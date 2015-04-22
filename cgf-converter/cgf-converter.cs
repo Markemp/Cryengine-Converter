@@ -14,11 +14,27 @@ namespace CgfConverter
         public ChunkTable CgfChunkTable { get; set; }
         public List<ChunkBase> CgfChunks { get; set; }
 
-        public CgfFormat(string cgffile)
+        public CgfFormat(string cgffile)  // the entire cgfformat in one handy class
         {
             CgfFile = cgffile;
             CgfHeader = new Header();
             CgfChunkTable = new ChunkTable();
+            // Need to implement the chunks here.  A list of the ChunkBase.
+        }
+        public CgfFormat GetData(string cgfFile) // Read the full cgf file and put it into
+        {
+            CgfFormat datafile = new CgfFormat(cgfFile); // datafile will be where we store all the components
+            using (BinaryReader cgfreader = new BinaryReader(File.Open(cgfFile, FileMode.Open)))
+            {
+                // header.FileSignature 
+                datafile.CgfHeader.fileSignature = cgfreader.ReadChars(8);
+                datafile.CgfHeader.fileType = cgfreader.ReadUInt32();
+                datafile.CgfHeader.chunkVersion = cgfreader.ReadUInt32();
+                datafile.CgfHeader.fileOffset = cgfreader.ReadInt32();
+                // read chunk table.  Need to start the read at datafile.cgfheader.filloffset
+
+            }
+            return datafile;
         }
     }
     // Aliases
@@ -95,20 +111,30 @@ namespace CgfConverter
     {
         public char[] fileSignature; // The CGF file signature.  CryTek for 3.5, CrChF for 3.6
         public uint fileType; // The CGF file type (geometry or animation)  3.5 only
-        public uint chunkVersion // The version of the chunk table  3.5 only
+        public uint chunkVersion; // The version of the chunk table  3.5 only
+        public int fileOffset; //Position of the chunk table in the CGF file
+        public int numChunks; // Number of chunks in the Chunk Table (3.6 only.  3.5 has it in Chunk Table)
+        
+        // methods
+        public Header GetHeader(BinaryReader binReader)
         {
-            get;
-            set;
+            Header cgfHeader = new Header();
+            // populate the Header objects
+            cgfHeader.fileSignature = binReader.ReadChars(8);
+            cgfHeader.fileType = binReader.ReadUInt32();
+            cgfHeader.chunkVersion = binReader.ReadUInt32();
+            cgfHeader.fileOffset = binReader.ReadInt32();
+            // read chunk table.  Need to start the read at datafile.cgfheader.filloffset
+            return cgfHeader;
         }
-        public int fileOffset //Position of the chunk table in the CGF file
+        public void WriteHeader(Header cgfHdr)  // output header to console for testing
         {
-            get;
-            set;
-        }
-        public int numChunks // Number of chunks in the Chunk Table (3.6 only.  3.5 has it in Chunk Table)
-        {
-            get;
-            set;
+            Console.WriteLine("Header Filesignature: {0:C}", cgfHdr.fileSignature);
+            Console.WriteLine("Header FileType: {0:X}", cgfHdr.fileType);
+            Console.WriteLine("Header ChunkVersion: {0:X}", cgfHdr.chunkVersion);
+            Console.WriteLine("Header ChunkTableOffset: {0:X}", cgfHdr.fileOffset);
+            Console.ReadKey();
+            return;
         }
     }
     // comment
@@ -118,6 +144,25 @@ namespace CgfConverter
         public ChunkVersion version;
         public uint offset;
         public uint id;
+
+        // methods
+        public ChunkHeader GetChunkHeader(BinaryReader binReader)
+        {
+            ChunkHeader chkHdr = new ChunkHeader();
+            // Populate the ChunkHeader objects
+            string headerType = binReader.ReadChars(8).ToString(); // read the enum, then parse it
+            chkHdr.type = (ChunkType)Enum.Parse(typeof(ChunkType), headerType);
+            string chunkversionType = binReader.ReadChars(4).ToString(); // read the enum then parse it
+            chkHdr.version = (ChunkVersion)Enum.Parse(typeof(ChunkVersion), chunkversionType);
+            chkHdr.offset = binReader.ReadUInt32();
+            chkHdr.id = binReader.ReadUInt32();
+
+            return chkHdr;
+        }
+        public void WriteChunkHeader(ChunkHeader chkHdr)  // write the Chunk Header Table to the console.  For testing.
+        {
+
+        }
     }
     public class ChunkTable
     {
