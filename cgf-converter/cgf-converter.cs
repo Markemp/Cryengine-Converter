@@ -9,16 +9,27 @@ namespace CgfConverter
 {
     public class CgfFormat // Stores all information about the cgf file format.
     {
-        public Header Header
+        public string CgfFile { get; set; } //the name of the file we are reading
+        public Header CgfHeader { get; set; }
+        public ChunkTable CgfChunkTable { get; set; }
+        public List<ChunkBase> CgfChunks { get; set; }
+
+        public CgfFormat(string cgffile)
         {
-            get;
-            set;
+            CgfFile = cgffile;
+            CgfHeader = new Header();
+            CgfChunkTable = new ChunkTable();
         }
     }
     // Aliases
     public class ChunkVersion
     {
         public uint ChunkVersion;
+
+        public ChunkVersion()
+        {
+            //ChunkVersions = new ChunkVersion;
+        }
     }
     public class FileOffset
     { 
@@ -100,7 +111,7 @@ namespace CgfConverter
             set;
         }
     }
-
+    // comment
     public class ChunkHeader
     {
         public ChunkType type;
@@ -140,13 +151,13 @@ namespace CgfConverter
             using (BinaryReader b = new BinaryReader(File.Open(cgfFile, FileMode.Open)))
             {
                 // header.FileSignature 
-                cgfData.Header.fileSignature = b.ReadChars(8);
-                cgfData.Header.fileType = b.ReadUInt32();
-                cgfData.Header.chunkVersion = b.ReadUInt32();
-                cgfData.Header.fileOffset = b.ReadInt32();
+                cgfData.CgfHeader.fileSignature = b.ReadChars(8);
+                cgfData.CgfHeader.fileType = b.ReadUInt32();
+                cgfData.CgfHeader.chunkVersion = b.ReadUInt32();
+                cgfData.CgfHeader.fileOffset = b.ReadInt32();
             }
             Console.Write("File Signature set to:  ");
-            Console.WriteLine(cgfData.Header.fileSignature);
+            Console.WriteLine(cgfData.CgfHeader.fileSignature);
             Console.WriteLine("File Type set to: '{0:X}'", cgfData.fileType);
             Console.WriteLine("Chunk Version set to : '{0:X}' ", cgfData.chunkVersion);
             Console.WriteLine("Chunk Table Offset set to: {0:X}'  ", cgfData.fileOffset);
