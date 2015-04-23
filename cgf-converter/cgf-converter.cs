@@ -28,22 +28,17 @@ namespace CgfConverter
             using (BinaryReader cgfreader = new BinaryReader(File.Open(CgfFile, FileMode.Open)))
             {
                 CgfHeader = CgfHeader.GetHeader(cgfreader);
-                //CgfChunkTable = 
+                int offset = CgfHeader.fileOffset;  // location of the Chunk table.
+                cgfreader.BaseStream.Seek(offset, 0);  // will now start to read from the start of the chunk table
+                //Console.WriteLine("Current offset is {0:X}", cgfreader.BaseStream.Position);    // for testing
+                //Console.ReadKey();                                                              // for testing
+                CgfChunkTable = CgfChunkTable.GetChunkTable(cgfreader, offset);
             }
             return;
         }
 
     }
     // Aliases
-    public class ChunkVersion
-    {
-        public uint ChkVersion;
-
-        public ChunkVersion()
-        {
-            //ChunkVersions = new ChunkVersion;
-        }
-    }
     public class FileOffset
     { 
         public int fOffset;
@@ -102,6 +97,13 @@ namespace CgfConverter
             UnknownAAFC0005 = 0xAAFC0005 //unknown chunk
         }
     }
+    public class ChunkVersion
+    {
+        public enum version : uint
+        {
+            ChkVersion
+        }
+    }
 
     // structs
     public class Header
@@ -122,55 +124,79 @@ namespace CgfConverter
             cgfHeader.chunkVersion = binReader.ReadUInt32();
             cgfHeader.fileOffset = binReader.ReadInt32();
             cgfHeader.WriteHeader(cgfHeader);  // For testing.  This will write out what we find.
-            // read chunk table.  Need to start the read at datafile.cgfheader.filloffset
+            
             return cgfHeader;
         }
         public void WriteHeader(Header cgfHdr)  // output header to console for testing
         {
-            Console.WriteLine("Header Filesignature: {0:S}", cgfHdr.fileSignature);
-            Console.WriteLine("Header FileType: {0:X}", cgfHdr.fileType);
-            Console.WriteLine("Header ChunkVersion: {0:X}", cgfHdr.chunkVersion);
-            Console.WriteLine("Header ChunkTableOffset: {0:X}", cgfHdr.fileOffset);
+            Console.WriteLine("Header Filesignature: {0}", fileSignature[0]);
+            Console.WriteLine("Header FileType: {0:X}", fileType);
+            Console.WriteLine("Header ChunkVersion: {0:X}", chunkVersion);
+            Console.WriteLine("Header ChunkTableOffset: {0:X}", fileOffset);
+
             Console.ReadKey();
+
             return;
         }
     }
     // comment
     public class ChunkHeader
     {
-        public ChunkType type;
-        public ChunkVersion version;
+        public ChunkType.value type;
+        public ChunkVersion.version version;
         public uint offset;
         public uint id;
+        public uint unknown; //  there are 2 uints(?) at the end of each chunk header.  Not sure what ID and unknown refer to.
 
-        // methods
+        // methods        
         public void GetChunkHeader(BinaryReader binReader)
         {
-            ChunkHeader chkHdr = new ChunkHeader();
             // Populate the ChunkHeader objects
-            string headerType = binReader.ReadChars(8).ToString(); // read the enum, then parse it
-            chkHdr.type = (ChunkType)Enum.Parse(typeof(ChunkType), headerType);
-            string chunkversionType = binReader.ReadChars(4).ToString(); // read the enum then parse it
-            chkHdr.version = (ChunkVersion)Enum.Parse(typeof(ChunkVersion), chunkversionType);
-            chkHdr.offset = binReader.ReadUInt32();
-            chkHdr.id = binReader.ReadUInt32();
-
+            Console.WriteLine("Current offset is {0:X}", binReader.BaseStream.Position);    // for testing
+            uint headerType = binReader.ReadUInt32(); // read the value, then parse it
+            Console.WriteLine("headerType: '{0:X}'", headerType);
+            type = (ChunkType.value)Enum.ToObject(typeof(ChunkType.value), headerType);
+            uint chunkversionType = binReader.ReadUInt32();
+            version = (ChunkVersion.version)Enum.ToObject(typeof(ChunkVersion.version), chunkversionType);
+            offset = binReader.ReadUInt32();
+            id = binReader.ReadUInt32();
+            unknown = binReader.ReadUInt32();
+            Console.WriteLine("Current offset is {0:X}", binReader.BaseStream.Position);
+            Console.ReadKey();
+            WriteChunkHeader(); // For testing.  remove.
             return;
         }
-        public void WriteChunkHeader(ChunkHeader chkHdr)  // write the Chunk Header Table to the console.  For testing.
+        public void WriteChunkHeader()  // write the Chunk Header Table to the console.  For testing.
         {
-            Console.WriteLine("ChunkType: {0}", chkHdr.type);
-            Console.WriteLine("ChunkVersion: {0}", chkHdr.version);
-            Console.WriteLine("offset: {0}", chkHdr.offset);
-            Console.WriteLine("ID: {0}", chkHdr.id);
+            Console.WriteLine("ChunkType: {0}", type);
+            Console.WriteLine("ChunkVersion: {0:X}", version);
+            Console.WriteLine("offset: {0:X}", offset);
+            Console.WriteLine("ID: {0:X}", id);
             Console.ReadKey();
         }
     }
-    public class ChunkTable
+    public class ChunkTable  // reads the chunk table
     {
         public uint numChunks;
-        public List<ChunkHeader> chunkHeaders;
+        public List<ChunkHeader> chunkHeaders = new List<ChunkHeader>();
 
+        // methods
+        public ChunkTable GetChunkTable (BinaryReader binReader, int foffset)
+        {
+            ChunkTable chkTbl = new ChunkTable();
+            
+            // need to seek to the start of the table here.  foffset points to the start of the table
+            chkTbl.numChunks = binReader.ReadUInt32();  // number of Chunks in the table.
+            int i; // counter for loop to read all the chunkHeaders
+            for (i = 0; i < chkTbl.numChunks; i++ )
+            {
+                Console.WriteLine("Loop {0}", i);
+                ChunkHeader tempChkHdr = new ChunkHeader(); // Add this chunk header to the list
+                tempChkHdr.GetChunkHeader(binReader); // Now has the next chunkheader
+                chunkHeaders.Add(tempChkHdr);
+            }
+            return chkTbl;
+        }
     }
 
     public class ChunkBase
@@ -191,15 +217,14 @@ namespace CgfConverter
 
     class Program
     {
-        static void ReadCryHeader(string cgfFile)
+        /*static void ReadCryHeader(string cgfFile)
         {
-
-
+            //TBD
         }
         static void ReadChunkTable(string cgfFile)
         {
             // TBD
-        }
+        }*/  // These 2 functions not needed.  To be implemented in classes
 
         static void Main(string[] args)
         {
