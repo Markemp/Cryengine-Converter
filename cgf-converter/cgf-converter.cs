@@ -20,6 +20,7 @@ namespace CgfConverter
             using (BinaryReader cgfreader = new BinaryReader(File.Open(CgfFile, FileMode.Open)))
             {
                 CgfHeader = new Header(cgfreader);// Gets the header of the file (3-5 objects dep on version)
+                CgfHeader.WriteHeader();
                 int offset = CgfHeader.fileOffset;  // location of the Chunk table.
                 cgfreader.BaseStream.Seek(offset, 0);  // will now start to read from the start of the chunk table
                 //Console.WriteLine("Current offset is {0:X}", cgfreader.BaseStream.Position);    // for testing
@@ -37,13 +38,23 @@ namespace CgfConverter
                             ChunkSourceInfo chkSrcInfo = new ChunkSourceInfo();
                             chkSrcInfo.GetChunkSourceInfo(cgfreader,ChkHdr.offset);
                             CgfChunks.Add(chkSrcInfo);
-                            Console.WriteLine("Source info chunk here");
-                            chkSrcInfo.WriteChunkSourceInfo();
+                            chkSrcInfo.WriteChunkSourceInfo();  //  Test. Delete
                             break;
                         }
                         case ChunkType.Timing:
                         {
-                            Console.WriteLine("Timing Chunk here");
+                            ChunkTimingFormat chkTiming = new ChunkTimingFormat();
+                            chkTiming.GetChunkTimingFormat(cgfreader, ChkHdr.offset);
+                            CgfChunks.Add(chkTiming);
+                            chkTiming.WriteChunkTiming();
+                            break;
+                        }
+                        case ChunkType.ExportFlags:
+                        {
+                            ChunkExportFlags chkExportFlag = new ChunkExportFlags();
+                            chkExportFlag.GetChunkExportFlags(cgfreader, ChkHdr.offset);
+                            CgfChunks.Add(chkExportFlag);
+                            chkExportFlag.WriteExportFlags();
                             break;
                         }
                         case ChunkType.Mtl:
@@ -88,7 +99,7 @@ namespace CgfConverter
     }   // 256 byte char array 
     public struct RangeEntity
     {
-        public String32 Name;
+        public char[] Name; // String32!  32 byte char array.
         public int Start;
         public int End;
     } // String32 Name, int Start, int End - complete
@@ -306,7 +317,6 @@ namespace CgfConverter
             fileType = binReader.ReadUInt32();
             chunkVersion = binReader.ReadUInt32();
             fileOffset = binReader.ReadInt32();
-            WriteHeader();  // For testing.  This will write out what we find.
             
             return;
         }
@@ -388,22 +398,104 @@ namespace CgfConverter
         FileOffset fOffset;
     }
 
-    public class ChuckTimingFormat : Chunk
+    public class ChunkTimingFormat : Chunk
     {
         public ChunkType ChunkTiming;   //
+        public uint version;
         public float SecsPerTick;
         public int TicksPerFrame;
+        public uint Unknown1; // 4 bytes, not sure what they are
+        public uint Unknown2; // 4 bytes, not sure what they are
         public RangeEntity GlobalRange;
         public int NumSubRanges;
 
-        public void ChunkTimingFormat(BinaryReader b, int foffset)
+        public void GetChunkTimingFormat(BinaryReader b, uint fOffset)
         {
-            b.BaseStream.Seek(foffset, 0); // seek to the beginning of the Timing Format chunk
+            b.BaseStream.Seek(fOffset, 0); // seek to the beginning of the Timing Format chunk
             uint tmpChkType = b.ReadUInt32();
             ChunkTiming = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChkType);
-            //SecsPerTick = b.read
-
+            version = b.ReadUInt32();  //0x00000918 is Far Cry, Crysis, MWO, Aion
+            SecsPerTick = b.ReadSingle();
+            TicksPerFrame = b.ReadInt32();
+            Unknown1 = b.ReadUInt32();
+            Unknown2 = b.ReadUInt32();
+            GlobalRange.Name = new char[32];
+            GlobalRange.Name = b.ReadChars(32);  // Name is technically a String32, but F those structs
+            GlobalRange.Start = b.ReadInt32();
+            GlobalRange.End = b.ReadInt32();
         }
+        public void WriteChunkTiming()
+        {
+            string tmpName = new string(GlobalRange.Name);
+            Console.WriteLine("*** TIMING CHUNK ***");
+            Console.WriteLine("Version: {0:X}", version);
+            Console.WriteLine("Secs Per Tick: {0}", SecsPerTick);
+            Console.WriteLine("Ticks Per Frame: {0}", TicksPerFrame);
+            Console.WriteLine("Global Range:  Name: {0}", tmpName);
+            Console.WriteLine("Global Range:  Start: {0}", GlobalRange.Start);
+            Console.WriteLine("Global Range:  End:  {0}", GlobalRange.End);
+            Console.WriteLine("*** END TIMING CHUNK ***");
+        }
+    }
+    public class ChunkExportFlags : Chunk
+    {
+        public ChunkType ExportFlag;
+        public uint version;  // Far Cry and Crysis:  1
+        public uint ChunkOffset;  // for some reason the offset of Export Flag chunk is stored here.
+        public uint Flags;    // ExportFlags type technically, but it's just 1 value
+        public uint Unknown1; // uint, no idea what they are
+        public uint[] RCVersion;  // 4 uints
+        public char[] RCVersionString;  // Technically String16
+        public uint[] Reserved;  // 32 uints
+
+        public void GetChunkExportFlags(BinaryReader b, uint fOffset)
+        {
+            b.BaseStream.Seek(fOffset, 0); // seek to the beginning of the Timing Format chunk
+            uint tmpExportFlag = b.ReadUInt32();
+            ExportFlag = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpExportFlag);
+            version = b.ReadUInt32();
+            ChunkOffset = b.ReadUInt32();
+            Flags = b.ReadUInt32();
+            Unknown1 = b.ReadUInt32();
+            RCVersion = new uint[4];
+            int count = 0;
+            for (count = 0; count < 4; count++)
+            {
+                RCVersion[count] = b.ReadUInt32();
+            }
+            RCVersionString = new char[16];
+            RCVersionString = b.ReadChars(16);
+            Reserved = new uint[32];
+            for (count = 0; count < 4; count++)
+            {
+                Reserved[count] = b.ReadUInt32();
+            }
+        }
+        public void WriteExportFlags() {
+            string tmpVersionString = new string(RCVersionString);
+            Console.WriteLine("*** START EXPORT FLAGS ***");
+            Console.WriteLine("ChunkType: {0}",ChunkType.ExportFlags);
+            Console.WriteLine("Version: {0}", version);
+            Console.WriteLine("Flags: {0}", Flags);
+            Console.Write("RC Version: ");
+            for (int i = 0; i < 4; i++)
+            {
+                Console.Write(RCVersion[i]);
+            }
+            Console.WriteLine();
+            Console.WriteLine("RCVersion String: {0}", tmpVersionString);
+            Console.WriteLine("Reserved: {0:X}", Reserved);
+            Console.WriteLine("*** END EXPORT FLAGS ***");
+        }
+
+
+        //<version num="1">Far Cry, Crysis</version>
+        //<add name="Flags" type="ExportFlags" />
+        //<add name="RC Version" type="uint" arr1="4" />
+        //<add name="RC Version String" type="String16" />
+        //<add name="Reserved" type="uint" arr1="32" />
+
+
     }
     public class ChunkSourceInfo : Chunk
     {
@@ -432,7 +524,7 @@ namespace CgfConverter
             } // count now has the null position relative to the seek position
             b.BaseStream.Seek(b.BaseStream.Position - count - 1, 0);
             char[] tmpDate = new char[count];
-            tmpDate = b.ReadChars(count+1);
+            tmpDate = b.ReadChars(count+1);  //strip off last 2 characters, because it contains a return
             Date = new string(tmpDate);
 
             count = 0;                           // Read Author
@@ -445,7 +537,6 @@ namespace CgfConverter
             tmpAuthor = b.ReadChars(count+1);
             Author = new string(tmpAuthor);
         }
-
         public void WriteChunkSourceInfo()
         {
             Console.WriteLine("***SOURCE INFO CHUNK***");
