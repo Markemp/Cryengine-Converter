@@ -70,6 +70,11 @@ namespace CgfConverter
                             chkMtlName.WriteMtlName();
                             break;
                         }
+                        case ChunkType.DataStream:
+                        {
+
+                            break;
+                        }
                         default:
                         {
                             //Console.WriteLine("Chunk type found that didn't match known versions");
@@ -168,6 +173,59 @@ namespace CgfConverter
         public int Material; // Material Index
         public int SmGroup; //smoothing group
     }
+    public struct Key
+    {
+        public int Time; // Time in ticks
+        public Vector3 AbsPos; // absolute position
+        public Vector3 RelPos; // relative position
+        public Quat RelQuat; //Relative Quaternion if ARG==1?
+        public Vector3 Unknown1; // If ARG==6 or 10?
+        public float[] Unknown2; // If ARG==9?  array length = 2
+    }
+    public struct UV
+    {
+        public float U;
+        public float V;
+    }
+    public struct UVFace
+    {
+        public int t0; // first vertex index
+        public int t1; // second vertex index
+        public int t2; // third vertex index
+    }
+    /*public struct TextureMap
+    {
+
+    }*/ // Fill this in later.  line 369 in cgf.xml.
+    public struct IRGB 
+    {
+        public byte r; // red
+        public byte g; // green
+        public byte b; // blue
+    }
+    public struct IRGBA
+    {
+        public byte r; // red
+        public byte g; // green
+        public byte b; // blue
+        public byte a; // alpha
+
+    }
+    public struct FRGB
+    {
+        public float r; // float Red
+        public float g; // float green
+        public float b; // float blue
+    }
+    public struct Tangent 
+    {
+        // Tangents.  Divide each component by 32767 to get the actual value
+        public short x;
+        public short y;
+        public short z;
+        public short w;  // Handness?  Either 32767 (+1.0) or -32767 (-1.0)
+    }
+
     // Aliases
     public class FileOffset
     { 
@@ -405,7 +463,6 @@ namespace CgfConverter
     {
         FileOffset fOffset;
     }
-
     public class ChunkTimingFormat : Chunk
     {
         public ChunkType ChunkTiming;   //
@@ -623,6 +680,30 @@ namespace CgfConverter
             Console.WriteLine("Number of Children: {0}", NumChildren);
             Console.WriteLine("*** END MATERIAL NAMES ***");
         }
+    }
+    public class ChunkDataStream : Chunk // cccc0016:  Contains data such as vertices, normals, etc.
+    {
+        public ChunkType ChunkDataStream; //
+        public uint Flags; // not used
+        public DataStreamType dataStreamType; // type of data (vertices, normals, uv, etc)
+        public uint NumElements; // Number of data entries
+        public uint BytesPerElement; // Bytes per data entry
+        public uint Reserved1;
+        public uint Reserved2;
+        public Vector3[] Vertices;  // For dataStreamType of 0, length is NumElements.
+        public Vector3[] Normals;   // For dataStreamType of 1, length is NumElements.
+        public UV[] UVs;            // for datastreamType of 2, length is NumElements.
+        public IRGB[] RGBColors;    // for dataStreamType of 3, length is NumElements.  Bytes per element of 3
+        public IRGBA[] RGBAColors;  // for dataStreamType of 4, length is NumElements.  Bytes per element of 4
+        public ushort[] Indices;    // for dataStreamType of 5, length is NumElements.
+        // For Tangents on down, this may be a 2 element array.  See line 846+ in cgf.xml
+        public Tangent[] Tangents;  // for dataStreamType of 6, length is NumElements.
+        public byte[] ShCoeffs;     // for dataStreamType of 7, length is NumElements.
+        public byte[] ShapeDeformation; // for dataStreamType of 8, length is NumElements.
+        public byte[] BoneMap;      // for dataStreamType of 9, length is NumElements.
+        public byte[] FaceMap;      // for dataStreamType of 10, length is NumElements.
+        public byte[] VertMats;     // for dataStreamType of 11, length is NumElements.
+
     }
 
     class Program
