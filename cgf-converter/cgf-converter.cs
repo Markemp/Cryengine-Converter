@@ -30,7 +30,7 @@ namespace CgfConverter
                 foreach (ChunkHeader ChkHdr in CgfChunkTable.chunkHeaders) 
                 {
                     ChunkType chkType = ChkHdr.type;
-                    Console.WriteLine("Processing {0}", chkType);
+                    //Console.WriteLine("Processing {0}", chkType);
                     switch (ChkHdr.type)
                     {
                         case ChunkType.SourceInfo:
@@ -59,12 +59,20 @@ namespace CgfConverter
                         }
                         case ChunkType.Mtl:
                         {
-                            Console.WriteLine("Mtl Chunk here");
+                            //Console.WriteLine("Mtl Chunk here");
+                            break;
+                        }
+                        case ChunkType.MtlName:
+                        {
+                            ChunkMtlName chkMtlName = new ChunkMtlName();
+                            chkMtlName.GetChunkMtlName(cgfreader, ChkHdr.offset);
+                            CgfChunks.Add(chkMtlName);
+                            chkMtlName.WriteMtlName();
                             break;
                         }
                         default:
                         {
-                            Console.WriteLine("Chunk type found that didn't match known versions");
+                            //Console.WriteLine("Chunk type found that didn't match known versions");
                             break;
                         }
                     }
@@ -440,20 +448,19 @@ namespace CgfConverter
     public class ChunkExportFlags : Chunk
     {
         public ChunkType ExportFlag;
-        public uint version;  // Far Cry and Crysis:  1
+        public uint Version;  // Far Cry and Crysis:  1
         public uint ChunkOffset;  // for some reason the offset of Export Flag chunk is stored here.
         public uint Flags;    // ExportFlags type technically, but it's just 1 value
         public uint Unknown1; // uint, no idea what they are
         public uint[] RCVersion;  // 4 uints
         public char[] RCVersionString;  // Technically String16
         public uint[] Reserved;  // 32 uints
-
         public void GetChunkExportFlags(BinaryReader b, uint fOffset)
         {
             b.BaseStream.Seek(fOffset, 0); // seek to the beginning of the Timing Format chunk
             uint tmpExportFlag = b.ReadUInt32();
             ExportFlag = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpExportFlag);
-            version = b.ReadUInt32();
+            Version = b.ReadUInt32();
             ChunkOffset = b.ReadUInt32();
             Flags = b.ReadUInt32();
             Unknown1 = b.ReadUInt32();
@@ -475,7 +482,7 @@ namespace CgfConverter
             string tmpVersionString = new string(RCVersionString);
             Console.WriteLine("*** START EXPORT FLAGS ***");
             Console.WriteLine("ChunkType: {0}",ChunkType.ExportFlags);
-            Console.WriteLine("Version: {0}", version);
+            Console.WriteLine("Version: {0}", Version);
             Console.WriteLine("Flags: {0}", Flags);
             Console.Write("RC Version: ");
             for (int i = 0; i < 4; i++)
@@ -497,7 +504,7 @@ namespace CgfConverter
 
 
     }
-    public class ChunkSourceInfo : Chunk
+    public class ChunkSourceInfo : Chunk  // Source Info chunk.  Pretty useless overall
     {
         public string SourceFile;
         public string Date;
@@ -543,6 +550,78 @@ namespace CgfConverter
             Console.WriteLine("Sourcefile: {0}.  Length {1}", SourceFile, SourceFile.Length);
             Console.WriteLine("Date:       {0}.  Length {1}", Date, Date.Length);
             Console.WriteLine("Author:     {0}.  Length {1}", Author, Author.Length);
+        }
+    }
+    public class ChunkMtlName : Chunk  // provides material name as used in the .mtl file
+    {
+        public ChunkType ChunkMaterialName;
+        public uint Version;
+        public uint Flags1;  // pointer to the start of this chunk?
+        public uint Flags2;  // unknown
+        public uint Filler1; // for type 800, unknown value
+        public uint Filler2; // for type 800, unknown value
+        public uint Filler3; // for type 802, unknown value (number of materials for type 802?)
+        public uint Filler4; // for type 802, unknown value
+        public char[] Name; // technically a String128 class
+        public MtlNamePhysicsType PhysicsType; // enum of a 4 byte uint
+        public uint NumChildren; // number of materials in this name. Max is 66
+        // need to implement an array of references here?  Name of Children
+        public uint[] Children;  
+        public uint[] Padding;  // array length of 32
+        public uint AdvancedData;  // probably not used
+        public float Opacity; // probably not used
+        public int[] Reserved;  // array length of 32
+
+        public void GetChunkMtlName(BinaryReader b, uint fOffset)
+        {
+            b.BaseStream.Seek(fOffset, 0); // seek to the beginning of the Timing Format chunk
+            uint tmpChunkMtlName = b.ReadUInt32();
+            ChunkMaterialName = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChunkMtlName);
+            Version = b.ReadUInt32();
+            Flags1 = b.ReadUInt32();
+            Flags2 = b.ReadUInt32();
+            // at this point we need to differentiate between Version 800 and 802, since the format differs.
+            if (Version == 0x800 || Version == 0x744)  // guessing on the 744. Aion.
+            {
+                Filler1 = b.ReadUInt32();
+                Filler2 = b.ReadUInt32();
+                // read the material Name, which is a 128 byte char array.  really want it as a string...
+                Name = new char[128];
+                Name = b.ReadChars(128);
+                uint tmpPhysicsType = b.ReadUInt32();
+                PhysicsType = (MtlNamePhysicsType)Enum.ToObject(typeof(MtlNamePhysicsType), tmpPhysicsType);
+                NumChildren = b.ReadUInt32();
+                // Now we need to read the Children references.  2 parts; the number of children, and then 66 - numchildren padding
+                Children = new uint[NumChildren];
+                for (int i=0; i < NumChildren; i++)
+                {
+                    Children[i] = b.ReadUInt32();
+                }
+                // Now dump the rest of the padding
+                Padding = new uint[66 - NumChildren];
+                for (int i = 0; i < 66 - NumChildren; i++)
+                {
+                    Padding[i] = b.ReadUInt32();
+                }
+            }
+            if (Version == 0x802)
+            {
+                // Don't need fillers for this type, but numchildren is weird...
+                Name = new char[128];
+                Name = b.ReadChars(128);
+                Filler3 = b.ReadUInt32();
+                uint tmpPhysicsType = b.ReadUInt32();
+                PhysicsType = (MtlNamePhysicsType)Enum.ToObject(typeof(MtlNamePhysicsType), tmpPhysicsType);
+            }
+        }
+        public void WriteMtlName()
+        {
+            string tmpMtlName = new string(Name);
+            Console.WriteLine("*** START MATERIAL NAMES ***");
+            Console.WriteLine("ChunkType: {0}", ChunkMaterialName);
+            Console.WriteLine("Material Name:  {0}", tmpMtlName);
+            Console.WriteLine("Number of Children: {0}", NumChildren);
+            Console.WriteLine("*** END MATERIAL NAMES ***");
         }
     }
 
