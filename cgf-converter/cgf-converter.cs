@@ -72,7 +72,9 @@ namespace CgfConverter
                         }
                         case ChunkType.DataStream:
                         {
-
+                            ChunkDataStream chkDataStream = new ChunkDataStream();
+                            chkDataStream.GetChunkDataStream(cgfreader, ChkHdr.offset);
+                            chkDataStream.WriteDataStream();
                             break;
                         }
                         default:
@@ -231,7 +233,6 @@ namespace CgfConverter
     { 
         public int fOffset;
     }
-
     // Enums
     public enum FileType : uint
     {
@@ -463,7 +464,7 @@ namespace CgfConverter
     {
         FileOffset fOffset;
     }
-    public class ChunkTimingFormat : Chunk
+    public class ChunkTimingFormat : Chunk // cccc000e:  Timing format chunk
     {
         public ChunkType ChunkTiming;   //
         public uint version;
@@ -502,7 +503,7 @@ namespace CgfConverter
             Console.WriteLine("*** END TIMING CHUNK ***");
         }
     }
-    public class ChunkExportFlags : Chunk
+    public class ChunkExportFlags : Chunk  // cccc0015:  Export Flags
     {
         public ChunkType ExportFlag;
         public uint Version;  // Far Cry and Crysis:  1
@@ -552,7 +553,6 @@ namespace CgfConverter
             Console.WriteLine("*** END EXPORT FLAGS ***");
         }
 
-
         //<version num="1">Far Cry, Crysis</version>
         //<add name="Flags" type="ExportFlags" />
         //<add name="RC Version" type="uint" arr1="4" />
@@ -561,7 +561,7 @@ namespace CgfConverter
 
 
     }
-    public class ChunkSourceInfo : Chunk  // Source Info chunk.  Pretty useless overall
+    public class ChunkSourceInfo : Chunk  // cccc0013:  Source Info chunk.  Pretty useless overall
     {
         public string SourceFile;
         public string Date;
@@ -609,7 +609,7 @@ namespace CgfConverter
             Console.WriteLine("Author:     {0}.  Length {1}", Author, Author.Length);
         }
     }
-    public class ChunkMtlName : Chunk  // provides material name as used in the .mtl file
+    public class ChunkMtlName : Chunk  // cccc000c:  provides material name as used in the .mtl file
     {
         public ChunkType ChunkMaterialName;
         public uint Version;
@@ -631,7 +631,7 @@ namespace CgfConverter
 
         public void GetChunkMtlName(BinaryReader b, uint fOffset)
         {
-            b.BaseStream.Seek(fOffset, 0); // seek to the beginning of the Timing Format chunk
+            b.BaseStream.Seek(fOffset, 0); // seek to the beginning of the Material Name chunk
             uint tmpChunkMtlName = b.ReadUInt32();
             ChunkMaterialName = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChunkMtlName);
             Version = b.ReadUInt32();
@@ -683,14 +683,18 @@ namespace CgfConverter
     }
     public class ChunkDataStream : Chunk // cccc0016:  Contains data such as vertices, normals, etc.
     {
-        public ChunkType ChunkDataStream; //
-        public uint Flags; // not used
+        public ChunkType ChkDataStream; //  cccc0016.
+        public uint version;  // 800 for Crysis
+        public uint Flags; // not used, but looks like the start of the Data Stream chunk
+        public uint Flags1; // not used.  uint after Flags that looks like offsets
+        public uint Flags2; // not used, looks almost like a filler.
         public DataStreamType dataStreamType; // type of data (vertices, normals, uv, etc)
         public uint NumElements; // Number of data entries
         public uint BytesPerElement; // Bytes per data entry
         public uint Reserved1;
         public uint Reserved2;
-        public Vector3[] Vertices;  // For dataStreamType of 0, length is NumElements.
+        // Need to be careful with using float for Vertices and normals.  technically it's a floating point of length BytesPerElement.  May need to fix this.
+        public Vector3[] Vertices;  // For dataStreamType of 0, length is NumElements. This isn't right; it's an array of floats...
         public Vector3[] Normals;   // For dataStreamType of 1, length is NumElements.
         public UV[] UVs;            // for datastreamType of 2, length is NumElements.
         public IRGB[] RGBColors;    // for dataStreamType of 3, length is NumElements.  Bytes per element of 3
@@ -703,7 +707,82 @@ namespace CgfConverter
         public byte[] BoneMap;      // for dataStreamType of 9, length is NumElements.
         public byte[] FaceMap;      // for dataStreamType of 10, length is NumElements.
         public byte[] VertMats;     // for dataStreamType of 11, length is NumElements.
+        public void GetChunkDataStream(BinaryReader b, uint fOffset)
+        {
+            b.BaseStream.Seek(fOffset, 0); // seek to the beginning of the DataStream chunk
+            uint tmpChunkDataStream = b.ReadUInt32();
+            ChkDataStream = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChunkDataStream);
+            version = b.ReadUInt32();
+            Flags = b.ReadUInt32();  // offset of this datastream chunk
+            Flags1 = b.ReadUInt32();  // filler?
+            Flags2 = b.ReadUInt32(); // another filler
+            uint tmpdataStreamType = b.ReadUInt32();
+            dataStreamType = (DataStreamType)Enum.ToObject(typeof(DataStreamType), tmpdataStreamType);
+            NumElements = b.ReadUInt32(); // number of elements in this chunk
+            BytesPerElement = b.ReadUInt32(); // bytes per element
+            Reserved1 = b.ReadUInt32();
+            Reserved2 = b.ReadUInt32();
+            // Now do loops to read for each of the different Data Stream Types.  If vertices, need to populate Vector3s for example.
+            switch (dataStreamType)
+            {
+                case DataStreamType.VERTICES:
+                {
+                    Vertices = new Vector3[NumElements];
+                    for (int i=0; i < NumElements; i++)
+                    {
+                        Vertices[i].x = b.ReadSingle();
+                        Vertices[i].y = b.ReadSingle();
+                        Console.WriteLine("{0}   {1}", Vertices[i].x.ToString(".0######"),Vertices[i].y.ToString(".0######"));
+                    }
+                    Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
+                    break;
+                }
+                case  DataStreamType.INDICES:
+                {
+                    Indices = new ushort[NumElements];
+                    for (int i = 0; i < NumElements; i++)
+                    {
+                        Indices[i] = b.ReadUInt16();
+                        // Console.WriteLine("Indice {0} is {1}", i, Indices[i]);
+                    }
+                    Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
+                    break;
+                }
+                case DataStreamType.NORMALS:
+                {
+                    Normals = new Vector3[NumElements];
+                    for (int i=0; i < NumElements ; i++)
+                    {
+                        Normals[i].x = b.ReadSingle();
+                        Normals[i].y = b.ReadSingle();
+                        Normals[i].z = b.ReadSingle();
+                        //Console.WriteLine("{0}  {1}  {2}", Normals[i].x.ToString(".0######"), Normals[i].y.ToString(".0######"), Normals[i].z.ToString(".0######"));
+                    }
+                    Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
+                    break;
 
+                }
+                default: 
+                {
+                    Console.WriteLine("***** Unknown DataStream Type *****");
+                    break;
+                }
+            }
+        }
+
+        internal void WriteDataStream()
+        {
+            //string tmpDataStream = new string(Name);
+            Console.WriteLine("*** START DATASTREAM ***");
+            Console.WriteLine("ChunkType: {0}", ChkDataStream);
+            Console.WriteLine("Version: {0:X}", version);
+            Console.WriteLine("DataStream chunk starting point: {0:X}", Flags);
+            Console.WriteLine("DataStreamType: {0}", dataStreamType);
+            Console.WriteLine("Number of Elements: {0}", NumElements);
+            Console.WriteLine("Bytes per Element: {0}", BytesPerElement);
+            Console.WriteLine("*** END DATASTREAM ***");
+
+        }
     }
 
     class Program
