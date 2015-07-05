@@ -695,18 +695,20 @@ namespace CgfConverter
         public uint Reserved2;
         // Need to be careful with using float for Vertices and normals.  technically it's a floating point of length BytesPerElement.  May need to fix this.
         public Vector3[] Vertices;  // For dataStreamType of 0, length is NumElements. This isn't right; it's an array of floats...
+        //public float[] VertexList; // list of vertices?  Not part of default structures.
         public Vector3[] Normals;   // For dataStreamType of 1, length is NumElements.
         public UV[] UVs;            // for datastreamType of 2, length is NumElements.
         public IRGB[] RGBColors;    // for dataStreamType of 3, length is NumElements.  Bytes per element of 3
         public IRGBA[] RGBAColors;  // for dataStreamType of 4, length is NumElements.  Bytes per element of 4
         public ushort[] Indices;    // for dataStreamType of 5, length is NumElements.
         // For Tangents on down, this may be a 2 element array.  See line 846+ in cgf.xml
-        public Tangent[] Tangents;  // for dataStreamType of 6, length is NumElements.
-        public byte[] ShCoeffs;     // for dataStreamType of 7, length is NumElements.
-        public byte[] ShapeDeformation; // for dataStreamType of 8, length is NumElements.
-        public byte[] BoneMap;      // for dataStreamType of 9, length is NumElements.
-        public byte[] FaceMap;      // for dataStreamType of 10, length is NumElements.
-        public byte[] VertMats;     // for dataStreamType of 11, length is NumElements.
+        public Tangent[,] Tangents;  // for dataStreamType of 6, length is NumElements,2.  
+        public byte[,] ShCoeffs;     // for dataStreamType of 7, length is NumElement,BytesPerElements.
+        public byte[,] ShapeDeformation; // for dataStreamType of 8, length is NumElements,BytesPerElement.
+        public byte[,] BoneMap;      // for dataStreamType of 9, length is NumElements,BytesPerElement.
+        public byte[,] FaceMap;      // for dataStreamType of 10, length is NumElements,BytesPerElement.
+        public byte[,] VertMats;     // for dataStreamType of 11, length is NumElements,BytesPerElement.
+
         public void GetChunkDataStream(BinaryReader b, uint fOffset)
         {
             b.BaseStream.Seek(fOffset, 0); // seek to the beginning of the DataStream chunk
@@ -728,11 +730,33 @@ namespace CgfConverter
                 case DataStreamType.VERTICES:
                 {
                     Vertices = new Vector3[NumElements];
-                    for (int i=0; i < NumElements; i++)
+                    //VertexList = new float[NumElements];
+                    if (BytesPerElement == 8)
                     {
-                        Vertices[i].x = b.ReadSingle();
-                        Vertices[i].y = b.ReadSingle();
-                        Console.WriteLine("{0}   {1}", Vertices[i].x.ToString(".0######"),Vertices[i].y.ToString(".0######"));
+                        // For some reason old Star Citizen files use 8 bytes per element.  No idea how this works
+                        for (int i = 0; i < NumElements; i++)
+                        {
+                            Vertices[i].x = b.ReadSingle();
+                            Vertices[i].y = b.ReadSingle();
+                            //Vertices[i].z = b.ReadSingle();
+                            //Console.WriteLine("{0}   {1}   {2}", Vertices[i].x.ToString("##.######"), Vertices[i].y.ToString("##.######"), Vertices[i].z);
+                            //Console.WriteLine("{0}", VertexList[i];
+                        }
+                    }
+                    if (BytesPerElement == 12)  // MWO files use this, which seems right.
+                    {
+                        for (int i = 0; i < NumElements; i++)
+                        {
+                            Vertices[i].x = b.ReadSingle();
+                            Vertices[i].y = b.ReadSingle();
+                            Vertices[i].z = b.ReadSingle();
+                            if (i < 10)
+                            {
+                                Console.WriteLine("{0}   {1}   {2}", Vertices[i].x.ToString("##.######"), Vertices[i].y.ToString("##.######"), Vertices[i].z);
+                            }
+                            // Console.WriteLine("{0}   {1}   {2}", Vertices[i].x.ToString("##.######"), Vertices[i].y.ToString("##.######"), Vertices[i].z);
+                        }
+
                     }
                     Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
                     break;
@@ -756,11 +780,68 @@ namespace CgfConverter
                         Normals[i].x = b.ReadSingle();
                         Normals[i].y = b.ReadSingle();
                         Normals[i].z = b.ReadSingle();
-                        //Console.WriteLine("{0}  {1}  {2}", Normals[i].x.ToString(".0######"), Normals[i].y.ToString(".0######"), Normals[i].z.ToString(".0######"));
+                        // Console.WriteLine("{0}  {1}  {2}", Normals[i].x, Normals[i].y, Normals[i].z);
                     }
                     Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
                     break;
 
+                }
+                case DataStreamType.UVS:
+                {
+                    UVs = new UV[NumElements];
+                    for (int i = 0; i < NumElements; i++)
+                    {
+                        UVs[i].U = b.ReadSingle();
+                        UVs[i].V = b.ReadSingle();
+                        // Console.WriteLine("{0}   {1}", UVs[i].U, UVs[i].V);
+                    }
+                    Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
+                    break;
+                }
+                case DataStreamType.TANGENTS:
+                {
+                    Tangents = new Tangent[NumElements,2];
+                    for (int i = 0; i < NumElements; i++)
+                    {
+                        // These have to be divided by 32767 to be used properly (value between 0 and 1)
+                        Tangents[i, 0].x = b.ReadInt16();
+                        Tangents[i, 0].y = b.ReadInt16();
+                        Tangents[i, 0].z = b.ReadInt16();
+                        Tangents[i, 0].w = b.ReadInt16();
+                        Tangents[i, 1].x = b.ReadInt16();
+                        Tangents[i, 1].y = b.ReadInt16();
+                        Tangents[i, 1].z = b.ReadInt16();
+                        Tangents[i, 1].w = b.ReadInt16();
+                        //Console.WriteLine("{0} {1} {2} {3}", Tangents[i, 0].x, Tangents[i, 0].y, Tangents[i, 0].z, Tangents[i, 0].w);
+                    }
+                    Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
+                    break;
+                }
+                case DataStreamType.COLORS:
+                {
+                    if (BytesPerElement == 3)
+                    {
+                        RGBColors = new IRGB[NumElements];
+                        for (int i = 0; i < NumElements; i++)
+                        {
+                            RGBColors[i].r = b.ReadByte();
+                            RGBColors[i].g = b.ReadByte();
+                            RGBColors[i].b = b.ReadByte();
+                        }
+                    }
+                    if (BytesPerElement == 4)
+                    {
+                        RGBAColors = new IRGBA[NumElements];
+                        for (int i = 0; i < NumElements; i++)
+                        {
+                            RGBAColors[i].r = b.ReadByte();
+                            RGBAColors[i].g = b.ReadByte();
+                            RGBAColors[i].b = b.ReadByte();
+                            RGBAColors[i].a = b.ReadByte();
+
+                        }
+                    }
+                    break;
                 }
                 default: 
                 {
