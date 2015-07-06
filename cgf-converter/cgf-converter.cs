@@ -77,6 +77,12 @@ namespace CgfConverter
                             chkDataStream.WriteDataStream();
                             break;
                         }
+                         
+                        case ChunkType.Mesh:
+                            {
+                                ChunkMesh chkMesh = new ChunkMesh();
+                                break;
+                            }
                         default:
                         {
                             //Console.WriteLine("Chunk type found that didn't match known versions");
@@ -467,7 +473,7 @@ namespace CgfConverter
     public class ChunkTimingFormat : Chunk // cccc000e:  Timing format chunk
     {
         public ChunkType ChunkTiming;   //
-        public uint version;
+        public uint Version;
         public float SecsPerTick;
         public int TicksPerFrame;
         public uint Unknown1; // 4 bytes, not sure what they are
@@ -480,7 +486,7 @@ namespace CgfConverter
             b.BaseStream.Seek(fOffset, 0); // seek to the beginning of the Timing Format chunk
             uint tmpChkType = b.ReadUInt32();
             ChunkTiming = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChkType);
-            version = b.ReadUInt32();  //0x00000918 is Far Cry, Crysis, MWO, Aion
+            Version = b.ReadUInt32();  //0x00000918 is Far Cry, Crysis, MWO, Aion
             SecsPerTick = b.ReadSingle();
             TicksPerFrame = b.ReadInt32();
             Unknown1 = b.ReadUInt32();
@@ -494,7 +500,7 @@ namespace CgfConverter
         {
             string tmpName = new string(GlobalRange.Name);
             Console.WriteLine("*** TIMING CHUNK ***");
-            Console.WriteLine("Version: {0:X}", version);
+            Console.WriteLine("Version: {0:X}", Version);
             Console.WriteLine("Secs Per Tick: {0}", SecsPerTick);
             Console.WriteLine("Ticks Per Frame: {0}", TicksPerFrame);
             Console.WriteLine("Global Range:  Name: {0}", tmpName);
@@ -864,6 +870,77 @@ namespace CgfConverter
             Console.WriteLine("*** END DATASTREAM ***");
 
         }
+    }
+    public class ChunkMeshSubsets : Chunk // cccc0017:  The cgf.xml seems incomplete.  Looks like arrays not identified.
+    {
+        public ChunkType MeshSubsetsChunk;
+        public uint Version;
+        public uint Offset;
+        public uint FirstIndex;
+        public uint NumIndices;
+        public uint FirstVertex;
+        public uint NumVertices;
+        public uint MatID;
+        public float Radius;
+        public Vector3 Center;
+
+        public void GetChunkMeshSubsets(BinaryReader b, uint fOffset) 
+        {
+            b.BaseStream.Seek(fOffset, 0); // seek to the beginning of the MeshSubset chunk
+            uint tmpChunkMeshSubsets = b.ReadUInt32();
+            MeshSubsetsChunk = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChunkMeshSubsets);
+            Version = b.ReadUInt32(); // probably 800
+            Offset = b.ReadUInt32();  // offset of this chunk
+            FirstIndex = b.ReadUInt32();
+            NumIndices = b.ReadUInt32();
+            FirstVertex = b.ReadUInt32();
+            NumVertices = b.ReadUInt32();  // 0 in sample file; doesn't seem right...
+            // Not implementing rest, although Center seems to be the last thing before next Chunk.
+        }
+    }
+    public class ChunkMesh : Chunk      //  cccc0000:  Object that points to the datastream chunk.
+    {
+        public ChunkType MeshChunk;
+        public uint Version;  // 623 Far Cry, 744 Far Cry, Aion, 800 Crysis
+        public bool HasVertexWeights; // for 744
+        public bool HasVertexColors; // 744
+        public bool InWorldSpace; // 623
+        public byte Reserved1;  // padding byte, 744
+        public byte Reserved2;  // padding byte, 744
+        public uint Flags1;  // 800
+        public uint Flags2;  // 800
+        public uint NumVertices; // 
+        public uint NumIndices;  // Number of indices (each triangle has 3 indices, so this is the number of triangles times 3).
+        public uint NumUVs; // 744
+        public uint NumFaces; // 744
+        // Pointers to various Chunk types
+        public ChunkMtlName Material; // 623, Material Chunk
+        public uint NumMeshSubsets; // 800, Number of Mesh subsets
+        public ChunkMeshSubsets MeshSubsets; // 800  Not really implemented
+        // public ChunkVertAnim VertAnims; // 744.  not implemented
+        public Vertex[] Vertices; // 744.  not implemented
+        public Face[,] Faces; // 744.  Not implemented
+        public UV[] UVs; // 744 Not implemented
+        public UVFace[] UVFaces; // 744 not implemented
+        // public VertexWeight[] VertexWeights; // 744 not implemented
+        public IRGB[] VertexColors; // 744 not implemented
+        public ChunkDataStream VerticesData; // 800
+        public ChunkDataStream NormalsData; // 800
+        public ChunkDataStream UVsData; // 800
+        public ChunkDataStream ColorsData; // 800
+        public ChunkDataStream Colors2Data; // 800 
+        public ChunkDataStream IndicesData; // 800
+        public ChunkDataStream TangentsData; // 800
+        public ChunkDataStream ShCoeffsData; // 800
+        public ChunkDataStream ShapeDeformationData; //800
+        public ChunkDataStream BoneMapData; //800
+        public ChunkDataStream FaceMapData; // 800
+        public ChunkDataStream VertMatsData; // 800
+        public ChunkDataStream ReservedData; // 800
+        public ChunkDataStream PhysicsData; // 800
+        public Vector3 MinBound; // 800 minimum coordinate values
+        public Vector3 MaxBound; // 800 Max coord values
+        public uint[] Reserved3; // 800 array of 32 uint values.
     }
 
     class Program
