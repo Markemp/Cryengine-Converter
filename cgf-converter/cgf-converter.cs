@@ -907,14 +907,14 @@ namespace CgfConverter
         public bool InWorldSpace; // 623
         public byte Reserved1;  // padding byte, 744
         public byte Reserved2;  // padding byte, 744
-        public uint Flags1;  // 800
-        public uint Flags2;  // 800
+        public uint Flags1;  // 800  Offset of this chunk
+        public uint Flags2;  // 800  Unknown
         public uint NumVertices; // 
         public uint NumIndices;  // Number of indices (each triangle has 3 indices, so this is the number of triangles times 3).
         public uint NumUVs; // 744
         public uint NumFaces; // 744
         // Pointers to various Chunk types
-        public ChunkMtlName Material; // 623, Material Chunk
+        public ChunkMtlName Material; // 623, Material Chunk, never encountered?
         public uint NumMeshSubsets; // 800, Number of Mesh subsets
         public ChunkMeshSubsets MeshSubsets; // 800  Not really implemented
         // public ChunkVertAnim VertAnims; // 744.  not implemented
