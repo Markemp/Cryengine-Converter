@@ -10,11 +10,12 @@ namespace CgfConverter
     public class CgfFormat // Stores all information about the cgf file format.
     {
         public string CgfFile; //the name of the file we are reading
+        // Header, ChunkTable and Chunks are what are in a file.  1 header, 1 table, and a chunk for each entry in the table.
         public Header CgfHeader;
         public ChunkTable CgfChunkTable;
         public List<Chunk> CgfChunks = new List<Chunk>();
 
-        public CgfFormat(string cgffile)  // Constructor for CgfFormat.
+        public CgfFormat(string cgffile)  // Constructor for CgfFormat.  This populates the structure
         {
             CgfFile = cgffile;
             using (BinaryReader cgfreader = new BinaryReader(File.Open(CgfFile, FileMode.Open)))
@@ -74,15 +75,25 @@ namespace CgfConverter
                         {
                             ChunkDataStream chkDataStream = new ChunkDataStream();
                             chkDataStream.GetChunkDataStream(cgfreader, ChkHdr.offset);
+                            CgfChunks.Add(chkDataStream);
                             chkDataStream.WriteDataStream();
                             break;
                         }
                          
                         case ChunkType.Mesh:
-                            {
-                                ChunkMesh chkMesh = new ChunkMesh();
-                                break;
-                            }
+                        {
+                            ChunkMesh chkMesh = new ChunkMesh();
+                            CgfChunks.Add(chkMesh);
+                            break;
+                        }
+                        case ChunkType.MeshSubsets:
+                        {
+                            ChunkMeshSubsets chkMeshSubsets = new ChunkMeshSubsets();
+                            chkMeshSubsets.GetChunkMeshSubsets(cgfreader, ChkHdr.offset);
+                            CgfChunks.Add(chkMeshSubsets);
+                            chkMeshSubsets.WriteMeshSubsets();
+                            break;
+                        }
                         default:
                         {
                             //Console.WriteLine("Chunk type found that didn't match known versions");
@@ -95,6 +106,14 @@ namespace CgfConverter
                 
             return;
         }
+
+        /*public void WriteChunks() // test method to write the vertex info
+        {
+            foreach (CgfFormat.CgfChunks)
+            {
+                if (  )
+            }
+        }*/
 }
 
     // Structures
@@ -397,10 +416,12 @@ namespace CgfConverter
         {
             string tmpFileSig;
             tmpFileSig = new string(fileSignature);
-            Console.WriteLine("Header Filesignature: {0}", tmpFileSig);
-            Console.WriteLine("Header FileType: {0:X}", fileType);
-            Console.WriteLine("Header ChunkVersion: {0:X}", chunkVersion);
-            Console.WriteLine("Header ChunkTableOffset: {0:X}", fileOffset);
+            Console.WriteLine("*** HEADER ***");
+            Console.WriteLine("    Header Filesignature: {0}", tmpFileSig);
+            Console.WriteLine("    Header FileType: {0:X}", fileType);
+            Console.WriteLine("    Header ChunkVersion: {0:X}", chunkVersion);
+            Console.WriteLine("    Header ChunkTableOffset: {0:X}", fileOffset);
+            Console.WriteLine("*** END HEADER ***");
             return;
         }
     }
@@ -468,7 +489,9 @@ namespace CgfConverter
     }
     public class Chunk // Main class has Fileoffset to identify where the chunk starts
     {
-        FileOffset fOffset;
+        public FileOffset fOffset;  // starting offset of the chunk.  Int, not uint
+        public ChunkType chunkType; // Type of chunk
+        public uint version; // version of this chunk
     }
     public class ChunkTimingFormat : Chunk // cccc000e:  Timing format chunk
     {
@@ -500,12 +523,12 @@ namespace CgfConverter
         {
             string tmpName = new string(GlobalRange.Name);
             Console.WriteLine("*** TIMING CHUNK ***");
-            Console.WriteLine("Version: {0:X}", Version);
-            Console.WriteLine("Secs Per Tick: {0}", SecsPerTick);
-            Console.WriteLine("Ticks Per Frame: {0}", TicksPerFrame);
-            Console.WriteLine("Global Range:  Name: {0}", tmpName);
-            Console.WriteLine("Global Range:  Start: {0}", GlobalRange.Start);
-            Console.WriteLine("Global Range:  End:  {0}", GlobalRange.End);
+            Console.WriteLine("    Version: {0:X}", Version);
+            Console.WriteLine("    Secs Per Tick: {0}", SecsPerTick);
+            Console.WriteLine("    Ticks Per Frame: {0}", TicksPerFrame);
+            Console.WriteLine("    Global Range:  Name: {0}", tmpName);
+            Console.WriteLine("    Global Range:  Start: {0}", GlobalRange.Start);
+            Console.WriteLine("    Global Range:  End:  {0}", GlobalRange.End);
             Console.WriteLine("*** END TIMING CHUNK ***");
         }
     }
@@ -545,17 +568,17 @@ namespace CgfConverter
         public void WriteExportFlags() {
             string tmpVersionString = new string(RCVersionString);
             Console.WriteLine("*** START EXPORT FLAGS ***");
-            Console.WriteLine("ChunkType: {0}",ChunkType.ExportFlags);
-            Console.WriteLine("Version: {0}", Version);
-            Console.WriteLine("Flags: {0}", Flags);
-            Console.Write("RC Version: ");
+            Console.WriteLine("    ChunkType: {0}",ChunkType.ExportFlags);
+            Console.WriteLine("    Version: {0}", Version);
+            Console.WriteLine("    Flags: {0}", Flags);
+            Console.Write("    RC Version: ");
             for (int i = 0; i < 4; i++)
             {
                 Console.Write(RCVersion[i]);
             }
             Console.WriteLine();
-            Console.WriteLine("RCVersion String: {0}", tmpVersionString);
-            Console.WriteLine("Reserved: {0:X}", Reserved);
+            Console.WriteLine("    RCVersion String: {0}", tmpVersionString);
+            Console.WriteLine("    Reserved: {0:X}", Reserved);
             Console.WriteLine("*** END EXPORT FLAGS ***");
         }
 
@@ -609,10 +632,11 @@ namespace CgfConverter
         }
         public void WriteChunkSourceInfo()
         {
-            Console.WriteLine("***SOURCE INFO CHUNK***");
-            Console.WriteLine("Sourcefile: {0}.  Length {1}", SourceFile, SourceFile.Length);
-            Console.WriteLine("Date:       {0}.  Length {1}", Date, Date.Length);
-            Console.WriteLine("Author:     {0}.  Length {1}", Author, Author.Length);
+            Console.WriteLine("*** SOURCE INFO CHUNK ***");
+            Console.WriteLine("    Sourcefile: {0}.  Length {1}", SourceFile, SourceFile.Length);
+            Console.WriteLine("    Date:       {0}.  Length {1}", Date, Date.Length);
+            Console.WriteLine("    Author:     {0}.  Length {1}", Author, Author.Length);
+            Console.WriteLine("*** END SOURCE INFO CHUNK ***");
         }
     }
     public class ChunkMtlName : Chunk  // cccc000c:  provides material name as used in the .mtl file
@@ -681,16 +705,16 @@ namespace CgfConverter
         {
             string tmpMtlName = new string(Name);
             Console.WriteLine("*** START MATERIAL NAMES ***");
-            Console.WriteLine("ChunkType: {0}", ChunkMaterialName);
-            Console.WriteLine("Material Name:  {0}", tmpMtlName);
-            Console.WriteLine("Number of Children: {0}", NumChildren);
+            Console.WriteLine("    ChunkType: {0}", ChunkMaterialName);
+            Console.WriteLine("    Material Name:  {0}", tmpMtlName);
+            Console.WriteLine("    Number of Children: {0}", NumChildren);
             Console.WriteLine("*** END MATERIAL NAMES ***");
         }
     }
     public class ChunkDataStream : Chunk // cccc0016:  Contains data such as vertices, normals, etc.
     {
-        public ChunkType ChkDataStream; //  cccc0016.
-        public uint version;  // 800 for Crysis
+        // public ChunkType ChkDataStream; //  cccc0016.
+        // public uint version;  // 800 for Crysis.  inherited from Chunk
         public uint Flags; // not used, but looks like the start of the Data Stream chunk
         public uint Flags1; // not used.  uint after Flags that looks like offsets
         public uint Flags2; // not used, looks almost like a filler.
@@ -700,8 +724,8 @@ namespace CgfConverter
         public uint Reserved1;
         public uint Reserved2;
         // Need to be careful with using float for Vertices and normals.  technically it's a floating point of length BytesPerElement.  May need to fix this.
-        public Vector3[] Vertices;  // For dataStreamType of 0, length is NumElements. This isn't right; it's an array of floats...
-        //public float[] VertexList; // list of vertices?  Not part of default structures.
+        public Vector3[] Vertices;  // For dataStreamType of 0, length is NumElements. 
+        public float[] VertexList; // list of vertices?  Not part of default structures. Temp for old SC files.
         public Vector3[] Normals;   // For dataStreamType of 1, length is NumElements.
         public UV[] UVs;            // for datastreamType of 2, length is NumElements.
         public IRGB[] RGBColors;    // for dataStreamType of 3, length is NumElements.  Bytes per element of 3
@@ -715,13 +739,15 @@ namespace CgfConverter
         public byte[,] FaceMap;      // for dataStreamType of 10, length is NumElements,BytesPerElement.
         public byte[,] VertMats;     // for dataStreamType of 11, length is NumElements,BytesPerElement.
 
-        public void GetChunkDataStream(BinaryReader b, uint fOffset)
+        public void GetChunkDataStream(BinaryReader b, uint f)
         {
-            b.BaseStream.Seek(fOffset, 0); // seek to the beginning of the DataStream chunk
+            b.BaseStream.Seek(f, 0); // seek to the beginning of the DataStream chunk
             uint tmpChunkDataStream = b.ReadUInt32();
-            ChkDataStream = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChunkDataStream);
+            chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChunkDataStream);
             version = b.ReadUInt32();
-            Flags = b.ReadUInt32();  // offset of this datastream chunk
+            Flags = b.ReadUInt32();
+            //int tmpfOffset = b.ReadInt32();
+            //fOffset = (FileOffset)Enum.ToObject(typeof(FileOffset), tmpfOffset);  // offset of this datastream chunk
             Flags1 = b.ReadUInt32();  // filler?
             Flags2 = b.ReadUInt32(); // another filler
             uint tmpdataStreamType = b.ReadUInt32();
@@ -736,35 +762,28 @@ namespace CgfConverter
                 case DataStreamType.VERTICES:
                 {
                     Vertices = new Vector3[NumElements];
-                    //VertexList = new float[NumElements];
-                    if (BytesPerElement == 8)
-                    {
-                        // For some reason old Star Citizen files use 8 bytes per element.  No idea how this works
-                        for (int i = 0; i < NumElements; i++)
-                        {
-                            Vertices[i].x = b.ReadSingle();
-                            Vertices[i].y = b.ReadSingle();
-                            //Vertices[i].z = b.ReadSingle();
-                            //Console.WriteLine("{0}   {1}   {2}", Vertices[i].x.ToString("##.######"), Vertices[i].y.ToString("##.######"), Vertices[i].z);
-                            //Console.WriteLine("{0}", VertexList[i];
-                        }
-                    }
-                    if (BytesPerElement == 12)  // MWO files use this, which seems right.
+                    if (BytesPerElement == 12)
                     {
                         for (int i = 0; i < NumElements; i++)
                         {
                             Vertices[i].x = b.ReadSingle();
                             Vertices[i].y = b.ReadSingle();
                             Vertices[i].z = b.ReadSingle();
-                            if (i < 10)
-                            {
-                                Console.WriteLine("{0}   {1}   {2}", Vertices[i].x.ToString("##.######"), Vertices[i].y.ToString("##.######"), Vertices[i].z);
-                            }
-                            // Console.WriteLine("{0}   {1}   {2}", Vertices[i].x.ToString("##.######"), Vertices[i].y.ToString("##.######"), Vertices[i].z);
+                        }
+                    }
+                    if (BytesPerElement == 8)  // Old Star Citizen files
+                    {
+                        // Need to figure out this case.  Star Citizen old files are like this.  Annoying.
+                        VertexList = new float[NumElements * BytesPerElement / 4];  //
+                        for (int i = 0; i < VertexList.Length; i++)
+                        {
+                            VertexList[i] = b.ReadSingle();
+                            // Console.WriteLine("{0,10:F6}", VertexList[i]);
                         }
 
                     }
-                    Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
+                    // Console.WriteLine("{0} elements read", VertexList.Length);
+                    // Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
                     break;
                 }
                 case  DataStreamType.INDICES:
@@ -774,8 +793,12 @@ namespace CgfConverter
                     {
                         Indices[i] = b.ReadUInt16();
                         // Console.WriteLine("Indice {0} is {1}", i, Indices[i]);
+                        if (i > NumElements - 20)
+                        {
+                            //Console.WriteLine("Indices {0} is {1}", i, Indices[i]);
+                        }
                     }
-                    Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
+                    //Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
                     break;
                 }
                 case DataStreamType.NORMALS:
@@ -788,7 +811,7 @@ namespace CgfConverter
                         Normals[i].z = b.ReadSingle();
                         // Console.WriteLine("{0}  {1}  {2}", Normals[i].x, Normals[i].y, Normals[i].z);
                     }
-                    Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
+                    //Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
                     break;
 
                 }
@@ -801,7 +824,7 @@ namespace CgfConverter
                         UVs[i].V = b.ReadSingle();
                         // Console.WriteLine("{0}   {1}", UVs[i].U, UVs[i].V);
                     }
-                    Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
+                    //Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
                     break;
                 }
                 case DataStreamType.TANGENTS:
@@ -856,24 +879,22 @@ namespace CgfConverter
                 }
             }
         }
-
         internal void WriteDataStream()
         {
             //string tmpDataStream = new string(Name);
             Console.WriteLine("*** START DATASTREAM ***");
-            Console.WriteLine("ChunkType: {0}", ChkDataStream);
-            Console.WriteLine("Version: {0:X}", version);
-            Console.WriteLine("DataStream chunk starting point: {0:X}", Flags);
-            Console.WriteLine("DataStreamType: {0}", dataStreamType);
-            Console.WriteLine("Number of Elements: {0}", NumElements);
-            Console.WriteLine("Bytes per Element: {0}", BytesPerElement);
+            Console.WriteLine("    ChunkType: {0}", chunkType);
+            Console.WriteLine("    Version: {0:X}", version);
+            Console.WriteLine("    DataStream chunk starting point: {0:X}", fOffset);
+            Console.WriteLine("    DataStreamType: {0}", dataStreamType);
+            Console.WriteLine("    Number of Elements: {0}", NumElements);
+            Console.WriteLine("    Bytes per Element: {0}", BytesPerElement);
             Console.WriteLine("*** END DATASTREAM ***");
 
         }
     }
     public class ChunkMeshSubsets : Chunk // cccc0017:  The cgf.xml seems incomplete.  Looks like arrays not identified.
     {
-        public ChunkType MeshSubsetsChunk;
         public uint Version;
         public uint Offset;
         public uint FirstIndex;
@@ -884,11 +905,11 @@ namespace CgfConverter
         public float Radius;
         public Vector3 Center;
 
-        public void GetChunkMeshSubsets(BinaryReader b, uint fOffset) 
+        public void GetChunkMeshSubsets(BinaryReader b, uint f) 
         {
-            b.BaseStream.Seek(fOffset, 0); // seek to the beginning of the MeshSubset chunk
-            uint tmpChunkMeshSubsets = b.ReadUInt32();
-            MeshSubsetsChunk = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChunkMeshSubsets);
+            b.BaseStream.Seek(f, 0); // seek to the beginning of the MeshSubset chunk
+            uint tmpChunkType = b.ReadUInt32();
+            chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChunkType);
             Version = b.ReadUInt32(); // probably 800
             Offset = b.ReadUInt32();  // offset of this chunk
             FirstIndex = b.ReadUInt32();
@@ -896,6 +917,15 @@ namespace CgfConverter
             FirstVertex = b.ReadUInt32();
             NumVertices = b.ReadUInt32();  // 0 in sample file; doesn't seem right...
             // Not implementing rest, although Center seems to be the last thing before next Chunk.
+        }
+        public void WriteMeshSubsets()
+        {
+            Console.WriteLine("*** START MESH SUBSET ***");
+            Console.WriteLine("    ChunkType: {0}", chunkType);
+            Console.WriteLine("    First Index: {0}", FirstIndex);
+            Console.WriteLine("    NumIndices: {0}", NumIndices);
+            Console.WriteLine("    First Vertex: {0}", FirstVertex);
+            Console.WriteLine("    Num Vertices: {0}", NumVertices);
         }
     }
     public class ChunkMesh : Chunk      //  cccc0000:  Object that points to the datastream chunk.
@@ -941,6 +971,15 @@ namespace CgfConverter
         public Vector3 MinBound; // 800 minimum coordinate values
         public Vector3 MaxBound; // 800 Max coord values
         public uint[] Reserved3; // 800 array of 32 uint values.
+
+        public void GetMeshChunk(BinaryReader b, uint f) 
+        {
+            b.BaseStream.Seek(f, 0); // seek to the beginning of the MeshSubset chunk
+            uint tmpChunkType = b.ReadUInt32();
+            chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChunkType);
+
+
+        }
     }
 
     class Program
