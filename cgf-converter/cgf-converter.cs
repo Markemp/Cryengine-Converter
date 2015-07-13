@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace CgfConverter
 {
-    public class CgfFormat // Stores all information about the cgf file format.
+    public class CgfData // Stores all information about the cgf file format.
     {
         public string CgfFile; //the name of the file we are reading
         // Header, ChunkTable and Chunks are what are in a file.  1 header, 1 table, and a chunk for each entry in the table.
@@ -15,7 +15,7 @@ namespace CgfConverter
         public ChunkTable CgfChunkTable;
         public List<Chunk> CgfChunks = new List<Chunk>();
 
-        public CgfFormat(string cgffile)  // Constructor for CgfFormat.  This populates the structure
+        public CgfData(string cgffile)  // Constructor for CgfFormat.  This populates the structure
         {
             CgfFile = cgffile;
             using (BinaryReader cgfreader = new BinaryReader(File.Open(CgfFile, FileMode.Open)))
@@ -109,14 +109,20 @@ namespace CgfConverter
             return;
         }
 
-        /*public void WriteChunks() // test method to write the vertex info
+        internal void WriteObjFile()
         {
-            foreach (CgfFormat.CgfChunks)
-            {
-                if (  )
-            }
-        }*/
-}
+            // At this point, we should have a CgfData object, fully populated.
+            // We need to create the obj header, then for each submech write the vertex, UV and normal data.
+            // First, let's figure out the name of the output file.  Should be <object name>.obj
+            string outputFile;
+            Console.WriteLine("Output file is {0}", CgfFile);
+            /*Console.WriteLine("CgfFile Length is {0}", CgfFile.Length);
+            outputFile = CgfFile.Substring(2, CgfFile.Length);
+            Console.WriteLine("Output file is {0}", CgfFile);
+            outputFile = outputFile.Substring(0, outputFile.Length - 4);
+            Console.WriteLine("Output file is {0}", CgfFile);*/
+        }
+    }
 
     // Structures
     public struct String16
@@ -1087,8 +1093,11 @@ namespace CgfConverter
             
             Console.WriteLine("Input File is '{0}'" , cgfFile);
             //ReadCryHeader(cgfFile);
-            CgfFormat cgfData = new CgfFormat(cgfFile);
+            CgfData cgfData = new CgfData(cgfFile);
             
+            // Output to an obj file
+            cgfData.WriteObjFile();
+
             //Console.WriteLine("Press any key to exit...");
             //Console.ReadKey(); // Press any key to continue
             
