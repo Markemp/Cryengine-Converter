@@ -9,19 +9,22 @@ namespace CgfConverter
 {
     public class CgfData // Stores all information about the cgf file format.
     {
-        public string CgfFile; //the name of the file we are reading
+        // public string CgfFile; //the name of the file we are reading.  Removed to use dataFile, a File object
         // Header, ChunkTable and Chunks are what are in a file.  1 header, 1 table, and a chunk for each entry in the table.
+        public FileInfo dataFile;
+        public FileInfo objOutputFile;  // want this to be the datafile minus the extension and .obj
         public Header CgfHeader;
         public ChunkTable CgfChunkTable;
         public List<Chunk> CgfChunks = new List<Chunk>();
 
-        public CgfData(string cgffile)  // Constructor for CgfFormat.  This populates the structure
+        public CgfData(FileInfo dataFile)  // Constructor for CgfFormat.  This populates the structure
         {
-            CgfFile = cgffile;
-            using (BinaryReader cgfreader = new BinaryReader(File.Open(CgfFile, FileMode.Open)))
-            {
+            // CgfFile = cgffile;  // Don't use string, use File Obj
+            //using (BinaryReader cgfreader = new BinaryReader(File.Open(dataFile.ToString(), FileMode.Open)))
+            BinaryReader cgfreader = new BinaryReader(File.Open(dataFile.ToString(), FileMode.Open));
+            //{
                 CgfHeader = new Header(cgfreader);// Gets the header of the file (3-5 objects dep on version)
-                CgfHeader.WriteHeader();
+                CgfHeader.WriteChunk();
                 int offset = CgfHeader.fileOffset;  // location of the Chunk table.
                 cgfreader.BaseStream.Seek(offset, 0);  // will now start to read from the start of the chunk table
                 //Console.WriteLine("Current offset is {0:X}", cgfreader.BaseStream.Position);    // for testing
@@ -39,7 +42,7 @@ namespace CgfConverter
                             ChunkSourceInfo chkSrcInfo = new ChunkSourceInfo();
                             chkSrcInfo.GetChunkSourceInfo(cgfreader,ChkHdr.offset);
                             CgfChunks.Add(chkSrcInfo);
-                            chkSrcInfo.WriteChunkSourceInfo();  //  Test. Delete
+                            //chkSrcInfo.WriteChunkSourceInfo();  //  Test. Delete
                             break;
                         }
                         case ChunkType.Timing:
@@ -47,7 +50,7 @@ namespace CgfConverter
                             ChunkTimingFormat chkTiming = new ChunkTimingFormat();
                             chkTiming.GetChunkTimingFormat(cgfreader, ChkHdr.offset);
                             CgfChunks.Add(chkTiming);
-                            chkTiming.WriteChunkTiming();
+                            //chkTiming.WriteChunkTiming();
                             break;
                         }
                         case ChunkType.ExportFlags:
@@ -55,7 +58,7 @@ namespace CgfConverter
                             ChunkExportFlags chkExportFlag = new ChunkExportFlags();
                             chkExportFlag.GetChunkExportFlags(cgfreader, ChkHdr.offset);
                             CgfChunks.Add(chkExportFlag);
-                            chkExportFlag.WriteExportFlags();
+                            //chkExportFlag.WriteExportFlags();
                             break;
                         }
                         case ChunkType.Mtl:
@@ -68,7 +71,7 @@ namespace CgfConverter
                             ChunkMtlName chkMtlName = new ChunkMtlName();
                             chkMtlName.GetChunkMtlName(cgfreader, ChkHdr.offset);
                             CgfChunks.Add(chkMtlName);
-                            chkMtlName.WriteMtlName();
+                            chkMtlName.WriteChunk();
                             break;
                         }
                         case ChunkType.DataStream:
@@ -76,7 +79,7 @@ namespace CgfConverter
                             ChunkDataStream chkDataStream = new ChunkDataStream();
                             chkDataStream.GetChunkDataStream(cgfreader, ChkHdr.offset);
                             CgfChunks.Add(chkDataStream);
-                            chkDataStream.WriteDataStream();
+                            //chkDataStream.WriteDataStream();
                             break;
                         }
                          
@@ -85,7 +88,7 @@ namespace CgfConverter
                             ChunkMesh chkMesh = new ChunkMesh();
                             chkMesh.GetMeshChunk(cgfreader, ChkHdr.offset);
                             CgfChunks.Add(chkMesh);
-                            chkMesh.WriteMeshChunk();
+                            //chkMesh.WriteMeshChunk();
                             break;
                         }
                         case ChunkType.MeshSubsets:
@@ -93,34 +96,39 @@ namespace CgfConverter
                             ChunkMeshSubsets chkMeshSubsets = new ChunkMeshSubsets();
                             chkMeshSubsets.GetChunkMeshSubsets(cgfreader, ChkHdr.offset);
                             CgfChunks.Add(chkMeshSubsets);
-                            chkMeshSubsets.WriteMeshSubsets();
+                            //chkMeshSubsets.WriteMeshSubsets();
                             break;
                         }
                         default:
                         {
-                            //Console.WriteLine("Chunk type found that didn't match known versions");
+                            Console.WriteLine("Chunk type found that didn't match known versions: {0}",ChkHdr.type);
                             break;
                         }
                     }
                 }
 
-            }
+            //}
                 
             return;
         }
 
-        internal void WriteObjFile()
+        public void WriteObjFile()
         {
             // At this point, we should have a CgfData object, fully populated.
             // We need to create the obj header, then for each submech write the vertex, UV and normal data.
             // First, let's figure out the name of the output file.  Should be <object name>.obj
-            string outputFile;
-            Console.WriteLine("Output file is {0}", CgfFile);
-            /*Console.WriteLine("CgfFile Length is {0}", CgfFile.Length);
-            outputFile = CgfFile.Substring(2, CgfFile.Length);
-            Console.WriteLine("Output file is {0}", CgfFile);
-            outputFile = outputFile.Substring(0, outputFile.Length - 4);
-            Console.WriteLine("Output file is {0}", CgfFile);*/
+            // Console.WriteLine("Output file is {0}", objOutputFile.Name);
+            
+            // let's practice writing the submeshes to console instead of the output file
+            Console.WriteLine("# cgf-converter .obj export Version 0.1");
+            Console.WriteLine("#");
+            foreach (Chunk chunk in CgfChunks)
+            {
+                if (chunk.chunkType == ChunkType.MtlName) 
+                {
+                    //Console.WriteLine("mtllib {0}", chunk.Name.tostring());
+                }
+            }
         }
     }
 
@@ -430,7 +438,7 @@ namespace CgfConverter
             
             return;
         }
-        public void WriteHeader()  // output header to console for testing
+        public void WriteChunk()  // output header to console for testing
         {
             string tmpFileSig;
             tmpFileSig = new string(fileSignature);
@@ -460,7 +468,7 @@ namespace CgfConverter
             id = new uint();
             unknown = new uint();
         }
-        public void WriteChunkHeader()  // write the Chunk Header Table to the console.  For testing.
+        public void WriteChunk()  // write the Chunk Header Table to the console.  For testing.
         {
             Console.Write("ChunkType: {0}", type);
             Console.Write("ChunkVersion: {0:X}", version);
@@ -475,10 +483,10 @@ namespace CgfConverter
         public List<ChunkHeader> chunkHeaders = new List<ChunkHeader>();
 
         // methods
-        public ChunkTable (BinaryReader binReader, int foffset)
+        public ChunkTable (BinaryReader binReader, int f)
         {
             // need to seek to the start of the table here.  foffset points to the start of the table
-            binReader.BaseStream.Seek(foffset, 0);
+            binReader.BaseStream.Seek(f, 0);
             numChunks = binReader.ReadUInt32();  // number of Chunks in the table.
             int i; // counter for loop to read all the chunkHeaders
             for (i = 0; i < numChunks; i++ )
@@ -497,11 +505,11 @@ namespace CgfConverter
                 chunkHeaders.Add(tempChkHdr);
             }
         }
-        public void WriteChunkTable(ChunkTable writeme)
+        public void WriteChunk(ChunkTable writeme)
         {
             foreach (ChunkHeader chkHdr in writeme.chunkHeaders)
             {
-                chkHdr.WriteChunkHeader();
+                chkHdr.WriteChunk();
             }
         }
     }
@@ -522,9 +530,9 @@ namespace CgfConverter
         public RangeEntity GlobalRange;
         public int NumSubRanges;
 
-        public void GetChunkTimingFormat(BinaryReader b, uint fOffset)
+        public void GetChunkTimingFormat(BinaryReader b, uint f)
         {
-            b.BaseStream.Seek(fOffset, 0); // seek to the beginning of the Timing Format chunk
+            b.BaseStream.Seek(f, 0); // seek to the beginning of the Timing Format chunk
             uint tmpChkType = b.ReadUInt32();
             ChunkTiming = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChkType);
             Version = b.ReadUInt32();  //0x00000918 is Far Cry, Crysis, MWO, Aion
@@ -537,7 +545,7 @@ namespace CgfConverter
             GlobalRange.Start = b.ReadInt32();
             GlobalRange.End = b.ReadInt32();
         }
-        public void WriteChunkTiming()
+        public void WriteChunk()
         {
             string tmpName = new string(GlobalRange.Name);
             Console.WriteLine("*** TIMING CHUNK ***");
@@ -560,9 +568,9 @@ namespace CgfConverter
         public uint[] RCVersion;  // 4 uints
         public char[] RCVersionString;  // Technically String16
         public uint[] Reserved;  // 32 uints
-        public void GetChunkExportFlags(BinaryReader b, uint fOffset)
+        public void GetChunkExportFlags(BinaryReader b, uint f)
         {
-            b.BaseStream.Seek(fOffset, 0); // seek to the beginning of the Timing Format chunk
+            b.BaseStream.Seek(f, 0); // seek to the beginning of the Timing Format chunk
             uint tmpExportFlag = b.ReadUInt32();
             ExportFlag = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpExportFlag);
             Version = b.ReadUInt32();
@@ -583,7 +591,7 @@ namespace CgfConverter
                 Reserved[count] = b.ReadUInt32();
             }
         }
-        public void WriteExportFlags() {
+        public void WriteChunk() {
             string tmpVersionString = new string(RCVersionString);
             Console.WriteLine("*** START EXPORT FLAGS ***");
             Console.WriteLine("    ChunkType: {0}",ChunkType.ExportFlags);
@@ -648,7 +656,7 @@ namespace CgfConverter
             tmpAuthor = b.ReadChars(count+1);
             Author = new string(tmpAuthor);
         }
-        public void WriteChunkSourceInfo()
+        public void WriteChunk()
         {
             Console.WriteLine("*** SOURCE INFO CHUNK ***");
             Console.WriteLine("    Sourcefile: {0}.  Length {1}", SourceFile, SourceFile.Length);
@@ -718,7 +726,7 @@ namespace CgfConverter
                 PhysicsType = (MtlNamePhysicsType)Enum.ToObject(typeof(MtlNamePhysicsType), tmpPhysicsType);
             }
         }
-        public void WriteMtlName()
+        public void WriteChunk()
         {
             string tmpMtlName = new string(Name);
             Console.WriteLine("*** START MATERIAL NAMES ***");
@@ -860,7 +868,7 @@ namespace CgfConverter
                         Tangents[i, 1].w = b.ReadInt16();
                         //Console.WriteLine("{0} {1} {2} {3}", Tangents[i, 0].x, Tangents[i, 0].y, Tangents[i, 0].z, Tangents[i, 0].w);
                     }
-                    Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
+                    // Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
                     break;
                 }
                 case DataStreamType.COLORS:
@@ -896,7 +904,7 @@ namespace CgfConverter
                 }
             }
         }
-        internal void WriteDataStream()
+        internal void WriteChunk()
         {
             //string tmpDataStream = new string(Name);
             Console.WriteLine("*** START DATASTREAM ***");
@@ -950,7 +958,7 @@ namespace CgfConverter
                 MeshSubsets[i].Center.z = b.ReadSingle();
             }
         }
-        public void WriteMeshSubsets()
+        public void WriteChunk()
         {
             Console.WriteLine("*** START MESH SUBSET CHUNK ***");
             Console.WriteLine("    ChunkType: {0}", chunkType);
@@ -1055,7 +1063,7 @@ namespace CgfConverter
             MaxBound.x = b.ReadUInt32();
             // Not going to read the Reserved 32 element array.
         }
-        public void WriteMeshChunk()
+        public void WriteChunk()
         {
             Console.WriteLine("*** START MESH CHUNK ***");
             Console.WriteLine("    ChunkType: {0}", chunkType);
@@ -1077,23 +1085,21 @@ namespace CgfConverter
         static void Main(string[] args)
         {
             // Assign the argument to a variable
-            int lengthofArgs = args.Length;
-            string cgfFile;
+            FileInfo dataFile;  // This is the file passed in args
 
-            if (args.Length != 0)
+            if (args.Length != 0 && File.Exists(args[0]))
             {
-                // Console.WriteLine("Args length not 0");
-                cgfFile = String.Copy(args[0]);
+                dataFile = new FileInfo(args[0]);  // preferred.  We want objects, not strings
             }
             else
             {
-                Console.WriteLine("Please input cgf/cga file.");
-                cgfFile = Console.ReadLine();
+                Console.WriteLine("Please input cgf/cga/chrparams file.");
+                dataFile = new FileInfo(Console.ReadLine());  // This needs error checking.
             }
             
-            Console.WriteLine("Input File is '{0}'" , cgfFile);
+            Console.WriteLine("Input File is '{0}'" , dataFile.Name);
             //ReadCryHeader(cgfFile);
-            CgfData cgfData = new CgfData(cgfFile);
+            CgfData cgfData = new CgfData(dataFile);
             
             // Output to an obj file
             cgfData.WriteObjFile();
