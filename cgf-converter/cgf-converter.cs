@@ -451,32 +451,6 @@ namespace CgfConverter
             return;
         }
     }
-    public class ChunkHeader  
-    {
-        public ChunkType type;
-        public ChunkVersion version;
-        public uint offset;
-        public uint id;
-        public uint unknown; //  there are 2 uints(?) at the end of each chunk header.  Not sure what ID and unknown refer to.
-
-        // methods
-        public ChunkHeader()
-        {
-            type = new ChunkType();
-            version = new ChunkVersion();
-            offset = new uint();
-            id = new uint();
-            unknown = new uint();
-        }
-        public void WriteChunk()  // write the Chunk Header Table to the console.  For testing.
-        {
-            Console.Write("ChunkType: {0}", type);
-            Console.Write("ChunkVersion: {0:X}", version);
-            Console.Write("offset: {0:X}", offset);
-            Console.WriteLine("ID: {0:X}", id);
-            //Console.ReadKey();
-        }
-    }
     public class ChunkTable  // reads the chunk table
     {
         public uint numChunks;
@@ -513,16 +487,44 @@ namespace CgfConverter
             }
         }
     }
-    public class Chunk // Main class has Fileoffset to identify where the chunk starts
+    public class ChunkHeader  
+    {
+        public ChunkType type;
+        public ChunkVersion version;
+        public uint offset;
+        public uint id;
+        public uint unknown; //  there are 2 uints(?) at the end of each chunk header.  Not sure what ID and unknown refer to.
+
+        // methods
+        public ChunkHeader()
+        {
+            type = new ChunkType();
+            version = new ChunkVersion();
+            offset = new uint();
+            id = new uint();
+            unknown = new uint();
+        }
+        public void WriteChunk()  // write the Chunk Header Table to the console.  For testing.
+        {
+            Console.Write("ChunkType: {0}", type);
+            Console.Write("ChunkVersion: {0:X}", version);
+            Console.Write("offset: {0:X}", offset);
+            Console.WriteLine("ID: {0:X}", id);
+            //Console.ReadKey();
+        }
+    }
+    abstract class Chunk // Main class has Fileoffset to identify where the chunk starts
     {
         public FileOffset fOffset;  // starting offset of the chunk.  Int, not uint
         public ChunkType chunkType; // Type of chunk
         public uint version; // version of this chunk
+        public abstract void GetChunk(BinaryReader b, uint f);
+        public abstract void WriteChunk();
     }
     public class ChunkTimingFormat : Chunk // cccc000e:  Timing format chunk
     {
-        public ChunkType ChunkTiming;   //
-        public uint Version;
+        // public ChunkType ChunkTiming;    // Moved to Chunk
+        // public uint Version;             // Moved to Chunk
         public float SecsPerTick;
         public int TicksPerFrame;
         public uint Unknown1; // 4 bytes, not sure what they are
@@ -530,12 +532,12 @@ namespace CgfConverter
         public RangeEntity GlobalRange;
         public int NumSubRanges;
 
-        public void GetChunkTimingFormat(BinaryReader b, uint f)
+        public override void GetChunkTimingFormat(BinaryReader b, uint f)
         {
             b.BaseStream.Seek(f, 0); // seek to the beginning of the Timing Format chunk
             uint tmpChkType = b.ReadUInt32();
-            ChunkTiming = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChkType);
-            Version = b.ReadUInt32();  //0x00000918 is Far Cry, Crysis, MWO, Aion
+            chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChkType);
+            version = b.ReadUInt32();  //0x00000918 is Far Cry, Crysis, MWO, Aion
             SecsPerTick = b.ReadSingle();
             TicksPerFrame = b.ReadInt32();
             Unknown1 = b.ReadUInt32();
@@ -549,7 +551,7 @@ namespace CgfConverter
         {
             string tmpName = new string(GlobalRange.Name);
             Console.WriteLine("*** TIMING CHUNK ***");
-            Console.WriteLine("    Version: {0:X}", Version);
+            Console.WriteLine("    Version: {0:X}", version);
             Console.WriteLine("    Secs Per Tick: {0}", SecsPerTick);
             Console.WriteLine("    Ticks Per Frame: {0}", TicksPerFrame);
             Console.WriteLine("    Global Range:  Name: {0}", tmpName);
