@@ -22,95 +22,93 @@ namespace CgfConverter
             // CgfFile = cgffile;  // Don't use string, use File Obj
             //using (BinaryReader cgfreader = new BinaryReader(File.Open(dataFile.ToString(), FileMode.Open)))
             BinaryReader cgfreader = new BinaryReader(File.Open(dataFile.ToString(), FileMode.Open));
-            //{
-                CgfHeader = new Header(cgfreader);// Gets the header of the file (3-5 objects dep on version)
-                CgfHeader.WriteChunk();
-                int offset = CgfHeader.fileOffset;  // location of the Chunk table.
-                cgfreader.BaseStream.Seek(offset, 0);  // will now start to read from the start of the chunk table
-                //Console.WriteLine("Current offset is {0:X}", cgfreader.BaseStream.Position);    // for testing
-                //Console.ReadKey();     
-                CgfChunkTable = new ChunkTable();
-                CgfChunkTable.GetChunkTable(cgfreader, offset);
+            CgfHeader = new Header(cgfreader);// Gets the header of the file (3-5 objects dep on version)
+            CgfHeader.WriteChunk();
+            int offset = CgfHeader.fileOffset;  // location of the Chunk table.
+            cgfreader.BaseStream.Seek(offset, 0);  // will now start to read from the start of the chunk table
+            CgfChunkTable = new ChunkTable();
+            CgfChunkTable.GetChunkTable(cgfreader, offset);
 
-                foreach (ChunkHeader ChkHdr in CgfChunkTable.chunkHeaders) 
+            foreach (ChunkHeader ChkHdr in CgfChunkTable.chunkHeaders) 
+            {
+                ChunkType chkType = ChkHdr.type;
+                //Console.WriteLine("Processing {0}", chkType);
+                switch (ChkHdr.type)
                 {
-                    ChunkType chkType = ChkHdr.type;
-                    //Console.WriteLine("Processing {0}", chkType);
-                    switch (ChkHdr.type)
+                    case ChunkType.SourceInfo:
                     {
-                        case ChunkType.SourceInfo:
-                        {
-                            ChunkSourceInfo chkSrcInfo = new ChunkSourceInfo();
-                            chkSrcInfo.GetChunk(cgfreader,ChkHdr.offset);
-                            CgfChunks.Add(chkSrcInfo);
-                            //chkSrcInfo.WriteChunk(); 
-                            break;
-                        }
-                        case ChunkType.Timing:
-                        {
-                            ChunkTimingFormat chkTiming = new ChunkTimingFormat();
-                            chkTiming.GetChunk(cgfreader, ChkHdr.offset);
-                            CgfChunks.Add(chkTiming);
-                            //chkTiming.WriteChunk();
-                            break;
-                        }
-                        case ChunkType.ExportFlags:
-                        {
-                            ChunkExportFlags chkExportFlag = new ChunkExportFlags();
-                            chkExportFlag.GetChunk(cgfreader, ChkHdr.offset);
-                            CgfChunks.Add(chkExportFlag);
-                            //chkExportFlag.WriteChunk();
-                            break;
-                        }
-                        case ChunkType.Mtl:
-                        {
-                            //Console.WriteLine("Mtl Chunk here");
-                            break;
-                        }
-                        case ChunkType.MtlName:
-                        {
-                            ChunkMtlName chkMtlName = new ChunkMtlName();
-                            chkMtlName.GetChunk(cgfreader, ChkHdr.offset);
-                            CgfChunks.Add(chkMtlName);
-                            chkMtlName.WriteChunk();
-                            break;
-                        }
-                        case ChunkType.DataStream:
-                        {
-                            ChunkDataStream chkDataStream = new ChunkDataStream();
-                            chkDataStream.GetChunk(cgfreader, ChkHdr.offset);
-                            CgfChunks.Add(chkDataStream);
-                            //chkDataStream.WriteChunk();
-                            break;
-                        }
+                        ChunkSourceInfo chkSrcInfo = new ChunkSourceInfo();
+                        chkSrcInfo.GetChunk(cgfreader,ChkHdr.offset);
+                        CgfChunks.Add(chkSrcInfo);
+                        //chkSrcInfo.WriteChunk(); 
+                        break;
+                    }
+                    case ChunkType.Timing:
+                    {
+                        ChunkTimingFormat chkTiming = new ChunkTimingFormat();
+                        chkTiming.GetChunk(cgfreader, ChkHdr.offset);
+                        CgfChunks.Add(chkTiming);
+                        //chkTiming.WriteChunk();
+                        break;
+                    }
+                    case ChunkType.ExportFlags:
+                    {
+                        ChunkExportFlags chkExportFlag = new ChunkExportFlags();
+                        chkExportFlag.GetChunk(cgfreader, ChkHdr.offset);
+                        CgfChunks.Add(chkExportFlag);
+                        //chkExportFlag.WriteChunk();
+                        break;
+                    }
+                    case ChunkType.Mtl:
+                    {
+                        //Console.WriteLine("Mtl Chunk here");
+                        break;
+                    }
+                    case ChunkType.MtlName:
+                    {
+                        ChunkMtlName chkMtlName = new ChunkMtlName();
+                        chkMtlName.GetChunk(cgfreader, ChkHdr.offset);
+                        CgfChunks.Add(chkMtlName);
+                        // chkMtlName.WriteChunk();
+                        break;
+                    }
+                    case ChunkType.DataStream:
+                    {
+                        ChunkDataStream chkDataStream = new ChunkDataStream();
+                        chkDataStream.GetChunk(cgfreader, ChkHdr.offset);
+                        CgfChunks.Add(chkDataStream);
+                        //chkDataStream.WriteChunk();
+                        break;
+                    }
                          
-                        case ChunkType.Mesh:
-                        {
-                            ChunkMesh chkMesh = new ChunkMesh();
-                            chkMesh.GetChunk(cgfreader, ChkHdr.offset);
-                            CgfChunks.Add(chkMesh);
-                            //chkMesh.WriteChunk();
-                            break;
-                        }
-                        case ChunkType.MeshSubsets:
-                        {
-                            ChunkMeshSubsets chkMeshSubsets = new ChunkMeshSubsets();
-                            chkMeshSubsets.GetChunk(cgfreader, ChkHdr.offset);
-                            CgfChunks.Add(chkMeshSubsets);
-                            //chkMeshSubsets.WriteChunk();
-                            break;
-                        }
-                        default:
-                        {
-                            Console.WriteLine("Chunk type found that didn't match known versions: {0}",ChkHdr.type);
-                            break;
-                        }
+                    case ChunkType.Mesh:
+                    {
+                        ChunkMesh chkMesh = new ChunkMesh();
+                        chkMesh.GetChunk(cgfreader, ChkHdr.offset);
+                        CgfChunks.Add(chkMesh);
+                        //chkMesh.WriteChunk();
+                        break;
+                    }
+                    case ChunkType.MeshSubsets:
+                    {
+                        ChunkMeshSubsets chkMeshSubsets = new ChunkMeshSubsets();
+                        chkMeshSubsets.GetChunk(cgfreader, ChkHdr.offset);
+                        CgfChunks.Add(chkMeshSubsets);
+                        chkMeshSubsets.WriteChunk();
+                        break;
+                    }
+                    default:
+                    {
+                        Console.WriteLine("Chunk type found that didn't match known versions: {0}",ChkHdr.type);
+                        break;
                     }
                 }
-
-            //}
-                
-            return;
+            }
+            /*foreach (Chunk chnk in CgfChunks)  // Write out all chunks, for debugging purposes.
+            {
+                chnk.WriteChunk();
+            }
+            return;*/
         }
 
         public void WriteObjFile()
@@ -123,13 +121,31 @@ namespace CgfConverter
             // let's practice writing the submeshes to console instead of the output file
             Console.WriteLine("# cgf-converter .obj export Version 0.1");
             Console.WriteLine("#");
+            // write out the mtl file name with mtllib.
             foreach (Chunk chunk in CgfChunks)
             {
+                // First get the material file name.
                 if (chunk.chunkType == ChunkType.MtlName) 
                 {
-                    //Console.WriteLine("mtllib {0}", chunk.Name.tostring());
+                    if (chunk.chunkMtlName.Filler1 == 0x01)  // this is the mtllib file.  0x12 is mtl name
+                    {
+                        string tmpName;
+                        tmpName = new string(chunk.chunkMtlName.Name);
+                        Console.WriteLine("mtllib {0}", tmpName);
+                    }
                 }
             }
+            Console.WriteLine("o " );  // really need to add object name in here.
+            // Dump out all the vertices (v), UVs (vt), and normals (vn) for each mesh subset
+            foreach (Chunk chunk in CgfChunks)
+            {
+                if (chunk.chunkType == ChunkType.MeshSubsets)
+                {
+                    Console.WriteLine("g"); // a group start.  Dump vertices, UVs and normals.
+
+                }
+            }
+
         }
     }
 
@@ -474,7 +490,7 @@ namespace CgfConverter
                 uint chunkversionType = b.ReadUInt32();
                 tempChkHdr.version = (ChunkVersion)Enum.ToObject(typeof(ChunkVersion), chunkversionType);
                 tempChkHdr.offset = b.ReadUInt32();
-                tempChkHdr.id = b.ReadUInt32();
+                tempChkHdr.id = b.ReadUInt32();  // This is the reference number to identify the mesh/datastream
                 tempChkHdr.unknown = b.ReadUInt32();
 
                 chunkHeaders.Add(tempChkHdr);
@@ -521,6 +537,14 @@ namespace CgfConverter
         public FileOffset fOffset;  // starting offset of the chunk.  Int, not uint
         public ChunkType chunkType; // Type of chunk
         public uint version; // version of this chunk
+        public ChunkTimingFormat chunkTimingFormat;
+        public ChunkMtlName chunkMtlName;
+        public ChunkExportFlags chunkExportFlags;
+        public ChunkSourceInfo chunkSourceInfo;
+        public ChunkDataStream chunkDataStream;
+        public ChunkMeshSubsets chunkMeshSubsets;
+        public ChunkMesh chunkMesh;
+
         public virtual void GetChunk(BinaryReader b, uint f) 
         {
             // Don't do anything.  This is just a placeholder
@@ -555,6 +579,7 @@ namespace CgfConverter
             GlobalRange.Name = b.ReadChars(32);  // Name is technically a String32, but F those structs
             GlobalRange.Start = b.ReadInt32();
             GlobalRange.End = b.ReadInt32();
+            chunkTimingFormat = this;
         }
 
         public override void WriteChunk()
@@ -572,7 +597,7 @@ namespace CgfConverter
     }
     public class ChunkExportFlags : Chunk  // cccc0015:  Export Flags
     {
-        public ChunkType ExportFlag;
+        // public ChunkType ExportFlag;
         public uint Version;  // Far Cry and Crysis:  1
         public uint ChunkOffset;  // for some reason the offset of Export Flag chunk is stored here.
         public uint Flags;    // ExportFlags type technically, but it's just 1 value
@@ -584,7 +609,7 @@ namespace CgfConverter
         {
             b.BaseStream.Seek(f, 0); // seek to the beginning of the Timing Format chunk
             uint tmpExportFlag = b.ReadUInt32();
-            ExportFlag = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpExportFlag);
+            chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpExportFlag);
             Version = b.ReadUInt32();
             ChunkOffset = b.ReadUInt32();
             Flags = b.ReadUInt32();
@@ -602,11 +627,12 @@ namespace CgfConverter
             {
                 Reserved[count] = b.ReadUInt32();
             }
+            chunkExportFlags = this;
         }
         public override void WriteChunk() {
             string tmpVersionString = new string(RCVersionString);
             Console.WriteLine("*** START EXPORT FLAGS ***");
-            Console.WriteLine("    ChunkType: {0}",ChunkType.ExportFlags);
+            Console.WriteLine("    ChunkType: {0}",chunkType);
             Console.WriteLine("    Version: {0}", Version);
             Console.WriteLine("    Flags: {0}", Flags);
             Console.Write("    RC Version: ");
@@ -637,6 +663,7 @@ namespace CgfConverter
         public override void GetChunk(BinaryReader b, uint f)  //
         {
             b.BaseStream.Seek(f, 0);
+            chunkType = ChunkType.SourceInfo; // this chunk doesn't actually have the chunktype header.
             // you'd think ReadString() would read from the current offset to the next null byte, but IT DOESN'T.
             int count = 0;                      // read original file
             while (b.ReadChar() != 0) 
@@ -667,6 +694,7 @@ namespace CgfConverter
             char[] tmpAuthor = new char[count];
             tmpAuthor = b.ReadChars(count+1);
             Author = new string(tmpAuthor);
+            chunkSourceInfo = this;
         }
         public override void WriteChunk()
         {
@@ -679,7 +707,8 @@ namespace CgfConverter
     }
     public class ChunkMtlName : Chunk  // cccc000c:  provides material name as used in the .mtl file
     {
-        public ChunkType ChunkMaterialName;
+        // public ChunkType ChunkMaterialName;
+        // need to find the material ID used by the mesh subsets
         public uint Flags1;  // pointer to the start of this chunk?
         public uint Flags2;  // unknown
         public uint Filler1; // for type 800, unknown value
@@ -700,14 +729,14 @@ namespace CgfConverter
         {
             b.BaseStream.Seek(f, 0); // seek to the beginning of the Material Name chunk
             uint tmpChunkMtlName = b.ReadUInt32();
-            ChunkMaterialName = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChunkMtlName);
+            chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChunkMtlName);
             version = b.ReadUInt32();
-            Flags1 = b.ReadUInt32();
-            Flags2 = b.ReadUInt32();
+            Flags1 = b.ReadUInt32();  // offset to this chunk
+            Flags2 = b.ReadUInt32();  // ref/chunk number?
             // at this point we need to differentiate between Version 800 and 802, since the format differs.
             if (version == 0x800 || version == 0x744)  // guessing on the 744. Aion.
             {
-                Filler1 = b.ReadUInt32();
+                Filler1 = b.ReadUInt32();  // if 0x1, then material lib.  If 0x12, mat name?
                 Filler2 = b.ReadUInt32();
                 // read the material Name, which is a 128 byte char array.  really want it as a string...
                 Name = new char[128];
@@ -737,12 +766,13 @@ namespace CgfConverter
                 uint tmpPhysicsType = b.ReadUInt32();
                 PhysicsType = (MtlNamePhysicsType)Enum.ToObject(typeof(MtlNamePhysicsType), tmpPhysicsType);
             }
+            chunkMtlName = this;
         }
         public override void WriteChunk()
         {
             string tmpMtlName = new string(Name);
             Console.WriteLine("*** START MATERIAL NAMES ***");
-            Console.WriteLine("    ChunkType: {0}", ChunkMaterialName);
+            Console.WriteLine("    ChunkType: {0}", chunkType);
             Console.WriteLine("    Material Name:  {0}", tmpMtlName);
             Console.WriteLine("    Number of Children: {0}", NumChildren);
             Console.WriteLine("*** END MATERIAL NAMES ***");
@@ -782,7 +812,7 @@ namespace CgfConverter
             uint tmpChunkDataStream = b.ReadUInt32();
             chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChunkDataStream);
             version = b.ReadUInt32();
-            Flags = b.ReadUInt32();
+            Flags = b.ReadUInt32();  // Offset to this chunk
             //int tmpfOffset = b.ReadInt32();
             //fOffset = (FileOffset)Enum.ToObject(typeof(FileOffset), tmpfOffset);  // offset of this datastream chunk
             Flags1 = b.ReadUInt32();  // Reference to the data stream type!  4th word after the start of the chunk
@@ -915,6 +945,7 @@ namespace CgfConverter
                     break;
                 }
             }
+            chunkDataStream = this;
         }
         public override void WriteChunk()
         {
@@ -936,7 +967,7 @@ namespace CgfConverter
         
         public uint Offset;
         public uint Flags; // probably the offset
-        public uint Unknown1; // unknown
+        public uint UID; // unknown
         public uint NumMeshSubset; // number of mesh subsets
         public int Reserved1;
         public int Reserved2;
@@ -951,7 +982,7 @@ namespace CgfConverter
             version = b.ReadUInt32(); // probably 800
             Offset = b.ReadUInt32();  // offset of this chunk
             Flags = b.ReadUInt32();   // Might be a ref to this chunk
-            Unknown1 = b.ReadUInt32(); // padding
+            UID = b.ReadUInt32(); // ID of this chunk.  Used to reference the mesh chunk
             NumMeshSubset = b.ReadUInt32();  // number of mesh subsets
             Reserved1 = b.ReadInt32();
             Reserved2 = b.ReadInt32();
@@ -969,6 +1000,7 @@ namespace CgfConverter
                 MeshSubsets[i].Center.y = b.ReadSingle();
                 MeshSubsets[i].Center.z = b.ReadSingle();
             }
+            chunkMeshSubsets = this;
         }
         public override void WriteChunk()
         {
@@ -992,7 +1024,7 @@ namespace CgfConverter
     }
     public class ChunkMesh : Chunk      //  cccc0000:  Object that points to the datastream chunk.
     {
-        public ChunkType MeshChunk;
+        //public ChunkType MeshChunk;
         // public uint Version;  // 623 Far Cry, 744 Far Cry, Aion, 800 Crysis
         public bool HasVertexWeights; // for 744
         public bool HasVertexColors; // 744
@@ -1049,9 +1081,9 @@ namespace CgfConverter
             NumVertices = b.ReadUInt32();
             NumIndices = b.ReadUInt32();   //
             NumMeshSubsets = b.ReadUInt32();
-            MeshSubsets = b.ReadUInt32();
+            MeshSubsets = b.ReadUInt32();  // refers to UID in mesh subsets
             NormalsData = b.ReadUInt32();
-            UVsData = b.ReadUInt32();
+            UVsData = b.ReadUInt32();     // refers to the ID in the Normals datastream?
             ColorsData = b.ReadUInt32();
             Colors2Data = b.ReadUInt32();
             IndicesData = b.ReadUInt32();
@@ -1073,6 +1105,7 @@ namespace CgfConverter
             MinBound.y = b.ReadUInt32();
             MinBound.z = b.ReadUInt32();
             MaxBound.x = b.ReadUInt32();
+            chunkMesh = this;
             // Not going to read the Reserved 32 element array.
         }
         public override void WriteChunk()
