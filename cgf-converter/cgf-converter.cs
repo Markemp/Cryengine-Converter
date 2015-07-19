@@ -124,12 +124,12 @@ namespace CgfConverter
             // so we can manipulate
             string objectName; // for the name of this object
             ChunkMesh tmpMesh;
-            ChunkMeshSubsets tmpMeshSubSets;
-            ChunkDataStream tmpDataStreamVertices;
-            ChunkDataStream tmpDataStreamNormals;
-            ChunkDataStream tmpDataStreamUVs;
-            ChunkDataStream tmpDataStreamIndices;
-            ChunkDataStream tmpDataStreamTangents;
+            ChunkMeshSubsets tmpMeshSubSets = new ChunkMeshSubsets();
+            ChunkDataStream tmpDataStreamVertices = new ChunkDataStream();
+            ChunkDataStream tmpDataStreamNormals = new ChunkDataStream();
+            ChunkDataStream tmpDataStreamUVs = new ChunkDataStream();
+            ChunkDataStream tmpDataStreamIndices = new ChunkDataStream();
+            ChunkDataStream tmpDataStreamTangents = new ChunkDataStream();
 
             // Get object name
             string[] parts = DataFile.ToString().Split('\\');
@@ -163,8 +163,6 @@ namespace CgfConverter
                 {
                     tmpMesh = chunk.chunkMesh;
                     // Now we have a mesh.  We need to populate the submeshes and datastreams
-                    tmpMesh.WriteChunk();
-
                     Console.WriteLine("g");
                     uint meshSubSetID = tmpMesh.id;
                     Console.WriteLine("Found Mesh ID {0:X}", meshSubSetID);
@@ -172,8 +170,7 @@ namespace CgfConverter
                     foreach (Chunk tmpChunk in CgfChunks)
                     {
                         // Mesh Subset
-                        Console.WriteLine("tmpChunk ID is {0:X}", tmpChunk.id);
-                        Console.WriteLine("meshSubSetID is {0:X}", meshSubSetID);
+                        // Console.WriteLine("tmpChunk ID is {0:X}", tmpChunk.id);
                         if (tmpChunk.id == tmpMesh.MeshSubsets)
                         {
                             tmpMeshSubSets = tmpChunk.chunkMeshSubsets;
@@ -206,16 +203,26 @@ namespace CgfConverter
                         }
                     }
 
-                    for (int i = 0; i < chunk.chunkMesh.NumMeshSubsets; i++)
+                    for (int i = 0; i < tmpMeshSubSets.NumMeshSubset; i++)
                     {
-                        //Console.WriteLine(" Mesh subset {0} First vertex {1}",i);
+                        // Write vertices data for each MeshSubSet
+                        // Console.WriteLine("Mesh Subset {0}, First Vertex {1}, Num Vertices {2}", i, tmpMeshSubSets.MeshSubsets[i].FirstVertex, tmpMeshSubSets.MeshSubsets[i].NumVertices);
+                        for (int j = (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j < (int)tmpMeshSubSets.MeshSubsets[i].NumVertices + (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j++) 
+                        {
+                            Console.WriteLine("v {0} {1} {2}", tmpDataStreamVertices.Vertices[j].x, tmpDataStreamVertices.Vertices[j].y, tmpDataStreamVertices.Vertices[j].z);
+                        }
+                        for (int j = (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j < (int)tmpMeshSubSets.MeshSubsets[i].NumVertices + (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j++)
+                        {
+                            Console.WriteLine("vt {0} {1} 0.0", tmpDataStreamUVs.UVs[j].U, tmpDataStreamUVs.UVs[j].V);
+                        }
+                        for (int j = (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j < (int)tmpMeshSubSets.MeshSubsets[i].NumVertices + (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j++)
+                        {
+                            Console.WriteLine("vn {0} {1} {2}", tmpDataStreamNormals.Normals[j].x, tmpDataStreamNormals.Normals[j].y, tmpDataStreamNormals.Normals[j].z);
+                        }
+                        Console.WriteLine();
                     }
-
-                    // Get the mesh subset for this mesh.
                 }
-                
             }
-
         }
     }
 
