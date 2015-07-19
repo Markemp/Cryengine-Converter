@@ -125,11 +125,14 @@ namespace CgfConverter
             string objectName; // for the name of this object
             ChunkMesh tmpMesh;
             ChunkMeshSubsets tmpMeshSubSets = new ChunkMeshSubsets();
+            ChunkMtlName tmpMtlParent = new ChunkMtlName();
+            ChunkMtlName[] tmpMtlName;
             ChunkDataStream tmpDataStreamVertices = new ChunkDataStream();
             ChunkDataStream tmpDataStreamNormals = new ChunkDataStream();
             ChunkDataStream tmpDataStreamUVs = new ChunkDataStream();
             ChunkDataStream tmpDataStreamIndices = new ChunkDataStream();
             ChunkDataStream tmpDataStreamTangents = new ChunkDataStream();
+            int numMtlChildren = 0; // used to figure out how many material IDs there are.
 
             // Get object name
             string[] parts = DataFile.ToString().Split('\\');
@@ -146,15 +149,17 @@ namespace CgfConverter
                 // First get the material file name.
                 if (chunk.chunkType == ChunkType.MtlName) 
                 {
-                    if (chunk.chunkMtlName.Filler1 == 0x01)  // this is the mtllib file.  0x12 is mtl name
+                    if (chunk.chunkMtlName.MatType == 0x01)  // this is the mtllib file.  0x12 is mtl name
                     {
                         //MtlFile = new FileInfo(chunk.chunkMtlName.Name);
                         string tmpMtlFileName = chunk.chunkMtlName.Name + ".mtl";
+                        numMtlChildren = (int) chunk.chunkMtlName.NumChildren; 
                         Console.WriteLine("mtllib {0}", tmpMtlFileName);
                     }
                 }
             }
 
+            tmpMtlName = new ChunkMtlName[numMtlChildren];
             Console.WriteLine("o {0}", objectName);  
             // Dump out all the vertices (v), UVs (vt), and normals (vn) for each mesh subset
             foreach (Chunk chunk in CgfChunks)
@@ -162,11 +167,13 @@ namespace CgfConverter
                 if (chunk.chunkType == ChunkType.Mesh) // a group start.  Dump vertices, UVs and normals.
                 {
                     tmpMesh = chunk.chunkMesh;
+                    //Console.WriteLine("Num of Mtl Children {0}", numMtlChildren);
                     // Now we have a mesh.  We need to populate the submeshes and datastreams
                     Console.WriteLine("g");
                     uint meshSubSetID = tmpMesh.id;
-                    Console.WriteLine("Found Mesh ID {0:X}", meshSubSetID);
+                    //Console.WriteLine("Found Mesh ID {0:X}", meshSubSetID);
                     // Get the meshsubsets and datastream chunks that belong to this mesh chunk.
+                    int k = 0; 
                     foreach (Chunk tmpChunk in CgfChunks)
                     {
                         // Mesh Subset
@@ -174,32 +181,38 @@ namespace CgfConverter
                         if (tmpChunk.id == tmpMesh.MeshSubsets)
                         {
                             tmpMeshSubSets = tmpChunk.chunkMeshSubsets;
-                            tmpMeshSubSets.WriteChunk();
+                            //tmpMeshSubSets.WriteChunk();
                         }
                         if (tmpChunk.id == tmpMesh.VerticesData)            // Vertices data for this mesh
                         {
                             tmpDataStreamVertices = tmpChunk.chunkDataStream;
-                            tmpDataStreamVertices.WriteChunk();
+                            //tmpDataStreamVertices.WriteChunk();
                         }
                         if (tmpChunk.id == tmpMesh.NormalsData)
                         {
                             tmpDataStreamNormals = tmpChunk.chunkDataStream;
-                            tmpDataStreamNormals.WriteChunk();
+                           // tmpDataStreamNormals.WriteChunk();
                         }
                         if (tmpChunk.id == tmpMesh.UVsData)
                         {
                             tmpDataStreamUVs = tmpChunk.chunkDataStream;
-                            tmpDataStreamUVs.WriteChunk();
+                            //tmpDataStreamUVs.WriteChunk();
                         }
                         if (tmpChunk.id == tmpMesh.IndicesData)
                         {
                             tmpDataStreamIndices = tmpChunk.chunkDataStream;
-                            tmpDataStreamIndices.WriteChunk();
+                            //tmpDataStreamIndices.WriteChunk();
                         }
                         if (tmpChunk.id == tmpMesh.TangentsData)
                         {
                             tmpDataStreamTangents = tmpChunk.chunkDataStream;
-                            tmpDataStreamTangents.WriteChunk();
+                            //tmpDataStreamTangents.WriteChunk();
+                        }
+                        if (tmpChunk.chunkType == ChunkType.MtlName && tmpChunk.chunkMtlName.MatType == 0x12)   // there are going to be multiple versions; a parent and the children.
+                        {
+                            tmpMtlName[k] = tmpChunk.chunkMtlName;
+                            //tmpMtlName[k].WriteChunk();
+                            k++;  // Material Chunk is a child array where the index is the material used.
                         }
                     }
 
@@ -209,15 +222,24 @@ namespace CgfConverter
                         // Console.WriteLine("Mesh Subset {0}, First Vertex {1}, Num Vertices {2}", i, tmpMeshSubSets.MeshSubsets[i].FirstVertex, tmpMeshSubSets.MeshSubsets[i].NumVertices);
                         for (int j = (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j < (int)tmpMeshSubSets.MeshSubsets[i].NumVertices + (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j++) 
                         {
-                            Console.WriteLine("v {0} {1} {2}", tmpDataStreamVertices.Vertices[j].x, tmpDataStreamVertices.Vertices[j].y, tmpDataStreamVertices.Vertices[j].z);
+                            Console.WriteLine("v {0:F8} {1:F8} {2:F8}", tmpDataStreamVertices.Vertices[j].x, tmpDataStreamVertices.Vertices[j].y, tmpDataStreamVertices.Vertices[j].z);
                         }
                         for (int j = (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j < (int)tmpMeshSubSets.MeshSubsets[i].NumVertices + (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j++)
                         {
-                            Console.WriteLine("vt {0} {1} 0.0", tmpDataStreamUVs.UVs[j].U, tmpDataStreamUVs.UVs[j].V);
+                            Console.WriteLine("vt {0:F8} {1:F8} 0.0 ", tmpDataStreamUVs.UVs[j].V, tmpDataStreamUVs.UVs[j].U);
                         }
                         for (int j = (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j < (int)tmpMeshSubSets.MeshSubsets[i].NumVertices + (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j++)
                         {
-                            Console.WriteLine("vn {0} {1} {2}", tmpDataStreamNormals.Normals[j].x, tmpDataStreamNormals.Normals[j].y, tmpDataStreamNormals.Normals[j].z);
+                            Console.WriteLine("vn {0:F8} {1:F8} {2:F8}", tmpDataStreamNormals.Normals[j].x, tmpDataStreamNormals.Normals[j].y, tmpDataStreamNormals.Normals[j].z);
+                        }
+                        Console.WriteLine();
+                        // Now write out the faces info based on the MtlName
+                        Console.WriteLine("g {0}", tmpMtlName[tmpMeshSubSets.MeshSubsets[i].MatID].Name);
+                        Console.WriteLine("usemtl {0}", tmpMtlName[tmpMeshSubSets.MeshSubsets[i].MatID].Name);
+                        for (int j = (int)tmpMeshSubSets.MeshSubsets[i].FirstIndex; j < (int)tmpMeshSubSets.MeshSubsets[i].NumIndices + (int)tmpMeshSubSets.MeshSubsets[i].FirstIndex; j++)
+                        {
+                            Console.WriteLine("f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}", tmpDataStreamIndices.Indices[j]+1, tmpDataStreamIndices.Indices[j+1]+1, tmpDataStreamIndices.Indices[j+2]+1);
+                            j = j + 2;
                         }
                         Console.WriteLine();
                     }
@@ -788,12 +810,11 @@ namespace CgfConverter
             Console.WriteLine("*** END SOURCE INFO CHUNK ***");
         }
     }
-    public class ChunkMtlName : Chunk  // cccc000c:  provides material name as used in the .mtl file
+    public class ChunkMtlName : Chunk  // cccc0014:  provides material name as used in the .mtl file
     {
-        // public ChunkType ChunkMaterialName;
         // need to find the material ID used by the mesh subsets
         public uint Flags1;  // pointer to the start of this chunk?
-        public uint Filler1; // for type 800, unknown value
+        public uint MatType; // for type 800, 0x1 is material library, 0x12 is child
         public uint Filler2; // for type 800, unknown value
         public uint Filler3; // for type 802, unknown value (number of materials for type 802?)
         public uint Filler4; // for type 802, unknown value
@@ -818,7 +839,7 @@ namespace CgfConverter
             // at this point we need to differentiate between Version 800 and 802, since the format differs.
             if (version == 0x800 || version == 0x744)  // guessing on the 744. Aion.
             {
-                Filler1 = b.ReadUInt32();  // if 0x1, then material lib.  If 0x12, mat name?
+                MatType = b.ReadUInt32();  // if 0x1, then material lib.  If 0x12, mat name
                 Filler2 = b.ReadUInt32();
                 // read the material Name, which is a 128 byte char array.  really want it as a string...
                 // long tmpPointer = b.BaseStream.Position;
@@ -877,7 +898,9 @@ namespace CgfConverter
             Console.WriteLine("*** START MATERIAL NAMES ***");
             Console.WriteLine("    ChunkType:           {0}", chunkType);
             Console.WriteLine("    Material Name:       {0}", Name);
+            Console.WriteLine("    Material ID:         {0:X}", id);
             Console.WriteLine("    Number of Children:  {0}", NumChildren);
+            Console.WriteLine("    Material Type:       {0}", MatType);
             Console.WriteLine("    Physics Type:        {0}", PhysicsType);
             Console.WriteLine("*** END MATERIAL NAMES ***");
         }
@@ -1254,8 +1277,8 @@ namespace CgfConverter
                 dataFile = new FileInfo(Console.ReadLine());  // This needs error checking.
             }
             
-            Console.WriteLine("Input File is '{0}'" , dataFile.Name);
-            //ReadCryHeader(cgfFile);
+            // Console.WriteLine("Input File is '{0}'" , dataFile.Name);
+            // ReadCryHeader(cgfFile);
             CgfData cgfData = new CgfData(dataFile);
             
             // Output to an obj file
