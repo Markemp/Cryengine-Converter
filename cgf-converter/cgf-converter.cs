@@ -169,7 +169,7 @@ namespace CgfConverter
                     tmpMesh = chunk.chunkMesh;
                     //Console.WriteLine("Num of Mtl Children {0}", numMtlChildren);
                     // Now we have a mesh.  We need to populate the submeshes and datastreams
-                    Console.WriteLine("g");
+                    // Console.WriteLine("g");
                     uint meshSubSetID = tmpMesh.id;
                     //Console.WriteLine("Found Mesh ID {0:X}", meshSubSetID);
                     // Get the meshsubsets and datastream chunks that belong to this mesh chunk.
@@ -219,15 +219,17 @@ namespace CgfConverter
                     for (int i = 0; i < tmpMeshSubSets.NumMeshSubset; i++)
                     {
                         // Write vertices data for each MeshSubSet
-                        // Console.WriteLine("Mesh Subset {0}, First Vertex {1}, Num Vertices {2}", i, tmpMeshSubSets.MeshSubsets[i].FirstVertex, tmpMeshSubSets.MeshSubsets[i].NumVertices);
+                        Console.WriteLine("g");
                         for (int j = (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j < (int)tmpMeshSubSets.MeshSubsets[i].NumVertices + (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j++) 
                         {
                             Console.WriteLine("v {0:F8} {1:F8} {2:F8}", tmpDataStreamVertices.Vertices[j].x, tmpDataStreamVertices.Vertices[j].y, tmpDataStreamVertices.Vertices[j].z);
                         }
+                        Console.WriteLine();
                         for (int j = (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j < (int)tmpMeshSubSets.MeshSubsets[i].NumVertices + (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j++)
                         {
                             Console.WriteLine("vt {0:F8} {1:F8} 0.0 ", tmpDataStreamUVs.UVs[j].V, tmpDataStreamUVs.UVs[j].U);
                         }
+                        Console.WriteLine();
                         for (int j = (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j < (int)tmpMeshSubSets.MeshSubsets[i].NumVertices + (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j++)
                         {
                             Console.WriteLine("vn {0:F8} {1:F8} {2:F8}", tmpDataStreamNormals.Normals[j].x, tmpDataStreamNormals.Normals[j].y, tmpDataStreamNormals.Normals[j].z);
