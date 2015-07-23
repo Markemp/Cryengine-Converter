@@ -698,7 +698,6 @@ namespace CgfConverter
             GlobalRange.End = b.ReadInt32();
             chunkTimingFormat = this;
         }
-
         public override void WriteChunk()
         {
             string tmpName = new string(GlobalRange.Name);
@@ -977,28 +976,30 @@ namespace CgfConverter
                     }
                     if (BytesPerElement == 8)  // Old Star Citizen files
                     {
-                        // 2 byte floats.  hope this works... NOPE
+                        // 2 byte floats.  Use the Half structure from TK.Math
                         for (int i = 0; i <NumElements; i++)
                         {
-                            short xshort = b.ReadInt16();
-                            int signx = xshort >> 15;
-                            int expx = (xshort >> 10) & 0x1F;
-                            int significandx = xshort & 0x3FF;
-                            Vertices[i].x = (1 - 2 * signx) * (significandx / (float)1024.0) * (1 << expx);
-                            short yshort = b.ReadInt16();
-                            int signy = yshort >> 15;
-                            int expy = (yshort >> 10) & 0x1F;
-                            int significandy = yshort & 0x3FF;
-                            Vertices[i].y = (1 - 2 * signy) * (significandy / (float)1024.0) * (1 << expy);
-                            short z = b.ReadInt16();
-                            short zshort = b.ReadInt16();
-                            int signz = zshort >> 15;
-                            int expz = (zshort >> 10) & 0x1F;
-                            int significandz = zshort & 0x3FF;
-                            Vertices[i].z = (1 - 2 * signz) * (significandz / (float)1024.0) * (1 << expz);
+                            Single flx = new Single();
+                            flx = (Single) b.ReadUInt16();
+                            Half xshort = new Half(flx);
+                            Vertices[i].x = xshort.ToSingle();
+
+                            Single fly = new Single();
+                            fly = (Single)b.ReadUInt16();
+                            Half yshort = new Half(fly);
+                            Vertices[i].y = yshort.ToSingle();
+
+                            Single flz = new Single();
+                            flz = (Single)b.ReadUInt16();
+                            Half zshort = new Half(flz);
+                            Vertices[i].z = zshort.ToSingle();
 
                             short w = b.ReadInt16();  // dump this as not needed.  Last 2 bytes are surplus...sort of.
                             // Console.WriteLine("{0} {1} {2} {3}", i, Vertices[i].x, Vertices[i].y, Vertices[i].z);
+                            if (i < 10)
+                            {
+                                Console.WriteLine("Vertices x: {0}   y: {1}  z:  {2}  w: {3}", Vertices[i].x, Vertices[i].y, Vertices[i].z, w);
+                            }
                         }
 
                     }
