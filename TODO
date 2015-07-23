@@ -4,7 +4,7 @@ Currently at version 0.1, which can successfully export an obj file to the conso
 imported into Blender.
 
 Version 0.8
-- Output to a user defined file (default to <object name.obj>
+- Output to a user defined file (default to <object name.obj>)
 - Usage output
 - Switch implementation:
   - -flipUV (probably default on, since I've never had to not do this)
@@ -13,6 +13,7 @@ Version 0.8
 - Figure out how to convert 8 byte vertex info into 3 vertices
 - Bug fix so some .obj files import properly to Blender.
 - Refactor to use Where(a=>a.blahblah==blahblahblah) and clean up classes.
+- add build version into the output
 
 Version 0.9
 - Add support for Cryengine 3.6 and newer files
