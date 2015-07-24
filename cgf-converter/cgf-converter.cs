@@ -779,6 +779,18 @@ namespace CgfConverter
 
 
     }
+    public class ChunkHelper : Chunk       // cccc0001:  Helper chunk.  This is the top level, then nodes, then mesh, then mesh subsets
+    {
+        public string Name;
+        public HelperType Type;
+        public Vector3 Pos;
+        public Matrix44 Transform;
+
+        public override void ReadChunk(BinaryReader b, uint f)
+        {
+            base.ReadChunk(b, f);
+        }
+    }
     public class ChunkNode : Chunk          // cccc000b:   Node
     {
         public string Name;  // String 64.
@@ -1169,8 +1181,8 @@ namespace CgfConverter
             Console.WriteLine("*** START DATASTREAM ***");
             Console.WriteLine("    ChunkType:                       {0}", chunkType);
             Console.WriteLine("    Version:                         {0:X}", version);
-            Console.WriteLine("    DataStream chunk starting point: {0:X}", fOffset);
-            Console.WriteLine("    Reference Type:                  {0:X}", id);
+            Console.WriteLine("    DataStream chunk starting point: {0:X}", Flags);
+            Console.WriteLine("    Chunk ID:                        {0:X}", id);
             Console.WriteLine("    DataStreamType:                  {0}", dataStreamType);
             Console.WriteLine("    Number of Elements:              {0}", NumElements);
             Console.WriteLine("    Bytes per Element:               {0}", BytesPerElement);
@@ -1332,6 +1344,7 @@ namespace CgfConverter
         {
             Console.WriteLine("*** START MESH CHUNK ***");
             Console.WriteLine("    ChunkType:           {0}", chunkType);
+            Console.WriteLine("    Chunk ID:            {0:X}", id);
             Console.WriteLine("    MeshSubSetID:        {0:X}", MeshSubsets);
             Console.WriteLine("    Vertex Datastream:   {0:X}", VerticesData);
             Console.WriteLine("    Normals Datastream:  {0:X}", NormalsData);
