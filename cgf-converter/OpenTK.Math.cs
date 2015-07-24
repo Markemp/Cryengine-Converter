@@ -81,7 +81,8 @@ namespace OpenTK.Math
     {
         #region Internal Field
 
-        UInt16 bits;
+        //UInt16 bits;
+        public UInt16 bits;  // makes it far easier to readuint16()
 
         #endregion Internal Field
 
