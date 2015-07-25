@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 delegate void TreeVisitor<T>(T nodeData);
 
