@@ -59,8 +59,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="cgf-converter.cs" />
-    <Compile Include="ChunkExportFlags.cs" />
-    <Compile Include="ChunkTimingFormat.cs" />
+    <Compile Include="Structs.cs" />
+    <Compile Include="Enums.cs" />
     <Compile Include="OpenTK.Math.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -68,6 +68,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Tree.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

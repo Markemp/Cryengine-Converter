@@ -72,7 +72,7 @@ namespace CgfConverter
                         ChunkMtlName chkMtlName = new ChunkMtlName();
                         chkMtlName.ReadChunk(cgfreader, ChkHdr.offset);
                         CgfChunks.Add(chkMtlName);
-                        chkMtlName.WriteChunk();
+                        //chkMtlName.WriteChunk();
                         break;
                     }
                     case ChunkType.DataStream:
@@ -80,7 +80,7 @@ namespace CgfConverter
                         ChunkDataStream chkDataStream = new ChunkDataStream();
                         chkDataStream.ReadChunk(cgfreader, ChkHdr.offset);
                         CgfChunks.Add(chkDataStream);
-                        chkDataStream.WriteChunk();
+                        //chkDataStream.WriteChunk();
                         break;
                     }
                          
@@ -89,7 +89,7 @@ namespace CgfConverter
                         ChunkMesh chkMesh = new ChunkMesh();
                         chkMesh.ReadChunk(cgfreader, ChkHdr.offset);
                         CgfChunks.Add(chkMesh);
-                        chkMesh.WriteChunk();
+                        //chkMesh.WriteChunk();
                         break;
                     }
                     case ChunkType.MeshSubsets:
@@ -97,7 +97,7 @@ namespace CgfConverter
                         ChunkMeshSubsets chkMeshSubsets = new ChunkMeshSubsets();
                         chkMeshSubsets.ReadChunk(cgfreader, ChkHdr.offset);
                         CgfChunks.Add(chkMeshSubsets);
-                        chkMeshSubsets.WriteChunk();
+                        //chkMeshSubsets.WriteChunk();
                         break;
                     }
                     case ChunkType.Node:
@@ -105,12 +105,20 @@ namespace CgfConverter
                         ChunkNode chkNode = new ChunkNode();
                         chkNode.ReadChunk(cgfreader, ChkHdr.offset);
                         CgfChunks.Add(chkNode);
-                        chkNode.WriteChunk();
+                        //chkNode.WriteChunk();
+                        break;
+                    }
+                    case ChunkType.Helper:
+                    {
+                        ChunkHelper chkHelper = new ChunkHelper();
+                        chkHelper.ReadChunk(cgfreader, ChkHdr.offset);
+                        CgfChunks.Add(chkHelper);
+                        //chkHelper.WriteChunk();
                         break;
                     }
                     default:
                     {
-                        Console.WriteLine("Chunk type found that didn't match known versions: {0}",ChkHdr.type);
+                        //Console.WriteLine("Chunk type found that didn't match known versions: {0}",ChkHdr.type);
                         break;
                     }
                 }
@@ -133,12 +141,15 @@ namespace CgfConverter
             ChunkMesh tmpMesh;
             ChunkMeshSubsets tmpMeshSubSets = new ChunkMeshSubsets();
             ChunkMtlName tmpMtlParent = new ChunkMtlName();
-            ChunkMtlName[] tmpMtlName;
+            ChunkMtlName[] tmpMtlNameArray;
+            ChunkMtlName tmpMtlName = new ChunkMtlName();
             ChunkDataStream tmpDataStreamVertices = new ChunkDataStream();
             ChunkDataStream tmpDataStreamNormals = new ChunkDataStream();
             ChunkDataStream tmpDataStreamUVs = new ChunkDataStream();
             ChunkDataStream tmpDataStreamIndices = new ChunkDataStream();
             ChunkDataStream tmpDataStreamTangents = new ChunkDataStream();
+            ChunkNode tmpNodeChunk = new ChunkNode();
+            ChunkNode tmpNodeChild = new ChunkNode();
             int numMtlChildren = 0; // used to figure out how many material IDs there are.
 
             // Get object name
@@ -150,824 +161,482 @@ namespace CgfConverter
             // Get the objOutputFile name
             objOutputFile = new FileInfo(objectName + ".obj");
             Console.WriteLine("Output File name is {0}", objOutputFile.Name);
-            // let's practice writing the submeshes to console instead of the output file
             using  (System.IO.StreamWriter file = new System.IO.StreamWriter(objOutputFile.Name))
             {
                 string s1 = String.Format("# cgf-converter .obj export Version 0.1");
                 file.WriteLine(s1);
                 file.WriteLine("#");
-                foreach (Chunk chunk in CgfChunks)
+                foreach (Chunk chunk in CgfChunks.Where(a => a.chunkType == ChunkType.MtlName))
                 {
                     // First get the material file name.
-                    if (chunk.chunkType == ChunkType.MtlName)
+                    //Console.WriteLine("__-- Material Type: {0:X}", chunk.chunkMtlName.MatType);
+                    if (chunk.chunkMtlName.MatType == 0x01) // this is the mtllib file.  0x12 is mtl name
                     {
-                        if (chunk.chunkMtlName.MatType == 0x01)  // this is the mtllib file.  0x12 is mtl name
-                        {
-                            //MtlFile = new FileInfo(chunk.chunkMtlName.Name);
-                            string tmpMtlFileName = chunk.chunkMtlName.Name + ".mtl";
-                            numMtlChildren = (int)chunk.chunkMtlName.NumChildren;
-                            string s2 = String.Format("mtllib {0}", tmpMtlFileName);
-                            file.WriteLine(s2);
-                        }
+                        //MtlFile = new FileInfo(chunk.chunkMtlName.Name);
+                        string tmpMtlFileName = chunk.chunkMtlName.Name + ".mtl";
+                        numMtlChildren = (int)chunk.chunkMtlName.NumChildren;  // this number can be zero!
+                        string s2 = String.Format("mtllib {0}", tmpMtlFileName);
+                        file.WriteLine(s2);
                     }
-                }
-                // write out the mtl file name with mtllib.  Right now we assume one mtl file per .cgf
-
-                tmpMtlName = new ChunkMtlName[numMtlChildren];
-                string s3 = String.Format("o {0}", objectName);
-                file.WriteLine(s3);
-                // Dump out all the vertices (v), UVs (vt), and normals (vn) for each mesh subset
-                foreach (Chunk chunk in CgfChunks.Where(a => a.chunkType == ChunkType.Mesh))
-                {
-                    tmpMesh = chunk.chunkMesh;
-                    chunk.WriteChunk();
-                    Console.WriteLine("Num of Mtl Children {0}", numMtlChildren);
-                    // Now we have a mesh.  We need to populate the submeshes and datastreams
-                    uint meshSubSetID = tmpMesh.id;
-                    Console.WriteLine("Found Mesh ID {0:X}", meshSubSetID);
-                    // Get the meshsubsets and datastream chunks that belong to this mesh chunk.
-                    int k = 0;
-                    foreach (Chunk tmpChunk in CgfChunks)
+                    if (chunk.chunkMtlName.MatType == 0x00)  // this is an SC file with type 0x802.
                     {
-                        // Mesh Subset
-                        Console.WriteLine("tmpChunk ID is {0:X}", tmpChunk.id);
-                        if (tmpChunk.id == tmpMesh.MeshSubsets)
-                        {
-                            tmpMeshSubSets = tmpChunk.chunkMeshSubsets;
-                            tmpMeshSubSets.WriteChunk();
-                        }
-                        if (tmpChunk.id == tmpMesh.VerticesData)            // Vertices data for this mesh
-                        {
-                            tmpDataStreamVertices = tmpChunk.chunkDataStream;
-                            tmpDataStreamVertices.WriteChunk();
-                        }
-                        if (tmpChunk.id == tmpMesh.NormalsData)
-                        {
-                            tmpDataStreamNormals = tmpChunk.chunkDataStream;
-                            tmpDataStreamNormals.WriteChunk();
-                        }
-                        if (tmpChunk.id == tmpMesh.UVsData)
-                        {
-                            tmpDataStreamUVs = tmpChunk.chunkDataStream;
-                            tmpDataStreamUVs.WriteChunk();
-                        }
-                        if (tmpChunk.id == tmpMesh.IndicesData)
-                        {
-                            tmpDataStreamIndices = tmpChunk.chunkDataStream;
-                            tmpDataStreamIndices.WriteChunk();
-                        }
-                        if (tmpChunk.id == tmpMesh.TangentsData)
-                        {
-                            tmpDataStreamTangents = tmpChunk.chunkDataStream;
-                            tmpDataStreamTangents.WriteChunk();
-                        }
-                        if (tmpChunk.chunkType == ChunkType.MtlName && tmpChunk.chunkMtlName.MatType == 0x12)   // there are going to be multiple versions; a parent and the children.
-                        {
-                            tmpMtlName[k] = tmpChunk.chunkMtlName;
-                            tmpMtlName[k].WriteChunk();
-                            k++;  // Material Chunk is a child array where the index is the material used.
-                        }
+                        string tmpMtlFileName = chunk.chunkMtlName.Name + ".mtl";
+                        string s2 = String.Format("mtllib {0}", tmpMtlFileName);
+                        file.WriteLine(s2);
+                        //Console.WriteLine("__-- Material Type: {0:X}", chunk.chunkMtlName.MatType);
                     }
 
-                    for (int i = 0; i < tmpMeshSubSets.NumMeshSubset; i++)
-                    {
-                        // Write vertices data for each MeshSubSet
-                        file.WriteLine("g");
-                        for (int j = (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j < (int)tmpMeshSubSets.MeshSubsets[i].NumVertices + (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j++)
-                        {
-                            string s4 = String.Format("v {0:F7} {1:F7} {2:F7}", tmpDataStreamVertices.Vertices[j].x, tmpDataStreamVertices.Vertices[j].y, tmpDataStreamVertices.Vertices[j].z);
-                            file.WriteLine(s4);
-                        }
-                        file.WriteLine();
-                        for (int j = (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j < (int)tmpMeshSubSets.MeshSubsets[i].NumVertices + (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j++)
-                        {
-                            string s5 = String.Format("vt {0:F7} {1:F7} 0.0 ", tmpDataStreamUVs.UVs[j].U, 1 - tmpDataStreamUVs.UVs[j].V);
-                            file.WriteLine(s5);
-                        }
-                        file.WriteLine();
-                        for (int j = (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j < (int)tmpMeshSubSets.MeshSubsets[i].NumVertices + (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j++)
-                        {
-                            string s6 = String.Format("vn {0:F7} {1:F7} {2:F7}", tmpDataStreamNormals.Normals[j].x, tmpDataStreamNormals.Normals[j].y, tmpDataStreamNormals.Normals[j].z);
-                            file.WriteLine(s6);
-                        }
-                        file.WriteLine();
-                        // Now write out the faces info based on the MtlName
-                        string s7 = String.Format("g {0}", tmpMtlName[tmpMeshSubSets.MeshSubsets[i].MatID].Name);  // bombs on some files...index out of bounds
-                        file.WriteLine(s7);
-                        string s8 = String.Format("usemtl {0}", tmpMtlName[tmpMeshSubSets.MeshSubsets[i].MatID].Name);
-                        file.WriteLine(s8);
-                        for (int j = (int)tmpMeshSubSets.MeshSubsets[i].FirstIndex; j < (int)tmpMeshSubSets.MeshSubsets[i].NumIndices + (int)tmpMeshSubSets.MeshSubsets[i].FirstIndex; j++)
-                        {
-                            string s9 = String.Format("f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}", tmpDataStreamIndices.Indices[j] + 1, tmpDataStreamIndices.Indices[j + 1] + 1, tmpDataStreamIndices.Indices[j + 2] + 1);
-                            file.WriteLine(s9);
-                            j = j + 2;
-                        }
-                        file.WriteLine();
-                    }           // End of Submesh writing
                 }
-            }
-        }
-    }
-
-    // Structures
-    public struct String16
-    {
-        public char[] Data;
-    }   // 16 byte char array.  THESE MUST BE CALLED WITH THE PROPER LENGTH!
-    public struct String32
-    {
-        public char[] Data;
-    }    // 32 byte char array 
-    public struct String64
-    {
-        public  char[] Data;
-    }  // 64 byte char array 
-    public struct String128
-    {
-        public char[] Data;
-    }   // 128 byte char array 
-    public struct String256
-    {
-        public char[] Data;
-    }   // 256 byte char array 
-    public struct RangeEntity
-    {
-        public char[] Name; // String32!  32 byte char array.
-        public int Start;
-        public int End;
-    } // String32 Name, int Start, int End - complete
-    public struct Vector3
-    {
-        public float x;
-        public float y;
-        public float z;
-    }  // Vector in 3D space {x,y,z}
-    public struct Matrix33    // a 3x3 transformation matrix
-    {
-        public float m11;
-        public float m12;
-        public float m13;
-        public float m21;
-        public float m22;
-        public float m23;
-        public float m31;
-        public float m32;
-        public float m33;
-    }
-    public struct Matrix44    // a 4x4 transformation matrix
-    {
-        public float m11;
-        public float m12;
-        public float m13;
-        public float m14;
-        public float m21;
-        public float m22;
-        public float m23;
-        public float m24;
-        public float m31;
-        public float m32;
-        public float m33;
-        public float m34;
-        public float m41;
-        public float m42;
-        public float m43;
-        public float m44;
-    }
-    public struct Quat        // A quaternion (x,y,z,w)
-    {
-        public float x;
-        public float y;
-        public float z;
-        public float w;
-    }
-    public struct Vertex      // position p(Vector3) and normal n(Vector3)
-    {
-        public Vector3 p;  // position
-        public Vector3 n;  // normal
-    }
-    public struct Face        // mesh face (3 vertex, Material index, smoothing group.  All ints)
-    {
-        public int v0; // first vertex
-        public int v1; // second vertex
-        public int v2; // third vertex
-        public int Material; // Material Index
-        public int SmGroup; //smoothing group
-    }
-    public struct MeshSubset 
-    {
-        public uint FirstIndex;
-        public uint NumIndices;
-        public uint FirstVertex;
-        public uint NumVertices;
-        public uint MatID;
-        public float Radius;
-        public Vector3 Center;
-    }  // Contains data about the parts of a mesh, such as vertices, radius and center.
-    public struct Key
-    {
-        public int Time; // Time in ticks
-        public Vector3 AbsPos; // absolute position
-        public Vector3 RelPos; // relative position
-        public Quat RelQuat; //Relative Quaternion if ARG==1?
-        public Vector3 Unknown1; // If ARG==6 or 10?
-        public float[] Unknown2; // If ARG==9?  array length = 2
-    }
-    public struct UV
-    {
-        public float U;
-        public float V;
-    }
-    public struct UVFace
-    {
-        public int t0; // first vertex index
-        public int t1; // second vertex index
-        public int t2; // third vertex index
-    }
-    /*public struct TextureMap
-    {
-
-    }*/ // Fill this in later.  line 369 in cgf.xml.
-    public struct IRGB 
-    {
-        public byte r; // red
-        public byte g; // green
-        public byte b; // blue
-    }
-    public struct IRGBA
-    {
-        public byte r; // red
-        public byte g; // green
-        public byte b; // blue
-        public byte a; // alpha
-
-    }
-    public struct FRGB
-    {
-        public float r; // float Red
-        public float g; // float green
-        public float b; // float blue
-    }
-    public struct Tangent 
-    {
-        // Tangents.  Divide each component by 32767 to get the actual value
-        public short x;
-        public short y;
-        public short z;
-        public short w;  // Handness?  Either 32767 (+1.0) or -32767 (-1.0)
-    }
-
-    // Aliases
-    public class FileOffset
-    { 
-        public int fOffset;
-    }
-    // Enums
-    public enum FileType : uint
-    {
-        GEOM = 0xFFFF0000,
-        ANIM = 0xFFFF0001
-    }  // complete
-    public enum ChunkType : uint    // complete
-    {
-        Any = 0x0,
-        Mesh = 0xCCCC0000,
-        Helper = 0xCCCC0001,
-        VertAnim = 0xCCCC0002,
-        BoneAnim = 0xCCCC0003,
-        GeomNameList = 0xCCCC0004,
-        BoneNameList = 0xCCCC0005,
-        MtlList = 0xCCCC0006,
-        MRM = 0xCCCC0007, //obsolete
-        SceneProps = 0xCCCC0008,
-        Light = 0xCCCC0009,
-        PatchMesh = 0xCCCC000A,
-        Node = 0xCCCC000B,
-        Mtl = 0xCCCC000C,
-        Controller = 0xCCCC000D,
-        Timing = 0xCCCC000E,
-        BoneMesh = 0xCCCC000F,
-        BoneLightBinding = 0xCCCC0010,
-        MeshMorphTarget = 0xCCCC0011,
-        BoneInitialPos = 0xCCCC0012,
-        SourceInfo = 0xCCCC0013, //Describes the source from which the cgf was exported: source max file, machine and user.
-        MtlName = 0xCCCC0014, //provides material name as used in the material.xml file
-        ExportFlags = 0xCCCC0015, //Describes export information.
-        DataStream = 0xCCCC0016, //A data Stream
-        MeshSubsets = 0xCCCC0017, //Describes an array of mesh subsets
-        MeshPhysicalData = 0xCCCC0018, //Physicalized mesh data
-        CompiledBones = 0xACDC0000, //unknown chunk
-        CompiledPhysicalBones = 0xACDC0001, // unknown chunk
-        CompiledMorphtargets = 0xACDC0002,  // unknown chunk
-        CompiledPhysicalProxies = 0xACDC0003, //unknown chunk
-        CompiledIntFaces = 0xACDC0004, //unknown chunk
-        CompiledIntSkinVertices = 0xACDC0004, //unknown chunk
-        CompiledExt2IntMap = 0xACDC0005, //unknown chunk
-        BreakablePhysics = 0xACDC0006, //unknown chunk
-        FaceMap = 0xAAFC0000, //unknown chunk
-        SpeedInfo = 0xAAFC0002, //Speed and distnace info
-        FootPlantInfo = 0xAAFC0003, // Footplant info
-        BonesBoxes = 0xAAFC0004, // unknown chunk
-        UnknownAAFC0005 = 0xAAFC0005 //unknown chunk
-    }
-    public enum ChunkVersion : uint
-    {
-        ChkVersion
-    }    //complete
-    public enum HelperType : uint
-    {
-        POINT,
-        DUMMY,
-        XREF,
-        CAMERA,
-        GEOMETRY
-    }      //complete
-    public enum MtlType : uint            //complete
-    {
-        UNKNOWN,
-        STANDARD,
-        MULTI,
-        TWOSIDED
-    }
-    public enum MtlNamePhysicsType : uint //complete
-    {
-        NONE = 0xFFFFFFFF,
-        DEFAULT = 0x00000000,
-        NOCOLLIDE = 0x00000001,
-        OBSTRUCT = 0x00000002,
-        DEFAULTPROXY = 0x000000FF  // this needs to be checked.  cgf.xml says 256; not sure if hex or dec
-    }
-    public enum LightType : uint         //complete
-    {
-        OMNI,
-        SPOT,
-        DIRECT,
-        AMBIENT
-    }
-    public enum CtrlType : uint
-    {
-        NONE,
-        CRYBONE,
-        LINEAR1,
-        LINEAR3,
-        LINEARQ,
-        BEZIER1,
-        BEZIER3,
-        BEZIERQ,
-        TBC1,
-        TBC3,
-        TBCQ,
-        BSPLINE2O,
-        BSPLINE1O,
-        BSPLINE2C,
-        BSPLINE1C,
-        CONST          // this was given a value of 11, which is the same as BSPLINE2o.
-    }        //complete
-    public enum TextureMapping : uint
-    {
-        NORMAL,
-        ENVIRONMENT,
-        SCREENENVIRONMENT,
-        CUBIC,
-        AUTOCUBIC
-    }  //complete
-    public enum DataStreamType : uint
-    {
-        VERTICES,
-        NORMALS,
-        UVS,
-        COLORS,
-        COLORS2,
-        INDICES,
-        TANGENTS,
-        SHCOEFFS,
-        SHAPEDEFORMATION,
-        BONEMAP,
-        FACEMAP,
-        VERTMATS
-    }  //complete
-    public enum PhysicsPrimitiveType : uint
-    {
-        CUBE = 0X0,
-        POLYHEDRON = 0X1,
-        CYLINDER = 0X5,
-        UNKNOWN6 = 0X6   // nothing between 2-4, no idea what unknown is.
-    }
-
-    // classes (aka anything more complicated than a fixed size struct, with methods etc.)
-    public class Header
-    {
-        public char[] fileSignature; // The CGF file signature.  CryTek for 3.5, CrChF for 3.6
-        public uint fileType; // The CGF file type (geometry or animation)  3.5 only
-        public uint chunkVersion; // The version of the chunk table  3.5 only
-        public int fileOffset; //Position of the chunk table in the CGF file
-        public int numChunks; // Number of chunks in the Chunk Table (3.6 only.  3.5 has it in Chunk Table)
-        
-        // methods
-        public Header (BinaryReader binReader)  //constructor with 1 arg
-        {
-            //Header cgfHeader = new Header();
-            // populate the Header objects
-            fileSignature = new char[8];
-            fileSignature = binReader.ReadChars(8);
-            fileType = binReader.ReadUInt32();
-            chunkVersion = binReader.ReadUInt32();
-            fileOffset = binReader.ReadInt32();
-            
-            return;
-        }
-        public void WriteChunk()  // output header to console for testing
-        {
-            string tmpFileSig;
-            tmpFileSig = new string(fileSignature);
-            Console.WriteLine("*** HEADER ***");
-            Console.WriteLine("    Header Filesignature: {0}", tmpFileSig);
-            Console.WriteLine("    Header FileType: {0:X}", fileType);
-            Console.WriteLine("    Header ChunkVersion: {0:X}", chunkVersion);
-            Console.WriteLine("    Header ChunkTableOffset: {0:X}", fileOffset);
-            Console.WriteLine("*** END HEADER ***");
-            return;
-        }
-    }
-    public class ChunkTable  // reads the chunk table
-    {
-        public uint numChunks;
-        public List<ChunkHeader> chunkHeaders = new List<ChunkHeader>();
-
-        // methods
-        public void GetChunkTable (BinaryReader b, int f)
-        {
-            // need to seek to the start of the table here.  foffset points to the start of the table
-            b.BaseStream.Seek(f, 0);
-            numChunks = b.ReadUInt32();  // number of Chunks in the table.
-            int i; // counter for loop to read all the chunkHeaders
-            for (i = 0; i < numChunks; i++ )
-            {
-                //Console.WriteLine("Loop {0}", i);
-                ChunkHeader tempChkHdr = new ChunkHeader(); // Add this chunk header to the list
-                uint headerType = b.ReadUInt32(); // read the value, then parse it
-                tempChkHdr.type = (ChunkType)Enum.ToObject(typeof(ChunkType), headerType);
-                //Console.WriteLine("headerType: '{0}'", tempChkHdr.type);
-                uint chunkversionType = b.ReadUInt32();
-                tempChkHdr.version = (ChunkVersion)Enum.ToObject(typeof(ChunkVersion), chunkversionType);
-                tempChkHdr.offset = b.ReadUInt32();
-                tempChkHdr.id = b.ReadUInt32();  // This is the reference number to identify the mesh/datastream
-                tempChkHdr.unknown = b.ReadUInt32();
-
-                chunkHeaders.Add(tempChkHdr);
-                //tempChkHdr.WriteChunk();
-            }
-        }
-        public void WriteChunk()
-        {
-            foreach (ChunkHeader chkHdr in chunkHeaders)
-            {
-                chkHdr.WriteChunk();
-            }
-        }
-    }
-    public class ChunkHeader  
-    {
-        public ChunkType type;
-        public ChunkVersion version;
-        public uint offset;
-        public uint id;
-        public uint unknown; //  TBD
-
-        // methods
-        /*public void GetChunkHeader()
-        {
-            type = new ChunkType();
-            version = new ChunkVersion();
-            offset = new uint();
-            id = new uint();
-            unknown = new uint();
-        }*/  // never used; refactor
-        public void WriteChunk()  // write the Chunk Header Table to the console.  For testing.
-        {
-            Console.WriteLine("*** CHUNK HEADER ***");
-            Console.WriteLine("    ChunkType: {0}", type);
-            Console.WriteLine("    ChunkVersion: {0:X}", version);
-            Console.WriteLine("    offset: {0:X}", offset);
-            Console.WriteLine("    ID: {0:X}", id);
-            Console.WriteLine("*** END CHUNK HEADER ***");
-        }
-    }
-
-    public class Chunk // Main class has Fileoffset to identify where the chunk starts
-    {
-        public FileOffset fOffset;  // starting offset of the chunk.  Int, not uint
-        public ChunkType chunkType; // Type of chunk
-        public uint version; // version of this chunk
-        public uint id; // ID of the chunk.
-        public int offset; // simpler way of getting fOffset;  Will need to refactor eventually
-        // These will be uninstantiated if it's not that kind of chunk
-        public ChunkTimingFormat chunkTimingFormat;
-        public ChunkMtlName chunkMtlName;
-        public ChunkExportFlags chunkExportFlags;
-        public ChunkSourceInfo chunkSourceInfo;
-        public ChunkDataStream chunkDataStream;  
-        public ChunkMeshSubsets chunkMeshSubsets;  
-        public ChunkMesh chunkMesh;  
-
-        public virtual void ReadChunk(BinaryReader b, uint f) 
-        {
-            // Don't do anything.  This is just a placeholder
-        }
-        public virtual void WriteChunk()
-        {
-            // Don't do anything.  Placeholder
-        }
-    }
-    public class ChunkTimingFormat : Chunk // cccc000e:  Timing format chunk
-    {
-        // public ChunkType ChunkTiming;    // Moved to Chunk
-        // public uint Version;             // Moved to Chunk
-        public float SecsPerTick;
-        public int TicksPerFrame;
-        public uint Unknown1; // 4 bytes, not sure what they are
-        public uint Unknown2; // 4 bytes, not sure what they are
-        public RangeEntity GlobalRange;
-        public int NumSubRanges;
-
-        public override void ReadChunk(BinaryReader b, uint f)
-        {
-            b.BaseStream.Seek(f, 0); // seek to the beginning of the Timing Format chunk
-            uint tmpChkType = b.ReadUInt32();
-            chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChkType);
-            version = b.ReadUInt32();  //0x00000918 is Far Cry, Crysis, MWO, Aion
-            //fOffset = b.ReadUInt32();
-            //id = b.ReadUInt32();
-            SecsPerTick = b.ReadSingle();
-            TicksPerFrame = b.ReadInt32();
-            Unknown1 = b.ReadUInt32();
-            Unknown2 = b.ReadUInt32();
-            GlobalRange.Name = new char[32];
-            GlobalRange.Name = b.ReadChars(32);  // Name is technically a String32, but F those structs
-            GlobalRange.Start = b.ReadInt32();
-            GlobalRange.End = b.ReadInt32();
-            chunkTimingFormat = this;
-        }
-        public override void WriteChunk()
-        {
-            string tmpName = new string(GlobalRange.Name);
-            Console.WriteLine("*** TIMING CHUNK ***");
-            Console.WriteLine("    Version: {0:X}", version);
-            Console.WriteLine("    Secs Per Tick: {0}", SecsPerTick);
-            Console.WriteLine("    Ticks Per Frame: {0}", TicksPerFrame);
-            Console.WriteLine("    Global Range:  Name: {0}", tmpName);
-            Console.WriteLine("    Global Range:  Start: {0}", GlobalRange.Start);
-            Console.WriteLine("    Global Range:  End:  {0}", GlobalRange.End);
-            Console.WriteLine("*** END TIMING CHUNK ***");
-        }
-    }
-    public class ChunkExportFlags : Chunk  // cccc0015:  Export Flags
-    {
-        // public ChunkType ExportFlag;
-        //public uint Version;  // Far Cry and Crysis:  1
-        public uint ChunkOffset;  // for some reason the offset of Export Flag chunk is stored here.
-        public uint Flags;    // ExportFlags type technically, but it's just 1 value
-        public uint Unknown1; // uint, no idea what they are
-        public uint[] RCVersion;  // 4 uints
-        public char[] RCVersionString;  // Technically String16
-        public uint[] Reserved;  // 32 uints
-        public override void ReadChunk(BinaryReader b, uint f)
-        {
-            b.BaseStream.Seek(f, 0); // seek to the beginning of the Timing Format chunk
-            uint tmpExportFlag = b.ReadUInt32();
-            chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpExportFlag);
-            version = b.ReadUInt32();
-            ChunkOffset = b.ReadUInt32();
-            id = b.ReadUInt32();
-            Unknown1 = b.ReadUInt32();
-            RCVersion = new uint[4];
-            int count = 0;
-            for (count = 0; count < 4; count++)
-            {
-                RCVersion[count] = b.ReadUInt32();
-            }
-            RCVersionString = new char[16];
-            RCVersionString = b.ReadChars(16);
-            Reserved = new uint[32];
-            for (count = 0; count < 4; count++)
-            {
-                Reserved[count] = b.ReadUInt32();
-            }
-            chunkExportFlags = this;
-        }
-        public override void WriteChunk() {
-            string tmpVersionString = new string(RCVersionString);
-            Console.WriteLine("*** START EXPORT FLAGS ***");
-            Console.WriteLine("    ChunkType: {0}",chunkType);
-            Console.WriteLine("    Version: {0}", version);
-            Console.WriteLine("    Flags: {0}", Flags);
-            Console.Write("    RC Version: ");
-            for (int i = 0; i < 4; i++)
-            {
-                Console.Write(RCVersion[i]);
-            }
-            Console.WriteLine();
-            Console.WriteLine("    RCVersion String: {0}", tmpVersionString);
-            Console.WriteLine("    Reserved: {0:X}", Reserved);
-            Console.WriteLine("*** END EXPORT FLAGS ***");
-        }
-
-        //<version num="1">Far Cry, Crysis</version>
-        //<add name="Flags" type="ExportFlags" />
-        //<add name="RC Version" type="uint" arr1="4" />
-        //<add name="RC Version String" type="String16" />
-        //<add name="Reserved" type="uint" arr1="32" />
-
-
-    }
-    public class ChunkHelper : Chunk       // cccc0001:  Helper chunk.  This is the top level, then nodes, then mesh, then mesh subsets
-    {
-        public string Name;
-        public HelperType Type;
-        public Vector3 Pos;
-        public Matrix44 Transform;
-
-        public override void ReadChunk(BinaryReader b, uint f)
-        {
-            base.ReadChunk(b, f);
-        }
-    }
-    public class ChunkNode : Chunk          // cccc000b:   Node
-    {
-        public string Name;  // String 64.
-        public uint Object;  // Mesh or Helper Object chunk ID
-        public uint Parent;  // Node parent.  if 0xFFFFFFFF, it's the top node.
-        public uint NumChildren;
-        public uint Material;  // reference to the material ID for this Node chunk
-        public Boolean IsGroupHead; //
-        public Boolean IsGroupMember;
-        public byte[] Reserved1; // padding, 2 bytes long
-        public Matrix44 Transform;   // Transformation matrix
-        public Vector3 Pos;  // position vector of above transform
-        public Quat Rot;     // rotation component of above transform
-        public Vector3 Scl;  // Scalar component of above matrix44
-        public uint PosCtrl;  // Position Controller ID (Controller Chunk type)
-        public uint RotCtrl;  // Rotation Controller ID 
-        public uint SclCtrl;  // Scalar controller ID
-
-        public override void ReadChunk(BinaryReader b, uint f)
-        {
-            b.BaseStream.Seek(f, 0); // seek to the beginning of the Node chunk
-            uint tmpNodeChunk = b.ReadUInt32();
-            chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpNodeChunk);
-            version = b.ReadUInt32();
-            offset = b.ReadInt32();
-            id = b.ReadUInt32();
-            // Read the Name string
-            char[] tmpName = new char[64];
-            tmpName = b.ReadChars(64);
-            int stringLength = 0;
-            for (int i = 0; i < tmpName.Length; i++)
-            {
-                if (tmpName[i] == 0)
+                foreach (Chunk nodechunk in CgfChunks.Where(a => a.chunkType == ChunkType.Node))
                 {
-                    stringLength = i;
-                    break;
-                }
-            }
-            Name = new string(tmpName, 0, stringLength);
-            Object = b.ReadUInt32(); // Object reference ID
-            Parent = b.ReadUInt32();
-            NumChildren = b.ReadUInt32();
-            Material = b.ReadUInt32();  // Material ID?
-            // Good enough for now.
-        }
-        public override void WriteChunk()
-        {
-            Console.WriteLine("*** START Node Chunk ***");
-            Console.WriteLine("    ChunkType:           {0}", chunkType);
-            Console.WriteLine("    Node ID:             {0:X}", id);
-            Console.WriteLine("    Node Name:           {0}", Name);
-            Console.WriteLine("    Object ID:           {0:X}", Object);
-            Console.WriteLine("    Parent ID:           {0:X}", Parent);
-            Console.WriteLine("    Number of Children:  {0}", NumChildren);
-            Console.WriteLine("    Material ID:         {0:X}", Material); // 0x1 is mtllib w children, 0x10 is mtl no children, 0x18 is child
-            Console.WriteLine("*** END Node Chunk ***");
-
-        }
-    }
-    public class ChunkSourceInfo : Chunk  // cccc0013:  Source Info chunk.  Pretty useless overall
-    {
-        public string SourceFile;
-        public string Date;
-        public string Author;
-
-        public override void ReadChunk(BinaryReader b, uint f)  //
-        {
-            b.BaseStream.Seek(f, 0);
-            chunkType = ChunkType.SourceInfo; // this chunk doesn't actually have the chunktype header.
-            // you'd think ReadString() would read from the current offset to the next null byte, but IT DOESN'T.
-            int count = 0;                      // read original file
-            while (b.ReadChar() != 0) 
-            {
-                count++;
-            } // count now has the null position relative to the seek position
-            b.BaseStream.Seek(f, 0);
-            char[] tmpSource = new char[count];
-            tmpSource = b.ReadChars(count+1);
-            SourceFile = new string(tmpSource);
-
-            count = 0;                          // Read date
-            while (b.ReadChar() != 0)
-            {
-                count++;
-            } // count now has the null position relative to the seek position
-            b.BaseStream.Seek(b.BaseStream.Position - count - 1, 0);
-            char[] tmpDate = new char[count];
-            tmpDate = b.ReadChars(count+1);  //strip off last 2 characters, because it contains a return
-            Date = new string(tmpDate);
-
-            count = 0;                           // Read Author
-            while (b.ReadChar() != 0)
-            {
-                count++;
-            } // count now has the null position relative to the seek position
-            b.BaseStream.Seek(b.BaseStream.Position - count - 1, 0);
-            char[] tmpAuthor = new char[count];
-            tmpAuthor = b.ReadChars(count+1);
-            Author = new string(tmpAuthor);
-            id = 0xFF;
-            chunkSourceInfo = this;
-        }
-        public override void WriteChunk()
-        {
-            Console.WriteLine("*** SOURCE INFO CHUNK ***");
-            Console.WriteLine("    Sourcefile: {0}.  Length {1}", SourceFile, SourceFile.Length);
-            Console.WriteLine("    Date:       {0}.  Length {1}", Date, Date.Length);
-            Console.WriteLine("    Author:     {0}.  Length {1}", Author, Author.Length);
-            Console.WriteLine("*** END SOURCE INFO CHUNK ***");
-        }
-    }
-    public class ChunkMtlName : Chunk  // cccc0014:  provides material name as used in the .mtl file
-    {
-        // need to find the material ID used by the mesh subsets
-        public uint Flags1;  // pointer to the start of this chunk?
-        public uint MatType; // for type 800, 0x1 is material library, 0x12 is child
-        public uint Filler2; // for type 800, unknown value
-        public uint Filler3; // for type 802, unknown value (number of materials for type 802?)
-        public uint Filler4; // for type 802, unknown value
-        public string Name; // technically a String128 class
-        public MtlNamePhysicsType PhysicsType; // enum of a 4 byte uint
-        public uint NumChildren; // number of materials in this name. Max is 66
-        // need to implement an array of references here?  Name of Children
-        public uint[] Children;  
-        public uint[] Padding;  // array length of 32
-        public uint AdvancedData;  // probably not used
-        public float Opacity; // probably not used
-        public int[] Reserved;  // array length of 32
-
-        public override void ReadChunk(BinaryReader b, uint f)
-        {
-            b.BaseStream.Seek(f, 0); // seek to the beginning of the Material Name chunk
-            uint tmpChunkMtlName = b.ReadUInt32();
-            chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChunkMtlName);
-            version = b.ReadUInt32();
-            Flags1 = b.ReadUInt32();  // offset to this chunk
-            id = b.ReadUInt32();  // ref/chunk number
-            // at this point we need to differentiate between Version 800 and 802, since the format differs.
-            if (version == 0x800 || version == 0x744)  // guessing on the 744. Aion.
-            {
-                MatType = b.ReadUInt32();  // if 0x1, then material lib.  If 0x12, mat name
-                Filler2 = b.ReadUInt32();
-                // read the material Name, which is a 128 byte char array.  really want it as a string...
-                // long tmpPointer = b.BaseStream.Position;
-                char[] tmpName = new char[128];
-                tmpName = b.ReadChars(128);
-                int stringLength=0; 
-                for (int i = 0; i < tmpName.Length; i++)
-                {
-                    if (tmpName[i] == 0)
+                    Console.WriteLine("===============================");
+                    if (nodechunk.chunkNode.Parent == 0xFFFFFFFF)
                     {
-                        stringLength = i;
-                        break;
+                        // We have a parent node. 2 cases:  there are children, or not.
+                        tmpNodeChunk = nodechunk.chunkNode;
+                        tmpNodeChunk.WriteChunk();
+                        file.WriteLine("o {0}", tmpNodeChunk.Name);  // we have the object.  Now process all the groups
+                        // Process the case where the node has a Material ID and no Children.  Object ID is the mesh chunk
+
+                        if (nodechunk.chunkNode.NumChildren == 0)  // Object ID is the mesh for this Node
+                        {
+                            foreach (Chunk chunk in CgfChunks.Where(a => a.chunkType == ChunkType.Mesh))
+                            {
+                                tmpMesh = chunk.chunkMesh;
+                                chunk.WriteChunk();
+                                Console.WriteLine("Num of Mtl Children {0}", numMtlChildren);
+                                // Now we have a mesh.  We need to populate the submeshes and datastreams
+                                uint meshSubSetID = tmpMesh.id;
+                                Console.WriteLine("Found Mesh ID {0:X}", meshSubSetID);
+                                // Get the meshsubsets and datastream chunks that belong to this mesh chunk.
+                                int k = 0;
+                                foreach (Chunk tmpChunk in CgfChunks)
+                                {
+                                    // Mesh Subset
+                                    Console.WriteLine("tmpChunk ID is {0:X}", tmpChunk.id);
+                                    if (tmpChunk.id == tmpMesh.MeshSubsets)
+                                    {
+                                        tmpMeshSubSets = tmpChunk.chunkMeshSubsets;
+                                        tmpMeshSubSets.WriteChunk();
+                                    }
+                                    if (tmpChunk.id == tmpMesh.VerticesData)            // Vertices data for this mesh
+                                    {
+                                        tmpDataStreamVertices = tmpChunk.chunkDataStream;
+                                        tmpDataStreamVertices.WriteChunk();
+                                    }
+                                    if (tmpChunk.id == tmpMesh.NormalsData)
+                                    {
+                                        tmpDataStreamNormals = tmpChunk.chunkDataStream;
+                                        //tmpDataStreamNormals.WriteChunk();
+                                    }
+                                    if (tmpChunk.id == tmpMesh.UVsData)
+                                    {
+                                        tmpDataStreamUVs = tmpChunk.chunkDataStream;
+                                        //tmpDataStreamUVs.WriteChunk();
+                                    }
+                                    if (tmpChunk.id == tmpMesh.IndicesData)
+                                    {
+                                        tmpDataStreamIndices = tmpChunk.chunkDataStream;
+                                        //tmpDataStreamIndices.WriteChunk();
+                                    }
+                                    if (tmpChunk.id == tmpMesh.TangentsData)
+                                    {
+                                        tmpDataStreamTangents = tmpChunk.chunkDataStream;
+                                        //tmpDataStreamTangents.WriteChunk();
+                                    }
+                                    /*if (tmpChunk.chunkType == ChunkType.MtlName && tmpChunk.chunkMtlName.MatType == 0x12)   // there are going to be multiple versions; a parent and the children.
+                                    {
+                                        tmpMtlName = new ChunkMtlName();
+
+                                        tmpMtlName = tmpChunk.chunkMtlName;
+                                        if (nodechunk.chunkNode.Material == ) {
+
+                                        }
+                                        tmpMtlName.WriteChunk();
+                                        k++;  // Material Chunk is a child array where the index is the material used.
+                                    }*/
+                                    if (tmpChunk.chunkType == ChunkType.MtlName && tmpChunk.chunkMtlName.MatType == 0x10)  // MWO hula girl for example
+                                    {
+                                        //tmpMtlName[k] = tmpChunk.chunkMtlName;
+                                        //tmpMtlName[k].WriteChunk();
+                                    }
+                                }
+                                for (int i = 0; i < tmpMeshSubSets.NumMeshSubset; i++)
+                                {
+                                    // Write vertices data for each MeshSubSet
+                                    file.WriteLine("g");
+                                    for (int j = (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j < (int)tmpMeshSubSets.MeshSubsets[i].NumVertices + (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j++)
+                                    {
+                                        string s4 = String.Format("v {0:F7} {1:F7} {2:F7}", tmpDataStreamVertices.Vertices[j].x, tmpDataStreamVertices.Vertices[j].y, tmpDataStreamVertices.Vertices[j].z);
+                                        file.WriteLine(s4);
+                                    }
+                                    file.WriteLine();
+                                    for (int j = (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j < (int)tmpMeshSubSets.MeshSubsets[i].NumVertices + (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j++)
+                                    {
+                                        string s5 = String.Format("vt {0:F7} {1:F7} 0.0 ", tmpDataStreamUVs.UVs[j].U, 1 - tmpDataStreamUVs.UVs[j].V);
+                                        file.WriteLine(s5);
+                                    }
+                                    file.WriteLine();
+                                    for (int j = (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j < (int)tmpMeshSubSets.MeshSubsets[i].NumVertices + (int)tmpMeshSubSets.MeshSubsets[i].FirstVertex; j++)
+                                    {
+                                        string s6 = String.Format("vn {0:F7} {1:F7} {2:F7}", tmpDataStreamNormals.Normals[j].x, tmpDataStreamNormals.Normals[j].y, tmpDataStreamNormals.Normals[j].z);
+                                        file.WriteLine(s6);
+                                    }
+                                    file.WriteLine();
+                                    // Now write out the faces info based on the MtlName
+                                    /*string s7 = String.Format("g {0}", tmpMtlName[tmpMeshSubSets.MeshSubsets[i].MatID].Name);  
+                                    file.WriteLine(s7);
+                                    string s8 = String.Format("usemtl {0}", tmpMtlName[tmpMeshSubSets.MeshSubsets[i].MatID].Name);
+                                    file.WriteLine(s8);
+                                    for (int j = (int)tmpMeshSubSets.MeshSubsets[i].FirstIndex; j < (int)tmpMeshSubSets.MeshSubsets[i].NumIndices + (int)tmpMeshSubSets.MeshSubsets[i].FirstIndex; j++)
+                                    {
+                                        string s9 = String.Format("f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}", tmpDataStreamIndices.Indices[j] + 1, tmpDataStreamIndices.Indices[j + 1] + 1, tmpDataStreamIndices.Indices[j + 2] + 1);
+                                        file.WriteLine(s9);
+                                        j = j + 2;
+                                    }
+                                    file.WriteLine();
+                                } */
+                                    // End of Submesh writing
+
+                                }
+                            }
+                            //{
+                            //    Console.WriteLine("tmpnodechunk id: {0}", tmpNodeChunk.id);
+                            //    foreach (Chunk nodechildren in CgfChunks.Where(a => a.chunkType == ChunkType.Node))
+                            //    {
+                            //        tmpNodeChild = nodechildren.chunkNode;
+                            //        {
+                            //            if (tmpNodeChild.Parent == nodechunk.chunkNode.id)
+                            //            {
+                            //                // 
+                            //                nodechunk.chunkNode.WriteChunk();
+                            //            }
+                            //        }
+                            //    }
+                            //}
+                        }
+
                     }
                 }
-                Name = new string(tmpName, 0, stringLength);
-                uint tmpPhysicsType = b.ReadUInt32();
-                PhysicsType = (MtlNamePhysicsType)Enum.ToObject(typeof(MtlNamePhysicsType), tmpPhysicsType);
-                NumChildren = b.ReadUInt32();
-                // Now we need to read the Children references.  2 parts; the number of children, and then 66 - numchildren padding
-                Children = new uint[NumChildren];
-                for (int i=0; i < NumChildren; i++)
+            }  // End of writing the output file
+        }
+        // Structures
+
+        public class Header
+        {
+            public char[] fileSignature; // The CGF file signature.  CryTek for 3.5, CrChF for 3.6
+            public uint fileType; // The CGF file type (geometry or animation)  3.5 only
+            public uint chunkVersion; // The version of the chunk table  3.5 only
+            public int fileOffset; //Position of the chunk table in the CGF file
+            public int numChunks; // Number of chunks in the Chunk Table (3.6 only.  3.5 has it in Chunk Table)
+
+            // methods
+            public Header(BinaryReader binReader)  //constructor with 1 arg
+            {
+                //Header cgfHeader = new Header();
+                // populate the Header objects
+                fileSignature = new char[8];
+                fileSignature = binReader.ReadChars(8);
+                fileType = binReader.ReadUInt32();
+                chunkVersion = binReader.ReadUInt32();
+                fileOffset = binReader.ReadInt32();
+
+                return;
+            }
+            public void WriteChunk()  // output header to console for testing
+            {
+                string tmpFileSig;
+                tmpFileSig = new string(fileSignature);
+                Console.WriteLine("*** HEADER ***");
+                Console.WriteLine("    Header Filesignature: {0}", tmpFileSig);
+                Console.WriteLine("    Header FileType: {0:X}", fileType);
+                Console.WriteLine("    Header ChunkVersion: {0:X}", chunkVersion);
+                Console.WriteLine("    Header ChunkTableOffset: {0:X}", fileOffset);
+                Console.WriteLine("*** END HEADER ***");
+                return;
+            }
+        }
+        public class ChunkTable  // reads the chunk table
+        {
+            public uint numChunks;
+            public List<ChunkHeader> chunkHeaders = new List<ChunkHeader>();
+
+            // methods
+            public void GetChunkTable(BinaryReader b, int f)
+            {
+                // need to seek to the start of the table here.  foffset points to the start of the table
+                b.BaseStream.Seek(f, 0);
+                numChunks = b.ReadUInt32();  // number of Chunks in the table.
+                int i; // counter for loop to read all the chunkHeaders
+                for (i = 0; i < numChunks; i++)
                 {
-                    Children[i] = b.ReadUInt32();
-                }
-                // Now dump the rest of the padding
-                Padding = new uint[66 - NumChildren];
-                for (int i = 0; i < 66 - NumChildren; i++)
-                {
-                    Padding[i] = b.ReadUInt32();
+                    //Console.WriteLine("Loop {0}", i);
+                    ChunkHeader tempChkHdr = new ChunkHeader(); // Add this chunk header to the list
+                    uint headerType = b.ReadUInt32(); // read the value, then parse it
+                    tempChkHdr.type = (ChunkType)Enum.ToObject(typeof(ChunkType), headerType);
+                    //Console.WriteLine("headerType: '{0}'", tempChkHdr.type);
+                    uint chunkversionType = b.ReadUInt32();
+                    tempChkHdr.version = (ChunkVersion)Enum.ToObject(typeof(ChunkVersion), chunkversionType);
+                    tempChkHdr.offset = b.ReadUInt32();
+                    tempChkHdr.id = b.ReadUInt32();  // This is the reference number to identify the mesh/datastream
+                    tempChkHdr.unknown = b.ReadUInt32();
+
+                    chunkHeaders.Add(tempChkHdr);
+                    //tempChkHdr.WriteChunk();
                 }
             }
-            if (version == 0x802)
+            public void WriteChunk()
             {
-                // Don't need fillers for this type, but numchildren is weird...
-                char[] tmpName = new char[128];
-                tmpName = b.ReadChars(128);
+                foreach (ChunkHeader chkHdr in chunkHeaders)
+                {
+                    chkHdr.WriteChunk();
+                }
+            }
+        }
+        public class ChunkHeader
+        {
+            public ChunkType type;
+            public ChunkVersion version;
+            public uint offset;
+            public uint id;
+            public uint unknown; //  TBD
+
+            // methods
+            /*public void GetChunkHeader()
+            {
+                type = new ChunkType();
+                version = new ChunkVersion();
+                offset = new uint();
+                id = new uint();
+                unknown = new uint();
+            }*/
+            // never used; refactor
+            public void WriteChunk()  // write the Chunk Header Table to the console.  For testing.
+            {
+                Console.WriteLine("*** CHUNK HEADER ***");
+                Console.WriteLine("    ChunkType: {0}", type);
+                Console.WriteLine("    ChunkVersion: {0:X}", version);
+                Console.WriteLine("    offset: {0:X}", offset);
+                Console.WriteLine("    ID: {0:X}", id);
+                Console.WriteLine("*** END CHUNK HEADER ***");
+            }
+        }
+
+
+        public class Chunk // Main class has Fileoffset to identify where the chunk starts
+        {
+            public FileOffset fOffset = new FileOffset();  // starting offset of the chunk.  Int, not uint
+            public ChunkType chunkType; // Type of chunk
+            public uint version; // version of this chunk
+            public uint id; // ID of the chunk.
+            // public int offset; // simpler way of getting fOffset;  Will need to refactor eventually
+            // These will be uninstantiated if it's not that kind of chunk
+            public ChunkTimingFormat chunkTimingFormat;
+            public ChunkMtlName chunkMtlName;
+            public ChunkExportFlags chunkExportFlags;
+            public ChunkSourceInfo chunkSourceInfo;
+            public ChunkDataStream chunkDataStream;
+            public ChunkMeshSubsets chunkMeshSubsets;
+            public ChunkMesh chunkMesh;
+            public ChunkNode chunkNode;
+            public ChunkHelper chunkHelper;
+
+            public virtual void ReadChunk(BinaryReader b, uint f)
+            {
+                // Don't do anything.  This is just a placeholder
+            }
+            public virtual void WriteChunk()
+            {
+                // Don't do anything.  Placeholder
+            }
+        }
+        public class ChunkTimingFormat : Chunk // cccc000e:  Timing format chunk
+        {
+            // public ChunkType ChunkTiming;    // Moved to Chunk
+            // public uint Version;             // Moved to Chunk
+            public float SecsPerTick;
+            public int TicksPerFrame;
+            public uint Unknown1; // 4 bytes, not sure what they are
+            public uint Unknown2; // 4 bytes, not sure what they are
+            public RangeEntity GlobalRange;
+            public int NumSubRanges;
+
+            public override void ReadChunk(BinaryReader b, uint f)
+            {
+                b.BaseStream.Seek(f, 0); // seek to the beginning of the Timing Format chunk
+                uint tmpChkType = b.ReadUInt32();
+                chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChkType);
+                version = b.ReadUInt32();  //0x00000918 is Far Cry, Crysis, MWO, Aion
+                //fOffset = b.ReadUInt32();
+                //id = b.ReadUInt32();
+                SecsPerTick = b.ReadSingle();
+                TicksPerFrame = b.ReadInt32();
+                Unknown1 = b.ReadUInt32();
+                Unknown2 = b.ReadUInt32();
+                GlobalRange.Name = new char[32];
+                GlobalRange.Name = b.ReadChars(32);  // Name is technically a String32, but F those structs
+                GlobalRange.Start = b.ReadInt32();
+                GlobalRange.End = b.ReadInt32();
+                chunkTimingFormat = this;
+            }
+            public override void WriteChunk()
+            {
+                string tmpName = new string(GlobalRange.Name);
+                Console.WriteLine("*** TIMING CHUNK ***");
+                Console.WriteLine("    Version: {0:X}", version);
+                Console.WriteLine("    Secs Per Tick: {0}", SecsPerTick);
+                Console.WriteLine("    Ticks Per Frame: {0}", TicksPerFrame);
+                Console.WriteLine("    Global Range:  Name: {0}", tmpName);
+                Console.WriteLine("    Global Range:  Start: {0}", GlobalRange.Start);
+                Console.WriteLine("    Global Range:  End:  {0}", GlobalRange.End);
+                Console.WriteLine("*** END TIMING CHUNK ***");
+            }
+        }
+        public class ChunkExportFlags : Chunk  // cccc0015:  Export Flags
+        {
+            // public ChunkType ExportFlag;
+            //public uint Version;  // Far Cry and Crysis:  1
+            public uint ChunkOffset;  // for some reason the offset of Export Flag chunk is stored here.
+            public uint Flags;    // ExportFlags type technically, but it's just 1 value
+            public uint Unknown1; // uint, no idea what they are
+            public uint[] RCVersion;  // 4 uints
+            public char[] RCVersionString;  // Technically String16
+            public uint[] Reserved;  // 32 uints
+            public override void ReadChunk(BinaryReader b, uint f)
+            {
+                b.BaseStream.Seek(f, 0); // seek to the beginning of the Timing Format chunk
+                uint tmpExportFlag = b.ReadUInt32();
+                chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpExportFlag);
+                version = b.ReadUInt32();
+                ChunkOffset = b.ReadUInt32();
+                id = b.ReadUInt32();
+                Unknown1 = b.ReadUInt32();
+                RCVersion = new uint[4];
+                int count = 0;
+                for (count = 0; count < 4; count++)
+                {
+                    RCVersion[count] = b.ReadUInt32();
+                }
+                RCVersionString = new char[16];
+                RCVersionString = b.ReadChars(16);
+                Reserved = new uint[32];
+                for (count = 0; count < 4; count++)
+                {
+                    Reserved[count] = b.ReadUInt32();
+                }
+                chunkExportFlags = this;
+            }
+            public override void WriteChunk()
+            {
+                string tmpVersionString = new string(RCVersionString);
+                Console.WriteLine("*** START EXPORT FLAGS ***");
+                Console.WriteLine("    ChunkType: {0}", chunkType);
+                Console.WriteLine("    Version: {0}", version);
+                Console.WriteLine("    Flags: {0}", Flags);
+                Console.Write("    RC Version: ");
+                for (int i = 0; i < 4; i++)
+                {
+                    Console.Write(RCVersion[i]);
+                }
+                Console.WriteLine();
+                Console.WriteLine("    RCVersion String: {0}", tmpVersionString);
+                Console.WriteLine("    Reserved: {0:X}", Reserved);
+                Console.WriteLine("*** END EXPORT FLAGS ***");
+            }
+
+            //<version num="1">Far Cry, Crysis</version>
+            //<add name="Flags" type="ExportFlags" />
+            //<add name="RC Version" type="uint" arr1="4" />
+            //<add name="RC Version String" type="String16" />
+            //<add name="Reserved" type="uint" arr1="32" />
+
+
+        }
+        public class ChunkHelper : Chunk       // cccc0001:  Helper chunk.  This is the top level, then nodes, then mesh, then mesh subsets
+        {
+            public string Name;
+            public HelperType Type;
+            public Vector3 Pos;
+            public Matrix44 Transform;
+
+            public override void ReadChunk(BinaryReader b, uint f)
+            {
+                b.BaseStream.Seek(f, 0); // seek to the beginning of the Timing Format chunk
+                chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), b.ReadUInt32());
+                version = b.ReadUInt32();
+                fOffset.Offset = b.ReadInt32();
+                id = b.ReadUInt32();
+                Type = (HelperType)Enum.ToObject(typeof(HelperType), b.ReadUInt32());
+                if (version == 0x744)  // only has the Position.
+                {
+                    Pos.x = b.ReadSingle();
+                    Pos.y = b.ReadSingle();
+                    Pos.z = b.ReadSingle();
+                }
+                else if (version == 0x362)   // will probably never see these.
+                {
+                    char[] tmpName = new char[64];
+                    tmpName = b.ReadChars(64);
+                    int stringLength = 0;
+                    for (int i = 0; i < tmpName.Length; i++)
+                    {
+                        if (tmpName[i] == 0)
+                        {
+                            stringLength = i;
+                            break;
+                        }
+                    }
+                    Name = new string(tmpName, 0, stringLength);
+                    Type = (HelperType)Enum.ToObject(typeof(HelperType), b.ReadUInt32());
+                    Pos.x = b.ReadSingle();
+                    Pos.y = b.ReadSingle();
+                    Pos.z = b.ReadSingle();
+                }
+                chunkHelper = this;
+            }
+            public override void WriteChunk()
+            {
+                Console.WriteLine("*** START Helper Chunk ***");
+                Console.WriteLine("    ChunkType:   {0}", chunkType);
+                Console.WriteLine("    Version:     {0:X}", version);
+                Console.WriteLine("    ID:          {0:X}", id);
+                Console.WriteLine("    HelperType:  {0}", Type);
+                Console.WriteLine("*** END Helper Chunk ***");
+            }
+        }
+        public class ChunkNode : Chunk          // cccc000b:   Node
+        {
+            public string Name;  // String 64.
+            public uint Object;  // Mesh or Helper Object chunk ID
+            public uint Parent;  // Node parent.  if 0xFFFFFFFF, it's the top node.
+            public uint NumChildren;
+            public uint Material;  // reference to the material ID for this Node chunk
+            public Boolean IsGroupHead; //
+            public Boolean IsGroupMember;
+            public byte[] Reserved1; // padding, 2 bytes long
+            public Matrix44 Transform;   // Transformation matrix
+            public Vector3 Pos;  // position vector of above transform
+            public Quat Rot;     // rotation component of above transform
+            public Vector3 Scl;  // Scalar component of above matrix44
+            public uint PosCtrl;  // Position Controller ID (Controller Chunk type)
+            public uint RotCtrl;  // Rotation Controller ID 
+            public uint SclCtrl;  // Scalar controller ID
+            // These are children, materials, etc.
+            public ChunkMtlName MaterialChunk;
+            public ChunkNode[] NodeChildren;
+
+
+            public override void ReadChunk(BinaryReader b, uint f)
+            {
+                b.BaseStream.Seek(f, 0); // seek to the beginning of the Node chunk
+                uint tmpNodeChunk = b.ReadUInt32();
+                chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpNodeChunk);
+                version = b.ReadUInt32();
+                fOffset.Offset = b.ReadInt32();
+                id = b.ReadUInt32();
+                // Read the Name string
+                char[] tmpName = new char[64];
+                tmpName = b.ReadChars(64);
                 int stringLength = 0;
                 for (int i = 0; i < tmpName.Length; i++)
                 {
@@ -978,380 +647,555 @@ namespace CgfConverter
                     }
                 }
                 Name = new string(tmpName, 0, stringLength);
-                Filler3 = b.ReadUInt32();
-                uint tmpPhysicsType = b.ReadUInt32();
-                PhysicsType = (MtlNamePhysicsType)Enum.ToObject(typeof(MtlNamePhysicsType), tmpPhysicsType);
+                Object = b.ReadUInt32(); // Object reference ID
+                Parent = b.ReadUInt32();
+                NumChildren = b.ReadUInt32();
+                Material = b.ReadUInt32();  // Material ID?
+                chunkNode = this;
+                // Good enough for now.
             }
-            chunkMtlName = this;
+            public override void WriteChunk()
+            {
+                Console.WriteLine("*** START Node Chunk ***");
+                Console.WriteLine("    ChunkType:           {0}", chunkType);
+                Console.WriteLine("    Node ID:             {0:X}", id);
+                Console.WriteLine("    Node Name:           {0}", Name);
+                Console.WriteLine("    Object ID:           {0:X}", Object);
+                Console.WriteLine("    Parent ID:           {0:X}", Parent);
+                Console.WriteLine("    Number of Children:  {0}", NumChildren);
+                Console.WriteLine("    Material ID:         {0:X}", Material); // 0x1 is mtllib w children, 0x10 is mtl no children, 0x18 is child
+                Console.WriteLine("*** END Node Chunk ***");
+
+            }
         }
-        public override void WriteChunk()
+        public class ChunkSourceInfo : Chunk  // cccc0013:  Source Info chunk.  Pretty useless overall
         {
-            Console.WriteLine("*** START MATERIAL NAMES ***");
-            Console.WriteLine("    ChunkType:           {0}", chunkType);
-            Console.WriteLine("    Material Name:       {0}", Name);
-            Console.WriteLine("    Material ID:         {0:X}", id);
-            Console.WriteLine("    Number of Children:  {0}", NumChildren);
-            Console.WriteLine("    Material Type:       {0:X}", MatType); // 0x1 is mtllib w children, 0x10 is mtl no children, 0x18 is child
-            Console.WriteLine("    Physics Type:        {0}", PhysicsType);
-            Console.WriteLine("*** END MATERIAL NAMES ***");
+            public string SourceFile;
+            public string Date;
+            public string Author;
+
+            public override void ReadChunk(BinaryReader b, uint f)  //
+            {
+                b.BaseStream.Seek(f, 0);
+                chunkType = ChunkType.SourceInfo; // this chunk doesn't actually have the chunktype header.
+                // you'd think ReadString() would read from the current offset to the next null byte, but IT DOESN'T.
+                int count = 0;                      // read original file
+                while (b.ReadChar() != 0)
+                {
+                    count++;
+                } // count now has the null position relative to the seek position
+                b.BaseStream.Seek(f, 0);
+                char[] tmpSource = new char[count];
+                tmpSource = b.ReadChars(count + 1);
+                SourceFile = new string(tmpSource);
+
+                count = 0;                          // Read date
+                while (b.ReadChar() != 0)
+                {
+                    count++;
+                } // count now has the null position relative to the seek position
+                b.BaseStream.Seek(b.BaseStream.Position - count - 1, 0);
+                char[] tmpDate = new char[count];
+                tmpDate = b.ReadChars(count + 1);  //strip off last 2 characters, because it contains a return
+                Date = new string(tmpDate);
+
+                count = 0;                           // Read Author
+                while (b.ReadChar() != 0)
+                {
+                    count++;
+                } // count now has the null position relative to the seek position
+                b.BaseStream.Seek(b.BaseStream.Position - count - 1, 0);
+                char[] tmpAuthor = new char[count];
+                tmpAuthor = b.ReadChars(count + 1);
+                Author = new string(tmpAuthor);
+                id = 0xFF;
+                chunkSourceInfo = this;
+            }
+            public override void WriteChunk()
+            {
+                Console.WriteLine("*** SOURCE INFO CHUNK ***");
+                Console.WriteLine("    Sourcefile: {0}.  Length {1}", SourceFile, SourceFile.Length);
+                Console.WriteLine("    Date:       {0}.  Length {1}", Date, Date.Length);
+                Console.WriteLine("    Author:     {0}.  Length {1}", Author, Author.Length);
+                Console.WriteLine("*** END SOURCE INFO CHUNK ***");
+            }
         }
+        public class ChunkMtlName : Chunk  // cccc0014:  provides material name as used in the .mtl file
+        {
+            // need to find the material ID used by the mesh subsets
+            public uint Flags1;  // pointer to the start of this chunk?
+            public uint MatType; // for type 800, 0x1 is material library, 0x12 is child
+            public uint Filler2; // for type 800, unknown value
+            public uint NumChildren802; // for type 802, unknown value (number of materials for type 802?)
+            public uint Filler4; // for type 802, unknown value
+            public string Name; // technically a String128 class
+            public MtlNamePhysicsType PhysicsType; // enum of a 4 byte uint  For 802 it's an array, 800 a single element.
+            public MtlNamePhysicsType[] PhysicsTypeArray; // enum of a 4 byte uint  For 802 it's an array, 800 a single element.
+            public uint NumChildren; // number of materials in this name. Max is 66
+            // need to implement an array of references here?  Name of Children
+            public uint[] Children;
+            public uint[] Padding;  // array length of 32
+            public uint AdvancedData;  // probably not used
+            public float Opacity; // probably not used
+            public int[] Reserved;  // array length of 32
+
+            public override void ReadChunk(BinaryReader b, uint f)
+            {
+                b.BaseStream.Seek(f, 0); // seek to the beginning of the Material Name chunk
+                uint tmpChunkMtlName = b.ReadUInt32();
+                chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChunkMtlName);
+                version = b.ReadUInt32();
+                fOffset.Offset = b.ReadInt32();  // offset to this chunk
+                id = b.ReadUInt32();  // ref/chunk number
+                // at this point we need to differentiate between Version 800 and 802, since the format differs.
+                if (version == 0x800 || version == 0x744)  // guessing on the 744. Aion.
+                {
+                    MatType = b.ReadUInt32();  // if 0x1, then material lib.  If 0x12, mat name.  This is actually a bitstruct.
+                    Filler2 = b.ReadUInt32();
+                    // read the material Name, which is a 128 byte char array.  really want it as a string...
+                    // long tmpPointer = b.BaseStream.Position;
+                    char[] tmpName = new char[128];
+                    tmpName = b.ReadChars(128);
+                    int stringLength = 0;
+                    for (int i = 0; i < tmpName.Length; i++)
+                    {
+                        if (tmpName[i] == 0)
+                        {
+                            stringLength = i;
+                            break;
+                        }
+                    }
+                    Name = new string(tmpName, 0, stringLength);
+                    PhysicsType = (MtlNamePhysicsType)Enum.ToObject(typeof(MtlNamePhysicsType), b.ReadUInt32());
+                    NumChildren = b.ReadUInt32();
+                    // Now we need to read the Children references.  2 parts; the number of children, and then 66 - numchildren padding
+                    Children = new uint[NumChildren];
+                    for (int i = 0; i < NumChildren; i++)
+                    {
+                        Children[i] = b.ReadUInt32();
+                    }
+                    // Now dump the rest of the padding
+                    Padding = new uint[66 - NumChildren];
+                    for (int i = 0; i < 66 - NumChildren; i++)
+                    {
+                        Padding[i] = b.ReadUInt32();
+                    }
+                }
+                if (version == 0x802)
+                {
+                    // Don't need fillers for this type, but there are no children.
+                    char[] tmpName = new char[128];
+                    tmpName = b.ReadChars(128);
+                    int stringLength = 0;
+                    for (int i = 0; i < tmpName.Length; i++)
+                    {
+                        if (tmpName[i] == 0)
+                        {
+                            stringLength = i;
+                            break;
+                        }
+                    }
+                    Name = new string(tmpName, 0, stringLength);
+                    NumChildren802 = b.ReadUInt32();  // number of materials
+                    PhysicsTypeArray = new MtlNamePhysicsType[NumChildren802];
+                    for (int i = 0; i < NumChildren802; i++)
+                    {
+                        PhysicsTypeArray[i] = (MtlNamePhysicsType)Enum.ToObject(typeof(MtlNamePhysicsType), b.ReadUInt32());
+                    }
+                }
+                chunkMtlName = this;
+            }
+            public override void WriteChunk()
+            {
+                Console.WriteLine("*** START MATERIAL NAMES ***");
+                Console.WriteLine("    ChunkType:           {0}", chunkType);
+                Console.WriteLine("    Material Name:       {0}", Name);
+                Console.WriteLine("    Material ID:         {0:X}", id);
+                Console.WriteLine("    Number of Children:  {0}", NumChildren);
+                Console.WriteLine("    Material Type:       {0:X}", MatType); // 0x1 is mtllib w children, 0x10 is mtl no children, 0x18 is child
+                Console.WriteLine("    Physics Type:        {0}", PhysicsType);
+                Console.WriteLine("*** END MATERIAL NAMES ***");
+            }
+        }
+        public class ChunkDataStream : Chunk // cccc0016:  Contains data such as vertices, normals, etc.
+        {
+            public uint Flags; // not used, but looks like the start of the Data Stream chunk
+            public uint Flags1; // not used.  uint after Flags that looks like offsets
+            public uint Flags2; // not used, looks almost like a filler.
+            public DataStreamType dataStreamType; // type of data (vertices, normals, uv, etc)
+            public uint NumElements; // Number of data entries
+            public uint BytesPerElement; // Bytes per data entry
+            public uint Reserved1;
+            public uint Reserved2;
+            // Need to be careful with using float for Vertices and normals.  technically it's a floating point of length BytesPerElement.  May need to fix this.
+            public Vector3[] Vertices;  // For dataStreamType of 0, length is NumElements. 
+            public Vector3[] Normals;   // For dataStreamType of 1, length is NumElements.
+            public UV[] UVs;            // for datastreamType of 2, length is NumElements.
+            public IRGB[] RGBColors;    // for dataStreamType of 3, length is NumElements.  Bytes per element of 3
+            public IRGBA[] RGBAColors;  // for dataStreamType of 4, length is NumElements.  Bytes per element of 4
+            public ushort[] Indices;    // for dataStreamType of 5, length is NumElements.
+            // For Tangents on down, this may be a 2 element array.  See line 846+ in cgf.xml
+            public Tangent[,] Tangents;  // for dataStreamType of 6, length is NumElements,2.  
+            public byte[,] ShCoeffs;     // for dataStreamType of 7, length is NumElement,BytesPerElements.
+            public byte[,] ShapeDeformation; // for dataStreamType of 8, length is NumElements,BytesPerElement.
+            public byte[,] BoneMap;      // for dataStreamType of 9, length is NumElements,BytesPerElement.
+            public byte[,] FaceMap;      // for dataStreamType of 10, length is NumElements,BytesPerElement.
+            public byte[,] VertMats;     // for dataStreamType of 11, length is NumElements,BytesPerElement.
+
+            public override void ReadChunk(BinaryReader b, uint f)
+            {
+                b.BaseStream.Seek(f, 0); // seek to the beginning of the DataStream chunk
+                uint tmpChunkDataStream = b.ReadUInt32();
+                chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChunkDataStream);
+                version = b.ReadUInt32();
+                Flags = b.ReadUInt32();  // Offset to this chunk
+                //int tmpfOffset = b.ReadInt32();
+                //fOffset = (FileOffset)Enum.ToObject(typeof(FileOffset), tmpfOffset);  // offset of this datastream chunk
+                id = b.ReadUInt32();  // Reference to the data stream type!  4th word after the start of the chunk
+                Flags2 = b.ReadUInt32(); // another filler
+                uint tmpdataStreamType = b.ReadUInt32();
+                dataStreamType = (DataStreamType)Enum.ToObject(typeof(DataStreamType), tmpdataStreamType);
+                NumElements = b.ReadUInt32(); // number of elements in this chunk
+                BytesPerElement = b.ReadUInt32(); // bytes per element
+                Reserved1 = b.ReadUInt32();
+                Reserved2 = b.ReadUInt32();
+                // Now do loops to read for each of the different Data Stream Types.  If vertices, need to populate Vector3s for example.
+                switch (dataStreamType)
+                {
+                    case DataStreamType.VERTICES:  // Ref is 0x00000000
+                        {
+                            Vertices = new Vector3[NumElements];
+                            if (BytesPerElement == 12)
+                            {
+                                for (int i = 0; i < NumElements; i++)
+                                {
+                                    Vertices[i].x = b.ReadSingle();
+                                    Vertices[i].y = b.ReadSingle();
+                                    Vertices[i].z = b.ReadSingle();
+                                }
+                            }
+                            if (BytesPerElement == 8)  // Old Star Citizen files
+                            {
+                                // 2 byte floats.  Use the Half structure from TK.Math
+                                for (int i = 0; i < NumElements; i++)
+                                {
+                                    //Single flx = new Single();
+                                    Half xshort = new Half();
+                                    xshort.bits = b.ReadUInt16();
+                                    //flx = (Single) b.ReadUInt16();
+                                    Vertices[i].x = xshort.ToSingle();
+
+                                    Half yshort = new Half();
+                                    yshort.bits = b.ReadUInt16();
+                                    Vertices[i].y = yshort.ToSingle();
+
+                                    Half zshort = new Half();
+                                    zshort.bits = b.ReadUInt16();
+                                    Vertices[i].z = zshort.ToSingle();
+
+                                    short w = b.ReadInt16();  // dump this as not needed.  Last 2 bytes are surplus...sort of.
+                                    // Console.WriteLine("{0} {1} {2} {3}", i, Vertices[i].x, Vertices[i].y, Vertices[i].z);
+                                }
+
+                            }
+                            // Console.WriteLine("{0} elements read", VertexList.Length);
+                            // Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
+                            break;
+                        }
+                    case DataStreamType.INDICES:  // Ref is 
+                        {
+                            Indices = new ushort[NumElements];
+                            for (int i = 0; i < NumElements; i++)
+                            {
+                                Indices[i] = b.ReadUInt16();
+                                // Console.WriteLine("Indice {0} is {1}", i, Indices[i]);
+                                if (i > NumElements - 20)
+                                {
+                                    //Console.WriteLine("Indices {0} is {1}", i, Indices[i]);
+                                }
+                            }
+                            //Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
+                            break;
+                        }
+                    case DataStreamType.NORMALS:
+                        {
+                            Normals = new Vector3[NumElements];
+                            for (int i = 0; i < NumElements; i++)
+                            {
+                                Normals[i].x = b.ReadSingle();
+                                Normals[i].y = b.ReadSingle();
+                                Normals[i].z = b.ReadSingle();
+                                // Console.WriteLine("{0}  {1}  {2}", Normals[i].x, Normals[i].y, Normals[i].z);
+                            }
+                            //Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
+                            break;
+
+                        }
+                    case DataStreamType.UVS:
+                        {
+                            UVs = new UV[NumElements];
+                            for (int i = 0; i < NumElements; i++)
+                            {
+                                UVs[i].U = b.ReadSingle();
+                                UVs[i].V = b.ReadSingle();
+                                // Console.WriteLine("{0}   {1}", UVs[i].U, UVs[i].V);
+                            }
+                            //Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
+                            break;
+                        }
+                    case DataStreamType.TANGENTS:
+                        {
+                            Tangents = new Tangent[NumElements, 2];
+                            for (int i = 0; i < NumElements; i++)
+                            {
+                                // These have to be divided by 32767 to be used properly (value between 0 and 1)
+                                Tangents[i, 0].x = b.ReadInt16();
+                                Tangents[i, 0].y = b.ReadInt16();
+                                Tangents[i, 0].z = b.ReadInt16();
+                                Tangents[i, 0].w = b.ReadInt16();
+                                Tangents[i, 1].x = b.ReadInt16();
+                                Tangents[i, 1].y = b.ReadInt16();
+                                Tangents[i, 1].z = b.ReadInt16();
+                                Tangents[i, 1].w = b.ReadInt16();
+                                //Console.WriteLine("{0} {1} {2} {3}", Tangents[i, 0].x, Tangents[i, 0].y, Tangents[i, 0].z, Tangents[i, 0].w);
+                            }
+                            // Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
+                            break;
+                        }
+                    case DataStreamType.COLORS:
+                        {
+                            if (BytesPerElement == 3)
+                            {
+                                RGBColors = new IRGB[NumElements];
+                                for (int i = 0; i < NumElements; i++)
+                                {
+                                    RGBColors[i].r = b.ReadByte();
+                                    RGBColors[i].g = b.ReadByte();
+                                    RGBColors[i].b = b.ReadByte();
+                                }
+                            }
+                            if (BytesPerElement == 4)
+                            {
+                                RGBAColors = new IRGBA[NumElements];
+                                for (int i = 0; i < NumElements; i++)
+                                {
+                                    RGBAColors[i].r = b.ReadByte();
+                                    RGBAColors[i].g = b.ReadByte();
+                                    RGBAColors[i].b = b.ReadByte();
+                                    RGBAColors[i].a = b.ReadByte();
+
+                                }
+                            }
+                            break;
+                        }
+                    default:
+                        {
+                            Console.WriteLine("***** Unknown DataStream Type *****");
+                            break;
+                        }
+                }
+                chunkDataStream = this;
+            }
+            public override void WriteChunk()
+            {
+                //string tmpDataStream = new string(Name);
+                Console.WriteLine("*** START DATASTREAM ***");
+                Console.WriteLine("    ChunkType:                       {0}", chunkType);
+                Console.WriteLine("    Version:                         {0:X}", version);
+                Console.WriteLine("    DataStream chunk starting point: {0:X}", Flags);
+                Console.WriteLine("    Chunk ID:                        {0:X}", id);
+                Console.WriteLine("    DataStreamType:                  {0}", dataStreamType);
+                Console.WriteLine("    Number of Elements:              {0}", NumElements);
+                Console.WriteLine("    Bytes per Element:               {0}", BytesPerElement);
+                Console.WriteLine("*** END DATASTREAM ***");
+
+            }
+        }
+        public class ChunkMeshSubsets : Chunk // cccc0017:  The different parts of a mesh.  Needed for obj exporting
+        {
+
+            public uint Offset;
+            public uint Flags; // probably the offset
+            public uint NumMeshSubset; // number of mesh subsets
+            public int Reserved1;
+            public int Reserved2;
+            public int Reserved3;
+            public MeshSubset[] MeshSubsets;
+
+            public override void ReadChunk(BinaryReader b, uint f)
+            {
+                b.BaseStream.Seek(f, 0); // seek to the beginning of the MeshSubset chunk
+                uint tmpChunkType = b.ReadUInt32();
+                chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChunkType);
+                version = b.ReadUInt32(); // probably 800
+                Offset = b.ReadUInt32();  // offset of this chunk
+                id = b.ReadUInt32(); // ID of this chunk.  Used to reference the mesh chunk
+                Flags = b.ReadUInt32();   // Might be a ref to this chunk
+                NumMeshSubset = b.ReadUInt32();  // number of mesh subsets
+                Reserved1 = b.ReadInt32();
+                Reserved2 = b.ReadInt32();
+                // Reserved3 = b.ReadInt32();
+                MeshSubsets = new MeshSubset[NumMeshSubset];
+                for (int i = 0; i < NumMeshSubset; i++)
+                {
+                    MeshSubsets[i].FirstIndex = b.ReadUInt32();
+                    MeshSubsets[i].NumIndices = b.ReadUInt32();
+                    MeshSubsets[i].FirstVertex = b.ReadUInt32();
+                    MeshSubsets[i].NumVertices = b.ReadUInt32();
+                    MeshSubsets[i].MatID = b.ReadUInt32();
+                    MeshSubsets[i].Radius = b.ReadSingle();
+                    MeshSubsets[i].Center.x = b.ReadSingle();
+                    MeshSubsets[i].Center.y = b.ReadSingle();
+                    MeshSubsets[i].Center.z = b.ReadSingle();
+                }
+                chunkMeshSubsets = this;
+            }
+            public override void WriteChunk()
+            {
+                Console.WriteLine("*** START MESH SUBSET CHUNK ***");
+                Console.WriteLine("    ChunkType:       {0}", chunkType);
+                Console.WriteLine("    Mesh SubSet ID:  {0:X}", id);
+                Console.WriteLine("    Number of Mesh Subsets: {0}", NumMeshSubset);
+                for (int i = 0; i < NumMeshSubset; i++)
+                {
+                    Console.WriteLine("        ** Mesh Subset:          {0}", i);
+                    Console.WriteLine("           First Index:          {0}", MeshSubsets[i].FirstIndex);
+                    Console.WriteLine("           Number of Indices:    {0}", MeshSubsets[i].NumIndices);
+                    Console.WriteLine("           First Vertex:         {0}", MeshSubsets[i].FirstVertex);
+                    Console.WriteLine("           Number of Vertices:   {0}", MeshSubsets[i].NumVertices);
+                    Console.WriteLine("           Material ID:          {0}", MeshSubsets[i].MatID);
+                    Console.WriteLine("           Radius:               {0}", MeshSubsets[i].Radius);
+                    Console.WriteLine("           Center:   {0},{1},{2}", MeshSubsets[i].Center.x, MeshSubsets[i].Center.y, MeshSubsets[i].Center.z);
+                    Console.WriteLine("        ** Mesh Subset {0} End", i);
+                }
+                Console.WriteLine("*** END MESH SUBSET CHUNK ***");
+            }
+        }
+        public class ChunkMesh : Chunk      //  cccc0000:  Object that points to the datastream chunk.
+        {
+            // public uint Version;  // 623 Far Cry, 744 Far Cry, Aion, 800 Crysis
+            //public bool HasVertexWeights; // for 744
+            //public bool HasVertexColors; // 744
+            //public bool InWorldSpace; // 623
+            //public byte Reserved1;  // padding byte, 744
+            //public byte Reserved2;  // padding byte, 744
+            public uint Flags1;  // 800  Offset of this chunk. 
+            // public uint ID;  // 800  Chunk ID
+            public uint Unknown1; // for 800, not sure what this is.  Value is 2?
+            public uint Unknown2; // for 800, not sure what this is.  Value is 0?
+            public uint NumVertices; // 
+            public uint NumIndices;  // Number of indices (each triangle has 3 indices, so this is the number of triangles times 3).
+            //public uint NumUVs; // 744
+            //public uint NumFaces; // 744
+            // Pointers to various Chunk types
+            //public ChunkMtlName Material; // 623, Material Chunk, never encountered?
+            public uint NumMeshSubsets; // 800, Number of Mesh subsets
+            public uint MeshSubsets; // 800  Reference of the mesh subsets
+            // public ChunkVertAnim VertAnims; // 744.  not implemented
+            //public Vertex[] Vertices; // 744.  not implemented
+            //public Face[,] Faces; // 744.  Not implemented
+            //public UV[] UVs; // 744 Not implemented
+            //public UVFace[] UVFaces; // 744 not implemented
+            // public VertexWeight[] VertexWeights; // 744 not implemented
+            //public IRGB[] VertexColors; // 744 not implemented
+            public uint UnknownData; // 0x00 word here for some reason.
+            public uint VerticesData; // 800
+            public uint NormalsData; // 800
+            public uint UVsData; // 800
+            public uint ColorsData; // 800
+            public uint Colors2Data; // 800 
+            public uint IndicesData; // 800
+            public uint TangentsData; // 800
+            public uint ShCoeffsData; // 800
+            public uint ShapeDeformationData; //800
+            public uint BoneMapData; //800
+            public uint FaceMapData; // 800
+            public uint VertMatsData; // 800
+            public uint[] ReservedData = new uint[4]; // 800 Length 4
+            public uint[] PhysicsData = new uint[4]; // 800
+            public Vector3 MinBound; // 800 minimum coordinate values
+            public Vector3 MaxBound; // 800 Max coord values
+            public uint[] Reserved3 = new uint[32]; // 800 array of 32 uint values.
+
+            //public ChunkMeshSubsets chunkMeshSubset; // pointer to the mesh subset that belongs to this mesh
+
+            public override void ReadChunk(BinaryReader b, uint f)
+            {
+                b.BaseStream.Seek(f, 0); // seek to the beginning of the MeshSubset chunk
+                uint tmpChunkType = b.ReadUInt32();
+                chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChunkType);
+                version = b.ReadUInt32();
+                Flags1 = b.ReadUInt32();  // offset
+                id = b.ReadUInt32();  // Chunk ID  0x23 for candle
+                Unknown1 = b.ReadUInt32();  // unknown
+                Unknown1 = b.ReadUInt32();  // unknown
+                NumVertices = b.ReadUInt32();
+                NumIndices = b.ReadUInt32();   //
+                NumMeshSubsets = b.ReadUInt32();
+                MeshSubsets = b.ReadUInt32();  // refers to ID in mesh subsets  1d for candle
+                UnknownData = b.ReadUInt32();
+                VerticesData = b.ReadUInt32();  // ID of the datastream for the vertices for this mesh
+                NormalsData = b.ReadUInt32();   // ID of the datastream for the normals for this mesh
+                UVsData = b.ReadUInt32();     // refers to the ID in the Normals datastream?
+                ColorsData = b.ReadUInt32();
+                Colors2Data = b.ReadUInt32();
+                IndicesData = b.ReadUInt32();
+                TangentsData = b.ReadUInt32();
+                ShCoeffsData = b.ReadUInt32();
+                ShapeDeformationData = b.ReadUInt32();
+                BoneMapData = b.ReadUInt32();
+                FaceMapData = b.ReadUInt32();
+                VertMatsData = b.ReadUInt32();
+                for (int i = 0; i < 4; i++)
+                {
+                    ReservedData[i] = b.ReadUInt32();
+                }
+                for (int i = 0; i < 4; i++)
+                {
+                    PhysicsData[i] = b.ReadUInt32();
+                }
+                MinBound.x = b.ReadUInt32();
+                MinBound.y = b.ReadUInt32();
+                MinBound.z = b.ReadUInt32();
+                MaxBound.x = b.ReadUInt32();
+                chunkMesh = this;
+                // Not going to read the Reserved 32 element array.
+            }
+            public override void WriteChunk()
+            {
+                Console.WriteLine("*** START MESH CHUNK ***");
+                Console.WriteLine("    ChunkType:           {0}", chunkType);
+                Console.WriteLine("    Chunk ID:            {0:X}", id);
+                Console.WriteLine("    MeshSubSetID:        {0:X}", MeshSubsets);
+                Console.WriteLine("    Vertex Datastream:   {0:X}", VerticesData);
+                Console.WriteLine("    Normals Datastream:  {0:X}", NormalsData);
+                Console.WriteLine("    UVs Datastream:      {0:X}", UVsData);
+                Console.WriteLine("*** END MESH CHUNK ***");
+            }
+        }
+
+        public class FileSignature          // the signature that Cryengine files start with.  Crytek or CrChF 
+        {
+            public String Read(BinaryReader b)  // Checks the signature
+            {
+                char[] signature = new char[8];  // first 8 bytes are the file signature.
+                signature = b.ReadChars(8);
+                string s = new string(signature);
+                return s;
+            }
+        }
+
     }
-    public class ChunkDataStream : Chunk // cccc0016:  Contains data such as vertices, normals, etc.
-    {
-        public uint Flags; // not used, but looks like the start of the Data Stream chunk
-        public uint Flags1; // not used.  uint after Flags that looks like offsets
-        public uint Flags2; // not used, looks almost like a filler.
-        public DataStreamType dataStreamType; // type of data (vertices, normals, uv, etc)
-        public uint NumElements; // Number of data entries
-        public uint BytesPerElement; // Bytes per data entry
-        public uint Reserved1;
-        public uint Reserved2;
-        // Need to be careful with using float for Vertices and normals.  technically it's a floating point of length BytesPerElement.  May need to fix this.
-        public Vector3[] Vertices;  // For dataStreamType of 0, length is NumElements. 
-        public Vector3[] Normals;   // For dataStreamType of 1, length is NumElements.
-        public UV[] UVs;            // for datastreamType of 2, length is NumElements.
-        public IRGB[] RGBColors;    // for dataStreamType of 3, length is NumElements.  Bytes per element of 3
-        public IRGBA[] RGBAColors;  // for dataStreamType of 4, length is NumElements.  Bytes per element of 4
-        public ushort[] Indices;    // for dataStreamType of 5, length is NumElements.
-        // For Tangents on down, this may be a 2 element array.  See line 846+ in cgf.xml
-        public Tangent[,] Tangents;  // for dataStreamType of 6, length is NumElements,2.  
-        public byte[,] ShCoeffs;     // for dataStreamType of 7, length is NumElement,BytesPerElements.
-        public byte[,] ShapeDeformation; // for dataStreamType of 8, length is NumElements,BytesPerElement.
-        public byte[,] BoneMap;      // for dataStreamType of 9, length is NumElements,BytesPerElement.
-        public byte[,] FaceMap;      // for dataStreamType of 10, length is NumElements,BytesPerElement.
-        public byte[,] VertMats;     // for dataStreamType of 11, length is NumElements,BytesPerElement.
 
-        public override void ReadChunk(BinaryReader b, uint f)
-        {
-            b.BaseStream.Seek(f, 0); // seek to the beginning of the DataStream chunk
-            uint tmpChunkDataStream = b.ReadUInt32();
-            chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChunkDataStream);
-            version = b.ReadUInt32();
-            Flags = b.ReadUInt32();  // Offset to this chunk
-            //int tmpfOffset = b.ReadInt32();
-            //fOffset = (FileOffset)Enum.ToObject(typeof(FileOffset), tmpfOffset);  // offset of this datastream chunk
-            id = b.ReadUInt32();  // Reference to the data stream type!  4th word after the start of the chunk
-            Flags2 = b.ReadUInt32(); // another filler
-            uint tmpdataStreamType = b.ReadUInt32();
-            dataStreamType = (DataStreamType)Enum.ToObject(typeof(DataStreamType), tmpdataStreamType);
-            NumElements = b.ReadUInt32(); // number of elements in this chunk
-            BytesPerElement = b.ReadUInt32(); // bytes per element
-            Reserved1 = b.ReadUInt32();
-            Reserved2 = b.ReadUInt32();
-            // Now do loops to read for each of the different Data Stream Types.  If vertices, need to populate Vector3s for example.
-            switch (dataStreamType)
-            {
-                case DataStreamType.VERTICES:  // Ref is 0x00000000
-                {
-                    Vertices = new Vector3[NumElements];
-                    if (BytesPerElement == 12)
-                    {
-                        for (int i = 0; i < NumElements; i++)
-                        {
-                            Vertices[i].x = b.ReadSingle();
-                            Vertices[i].y = b.ReadSingle();
-                            Vertices[i].z = b.ReadSingle();
-                        }
-                    }
-                    if (BytesPerElement == 8)  // Old Star Citizen files
-                    {
-                        // 2 byte floats.  Use the Half structure from TK.Math
-                        for (int i = 0; i <NumElements; i++)
-                        {
-                            //Single flx = new Single();
-                            Half xshort = new Half();
-                            xshort.bits = b.ReadUInt16();
-                            //flx = (Single) b.ReadUInt16();
-                            Vertices[i].x = xshort.ToSingle();
 
-                            Half yshort = new Half();
-                            yshort.bits = b.ReadUInt16();
-                            Vertices[i].y = yshort.ToSingle();
-
-                            Half zshort = new Half();
-                            zshort.bits = b.ReadUInt16();
-                            Vertices[i].z = zshort.ToSingle();
-
-                            short w = b.ReadInt16();  // dump this as not needed.  Last 2 bytes are surplus...sort of.
-                            // Console.WriteLine("{0} {1} {2} {3}", i, Vertices[i].x, Vertices[i].y, Vertices[i].z);
-                        }
-
-                    }
-                    // Console.WriteLine("{0} elements read", VertexList.Length);
-                    // Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
-                    break;
-                }
-                case  DataStreamType.INDICES:  // Ref is 
-                {
-                    Indices = new ushort[NumElements];
-                    for (int i = 0; i < NumElements; i++)
-                    {
-                        Indices[i] = b.ReadUInt16();
-                        // Console.WriteLine("Indice {0} is {1}", i, Indices[i]);
-                        if (i > NumElements - 20)
-                        {
-                            //Console.WriteLine("Indices {0} is {1}", i, Indices[i]);
-                        }
-                    }
-                    //Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
-                    break;
-                }
-                case DataStreamType.NORMALS:
-                {
-                    Normals = new Vector3[NumElements];
-                    for (int i=0; i < NumElements ; i++)
-                    {
-                        Normals[i].x = b.ReadSingle();
-                        Normals[i].y = b.ReadSingle();
-                        Normals[i].z = b.ReadSingle();
-                        // Console.WriteLine("{0}  {1}  {2}", Normals[i].x, Normals[i].y, Normals[i].z);
-                    }
-                    //Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
-                    break;
-
-                }
-                case DataStreamType.UVS:
-                {
-                    UVs = new UV[NumElements];
-                    for (int i = 0; i < NumElements; i++)
-                    {
-                        UVs[i].U = b.ReadSingle();
-                        UVs[i].V = b.ReadSingle();
-                        // Console.WriteLine("{0}   {1}", UVs[i].U, UVs[i].V);
-                    }
-                    //Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
-                    break;
-                }
-                case DataStreamType.TANGENTS:
-                {
-                    Tangents = new Tangent[NumElements,2];
-                    for (int i = 0; i < NumElements; i++)
-                    {
-                        // These have to be divided by 32767 to be used properly (value between 0 and 1)
-                        Tangents[i, 0].x = b.ReadInt16();
-                        Tangents[i, 0].y = b.ReadInt16();
-                        Tangents[i, 0].z = b.ReadInt16();
-                        Tangents[i, 0].w = b.ReadInt16();
-                        Tangents[i, 1].x = b.ReadInt16();
-                        Tangents[i, 1].y = b.ReadInt16();
-                        Tangents[i, 1].z = b.ReadInt16();
-                        Tangents[i, 1].w = b.ReadInt16();
-                        //Console.WriteLine("{0} {1} {2} {3}", Tangents[i, 0].x, Tangents[i, 0].y, Tangents[i, 0].z, Tangents[i, 0].w);
-                    }
-                    // Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
-                    break;
-                }
-                case DataStreamType.COLORS:
-                {
-                    if (BytesPerElement == 3)
-                    {
-                        RGBColors = new IRGB[NumElements];
-                        for (int i = 0; i < NumElements; i++)
-                        {
-                            RGBColors[i].r = b.ReadByte();
-                            RGBColors[i].g = b.ReadByte();
-                            RGBColors[i].b = b.ReadByte();
-                        }
-                    }
-                    if (BytesPerElement == 4)
-                    {
-                        RGBAColors = new IRGBA[NumElements];
-                        for (int i = 0; i < NumElements; i++)
-                        {
-                            RGBAColors[i].r = b.ReadByte();
-                            RGBAColors[i].g = b.ReadByte();
-                            RGBAColors[i].b = b.ReadByte();
-                            RGBAColors[i].a = b.ReadByte();
-
-                        }
-                    }
-                    break;
-                }
-                default: 
-                {
-                    Console.WriteLine("***** Unknown DataStream Type *****");
-                    break;
-                }
-            }
-            chunkDataStream = this;
-        }
-        public override void WriteChunk()
-        {
-            //string tmpDataStream = new string(Name);
-            Console.WriteLine("*** START DATASTREAM ***");
-            Console.WriteLine("    ChunkType:                       {0}", chunkType);
-            Console.WriteLine("    Version:                         {0:X}", version);
-            Console.WriteLine("    DataStream chunk starting point: {0:X}", Flags);
-            Console.WriteLine("    Chunk ID:                        {0:X}", id);
-            Console.WriteLine("    DataStreamType:                  {0}", dataStreamType);
-            Console.WriteLine("    Number of Elements:              {0}", NumElements);
-            Console.WriteLine("    Bytes per Element:               {0}", BytesPerElement);
-            Console.WriteLine("*** END DATASTREAM ***");
-
-        }
+    // Aliases
+    public class FileOffset
+    { 
+        public int Offset;
     }
-    public class ChunkMeshSubsets : Chunk // cccc0017:  The different parts of a mesh.  Needed for obj exporting
-    {
-        
-        public uint Offset;
-        public uint Flags; // probably the offset
-        public uint NumMeshSubset; // number of mesh subsets
-        public int Reserved1;
-        public int Reserved2;
-        public int Reserved3;
-        public MeshSubset[] MeshSubsets;
 
-        public override void ReadChunk(BinaryReader b, uint f) 
-        {
-            b.BaseStream.Seek(f, 0); // seek to the beginning of the MeshSubset chunk
-            uint tmpChunkType = b.ReadUInt32();
-            chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChunkType);
-            version = b.ReadUInt32(); // probably 800
-            Offset = b.ReadUInt32();  // offset of this chunk
-            id = b.ReadUInt32(); // ID of this chunk.  Used to reference the mesh chunk
-            Flags = b.ReadUInt32();   // Might be a ref to this chunk
-            NumMeshSubset = b.ReadUInt32();  // number of mesh subsets
-            Reserved1 = b.ReadInt32();
-            Reserved2 = b.ReadInt32();
-            // Reserved3 = b.ReadInt32();
-            MeshSubsets = new MeshSubset[NumMeshSubset];
-            for (int i = 0; i < NumMeshSubset; i++)
-            {
-                MeshSubsets[i].FirstIndex = b.ReadUInt32();
-                MeshSubsets[i].NumIndices = b.ReadUInt32();
-                MeshSubsets[i].FirstVertex = b.ReadUInt32();
-                MeshSubsets[i].NumVertices = b.ReadUInt32();
-                MeshSubsets[i].MatID = b.ReadUInt32();
-                MeshSubsets[i].Radius = b.ReadSingle();
-                MeshSubsets[i].Center.x = b.ReadSingle();
-                MeshSubsets[i].Center.y = b.ReadSingle();
-                MeshSubsets[i].Center.z = b.ReadSingle();
-            }
-            chunkMeshSubsets = this;
-        }
-        public override void WriteChunk()
-        {
-            Console.WriteLine("*** START MESH SUBSET CHUNK ***");
-            Console.WriteLine("    ChunkType:       {0}", chunkType);
-            Console.WriteLine("    Mesh SubSet ID:  {0:X}", id);
-            Console.WriteLine("    Number of Mesh Subsets: {0}", NumMeshSubset);
-            for (int i = 0; i < NumMeshSubset; i++)
-            {
-                Console.WriteLine("        ** Mesh Subset:          {0}", i);
-                Console.WriteLine("           First Index:          {0}", MeshSubsets[i].FirstIndex);
-                Console.WriteLine("           Number of Indices:    {0}", MeshSubsets[i].NumIndices);
-                Console.WriteLine("           First Vertex:         {0}", MeshSubsets[i].FirstVertex);
-                Console.WriteLine("           Number of Vertices:   {0}", MeshSubsets[i].NumVertices);
-                Console.WriteLine("           Material ID:          {0}", MeshSubsets[i].MatID);
-                Console.WriteLine("           Radius:               {0}", MeshSubsets[i].Radius);
-                Console.WriteLine("           Center:   {0},{1},{2}", MeshSubsets[i].Center.x, MeshSubsets[i].Center.y, MeshSubsets[i].Center.z);
-                Console.WriteLine("        ** Mesh Subset {0} End", i);
-            }
-            Console.WriteLine("*** END MESH SUBSET CHUNK ***");
-        }
-    }
-    public class ChunkMesh : Chunk      //  cccc0000:  Object that points to the datastream chunk.
-    {
-        // public uint Version;  // 623 Far Cry, 744 Far Cry, Aion, 800 Crysis
-        //public bool HasVertexWeights; // for 744
-        //public bool HasVertexColors; // 744
-        //public bool InWorldSpace; // 623
-        //public byte Reserved1;  // padding byte, 744
-        //public byte Reserved2;  // padding byte, 744
-        public uint Flags1;  // 800  Offset of this chunk. 
-        // public uint ID;  // 800  Chunk ID
-        public uint Unknown1; // for 800, not sure what this is.  Value is 2?
-        public uint Unknown2; // for 800, not sure what this is.  Value is 0?
-        public uint NumVertices; // 
-        public uint NumIndices;  // Number of indices (each triangle has 3 indices, so this is the number of triangles times 3).
-        //public uint NumUVs; // 744
-        //public uint NumFaces; // 744
-        // Pointers to various Chunk types
-        //public ChunkMtlName Material; // 623, Material Chunk, never encountered?
-        public uint NumMeshSubsets; // 800, Number of Mesh subsets
-        public uint MeshSubsets; // 800  Reference of the mesh subsets
-        // public ChunkVertAnim VertAnims; // 744.  not implemented
-        //public Vertex[] Vertices; // 744.  not implemented
-        //public Face[,] Faces; // 744.  Not implemented
-        //public UV[] UVs; // 744 Not implemented
-        //public UVFace[] UVFaces; // 744 not implemented
-        // public VertexWeight[] VertexWeights; // 744 not implemented
-        //public IRGB[] VertexColors; // 744 not implemented
-        public uint UnknownData; // 0x00 word here for some reason.
-        public uint VerticesData; // 800
-        public uint NormalsData; // 800
-        public uint UVsData; // 800
-        public uint ColorsData; // 800
-        public uint Colors2Data; // 800 
-        public uint IndicesData; // 800
-        public uint TangentsData; // 800
-        public uint ShCoeffsData; // 800
-        public uint ShapeDeformationData; //800
-        public uint BoneMapData; //800
-        public uint FaceMapData; // 800
-        public uint VertMatsData; // 800
-        public uint[] ReservedData = new uint[4]; // 800 Length 4
-        public uint[] PhysicsData = new uint[4]; // 800
-        public Vector3 MinBound; // 800 minimum coordinate values
-        public Vector3 MaxBound; // 800 Max coord values
-        public uint[] Reserved3 = new uint[32]; // 800 array of 32 uint values.
+    // classes (aka anything more complicated than a fixed size struct, with methods etc.)
 
-        //public ChunkMeshSubsets chunkMeshSubset; // pointer to the mesh subset that belongs to this mesh
-
-        public override void ReadChunk(BinaryReader b, uint f) 
-        {
-            b.BaseStream.Seek(f, 0); // seek to the beginning of the MeshSubset chunk
-            uint tmpChunkType = b.ReadUInt32();
-            chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChunkType);
-            version = b.ReadUInt32();
-            Flags1 = b.ReadUInt32();  // offset
-            id = b.ReadUInt32();  // Chunk ID  0x23 for candle
-            Unknown1 = b.ReadUInt32();  // unknown
-            Unknown1 = b.ReadUInt32();  // unknown
-            NumVertices = b.ReadUInt32();
-            NumIndices = b.ReadUInt32();   //
-            NumMeshSubsets = b.ReadUInt32();
-            MeshSubsets = b.ReadUInt32();  // refers to ID in mesh subsets  1d for candle
-            UnknownData = b.ReadUInt32();
-            VerticesData = b.ReadUInt32();  // ID of the datastream for the vertices for this mesh
-            NormalsData = b.ReadUInt32();   // ID of the datastream for the normals for this mesh
-            UVsData = b.ReadUInt32();     // refers to the ID in the Normals datastream?
-            ColorsData = b.ReadUInt32();
-            Colors2Data = b.ReadUInt32();
-            IndicesData = b.ReadUInt32();
-            TangentsData = b.ReadUInt32();
-            ShCoeffsData = b.ReadUInt32();
-            ShapeDeformationData = b.ReadUInt32();
-            BoneMapData = b.ReadUInt32();
-            FaceMapData = b.ReadUInt32();
-            VertMatsData = b.ReadUInt32();
-            for (int i = 0; i < 4; i++)
-            {
-                ReservedData[i] = b.ReadUInt32();
-            }
-            for (int i = 0; i < 4; i++)
-            {
-                PhysicsData[i] = b.ReadUInt32();
-            }
-            MinBound.x = b.ReadUInt32();
-            MinBound.y = b.ReadUInt32();
-            MinBound.z = b.ReadUInt32();
-            MaxBound.x = b.ReadUInt32();
-            chunkMesh = this;
-            // Not going to read the Reserved 32 element array.
-        }
-        public override void WriteChunk()
-        {
-            Console.WriteLine("*** START MESH CHUNK ***");
-            Console.WriteLine("    ChunkType:           {0}", chunkType);
-            Console.WriteLine("    Chunk ID:            {0:X}", id);
-            Console.WriteLine("    MeshSubSetID:        {0:X}", MeshSubsets);
-            Console.WriteLine("    Vertex Datastream:   {0:X}", VerticesData);
-            Console.WriteLine("    Normals Datastream:  {0:X}", NormalsData);
-            Console.WriteLine("    UVs Datastream:      {0:X}", UVsData);
-            Console.WriteLine("*** END MESH CHUNK ***");
-        }
-    }
 
     public class ArgsHandler
     {
