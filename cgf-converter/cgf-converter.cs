@@ -81,7 +81,7 @@ namespace CgfConverter
                         chkMtlName.ReadChunk(cgfreader, ChkHdr.offset);
                         CgfChunks.Add(chkMtlName);
                         ChunkDictionary.Add(chkMtlName.id, chkMtlName);
-                        //chkMtlName.WriteChunk();
+                        chkMtlName.WriteChunk();
                         break;
                     }
                     case ChunkType.DataStream:
@@ -122,6 +122,7 @@ namespace CgfConverter
                         {
                             Console.WriteLine("Found a Parent chunk node.  Adding to the dictionary.");
                             RootNodeID = chkNode.id;
+                            RootNode = chkNode;
                             // ChunkDictionary[RootNodeID].WriteChunk();
                         }
                         //chkNode.WriteChunk();
@@ -158,13 +159,9 @@ namespace CgfConverter
             Console.WriteLine();
             Console.WriteLine("*** Starting WriteObjFile() ***");
             Console.WriteLine();
-            string objectName; // for the name of this object
-            int numMtlChildren = 0; // used to figure out how many material IDs there are.
 
             // Get object name.  This is the Root Node chunk Name
-            
             // Get the objOutputFile name
-            RootNode = (ChunkNode)ChunkDictionary[RootNodeID];
             objOutputFile = new FileInfo(RootNode.Name + ".obj");
             Console.WriteLine("Output File name is {0}", objOutputFile.Name);
 
@@ -173,7 +170,8 @@ namespace CgfConverter
                 string s1 = String.Format("# cgf-converter .obj export Version 0.1");
                 file.WriteLine(s1);
                 file.WriteLine("#");
-                Console.WriteLine(RootNode.NumChildren);
+                
+                // Console.WriteLine(RootNode.NumChildren);
                 if (RootNode.NumChildren == 0)
                 {
                     // write out the material library
@@ -185,15 +183,36 @@ namespace CgfConverter
                     file.WriteLine(s3);
 
                     // Now grab the mesh and process that.  RootNode[ObjID] is the Mesh for this Node.
-                    ChunkMesh tmpMesh = (ChunkMesh)ChunkDictionary[RootNode.Object];
-                    tmpMesh.WriteChunk();
-                    ChunkMeshSubsets tmpMeshSubSet = (ChunkMeshSubsets)ChunkDictionary[tmpMesh.MeshSubsets];
+                    //ChunkMesh tmpMesh = (ChunkMesh)ChunkDictionary[RootNode.Object];
+                    //tmpMesh.WriteChunk();
+                    //ChunkMeshSubsets tmpMeshSubSet = (ChunkMeshSubsets)ChunkDictionary[tmpMesh.MeshSubsets];
                     this.WriteObjNode(file, RootNode);
 
                 }
                 else
                 {
                     // Not a simple object.  Will need to recursively call WriteObjNode
+                    // Write out the mtl lib.  For MatType of 0x10, only one mtl in town.
+                    foreach (ChunkMtlName tmpMtlName in CgfChunks.Where(a => a.chunkType == ChunkType.MtlName))
+                    {
+                        Console.WriteLine("Found the material file...");
+                        string s_material = String.Format("mtllib {0}", tmpMtlName.Name + ".mtl");
+                        file.WriteLine(s_material);
+                    }
+                    foreach (ChunkNode tmpNode in CgfChunks.Where(a => a.chunkType == ChunkType.Node))
+                    {
+                        if (tmpNode.MatID != 0)  // because we don't want to process an object with no material.
+                        {
+                            tmpNode.WriteChunk();
+                            //ChunkMtlName tmpMtlName = (ChunkMtlName)ChunkDictionary[tmpNode.MatID];
+                            //string s2 = String.Format("mtllib {0}", tmpMtlName.Name + ".mtl");
+                            //file.WriteLine(s2);
+                            string s3 = String.Format("o {0}", tmpNode.Name);
+                            file.WriteLine(s3);
+                            // Grab the mesh and process that.
+                            this.WriteObjNode(file, tmpNode);
+                        }
+                    }
                 }
             }  // End of writing the output file
         }
@@ -215,12 +234,14 @@ namespace CgfConverter
                 // Need a way to get all the children, so they can each be passed recursively
             }
             Console.WriteLine("In WriteObjNode");
-            tmpMtlName.WriteChunk();
-            tmpMesh.WriteChunk();
-            tmpMeshSubsets.WriteChunk();
+            //chunkNode.WriteChunk();
+            //tmpMesh.WriteChunk();
+            //tmpMeshSubsets.WriteChunk();
+            //tmpMtlName.WriteChunk();
             for (int i = 0; i < tmpMeshSubsets.NumMeshSubset; i++)
             {
                 // Write vertices data for each MeshSubSet
+                Console.WriteLine("Write out datastreams");
                 f.WriteLine("g");
                 for (int j = (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex; j < (int)tmpMeshSubsets.MeshSubsets[i].NumVertices + (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex; j++)
                 {
@@ -240,12 +261,21 @@ namespace CgfConverter
                     f.WriteLine(s6);
                 }
                 f.WriteLine();
-                // Now write out the faces info based on the MtlName
-                ChunkMtlName tmpSubMtlName = (ChunkMtlName)ChunkDictionary[tmpMtlName.Children[i]];
-                string s7 = String.Format("g {0}", tmpSubMtlName.Name);
+                string s7 = String.Format("g {0}", chunkNode.Name);
                 f.WriteLine(s7);
-                string s8 = String.Format("usemtl {0}", tmpSubMtlName.Name);
-                f.WriteLine(s8);
+                if (tmpMtlName.MatType == 0x10)
+                {
+                    // Only one material file.  Material name is... not sure.
+                    string s_material = String.Format("usemtl {0}", tmpMtlName.Name);
+                    f.WriteLine(s_material);
+                }
+                else if (tmpMtlName.MatType == 0x01)  // The material ID assigned to this node is a parent, so there are children for each submesh.
+                {
+                    ChunkMtlName tmpSubMtlName = (ChunkMtlName)ChunkDictionary[tmpMtlName.Children[i]];
+                    string s8 = String.Format("usemtl {0}", tmpSubMtlName.Name);
+                    f.WriteLine(s8);
+                }
+                // Now write out the faces info based on the MtlName
                 for (int j = (int)tmpMeshSubsets.MeshSubsets[i].FirstIndex; j < (int)tmpMeshSubsets.MeshSubsets[i].NumIndices + (int)tmpMeshSubsets.MeshSubsets[i].FirstIndex; j++)
                 {
                     string s9 = String.Format("f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}", tmpIndices.Indices[j] + 1, tmpIndices.Indices[j + 1] + 1, tmpIndices.Indices[j + 2] + 1);
@@ -253,10 +283,9 @@ namespace CgfConverter
                     j = j + 2;
                 }
                 f.WriteLine();
-
             }
-
         }
+        
         public class Header
         {
             public char[] fileSignature; // The CGF file signature.  CryTek for 3.5, CrChF for 3.6
@@ -660,7 +689,7 @@ namespace CgfConverter
         {
             // need to find the material ID used by the mesh subsets
             public uint Flags1;  // pointer to the start of this chunk?
-            public uint MatType; // for type 800, 0x1 is material library, 0x12 is child
+            public uint MatType; // for type 800, 0x1 is material library, 0x12 is child, 0x10 is solo material
             public uint Filler2; // for type 800, unknown value
             public uint NumChildren802; // for type 802, unknown value (number of materials for type 802?)
             public uint Filler4; // for type 802, unknown value
