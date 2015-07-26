@@ -10,7 +10,7 @@ Version 0.8
   - -flipUV (probably default on, since I've never had to not do this)
   - -obj (export to obj) | -blend (export to .blend, to be implemented in 1.0)
   - -output <filename> (where to write the output file; default to .cgf/.cga input directory)
-- Figure out how to convert 8 byte vertex info into 3 vertices
+- Figure out how to convert 8 byte vertex info into 3 vertices COMPLETE 7/25
 - Bug fix so some .obj files import properly to Blender.
 - Refactor to use Where(a=>a.blahblah==blahblahblah) and clean up classes.
 - add build version into the output
