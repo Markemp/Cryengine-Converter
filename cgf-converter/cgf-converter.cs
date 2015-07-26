@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using OpenTK.Math;
+using System.Xml;
 
 namespace CgfConverter
 {
@@ -20,8 +21,13 @@ namespace CgfConverter
         public List<Chunk> CgfChunks = new List<Chunk>();   //  I don't think we want this.  Dictionary is better because of ID
         // ChunkDictionary will let us get the Chunk from the ID.
         public Dictionary<UInt32, Chunk> ChunkDictionary = new Dictionary<UInt32, Chunk>();
+        private String[] MaterialNames;                         // Read the mtl file and get the list of mat names.
         private UInt32 RootNodeID;
         private ChunkNode RootNode;
+        public UInt32 CurrentVertexPosition = 0; //used to recalculate the face indices for files with multiple objects (o)
+        public UInt32 TempVertexPosition = 0;
+        public UInt32 CurrentIndicesPosition = 0;
+        public UInt32 TempIndicesPosition = 0;
 
 
         public void ReadCgfData(FileInfo dataFile)  // Constructor for CgfFormat.  This populates the structure
@@ -163,7 +169,7 @@ namespace CgfConverter
             // Get object name.  This is the Root Node chunk Name
             // Get the objOutputFile name
             objOutputFile = new FileInfo(RootNode.Name + ".obj");
-            Console.WriteLine("Output File name is {0}", objOutputFile.Name);
+            //Console.WriteLine("Output File name is {0}", objOutputFile.Name);
 
             using  (System.IO.StreamWriter file = new System.IO.StreamWriter(objOutputFile.Name))
             {
@@ -197,14 +203,14 @@ namespace CgfConverter
                     {
                         if (tmpMtlName.MatType == 0x01)
                         {
-                            Console.WriteLine("Found the material file...");
+                            // Console.WriteLine("Found the material file...");
                             string s_material = String.Format("mtllib {0}", tmpMtlName.Name + ".mtl");
                             file.WriteLine(s_material);
                         }
                     }
                     foreach (ChunkNode tmpNode in CgfChunks.Where(a => a.chunkType == ChunkType.Node))
                     {
-                        if (tmpNode.MatID != 0)  // because we don't want to process an object with no material.
+                        if (tmpNode.MatID != 0)  // because we don't want to process an object with no material.  ...maybe we do
                         {
                             tmpNode.WriteChunk();
                             //ChunkMtlName tmpMtlName = (ChunkMtlName)ChunkDictionary[tmpNode.MatID];
@@ -214,6 +220,11 @@ namespace CgfConverter
                             file.WriteLine(s3);
                             // Grab the mesh and process that.
                             this.WriteObjNode(file, tmpNode);
+                        }
+                        else
+                        {
+                            Console.WriteLine("****** DIDN'T WRITE THIS NODE *****");
+                            tmpNode.WriteChunk();
                         }
                     }
                 }
@@ -227,9 +238,10 @@ namespace CgfConverter
             Console.WriteLine("***     Object ID {0:X}", chunkNode.Object);
             ChunkDictionary[chunkNode.Object].WriteChunk();
             ChunkMesh tmpMesh = (ChunkMesh)ChunkDictionary[chunkNode.Object];
-            if (tmpMesh.MeshSubsets == 0)
+            if (tmpMesh.MeshSubsets == 0 || tmpMesh.VerticesData == 0)
             {
-                Console.WriteLine("Found a node chunk with no mesh subsets.  Proxy.  Skipping...");
+                Console.WriteLine("*********************Found a node chunk with no mesh subsets.  Skipping...");
+                tmpMesh.WriteChunk();
                 return;
             }
             ChunkMtlName tmpMtlName = (ChunkMtlName)ChunkDictionary[chunkNode.MatID];
@@ -240,10 +252,6 @@ namespace CgfConverter
             ChunkDataStream tmpIndices = (ChunkDataStream)ChunkDictionary[tmpMesh.IndicesData];
             uint numChildren = chunkNode.NumChildren;           // use in a for loop to print the mesh for each child
 
-            if (numChildren != 0)
-            {
-                // Need a way to get all the children, so they can each be passed recursively
-            }
             Console.WriteLine("In WriteObjNode");
             //chunkNode.WriteChunk();
             //tmpMesh.WriteChunk();
@@ -252,53 +260,60 @@ namespace CgfConverter
             for (int i = 0; i < tmpMeshSubsets.NumMeshSubset; i++)
             {
                 // Write vertices data for each MeshSubSet
-                Console.WriteLine("Write out datastreams");
+                // Console.WriteLine("Write out datastreams");
                 f.WriteLine("g");
                 for (int j = (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex; j < (int)tmpMeshSubsets.MeshSubsets[i].NumVertices + (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex; j++)
                 {
-                    string s4 = String.Format("v {0:F7} {1:F7} {2:F7}", tmpVertices.Vertices[j].x, tmpVertices.Vertices[j].y, tmpVertices.Vertices[j].z);
+                    string s4 = String.Format("v {0:F7} {1:F7} {2:F7}", 
+                        tmpVertices.Vertices[j].x, 
+                        tmpVertices.Vertices[j].y, 
+                        tmpVertices.Vertices[j].z);
                     f.WriteLine(s4);
                 }
                 f.WriteLine();
                 for (int j = (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex; j < (int)tmpMeshSubsets.MeshSubsets[i].NumVertices + (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex; j++)
                 {
-                    string s5 = String.Format("vt {0:F7} {1:F7} 0.0 ", tmpUVs.UVs[j].U, 1 - tmpUVs.UVs[j].V);
+                    string s5 = String.Format("vt {0:F7} {1:F7} 0.0 ", 
+                        tmpUVs.UVs[j].U, 
+                        1 - tmpUVs.UVs[j].V);
                     f.WriteLine(s5);
                 }
                 f.WriteLine();
                 for (int j = (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex; j < (int)tmpMeshSubsets.MeshSubsets[i].NumVertices + (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex; j++)
                 {
-                    string s6 = String.Format("vn {0:F7} {1:F7} {2:F7}", tmpNormals.Normals[j].x, tmpNormals.Normals[j].y, tmpNormals.Normals[j].z);
+                    string s6 = String.Format("vn {0:F7} {1:F7} {2:F7}", 
+                        tmpNormals.Normals[j].x, 
+                        tmpNormals.Normals[j].y, 
+                        tmpNormals.Normals[j].z);
                     f.WriteLine(s6);
                 }
                 f.WriteLine();
+
                 string s7 = String.Format("g {0}", chunkNode.Name);
                 f.WriteLine(s7);
+
+                // usemtl <number> refers to the position of this material in the .mtl file.  If it's 0, it's the first entry, etc.
                 string s_material = String.Format("usemtl {0}", tmpMeshSubsets.MeshSubsets[i].MatID);
                 f.WriteLine(s_material);
-                /*if (tmpMtlName.MatType == 0x10)
-                {
-                    // Only one material file.  Material is an index to the .mtl file.  If the submesh material ID is 2, it's the 2nd item in the mtl file
-                    string s_material = String.Format("usemtl {0}", tmpMeshSubsets.MeshSubsets[i].MatID);
-                    f.WriteLine(s_material);
-                }
-                else if (tmpMtlName.MatType == 0x01 || tmpMtlName.MatType == 0x0)  // The material ID assigned to this node is a parent, so there are children for each submesh.
-                {
-                    //ChunkMtlName tmpSubMtlName = (ChunkMtlName)ChunkDictionary[tmpMtlName.Children[i]];
-                    //Console.WriteLine("Submesh Material");
-                    //tmpSubMtlName.WriteChunk();
-                    string s8 = String.Format("usemtl {0}", tmpMeshSubsets.MeshSubsets[i].MatID);
-                    f.WriteLine(s8);
-                }*/
+
                 // Now write out the faces info based on the MtlName
                 for (int j = (int)tmpMeshSubsets.MeshSubsets[i].FirstIndex; j < (int)tmpMeshSubsets.MeshSubsets[i].NumIndices + (int)tmpMeshSubsets.MeshSubsets[i].FirstIndex; j++)
                 {
-                    string s9 = String.Format("f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}", tmpIndices.Indices[j] + 1, tmpIndices.Indices[j + 1] + 1, tmpIndices.Indices[j + 2] + 1);
+                    string s9 = String.Format("f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}",    // Vertices, UVs, Normals
+                        tmpIndices.Indices[j] + 1 + CurrentVertexPosition, 
+                        tmpIndices.Indices[j + 1] + 1 + CurrentVertexPosition, 
+                        tmpIndices.Indices[j + 2] + 1 + CurrentVertexPosition);
                     f.WriteLine(s9);
                     j = j + 2;
                 }
                 f.WriteLine();
+                TempVertexPosition += tmpMeshSubsets.MeshSubsets[i].NumVertices;  // add the number of vertices so future objects can start at the right place
+                Console.WriteLine("Temp vertex position is {0}", TempVertexPosition);
             }
+            // Extend the current vertex, uv and normal positions by the length of those arrays.
+            CurrentVertexPosition = TempVertexPosition;
+            Console.WriteLine("Current vertex position is {0}", CurrentVertexPosition);
+
         }
         
         public class Header
@@ -403,23 +418,11 @@ namespace CgfConverter
 
 
         public class Chunk
- // Main class has Fileoffset to identify where the chunk starts
         {
             public FileOffset fOffset = new FileOffset();  // starting offset of the chunk.  Int, not uint
             public ChunkType chunkType; // Type of chunk
             public uint version; // version of this chunk
             public uint id; // ID of the chunk.
-            // public int offset; // simpler way of getting fOffset;  Will need to refactor eventually
-            // These will be uninstantiated if it's not that kind of chunk
-            //public ChunkTimingFormat chunkTimingFormat;
-            //public ChunkMtlName chunkMtlName;
-            //public ChunkExportFlags chunkExportFlags;
-            //public ChunkSourceInfo chunkSourceInfo;
-            //public ChunkDataStream chunkDataStream;
-            //public ChunkMeshSubsets chunkMeshSubsets;
-            //public ChunkMesh chunkMesh;
-            //public ChunkNode chunkNode;
-            //public ChunkHelper chunkHelper;
 
             public virtual void ReadChunk(BinaryReader b, uint f)
             {
@@ -548,8 +551,6 @@ namespace CgfConverter
         }
         public class ChunkTimingFormat : Chunk // cccc000e:  Timing format chunk
         {
-            // public ChunkType ChunkTiming;    // Moved to Chunk
-            // public uint Version;             // Moved to Chunk
             public float SecsPerTick;
             public int TicksPerFrame;
             public uint Unknown1; // 4 bytes, not sure what they are
@@ -590,8 +591,6 @@ namespace CgfConverter
         }
         public class ChunkExportFlags : Chunk  // cccc0015:  Export Flags
         {
-            // public ChunkType ExportFlag;
-            //public uint Version;  // Far Cry and Crysis:  1
             public uint ChunkOffset;  // for some reason the offset of Export Flag chunk is stored here.
             public uint Flags;    // ExportFlags type technically, but it's just 1 value
             public uint Unknown1; // uint, no idea what they are
@@ -1177,12 +1176,14 @@ namespace CgfConverter
     public class ArgsHandler
     {
         // all the possible switches
-        public Boolean Usage;
-        public Boolean FlipUVs;
-        public FileInfo InputFile;
-        public FileInfo OutputFile;
-        public Boolean Obj;
-        public Boolean Blend;
+        public Boolean Usage;               // Usage
+        public Boolean FlipUVs;             // Doing this by default.  If you want to undo, check this (reversed)
+        public FileInfo InputFile;          // File we are reading (need to check for CryTek or CrChF)
+        public FileInfo OutputFile;         // File we are outputting to
+        public FileInfo ObjectDir;          // this is where the cryengine Object files start.
+        public Boolean Obj;                 // You want to export to a .obj file
+        public Boolean Blend;               // you want to export to a .blend file.
+
 
 
     }
@@ -1190,14 +1191,6 @@ namespace CgfConverter
 
     class Program
     {
-        /*static void ReadCryHeader(string cgfFile)
-        {
-            //TBD
-        }
-        static void ReadChunkTable(string cgfFile)
-        {
-            // TBD
-        }*/  // These 2 functions not needed.  To be implemented in classes
 
         static void Main(string[] args)
         {
