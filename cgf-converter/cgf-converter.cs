@@ -87,7 +87,7 @@ namespace CgfConverter
                         chkMtlName.ReadChunk(cgfreader, ChkHdr.offset);
                         CgfChunks.Add(chkMtlName);
                         ChunkDictionary.Add(chkMtlName.id, chkMtlName);
-                        chkMtlName.WriteChunk();
+                        //chkMtlName.WriteChunk();
                         break;
                     }
                     case ChunkType.DataStream:
@@ -115,7 +115,7 @@ namespace CgfConverter
                         chkMeshSubsets.ReadChunk(cgfreader, ChkHdr.offset);
                         CgfChunks.Add(chkMeshSubsets);
                         ChunkDictionary.Add(chkMeshSubsets.id, chkMeshSubsets);
-                        chkMeshSubsets.WriteChunk();
+                        //chkMeshSubsets.WriteChunk();
                         break;
                     }
                     case ChunkType.Node:
@@ -126,7 +126,7 @@ namespace CgfConverter
                         ChunkDictionary.Add(chkNode.id, chkNode);
                         if (chkNode.Parent == 0xFFFFFFFF)
                         {
-                            Console.WriteLine("Found a Parent chunk node.  Adding to the dictionary.");
+                            //Console.WriteLine("Found a Parent chunk node.  Adding to the dictionary.");
                             RootNodeID = chkNode.id;
                             RootNode = chkNode;
                             // ChunkDictionary[RootNodeID].WriteChunk();
@@ -149,8 +149,6 @@ namespace CgfConverter
                     }
                 }
             }
-            // Test:  Let's write the parent node chunk.  ID is 6B4 for SHornet
-            ChunkDictionary[RootNodeID].WriteChunk();
         }
 
         public void WriteObjFile()
@@ -230,7 +228,6 @@ namespace CgfConverter
                 }
             }  // End of writing the output file
         }
-        // Structures
 
         public void WriteObjNode(StreamWriter f, ChunkNode chunkNode)  // Pass a node to this to have it write to the Stream
         {
@@ -265,8 +262,8 @@ namespace CgfConverter
                 for (int j = (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex; j < (int)tmpMeshSubsets.MeshSubsets[i].NumVertices + (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex; j++)
                 {
                     string s4 = String.Format("v {0:F7} {1:F7} {2:F7}", 
-                        tmpVertices.Vertices[j].x, 
-                        tmpVertices.Vertices[j].y, 
+                        tmpVertices.Vertices[j].x,  
+                        tmpVertices.Vertices[j].y,
                         tmpVertices.Vertices[j].z);
                     f.WriteLine(s4);
                 }
@@ -482,6 +479,7 @@ namespace CgfConverter
                 Console.WriteLine("    Version:     {0:X}", version);
                 Console.WriteLine("    ID:          {0:X}", id);
                 Console.WriteLine("    HelperType:  {0}", Type);
+                Console.WriteLine("    Position:    {0}, {1}, {2}", Pos.x, Pos.y, Pos.z);
                 Console.WriteLine("*** END Helper Chunk ***");
             }
         }
@@ -494,11 +492,12 @@ namespace CgfConverter
             public uint MatID;  // reference to the material ID for this Node chunk
             public Boolean IsGroupHead; //
             public Boolean IsGroupMember;
-            public byte[] Reserved1; // padding, 2 bytes long
+            public byte[] Reserved1; // padding, 2 bytes long... or just read a uint 
+            private uint Filler;
             public Matrix44 Transform;   // Transformation matrix
             public Vector3 Pos;  // position vector of above transform
             public Quat Rot;     // rotation component of above transform
-            public Vector3 Scl;  // Scalar component of above matrix44
+            public Vector3 Scale;  // Scalar component of above matrix44
             public uint PosCtrl;  // Position Controller ID (Controller Chunk type)
             public uint RotCtrl;  // Rotation Controller ID 
             public uint SclCtrl;  // Scalar controller ID
@@ -532,8 +531,42 @@ namespace CgfConverter
                 Parent = b.ReadUInt32();
                 NumChildren = b.ReadUInt32();
                 MatID = b.ReadUInt32();  // Material ID?
-                // chunkNode = this;
+                Filler = b.ReadUInt32();  // Actually a couple of booleans and a padding
+                // Read the 4x4 transform matrix.  Should do a couple of for loops, but data structures...
+                Transform.m11 = b.ReadSingle();
+                Transform.m12 = b.ReadSingle();
+                Transform.m13 = b.ReadSingle();
+                Transform.m14 = b.ReadSingle();
+                Transform.m21 = b.ReadSingle();
+                Transform.m22 = b.ReadSingle();
+                Transform.m23 = b.ReadSingle();
+                Transform.m24 = b.ReadSingle();
+                Transform.m31 = b.ReadSingle();
+                Transform.m32 = b.ReadSingle();
+                Transform.m33 = b.ReadSingle();
+                Transform.m34 = b.ReadSingle();
+                Transform.m41 = b.ReadSingle();
+                Transform.m42 = b.ReadSingle();
+                Transform.m43 = b.ReadSingle();
+                Transform.m44 = b.ReadSingle();  
+                // Read the position Pos Vector3
+                Pos.x = b.ReadSingle();
+                Pos.y = b.ReadSingle();
+                Pos.z = b.ReadSingle();
+                // Read the rotation Rot Quad
+                Rot.w = b.ReadSingle();
+                Rot.x = b.ReadSingle();
+                Rot.y = b.ReadSingle();
+                Rot.z = b.ReadSingle();
+                // Read the Scale Vector 3
+                Scale.x = b.ReadSingle();
+                Scale.y = b.ReadSingle();
+                Scale.z = b.ReadSingle();
+                // read the controller pos/rot/scale
+
+
                 // Good enough for now.
+
             }
             public override void WriteChunk()
             {
@@ -545,6 +578,12 @@ namespace CgfConverter
                 Console.WriteLine("    Parent ID:           {0:X}", Parent);
                 Console.WriteLine("    Number of Children:  {0}", NumChildren);
                 Console.WriteLine("    Material ID:         {0:X}", MatID); // 0x1 is mtllib w children, 0x10 is mtl no children, 0x18 is child
+                Console.WriteLine("    Position:            {0:F7}   {1:F7}   {2:F7}", Pos.x, Pos.y, Pos.z);
+                Console.WriteLine("    Scale:               {0:F7}   {1:F7}   {2:F7}", Scale.x, Scale.y, Scale.z);
+                Console.WriteLine("    Transformation:      {0:F7}  {1:F7}  {2:F7}  {3:F7}", Transform.m11, Transform.m12, Transform.m13, Transform.m14);
+                Console.WriteLine("                         {0:F7}  {1:F7}  {2:F7}  {3:F7}", Transform.m21, Transform.m22, Transform.m23, Transform.m24);
+                Console.WriteLine("                         {0:F7}  {1:F7}  {2:F7}  {3:F7}", Transform.m31, Transform.m32, Transform.m33, Transform.m34);
+                Console.WriteLine("                         {0:F7}  {1:F7}  {2:F7}  {3:F7}", Transform.m41, Transform.m42, Transform.m43, Transform.m44);
                 Console.WriteLine("*** END Node Chunk ***");
 
             }
