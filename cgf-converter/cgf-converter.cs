@@ -21,13 +21,15 @@ namespace CgfConverter
         public List<Chunk> CgfChunks = new List<Chunk>();   //  I don't think we want this.  Dictionary is better because of ID
         // ChunkDictionary will let us get the Chunk from the ID.
         public Dictionary<UInt32, Chunk> ChunkDictionary = new Dictionary<UInt32, Chunk>();
-        private String[] MaterialNames;                         // Read the mtl file and get the list of mat names.
+        private List<String> MaterialNames = new List<String>();                         // Read the mtl file and get the list of mat names.
+        private string[] MaterialNameArray;   // this has the names organized by ID
         private UInt32 RootNodeID;
         private ChunkNode RootNode;
         public UInt32 CurrentVertexPosition = 0; //used to recalculate the face indices for files with multiple objects (o)
         public UInt32 TempVertexPosition = 0;
         public UInt32 CurrentIndicesPosition = 0;
         public UInt32 TempIndicesPosition = 0;
+        const String BasePath = @"E:\Blender Projects\Mechs\";  // for testing.  This will eventually need to be input by user.
 
 
         public void ReadCgfData(FileInfo dataFile)  // Constructor for CgfFormat.  This populates the structure
@@ -131,7 +133,7 @@ namespace CgfConverter
                             RootNode = chkNode;
                             // ChunkDictionary[RootNodeID].WriteChunk();
                         }
-                        //chkNode.WriteChunk();
+                        chkNode.WriteChunk();
                         break;
                     }
                     case ChunkType.Helper:
@@ -139,6 +141,7 @@ namespace CgfConverter
                         ChunkHelper chkHelper = new ChunkHelper();
                         chkHelper.ReadChunk(cgfreader, ChkHdr.offset);
                         CgfChunks.Add(chkHelper);
+                        ChunkDictionary.Add(chkHelper.id, chkHelper);
                         //chkHelper.WriteChunk();
                         break;
                     }
@@ -150,7 +153,6 @@ namespace CgfConverter
                 }
             }
         }
-
         public void WriteObjFile()
         {
             // At this point, we should have a CgfData object, fully populated.
@@ -182,6 +184,9 @@ namespace CgfConverter
                     ChunkMtlName tmpMtlName = (ChunkMtlName)ChunkDictionary[RootNode.MatID];
                     string s2 = String.Format("mtllib {0}", tmpMtlName.Name + ".mtl");
                     file.WriteLine(s2);
+                    Console.WriteLine("****************************Mtl File is {0}", BasePath+tmpMtlName.Name);
+                    ReadMtlFile(BasePath + tmpMtlName.Name + ".mtl");
+
                     // We have a root node with no children, so simple object.
                     string s3 = String.Format("o {0}", RootNode.Name);
                     file.WriteLine(s3);
@@ -199,10 +204,12 @@ namespace CgfConverter
                     // Write out the mtl lib.  For MatType of 0x10, only one mtl in town.
                     foreach (ChunkMtlName tmpMtlName in CgfChunks.Where(a => a.chunkType == ChunkType.MtlName))
                     {
-                        if (tmpMtlName.MatType == 0x01)
+                        if (tmpMtlName.MatType == 0x01 || tmpMtlName.MatType == 0x10 )
                         {
                             // Console.WriteLine("Found the material file...");
                             string s_material = String.Format("mtllib {0}", tmpMtlName.Name + ".mtl");
+                            Console.WriteLine("*************************Mtl File is {0}", BasePath + tmpMtlName.Name+".mtl");
+                            ReadMtlFile(BasePath + tmpMtlName.Name + ".mtl");
                             file.WriteLine(s_material);
                         }
                     }
@@ -211,9 +218,6 @@ namespace CgfConverter
                         if (tmpNode.MatID != 0)  // because we don't want to process an object with no material.  ...maybe we do
                         {
                             tmpNode.WriteChunk();
-                            //ChunkMtlName tmpMtlName = (ChunkMtlName)ChunkDictionary[tmpNode.MatID];
-                            //string s2 = String.Format("mtllib {0}", tmpMtlName.Name + ".mtl");
-                            //file.WriteLine(s2);
                             string s3 = String.Format("o {0}", tmpNode.Name);
                             file.WriteLine(s3);
                             // Grab the mesh and process that.
@@ -228,7 +232,6 @@ namespace CgfConverter
                 }
             }  // End of writing the output file
         }
-
         public void WriteObjNode(StreamWriter f, ChunkNode chunkNode)  // Pass a node to this to have it write to the Stream
         {
             Console.WriteLine("*** Processing Chunk node {0:X}", chunkNode.id);
@@ -289,9 +292,16 @@ namespace CgfConverter
                 string s7 = String.Format("g {0}", chunkNode.Name);
                 f.WriteLine(s7);
 
-                // usemtl <number> refers to the position of this material in the .mtl file.  If it's 0, it's the first entry, etc.
-                string s_material = String.Format("usemtl {0}", tmpMeshSubsets.MeshSubsets[i].MatID);
-                f.WriteLine(s_material);
+                // usemtl <number> refers to the position of this material in the .mtl file.  If it's 0, it's the first entry, etc. MaterialNameArray[]
+                if (MaterialNameArray == null)     // No names in the material file.  use the chunknode name.
+                {
+                    // The material file doesn't have any elements with the Name of the material.  Use the object name.
+                    string s_material = String.Format("usemtl {0}", RootNode.Name);
+                    f.WriteLine(s_material);
+                } else {
+                    string s_material = String.Format("usemtl {0}", MaterialNameArray[tmpMeshSubsets.MeshSubsets[i].MatID]);
+                    f.WriteLine(s_material);
+                }
 
                 // Now write out the faces info based on the MtlName
                 for (int j = (int)tmpMeshSubsets.MeshSubsets[i].FirstIndex; j < (int)tmpMeshSubsets.MeshSubsets[i].NumIndices + (int)tmpMeshSubsets.MeshSubsets[i].FirstIndex; j++)
@@ -305,14 +315,63 @@ namespace CgfConverter
                 }
                 f.WriteLine();
                 TempVertexPosition += tmpMeshSubsets.MeshSubsets[i].NumVertices;  // add the number of vertices so future objects can start at the right place
-                Console.WriteLine("Temp vertex position is {0}", TempVertexPosition);
             }
             // Extend the current vertex, uv and normal positions by the length of those arrays.
             CurrentVertexPosition = TempVertexPosition;
-            Console.WriteLine("Current vertex position is {0}", CurrentVertexPosition);
+        }
+        public void ReadMtlFile(string Materialfile)    // reads the mtl file, so we can populate the MaterialNames array and assign those material names to the meshes
+        {
+            // string Materialfile = @"E:\Blender Projects\Mechs\Objects\Mechs\adder\cockpit_standard\adder_a_cockpit_standard.mtl";
+            // MtlFile should be an object to the Material File for the CgfData.  We need to populate the array with the objects.
+            Console.WriteLine("Mtl File name is {0}", Materialfile);
+            using (XmlReader reader = XmlReader.Create(Materialfile))
+            {
+                while (reader.Read())
+                {
+                    if (reader.IsStartElement())
+                    {
+                        switch (reader.Name)
+                        {
+                            case "Material":
+                            {
+                                // detected this element
+                                string attribute = reader["Name"];
+                                //Console.WriteLine(" Name is {0}", attribute);
+                                if (attribute != null)
+                                {
+                                    MaterialNames.Add(attribute);
+                                    //Console.WriteLine("  Has attribute Name " + attribute);  // if this works, we want to add to the MaterialNames array
+                                }
+                                break;
+                            }
+                            default:
+                            {
+                                break;
+                            }
+
+                        }
+                    }
+                }
+                if (MaterialNames.Count == 0)
+                {
+                    Console.WriteLine("No material names found.");
+                }
+            }
+            int length = MaterialNames.Count;
+            //Console.WriteLine("{0} Materials found in the material file", length);
+            foreach (string tmpstring in MaterialNames)
+            {
+                Console.WriteLine("Material name is {0}", tmpstring);
+            }
+            MaterialNameArray = new String[length];
+            MaterialNameArray = MaterialNames.ToArray();
+            //Console.WriteLine("Material Name Array length is {0}", MaterialNameArray.Length);
+        }
+        public void WriteMtlFile(StreamWriter f)        // writes the mtllib file to the stream.
+        {
 
         }
-        
+
         public class Header
         {
             public char[] fileSignature; // The CGF file signature.  CryTek for 3.5, CrChF for 3.6
@@ -1216,15 +1275,65 @@ namespace CgfConverter
     {
         // all the possible switches
         public Boolean Usage;               // Usage
-        public Boolean FlipUVs;             // Doing this by default.  If you want to undo, check this (reversed)
+        public Boolean FlipUVs=false;       // Doing this by default.  If you want to undo, check this (reversed)
         public FileInfo InputFile;          // File we are reading (need to check for CryTek or CrChF)
         public FileInfo OutputFile;         // File we are outputting to
-        public FileInfo ObjectDir;          // this is where the cryengine Object files start.
-        public Boolean Obj;                 // You want to export to a .obj file
-        public Boolean Blend;               // you want to export to a .blend file.
+        public Boolean Obj=true;            // You want to export to a .obj file
+        public Boolean Blend=false;         // you want to export to a .blend file.
+        public List<DirectoryInfo> ObjectDir = new List<DirectoryInfo>(); // Where the Object files are.  Will need to eventually store this in the registry.
+                                                                          // ALWAYS check submitted directory first.  usemtl isn't always set to the obj dir.
 
-
-
+        public int ProcessArgs(string[] inputArgs)      // fill out the args passed in at the command line.
+        {
+            if (inputArgs.Length == 0)
+            {
+                this.GetUsage();
+                return 1;
+            }
+            if (inputArgs.Length == 1)      // either have unknown option, or the cgf file to process.
+            {
+                if (File.Exists(inputArgs[0])) 
+                {
+                    InputFile = new FileInfo(inputArgs[0]);
+                    FlipUVs = false;
+                    OutputFile = new FileInfo(inputArgs[0] + ".obj");
+                    Obj = true;
+                    Blend = false;
+                    DirectoryInfo di = new DirectoryInfo(Directory.GetCurrentDirectory());
+                    Console.WriteLine("Current Working directory is {0}", di.FullName);
+                    ObjectDir.Add(di);
+                    return 0;
+                }
+                else
+                {
+                    this.GetUsage();
+                    return 1;
+                }
+            }
+            else
+            {
+                // More than one argument submitted.  Test each value.  For loops?
+                return 0;
+            }
+            return 0;
+        }
+        private void GetUsage()
+        {
+            var usage = new StringBuilder();
+            usage.AppendLine();
+            usage.AppendLine("cgf-converter -usage | [-inputfile] <.cgf file> [-outputfile <output file>] [-objectdir <ObjectDir>] [-obj|-blend] [-flipUVs]");
+            usage.AppendLine();
+            usage.AppendLine("-usage:           Prints out the usage statement");
+            usage.AppendLine();
+            usage.AppendLine("-inputfile:       Mandatory.  The name of the .cgf or .cga file to process");
+            usage.AppendLine("-output file:     The name of the file to write the output.  Default is <cgf File>.obj");
+            usage.AppendLine("-objectdir:       The name where the base Objects directory is located.  Used to read mtl file. ");
+		    usage.AppendLine("                  Defaults to current directory.");
+            usage.AppendLine("-obj|-blend:      Export to .obj or .blend format.  Can be both.  Defaults to .obj only.");
+            usage.AppendLine("-flipUVs:         Flips the UV.  Defaults to... true?  Whatever Blender likes by default.");
+            usage.AppendLine();
+            Console.WriteLine(usage.ToString());
+        }
     }
 
 
@@ -1233,7 +1342,19 @@ namespace CgfConverter
 
         static void Main(string[] args)
         {
+            ArgsHandler argsHandler = new ArgsHandler();
+            int result = argsHandler.ProcessArgs(args);
+            Console.WriteLine("Argshandler returned {0}", result);
             // Assign the argument to a variable
+            // Console.WriteLine("Current directory is {0}", argsHandler.ObjectDir[0]);
+            if (result == 1)
+            {
+                // Error parsing the arguments.  Usage should have been thrown.  Exit with return 1;
+                Console.WriteLine("Unable to parse arguments.  Exiting...");
+                return;
+            }
+
+
             FileInfo dataFile;  // This is the file passed in args
 
             if (args.Length != 0 && File.Exists(args[0]))
@@ -1247,7 +1368,6 @@ namespace CgfConverter
             }
             
             // Console.WriteLine("Input File is '{0}'" , dataFile.Name);
-            // ReadCryHeader(cgfFile);
             CgfData cgfData = new CgfData();
             cgfData.ReadCgfData(dataFile);
             
