@@ -183,9 +183,15 @@ namespace CgfConverter
                     // write out the material library
                     ChunkMtlName tmpMtlName = (ChunkMtlName)ChunkDictionary[RootNode.MatID];
                     string s2 = String.Format("mtllib {0}", tmpMtlName.Name + ".mtl");
+                    Console.Write("========={0}", s2);
                     file.WriteLine(s2);
-                    Console.WriteLine("****************************Mtl File is {0}", BasePath+tmpMtlName.Name);
-                    ReadMtlFile(BasePath + tmpMtlName.Name + ".mtl");
+                    MtlFile = new FileInfo(tmpMtlName + ".mtl");
+                    if (MtlFile.Exists)
+                    {
+                        Console.WriteLine("****************************Mtl File is {0}", MtlFile.FullName);
+                        ReadMtlFile(MtlFile);
+
+                    }
 
                     // We have a root node with no children, so simple object.
                     string s3 = String.Format("o {0}", RootNode.Name);
@@ -207,9 +213,10 @@ namespace CgfConverter
                         if (tmpMtlName.MatType == 0x01 || tmpMtlName.MatType == 0x10 )
                         {
                             // Console.WriteLine("Found the material file...");
+                            MtlFile = new FileInfo(tmpMtlName + ".mtl");
                             string s_material = String.Format("mtllib {0}", tmpMtlName.Name + ".mtl");
-                            Console.WriteLine("*************************Mtl File is {0}", BasePath + tmpMtlName.Name+".mtl");
-                            ReadMtlFile(BasePath + tmpMtlName.Name + ".mtl");
+                            Console.WriteLine("*************************Mtl File is {0}", tmpMtlName.Name+".mtl");
+                            ReadMtlFile(MtlFile);
                             file.WriteLine(s_material);
                         }
                     }
@@ -319,12 +326,47 @@ namespace CgfConverter
             // Extend the current vertex, uv and normal positions by the length of those arrays.
             CurrentVertexPosition = TempVertexPosition;
         }
-        public void ReadMtlFile(string Materialfile)    // reads the mtl file, so we can populate the MaterialNames array and assign those material names to the meshes
+        public void GetMtlFile()  // Get the name of the parent material, then get the location of the file name. Assume pwd if no objectdir.
+        {
+            FileInfo mtlFile;
+            DirectoryInfo currentDir = new DirectoryInfo(Directory.GetCurrentDirectory());
+
+            // Find the number of material chunks.  if 1, then name is the mtl file name.  If many, find type 0x01.
+            foreach (ChunkMtlName mtlChunk in CgfChunks.Where(a => a.chunkType == ChunkType.MtlName))
+            {
+                if (mtlChunk.MatType == 0x01)
+                {
+                    // this is a parent material. Should be only one.  Don't care about the rest.
+                    if (mtlChunk.Name.Contains(@"\") || mtlChunk.Name.Contains(@"/"))
+                    {
+                        // have a path to the objects
+                    }
+                    else
+                    {
+                        // just the file name.  Can only check current directory.
+                        string file = currentDir.ToString() + mtlChunk.Name + ".mtl";
+                        try 
+                        {
+                            mtlFile = new FileInfo(file);
+                        }
+                        catch (FileNotFoundException e) 
+                        {
+                            Console.WriteLine("ERROR:  Material file {0} does not exist.", file);
+                            throw;
+                        }
+
+                    }
+                }
+            }
+
+            return;
+        }
+        public void ReadMtlFile(FileInfo Materialfile)    // reads the mtl file, so we can populate the MaterialNames array and assign those material names to the meshes
         {
             // string Materialfile = @"E:\Blender Projects\Mechs\Objects\Mechs\adder\cockpit_standard\adder_a_cockpit_standard.mtl";
             // MtlFile should be an object to the Material File for the CgfData.  We need to populate the array with the objects.
             Console.WriteLine("Mtl File name is {0}", Materialfile);
-            using (XmlReader reader = XmlReader.Create(Materialfile))
+            using (XmlReader reader = XmlReader.Create(Materialfile.Name))
             {
                 while (reader.Read())
                 {
@@ -1335,7 +1377,6 @@ namespace CgfConverter
             Console.WriteLine(usage.ToString());
         }
     }
-
 
     class Program
     {
