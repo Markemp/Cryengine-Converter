@@ -12,13 +12,13 @@ Version 0.8
   - -blend (export to .blend, to be implemented in 1.0) (can be used in conjunction with -obj)
   - -output <filename> (where to write the output file; default to .cgf/.cga input directory)
 - Figure out how to convert 8 byte vertex info into 3 vertices **COMPLETE** 7/25
-- Bug fix so some .obj files import properly to Blender.
+- Bug fix so some .obj files import properly to Blender (exploded geometry issue)
 - Refactor to use Where(a=>a.blahblah==blahblahblah) and clean up classes. **COMPLETE** 7/30
 - add build version into the output
-- .mtl files:  Find the associated mtl file for the .cgf file from the MtlName chunk.  **COMPLETE**
+- .mtl files:  Find the associated mtl file for the .cgf file from the MtlName chunk.
+- Add support for Cryengine 3.6 and newer files **COMPLETE** 8/1
 
 Version 0.9
-- Add support for Cryengine 3.6 and newer files
 - .mtl files - convert Cryengine .mtl files to .obj .mtl files.  Better mtl file handling (search given obj dirs)
 - Break classes into separate files.
 - Input validation, error checking, etc.
