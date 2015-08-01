@@ -33,7 +33,7 @@
         ExportFlags = 0xCCCC0015, //Describes export information.
         DataStream = 0xCCCC0016, //A data Stream
         MeshSubsets = 0xCCCC0017, //Describes an array of mesh subsets
-        MeshPhysicalData = 0xCCCC0018, //Physicalized mesh data
+        MeshPhysicsData = 0xCCCC0018, //Physicalized mesh data
         CompiledBones = 0xACDC0000, //unknown chunk
         CompiledPhysicalBones = 0xACDC0001, // unknown chunk
         CompiledMorphtargets = 0xACDC0002,  // unknown chunk
@@ -48,10 +48,58 @@
         BonesBoxes = 0xAAFC0004, // unknown chunk
         UnknownAAFC0005 = 0xAAFC0005 //unknown chunk
     }
+    public enum ChunkType36 : short    // complete
+    {
+        Any = 0x0,
+        Mesh = 0x1000,
+        Helper = 0x1001,
+        VertAnim = 0x1002,
+        BoneAnim = 0x1003,
+        GeomNameList = 0x1004,
+        BoneNameList = 0x1005,
+        MtlList = 0x1006,
+        MRM = 0x1007, //obsolete
+        SceneProps = 0x1008,
+        Light = 0x1009,
+        PatchMesh = 0x100A,
+        Node = 0x100B,
+        Mtl = 0x100C,
+        Controller = 0x100D,
+        Timing = 0x100E,
+        BoneMesh = 0x100F,
+        BoneLightBinding = 0x1010,
+        MeshMorphTarget = 0x1011,
+        BoneInitialPos = 0x1012,
+        SourceInfo = 0x1013, //Describes the source from which the cgf was exported: source max file, machine and user.
+        MtlName = 0x1014, //provides material name as used in the material.xml file
+        ExportFlags = 0x1015, //Describes export information.
+        DataStream = 0x1016, //A data Stream
+        MeshSubsets = 0x1017, //Describes an array of mesh subsets
+        MeshPhysicalData = 0x1018, //Physicalized mesh data
+        // not sure what the following enums will be, since not experienced yet.
+        /*CompiledBones = 0xACDC0000, //unknown chunk
+        CompiledPhysicalBones = 0xACDC0001, // unknown chunk
+        CompiledMorphtargets = 0xACDC0002,  // unknown chunk
+        CompiledPhysicalProxies = 0xACDC0003, //unknown chunk
+        CompiledIntFaces = 0xACDC0004, //unknown chunk
+        CompiledIntSkinVertices = 0xACDC0004, //unknown chunk
+        CompiledExt2IntMap = 0xACDC0005, //unknown chunk
+        BreakablePhysics = 0xACDC0006, //unknown chunk
+        FaceMap = 0xAAFC0000, //unknown chunk
+        SpeedInfo = 0xAAFC0002, //Speed and distnace info
+        FootPlantInfo = 0xAAFC0003, // Footplant info
+        BonesBoxes = 0xAAFC0004, // unknown chunk
+        UnknownAAFC0005 = 0xAAFC0005 //unknown chunk*/
+    }
+
     public enum ChunkVersion : uint
     {
         ChkVersion
     }    //complete
+    public enum ChunkVersion36 : short
+    {
+        ChkVersion36
+    }
     public enum HelperType : uint
     {
         POINT,
