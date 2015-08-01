@@ -22,6 +22,7 @@ Version 0.9
 - .mtl files - convert Cryengine .mtl files to .obj .mtl files.  Better mtl file handling (search given obj dirs)
 - Break classes into separate files.
 - Input validation, error checking, etc.
+- Move version, id, type and offset so they are read from the chunk table, not the chunks.
 
 Version 1.0
 - Export directly to .blend files
