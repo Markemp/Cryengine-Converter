@@ -55,8 +55,7 @@ namespace CgfConverter
 
             foreach (ChunkHeader ChkHdr in CgfChunkTable.chunkHeaders) 
             {
-                ChunkType chkType = ChkHdr.type;
-                //Console.WriteLine("Processing {0}", chkType);
+                Console.WriteLine("Processing {0}", ChkHdr.type);
                 switch (ChkHdr.type)
                 {
                     case ChunkType.SourceInfo:
@@ -97,11 +96,14 @@ namespace CgfConverter
                     case ChunkType.MtlName:
                     {
                         ChunkMtlName chkMtlName = new ChunkMtlName();
+                        chkMtlName.version = ChkHdr.version;
                         chkMtlName.ReadChunk(cgfreader, ChkHdr.offset);
                         chkMtlName.id = ChkHdr.id;  // Should probably check to see if the 2 values match...
+                        chkMtlName.chunkType = ChkHdr.type;
+                        //Console.WriteLine("Chunk header version is {0:X}", ChkHdr.version);
                         CgfChunks.Add(chkMtlName);
                         ChunkDictionary.Add(chkMtlName.id, chkMtlName);
-                        chkMtlName.WriteChunk();
+                        //chkMtlName.WriteChunk();
                         break;
                     }
                     case ChunkType.DataStream:
@@ -109,6 +111,7 @@ namespace CgfConverter
                         ChunkDataStream chkDataStream = new ChunkDataStream();
                         chkDataStream.ReadChunk(cgfreader, ChkHdr.offset);
                         chkDataStream.id = ChkHdr.id;
+                        chkDataStream.chunkType = ChkHdr.type;
                         CgfChunks.Add(chkDataStream);
                         ChunkDictionary.Add(chkDataStream.id, chkDataStream);
                         //chkDataStream.WriteChunk();
@@ -120,9 +123,10 @@ namespace CgfConverter
                         ChunkMesh chkMesh = new ChunkMesh();
                         chkMesh.ReadChunk(cgfreader, ChkHdr.offset);
                         chkMesh.id = ChkHdr.id;
+                        chkMesh.chunkType = ChkHdr.type;
                         CgfChunks.Add(chkMesh);
                         ChunkDictionary.Add(chkMesh.id, chkMesh);
-                        chkMesh.WriteChunk();
+                        //chkMesh.WriteChunk();
                         break;
                     }
                     case ChunkType.MeshSubsets:
@@ -130,6 +134,7 @@ namespace CgfConverter
                         ChunkMeshSubsets chkMeshSubsets = new ChunkMeshSubsets();
                         chkMeshSubsets.ReadChunk(cgfreader, ChkHdr.offset);
                         chkMeshSubsets.id = ChkHdr.id;
+                        chkMeshSubsets.chunkType = ChkHdr.type;
                         CgfChunks.Add(chkMeshSubsets);
                         ChunkDictionary.Add(chkMeshSubsets.id, chkMeshSubsets);
                         //chkMeshSubsets.WriteChunk();
@@ -140,6 +145,7 @@ namespace CgfConverter
                         ChunkNode chkNode = new ChunkNode();
                         chkNode.ReadChunk(cgfreader, ChkHdr.offset);
                         chkNode.id = ChkHdr.id;
+                        chkNode.chunkType = ChkHdr.type;
                         CgfChunks.Add(chkNode);
                         ChunkDictionary.Add(chkNode.id, chkNode);
                         if (chkNode.Parent == 0xFFFFFFFF)
@@ -149,7 +155,7 @@ namespace CgfConverter
                             RootNode = chkNode;
                             //ChunkDictionary[RootNodeID].WriteChunk();
                         }
-                        chkNode.WriteChunk();
+                        //chkNode.WriteChunk();
                         break;
                     }
                     case ChunkType.Helper:
@@ -164,7 +170,7 @@ namespace CgfConverter
                     }
                     default:
                     {
-                        //Console.WriteLine("Chunk type found that didn't match known versions: {0}",ChkHdr.type);
+                        Console.WriteLine("Chunk type found that didn't match known versions: {0}",ChkHdr.type);
                         break;
                     }
                 }
@@ -193,8 +199,8 @@ namespace CgfConverter
                 file.WriteLine(s1);
                 file.WriteLine("#");
                 
-                // Console.WriteLine(RootNode.NumChildren);
                 this.GetMtlFileName();  // Gets the Fileinfo MtlFile from the material chunks
+                Console.WriteLine("MtlFile name is {0}", MtlFile.Name);
                 if (MtlFile != null)
                 {
                     Console.WriteLine("MtlFile Full Name is {0}", MtlFile.FullName);
@@ -242,7 +248,7 @@ namespace CgfConverter
             ChunkMesh tmpMesh = (ChunkMesh)ChunkDictionary[chunkNode.Object];
             if (tmpMesh.MeshSubsets == 0 || tmpMesh.VerticesData == 0)
             {
-                Console.WriteLine("*********************Found a node chunk with no mesh subsets (ID: {0}).  Skipping...", tmpMesh.id);
+                //Console.WriteLine("*********************Found a node chunk with no mesh subsets (ID: {0}).  Skipping...", tmpMesh.id);
                 //tmpMesh.WriteChunk();
                 return;
             }
@@ -291,12 +297,15 @@ namespace CgfConverter
                 f.WriteLine(s7);
 
                 // usemtl <number> refers to the position of this material in the .mtl file.  If it's 0, it's the first entry, etc. MaterialNameArray[]
-                if (MaterialNameArray == null)     // No names in the material file.  use the chunknode name.
+                if (MaterialNameArray.Length == 0)     // No names in the material file.  use the chunknode name.
                 {
                     // The material file doesn't have any elements with the Name of the material.  Use the object name.
                     string s_material = String.Format("usemtl {0}", RootNode.Name);
                     f.WriteLine(s_material);
-                } else {
+                } 
+                else 
+                {
+                    // Console.WriteLine("Number of items in Material Name Array: {0}", MaterialNameArray.Length);
                     string s_material = String.Format("usemtl {0}", MaterialNameArray[tmpMeshSubsets.MeshSubsets[i].MatID]);
                     f.WriteLine(s_material);
                 }
@@ -320,42 +329,107 @@ namespace CgfConverter
         public void GetMtlFileName()  // Get FileInfo Mtlfile name from the MtlName chunks and read it. Assume pwd if no objectdir.
         {
             DirectoryInfo currentDir = new DirectoryInfo(Directory.GetCurrentDirectory());
-            
+            Console.WriteLine("Current dir is {0}", currentDir.FullName);
             // Find the number of material chunks.  if 1, then name is the mtl file name.  If many, find type 0x01.
             foreach (ChunkMtlName mtlChunk in CgfChunks.Where(a => a.chunkType == ChunkType.MtlName))
             {
+                mtlChunk.WriteChunk();
                 if (mtlChunk.version == 0x800)
                 {
                     // this is a parent material. Should be only one.  Don't care about the rest.
-                    if (mtlChunk.MatType == 0x01)
+                    Console.WriteLine("Type 0x800 found.  {0}", mtlChunk.Name);
+                    if (mtlChunk.MatType == 0x01 || mtlChunk.MatType == 0x10)
                     {
                         // parent material.  This is the one we want.
-                        // TEMPORARY CODE.  This will only read in current directory.
-                        MtlFile = new FileInfo(mtlChunk.Name + ".mtl");
-                        ReadMtlFile(MtlFile);
+                        Console.WriteLine("Mat type 0x01 found.");
+                        if (mtlChunk.Name.Contains(@"\") || mtlChunk.Name.Contains(@"/"))
+                        {
+                            // Check object dir + mtlchunk.name + ".mtl"
+                            MtlFile = new FileInfo(Args.ObjectDir + "\\" + mtlChunk.Name + ".mtl");
+                            //Console.WriteLine("********* Check to see if {0} exists... *************", MtlFile.FullName);
+                            if (MtlFile.Exists)
+                            {
+                                //Console.WriteLine("!!! Found {0}!!!", MtlFile.FullName);
+                                ReadMtlFile(MtlFile);
+                            }
+                            else
+                            {
+                                // Check local directory
+                                Console.WriteLine("!!! {0} not found.  Using last part...", MtlFile.FullName);
+                                if (mtlChunk.Name.Contains(@"\"))
+                                {
+                                    string s = mtlChunk.Name;
+                                    string[] parse = s.Split('\\');
+                                    MtlFile = new FileInfo(currentDir + "\\" + parse[parse.Length - 1] + ".mtl");
+                                    ReadMtlFile(MtlFile);
+                                }
+                                if (mtlChunk.Name.Contains(@"/"))
+                                {
+                                    string s = mtlChunk.Name;
+                                    string[] parse = s.Split('/');
+                                    MtlFile = new FileInfo(currentDir + "\\" + parse[parse.Length - 1] + ".mtl");
+                                    ReadMtlFile(MtlFile);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // mtlchunk.name doesn't have a path.  Just use the current dir + .mtl
+                            MtlFile = new FileInfo(currentDir + "\\" + mtlChunk.Name + ".mtl");
+                            ReadMtlFile(MtlFile);
+                        }
                     }
                 }
                 else  // version 0x802 file.  There will be just one, so return after it is found and read
                 {
                     // TEMPORARY CODE.  This will only read in current directory.
-                   MtlFile = new FileInfo(mtlChunk.Name + ".mtl");
-                   if (MtlFile.Exists)
-                   {
-                       // if the material file doesn't exist, then we're all kinds of screwed, eh?
-                       ReadMtlFile(MtlFile);
-                   }
+                    Console.WriteLine("version 0x802 mtl file found.");
+                    if (mtlChunk.Name.Contains(@"\") || mtlChunk.Name.Contains(@"/"))
+                    {
+                        MtlFile = new FileInfo(Args.ObjectDir + "\\" + mtlChunk.Name + ".mtl");
+                        if (MtlFile.Exists)
+                        {
+                            // Check object dir + mtlchunk.name + ".mtl"
+                            MtlFile = new FileInfo(Args.ObjectDir + "\\" + mtlChunk.Name + ".mtl");
+                            //Console.WriteLine("********* Check to see if {0} exists... *************", MtlFile.FullName);
+                            if (MtlFile.Exists)
+                            {
+                                Console.WriteLine("!!! Found {0}!!!", MtlFile.FullName);
+                                ReadMtlFile(MtlFile);
+                            }
+                            else
+                            {
+                                // Check local directory
+                                Console.WriteLine("!!! {0} not found.  Using last part...", MtlFile.FullName);
+                                if (mtlChunk.Name.Contains(@"\"))
+                                {
+                                    string s = mtlChunk.Name;
+                                    string[] parse = s.Split('\\');
+                                    MtlFile = new FileInfo(currentDir + "\\" + parse[parse.Length - 1] + ".mtl");
+                                    ReadMtlFile(MtlFile);
+                                }
+                                if (mtlChunk.Name.Contains(@"/"))
+                                {
+                                    string s = mtlChunk.Name;
+                                    string[] parse = s.Split('/');
+                                    MtlFile = new FileInfo(currentDir + "\\" + parse[parse.Length - 1] + ".mtl");
+                                    ReadMtlFile(MtlFile);
+                                }
+                            }
+
+                        }
+                    }
+                    return;
                 }
-                return;
             }
             return;
         }
         public void ReadMtlFile(FileInfo Materialfile)    // reads the mtl file, so we can populate the MaterialNames array and assign those material names to the meshes
         {
-            // string Materialfile = @"E:\Blender Projects\Mechs\Objects\Mechs\adder\cockpit_standard\adder_a_cockpit_standard.mtl";
             // MtlFile should be an object to the Material File for the CgfData.  We need to populate the array with the objects.
             
             Console.WriteLine("Mtl File name is {0}", Materialfile.FullName);
-            if (Materialfile.Exists)
+            if (!Materialfile.Exists)
             {
                 Console.WriteLine("Unable to find material file {0}.  Using group names.", Materialfile.FullName);
                 return;
@@ -389,11 +463,11 @@ namespace CgfConverter
                 }
                 if (MaterialNames.Count == 0)
                 {
-                    Console.WriteLine("No material names found.");
+                    Console.WriteLine("No material names found, but there is a material.  Basic mtl file type.  Use object name.");
                 }
             }
             int length = MaterialNames.Count;
-            Console.WriteLine("{0} Materials found in the material file", length);
+            Console.WriteLine("{0} Materials found in the material file.", length);
             foreach (string tmpstring in MaterialNames)
             {
                 Console.WriteLine("Material name is {0}", tmpstring);
@@ -424,7 +498,7 @@ namespace CgfConverter
                 fileSignature = new char[8];
                 fileSignature = binReader.ReadChars(8);
                 string s = new string(fileSignature);
-                Console.WriteLine("fileSignature is {0}", s);
+                Console.Write("fileSignature is {0}, ", s);
                 if (s.ToLower().Contains("crytek"))
                 {
                     Console.WriteLine("Version 3.4 or earlier");
@@ -485,8 +559,7 @@ namespace CgfConverter
                         uint headerType = b.ReadUInt32(); // read the value, then parse it
                         tempChkHdr.type = (ChunkType)Enum.ToObject(typeof(ChunkType), headerType);
                         //Console.WriteLine("headerType: '{0}'", tempChkHdr.type);
-                        uint chunkVersionType = b.ReadUInt32();
-                        tempChkHdr.version = (ChunkVersion)Enum.ToObject(typeof(ChunkVersion), chunkVersionType);
+                        tempChkHdr.version = b.ReadUInt32();
                         tempChkHdr.offset = b.ReadUInt32();
                         tempChkHdr.id = b.ReadUInt32();  // This is the reference number to identify the mesh/datastream
                         tempChkHdr.size = b.ReadUInt32();
@@ -561,9 +634,8 @@ namespace CgfConverter
                                 break;
                         }
                         //tempChkHdr.type36 = (ChunkType36)Enum.ToObject(typeof(ChunkType36), tempChkHdr);
-                        Console.WriteLine("headerType: '{0}'", tempChkHdr.type);
-                        uint chunkVersionType = (uint) b.ReadUInt16();
-                        tempChkHdr.version = (ChunkVersion)Enum.ToObject(typeof(ChunkVersion), chunkVersionType);
+                        //Console.WriteLine("headerType: '{0}'", tempChkHdr.type);
+                        tempChkHdr.version = (uint)b.ReadUInt16();
                         tempChkHdr.id = b.ReadUInt32();  // This is the reference number to identify the mesh/datastream
                         tempChkHdr.size = b.ReadUInt32();
                         tempChkHdr.offset = b.ReadUInt32();
@@ -585,9 +657,7 @@ namespace CgfConverter
         public class ChunkHeader
         {
             public ChunkType type;
-            public ChunkType36 type36;          // for new files.  This is a short.
-            public ChunkVersion version;
-            public ChunkVersion36 version36;      // for new versions.  This is a short.
+            public uint version;
             public uint offset;
             public uint id;
             public uint size; //  Size of the chunk
@@ -959,78 +1029,56 @@ namespace CgfConverter
 
             public override void ReadChunk(BinaryReader b, uint f)
             {
+                b.BaseStream.Seek(f, 0); // seek to the beginning of the Material Name chunk
                 if (FileVersion == 0)
                 {
-                    b.BaseStream.Seek(f, 0); // seek to the beginning of the Material Name chunk
                     uint tmpChunkMtlName = b.ReadUInt32();
                     chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChunkMtlName);
                     version = b.ReadUInt32();
                     fOffset.Offset = b.ReadInt32();  // offset to this chunk
                     id = b.ReadUInt32();  // ref/chunk number
-                    // at this point we need to differentiate between Version 800 and 802, since the format differs.
-                    if (version == 0x800 || version == 0x744)  // guessing on the 744. Aion.
-                    {
-                        MatType = b.ReadUInt32();  // if 0x1, then material lib.  If 0x12, mat name.  This is actually a bitstruct.
-                        Filler2 = b.ReadUInt32();
-                        // read the material Name, which is a 128 byte char array.  really want it as a string...
-                        // long tmpPointer = b.BaseStream.Position;
-                        char[] tmpName = new char[128];
-                        tmpName = b.ReadChars(128);
-                        int stringLength = 0;
-                        for (int i = 0; i < tmpName.Length; i++)
-                        {
-                            if (tmpName[i] == 0)
-                            {
-                                stringLength = i;
-                                break;
-                            }
-                        }
-                        Name = new string(tmpName, 0, stringLength);
-                        PhysicsType = (MtlNamePhysicsType)Enum.ToObject(typeof(MtlNamePhysicsType), b.ReadUInt32());
-                        NumChildren = b.ReadUInt32();
-                        // Now we need to read the Children references.  2 parts; the number of children, and then 66 - numchildren padding
-                        Children = new uint[NumChildren];
-                        for (int i = 0; i < NumChildren; i++)
-                        {
-                            Children[i] = b.ReadUInt32();
-                        }
-                        // Now dump the rest of the padding
-                        Padding = new uint[66 - NumChildren];
-                        for (int i = 0; i < 66 - NumChildren; i++)
-                        {
-                            Padding[i] = b.ReadUInt32();
-                        }
-                    }
-                    if (version == 0x802)
-                    {
-                        // Don't need fillers for this type, but there are no children.
-                        char[] tmpName = new char[128];
-                        tmpName = b.ReadChars(128);
-                        int stringLength = 0;
-                        for (int i = 0; i < tmpName.Length; i++)
-                        {
-                            if (tmpName[i] == 0)
-                            {
-                                stringLength = i;
-                                break;
-                            }
-                        }
-                        Name = new string(tmpName, 0, stringLength);
-                        NumChildren = b.ReadUInt32();  // number of materials
-                        PhysicsTypeArray = new MtlNamePhysicsType[NumChildren];
-                        for (int i = 0; i < NumChildren; i++)
-                        {
-                            PhysicsTypeArray[i] = (MtlNamePhysicsType)Enum.ToObject(typeof(MtlNamePhysicsType), b.ReadUInt32());
-                        }
-                    }
                 }
-                if (FileVersion == 1)   // 3.6 or newer
+                // at this point we need to differentiate between Version 800 and 802, since the format differs.
+                if (version == 0x800 || version == 0x744)  // guessing on the 744. Aion.
                 {
-                    b.BaseStream.Seek(f, 0); // seek to the beginning of the Material Name chunk
+                    MatType = b.ReadUInt32();  // if 0x1, then material lib.  If 0x12, mat name.  This is actually a bitstruct.
+                    Filler2 = b.ReadUInt32();
+                    // read the material Name, which is a 128 byte char array.  really want it as a string...
+                    // long tmpPointer = b.BaseStream.Position;
                     char[] tmpName = new char[128];
                     tmpName = b.ReadChars(128);
                     int stringLength = 0;
-                    Console.WriteLine("Length is {0}", tmpName.Length);
+                    for (int i = 0; i < tmpName.Length; i++)
+                    {
+                        if (tmpName[i] == 0)
+                        {
+                            stringLength = i;
+                            break;
+                        }
+                    }
+                    Name = new string(tmpName, 0, stringLength);
+                    PhysicsType = (MtlNamePhysicsType)Enum.ToObject(typeof(MtlNamePhysicsType), b.ReadUInt32());
+                    NumChildren = b.ReadUInt32();
+                    // Now we need to read the Children references.  2 parts; the number of children, and then 66 - numchildren padding
+                    Children = new uint[NumChildren];
+                    for (int i = 0; i < NumChildren; i++)
+                    {
+                        Children[i] = b.ReadUInt32();
+                    }
+                    // Now dump the rest of the padding
+                    Padding = new uint[66 - NumChildren];
+                    for (int i = 0; i < 66 - NumChildren; i++)
+                    {
+                        Padding[i] = b.ReadUInt32();
+                    }
+                }
+                if (version == 0x802)
+                {
+                    // Don't need fillers for this type, but there are no children.
+                    Console.WriteLine("version 0x802 material file found....");
+                    char[] tmpName = new char[128];
+                    tmpName = b.ReadChars(128);
+                    int stringLength = 0;
                     for (int i = 0; i < tmpName.Length; i++)
                     {
                         if (tmpName[i] == 0)
@@ -1047,6 +1095,7 @@ namespace CgfConverter
                         PhysicsTypeArray[i] = (MtlNamePhysicsType)Enum.ToObject(typeof(MtlNamePhysicsType), b.ReadUInt32());
                     }
                 }
+                
                 // chunkMtlName = this;
             }
             public override void WriteChunk()
@@ -1055,6 +1104,7 @@ namespace CgfConverter
                 Console.WriteLine("    ChunkType:           {0}", chunkType);
                 Console.WriteLine("    Material Name:       {0}", Name);
                 Console.WriteLine("    Material ID:         {0:X}", id);
+                Console.WriteLine("    Version:             {0:X}", version);
                 Console.WriteLine("    Number of Children:  {0}", NumChildren);
                 Console.WriteLine("    Material Type:       {0:X}", MatType); // 0x1 is mtllib w children, 0x10 is mtl no children, 0x18 is child
                 Console.WriteLine("    Physics Type:        {0}", PhysicsType);
@@ -1077,7 +1127,7 @@ namespace CgfConverter
             public UV[] UVs;            // for datastreamType of 2, length is NumElements.
             public IRGB[] RGBColors;    // for dataStreamType of 3, length is NumElements.  Bytes per element of 3
             public IRGBA[] RGBAColors;  // for dataStreamType of 4, length is NumElements.  Bytes per element of 4
-            public ushort[] Indices;    // for dataStreamType of 5, length is NumElements.
+            public UInt32[] Indices;    // for dataStreamType of 5, length is NumElements.
             // For Tangents on down, this may be a 2 element array.  See line 846+ in cgf.xml
             public Tangent[,] Tangents;  // for dataStreamType of 6, length is NumElements,2.  
             public byte[,] ShCoeffs;     // for dataStreamType of 7, length is NumElement,BytesPerElements.
@@ -1169,14 +1219,25 @@ namespace CgfConverter
                         }
                     case DataStreamType.INDICES:  // Ref is 
                         {
-                            Indices = new ushort[NumElements];
-                            for (int i = 0; i < NumElements; i++)
+                            Indices = new UInt32[NumElements];
+                            if (BytesPerElement == 2)
                             {
-                                Indices[i] = b.ReadUInt16();
-                                // Console.WriteLine("Indice {0} is {1}", i, Indices[i]);
-                                if (i > NumElements - 20)
+                                for (int i = 0; i < NumElements; i++)
                                 {
-                                    //Console.WriteLine("Indices {0} is {1}", i, Indices[i]);
+                                    Indices[i] = (UInt32)b.ReadUInt16();
+                                    // Console.WriteLine("Indice {0} is {1}", i, Indices[i]);
+                                    if (i > NumElements - 20)
+                                    {
+                                        //Console.WriteLine("Indices {0} is {1}", i, Indices[i]);
+                                    }
+                                }
+                            }
+                            if (BytesPerElement == 4)
+                            {
+                                for (int i = 0; i < NumElements; i++)
+                                {
+                                    Indices[i] = b.ReadUInt32();
+                                    // Console.WriteLine("Indice {0} is {1}", i, Indices[i]);
                                 }
                             }
                             //Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
@@ -1489,15 +1550,15 @@ namespace CgfConverter
         public Boolean Usage;               // Usage
         public Boolean FlipUVs=false;       // Doing this by default.  If you want to undo, check this (reversed)
         public FileInfo InputFile;          // File we are reading (need to check for CryTek or CrChF)
-        public FileInfo OutputFile;         // File we are outputting to
+        public FileInfo OutputFile = null;         // File we are outputting to
         public Boolean Obj=true;            // You want to export to a .obj file
         public Boolean Blend=false;         // you want to export to a .blend file.
-        public List<DirectoryInfo> ObjectDir = new List<DirectoryInfo>(); // Where the Object files are.  Will need to eventually store this in the registry.
-                                                                          // ALWAYS check submitted directory first.  usemtl isn't always set to the obj dir.
+        public DirectoryInfo ObjectDir = null;     // Where the Object files are.
+                                            // ALWAYS check submitted directory first.  usemtl isn't always set to the obj dir.
 
         public int ProcessArgs(string[] inputArgs)      // fill out the args passed in at the command line.
         {
-            if (inputArgs.Length == 0)
+            if (inputArgs.Length == 0)      // No arguments provided.  Just go to usage and return to exit.
             {
                 this.GetUsage();
                 return 1;
@@ -1508,12 +1569,10 @@ namespace CgfConverter
                 {
                     InputFile = new FileInfo(inputArgs[0]);
                     FlipUVs = false;
-                    OutputFile = new FileInfo(inputArgs[0] + ".obj");
+                    OutputFile = new FileInfo(inputArgs[0] + ".obj");   // is this a bug?  .cgf.obj file output?
                     Obj = true;
                     Blend = false;
-                    DirectoryInfo di = new DirectoryInfo(Directory.GetCurrentDirectory());
-                    Console.WriteLine("Current Working directory is {0}", di.FullName);
-                    ObjectDir.Add(di);
+                    
                     return 0;
                 }
                 else
@@ -1525,6 +1584,64 @@ namespace CgfConverter
             else
             {
                 // More than one argument submitted.  Test each value.  For loops?
+                if (File.Exists(inputArgs[0]))
+                {
+                    InputFile = new FileInfo(inputArgs[0]);
+
+                    for (int i = 0; i < inputArgs.Length; i++)
+                    {
+                        //Console.WriteLine("Processing inputArg {0}", inputArgs[i]);
+                        if (inputArgs[i].ToLower() == "-objectdir")
+                        {
+                            // Next item in list will be the Object directory
+                            // Console.WriteLine("i is {0}, Length is {1}", i, inputArgs.Length);
+                            if (i + 1 > inputArgs.Length)
+                            {
+                                // nothing after -object dir.  Usage.
+                                GetUsage();
+                                return 1;
+                            }
+                            else
+                            {
+                                string s = inputArgs[i + 1].ToLower();
+                                //Console.WriteLine("String s is {0}", s);
+                                ObjectDir = new DirectoryInfo(inputArgs[i + 1]);
+                                //Console.WriteLine("Found Object Dir {0}", ObjectDir.FullName);
+                                //i++; // because we know i+1 is the directory
+                            }
+                        }
+                        if (inputArgs[i].ToLower() == "-flipuv")
+                        {
+                            FlipUVs = true;
+                            Console.WriteLine("Flipping UVs.");
+                        }
+                        if (inputArgs[i].ToLower() == "-outputfile")
+                        {
+                            if (i + 1 > inputArgs.Length)
+                            {
+                                // nothing after -object dir.  Usage.
+                                GetUsage();
+                                return 1;
+                            }
+                            else
+                            {
+                                OutputFile = new FileInfo(inputArgs[i + 1]);
+                                Console.WriteLine("Output file set to {0}", OutputFile.FullName);
+                                i++; // because we know i+1 is the outputfile
+                            }
+                        }
+                        if (inputArgs[i].ToLower() == "-blend")
+                        {
+                            Blend = true;
+                            Console.WriteLine("Output format set to Blend. (NYI)");
+                        }
+                    }
+                }
+                else
+                {
+                    GetUsage();
+                    return 1;
+                }
                 return 0;
             }
         }
@@ -1532,11 +1649,11 @@ namespace CgfConverter
         {
             var usage = new StringBuilder();
             usage.AppendLine();
-            usage.AppendLine("cgf-converter -usage | [-inputfile] <.cgf file> [-outputfile <output file>] [-objectdir <ObjectDir>] [-obj|-blend] [-flipUVs]");
+            usage.AppendLine("cgf-converter [-usage] | <.cgf file> [-outputfile <output file>] [-objectdir <ObjectDir>] [-obj|-blend] [-flipUVs]");
             usage.AppendLine();
             usage.AppendLine("-usage:           Prints out the usage statement");
             usage.AppendLine();
-            usage.AppendLine("-inputfile:       Mandatory.  The name of the .cgf or .cga file to process");
+            usage.AppendLine("<.cgf file>:      Mandatory.  The name of the .cgf or .cga file to process");
             usage.AppendLine("-output file:     The name of the file to write the output.  Default is <cgf File>.obj.  NYI");
             usage.AppendLine("-objectdir:       The name where the base Objects directory is located.  Used to read mtl file. ");
 		    usage.AppendLine("                  Defaults to current directory.");
@@ -1545,17 +1662,34 @@ namespace CgfConverter
             usage.AppendLine();
             Console.WriteLine(usage.ToString());
         }
+        public void WriteArgs()
+        {
+            Console.WriteLine("*** Submitted args ***");
+            Console.WriteLine("    Input file:             {0}", InputFile.FullName);
+            if (ObjectDir != null)
+            {
+                Console.WriteLine("    Object dir:             {0}", ObjectDir.FullName);
+            }
+            if (OutputFile != null)
+            {
+                Console.WriteLine("    Output file:            {0}", OutputFile.FullName);
+            }
+            Console.WriteLine("    Flip UVs:               {0}", FlipUVs);
+            Console.WriteLine("    Output to .obj:         {0}", Obj);
+            Console.WriteLine("    Output to .blend:       {0}", Blend);
+            Console.WriteLine();
+        }
     }
 
     class Program
     {
-        static void Main(string[] args)
+        static void Main(string[] @args)
         {
             ArgsHandler argsHandler = new ArgsHandler();
+
             int result = argsHandler.ProcessArgs(args);
-            Console.WriteLine("Argshandler returned {0}", result);
             // Assign the argument to a variable
-            // Console.WriteLine("Current directory is {0}", argsHandler.ObjectDir[0]);
+
             if (result == 1)
             {
                 // Error parsing the arguments.  Usage should have been thrown.  Exit with return 1;
@@ -1563,16 +1697,7 @@ namespace CgfConverter
                 return;
             }
 
-            if (args.Length != 0 && File.Exists(args[0]))
-            {
-                argsHandler.InputFile = new FileInfo(args[0]);  // preferred.  We want objects, not strings
-            }
-            else
-            {
-                Console.WriteLine("Please input cgf/cga/chrparams file.");
-                argsHandler.InputFile = new FileInfo(Console.ReadLine());  // This needs error checking.
-            }
-            
+            argsHandler.WriteArgs();
             // Console.WriteLine("Input File is '{0}'" , dataFile.Name);
             CgfData cgfData = new CgfData();
             cgfData.ReadCgfData(argsHandler);
