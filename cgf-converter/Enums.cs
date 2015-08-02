@@ -170,7 +170,13 @@
         SHAPEDEFORMATION,
         BONEMAP,
         FACEMAP,
-        VERTMATS
+        VERTMATS,
+        UNKNOWN1,
+        UNKNOWN2,
+        UNKNOWN3,
+        VERTSUVS,
+        UNKNOWN5,
+        UNKNOWN6
     }  //complete
     public enum PhysicsPrimitiveType : uint
     {

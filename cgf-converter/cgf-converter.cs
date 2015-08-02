@@ -52,6 +52,7 @@ namespace CgfConverter
             cgfreader.BaseStream.Seek(offset, 0);  // will now start to read from the start of the chunk table
             CgfChunkTable = new ChunkTable();
             CgfChunkTable.GetChunkTable(cgfreader, offset);
+            CgfChunkTable.WriteChunk();
 
             foreach (ChunkHeader ChkHdr in CgfChunkTable.chunkHeaders) 
             {
@@ -61,8 +62,10 @@ namespace CgfConverter
                     case ChunkType.SourceInfo:
                     {
                         ChunkSourceInfo chkSrcInfo = new ChunkSourceInfo();
-                        chkSrcInfo.ReadChunk(cgfreader,ChkHdr.offset);
+                        chkSrcInfo.version = ChkHdr.version;
                         chkSrcInfo.id = ChkHdr.id;
+                        chkSrcInfo.size = ChkHdr.size;
+                        chkSrcInfo.ReadChunk(cgfreader, ChkHdr.offset);
                         CgfChunks.Add(chkSrcInfo);
                         ChunkDictionary.Add(chkSrcInfo.id, chkSrcInfo);
                         //chkSrcInfo.WriteChunk(); 
@@ -97,10 +100,10 @@ namespace CgfConverter
                     {
                         ChunkMtlName chkMtlName = new ChunkMtlName();
                         chkMtlName.version = ChkHdr.version;
-                        chkMtlName.ReadChunk(cgfreader, ChkHdr.offset);
                         chkMtlName.id = ChkHdr.id;  // Should probably check to see if the 2 values match...
                         chkMtlName.chunkType = ChkHdr.type;
-                        //Console.WriteLine("Chunk header version is {0:X}", ChkHdr.version);
+                        chkMtlName.size = ChkHdr.size;
+                        chkMtlName.ReadChunk(cgfreader, ChkHdr.offset);
                         CgfChunks.Add(chkMtlName);
                         ChunkDictionary.Add(chkMtlName.id, chkMtlName);
                         //chkMtlName.WriteChunk();
@@ -109,32 +112,35 @@ namespace CgfConverter
                     case ChunkType.DataStream:
                     {
                         ChunkDataStream chkDataStream = new ChunkDataStream();
-                        chkDataStream.ReadChunk(cgfreader, ChkHdr.offset);
                         chkDataStream.id = ChkHdr.id;
                         chkDataStream.chunkType = ChkHdr.type;
+                        chkDataStream.version = ChkHdr.version;
+                        chkDataStream.ReadChunk(cgfreader, ChkHdr.offset);
                         CgfChunks.Add(chkDataStream);
                         ChunkDictionary.Add(chkDataStream.id, chkDataStream);
-                        //chkDataStream.WriteChunk();
+                        chkDataStream.WriteChunk();
                         break;
                     }
                          
                     case ChunkType.Mesh:
                     {
                         ChunkMesh chkMesh = new ChunkMesh();
-                        chkMesh.ReadChunk(cgfreader, ChkHdr.offset);
                         chkMesh.id = ChkHdr.id;
                         chkMesh.chunkType = ChkHdr.type;
+                        chkMesh.version = ChkHdr.version;
+                        chkMesh.ReadChunk(cgfreader, ChkHdr.offset);
                         CgfChunks.Add(chkMesh);
                         ChunkDictionary.Add(chkMesh.id, chkMesh);
-                        //chkMesh.WriteChunk();
+                        chkMesh.WriteChunk();
                         break;
                     }
                     case ChunkType.MeshSubsets:
                     {
                         ChunkMeshSubsets chkMeshSubsets = new ChunkMeshSubsets();
-                        chkMeshSubsets.ReadChunk(cgfreader, ChkHdr.offset);
                         chkMeshSubsets.id = ChkHdr.id;
                         chkMeshSubsets.chunkType = ChkHdr.type;
+                        chkMeshSubsets.version = chkMeshSubsets.version;
+                        chkMeshSubsets.ReadChunk(cgfreader, ChkHdr.offset);
                         CgfChunks.Add(chkMeshSubsets);
                         ChunkDictionary.Add(chkMeshSubsets.id, chkMeshSubsets);
                         //chkMeshSubsets.WriteChunk();
@@ -255,9 +261,22 @@ namespace CgfConverter
             ChunkMtlName tmpMtlName = (ChunkMtlName)ChunkDictionary[chunkNode.MatID];
             ChunkMeshSubsets tmpMeshSubsets = (ChunkMeshSubsets)ChunkDictionary[tmpMesh.MeshSubsets];
             ChunkDataStream tmpVertices = (ChunkDataStream)ChunkDictionary[tmpMesh.VerticesData];
-            ChunkDataStream tmpNormals = (ChunkDataStream)ChunkDictionary[tmpMesh.NormalsData];
-            ChunkDataStream tmpUVs = (ChunkDataStream)ChunkDictionary[tmpMesh.UVsData];
             ChunkDataStream tmpIndices = (ChunkDataStream)ChunkDictionary[tmpMesh.IndicesData];
+            
+            // these chunks don't exist for Mesh type 0x801
+            ChunkDataStream tmpNormals = new ChunkDataStream();
+            ChunkDataStream tmpUVs = new ChunkDataStream();
+            ChunkDataStream tmpVertsUVs = new ChunkDataStream();
+            if (tmpMesh.version != 0x801)
+            {
+                tmpNormals = (ChunkDataStream)ChunkDictionary[tmpMesh.NormalsData];
+                tmpUVs = (ChunkDataStream)ChunkDictionary[tmpMesh.UVsData];
+            }
+            else
+            {
+                tmpVertsUVs = (ChunkDataStream)ChunkDictionary[tmpMesh.VerticesData];
+            }
+
             uint numChildren = chunkNode.NumChildren;           // use in a for loop to print the mesh for each child
 
             for (int i = 0; i < tmpMeshSubsets.NumMeshSubset; i++)
@@ -274,23 +293,37 @@ namespace CgfConverter
                     f.WriteLine(s4);
                 }
                 f.WriteLine();
-                for (int j = (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex; j < (int)tmpMeshSubsets.MeshSubsets[i].NumVertices + (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex; j++)
+                if (tmpMesh.version != 0x801)
                 {
-                    string s5 = String.Format("vt {0:F7} {1:F7} 0.0 ", 
-                        tmpUVs.UVs[j].U, 
-                        1 - tmpUVs.UVs[j].V);
-                    f.WriteLine(s5);
+                    for (int j = (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex; j < (int)tmpMeshSubsets.MeshSubsets[i].NumVertices + (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex; j++)
+                    {
+                        string s5 = String.Format("vt {0:F7} {1:F7} 0.0 ",
+                            tmpUVs.UVs[j].U,
+                            1 - tmpUVs.UVs[j].V);
+                        f.WriteLine(s5);
+                    }
+                    f.WriteLine();
+                    for (int j = (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex; j < (int)tmpMeshSubsets.MeshSubsets[i].NumVertices + (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex; j++)
+                    {
+                        string s6 = String.Format("vn {0:F7} {1:F7} {2:F7}",
+                            tmpNormals.Normals[j].x,
+                            tmpNormals.Normals[j].y,
+                            tmpNormals.Normals[j].z);
+                        f.WriteLine(s6);
+                    }
                 }
                 f.WriteLine();
-                for (int j = (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex; j < (int)tmpMeshSubsets.MeshSubsets[i].NumVertices + (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex; j++)
+                if (tmpMesh.version == 0x801)
                 {
-                    string s6 = String.Format("vn {0:F7} {1:F7} {2:F7}", 
-                        tmpNormals.Normals[j].x, 
-                        tmpNormals.Normals[j].y, 
-                        tmpNormals.Normals[j].z);
-                    f.WriteLine(s6);
+                    // Do UVs for the 3.7+ game files
+                    for (int j = (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex; j < (int)tmpMeshSubsets.MeshSubsets[i].NumVertices + (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex; j++)
+                    {
+                        string sUVs = String.Format("vt {0:F7} {1:F7} 0.0",
+                            tmpVertsUVs.UVs[j].U,
+                            1 - tmpVertsUVs.UVs[j].V);
+                        f.WriteLine(sUVs);
+                    }
                 }
-                f.WriteLine();
 
                 //Console.WriteLine("Writing {0} to the output file", chunkNode.Name);
                 string s7 = String.Format("g {0}", chunkNode.Name);
@@ -382,8 +415,7 @@ namespace CgfConverter
                 }
                 else  // version 0x802 file.  There will be just one, so return after it is found and read
                 {
-                    // TEMPORARY CODE.  This will only read in current directory.
-                    Console.WriteLine("version 0x802 mtl file found.");
+                    // Process version 0x802 files
                     if (mtlChunk.Name.Contains(@"\") || mtlChunk.Name.Contains(@"/"))
                     {
                         MtlFile = new FileInfo(Args.ObjectDir + "\\" + mtlChunk.Name + ".mtl");
@@ -434,7 +466,7 @@ namespace CgfConverter
                 Console.WriteLine("Unable to find material file {0}.  Using group names.", Materialfile.FullName);
                 return;
             }
-            using (XmlReader reader = XmlReader.Create(Materialfile.Name))
+            using (XmlReader reader = XmlReader.Create(Materialfile.FullName))
             {
                 while (reader.Read())
                 {
@@ -648,9 +680,11 @@ namespace CgfConverter
             }
             public void WriteChunk()
             {
+                Console.WriteLine("*** Chunk Header Table***");
+                Console.WriteLine("Chunk Type              Version   ID        Size      Offset    ");
                 foreach (ChunkHeader chkHdr in chunkHeaders)
                 {
-                    chkHdr.WriteChunk();
+                    Console.WriteLine("{0,24}{1,10:X}{2,10:X}{3,10:X}{4,10:X}", chkHdr.type, chkHdr.version, chkHdr.id, chkHdr.size, chkHdr.offset);
                 }
             }
         }
@@ -687,8 +721,9 @@ namespace CgfConverter
         {
             public FileOffset fOffset = new FileOffset();  // starting offset of the chunk.  Int, not uint
             public ChunkType chunkType; // Type of chunk
-            public uint version; // version of this chunk
-            public uint id; // ID of the chunk.
+            public uint version;        // version of this chunk
+            public uint id;             // ID of the chunk.
+            public uint size;           // size of this chunk in bytes
 
             public virtual void ReadChunk(BinaryReader b, uint f)
             {
@@ -1147,12 +1182,6 @@ namespace CgfConverter
                     Flags = b.ReadUInt32();  // Offset to this chunk
                     id = b.ReadUInt32();  // Reference to the data stream type.
                 }
-                if (FileVersion == 1)
-                {
-                    // hard code these, since not in the data stream.
-                    chunkType = ChunkType.DataStream;
-                    version = 0x0800;
-                }
                 Flags2 = b.ReadUInt32(); // another filler
                 uint tmpdataStreamType = b.ReadUInt32();
                 dataStreamType = (DataStreamType)Enum.ToObject(typeof(DataStreamType), tmpdataStreamType);
@@ -1314,6 +1343,66 @@ namespace CgfConverter
                             }
                             break;
                         }
+                    case DataStreamType.VERTSUVS:  // 3 half floats for verts, 6 unknown, 2 half floats for UVs
+                        {
+                            Console.WriteLine("In VertsNorms...");
+                            Vertices = new Vector3[NumElements]; 
+                            Normals = new Vector3[NumElements];
+                            UVs = new UV[NumElements];
+                            if (BytesPerElement == 16)  // new Star Citizen files
+                            {
+                                for (int i = 0; i < NumElements; i++)
+                                {
+                                    //Single flx = new Single();
+                                    /*float flx = (Single) b.ReadSingle();
+                                    Vertices[i].x = flx;
+                                    float fly = (Single)b.ReadSingle();
+                                    Vertices[i].y = fly;
+                                    float flz = (Single)b.ReadSingle();
+                                    Vertices[i].z = flz;*/
+                                    Half xshort = new Half();
+                                    xshort.bits = b.ReadUInt16();
+                                    Vertices[i].x = xshort.ToSingle();
+
+                                    Half yshort = new Half();
+                                    yshort.bits = b.ReadUInt16();
+                                    Vertices[i].y = yshort.ToSingle();
+
+                                    Half zshort = new Half();
+                                    zshort.bits = b.ReadUInt16();
+                                    Vertices[i].z = zshort.ToSingle();
+
+                                    Half xnorm = new Half();
+                                    xnorm.bits = b.ReadUInt16();
+                                    Normals[i].x = xnorm.ToSingle();
+
+                                    Half ynorm = new Half();
+                                    ynorm.bits = b.ReadUInt16();
+                                    Normals[i].y = ynorm.ToSingle();
+
+                                    Half znorm = new Half();
+                                    znorm.bits = b.ReadUInt16();
+                                    Normals[i].z = znorm.ToSingle();
+
+                                    Half uvu = new Half();
+                                    uvu.bits = b.ReadUInt16();
+                                    UVs[i].U = uvu.ToSingle();
+
+                                    Half uvv = new Half();
+                                    uvv.bits = b.ReadUInt16();
+                                    UVs[i].V = uvv.ToSingle();
+
+                                    //short w = b.ReadInt16();  // dump this as not needed.  Last 2 bytes are surplus...sort of.
+                                    if (i < 20)
+                                    {
+                                        Console.WriteLine("{0:F7} {1:F7} {2:F7} {3:F7} {4:F7}",
+                                            Vertices[i].x, Vertices[i].y, Vertices[i].z,
+                                            UVs[i].U, UVs[i].V);
+                                    }
+                                }
+                            }
+                            break;
+                        }
                     default:
                         {
                             Console.WriteLine("***** Unknown DataStream Type *****");
@@ -1458,6 +1547,7 @@ namespace CgfConverter
             public uint BoneMapData; //800
             public uint FaceMapData; // 800
             public uint VertMatsData; // 800
+            public uint MeshPhysicsData; // 801
             public uint[] ReservedData = new uint[4]; // 800 Length 4
             public uint[] PhysicsData = new uint[4]; // 800
             public Vector3 MinBound; // 800 minimum coordinate values
@@ -1477,39 +1567,75 @@ namespace CgfConverter
                     Flags1 = b.ReadUInt32();  // offset
                     id = b.ReadUInt32();  // Chunk ID  0x23 for candle
                 }
-                Unknown1 = b.ReadUInt32();  // unknown
-                Unknown1 = b.ReadUInt32();  // unknown
-                NumVertices = b.ReadUInt32();
-                NumIndices = b.ReadUInt32();   //
-                NumMeshSubsets = b.ReadUInt32();
-                MeshSubsets = b.ReadUInt32();  // refers to ID in mesh subsets  1d for candle
-                UnknownData = b.ReadUInt32();
-                VerticesData = b.ReadUInt32();  // ID of the datastream for the vertices for this mesh
-                NormalsData = b.ReadUInt32();   // ID of the datastream for the normals for this mesh
-                UVsData = b.ReadUInt32();     // refers to the ID in the Normals datastream?
-                ColorsData = b.ReadUInt32();
-                Colors2Data = b.ReadUInt32();
-                IndicesData = b.ReadUInt32();
-                TangentsData = b.ReadUInt32();
-                ShCoeffsData = b.ReadUInt32();
-                ShapeDeformationData = b.ReadUInt32();
-                BoneMapData = b.ReadUInt32();
-                FaceMapData = b.ReadUInt32();
-                VertMatsData = b.ReadUInt32();
-                for (int i = 0; i < 4; i++)
+                if (version == 0x800)
                 {
-                    ReservedData[i] = b.ReadUInt32();
+                    Unknown1 = b.ReadUInt32();  // unknown
+                    Unknown1 = b.ReadUInt32();  // unknown
+                    NumVertices = b.ReadUInt32();
+                    NumIndices = b.ReadUInt32();   //
+                    NumMeshSubsets = b.ReadUInt32();
+                    MeshSubsets = b.ReadUInt32();  // refers to ID in mesh subsets  1d for candle
+                    UnknownData = b.ReadUInt32();
+                    VerticesData = b.ReadUInt32();  // ID of the datastream for the vertices for this mesh
+                    NormalsData = b.ReadUInt32();   // ID of the datastream for the normals for this mesh
+                    UVsData = b.ReadUInt32();     // refers to the ID in the Normals datastream?
+                    ColorsData = b.ReadUInt32();
+                    Colors2Data = b.ReadUInt32();
+                    IndicesData = b.ReadUInt32();
+                    TangentsData = b.ReadUInt32();
+                    ShCoeffsData = b.ReadUInt32();
+                    ShapeDeformationData = b.ReadUInt32();
+                    BoneMapData = b.ReadUInt32();
+                    FaceMapData = b.ReadUInt32();
+                    VertMatsData = b.ReadUInt32();
+                    for (int i = 0; i < 4; i++)
+                    {
+                        ReservedData[i] = b.ReadUInt32();
+                    }
+                    for (int i = 0; i < 4; i++)
+                    {
+                        PhysicsData[i] = b.ReadUInt32();
+                    }
+                    MinBound.x = b.ReadUInt32();
+                    MinBound.y = b.ReadUInt32();
+                    MinBound.z = b.ReadUInt32();
+                    MaxBound.x = b.ReadUInt32();
+                    // Not going to read the Reserved 32 element array.
                 }
-                for (int i = 0; i < 4; i++)
+                else if (version == 0x801)
                 {
-                    PhysicsData[i] = b.ReadUInt32();
+                    Unknown1 = b.ReadUInt32();  // unknown
+                    Unknown1 = b.ReadUInt32();  // unknown
+                    NumVertices = b.ReadUInt32();
+                    NumIndices = b.ReadUInt32();   //
+                    NumMeshSubsets = b.ReadUInt32();
+                    MeshSubsets = b.ReadUInt32();
+                    // For 801, meshsubsets is an array of length nummeshsubsets.  Are there actual multiple submeshes per mesh?
+                    for (int i = 0; i < 5; i++)
+                    {
+                        b.ReadUInt32();  // this will dump the next few submesh IDs. 
+                    }
+                    UnknownData = b.ReadUInt32();
+                    IndicesData = b.ReadUInt32();
+                    TangentsData = b.ReadUInt32();
+                    ColorsData = b.ReadUInt32();
+                    Colors2Data = b.ReadUInt32();
+                    ShCoeffsData = b.ReadUInt32();
+                    ShapeDeformationData = b.ReadUInt32();
+                    BoneMapData = b.ReadUInt32();
+                    FaceMapData = b.ReadUInt32();
+                    VertMatsData = b.ReadUInt32();
+                    b.ReadUInt32();  // unknown.
+                    VerticesData = b.ReadUInt32();  // ID of the datastream for the vertices for this mesh
+                    NormalsData = b.ReadUInt32();   // ID of the datastream for the normals for this mesh
+                    MeshPhysicsData = b.ReadUInt32();
+                    UVsData = b.ReadUInt32();     // refers to the ID in the Normals datastream?
+                    MinBound.x = b.ReadUInt32();
+                    MinBound.y = b.ReadUInt32();
+                    MinBound.z = b.ReadUInt32();
+                    MaxBound.x = b.ReadUInt32();
+                    // not reading the rest
                 }
-                MinBound.x = b.ReadUInt32();
-                MinBound.y = b.ReadUInt32();
-                MinBound.z = b.ReadUInt32();
-                MaxBound.x = b.ReadUInt32();
-                //chunkMesh = this;
-                // Not going to read the Reserved 32 element array.
             }
             public override void WriteChunk()
             {
@@ -1520,6 +1646,9 @@ namespace CgfConverter
                 Console.WriteLine("    Vertex Datastream:   {0:X}", VerticesData);
                 Console.WriteLine("    Normals Datastream:  {0:X}", NormalsData);
                 Console.WriteLine("    UVs Datastream:      {0:X}", UVsData);
+                Console.WriteLine("    Indices Datastream:  {0:X}", IndicesData);
+                Console.WriteLine("    Tangents Datastream: {0:X}", TangentsData);
+                Console.WriteLine("    Mesh Physics Data:   {0:X}", MeshPhysicsData);
                 Console.WriteLine("*** END MESH CHUNK ***");
             }
         }
