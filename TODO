@@ -4,18 +4,15 @@ Currently at version 0.1, which can successfully export an obj file to the conso
 imported into Blender.
 
 Version 0.8
-- Output to a user defined file (default to <object name.obj>)
 - Usage output  **COMPLETE** 7/30 
-- Switch implementation:
+- Switch implementation:  **COMPLETE** 8/1
   - -flipUV (probably default on, since I've never had to not do this)
   - -obj (export to obj) 
   - -blend (export to .blend, to be implemented in 1.0) (can be used in conjunction with -obj)
   - -output <filename> (where to write the output file; default to .cgf/.cga input directory)
 - Figure out how to convert 8 byte vertex info into 3 vertices **COMPLETE** 7/25
-- Bug fix so some .obj files import properly to Blender (exploded geometry issue)
 - Refactor to use Where(a=>a.blahblah==blahblahblah) and clean up classes. **COMPLETE** 7/30
-- add build version into the output
-- .mtl files:  Find the associated mtl file for the .cgf file from the MtlName chunk.
+- .mtl files:  Find the associated mtl file for the .cgf file from the MtlName chunk. **COMPLETE** 8/1
 - Add support for Cryengine 3.6 and newer files **COMPLETE** 8/1
 
 Version 0.9
@@ -23,6 +20,9 @@ Version 0.9
 - Break classes into separate files.
 - Input validation, error checking, etc.
 - Move version, id, type and offset so they are read from the chunk table, not the chunks.
+- add build version into the output
+- Bug fix so some .obj files import properly to Blender (exploded geometry issue)
+- Output to a user defined file (default to <object name.obj>)
 
 Version 1.0
 - Export directly to .blend files
