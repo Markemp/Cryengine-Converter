@@ -23,6 +23,7 @@ Version 0.9
 - add build version into the output
 - Bug fix so some .obj files import properly to Blender (exploded geometry issue)
 - Output to a user defined file (default to <object name.obj>)
+- Icon for the exe.
 
 Version 1.0
 - Export directly to .blend files
