@@ -33,7 +33,8 @@ namespace CgfConverter
 
         const String BasePath = @"E:\Blender Projects\Mechs\";  // for testing.  This will eventually need to be input by user.
         public ArgsHandler Args = new ArgsHandler();
-        
+
+        public MaterialFile MatFile;    // The material file (from MaterialFile.cs)
         public FileInfo MtlFile;        // the Material file
         private List<String> MaterialNames = new List<String>();                         // Read the mtl file and get the list of mat names.
         private string[] MaterialNameArray;   // this has the names organized by ID
@@ -56,7 +57,7 @@ namespace CgfConverter
 
             foreach (ChunkHeader ChkHdr in CgfChunkTable.chunkHeaders) 
             {
-                Console.WriteLine("Processing {0}", ChkHdr.type);
+                //Console.WriteLine("Processing {0}", ChkHdr.type);
                 switch (ChkHdr.type)
                 {
                     case ChunkType.SourceInfo:
@@ -118,7 +119,7 @@ namespace CgfConverter
                         chkDataStream.ReadChunk(cgfreader, ChkHdr.offset);
                         CgfChunks.Add(chkDataStream);
                         ChunkDictionary.Add(chkDataStream.id, chkDataStream);
-                        chkDataStream.WriteChunk();
+                        //chkDataStream.WriteChunk();
                         break;
                     }
                          
@@ -131,7 +132,7 @@ namespace CgfConverter
                         chkMesh.ReadChunk(cgfreader, ChkHdr.offset);
                         CgfChunks.Add(chkMesh);
                         ChunkDictionary.Add(chkMesh.id, chkMesh);
-                        chkMesh.WriteChunk();
+                        //chkMesh.WriteChunk();
                         break;
                     }
                     case ChunkType.MeshSubsets:
@@ -201,12 +202,19 @@ namespace CgfConverter
 
             using  (System.IO.StreamWriter file = new System.IO.StreamWriter(objOutputFile.Name))
             {
-                string s1 = String.Format("# cgf-converter .obj export Version 0.1");
+                string s1 = String.Format("# cgf-converter .obj export Version 0.8");
                 file.WriteLine(s1);
                 file.WriteLine("#");
-                
+
+                // Start populating the MatFile object
+                MatFile = new MaterialFile();           // This will have all the material info
+                MatFile.b = file;                       // The stream writer, so the functions know where to write.
+                MatFile.Datafile = this;                // Reference back to this CgfData so MatFile can read need info (like chunks)
+
+                MatFile.GetMtlFileName();               // Gets the MtlFile name                
                 this.GetMtlFileName();  // Gets the Fileinfo MtlFile from the material chunks
                 Console.WriteLine("MtlFile name is {0}", MtlFile.Name);
+                Console.WriteLine("MtlFile name is {0}", MatFile.MtlFile.FullName);
                 if (MtlFile != null)
                 {
                     Console.WriteLine("MtlFile Full Name is {0}", MtlFile.FullName);
@@ -451,6 +459,19 @@ namespace CgfConverter
 
                         }
                     }
+                    else
+                    {
+                        // It's just a file name.  Search only in current directory.
+                        MtlFile = new FileInfo(currentDir + "\\" + mtlChunk.Name + ".mtl");
+                        if (MtlFile.Exists)
+                        {
+                            ReadMtlFile(MtlFile);
+                        }
+                        else
+                        {
+                            Console.WriteLine("*** Unable to find a .mtl file.  I will probably crash now. ***");
+                        }
+                    }
                     return;
                 }
             }
@@ -458,7 +479,7 @@ namespace CgfConverter
         }
         public void ReadMtlFile(FileInfo Materialfile)    // reads the mtl file, so we can populate the MaterialNames array and assign those material names to the meshes
         {
-            // MtlFile should be an object to the Material File for the CgfData.  We need to populate the array with the objects.
+            // MtlFile should be an object to the Material File for the CgfData.  We need to populate the MaterialNameArray array with the objects.
             
             Console.WriteLine("Mtl File name is {0}", Materialfile.FullName);
             if (!Materialfile.Exists)
@@ -510,6 +531,8 @@ namespace CgfConverter
         }
         public void WriteMtlLibFile(StreamWriter file)        // writes the mtllib file to the stream.
         {
+            // We don't want to write the mtllib for the Cryengine mtl file.  We want to make a custom old school one for Blender to use.
+            // See https://en.wikipedia.org/wiki/Wavefront_.obj_file for specifics.
             string s = string.Format("mtllib {0}", MtlFile.Name);
             file.WriteLine(s);
         }
@@ -939,6 +962,20 @@ namespace CgfConverter
                 Console.WriteLine("*** END TIMING CHUNK ***");
             }
         }
+        public class ChunkController : Chunk   // cccc000d:  Controller chunk
+        {
+
+            public override void ReadChunk(BinaryReader b, uint f)
+            {
+                b.BaseStream.Seek(f, 0); // seek to the beginning of the Timing Format chunk
+                uint tmpChkType = b.ReadUInt32();
+                chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChkType);
+                version = b.ReadUInt32();  //0x00000918 is Far Cry, Crysis, MWO, Aion
+                //fOffset = b.ReadUInt32();
+                id = b.ReadUInt32();
+            }
+
+        }
         public class ChunkExportFlags : Chunk  // cccc0015:  Export Flags
         {
             public uint ChunkOffset;  // for some reason the offset of Export Flag chunk is stored here.
@@ -1238,7 +1275,7 @@ namespace CgfConverter
                                     float dump = b.ReadSingle();        // Sometimes there's a W to these structures.  Will investigate.
                                     if (i < 20)
                                     {
-                                        Console.WriteLine("{0} {1} {2} {3}", i, Vertices[i].x, Vertices[i].y, Vertices[i].z);
+                                        //Console.WriteLine("{0} {1} {2} {3}", i, Vertices[i].x, Vertices[i].y, Vertices[i].z);
                                     }
                                 }
                             }
@@ -1345,7 +1382,7 @@ namespace CgfConverter
                         }
                     case DataStreamType.VERTSUVS:  // 3 half floats for verts, 6 unknown, 2 half floats for UVs
                         {
-                            Console.WriteLine("In VertsNorms...");
+                            //Console.WriteLine("In VertsNorms...");
                             Vertices = new Vector3[NumElements]; 
                             Normals = new Vector3[NumElements];
                             UVs = new UV[NumElements];
@@ -1395,9 +1432,9 @@ namespace CgfConverter
                                     //short w = b.ReadInt16();  // dump this as not needed.  Last 2 bytes are surplus...sort of.
                                     if (i < 20)
                                     {
-                                        Console.WriteLine("{0:F7} {1:F7} {2:F7} {3:F7} {4:F7}",
-                                            Vertices[i].x, Vertices[i].y, Vertices[i].z,
-                                            UVs[i].U, UVs[i].V);
+                                        //Console.WriteLine("{0:F7} {1:F7} {2:F7} {3:F7} {4:F7}",
+                                        //    Vertices[i].x, Vertices[i].y, Vertices[i].z,
+                                        //    UVs[i].U, UVs[i].V);
                                     }
                                 }
                             }
