@@ -215,6 +215,7 @@ namespace CgfConverter
                 this.GetMtlFileName();  // Gets the Fileinfo MtlFile from the material chunks
                 Console.WriteLine("MtlFile name is {0}", MtlFile.Name);
                 Console.WriteLine("MtlFile name is {0}", MatFile.MtlFile.FullName);
+                Console.ReadLine();
                 if (MtlFile != null)
                 {
                     Console.WriteLine("MtlFile Full Name is {0}", MtlFile.FullName);
