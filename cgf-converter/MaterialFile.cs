@@ -62,6 +62,7 @@ namespace CgfConverter
         public MtlFormat[] MaterialNameArray;   // this has the names organized by ID
         private String MtlFileName;             // The name of just the file.  no path, no extension 
         public FileInfo XmlMtlFile;                // the Cryengine xml Material file FileInfo
+        public FileInfo MtlFile;                // The obj .mtl file that we write.  Should be RootNode.Name + "_mtl.mtl".
         
         public void GetMtlFileName()        // Get FileInfo Mtlfile name from the MtlName chunks and read it. Assume pwd if no objectdir.
         {
@@ -70,6 +71,7 @@ namespace CgfConverter
             String[] result;                                            // carries the results of the split
 
             Console.WriteLine("*****  In MaterialFile.cs *****");
+            MtlFile = new FileInfo(Datafile.RootNode.Name + "_mtl.mtl");
             // Console.WriteLine("Current dir is {0}", currentDir.FullName);
             // Find the number of material chunks.  if 1, then name is the mtl file name.  If many, find type 0x01.
             foreach (CgfData.ChunkMtlName mtlChunk in Datafile.CgfChunks.Where(a => a.chunkType == ChunkType.MtlName))
@@ -88,23 +90,24 @@ namespace CgfConverter
                             // I'm a qualified path, but don't know if objectdir exists.  Need to get name+.mtl without the path info.
                             result = mtlChunk.Name.Split(stringSeparators, StringSplitOptions.None);
                             MtlFileName = result[result.Length - 1];        // Last element in mtlChunk.Name
-                            Console.WriteLine("MtlFileName is {0}", MtlFileName);
+                            Console.WriteLine("MtlFileName (has slash) is {0}", MtlFileName);
+                            if (Datafile.Args.ObjectDir != null)                // Check to see if objectdir was set.  if not, just check local dir
+                            {
+                                XmlMtlFile = new FileInfo(Datafile.Args.ObjectDir + @"\" + MtlFileName + ".mtl");
+                            }
+                            else
+                            {
+                                // We were given a objectdir arg, but the material file is local.  Use currentdir.
+                                XmlMtlFile = new FileInfo(currentDir + @"\" + MtlFileName + ".mtl");
+                            }
                         }
                         else 
                         {
-                            Console.WriteLine("MtlFileName is {0}", MtlFileName);
                             MtlFileName = mtlChunk.Name;                    // will add .mtl later.
+                            Console.WriteLine("MtlFileName (no slash) is {0}", MtlFileName);
+                            XmlMtlFile = new FileInfo(currentDir + @"\" + MtlFileName + ".mtl");
                         }
 
-                        if (Datafile.Args.ObjectDir != null)                // Check to see if objectdir was set.  if not, just check local dir
-                        {
-                            XmlMtlFile = new FileInfo(Datafile.Args.ObjectDir + "\\" + mtlChunk.Name + ".mtl");
-                        }
-                        else
-                        {
-                            // No objectdir provided.  Only check current directory.
-                            XmlMtlFile = new FileInfo(currentDir + "\\" +  MtlFileName + ".mtl");
-                        }
                         Console.WriteLine("MtlFile.Fullname is {0}", XmlMtlFile.FullName);
 
                         if (XmlMtlFile.Exists)
@@ -138,12 +141,12 @@ namespace CgfConverter
 
                     if (Datafile.Args.ObjectDir != null)
                     {
-                        XmlMtlFile = new FileInfo(Datafile.Args.ObjectDir + "\\" + mtlChunk.Name + ".mtl");
+                        XmlMtlFile = new FileInfo(Datafile.Args.ObjectDir + @"\" + MtlFileName + ".mtl");
                     }
                     else
                     {
                         // No objectdir provided.  Only check current directory.
-                        XmlMtlFile = new FileInfo(currentDir + "\\" + MtlFileName + ".mtl");
+                        XmlMtlFile = new FileInfo(currentDir + @"\" + MtlFileName + ".mtl");
                     }
                     Console.WriteLine("MtlFile.Fullname is {0}", XmlMtlFile.FullName);
 
@@ -251,7 +254,7 @@ namespace CgfConverter
                         material.Emissive.Red = float.Parse(parseemissive[0]);
                         material.Emissive.Blue = float.Parse(parseemissive[1]);
                         material.Emissive.Green = float.Parse(parseemissive[2]);
-                        material.Shininess = float.Parse(submat.Attribute("Shininess").Value);
+                        // material.Shininess = float.Parse(submat.Attribute("Shininess").Value);
                         material.Opacity = float.Parse(submat.Attribute("Opacity").Value);
                         // now loop for all the textures
                         int i = 0;
@@ -283,21 +286,75 @@ namespace CgfConverter
         {
             // We don't want to write the mtllib for the Cryengine mtl file.  We want to make a custom old school one for Blender to use.
             // See https://en.wikipedia.org/wiki/Wavefront_.obj_file for specifics.
-            string s = string.Format("mtllib {0}", XmlMtlFile.FullName);
+            string s = string.Format("mtllib {0}", MtlFile.Name);
             file.WriteLine(s);
+            WriteMtlFile();                                     // write the _mtl.mtl file
         }
         public void WriteMtlFile()                              // writes the .mtl file for the .obj file we create.
         {
             // Write the .mtl file for the .obj file we create.  This will be rootnode name + _mtl.mtl.
-            FileInfo mtlFile = new FileInfo(Datafile.RootNode.Name + "_mtl" + ".mtl");
+            FileInfo mtlFile = new FileInfo(MtlFile.Name);
             Console.WriteLine("Output .mtl file is {0}", mtlFile.FullName);
             using (System.IO.StreamWriter file = new System.IO.StreamWriter(mtlFile.Name))
             {
+                string s = String.Format("# Material file output from cgf-converter.exe version 0.8");
+                file.WriteLine(s);
+                file.WriteLine("#");
+                foreach (MtlFormat mtl in Materials)
+                {
+                    // start writing each material.
+                    // See https://en.wikipedia.org/wiki/Wavefront_.obj_file for format structure
+                    string s_name = String.Format("newmtl {0}", mtl.MaterialName);
+                    file.WriteLine(s_name);
+                    // write Kd, Ks, d
+                    string s_diffuse = String.Format("Kd {0:F4} {1:F4} {2:F4}", mtl.Diffuse.Red, mtl.Diffuse.Green, mtl.Diffuse.Blue);
+                    file.WriteLine(s_diffuse);
+                    string s_spec = String.Format("Ks  {0:F4} {1:F4} {2:F4}", mtl.Specular.Red, mtl.Specular.Green, mtl.Specular.Blue);
+                    file.WriteLine(s_spec);
+                    string s_dissolve = String.Format("d {0:F4}", mtl.Opacity);
+                    file.WriteLine(s_dissolve);
+                    file.WriteLine("illum 2");  // Highlight on.  this is a guess.
+                    int length = mtl.Textures.Count;   // number of texture files.
+                    for (int i = 0; i < length; i++)
+                    {
+                        // replace .tif filenames with .dds
+                        StringBuilder builder = new StringBuilder(Datafile.Args.ObjectDir + @"\" + mtl.Textures[i].File);
+                        builder.Replace(".tif", ".dds");
+                        switch (mtl.Textures[i].Map)
+                        {
+                            case "Diffuse":
+                                {
+                                    string s_mapdiffuse = String.Format("map_Kd {0}", builder.ToString());
+                                    file.WriteLine(s_mapdiffuse);
+                                    break;
+                                }
+                            case "Specular":
+                                {
+                                    string s_mapspec = String.Format("map_Ks {0}", builder.ToString());
+                                    file.WriteLine(s_mapspec);
+                                    break;
+                                }
+                            case "Bumpmap":
+                                {
+                                    string s_mapbump = String.Format("map_bump {0}", builder.ToString());
+                                    file.WriteLine(s_mapbump);
+                                    break;
+                                }
+                            case "Detail":
+                                {
+                                    string s_mapbump = String.Format("map_bump {0}", builder.ToString());
+                                    file.WriteLine(s_mapbump);
+                                    break;
+                                }
+                            default:
+                                break;
+                        }
+                    }
+                    file.WriteLine();
+                }
 
             }
-
         }
-
 
     }
 

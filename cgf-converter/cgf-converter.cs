@@ -212,7 +212,6 @@ namespace CgfConverter
 
                 MatFile.GetMtlFileName();               // Gets the MtlFile name                
                 Console.WriteLine("Matfile name is {0}", MatFile.XmlMtlFile.FullName);
-                Console.ReadLine();
                 if (MatFile != null)
                 {
                     Console.WriteLine("MtlFile Full Name is {0}", MatFile.XmlMtlFile.FullName);
