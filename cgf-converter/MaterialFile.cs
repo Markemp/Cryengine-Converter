@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
@@ -30,22 +31,25 @@ namespace CgfConverter
         // more stuff I'm just not going to implement
     }
     
-    public struct MtlFormat 
+    public class MtlFormat 
     {
         // A single material.  Might need to make this IEnumerable.
         public String MaterialName;
-        public UInt32 Flags;            // used by Cryengine
+        public String Flags;            // used by Cryengine
         public String Shader;           // Cryengine shader name
-        public UInt32 GenMask;          // used by Cryengine, not sure what this is
+        public String GenMask;          // used by Cryengine, not sure what this is
         public String StringGenMask;    // used by Cryengine, not sure what this is
-        public String MatSurfaceType;   // What object the material will be applied to.
+        public String SurfaceType;   // What object the material will be applied to.
         public String MatTemplate;      // Unknown
         public Color Diffuse;           // 3 values for the Diffuse RGB
         public Color Specular;          // 3 values for the Specular RGB
         public Color Emissive;          // 3 values for the Emissive RGB
-        public UInt16 Shininess;        // 0-255 value
+        public float Shininess;        // 0-255 value
         public float Opacity;           // 0-1 float
+        public List<Texture> Textures = new List<Texture>();      // All the textures for this material
+        public PublicParameters PublicParam; // The public parameters, after textures
     }
+
     public class MaterialFile
     {
         // Material information.  This class will read the Cryengine .mtl file, get the material names, and then output a classic .mtl file.
@@ -53,10 +57,11 @@ namespace CgfConverter
         public StreamWriter b;          // the streamreader of the file
         public CgfData Datafile;        // the cgf datafile.  This will have all the data we need to get the mtl file
 
-        private List<String> MaterialNames = new List<String>();                         // Read the mtl file and get the list of mat names.
-        public string[] MaterialNameArray;  // this has the names organized by ID
-        private String MtlFileName;         // The name of just the file.  no path, no extension 
-        public FileInfo MtlFile;            // the Material file FileInfo
+        private List<String> MaterialNames = new List<String>();                        // Read the mtl file and get the list of mat names.
+        private List<MtlFormat> Materials = new List<MtlFormat>();                      // List of the material structures
+        public MtlFormat[] MaterialNameArray;   // this has the names organized by ID
+        private String MtlFileName;             // The name of just the file.  no path, no extension 
+        public FileInfo XmlMtlFile;                // the Cryengine xml Material file FileInfo
         
         public void GetMtlFileName()        // Get FileInfo Mtlfile name from the MtlName chunks and read it. Assume pwd if no objectdir.
         {
@@ -65,7 +70,7 @@ namespace CgfConverter
             String[] result;                                            // carries the results of the split
 
             Console.WriteLine("*****  In MaterialFile.cs *****");
-            Console.WriteLine("Current dir is {0}", currentDir.FullName);
+            // Console.WriteLine("Current dir is {0}", currentDir.FullName);
             // Find the number of material chunks.  if 1, then name is the mtl file name.  If many, find type 0x01.
             foreach (CgfData.ChunkMtlName mtlChunk in Datafile.CgfChunks.Where(a => a.chunkType == ChunkType.MtlName))
             {
@@ -84,33 +89,32 @@ namespace CgfConverter
                             result = mtlChunk.Name.Split(stringSeparators, StringSplitOptions.None);
                             MtlFileName = result[result.Length - 1];        // Last element in mtlChunk.Name
                             Console.WriteLine("MtlFileName is {0}", MtlFileName);
+                        }
+                        else 
+                        {
+                            Console.WriteLine("MtlFileName is {0}", MtlFileName);
+                            MtlFileName = mtlChunk.Name;                    // will add .mtl later.
+                        }
 
-                            if (Datafile.Args.ObjectDir != null)
-                            {
-                                MtlFile = new FileInfo(Datafile.Args.ObjectDir + "\\" + mtlChunk.Name + ".mtl");
-                                Console.WriteLine("*** MtlFile is {0}", MtlFile.FullName);
-                            }
-                            else
-                            {
-                                // No objectdir provided.  Only check current directory.
-                                MtlFile = new FileInfo(currentDir + "\\" +  MtlFileName + ".mtl");
-                                Console.WriteLine("*** MtlFile is {0}", MtlFile.FullName);
-                            }
-                            Console.WriteLine("MtlFile.Fullname is {0}", MtlFile.FullName);
+                        if (Datafile.Args.ObjectDir != null)                // Check to see if objectdir was set.  if not, just check local dir
+                        {
+                            XmlMtlFile = new FileInfo(Datafile.Args.ObjectDir + "\\" + mtlChunk.Name + ".mtl");
                         }
                         else
                         {
-                            // mtlchunk.name doesn't have a path.  Just use the current dir + .mtl
-                            MtlFile = new FileInfo(currentDir + "\\" + mtlChunk.Name + ".mtl");
+                            // No objectdir provided.  Only check current directory.
+                            XmlMtlFile = new FileInfo(currentDir + "\\" +  MtlFileName + ".mtl");
                         }
-                        if (MtlFile.Exists)
+                        Console.WriteLine("MtlFile.Fullname is {0}", XmlMtlFile.FullName);
+
+                        if (XmlMtlFile.Exists)
                         {
-                            Console.WriteLine("*** Found material file {0}.  Reading it now.", MtlFile.FullName);
-                            ReadMtlFile(MtlFile);
+                            Console.WriteLine("*** Found material file {0}.  Reading it now.", XmlMtlFile.FullName);
+                            ReadMtlFile(XmlMtlFile);
                         }
                         else
                         {
-                            Console.WriteLine("*** Unable to find material file {0}.  I'm probably going to not work well.", MtlFile.FullName);
+                            Console.WriteLine("*** Unable to find material file {0}.  I'm probably going to not work well.", XmlMtlFile.FullName);
                         }
                     }       // Not a material type 0x01 or 0x10.  Will be a child material.  Continue to next mtlname chunk
                 }
@@ -124,143 +128,176 @@ namespace CgfConverter
                         result = mtlChunk.Name.Split(stringSeparators, StringSplitOptions.None);
                         MtlFileName = result[result.Length - 1];        // Last element in mtlChunk.Name
                         Console.WriteLine("MtlFileName is {0}", MtlFileName);
+                    }
+                    else 
+                    {
+                        // It's just a file name.  Search only in current directory.
+                        MtlFileName = mtlChunk.Name;  
+                        Console.WriteLine("MtlFileName (short version) is {0}", MtlFileName);
+                    }
 
-                        if (Datafile.Args.ObjectDir != null)
-                        {
-                            MtlFile = new FileInfo(Datafile.Args.ObjectDir + "\\" + mtlChunk.Name + ".mtl");
-                            Console.WriteLine("*** MtlFile is {0}", MtlFile.FullName);
-                        }
-                        else
-                        {
-                            // No objectdir provided.  Only check current directory.
-                            MtlFile = new FileInfo(MtlFileName + ".mtl");
-                            Console.WriteLine("*** MtlFile is {0}", MtlFileName);
-                        }
-                        Console.WriteLine("MtlFile.Fullname is {0}", MtlFile.FullName);
-                        
-                        if (MtlFile.Exists)
-                        {
-                            // Check object dir + mtlchunk.name + ".mtl"
-                            Console.WriteLine("I EXIST!");
-                            ReadMtlFile(MtlFile);
-                        }
-                        else
-                        {
-                            // Check local directory
-                            Console.WriteLine("!!! {0} not found.  Using last part...", MtlFile.FullName);
-                            if (mtlChunk.Name.Contains(@"\"))
-                            {
-                                string s = mtlChunk.Name;
-                                string[] parse = s.Split('\\');
-                                MtlFile = new FileInfo(currentDir + "\\" + parse[parse.Length - 1] + ".mtl");
-                                ReadMtlFile(MtlFile);
-                            }
-                            if (mtlChunk.Name.Contains(@"/"))
-                            {
-                                string s = mtlChunk.Name;
-                                string[] parse = s.Split('/');
-                                MtlFile = new FileInfo(currentDir + "\\" + parse[parse.Length - 1] + ".mtl");
-                                ReadMtlFile(MtlFile);
-                            }
-                        }
+                    if (Datafile.Args.ObjectDir != null)
+                    {
+                        XmlMtlFile = new FileInfo(Datafile.Args.ObjectDir + "\\" + mtlChunk.Name + ".mtl");
                     }
                     else
                     {
-                        // It's just a file name.  Search only in current directory.
-                        MtlFile = new FileInfo(currentDir + "\\" + mtlChunk.Name + ".mtl");
-                        if (MtlFile.Exists)
-                        {
-                            ReadMtlFile(MtlFile);
-                        }
-                        else
-                        {
-                            Console.WriteLine("*** Unable to find a .mtl file.  I will probably crash now. ***");
-                        }
+                        // No objectdir provided.  Only check current directory.
+                        XmlMtlFile = new FileInfo(currentDir + "\\" + MtlFileName + ".mtl");
+                    }
+                    Console.WriteLine("MtlFile.Fullname is {0}", XmlMtlFile.FullName);
+
+                    if (XmlMtlFile.Exists)
+                    {
+                        Console.WriteLine("*** Found material file {0}.  Reading it now.", XmlMtlFile.FullName);
+                        ReadMtlFile(XmlMtlFile);
+                    }
+                    else
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine("*** Unable to find material file {0}.  I'm probably going to not work well.", XmlMtlFile.FullName);
+                        Console.WriteLine();
                     }
                     return;
                 }
             }
             return;
         }
-        public void ReadMtlFile(FileInfo Materialfile)    // reads the mtl file, so we can populate the MaterialNames array and assign those material names to the meshes
+        public void ReadMtlFile(FileInfo Materialfile)          // reads the mtl file, so we can populate the MaterialNames array and assign those material names to the meshes
         {
             // MtlFile should be an object to the Material File for the CgfData.  We need to populate the MaterialNameArray array with the objects.
+            // If I was smart I'd actually get Blender to add this to /scripts/addons/io_scene_obj/import_obj.py
+            // Console.WriteLine("Mtl File name is {0}", Materialfile.FullName);
 
-            Console.WriteLine("Mtl File name is {0}", Materialfile.FullName);
             if (!Materialfile.Exists)
             {
                 Console.WriteLine("Unable to find material file {0}.  Using group names.", Materialfile.FullName);
                 return;
             }
-            XmlTextReader reader = new XmlTextReader(Materialfile.FullName);
-            while (reader.Read())
+            XElement materialmap = XElement.Load(Materialfile.FullName);
+
+            if (materialmap.Attribute("MtlFlags").Value == "524288")
             {
-                switch (reader.NodeType)
+                // Short mtl file with just one material.  No name, so set it to the object name.
+                Console.WriteLine("Found material with 524288");
+                MtlFormat material = new MtlFormat();
+                Console.WriteLine("Attribute: {0}", Datafile.RootNode.Name);
+                material.MaterialName = Datafile.RootNode.Name;                 // since there is no Name, use the node name.
+                material.Flags = materialmap.Attribute("MtlFlags").Value;
+                material.Shader = materialmap.Attribute("Shader").Value;
+                material.GenMask = materialmap.Attribute("GenMask").Value;
+                material.StringGenMask = materialmap.Attribute("StringGenMask").Value;
+                material.SurfaceType = materialmap.Attribute("SurfaceType").Value;
+                material.MatTemplate = materialmap.Attribute("MatTemplate").Value;
+                String tmpDiffuse = materialmap.Attribute("Diffuse").Value;
+                string[] parse = tmpDiffuse.Split(',');
+                material.Diffuse.Red = float.Parse(parse[0]);
+                material.Diffuse.Green = float.Parse(parse[1]);
+                material.Diffuse.Blue = float.Parse(parse[2]);
+                String tmpSpec = materialmap.Attribute("Specular").Value;
+                string[] parsespec = tmpSpec.Split(',');
+                material.Specular.Red = float.Parse(parsespec[0]);
+                material.Specular.Blue = float.Parse(parsespec[1]);
+                material.Specular.Green = float.Parse(parsespec[2]);
+                String tmpEmissive = materialmap.Attribute("Emissive").Value;
+                string[] parseemissive = tmpEmissive.Split(',');
+                material.Emissive.Red = float.Parse(parseemissive[0]);
+                material.Emissive.Blue = float.Parse(parseemissive[1]);
+                material.Emissive.Green = float.Parse(parseemissive[2]);
+                material.Shininess = float.Parse(materialmap.Attribute("Shininess").Value);
+                material.Opacity = float.Parse(materialmap.Attribute("Opacity").Value);
+                // now loop for all the textures
+                int i = 0;
+                foreach (XElement tex in materialmap.Descendants("Texture"))
                 {
-                    case XmlNodeType.Element: // The node is an element.
-                        Console.Write("<" + reader.Name);
-                        Console.WriteLine(">");
-                        break;
-                    case XmlNodeType.Text: //Display the text in each element.
-                        Console.WriteLine(reader.Value);
-                        break;
-                    case XmlNodeType.EndElement: //Display the end of the element.
-                        Console.Write("</" + reader.Name);
-                        Console.WriteLine(">");
-                        break;
+                    Texture temptex = new Texture();
+                    temptex.Map = tex.Attribute("Map").Value;
+                    temptex.File = tex.Attribute("File").Value;
+                    material.Textures.Add(temptex);
+                    Console.WriteLine("Texture File found: {0}", material.Textures[i].File);
+                    i++;
+                }
+                Materials.Add(material);
+            }
+            else
+            {
+                foreach (XElement mat in materialmap.Descendants("SubMaterials"))
+                {
+                    //var matElement = mat.Element("Material");
+                    Console.WriteLine("SubMat {0}", mat);
+                    foreach (XElement submat in mat.Descendants("Material"))
+                    {
+                        MtlFormat material = new MtlFormat();
+                        Console.WriteLine("Attribute: {0}", submat.Attribute("Name"));
+                        material.MaterialName = submat.Attribute("Name").Value;
+                        material.Flags = submat.Attribute("MtlFlags").Value;
+                        material.Shader = submat.Attribute("Shader").Value;
+                        material.GenMask = submat.Attribute("GenMask").Value;
+                        material.StringGenMask = submat.Attribute("StringGenMask").Value;
+                        material.SurfaceType = submat.Attribute("SurfaceType").Value;
+                        material.MatTemplate = submat.Attribute("MatTemplate").Value;
+                        String tmpDiffuse = submat.Attribute("Diffuse").Value;
+                        string[] parse = tmpDiffuse.Split(',');
+                        material.Diffuse.Red = float.Parse(parse[0]);
+                        material.Diffuse.Green = float.Parse(parse[1]);
+                        material.Diffuse.Blue = float.Parse(parse[2]);
+                        String tmpSpec = submat.Attribute("Specular").Value;
+                        string[] parsespec = tmpSpec.Split(',');
+                        material.Specular.Red = float.Parse(parsespec[0]);
+                        material.Specular.Blue = float.Parse(parsespec[1]);
+                        material.Specular.Green = float.Parse(parsespec[2]);
+                        String tmpEmissive = submat.Attribute("Emissive").Value;
+                        string[] parseemissive = tmpEmissive.Split(',');
+                        material.Emissive.Red = float.Parse(parseemissive[0]);
+                        material.Emissive.Blue = float.Parse(parseemissive[1]);
+                        material.Emissive.Green = float.Parse(parseemissive[2]);
+                        material.Shininess = float.Parse(submat.Attribute("Shininess").Value);
+                        material.Opacity = float.Parse(submat.Attribute("Opacity").Value);
+                        // now loop for all the textures
+                        int i = 0;
+                        foreach (XElement tex in submat.Descendants("Texture"))
+                        {
+                            Texture temptex = new Texture();
+                            temptex.Map = tex.Attribute("Map").Value;
+                            temptex.File = tex.Attribute("File").Value;
+                            material.Textures.Add(temptex);
+                            Console.WriteLine("Texture File found: {0}", material.Textures[i].File);
+                            i++;
+                        }
+                        Materials.Add(material);
+                    }
                 }
             }
-            Console.ReadLine();
 
-            //using (XmlReader reader = XmlReader.Create(Materialfile.FullName))
-            //{
-            //    while (reader.Read())
-            //    {
-            //        if (reader.IsStartElement())
-            //        {
-            //            switch (reader.Name)
-            //            {
-            //                case "Material":
-            //                    {
-            //                        // detected this element
-            //                        string attribute = reader["Name"];
-            //                        //Console.WriteLine(" Name is {0}", attribute);
-            //                        if (attribute != null)
-            //                        {
-            //                            MaterialNames.Add(attribute);
-            //                            //Console.WriteLine("  Has attribute Name " + attribute);  // if this works, we want to add to the MaterialNames array
-            //                        }
-            //                        break;
-            //                    }
-            //                default:
-            //                    {
-            //                        break;
-            //                    }
-            //            }
-            //        }
-            //    }
-            //    if (MaterialNames.Count == 0)
-            //    {
-            //        Console.WriteLine("No material names found, but there is a material.  Basic mtl file type.  Use object name.");
-            //    }
-            //}
-            int length = MaterialNames.Count;
+            int length = Materials.Count;
             Console.WriteLine("{0} Materials found in the material file.", length);
-            foreach (string tmpstring in MaterialNames)
+            foreach (MtlFormat mats in Materials)
             {
-                Console.WriteLine("Material name is {0}", tmpstring);
+                Console.WriteLine("Material name is {0}", mats.MaterialName);
             }
-            MaterialNameArray = new String[length];
-            MaterialNameArray = MaterialNames.ToArray();
-            //Console.WriteLine("Material Name Array length is {0}", MaterialNameArray.Length);
+            MaterialNameArray = new MtlFormat[Materials.Count];
+            MaterialNameArray = Materials.ToArray();
+            Console.WriteLine("Material Name Array length is {0}", MaterialNameArray.Length);
         }
-        public void WriteMtlLibFile(StreamWriter file)        // writes the mtllib file to the stream.
+        public void WriteMtlLibInfo(StreamWriter file)          // writes the mtllib file to the stream.
         {
             // We don't want to write the mtllib for the Cryengine mtl file.  We want to make a custom old school one for Blender to use.
             // See https://en.wikipedia.org/wiki/Wavefront_.obj_file for specifics.
-            string s = string.Format("mtllib {0}", MtlFile.FullName);
+            string s = string.Format("mtllib {0}", XmlMtlFile.FullName);
             file.WriteLine(s);
         }
+        public void WriteMtlFile()                              // writes the .mtl file for the .obj file we create.
+        {
+            // Write the .mtl file for the .obj file we create.  This will be rootnode name + _mtl.mtl.
+            FileInfo mtlFile = new FileInfo(Datafile.RootNode.Name + "_mtl" + ".mtl");
+            Console.WriteLine("Output .mtl file is {0}", mtlFile.FullName);
+            using (System.IO.StreamWriter file = new System.IO.StreamWriter(mtlFile.Name))
+            {
+
+            }
+
+        }
+
 
     }
 
