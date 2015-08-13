@@ -70,30 +70,30 @@ namespace CgfConverter
             String[] stringSeparators = new string[] { @"\", @"/" };    // to split up the paths
             String[] result;                                            // carries the results of the split
 
-            Console.WriteLine("*****  In MaterialFile.cs *****");
+            //Console.WriteLine("*****  In MaterialFile.cs *****");
             MtlFile = new FileInfo(Datafile.RootNode.Name + "_mtl.mtl");
             // Console.WriteLine("Current dir is {0}", currentDir.FullName);
             // Find the number of material chunks.  if 1, then name is the mtl file name.  If many, find type 0x01.
             foreach (CgfData.ChunkMtlName mtlChunk in Datafile.CgfChunks.Where(a => a.chunkType == ChunkType.MtlName))
             {
-                mtlChunk.WriteChunk();
+                // mtlChunk.WriteChunk();
                 if (mtlChunk.version == 0x800)
                 {
                     // this is a parent material. Should be only one.  Don't care about the rest.
-                    Console.WriteLine("Type 0x800 found.  {0}", mtlChunk.Name);
+                    //Console.WriteLine("Type 0x800 found.  {0}", mtlChunk.Name);
                     if (mtlChunk.MatType == 0x01 || mtlChunk.MatType == 0x10)
                     {
                         // parent material.  This is the one we want.
-                        Console.WriteLine("Mat type 0x01 found.");
+                        //Console.WriteLine("Mat type 0x01 found.");
                         if (mtlChunk.Name.Contains(@"\") || mtlChunk.Name.Contains(@"/"))
                         {
                             // I'm a qualified path, but don't know if objectdir exists.  Need to get name+.mtl without the path info.
                             result = mtlChunk.Name.Split(stringSeparators, StringSplitOptions.None);
                             MtlFileName = result[result.Length - 1];        // Last element in mtlChunk.Name
-                            Console.WriteLine("MtlFileName (has slash) is {0}", MtlFileName);
+                            //Console.WriteLine("MtlFileName (has slash) is {0}", MtlFileName);
                             if (Datafile.Args.ObjectDir != null)                // Check to see if objectdir was set.  if not, just check local dir
                             {
-                                XmlMtlFile = new FileInfo(Datafile.Args.ObjectDir + @"\" + MtlFileName + ".mtl");
+                                XmlMtlFile = new FileInfo(Datafile.Args.ObjectDir + @"\" + mtlChunk.Name + ".mtl");
                             }
                             else
                             {
@@ -104,15 +104,15 @@ namespace CgfConverter
                         else 
                         {
                             MtlFileName = mtlChunk.Name;                    // will add .mtl later.
-                            Console.WriteLine("MtlFileName (no slash) is {0}", MtlFileName);
+                            //Console.WriteLine("MtlFileName (no slash) is {0}", MtlFileName);
                             XmlMtlFile = new FileInfo(currentDir + @"\" + MtlFileName + ".mtl");
                         }
 
-                        Console.WriteLine("MtlFile.Fullname is {0}", XmlMtlFile.FullName);
+                        //Console.WriteLine("MtlFile.Fullname is {0}", XmlMtlFile.FullName);
 
                         if (XmlMtlFile.Exists)
                         {
-                            Console.WriteLine("*** Found material file {0}.  Reading it now.", XmlMtlFile.FullName);
+                            //Console.WriteLine("*** Found material file {0}.  Reading it now.", XmlMtlFile.FullName);
                             ReadMtlFile(XmlMtlFile);
                         }
                         else
@@ -124,35 +124,36 @@ namespace CgfConverter
                 else  // version 0x802 file.  There will be just one, so return after it is found and read
                 {
                     // Process version 0x802 files
-                    Console.WriteLine("In 0x802 section");
+                    //Console.WriteLine("In 0x802 section");
                     if (mtlChunk.Name.Contains(@"\") || mtlChunk.Name.Contains(@"/"))
                     {
                         // I'm a qualified path, but don't know if objectdir exists.  Need to get name+.mtl without the path info.
                         result = mtlChunk.Name.Split(stringSeparators, StringSplitOptions.None);
                         MtlFileName = result[result.Length - 1];        // Last element in mtlChunk.Name
-                        Console.WriteLine("MtlFileName is {0}", MtlFileName);
+                        //Console.WriteLine("MtlFileName is {0}", MtlFileName);
+                        if (Datafile.Args.ObjectDir != null)
+                        {
+                            XmlMtlFile = new FileInfo(Datafile.Args.ObjectDir + @"\" + mtlChunk.Name + ".mtl");
+                        }
+                        else
+                        {
+                            // No objectdir provided.  Only check current directory.
+                            XmlMtlFile = new FileInfo(currentDir + @"\" + MtlFileName + ".mtl");
+                        }
                     }
                     else 
                     {
                         // It's just a file name.  Search only in current directory.
-                        MtlFileName = mtlChunk.Name;  
-                        Console.WriteLine("MtlFileName (short version) is {0}", MtlFileName);
+                        MtlFileName = mtlChunk.Name;
+                        XmlMtlFile = new FileInfo(currentDir + @"\" + MtlFileName + ".mtl");
+                        //Console.WriteLine("MtlFileName (short version) is {0}", MtlFileName);
                     }
 
-                    if (Datafile.Args.ObjectDir != null)
-                    {
-                        XmlMtlFile = new FileInfo(Datafile.Args.ObjectDir + @"\" + MtlFileName + ".mtl");
-                    }
-                    else
-                    {
-                        // No objectdir provided.  Only check current directory.
-                        XmlMtlFile = new FileInfo(currentDir + @"\" + MtlFileName + ".mtl");
-                    }
-                    Console.WriteLine("MtlFile.Fullname is {0}", XmlMtlFile.FullName);
+                    //Console.WriteLine("MtlFile.Fullname is {0}", XmlMtlFile.FullName);
 
                     if (XmlMtlFile.Exists)
                     {
-                        Console.WriteLine("*** Found material file {0}.  Reading it now.", XmlMtlFile.FullName);
+                        //Console.WriteLine("*** Found material file {0}.  Reading it now.", XmlMtlFile.FullName);
                         ReadMtlFile(XmlMtlFile);
                     }
                     else
@@ -182,9 +183,9 @@ namespace CgfConverter
             if (materialmap.Attribute("MtlFlags").Value == "524288")
             {
                 // Short mtl file with just one material.  No name, so set it to the object name.
-                Console.WriteLine("Found material with 524288");
+                //Console.WriteLine("Found material with 524288");
                 MtlFormat material = new MtlFormat();
-                Console.WriteLine("Attribute: {0}", Datafile.RootNode.Name);
+                //Console.WriteLine("Attribute: {0}", Datafile.RootNode.Name);
                 material.MaterialName = Datafile.RootNode.Name;                 // since there is no Name, use the node name.
                 material.Flags = materialmap.Attribute("MtlFlags").Value;
                 material.Shader = materialmap.Attribute("Shader").Value;
@@ -217,21 +218,21 @@ namespace CgfConverter
                     temptex.Map = tex.Attribute("Map").Value;
                     temptex.File = tex.Attribute("File").Value;
                     material.Textures.Add(temptex);
-                    Console.WriteLine("Texture File found: {0}", material.Textures[i].File);
+                    //Console.WriteLine("Texture File found: {0}", material.Textures[i].File);
                     i++;
                 }
                 Materials.Add(material);
             }
-            else
+            else            // more complicated material file, with Submaterials attribute
             {
                 foreach (XElement mat in materialmap.Descendants("SubMaterials"))
                 {
                     //var matElement = mat.Element("Material");
-                    Console.WriteLine("SubMat {0}", mat);
+                    //Console.WriteLine("SubMat {0}", mat);
                     foreach (XElement submat in mat.Descendants("Material"))
                     {
                         MtlFormat material = new MtlFormat();
-                        Console.WriteLine("Attribute: {0}", submat.Attribute("Name"));
+                        //Console.WriteLine("Attribute: {0}", submat.Attribute("Name"));
                         material.MaterialName = submat.Attribute("Name").Value;
                         material.Flags = submat.Attribute("MtlFlags").Value;
                         material.Shader = submat.Attribute("Shader").Value;
@@ -264,7 +265,7 @@ namespace CgfConverter
                             temptex.Map = tex.Attribute("Map").Value;
                             temptex.File = tex.Attribute("File").Value;
                             material.Textures.Add(temptex);
-                            Console.WriteLine("Texture File found: {0}", material.Textures[i].File);
+                            //Console.WriteLine("Texture File found: {0}", material.Textures[i].File);
                             i++;
                         }
                         Materials.Add(material);
@@ -280,7 +281,6 @@ namespace CgfConverter
             }
             MaterialNameArray = new MtlFormat[Materials.Count];
             MaterialNameArray = Materials.ToArray();
-            Console.WriteLine("Material Name Array length is {0}", MaterialNameArray.Length);
         }
         public void WriteMtlLibInfo(StreamWriter file)          // writes the mtllib file to the stream.
         {
@@ -294,7 +294,6 @@ namespace CgfConverter
         {
             // Write the .mtl file for the .obj file we create.  This will be rootnode name + _mtl.mtl.
             FileInfo mtlFile = new FileInfo(MtlFile.Name);
-            Console.WriteLine("Output .mtl file is {0}", mtlFile.FullName);
             using (System.IO.StreamWriter file = new System.IO.StreamWriter(mtlFile.Name))
             {
                 string s = String.Format("# Material file output from cgf-converter.exe version 0.8");
@@ -354,8 +353,6 @@ namespace CgfConverter
                 }
 
             }
-        }
-
-    }
-
+        }               // end WriteMtlFile method
+    }                   // end MaterialFile class
 }
