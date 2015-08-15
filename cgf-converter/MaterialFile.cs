@@ -117,7 +117,7 @@ namespace CgfConverter
                         }
                         else
                         {
-                            Console.WriteLine("*** Unable to find material file {0}.  I'm probably going to not work well.", XmlMtlFile.FullName);
+                            Console.WriteLine("*** 0x800 Unable to find material file {0}.  I'm probably going to not work well.", XmlMtlFile.FullName);
                         }
                     }       // Not a material type 0x01 or 0x10.  Will be a child material.  Continue to next mtlname chunk
                 }
@@ -159,7 +159,7 @@ namespace CgfConverter
                     else
                     {
                         Console.WriteLine();
-                        Console.WriteLine("*** Unable to find material file {0}.  I'm probably going to not work well.", XmlMtlFile.FullName);
+                        Console.WriteLine("*** 0x802 Unable to find material file {0}.  I'm probably going to not work well.", XmlMtlFile.FullName);
                         Console.WriteLine();
                     }
                     return;
@@ -175,7 +175,16 @@ namespace CgfConverter
 
             if (!Materialfile.Exists)
             {
+                // Set up a dummy material and return.
                 Console.WriteLine("Unable to find material file {0}.  Using group names.", Materialfile.FullName);
+                MtlFormat material = new MtlFormat();
+                material.MaterialName = Datafile.RootNode.Name;                 // since there is no Name, use the node name.
+                material.Diffuse.Red = 1;
+                material.Diffuse.Green = 0;
+                material.Diffuse.Blue = 1;
+                Materials.Add(material);
+                MaterialNameArray = new MtlFormat[Materials.Count];
+                MaterialNameArray = Materials.ToArray();
                 return;
             }
             XElement materialmap = XElement.Load(Materialfile.FullName);
@@ -319,6 +328,7 @@ namespace CgfConverter
                         // replace .tif filenames with .dds
                         StringBuilder builder = new StringBuilder(Datafile.Args.ObjectDir + @"\" + mtl.Textures[i].File);
                         builder.Replace(".tif", ".dds");
+                        builder.Replace("@", "_");              // Blender does NOT like @ symbols in the file path.
                         switch (mtl.Textures[i].Map)
                         {
                             case "Diffuse":
@@ -343,6 +353,12 @@ namespace CgfConverter
                                 {
                                     string s_mapbump = String.Format("map_bump {0}", builder.ToString());
                                     file.WriteLine(s_mapbump);
+                                    break;
+                                }
+                            case "Environment":                 // For things like cockpit monitors.
+                                {
+                                    string s_env = String.Format("map_Kd {0}", builder.ToString());
+                                    file.WriteLine(s_env);
                                     break;
                                 }
                             default:

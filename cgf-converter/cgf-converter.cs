@@ -160,7 +160,7 @@ namespace CgfConverter
                             RootNode = chkNode;
                             //ChunkDictionary[RootNodeID].WriteChunk();
                         }
-                        //chkNode.WriteChunk();
+                        chkNode.WriteChunk();
                         break;
                     }
                     case ChunkType.Helper:
@@ -211,7 +211,7 @@ namespace CgfConverter
 
                 MatFile.GetMtlFileName();               // Gets the MtlFile name                
                 Console.WriteLine("Matfile name is {0}", MatFile.XmlMtlFile.FullName);
-                if (MatFile != null)
+                if (MatFile.MtlFile.Exists)              
                 {
                     Console.WriteLine("Matfile Full Name is {0}", MatFile.XmlMtlFile.FullName);
                     MatFile.WriteMtlLibInfo(file);  // writes the mtllib file.
@@ -220,6 +220,7 @@ namespace CgfConverter
                 {
                     Console.WriteLine("Unable to get Mtl File name (not in expected locations).");
                 }
+
                 if (RootNode.NumChildren == 0)
                 {
                     // We have a root node with no children, so simple object.
@@ -254,62 +255,100 @@ namespace CgfConverter
         {
             // Console.WriteLine("\n*** Processing Chunk node {0:X}", chunkNode.id);
             // Console.WriteLine("***     Object ID {0:X}", chunkNode.Object);
-            //ChunkDictionary[chunkNode.Object].WriteChunk();
+            
+            // We are only processing Nodes that have Materials.  The chunkType should never be Helper.
             ChunkMesh tmpMesh = (ChunkMesh)ChunkDictionary[chunkNode.Object];
-            for (int i=0; i< tmpMesh.NumMeshSubsets; i++)  {
-                if (tmpMesh.MeshSubsets[i] == 0 || tmpMesh.VerticesData == 0)
-                {
-                    Console.WriteLine("*********************Found a node chunk with no mesh subsets (ID: {0}).  Skipping...", tmpMesh.id);
-                    tmpMesh.WriteChunk();
-                    return;
-                }
+            if (ChunkDictionary[chunkNode.Object].chunkType == ChunkType.Helper)
+            {
+                Console.WriteLine("*********************Found a node chunk for a Helper (ID: {0}).  Skipping...", tmpMesh.id);
+                tmpMesh.WriteChunk();
+                return;
+            }
 
+            if (tmpMesh.MeshSubsets == 0)
+            {
+                Console.WriteLine("*********************Found a Mesh chunk with no Submesh ID (ID: {0}).  Skipping...", tmpMesh.id);
+                tmpMesh.WriteChunk();
+                return;
             }
             ChunkMtlName tmpMtlName = (ChunkMtlName)ChunkDictionary[chunkNode.MatID];
-            ChunkMeshSubsets[] tmpMeshSubsets = new ChunkMeshSubsets[tmpMesh.NumMeshSubsets];
-            for (int i = 0; i < tmpMesh.NumMeshSubsets; i++)
-            {
-                tmpMeshSubsets[i] = (ChunkMeshSubsets)ChunkDictionary[tmpMesh.MeshSubsets[i]];
-            }
-            ChunkDataStream tmpVertices = (ChunkDataStream)ChunkDictionary[tmpMesh.VerticesData];
-            ChunkDataStream tmpIndices = (ChunkDataStream)ChunkDictionary[tmpMesh.IndicesData];
+            ChunkMeshSubsets tmpMeshSubsets = new ChunkMeshSubsets();
+            Console.WriteLine("ID is {0}", tmpMesh.MeshSubsets);
+            tmpMeshSubsets = (ChunkMeshSubsets)ChunkDictionary[tmpMesh.MeshSubsets];  // Listed as Object ID for the Node
             
-            // these chunks don't exist for Mesh type 0x801
+            // Going to assume that there is only one VerticesData datastream for now.  Need to watch for this.   
+            // Some 801 types have vertices and not VertsUVs.
+            ChunkDataStream tmpIndices = (ChunkDataStream)ChunkDictionary[tmpMesh.IndicesData];
             ChunkDataStream tmpNormals = new ChunkDataStream();
             ChunkDataStream tmpUVs = new ChunkDataStream();
+            ChunkDataStream tmpVertices = new ChunkDataStream();
             ChunkDataStream tmpVertsUVs = new ChunkDataStream();
-            if (tmpMesh.version != 0x801)
+
+            if (tmpMesh.VerticesData != 0)
+            {
+                tmpVertices = (ChunkDataStream)ChunkDictionary[tmpMesh.VerticesData];
+            }
+            if (tmpMesh.NormalsData != 0)
             {
                 tmpNormals = (ChunkDataStream)ChunkDictionary[tmpMesh.NormalsData];
+            }
+            if (tmpMesh.UVsData != 0)
+            {
                 tmpUVs = (ChunkDataStream)ChunkDictionary[tmpMesh.UVsData];
             }
-            else
+            if (tmpMesh.VertsUVsData != 0)
             {
-                tmpVertsUVs = (ChunkDataStream)ChunkDictionary[tmpMesh.VerticesData];
+                tmpVertsUVs = (ChunkDataStream)ChunkDictionary[tmpMesh.VertsUVsData];
             }
+            // We only use 3 things in obj files:  vertices, normals and UVs.  No need to process the Tangents.
 
             uint numChildren = chunkNode.NumChildren;           // use in a for loop to print the mesh for each child
 
-            for (int i = 0; i < tmpMeshSubsets[0].NumMeshSubset; i++)
+            for (int i = 0; i < tmpMeshSubsets.NumMeshSubset; i++)
             {
-                // Write vertices data for each MeshSubSet
-                // Console.WriteLine("Write out datastreams");
+                // Write vertices data for each MeshSubSet (v)
                 f.WriteLine("g");
-                for (int j = (int)tmpMeshSubsets[0].MeshSubsets[i].FirstVertex; 
-                    j < (int)tmpMeshSubsets[0].MeshSubsets[i].NumVertices + (int)tmpMeshSubsets[0].MeshSubsets[i].FirstVertex; 
-                    j++)
+                if (tmpMesh.VerticesData == 0)
                 {
-                    string s4 = String.Format("v {0:F7} {1:F7} {2:F7}", 
-                        tmpVertices.Vertices[j].x,  
-                        tmpVertices.Vertices[j].y,
-                        tmpVertices.Vertices[j].z);
-                    f.WriteLine(s4);
+                    // Probably using VertsUVs (3.7+).  Write those vertices out. Do UVs at same time.
+                    for (int j = (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex;
+                        j < (int)tmpMeshSubsets.MeshSubsets[i].NumVertices + (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex;
+                        j++)
+                    {
+                        string s4 = String.Format("v {0:F7} {1:F7} {2:F7}",
+                            tmpVertsUVs.Vertices[j].x,
+                            tmpVertsUVs.Vertices[j].y,
+                            tmpVertsUVs.Vertices[j].z);
+                        f.WriteLine(s4);
+                    }
+                    f.WriteLine();
+                    for (int j = (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex;
+                        j < (int)tmpMeshSubsets.MeshSubsets[i].NumVertices + (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex;
+                        j++)
+                    {
+                        string s4 = String.Format("vt {0:F7} {1:F7} 0.0",
+                            tmpVertsUVs.UVs[j].U,
+                            1 - tmpVertsUVs.UVs[j].V);
+                        f.WriteLine(s4);
+                    }
+                    f.WriteLine();
                 }
-                f.WriteLine();
-                if (tmpMesh.version != 0x801)
+                else
                 {
-                    for (int j = (int)tmpMeshSubsets[0].MeshSubsets[i].FirstVertex; 
-                        j < (int)tmpMeshSubsets[0].MeshSubsets[i].NumVertices + (int)tmpMeshSubsets[0].MeshSubsets[i].FirstVertex; 
+                    // Using Verts.  Write those vertices out.
+                    for (int j = (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex;
+                        j < (int)tmpMeshSubsets.MeshSubsets[i].NumVertices + (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex;
+                        j++)
+                    {
+                        string s4 = String.Format("v {0:F7} {1:F7} {2:F7}",
+                            tmpVertices.Vertices[j].x,
+                            tmpVertices.Vertices[j].y,
+                            tmpVertices.Vertices[j].z);
+                        f.WriteLine(s4);
+                    }
+                    f.WriteLine();
+                    for (int j = (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex;
+                        j < (int)tmpMeshSubsets.MeshSubsets[i].NumVertices + (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex;
                         j++)
                     {
                         string s5 = String.Format("vt {0:F7} {1:F7} 0.0 ",
@@ -318,8 +357,14 @@ namespace CgfConverter
                         f.WriteLine(s5);
                     }
                     f.WriteLine();
-                    for (int j = (int)tmpMeshSubsets[0].MeshSubsets[i].FirstVertex;
-                        j < (int)tmpMeshSubsets[0].MeshSubsets[i].NumVertices + (int)tmpMeshSubsets[0].MeshSubsets[i].FirstVertex; 
+
+                }
+
+                // Write Normals block (vn)
+                if (tmpMesh.NormalsData != 0)
+                {
+                    for (int j = (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex;
+                        j < (int)tmpMeshSubsets.MeshSubsets[i].NumVertices + (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex; 
                         j++)
                     {
                         string s6 = String.Format("vn {0:F7} {1:F7} {2:F7}",
@@ -330,25 +375,12 @@ namespace CgfConverter
                     }
                 }
                 f.WriteLine();
-                if (tmpMesh.version == 0x801)
-                {
-                    // Do UVs for the 3.7+ game files
-                    for (int j = (int)tmpMeshSubsets[0].MeshSubsets[i].FirstVertex;
-                        j < (int)tmpMeshSubsets[0].MeshSubsets[i].NumVertices + (int)tmpMeshSubsets[0].MeshSubsets[i].FirstVertex; 
-                        j++)
-                    {
-                        string sUVs = String.Format("vt {0:F7} {1:F7} 0.0",
-                            tmpVertsUVs.UVs[j].U,
-                            1 - tmpVertsUVs.UVs[j].V);
-                        f.WriteLine(sUVs);
-                    }
-                }
 
                 //Console.WriteLine("Writing {0} to the output file", chunkNode.Name);
                 f.WriteLine();
                 string s7 = String.Format("g {0}", chunkNode.Name);
                 f.WriteLine(s7);
-
+                
                 // usemtl <number> refers to the position of this material in the .mtl file.  If it's 0, it's the first entry, etc. MaterialNameArray[]
                 if (MatFile.MaterialNameArray.Length == 0)     // No names in the material file.  use the chunknode name.
                 {
@@ -358,13 +390,13 @@ namespace CgfConverter
                 } 
                 else 
                 {
-                    string s_material = String.Format("usemtl {0}", MatFile.MaterialNameArray[tmpMeshSubsets[0].MeshSubsets[i].MatID].MaterialName);
+                    string s_material = String.Format("usemtl {0}", MatFile.MaterialNameArray[tmpMeshSubsets.MeshSubsets[i].MatID].MaterialName);
                     f.WriteLine(s_material);
                 }
 
                 // Now write out the faces info based on the MtlName
-                for (int j = (int)tmpMeshSubsets[0].MeshSubsets[i].FirstIndex;
-                    j < (int)tmpMeshSubsets[0].MeshSubsets[i].NumIndices + (int)tmpMeshSubsets[0].MeshSubsets[i].FirstIndex; 
+                for (int j = (int)tmpMeshSubsets.MeshSubsets[i].FirstIndex;
+                    j < (int)tmpMeshSubsets.MeshSubsets[i].NumIndices + (int)tmpMeshSubsets.MeshSubsets[i].FirstIndex; 
                     j++)
                 {
                     string s9 = String.Format("f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}",    // Vertices, UVs, Normals
@@ -375,10 +407,17 @@ namespace CgfConverter
                     j = j + 2;
                 }
                 f.WriteLine();
-                TempVertexPosition += tmpMeshSubsets[0].MeshSubsets[i].NumVertices;  // add the number of vertices so future objects can start at the right place
+                TempVertexPosition += tmpMeshSubsets.MeshSubsets[i].NumVertices;  // add the number of vertices so future objects can start at the right place
+                TempIndicesPosition += tmpMeshSubsets.MeshSubsets[i].NumIndices;
+                Console.WriteLine("temp Vertex position: {0}", TempVertexPosition);
+                Console.WriteLine("temp Index position: {0}", TempIndicesPosition);
             }
             // Extend the current vertex, uv and normal positions by the length of those arrays.
             CurrentVertexPosition = TempVertexPosition;
+            CurrentIndicesPosition = TempIndicesPosition;
+            Console.WriteLine("Current Vertex position: {0}", CurrentVertexPosition);
+            Console.WriteLine("Current Index position: {0}", CurrentIndicesPosition);
+
         }
 
         public class Header
@@ -1107,7 +1146,7 @@ namespace CgfConverter
                                     short w = b.ReadInt16();  // dump this as not needed.  Last 2 bytes are surplus...sort of.
                                     if (i < 20)
                                     {
-                                        Console.WriteLine("{0} {1} {2} {3}", i, Vertices[i].x, Vertices[i].y, Vertices[i].z);
+                                        //Console.WriteLine("{0} {1} {2} {3}", i, Vertices[i].x, Vertices[i].y, Vertices[i].z);
                                     }
                                 }
 
@@ -1229,7 +1268,7 @@ namespace CgfConverter
                         }
                     case DataStreamType.VERTSUVS:  // 3 half floats for verts, 6 unknown, 2 half floats for UVs
                         {
-                            Console.WriteLine("In VertsNorms...");
+                            Console.WriteLine("In VertsUVs...");
                             Vertices = new Vector3[NumElements]; 
                             Normals = new Vector3[NumElements];
                             UVs = new UV[NumElements];
@@ -1277,12 +1316,12 @@ namespace CgfConverter
                                     UVs[i].V = uvv.ToSingle();
 
                                     //short w = b.ReadInt16();  // dump this as not needed.  Last 2 bytes are surplus...sort of.
-                                    if (i < 20)
-                                    {
-                                        Console.WriteLine("{0:F7} {1:F7} {2:F7} {3:F7} {4:F7}",
-                                            Vertices[i].x, Vertices[i].y, Vertices[i].z,
-                                            UVs[i].U, UVs[i].V);
-                                    }
+                                    //if (i < 20)
+                                    //{
+                                    //    Console.WriteLine("{0:F7} {1:F7} {2:F7} {3:F7} {4:F7}",
+                                    //        Vertices[i].x, Vertices[i].y, Vertices[i].z,
+                                    //        UVs[i].U, UVs[i].V);
+                                    //}
                                 }
                             }
                             break;
@@ -1382,7 +1421,7 @@ namespace CgfConverter
                     Console.WriteLine("           First Index:          {0}", MeshSubsets[i].FirstIndex);
                     Console.WriteLine("           Number of Indices:    {0}", MeshSubsets[i].NumIndices);
                     Console.WriteLine("           First Vertex:         {0}", MeshSubsets[i].FirstVertex);
-                    Console.WriteLine("           Number of Vertices:   {0}", MeshSubsets[i].NumVertices);
+                    Console.WriteLine("           Number of Vertices:   {0}  (next will be {1})", MeshSubsets[i].NumVertices, MeshSubsets[i].NumVertices+MeshSubsets[i].FirstVertex);
                     Console.WriteLine("           Material ID:          {0}", MeshSubsets[i].MatID);
                     Console.WriteLine("           Radius:               {0}", MeshSubsets[i].Radius);
                     Console.WriteLine("           Center:   {0},{1},{2}", MeshSubsets[i].Center.x, MeshSubsets[i].Center.y, MeshSubsets[i].Center.z);
@@ -1410,8 +1449,8 @@ namespace CgfConverter
             // Pointers to various Chunk types
             //public ChunkMtlName Material; // 623, Material Chunk, never encountered?
             public uint Unknown3;       // for type 800, not sure what this is.
-            public uint NumMeshSubsets; // 801, Number of Mesh subsets
-            public uint[] MeshSubsets; // 800  Reference of the mesh subsets
+            public uint NumVertSubsets; // 801, Number of vert subsets
+            public uint MeshSubsets; // 800  Reference of the mesh subsets
             // public ChunkVertAnim VertAnims; // 744.  not implemented
             //public Vertex[] Vertices; // 744.  not implemented
             //public Face[,] Faces; // 744.  Not implemented
@@ -1420,7 +1459,9 @@ namespace CgfConverter
             // public VertexWeight[] VertexWeights; // 744 not implemented
             //public IRGB[] VertexColors; // 744 not implemented
             public uint UnknownData; // 0x00 word here for some reason.
-            public uint VerticesData; // 800
+            public uint VerticesData; // 800, 801.  Need an array because some 801 files have NumVertSubsets
+            public uint NumBuffs;
+            public uint[] Buffer;       // 801.  For some reason there is a weird buffer here.
             public uint NormalsData; // 800
             public uint UVsData; // 800
             public uint ColorsData; // 800
@@ -1455,14 +1496,13 @@ namespace CgfConverter
                 }
                 if (version == 0x800)
                 {
+                    NumVertSubsets = 1;
                     Unknown1 = b.ReadUInt32();  // unknown
                     Unknown1 = b.ReadUInt32();  // unknown
                     NumVertices = b.ReadUInt32();
-                    NumIndices = b.ReadUInt32();   //
+                    NumIndices = b.ReadUInt32();   //  Number of indices
                     Unknown3 = b.ReadUInt32();
-                    NumMeshSubsets = 1;
-                    MeshSubsets = new uint[NumMeshSubsets];
-                    MeshSubsets[0] = b.ReadUInt32();  // refers to ID in mesh subsets  1d for candle.  Just 1 for 0x800 type
+                    MeshSubsets = b.ReadUInt32();  // refers to ID in mesh subsets  1d for candle.  Just 1 for 0x800 type
                     UnknownData = b.ReadUInt32();
                     VerticesData = b.ReadUInt32();  // ID of the datastream for the vertices for this mesh
                     NormalsData = b.ReadUInt32();   // ID of the datastream for the normals for this mesh
@@ -1484,10 +1524,12 @@ namespace CgfConverter
                     {
                         PhysicsData[i] = b.ReadUInt32();
                     }
-                    MinBound.x = b.ReadUInt32();
-                    MinBound.y = b.ReadUInt32();
-                    MinBound.z = b.ReadUInt32();
-                    MaxBound.x = b.ReadUInt32();
+                    MinBound.x = b.ReadSingle();
+                    MinBound.y = b.ReadSingle();
+                    MinBound.z = b.ReadSingle();
+                    MaxBound.x = b.ReadSingle();
+                    MaxBound.y = b.ReadSingle();
+                    MaxBound.z = b.ReadSingle();
                     // Not going to read the Reserved 32 element array.
                 }
                 else if (version == 0x801)
@@ -1496,36 +1538,37 @@ namespace CgfConverter
                     Unknown1 = b.ReadUInt32();  // unknown
                     NumVertices = b.ReadUInt32();
                     NumIndices = b.ReadUInt32();   //
-                    NumMeshSubsets = b.ReadUInt32();
-                    MeshSubsets = new uint[NumMeshSubsets];
-                    // MeshSubsets = b.ReadUInt32();
-                    // For 801, meshsubsets is an array of length nummeshsubsets.  Are there actual multiple submeshes per mesh?
-                    for (int i = 0; i < NumMeshSubsets; i++)         // this ain't right.
-                    {
-                        MeshSubsets[i] = b.ReadUInt32();    // this will dump the next few submesh IDs. 
-                    }
-                    b.ReadUInt32();                         // unknown value
+                    //NumBuffs = b.ReadUInt32();
+                    //Buffer = new uint[NumBuffs];
+                    uint dump = b.ReadUInt32();
+                    MeshSubsets = b.ReadUInt32();  // refers to ID in mesh subsets 
+                    dump = b.ReadUInt32(); 
                     VerticesData = b.ReadUInt32();
-                    NormalsData = b.ReadUInt32();           // can be zero.
+                    NormalsData = b.ReadUInt32();           // ID of the datastream for the normals for this mesh
                     UVsData = b.ReadUInt32();               // refers to the ID in the Normals datastream
                     ColorsData = b.ReadUInt32();
                     Colors2Data = b.ReadUInt32();
                     IndicesData = b.ReadUInt32();
                     TangentsData = b.ReadUInt32();
+                    for (int i = 0; i < 4; i++)
+                    {
+                        ReservedData[i] = b.ReadUInt32();
+                    }
+                    for (int i = 0; i < 4; i++)
+                    {
+                        PhysicsData[i] = b.ReadUInt32();
+                    }
+                    VertsUVsData = b.ReadUInt32();  // This should be a vertsUV index number, not vertices.  Vertices are above.
                     ShCoeffsData = b.ReadUInt32();
                     ShapeDeformationData = b.ReadUInt32();
                     BoneMapData = b.ReadUInt32();
                     FaceMapData = b.ReadUInt32();
-                    VertMatsData = b.ReadUInt32();
-                    b.ReadUInt32();  // unknown.
-                    VertsUVsData = b.ReadUInt32();  // This should be a vertsUV index number, not vertices.  Vertices are above.
-                    NormalsData = b.ReadUInt32();   // ID of the datastream for the normals for this mesh
-                    MeshPhysicsData = b.ReadUInt32();
-                    UVsData = b.ReadUInt32();     // refers to the ID in the Normals datastream?
-                    MinBound.x = b.ReadUInt32();
-                    MinBound.y = b.ReadUInt32();
-                    MinBound.z = b.ReadUInt32();
-                    MaxBound.x = b.ReadUInt32();
+                    MinBound.x = b.ReadSingle();
+                    MinBound.y = b.ReadSingle();
+                    MinBound.z = b.ReadSingle();
+                    MaxBound.x = b.ReadSingle();
+                    MaxBound.y = b.ReadSingle();
+                    MaxBound.z = b.ReadSingle();
                     // not reading the rest
                 }
             }
@@ -1534,8 +1577,7 @@ namespace CgfConverter
                 Console.WriteLine("*** START MESH CHUNK ***");
                 Console.WriteLine("    ChunkType:           {0}", chunkType);
                 Console.WriteLine("    Chunk ID:            {0:X}", id);
-                Console.WriteLine("    Num Mesh Subsets:    {0}", NumMeshSubsets);
-                Console.WriteLine("    MeshSubSetID:        {0:X}", MeshSubsets[0]);
+                Console.WriteLine("    MeshSubSetID:        {0:X}", MeshSubsets);
                 Console.WriteLine("    Vertex Datastream:   {0:X}", VerticesData);
                 Console.WriteLine("    Normals Datastream:  {0:X}", NormalsData);
                 Console.WriteLine("    UVs Datastream:      {0:X}", UVsData);
@@ -1543,6 +1585,8 @@ namespace CgfConverter
                 Console.WriteLine("    Tangents Datastream: {0:X}", TangentsData);
                 Console.WriteLine("    Mesh Physics Data:   {0:X}", MeshPhysicsData);
                 Console.WriteLine("    VertUVs:             {0:X}", VertsUVsData);
+                Console.WriteLine("    MinBound:            {0:F7}, {1:F7}, {2:F7}", MinBound.x, MinBound.y, MinBound.z);
+                Console.WriteLine("    MaxBound:            {0:F7}, {1:F7}, {2:F7}", MaxBound.x, MaxBound.y, MaxBound.z);
                 Console.WriteLine("*** END MESH CHUNK ***");
             }
         }
