@@ -326,9 +326,18 @@ namespace CgfConverter
                     for (int i = 0; i < length; i++)
                     {
                         // replace .tif filenames with .dds
-                        StringBuilder builder = new StringBuilder(Datafile.Args.ObjectDir + @"\" + mtl.Textures[i].File);
+                        // If there is no path (\ or /) in the file, then don't put in Object Dir!!
+                        StringBuilder builder;
+                        if (mtl.Textures[i].File.Contains(@"/") || mtl.Textures[i].File.Contains(@"\"))
+                        {
+                            builder = new StringBuilder(Datafile.Args.ObjectDir + @"\" + mtl.Textures[i].File);
+                        }
+                        else
+                        {
+                            builder = new StringBuilder(mtl.Textures[i].File);
+                        }
+
                         builder.Replace(".tif", ".dds");
-                        builder.Replace("@", "_");              // Blender does NOT like @ symbols in the file path.
                         switch (mtl.Textures[i].Map)
                         {
                             case "Diffuse":
@@ -355,12 +364,12 @@ namespace CgfConverter
                                     file.WriteLine(s_mapbump);
                                     break;
                                 }
-                            case "Environment":                 // For things like cockpit monitors.
-                                {
-                                    string s_env = String.Format("map_Kd {0}", builder.ToString());
-                                    file.WriteLine(s_env);
-                                    break;
-                                }
+                            //case "Environment":                 // For things like cockpit monitors.
+                            //    {
+                            //        string s_env = String.Format("map_Kd {0}", builder.ToString());
+                            //        file.WriteLine(s_env);
+                            //        break;
+                            //    }
                             default:
                                 break;
                         }
