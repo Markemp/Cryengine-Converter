@@ -35,8 +35,6 @@ namespace CgfConverter
         public ArgsHandler Args = new ArgsHandler();
 
         public MaterialFile MatFile;    // The material file (from MaterialFile.cs)
-        //public FileInfo MtlFile;        // the Material file
-        //private List<String> MaterialNames = new List<String>();                         // Read the mtl file and get the list of mat names.
 
         public void ReadCgfData(ArgsHandler args)  // Constructor for CgfFormat.  This populates the structure
         {
@@ -117,7 +115,7 @@ namespace CgfConverter
                         chkDataStream.ReadChunk(cgfreader, ChkHdr.offset);
                         CgfChunks.Add(chkDataStream);
                         ChunkDictionary.Add(chkDataStream.id, chkDataStream);
-                        chkDataStream.WriteChunk();
+                        //chkDataStream.WriteChunk();
                         break;
                     }
                          
@@ -155,7 +153,7 @@ namespace CgfConverter
                         ChunkDictionary.Add(chkNode.id, chkNode);
                         if (chkNode.Parent == 0xFFFFFFFF)
                         {
-                            Console.WriteLine("Found a Parent chunk node.  Adding to the dictionary.");
+                            //Console.WriteLine("Found a Parent chunk node.  Adding to the dictionary.");
                             RootNodeID = chkNode.id;
                             RootNode = chkNode;
                             //ChunkDictionary[RootNodeID].WriteChunk();
@@ -170,7 +168,19 @@ namespace CgfConverter
                         chkHelper.id = ChkHdr.id;
                         CgfChunks.Add(chkHelper);
                         ChunkDictionary.Add(chkHelper.id, chkHelper);
-                        //chkHelper.WriteChunk();
+                        chkHelper.WriteChunk();
+                        break;
+                    }
+                    case ChunkType.Controller:
+                    {
+                        ChunkController chkController = new ChunkController();
+                        chkController.ReadChunk(cgfreader, ChkHdr.offset);
+                        chkController.chunkType = ChkHdr.type;
+                        chkController.id = ChkHdr.id;
+                        chkController.size = ChkHdr.size;
+                        CgfChunks.Add(chkController);
+                        ChunkDictionary.Add(chkController.id, chkController);
+                        chkController.WriteChunk();
                         break;
                     }
                     default:
@@ -210,8 +220,7 @@ namespace CgfConverter
                 MatFile.Datafile = this;                // Reference back to this CgfData so MatFile can read need info (like chunks)
 
                 MatFile.GetMtlFileName();               // Gets the MtlFile name                
-                Console.WriteLine("Matfile name is {0}", MatFile.XmlMtlFile.FullName);
-                if (MatFile.MtlFile.Exists)              
+                if (MatFile.XmlMtlFile.Exists)              
                 {
                     Console.WriteLine("Matfile Full Name is {0}", MatFile.XmlMtlFile.FullName);
                     MatFile.WriteMtlLibInfo(file);  // writes the mtllib file.
@@ -256,28 +265,37 @@ namespace CgfConverter
             // Console.WriteLine("\n*** Processing Chunk node {0:X}", chunkNode.id);
             // Console.WriteLine("***     Object ID {0:X}", chunkNode.Object);
             
-            // We are only processing Nodes that have Materials.  The chunkType should never be Helper.
+            // We are only processing Nodes that have Materials.  The chunkType should never be Helper.  Check for Nodes to not process
             ChunkMesh tmpMesh = (ChunkMesh)ChunkDictionary[chunkNode.Object];
+            Vector3 transform;
+
             if (ChunkDictionary[chunkNode.Object].chunkType == ChunkType.Helper)
             {
-                Console.WriteLine("*********************Found a node chunk for a Helper (ID: {0}).  Skipping...", tmpMesh.id);
-                tmpMesh.WriteChunk();
+                Console.WriteLine("*********************Found a node chunk for a Helper (ID: {0:X}).  Skipping...", tmpMesh.id);
+                //tmpMesh.WriteChunk();
                 return;
             }
 
             if (tmpMesh.MeshSubsets == 0)
             {
-                Console.WriteLine("*********************Found a Mesh chunk with no Submesh ID (ID: {0}).  Skipping...", tmpMesh.id);
-                tmpMesh.WriteChunk();
+                Console.WriteLine("*********************Found a Mesh chunk with no Submesh ID (ID: {0:X}).  Skipping...", tmpMesh.id);
+                //tmpMesh.WriteChunk();
+                return;
+            }
+            if (tmpMesh.VerticesData == 0 && tmpMesh.VertsUVsData == 0)
+            {
+                Console.WriteLine("*********************Found a Mesh chunk with no Vertex info (ID: {0:X}).  Skipping...", tmpMesh.id);
+                //tmpMesh.WriteChunk();
                 return;
             }
             ChunkMtlName tmpMtlName = (ChunkMtlName)ChunkDictionary[chunkNode.MatID];
             ChunkMeshSubsets tmpMeshSubsets = new ChunkMeshSubsets();
-            Console.WriteLine("ID is {0}", tmpMesh.MeshSubsets);
             tmpMeshSubsets = (ChunkMeshSubsets)ChunkDictionary[tmpMesh.MeshSubsets];  // Listed as Object ID for the Node
             
             // Going to assume that there is only one VerticesData datastream for now.  Need to watch for this.   
             // Some 801 types have vertices and not VertsUVs.
+            //Console.WriteLine("TEMPMESH WITH NO CurrentIndicesPosition");
+            //tmpMesh.WriteChunk();
             ChunkDataStream tmpIndices = (ChunkDataStream)ChunkDictionary[tmpMesh.IndicesData];
             ChunkDataStream tmpNormals = new ChunkDataStream();
             ChunkDataStream tmpUVs = new ChunkDataStream();
@@ -304,6 +322,27 @@ namespace CgfConverter
 
             uint numChildren = chunkNode.NumChildren;           // use in a for loop to print the mesh for each child
 
+            // Get the Transform here. It's the node chunk Transform.m(41/42/42) divided by 100, added to the parent transform.
+            if (chunkNode.Parent != 0xFFFFFFFF)
+            {
+                // Not the parent node.  Parent node shouldn't have a transform, so no need to calculate it.
+                // add the current node's transform to transform.x, y and z.
+                transform.x = chunkNode.Transform.m41 / 100;
+                transform.y = chunkNode.Transform.m42 / 100;
+                transform.z = chunkNode.Transform.m43 / 100;
+                // add in the parent transform
+                ChunkNode tmpParent;
+                tmpParent = (ChunkNode)ChunkDictionary[chunkNode.Parent];
+                transform.x += tmpParent.Transform.m41 / 100;
+                transform.y += tmpParent.Transform.m42 / 100;
+                transform.z += tmpParent.Transform.m43 / 100;
+            }
+            else
+            {
+                transform.x = chunkNode.Transform.m41 / 100;
+                transform.y = chunkNode.Transform.m42 / 100;
+                transform.z = chunkNode.Transform.m43 / 100;
+            }
             for (int i = 0; i < tmpMeshSubsets.NumMeshSubset; i++)
             {
                 // Write vertices data for each MeshSubSet (v)
@@ -316,9 +355,9 @@ namespace CgfConverter
                         j++)
                     {
                         string s4 = String.Format("v {0:F7} {1:F7} {2:F7}",
-                            tmpVertsUVs.Vertices[j].x,
-                            tmpVertsUVs.Vertices[j].y,
-                            tmpVertsUVs.Vertices[j].z);
+                            tmpVertsUVs.Vertices[j].x + transform.x,
+                            tmpVertsUVs.Vertices[j].y + transform.y,
+                            tmpVertsUVs.Vertices[j].z + transform.z);
                         f.WriteLine(s4);
                     }
                     f.WriteLine();
@@ -341,9 +380,9 @@ namespace CgfConverter
                         j++)
                     {
                         string s4 = String.Format("v {0:F7} {1:F7} {2:F7}",
-                            tmpVertices.Vertices[j].x,
-                            tmpVertices.Vertices[j].y,
-                            tmpVertices.Vertices[j].z);
+                            tmpVertices.Vertices[j].x + transform.x,
+                            tmpVertices.Vertices[j].y + transform.y,
+                            tmpVertices.Vertices[j].z + transform.z);
                         f.WriteLine(s4);
                     }
                     f.WriteLine();
@@ -382,7 +421,7 @@ namespace CgfConverter
                 f.WriteLine(s7);
                 
                 // usemtl <number> refers to the position of this material in the .mtl file.  If it's 0, it's the first entry, etc. MaterialNameArray[]
-                if (MatFile.MaterialNameArray.Length == 0)     // No names in the material file.  use the chunknode name.
+                if (!MatFile.MtlFile.Exists)     // No names in the material file.  use the chunknode name.
                 {
                     // The material file doesn't have any elements with the Name of the material.  Use the object name.
                     string s_material = String.Format("usemtl {0}", RootNode.Name);
@@ -408,16 +447,11 @@ namespace CgfConverter
                 }
                 f.WriteLine();
                 TempVertexPosition += tmpMeshSubsets.MeshSubsets[i].NumVertices;  // add the number of vertices so future objects can start at the right place
-                TempIndicesPosition += tmpMeshSubsets.MeshSubsets[i].NumIndices;
-                Console.WriteLine("temp Vertex position: {0}", TempVertexPosition);
-                Console.WriteLine("temp Index position: {0}", TempIndicesPosition);
+                TempIndicesPosition += tmpMeshSubsets.MeshSubsets[i].NumIndices;  // Not really used...
             }
             // Extend the current vertex, uv and normal positions by the length of those arrays.
             CurrentVertexPosition = TempVertexPosition;
             CurrentIndicesPosition = TempIndicesPosition;
-            Console.WriteLine("Current Vertex position: {0}", CurrentVertexPosition);
-            Console.WriteLine("Current Index position: {0}", CurrentIndicesPosition);
-
         }
 
         public class Header
@@ -452,7 +486,7 @@ namespace CgfConverter
                     fileOffset = binReader.ReadInt32(); // location of the chunk table
                     FileVersion = 1;
                 }
-                WriteChunk();
+                // WriteChunk();
                 return;
             }
             public void WriteChunk()  // output header to console for testing
@@ -766,9 +800,9 @@ namespace CgfConverter
                 Transform.m43 = b.ReadSingle();
                 Transform.m44 = b.ReadSingle();  
                 // Read the position Pos Vector3
-                Pos.x = b.ReadSingle();
-                Pos.y = b.ReadSingle();
-                Pos.z = b.ReadSingle();
+                Pos.x = b.ReadSingle()/100;
+                Pos.y = b.ReadSingle()/100;
+                Pos.z = b.ReadSingle()/100;
                 // Read the rotation Rot Quad
                 Rot.w = b.ReadSingle();
                 Rot.x = b.ReadSingle();
@@ -847,15 +881,61 @@ namespace CgfConverter
         }
         public class ChunkController : Chunk   // cccc000d:  Controller chunk
         {
+            public CtrlType ControllerType;
+            public uint NumKeys;
+            public uint ControllerFlags;        // technically a bitstruct to identify a cycle or a loop.
+            public uint ControllerID;           // Unique id based on CRC32 of bone name.  Ver 827 only?
+            public Key[] Keys;                    // array length NumKeys.  Ver 827?
+
 
             public override void ReadChunk(BinaryReader b, uint f)
             {
                 b.BaseStream.Seek(f, 0); // seek to the beginning of the Timing Format chunk
-                uint tmpChkType = b.ReadUInt32();
-                chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChkType);
-                version = b.ReadUInt32();  //0x00000918 is Far Cry, Crysis, MWO, Aion
-                //fOffset = b.ReadUInt32();
-                id = b.ReadUInt32();
+                if (FileVersion == 0)
+                {
+                    uint tmpChkType = b.ReadUInt32();
+                    chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChkType);
+                    version = b.ReadUInt32();  //0x00000918 is Far Cry, Crysis, MWO, Aion
+                    fOffset.Offset = b.ReadInt32();
+                    id = b.ReadUInt32();
+                }
+                ControllerType = (CtrlType)Enum.ToObject(typeof(CtrlType), b.ReadUInt32());
+                NumKeys = b.ReadUInt32();
+                ControllerFlags = b.ReadUInt32();
+                ControllerID = b.ReadUInt32();
+                Keys = new Key[NumKeys];
+                for (int i = 0; i < NumKeys; i++)
+                {
+                    // Will implement fully later.  Not sure I understand the structure, or if it's necessary.
+                    Keys[i].Time = b.ReadInt32();
+                    //Console.WriteLine("Time {0}", Keys[i].Time);
+                    Keys[i].AbsPos.x = b.ReadSingle();
+                    Keys[i].AbsPos.y = b.ReadSingle();
+                    Keys[i].AbsPos.z = b.ReadSingle();
+                    //Console.WriteLine("Abs Pos: {0:F7}  {1:F7}  {2:F7}", Keys[i].AbsPos.x, Keys[i].AbsPos.y, Keys[i].AbsPos.z);
+                    Keys[i].RelPos.x = b.ReadSingle();
+                    Keys[i].RelPos.y = b.ReadSingle();
+                    Keys[i].RelPos.z = b.ReadSingle();
+                    //Console.WriteLine("Rel Pos: {0:F7}  {1:F7}  {2:F7}", Keys[i].RelPos.x, Keys[i].RelPos.y, Keys[i].RelPos.z);
+                }
+
+            }
+            public override void WriteChunk()
+            {
+                Console.WriteLine("*** Controller Chunk ***");
+                Console.WriteLine("Version:                 {0:X}", version);
+                Console.WriteLine("ID:                      {0:X}", id);
+                Console.WriteLine("Number of Keys:          {0}", NumKeys);
+                Console.WriteLine("Controller Type:         {0}", ControllerType);
+                Console.WriteLine("Conttroller Flags:       {0}", ControllerFlags);
+                Console.WriteLine("Controller ID:           {0}", ControllerID);
+                for (int i = 0; i < NumKeys; i++)
+                {
+                    Console.WriteLine("        Key {0}:       Time: {1}", i, Keys[i].Time);
+                    Console.WriteLine("        AbsPos {0}:    {1:F7}, {2:F7}, {3:F7}", i, Keys[i].AbsPos.x, Keys[i].AbsPos.y, Keys[i].AbsPos.z);
+                    Console.WriteLine("        RelPos {0}:    {1:F7}, {2:F7}, {3:F7}", i, Keys[i].RelPos.x, Keys[i].RelPos.y, Keys[i].RelPos.z);
+                }
+                
             }
 
         }
@@ -1268,7 +1348,7 @@ namespace CgfConverter
                         }
                     case DataStreamType.VERTSUVS:  // 3 half floats for verts, 6 unknown, 2 half floats for UVs
                         {
-                            Console.WriteLine("In VertsUVs...");
+                            // Console.WriteLine("In VertsUVs...");
                             Vertices = new Vector3[NumElements]; 
                             Normals = new Vector3[NumElements];
                             UVs = new UV[NumElements];
@@ -1693,7 +1773,7 @@ namespace CgfConverter
                             else
                             {
                                 OutputFile = new FileInfo(inputArgs[i + 1]);
-                                Console.WriteLine("Output file set to {0}", OutputFile.FullName);
+                                //Console.WriteLine("Output file set to {0}", OutputFile.FullName);
                                 i++; // because we know i+1 is the outputfile
                             }
                         }
@@ -1764,7 +1844,7 @@ namespace CgfConverter
                 return;
             }
 
-            argsHandler.WriteArgs();
+            // argsHandler.WriteArgs();
             // Console.WriteLine("Input File is '{0}'" , dataFile.Name);
             CgfData cgfData = new CgfData();
             cgfData.ReadCgfData(argsHandler);
