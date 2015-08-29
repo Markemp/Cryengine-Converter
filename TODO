@@ -17,11 +17,11 @@ Version 0.8
 
 Version 0.9
 - .mtl files - convert Cryengine .mtl files to .obj .mtl files.  Better mtl file handling (search given obj dirs)
-- Break classes into separate files.
-- Input validation, error checking, etc.
-- Move version, id, type and offset so they are read from the chunk table, not the chunks.
+- Break classes into separate files.      ** IN PROGRESS **
+- Input validation, error checking, etc.  ** IN PROGRESS **
+- Move version, id, type and offset so they are read from the chunk table, not the chunks.  **COMPLETE**  8/29
 - add build version into the output
-- Bug fix so some .obj files import properly to Blender (exploded geometry issue)
+- Bug fix so some .obj files import properly to Blender (exploded geometry issue)  **COMPLETE** 8/29
 - Output to a user defined file (default to <object name.obj>)
 - Icon for the exe.
 - Implement controller and meshphysics chunks
