@@ -119,8 +119,10 @@ namespace CgfConverter
             if (System.Math.Abs(mat.m12) + System.Math.Abs(mat.m13)
                 + System.Math.Abs(mat.m21) + System.Math.Abs(mat.m23)
                 + System.Math.Abs(mat.m31) + System.Math.Abs(mat.m32) > 0.01) {
+                    Console.WriteLine(" is a Scale_Rot matrix");
                     return false;
                 }
+            Console.WriteLine(" is not a Scale_Rot matrix"); 
             return true;
         }
         public Vector3 Get_Scale()

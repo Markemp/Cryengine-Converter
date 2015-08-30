@@ -265,7 +265,7 @@ namespace CgfConverter
                         material.Emissive.Blue = float.Parse(parseemissive[1]);
                         material.Emissive.Green = float.Parse(parseemissive[2]);
                         // material.Shininess = float.Parse(submat.Attribute("Shininess").Value);
-                        material.Opacity = float.Parse(submat.Attribute("Opacity").Value);
+                        // material.Opacity = float.Parse(submat.Attribute("Opacity").Value);
                         // now loop for all the textures
                         int i = 0;
                         foreach (XElement tex in submat.Descendants("Texture"))

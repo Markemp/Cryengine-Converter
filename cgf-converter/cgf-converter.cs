@@ -128,7 +128,7 @@ namespace CgfConverter
                         chkMesh.ReadChunk(cgfreader, ChkHdr.offset);
                         CgfChunks.Add(chkMesh);
                         ChunkDictionary.Add(chkMesh.id, chkMesh);
-                        chkMesh.WriteChunk();
+                        //chkMesh.WriteChunk();
                         break;
                     }
                     case ChunkType.MeshSubsets:
@@ -140,7 +140,7 @@ namespace CgfConverter
                         chkMeshSubsets.ReadChunk(cgfreader, ChkHdr.offset);
                         CgfChunks.Add(chkMeshSubsets);
                         ChunkDictionary.Add(chkMeshSubsets.id, chkMeshSubsets);
-                        chkMeshSubsets.WriteChunk();
+                        //chkMeshSubsets.WriteChunk();
                         break;
                     }
                     case ChunkType.Node:
@@ -269,6 +269,18 @@ namespace CgfConverter
             ChunkMesh tmpMesh = (ChunkMesh)ChunkDictionary[chunkNode.Object];
             Vector3 transform = new Vector3();
 
+            // Get the Transform here. It's the node chunk Transform.m(41/42/42) divided by 100, added to the parent transform.
+            // The transform of a child has to add the transforms of ALL the parents.  Need to use regression?  Maybe a while loop...
+            transform.x = 0;  // initializing the transform vector.  
+            transform.y = 0;
+            transform.z = 0;
+            if (chunkNode.Parent != 0xFFFFFFFF)
+            {
+                // Not the parent node.  Parent node shouldn't have a transform, so no need to calculate it.
+                // add the current node's transform to transform.x, y and z.
+                transform = GetTransform(chunkNode, transform);
+            }
+
             if (ChunkDictionary[chunkNode.Object].chunkType == ChunkType.Helper)
             {
                 Console.WriteLine("*********************Found a node chunk for a Helper (ID: {0:X}).  Skipping...", tmpMesh.id);
@@ -276,13 +288,13 @@ namespace CgfConverter
                 return;
             }
 
-            if (tmpMesh.MeshSubsets == 0)
+            if (tmpMesh.MeshSubsets == 0)   // This is probably wrong.  These may be parents with no geometry, but still have an offset
             {
                 Console.WriteLine("*********************Found a Mesh chunk with no Submesh ID (ID: {0:X}).  Skipping...", tmpMesh.id);
                 //tmpMesh.WriteChunk();
                 return;
             }
-            if (tmpMesh.VerticesData == 0 && tmpMesh.VertsUVsData == 0)
+            if (tmpMesh.VerticesData == 0 && tmpMesh.VertsUVsData == 0)  // This is probably wrong.  These may be parents with no geometry, but still have an offset
             {
                 Console.WriteLine("*********************Found a Mesh chunk with no Vertex info (ID: {0:X}).  Skipping...", tmpMesh.id);
                 //tmpMesh.WriteChunk();
@@ -322,18 +334,6 @@ namespace CgfConverter
 
             uint numChildren = chunkNode.NumChildren;           // use in a for loop to print the mesh for each child
 
-            // Get the Transform here. It's the node chunk Transform.m(41/42/42) divided by 100, added to the parent transform.
-            // The transform of a child has to add the transforms of ALL the parents.  Need to use regression?  Maybe a while loop...
-            transform.x = 0;  // initializing the transform vector.  
-            transform.y = 0;
-            transform.z = 0;
-            if (chunkNode.Parent != 0xFFFFFFFF)
-            {
-                // Not the parent node.  Parent node shouldn't have a transform, so no need to calculate it.
-                // add the current node's transform to transform.x, y and z.
-                transform = GetTransform(chunkNode, transform);
-            }
-
             for (int i = 0; i < tmpMeshSubsets.NumMeshSubset; i++)
             {
                 // Write vertices data for each MeshSubSet (v)
@@ -356,7 +356,7 @@ namespace CgfConverter
                         j < (int)tmpMeshSubsets.MeshSubsets[i].NumVertices + (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex;
                         j++)
                     {
-                        string s4 = String.Format("vt {0:F7} {1:F7} 0.0",
+                        string s4 = String.Format("vt {0:F7} {1:F7} 0",
                             tmpVertsUVs.UVs[j].U,
                             1 - tmpVertsUVs.UVs[j].V);
                         f.WriteLine(s4);
@@ -381,12 +381,12 @@ namespace CgfConverter
                         j < (int)tmpMeshSubsets.MeshSubsets[i].NumVertices + (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex;
                         j++)
                     {
-                        string s5 = String.Format("vt {0:F7} {1:F7} 0.0 ",
+                        string s5 = String.Format("vt {0:F7} {1:F7} 0",
                             tmpUVs.UVs[j].U,
                             1 - tmpUVs.UVs[j].V);
                         f.WriteLine(s5);
                     }
-                    f.WriteLine();
+                    //f.WriteLine();
 
                 }
 
@@ -404,10 +404,11 @@ namespace CgfConverter
                         f.WriteLine(s6);
                     }
                 }
-                f.WriteLine();
+                
+                //f.WriteLine();
 
                 //Console.WriteLine("Writing {0} to the output file", chunkNode.Name);
-                f.WriteLine();
+                //f.WriteLine();
                 string s7 = String.Format("g {0}", chunkNode.Name);
                 f.WriteLine(s7);
                 
@@ -436,7 +437,7 @@ namespace CgfConverter
                     f.WriteLine(s9);
                     j = j + 2;
                 }
-                f.WriteLine();
+                //f.WriteLine();
                 TempVertexPosition += tmpMeshSubsets.MeshSubsets[i].NumVertices;  // add the number of vertices so future objects can start at the right place
                 TempIndicesPosition += tmpMeshSubsets.MeshSubsets[i].NumIndices;  // Not really used...
             }
@@ -446,12 +447,16 @@ namespace CgfConverter
         }
         public Vector3 GetTransform(ChunkNode chunkNode, Vector3 transform)        //  Calculate the transform of a node by getting parent's transform.
         {
+            float x = chunkNode.Transform.m41 / 100;
+            float y = chunkNode.Transform.m42 / 100;
+            float z = chunkNode.Transform.m43 / 100;
             // if we're at the parent, we just want to return.  Otherwise we want to go up to the next level.
+            // Matrix math here.  final x is x*m11 + y*m12 + z*m13.  Same for y and z
             if (chunkNode.Parent != 0xFFFFFFFF)
             {
-                transform.x += chunkNode.Transform.m41/100;
-                transform.y += chunkNode.Transform.m42/100;
-                transform.z += chunkNode.Transform.m43/100;
+                transform.x += x * chunkNode.Transform.m11 + y * chunkNode.Transform.m12 + z * chunkNode.Transform.m13;
+                transform.y += x * chunkNode.Transform.m21 + y * chunkNode.Transform.m22 + z * chunkNode.Transform.m23;
+                transform.z += x * chunkNode.Transform.m31 + y * chunkNode.Transform.m32 + z * chunkNode.Transform.m33;
 
                 transform = GetTransform((ChunkNode)ChunkDictionary[chunkNode.Parent], transform);
             }
