@@ -16,7 +16,7 @@ Version 0.8
 - Add support for Cryengine 3.6 and newer files **COMPLETE** 8/1
 
 Version 0.9
-- .mtl files - convert Cryengine .mtl files to .obj .mtl files.  Better mtl file handling (search given obj dirs)
+- .mtl files - convert Cryengine .mtl files to .obj .mtl files.  Better mtl file handling (search given obj dirs) **COMPLETE**
 - Break classes into separate files.      ** IN PROGRESS **
 - Input validation, error checking, etc.  ** IN PROGRESS **
 - Move version, id, type and offset so they are read from the chunk table, not the chunks.  **COMPLETE**  8/29
@@ -27,7 +27,7 @@ Version 0.9
 - Implement controller and meshphysics chunks
 
 Version 1.0
-- Export directly to .blend files
+- Export directly to .blend files  **IN PROGRESS**
 
 Version 1.1
 - Implement animation and armature files.
