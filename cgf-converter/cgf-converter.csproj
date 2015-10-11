@@ -74,7 +74,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Blender.cs" />
     <Compile Include="cgf-converter.cs" />
+    <Compile Include="COLLADA.cs" />
     <Compile Include="MaterialFile.cs" />
     <Compile Include="Structs.cs" />
     <Compile Include="Enums.cs" />

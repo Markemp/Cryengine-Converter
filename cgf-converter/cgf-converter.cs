@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using OpenTK.Math;
 using System.Xml;
+using System.Xml.Schema;
 
 namespace CgfConverter
 {
@@ -158,7 +159,7 @@ namespace CgfConverter
                             RootNode = chkNode;
                             //ChunkDictionary[RootNodeID].WriteChunk();
                         }
-                        chkNode.WriteChunk();
+                        //chkNode.WriteChunk();
                         break;
                     }
                     case ChunkType.Helper:
@@ -168,7 +169,7 @@ namespace CgfConverter
                         chkHelper.id = ChkHdr.id;
                         CgfChunks.Add(chkHelper);
                         ChunkDictionary.Add(chkHelper.id, chkHelper);
-                        chkHelper.WriteChunk();
+                        //chkHelper.WriteChunk();
                         break;
                     }
                     case ChunkType.Controller:
@@ -180,7 +181,19 @@ namespace CgfConverter
                         chkController.size = ChkHdr.size;
                         CgfChunks.Add(chkController);
                         ChunkDictionary.Add(chkController.id, chkController);
-                        chkController.WriteChunk();
+                        //chkController.WriteChunk();
+                        break;
+                    }
+                    case ChunkType.SceneProps:
+                    {
+                        ChunkSceneProp chkSceneProp = new ChunkSceneProp();
+                        chkSceneProp.ReadChunk(cgfreader, ChkHdr.offset);
+                        chkSceneProp.chunkType = ChkHdr.type;
+                        chkSceneProp.id = ChkHdr.id;
+                        chkSceneProp.size = ChkHdr.size;
+                        CgfChunks.Add(chkSceneProp);
+                        ChunkDictionary.Add(chkSceneProp.id, chkSceneProp);
+                        chkSceneProp.WriteChunk();
                         break;
                     }
                     default:
@@ -846,6 +859,71 @@ namespace CgfConverter
                 Console.WriteLine("                         {0:F7}  {1:F7}  {2:F7}  {3:F7}", Transform.m41, Transform.m42, Transform.m43, Transform.m44);
                 Console.WriteLine("*** END Node Chunk ***");
 
+            }
+        }
+        public class ChunkSceneProp : Chunk     // cccc0008 
+        {
+            // This chunk isn't really used, but contains some data probably necessary for the game.
+            // Size for 0x744 type is always 0xBB4 (test this)
+            public UInt32 numProps;             // number of elements in the props array  (31 for type 0x744)
+            public String[] prop;
+            public String[] propvalue;
+            public override void ReadChunk(BinaryReader b, uint f)
+            {
+                b.BaseStream.Seek(f, 0); // seek to the beginning of the MeshSubset chunk
+                if (FileVersion == 0)
+                {
+                    uint tmpChunkType = b.ReadUInt32();
+                    chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChunkType);
+                    version = b.ReadUInt32();
+                    fOffset.Offset = b.ReadInt32();  // offset
+                    id = b.ReadUInt32();  
+                }
+                numProps = b.ReadUInt32();          // Should be 31 for 0x744
+                prop = new String[numProps];
+                propvalue = new String[numProps];
+
+                // Read the array of scene props and their associated values
+                for (int i = 0; i < numProps; i++)
+                {
+                    char[] tmpProp = new char[32];
+                    char[] tmpPropValue = new char[64];
+                    tmpProp = b.ReadChars(32);
+                    int stringLength = 0;
+                    for (int j = 0; j < tmpProp.Length; j++)
+                    {
+                        if (tmpProp[j] == 0)
+                        {
+                            stringLength = j;
+                            break;
+                        }
+                    }
+                    prop[i] = new string(tmpProp, 0, stringLength);
+                    
+                    tmpPropValue = b.ReadChars(64);
+                    stringLength = 0;
+                    for (int j = 0; j < tmpPropValue.Length; j++)
+                    {
+                        if (tmpPropValue[j] == 0)
+                        {
+                            stringLength = j;
+                            break;
+                        }
+                    }
+                    propvalue[i] = new string(tmpPropValue, 0, stringLength);
+                }
+            }
+            public override void WriteChunk()
+            {
+                Console.WriteLine("*** START SceneProp Chunk ***");
+                Console.WriteLine("    ChunkType:   {0}", chunkType);
+                Console.WriteLine("    Version:     {0:X}", version);
+                Console.WriteLine("    ID:          {0:X}", id);
+                for (int i = 0; i < numProps; i++)
+                {
+                    Console.WriteLine("{0,30}{1,20}", prop[i], propvalue[i]);
+                }
+                Console.WriteLine("*** END SceneProp Chunk ***");
             }
         }
         public class ChunkTimingFormat : Chunk // cccc000e:  Timing format chunk
