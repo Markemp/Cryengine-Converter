@@ -273,4 +273,12 @@ namespace CgfConverter
         public short z;
         public short w;  // Handness?  Either 32767 (+1.0) or -32767 (-1.0)
     }
+    public struct CompiledBone
+    {
+        public Matrix44 Transform;
+        public String Name;         // String256 in old terms; convert to a real null terminated string.
+        public UInt32 ID;
+        public Vector3 Head;        // location of the head
+        public Vector3 Tail;        // location of the tail
+    }
 }

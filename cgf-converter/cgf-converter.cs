@@ -27,6 +27,11 @@ namespace CgfConverter
         private UInt32 RootNodeID;
         public ChunkNode RootNode;
 
+        // Bone info
+        public Dictionary<UInt32, CompiledBone> BoneDictionary = new Dictionary<UInt32, CompiledBone>();
+        private UInt32 RootBoneID;
+        public CompiledBone RootBone;
+
         public UInt32 CurrentVertexPosition = 0; //used to recalculate the face indices for files with multiple objects (o)
         public UInt32 TempVertexPosition = 0;
         public UInt32 CurrentIndicesPosition = 0;
@@ -194,6 +199,22 @@ namespace CgfConverter
                         CgfChunks.Add(chkSceneProp);
                         ChunkDictionary.Add(chkSceneProp.id, chkSceneProp);
                         chkSceneProp.WriteChunk();
+                        break;
+                    }
+                    case ChunkType.CompiledBones:
+                    {
+                        ChunkCompiledBones chkCompiledBones = new ChunkCompiledBones();
+                        chkCompiledBones.ReadChunk(cgfreader, ChkHdr.offset);
+                        chkCompiledBones.chunkType = ChkHdr.type;
+                        chkCompiledBones.id = ChkHdr.id;
+                        chkCompiledBones.size = ChkHdr.size;
+                        CgfChunks.Add(chkCompiledBones);
+                        ChunkDictionary.Add(chkCompiledBones.id, chkCompiledBones);
+                        break;
+                    }
+                    case ChunkType.CompiledPhysicalProxies:
+                    {
+
                         break;
                     }
                     default:
@@ -753,6 +774,62 @@ namespace CgfConverter
                 Console.WriteLine("*** END Helper Chunk ***");
             }
         }
+        public class ChunkCompiledBones : Chunk     //  0xACDC0000:  Bones info
+        {
+            public CompiledBone[] compiledBones;
+            public override void ReadChunk(BinaryReader b, uint f)
+            {
+                b.BaseStream.Seek(f, 0); // seek to the beginning of the Node chunk
+                if (FileVersion == 0)
+                {
+                    uint tmpNodeChunk = b.ReadUInt32();
+                    chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpNodeChunk);
+                    version = b.ReadUInt32();
+                    fOffset.Offset = b.ReadInt32();
+                    id = b.ReadUInt32();
+                }
+
+            }
+            public override void WriteChunk()
+            {
+                Console.WriteLine("*** START CompiledBone Chunk ***");
+                Console.WriteLine("    ChunkType:           {0}", chunkType);
+                Console.WriteLine("    Node ID:             {0:X}", id);
+
+            }
+        }
+
+        public class ChunkCompiledPhysicalProxies : Chunk        // 0xACDC0003:  Hit boxes?
+        {
+            // Properties
+            public uint Flags2;
+
+
+            public override void ReadChunk(BinaryReader b, uint f)
+            {
+                if (FileVersion == 0)
+                {
+                    uint tmpNodeChunk = b.ReadUInt32();
+                    chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpNodeChunk);
+                    version = b.ReadUInt32();
+                    fOffset.Offset = b.ReadInt32();
+                    id = b.ReadUInt32();
+                }
+                Flags2 = b.ReadUInt32(); // another filler
+                uint tmpdataStreamType = b.ReadUInt32();
+                dataStreamType = (DataStreamType)Enum.ToObject(typeof(DataStreamType), tmpdataStreamType);
+                NumElements = b.ReadUInt32(); // number of elements in this chunk
+                BytesPerElement = b.ReadUInt32(); // bytes per element
+                Reserved1 = b.ReadUInt32();
+                Reserved2 = b.ReadUInt32();
+
+
+            }
+            public override void WriteChunk()
+            {
+                base.WriteChunk();
+            }
+        }
         public class ChunkNode : Chunk          // cccc000b:   Node
         {
             public string Name;  // String 64.
@@ -1267,7 +1344,7 @@ namespace CgfConverter
                     uint tmpChunkDataStream = b.ReadUInt32();
                     chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChunkDataStream);
                     version = b.ReadUInt32();
-                    Flags = b.ReadUInt32();  // Offset to this chunk
+                    fOffset.Offset = b.ReadInt32();  // Offset to this chunk
                     id = b.ReadUInt32();  // Reference to the data stream type.
                 }
                 Flags2 = b.ReadUInt32(); // another filler
