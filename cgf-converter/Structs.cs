@@ -281,4 +281,16 @@ namespace CgfConverter
         public Vector3 Head;        // location of the head
         public Vector3 Tail;        // location of the tail
     }
+    public struct HitBox
+    {
+        public uint MatID;          // this is a guess for now
+        public uint FirstIndex;
+        public uint NumIndices;
+        public uint FirstVertex;
+        public uint NumVertices;
+        public UInt32 Unknown1;     // unknown
+        public UInt32 Unknown2;     // Unknown
+        public Vector3[] Vertices;    // Array of vertices (x,y,z) length NumVertices
+        public UInt16[] Indices;      // Array of indices
+    }
 }

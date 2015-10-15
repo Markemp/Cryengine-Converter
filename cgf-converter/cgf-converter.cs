@@ -198,7 +198,7 @@ namespace CgfConverter
                         chkSceneProp.size = ChkHdr.size;
                         CgfChunks.Add(chkSceneProp);
                         ChunkDictionary.Add(chkSceneProp.id, chkSceneProp);
-                        chkSceneProp.WriteChunk();
+                        //chkSceneProp.WriteChunk();
                         break;
                     }
                     case ChunkType.CompiledBones:
@@ -214,7 +214,14 @@ namespace CgfConverter
                     }
                     case ChunkType.CompiledPhysicalProxies:
                     {
-
+                        ChunkCompiledPhysicalProxies chkCompiledPhysicalProxy = new ChunkCompiledPhysicalProxies();
+                        chkCompiledPhysicalProxy.ReadChunk(cgfreader, ChkHdr.offset);
+                        chkCompiledPhysicalProxy.chunkType = ChkHdr.type;
+                        chkCompiledPhysicalProxy.id = ChkHdr.id;
+                        chkCompiledPhysicalProxy.size = ChkHdr.size;
+                        CgfChunks.Add(chkCompiledPhysicalProxy);
+                        ChunkDictionary.Add(chkCompiledPhysicalProxy.id, chkCompiledPhysicalProxy);
+                        //chkCompiledPhysicalProxy.WriteChunk();
                         break;
                     }
                     default:
@@ -244,7 +251,7 @@ namespace CgfConverter
 
             using  (System.IO.StreamWriter file = new System.IO.StreamWriter(objOutputFile.Name))
             {
-                string s1 = String.Format("# cgf-converter .obj export Version 0.8");
+                string s1 = String.Format("# cgf-converter .obj export Version 0.83");
                 file.WriteLine(s1);
                 file.WriteLine("#");
 
@@ -292,6 +299,15 @@ namespace CgfConverter
                         }
                     }
                 }
+
+                // If this is a .chr file, just write out the hitbox info.  OBJ files can't do armatures.
+                foreach (ChunkCompiledPhysicalProxies tmpProxy in CgfChunks.Where(a => a.chunkType == ChunkType.CompiledPhysicalProxies))
+                {
+                    //string s_hitbox = String.Format("o Hitbox");
+                    //file.WriteLine(s_hitbox);
+                    this.WriteObjHitBox(file, tmpProxy);
+                }
+
             }  // End of writing the output file
         }
         public void WriteObjNode(StreamWriter f, ChunkNode chunkNode)  // Pass a node to this to have it write to the Stream
@@ -478,6 +494,44 @@ namespace CgfConverter
             // Extend the current vertex, uv and normal positions by the length of those arrays.
             CurrentVertexPosition = TempVertexPosition;
             CurrentIndicesPosition = TempIndicesPosition;
+        }
+        public void WriteObjHitBox(StreamWriter f, ChunkCompiledPhysicalProxies chunkProx)  // Pass a bone proxy to write to the stream.  For .chr files (armatures)
+        {
+            // The chunkProx has the vertex and index info, so much like WriteObjNode just need to write it out.  Much simpler than WriteObjNode though in theory
+            // Assume only one CompiledPhysicalProxies per .chr file (or any file for that matter).  May not be a safe bet.
+            for (int i = 0; i < chunkProx.NumBones; i++)        // Write out all the 
+            {
+                // write out this bones vertex info.
+                f.WriteLine("g");
+                Console.WriteLine("Num Vertices: {0} ", chunkProx.HitBoxes[i].NumVertices);
+                for (int j = 0; j < chunkProx.HitBoxes[i].NumVertices; j++)
+                {
+                    Console.WriteLine("{0} {1} {2}", chunkProx.HitBoxes[i].Vertices[j].x, chunkProx.HitBoxes[i].Vertices[j].y, chunkProx.HitBoxes[i].Vertices[j].z);
+                    string s1 = String.Format("v {0:F7} {1:F7} {2:F7}",
+                        chunkProx.HitBoxes[i].Vertices[j].x,
+                        chunkProx.HitBoxes[i].Vertices[j].y,
+                        chunkProx.HitBoxes[i].Vertices[j].z);
+                    f.WriteLine(s1);
+                }
+                f.WriteLine();
+                for (int j = 0; j < chunkProx.HitBoxes[i].NumIndices; j++)
+                {
+                    //string s2 = String.Format("f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}",
+                    string s2 = String.Format("f {0} {1} {2}",
+                        chunkProx.HitBoxes[i].Indices[j] + 1 + CurrentVertexPosition,
+                        chunkProx.HitBoxes[i].Indices[j+1] + 1 + CurrentVertexPosition,
+                        chunkProx.HitBoxes[i].Indices[j+2] + 1 + CurrentVertexPosition);
+                    f.WriteLine(s2);
+                    j = j + 2;
+                }
+                CurrentVertexPosition += chunkProx.HitBoxes[i].NumVertices;
+                CurrentIndicesPosition += chunkProx.HitBoxes[i].NumIndices;
+                f.WriteLine();
+            }
+            f.WriteLine();
+            // CurrentVertexPosition = TempVertexPosition;
+            // CurrentIndicesPosition = TempIndicesPosition;
+
         }
         public Vector3 GetTransform(ChunkNode chunkNode, Vector3 transform)        //  Calculate the transform of a node by getting parent's transform.
         {
@@ -774,6 +828,7 @@ namespace CgfConverter
                 Console.WriteLine("*** END Helper Chunk ***");
             }
         }
+        
         public class ChunkCompiledBones : Chunk     //  0xACDC0000:  Bones info
         {
             public CompiledBone[] compiledBones;
@@ -798,15 +853,20 @@ namespace CgfConverter
 
             }
         }
-
         public class ChunkCompiledPhysicalProxies : Chunk        // 0xACDC0003:  Hit boxes?
         {
-            // Properties
+            // Properties.  VERY similar to datastream, since it's essential vertex info.
             public uint Flags2;
-
+            // public DataStreamType dataStreamType; // type of data (vertices, normals, uv, etc)
+            public uint NumBones; // Number of data entries
+            public uint BytesPerElement; // Bytes per data entry
+            //public uint Reserved1;
+            //public uint Reserved2;
+            public HitBox[] HitBoxes;
 
             public override void ReadChunk(BinaryReader b, uint f)
             {
+                b.BaseStream.Seek(f, 0); // seek to the beginning of the Hitbox chunk
                 if (FileVersion == 0)
                 {
                     uint tmpNodeChunk = b.ReadUInt32();
@@ -814,15 +874,44 @@ namespace CgfConverter
                     version = b.ReadUInt32();
                     fOffset.Offset = b.ReadInt32();
                     id = b.ReadUInt32();
+                    Console.WriteLine("Chunk ID is {0:X}", id);
                 }
-                Flags2 = b.ReadUInt32(); // another filler
-                uint tmpdataStreamType = b.ReadUInt32();
-                dataStreamType = (DataStreamType)Enum.ToObject(typeof(DataStreamType), tmpdataStreamType);
-                NumElements = b.ReadUInt32(); // number of elements in this chunk
-                BytesPerElement = b.ReadUInt32(); // bytes per element
-                Reserved1 = b.ReadUInt32();
-                Reserved2 = b.ReadUInt32();
 
+                NumBones = b.ReadUInt32(); // number of Bones in this chunk.  Will 
+                Console.WriteLine("Number of bones: {0}", NumBones);
+                HitBoxes = new HitBox[NumBones];    // now have an array of hitboxes
+                for (int i = 0; i < NumBones; i++)
+                {
+                    // Start populating the hitbox array
+                    HitBoxes[i].MatID = b.ReadUInt32();
+                    HitBoxes[i].NumVertices = b.ReadUInt32();
+                    HitBoxes[i].NumIndices = b.ReadUInt32();
+                    HitBoxes[i].Unknown2 = b.ReadUInt32();      // Probably a fill of some sort?
+                    HitBoxes[i].Vertices = new Vector3[HitBoxes[i].NumVertices];
+                    HitBoxes[i].Indices = new ushort[HitBoxes[i].NumIndices];
+
+                    //Console.WriteLine("Hitbox {0}, {1:X} Vertices and {2:X} Indices", i, HitBoxes[i].NumVertices, HitBoxes[i].NumIndices);
+                    for (int j = 0; j < HitBoxes[i].NumVertices; j++)
+                    {
+                        HitBoxes[i].Vertices[j].x = b.ReadSingle();
+                        HitBoxes[i].Vertices[j].y = b.ReadSingle();
+                        HitBoxes[i].Vertices[j].z = b.ReadSingle();
+                        
+                        Console.WriteLine("{0} {1} {2}",HitBoxes[i].Vertices[j].x,HitBoxes[i].Vertices[j].y,HitBoxes[i].Vertices[j].z);
+                    }
+                    // Read the indices
+                    for (int j = 0; j < HitBoxes[i].NumIndices; j++)
+                    {
+                        HitBoxes[i].Indices[j] = b.ReadUInt16();
+                        //Console.WriteLine("Indices: {0}", HitBoxes[i].Indices[j]);
+                    }
+                    // Console.WriteLine("Index 0 is {0}, Index 9 is {1}", HitBoxes[i].Indices[0],HitBoxes[i].Indices[9]);
+                    // read the crap at the end so we can move on.
+                    for (int j = 0; j < HitBoxes[i].Unknown2/2; j++)
+                    {
+                        b.ReadUInt16();
+                    }
+                }
 
             }
             public override void WriteChunk()
@@ -830,6 +919,7 @@ namespace CgfConverter
                 base.WriteChunk();
             }
         }
+
         public class ChunkNode : Chunk          // cccc000b:   Node
         {
             public string Name;  // String 64.
@@ -1422,11 +1512,6 @@ namespace CgfConverter
                                 for (int i = 0; i < NumElements; i++)
                                 {
                                     Indices[i] = (UInt32)b.ReadUInt16();
-                                    // Console.WriteLine("Indice {0} is {1}", i, Indices[i]);
-                                    if (i > NumElements - 20)
-                                    {
-                                        //Console.WriteLine("Indices {0} is {1}", i, Indices[i]);
-                                    }
                                 }
                             }
                             if (BytesPerElement == 4)
@@ -1434,7 +1519,6 @@ namespace CgfConverter
                                 for (int i = 0; i < NumElements; i++)
                                 {
                                     Indices[i] = b.ReadUInt32();
-                                    // Console.WriteLine("Indice {0} is {1}", i, Indices[i]);
                                 }
                             }
                             //Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
