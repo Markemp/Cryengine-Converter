@@ -293,4 +293,52 @@ namespace CgfConverter
         public Vector3[] Vertices;    // Array of vertices (x,y,z) length NumVertices
         public UInt16[] Indices;      // Array of indices
     }
+    // Bone Structures courtesy of revelation
+    public struct InitialPosMatrix
+    {
+        // A bone initial position matrix.
+        float[][] Rot;              // type="Matrix33">
+        float[] Pos;                // type="Vector3">
+    }
+    public struct BoneNameListChunk
+    {
+        //<version num="745">Far Cry, Crysis, Aion</version>
+        UInt32 Num_Names;           //" type="uint" />
+        UInt16[]  boneNames;        // uint 8?
+    }
+    public struct BoneInitialPosChunk
+    {
+        //<version num="1">Far Cry, Crysis, Aion</version>
+        UInt32 Mesh;      //" type="Ptr" template="MeshChunk">The mesh with bone info for which these bone initial positions are applicable. There might be some unused bones here as well. There must be the same number of bones as in the other chunks - they are placed in BoneId order.</add>
+        UInt32 Num_Bones; //" type="uint">Number of bone initial positions.</add>
+        InitialPosMatrix[] Initial_Pos_Matrices; //" type="InitialPosMatrix" arr1="Num Bones" />
+    }
+    public struct BonePhysics
+    {
+        UInt32 Geometry;                //" type="Ref" template="BoneMeshChunk">Geometry of a separate mesh for this bone.</add>
+        //<!-- joint parameters -->
+        UInt32 Flags;                   //" type="uint" />
+        float[]  Min;                   //" type="Vector3" />
+        float[]  Max;                   //" type="Vector3" />
+        float[]  Spring_Angle;          //" type="Vector3" />
+        float[]  Spring_Tension;        //" type="Vector3" />
+        float[]  Damping;               //" type="Vector3" />
+        float[][]  Frame_Matrix;        //" type="Matrix33" />
+    }
+    public struct BoneEntity
+    {
+        UInt32 Bone_Id;                 //" type="int">Bone identifier.</add>
+        UInt32 Parent_Id;               //" type="int">Parent identifier.</add>
+        UInt32 Num_Children;            //" type="uint" />
+        UInt32 Bone_Name_CRC32;         //" type="uint">CRC32 of bone name as listed in the BoneNameListChunk.  In Python this can be calculated using zlib.crc32(name)</add>
+        char[]   Properties;            //" type="String32" />
+        BonePhysics Physics;            //" type="BonePhysics" />
+    }
+    public struct BoneAnimChunk
+    {
+        //<version num="290">Far Cry, Crysis, Aion</version>
+        UInt32 Num_Bones;               //" type="uint" />
+        BoneEntity[] Bones;             //" type="BoneEntity" arr1="Num Bones" />
+    }
+
 }

@@ -506,7 +506,7 @@ namespace CgfConverter
                 Console.WriteLine("Num Vertices: {0} ", chunkProx.HitBoxes[i].NumVertices);
                 for (int j = 0; j < chunkProx.HitBoxes[i].NumVertices; j++)
                 {
-                    Console.WriteLine("{0} {1} {2}", chunkProx.HitBoxes[i].Vertices[j].x, chunkProx.HitBoxes[i].Vertices[j].y, chunkProx.HitBoxes[i].Vertices[j].z);
+                    //Console.WriteLine("{0} {1} {2}", chunkProx.HitBoxes[i].Vertices[j].x, chunkProx.HitBoxes[i].Vertices[j].y, chunkProx.HitBoxes[i].Vertices[j].z);
                     string s1 = String.Format("v {0:F7} {1:F7} {2:F7}",
                         chunkProx.HitBoxes[i].Vertices[j].x,
                         chunkProx.HitBoxes[i].Vertices[j].y,
@@ -874,7 +874,7 @@ namespace CgfConverter
                     version = b.ReadUInt32();
                     fOffset.Offset = b.ReadInt32();
                     id = b.ReadUInt32();
-                    Console.WriteLine("Chunk ID is {0:X}", id);
+                    // Console.WriteLine("Chunk ID is {0:X}", id);
                 }
 
                 NumBones = b.ReadUInt32(); // number of Bones in this chunk.  Will 
@@ -896,8 +896,7 @@ namespace CgfConverter
                         HitBoxes[i].Vertices[j].x = b.ReadSingle();
                         HitBoxes[i].Vertices[j].y = b.ReadSingle();
                         HitBoxes[i].Vertices[j].z = b.ReadSingle();
-                        
-                        Console.WriteLine("{0} {1} {2}",HitBoxes[i].Vertices[j].x,HitBoxes[i].Vertices[j].y,HitBoxes[i].Vertices[j].z);
+                        // Console.WriteLine("{0} {1} {2}",HitBoxes[i].Vertices[j].x,HitBoxes[i].Vertices[j].y,HitBoxes[i].Vertices[j].z);
                     }
                     // Read the indices
                     for (int j = 0; j < HitBoxes[i].NumIndices; j++)
