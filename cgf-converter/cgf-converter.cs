@@ -31,6 +31,7 @@ namespace CgfConverter
         public Dictionary<UInt32, CompiledBone> BoneDictionary = new Dictionary<UInt32, CompiledBone>();
         private UInt32 RootBoneID;
         public CompiledBone RootBone;
+        public uint NumBones;
 
         public UInt32 CurrentVertexPosition = 0; //used to recalculate the face indices for files with multiple objects (o)
         public UInt32 TempVertexPosition = 0;
@@ -831,6 +832,7 @@ namespace CgfConverter
         
         public class ChunkCompiledBones : Chunk     //  0xACDC0000:  Bones info
         {
+            public uint[] Reserved; // 8 reserved bytes
             public CompiledBone[] compiledBones;
             public override void ReadChunk(BinaryReader b, uint f)
             {
@@ -842,6 +844,26 @@ namespace CgfConverter
                     version = b.ReadUInt32();
                     fOffset.Offset = b.ReadInt32();
                     id = b.ReadUInt32();
+                }
+                Reserved = new uint[8];
+                for (int i = 0; i < 8; i++)
+                {
+                    Reserved[i] = b.ReadUInt32();
+                }
+                //  Read the first bone with ReadCompiledBone, then recursively grab all the children for each bone you find.
+                //  Each bone structure is 584 bytes, so will need to seek childOffset * 584 each time, and go back.
+                ReadCompiledBone(b);
+            }
+            public void ReadCompiledBone(BinaryReader b)        // Read a compiled bone structure (584 bytes) and add it to the CompiledBone dictionary, using Controller ID
+            {
+                // Start reading all the properties of this bone.
+                CompiledBone tempBone = new CompiledBone();
+                tempBone.controllerID = b.ReadUInt32();
+                PhysicsGeometry[] tempPhysGeo = new PhysicsGeometry[2];  // Need to read 2 of thse, although I've only seen zeroes in these structures
+                for (int i = 0; i < 2; i++)
+                {
+                    tempPhysGeo[i].physicsGeom = b.ReadUInt32();
+
                 }
 
             }

@@ -22,6 +22,28 @@ namespace CgfConverter
     public struct String256
     {
         public char[] Data;
+
+        public String ReadString256(BinaryReader b)  // Read 256 chars, return a String.
+        {
+            char[] tempData = new char[256];
+            int stringLength = 0;
+            String tempString;
+
+            for (int i = 0; i < 256; i++)
+            {
+                tempData[i] = b.ReadChar();
+            }
+            for (int i = 0; i < tempData.Length; i++)
+            {
+                if (tempData[i] == 0)
+                {
+                    stringLength = i;
+                    break;
+                }
+            }
+            tempString = new string(tempData, 0, stringLength);
+            return tempString;
+        }
     }   // 256 byte char array 
     public struct RangeEntity
     {
@@ -34,6 +56,13 @@ namespace CgfConverter
         public float x;
         public float y;
         public float z;
+        public Vector3 ReadVector3(BinaryReader b)
+        {
+            this.x = b.ReadSingle();
+            this.y = b.ReadSingle();
+            this.z = b.ReadSingle();
+            return this;
+        }
     }  // Vector in 3D space {x,y,z}
     public struct Matrix33    // a 3x3 transformation matrix
     {
@@ -273,14 +302,92 @@ namespace CgfConverter
         public short z;
         public short w;  // Handness?  Either 32767 (+1.0) or -32767 (-1.0)
     }
+    public struct WORLDTOBONE
+    {
+        public float[,] worldToBone;   //  4x3 structure
+        
+        public WORLDTOBONE GetWorldToBone(BinaryReader b)
+        {
+            WORLDTOBONE tempW2B = new WORLDTOBONE();
+            worldToBone = new float[4,3];
+            for (int i = 0; i<4; i++) 
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    tempW2B.worldToBone[i, j] = b.ReadSingle();  // this might have to be switched to [j,i].  Who knows???
+                }
+            }
+            return tempW2B;
+        }
+    }
+    public struct BONETOWORLD
+    {
+        public float[,] boneToWorld;   //  4x3 structure
+
+        public BONETOWORLD GetBoneToWorld(BinaryReader b)
+        {
+            WORLDTOBONE tempB2W = new WORLDTOBONE();
+            boneToWorld = new float[4, 3];
+            for (int i = 0; i < 4; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    tempB2W.[i, j] = b.ReadSingle();  // this might have to be switched to [j,i].  Who knows???
+                }
+            }
+            return tempB2W;
+        }
+
+    }
+
+    public struct PhysicsGeometry
+    {
+        public UInt32 physicsGeom;
+        public UInt32 flags;              // 0x0C ?
+        public Vector3 min;
+        public Vector3 max;
+        public Vector3 spring_angle;
+        public Vector3 spring_tension;
+        public Vector3 damping;
+        public Matrix33 framemtx;
+        
+        public PhysicsGeometry ReadPhysicsGeometry(BinaryReader b)      // Read a PhysicsGeometry structure
+        {
+            physicsGeom = b.ReadUInt32();
+            flags = b.ReadUInt32();
+            min.ReadVector3(b);
+            max.ReadVector3(b);
+            spring_angle.ReadVector3(b);
+            spring_tension.ReadVector3(b);
+            damping.ReadVector3(b);
+
+            return this;
+        }
+    }
     public struct CompiledBone
     {
-        public Matrix44 Transform;
-        public String Name;         // String256 in old terms; convert to a real null terminated string.
-        public UInt32 ID;
-        public Vector3 Head;        // location of the head
-        public Vector3 Tail;        // location of the tail
+        public UInt32 controllerID;
+        public PhysicsGeometry[] physicsGeometry; // 2 of these.
+        public float mass;                  // 0xD8 ?
+        public WORLDTOBONE worldToBone;     // 4x3 matrix
+        public BONETOWORLD boneToWorld;     // 4x3 matrix
+        public String boneName;             // String256 in old terms; convert to a real null terminated string.
+        public UInt32 limbID;               // ID of this limb... usually just 0xFFFFFFFF
+        public UInt32 offsetParent;         // offset to the parent in number of CompiledBone structs (584 bytes)
+        public UInt32 numChildren;          // Number of children to this bone
+        public UInt32 offsetChild;          // Offset to the first child to this bone in number of CompiledBone structs
+
+        public CompiledBone GetCompiledBone(BinaryReader b)
+        {
+            controllerID = b.ReadUInt32();
+            physicsGeometry = new PhysicsGeometry[2];
+            physicsGeometry[0].ReadPhysicsGeometry(b);
+            physicsGeometry[1].ReadPhysicsGeometry(b);
+            mass = b.ReadSingle();
+
+        }
     }
+
     public struct HitBox
     {
         public uint MatID;          // this is a guess for now
@@ -297,8 +404,8 @@ namespace CgfConverter
     public struct InitialPosMatrix
     {
         // A bone initial position matrix.
-        float[][] Rot;              // type="Matrix33">
-        float[] Pos;                // type="Vector3">
+        Matrix33 Rot;              // type="Matrix33">
+        Vector3 Pos;                // type="Vector3">
     }
     public struct BoneNameListChunk
     {
@@ -308,23 +415,22 @@ namespace CgfConverter
     }
     public struct BoneInitialPosChunk
     {
-        //<version num="1">Far Cry, Crysis, Aion</version>
-        UInt32 Mesh;      //" type="Ptr" template="MeshChunk">The mesh with bone info for which these bone initial positions are applicable. There might be some unused bones here as well. There must be the same number of bones as in the other chunks - they are placed in BoneId order.</add>
-        UInt32 Num_Bones; //" type="uint">Number of bone initial positions.</add>
-        InitialPosMatrix[] Initial_Pos_Matrices; //" type="InitialPosMatrix" arr1="Num Bones" />
+        UInt32 Mesh;      // type="Ptr" template="MeshChunk">The mesh with bone info for which these bone initial positions are applicable. There might be some unused bones here as well. There must be the same number of bones as in the other chunks - they are placed in BoneId order.</add>
+        UInt32 Num_Bones; // Number of bone initial positions.
+        InitialPosMatrix[] Initial_Pos_Matrices; // type="InitialPosMatrix" arr1="Num Bones"
     }
-    public struct BonePhysics
+    public struct BonePhysics           // 26 total words = 104 total bytes
     {
         UInt32 Geometry;                //" type="Ref" template="BoneMeshChunk">Geometry of a separate mesh for this bone.</add>
         //<!-- joint parameters -->
         UInt32 Flags;                   //" type="uint" />
-        float[]  Min;                   //" type="Vector3" />
-        float[]  Max;                   //" type="Vector3" />
-        float[]  Spring_Angle;          //" type="Vector3" />
-        float[]  Spring_Tension;        //" type="Vector3" />
-        float[]  Damping;               //" type="Vector3" />
-        float[][]  Frame_Matrix;        //" type="Matrix33" />
-    }
+        Vector3  Min;                   //" type="Vector3" />
+        Vector3 Max;                   //" type="Vector3" />
+        Vector3 Spring_Angle;          //" type="Vector3" />
+        Vector3 Spring_Tension;        //" type="Vector3" />
+        Vector3 Damping;               //" type="Vector3" />
+        Matrix33  Frame_Matrix;        //" type="Matrix33" />
+    }       // 
     public struct BoneEntity
     {
         UInt32 Bone_Id;                 //" type="int">Bone identifier.</add>
