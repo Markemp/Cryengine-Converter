@@ -29,10 +29,12 @@ namespace CgfConverter
             int stringLength = 0;
             String tempString;
 
-            for (int i = 0; i < 256; i++)
-            {
-                tempData[i] = b.ReadChar();
-            }
+            //Console.WriteLine("Pos: {0:X}", b.BaseStream.Position);
+            tempData = b.ReadChars(256);
+            //for (int i = 0; i < 256; i++)
+            //{
+            //    tempdata[i] = b.readchar();
+            //}
             for (int i = 0; i < tempData.Length; i++)
             {
                 if (tempData[i] == 0)
@@ -56,12 +58,18 @@ namespace CgfConverter
         public float x;
         public float y;
         public float z;
-        public Vector3 ReadVector3(BinaryReader b)
+        public void ReadVector3(BinaryReader b)
         {
             this.x = b.ReadSingle();
             this.y = b.ReadSingle();
             this.z = b.ReadSingle();
-            return this;
+            return;
+        }
+        public void WriteVector3()
+        {
+            Console.WriteLine("*** WriteVector3");
+            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}", x, y, z);
+            Console.WriteLine();
         }
     }  // Vector in 3D space {x,y,z}
     public struct Matrix33    // a 3x3 transformation matrix
@@ -76,6 +84,19 @@ namespace CgfConverter
         public float m32;
         public float m33;
 
+        public void ReadMatrix33(BinaryReader b)
+        {
+            // Reads a Matrix33 structure
+            m11 = b.ReadSingle();
+            m12 = b.ReadSingle();
+            m13 = b.ReadSingle();
+            m21 = b.ReadSingle();
+            m22 = b.ReadSingle();
+            m23 = b.ReadSingle();
+            m31 = b.ReadSingle();
+            m32 = b.ReadSingle();
+            m33 = b.ReadSingle();
+        }
         public bool Is_Identity()
         {
             if (System.Math.Abs(m11 - 1.0) > 0.00001) { return false; }
@@ -191,7 +212,7 @@ namespace CgfConverter
             }
             return true;
         }
-        public void Write_Matrix()
+        public void WriteMatrix33()
         {
             Console.WriteLine("=============================================");
             Console.WriteLine("{0:F7}  {1:F7}  {2:F7}", m11, m12, m13);
@@ -306,36 +327,60 @@ namespace CgfConverter
     {
         public float[,] worldToBone;   //  4x3 structure
         
-        public WORLDTOBONE GetWorldToBone(BinaryReader b)
+        public void GetWorldToBone(BinaryReader b)
         {
-            WORLDTOBONE tempW2B = new WORLDTOBONE();
             worldToBone = new float[4,3];
+            //Console.WriteLine("GetWorldToBone {0:X}", b.BaseStream.Position);
             for (int i = 0; i<4; i++) 
             {
                 for (int j = 0; j < 3; j++)
                 {
-                    tempW2B.worldToBone[i, j] = b.ReadSingle();  // this might have to be switched to [j,i].  Who knows???
+                    worldToBone[i, j] = b.ReadSingle();  // this might have to be switched to [j,i].  Who knows???
+                    //tempW2B.worldToBone[i, j] = b.ReadSingle();  // this might have to be switched to [j,i].  Who knows???
+                    //Console.WriteLine("worldToBone: {0:F7}", worldToBone[i, j]);
                 }
             }
-            return tempW2B;
+            return;
+        }
+        public void WriteWorldToBone()
+        {
+            Console.WriteLine();
+            Console.WriteLine("*** World to Bone ***");
+            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}", this.worldToBone[0, 0], this.worldToBone[0, 1], this.worldToBone[0, 2]);
+            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}", this.worldToBone[1, 0], this.worldToBone[1, 1], this.worldToBone[1, 2]);
+            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}", this.worldToBone[2, 0], this.worldToBone[2, 1], this.worldToBone[2, 2]);
+            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}", this.worldToBone[3, 0], this.worldToBone[3, 1], this.worldToBone[3, 2]);
+            Console.WriteLine();
         }
     }
     public struct BONETOWORLD
     {
         public float[,] boneToWorld;   //  4x3 structure
 
-        public BONETOWORLD GetBoneToWorld(BinaryReader b)
+        public void GetBoneToWorld(BinaryReader b)
         {
-            WORLDTOBONE tempB2W = new WORLDTOBONE();
+            //BONETOWORLD tempB2W = new BONETOWORLD();
             boneToWorld = new float[4, 3];
+            //Console.WriteLine("GetBoneToWorld");
             for (int i = 0; i < 4; i++)
             {
                 for (int j = 0; j < 3; j++)
                 {
-                    tempB2W.[i, j] = b.ReadSingle();  // this might have to be switched to [j,i].  Who knows???
+                    boneToWorld[i, j] = b.ReadSingle();  // this might have to be switched to [j,i].  Who knows???
+                    //Console.WriteLine("boneToWorld: {0:F7}", boneToWorld[i, j]);
                 }
             }
-            return tempB2W;
+            return;
+        }
+        public void WriteBoneToWorld()
+        {
+            Console.WriteLine();
+            Console.WriteLine("*** Bone to World ***");
+            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}", this.boneToWorld[0, 0], this.boneToWorld[0, 1], this.boneToWorld[0, 2]);
+            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}", this.boneToWorld[1, 0], this.boneToWorld[1, 1], this.boneToWorld[1, 2]);
+            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}", this.boneToWorld[2, 0], this.boneToWorld[2, 1], this.boneToWorld[2, 2]);
+            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}", this.boneToWorld[3, 0], this.boneToWorld[3, 1], this.boneToWorld[3, 2]);
+            Console.WriteLine();
         }
 
     }
@@ -351,18 +396,25 @@ namespace CgfConverter
         public Vector3 damping;
         public Matrix33 framemtx;
         
-        public PhysicsGeometry ReadPhysicsGeometry(BinaryReader b)      // Read a PhysicsGeometry structure
+        public void ReadPhysicsGeometry(BinaryReader b)      // Read a PhysicsGeometry structure
         {
             physicsGeom = b.ReadUInt32();
             flags = b.ReadUInt32();
             min.ReadVector3(b);
+            // min.WriteVector3();
             max.ReadVector3(b);
+            // max.WriteVector3();
             spring_angle.ReadVector3(b);
             spring_tension.ReadVector3(b);
             damping.ReadVector3(b);
-
-            return this;
+            framemtx.ReadMatrix33(b);
+            return;
         }
+        public void WritePhysicsGeometry()
+        {
+            Console.WriteLine("WritePhysicsGeometry");
+        }
+        
     }
     public struct CompiledBone
     {
@@ -373,18 +425,43 @@ namespace CgfConverter
         public BONETOWORLD boneToWorld;     // 4x3 matrix
         public String boneName;             // String256 in old terms; convert to a real null terminated string.
         public UInt32 limbID;               // ID of this limb... usually just 0xFFFFFFFF
-        public UInt32 offsetParent;         // offset to the parent in number of CompiledBone structs (584 bytes)
-        public UInt32 numChildren;          // Number of children to this bone
+        public Int32  offsetParent;         // offset to the parent in number of CompiledBone structs (584 bytes)
         public UInt32 offsetChild;          // Offset to the first child to this bone in number of CompiledBone structs
+        public UInt32 numChildren;          // Number of children to this bone
 
-        public CompiledBone GetCompiledBone(BinaryReader b)
+        public void ReadCompiledBone(BinaryReader b)
         {
+            // Reads just a single 584 byte entry of a bone. At the end the seek position will be advanced, so keep that in mind.
+            String256 tmpName = new String256();
             controllerID = b.ReadUInt32();
             physicsGeometry = new PhysicsGeometry[2];
             physicsGeometry[0].ReadPhysicsGeometry(b);
             physicsGeometry[1].ReadPhysicsGeometry(b);
             mass = b.ReadSingle();
-
+            worldToBone = new WORLDTOBONE();
+            worldToBone.GetWorldToBone(b);
+            boneToWorld = new BONETOWORLD();
+            boneToWorld.GetBoneToWorld(b);
+            boneName = tmpName.ReadString256(b);
+            limbID = b.ReadUInt32();
+            offsetParent = b.ReadInt32();
+            offsetChild = b.ReadUInt32();
+            numChildren = b.ReadUInt32();
+        }
+        public void WriteCompiledBone()
+        {
+            // Output the bone to the console
+            Console.WriteLine("*** Compiled bone {0}", boneName);
+            Console.WriteLine("    Controller ID: {0}", controllerID);
+            Console.WriteLine("    World To Bone:");
+            worldToBone.WriteWorldToBone();
+            Console.WriteLine("    Bone To World:");
+            boneToWorld.WriteBoneToWorld();
+            Console.WriteLine("    Limb ID: {0}", limbID);
+            Console.WriteLine("    Parent Offset: {0}", offsetParent);
+            Console.WriteLine("    Child Offset:  {0}", offsetChild);
+            Console.WriteLine("    Number of Children:  {0}", numChildren);
+            Console.WriteLine("*** End Bone {0}", boneName);
         }
     }
 

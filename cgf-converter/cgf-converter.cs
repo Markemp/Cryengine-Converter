@@ -22,16 +22,9 @@ namespace CgfConverter
         public Header CgfHeader;
         public ChunkTable CgfChunkTable;
         public List<Chunk> CgfChunks = new List<Chunk>();   //  I don't think we want this.  Dictionary is better because of ID
-        // ChunkDictionary will let us get the Chunk from the ID.
-        public Dictionary<UInt32, Chunk> ChunkDictionary = new Dictionary<UInt32, Chunk>();
+        public Dictionary<UInt32, Chunk> ChunkDictionary = new Dictionary<UInt32, Chunk>();  // ChunkDictionary will let us get the Chunk from the ID.
         private UInt32 RootNodeID;
         public ChunkNode RootNode;
-
-        // Bone info
-        public Dictionary<UInt32, CompiledBone> BoneDictionary = new Dictionary<UInt32, CompiledBone>();
-        private UInt32 RootBoneID;
-        public CompiledBone RootBone;
-        public uint NumBones;
 
         public UInt32 CurrentVertexPosition = 0; //used to recalculate the face indices for files with multiple objects (o)
         public UInt32 TempVertexPosition = 0;
@@ -168,6 +161,16 @@ namespace CgfConverter
                         //chkNode.WriteChunk();
                         break;
                     }
+                    case ChunkType.CompiledBones:
+                    {
+                        ChunkCompiledBones chkCompiledBones = new ChunkCompiledBones();
+                        chkCompiledBones.ReadChunk(cgfreader, ChkHdr.offset);
+                        chkCompiledBones.id = ChkHdr.id;
+                        chkCompiledBones.chunkType = ChkHdr.type;
+                        CgfChunks.Add(chkCompiledBones);
+                        ChunkDictionary.Add(chkCompiledBones.id, chkCompiledBones);
+                        break;
+                    }
                     case ChunkType.Helper:
                     {
                         ChunkHelper chkHelper = new ChunkHelper();
@@ -200,17 +203,6 @@ namespace CgfConverter
                         CgfChunks.Add(chkSceneProp);
                         ChunkDictionary.Add(chkSceneProp.id, chkSceneProp);
                         //chkSceneProp.WriteChunk();
-                        break;
-                    }
-                    case ChunkType.CompiledBones:
-                    {
-                        ChunkCompiledBones chkCompiledBones = new ChunkCompiledBones();
-                        chkCompiledBones.ReadChunk(cgfreader, ChkHdr.offset);
-                        chkCompiledBones.chunkType = ChkHdr.type;
-                        chkCompiledBones.id = ChkHdr.id;
-                        chkCompiledBones.size = ChkHdr.size;
-                        CgfChunks.Add(chkCompiledBones);
-                        ChunkDictionary.Add(chkCompiledBones.id, chkCompiledBones);
                         break;
                     }
                     case ChunkType.CompiledPhysicalProxies:
@@ -773,7 +765,7 @@ namespace CgfConverter
                 // Don't do anything.  Placeholder
             }
         }
-        public class ChunkHelper : Chunk       // cccc0001:  Helper chunk.  This is the top level, then nodes, then mesh, then mesh subsets
+        public class ChunkHelper : Chunk        // cccc0001:  Helper chunk.  This is the top level, then nodes, then mesh, then mesh subsets
         {
             public string Name;
             public HelperType Type;
@@ -832,11 +824,17 @@ namespace CgfConverter
         
         public class ChunkCompiledBones : Chunk     //  0xACDC0000:  Bones info
         {
-            public uint[] Reserved; // 8 reserved bytes
-            public CompiledBone[] compiledBones;
+            public uint[] Reserved;             // 8 reserved bytes
+            public String RootBoneID;          // Controller ID?  Name?  Not sure yet.
+            public CompiledBone RootBone;       // First bone in the data structure.  Usually Bip01
+            public uint NumBones;               // Number of bones in the chunk
+            // Bone info
+            //public Dictionary<UInt32, CompiledBone> BoneDictionary = new Dictionary<UInt32, CompiledBone>();
+            public Dictionary<String, CompiledBone> BoneDictionary = new Dictionary<String, CompiledBone>();  // Name and CompiledBone object
+
             public override void ReadChunk(BinaryReader b, uint f)
             {
-                b.BaseStream.Seek(f, 0); // seek to the beginning of the Node chunk
+                b.BaseStream.Seek(f, 0); // seek to the beginning of the Node chunk.  f+12(?) will always be the start of this chunk, so us it!
                 if (FileVersion == 0)
                 {
                     uint tmpNodeChunk = b.ReadUInt32();
@@ -852,18 +850,41 @@ namespace CgfConverter
                 }
                 //  Read the first bone with ReadCompiledBone, then recursively grab all the children for each bone you find.
                 //  Each bone structure is 584 bytes, so will need to seek childOffset * 584 each time, and go back.
-                ReadCompiledBone(b);
+                Console.WriteLine("Pre Root bone read:  Current seek position is {0:X}", b.BaseStream.Position);
+                RootBone.ReadCompiledBone(b);                   // this will read the First bone.  Now go recurse!
+                RootBoneID = RootBone.boneName;
+                BoneDictionary.Add(RootBone.boneName, RootBone);
+                RootBone.WriteCompiledBone();
+                Console.WriteLine("Post Root bone read:  Current seek position is {0:X}, num children = {1}", b.BaseStream.Position, RootBone.numChildren);
+                for (int i = 0; i < RootBone.numChildren; i++)  
+                {
+                    CompiledBone tmpBone = new CompiledBone();
+                    // offset of 1 means the next bone is a child of this one.  So we need to advance current offset + 584 bytes*child number to get to the next bone.
+                    // This bone has children.  We have to read these as well.
+                    Console.WriteLine("Child position read:  Current seek position is {0:X}", b.BaseStream.Position);
+                    b.BaseStream.Seek(584 * i * tmpBone.offsetChild, SeekOrigin.Current);
+                    Console.WriteLine("Child Position read + offset:  Current seek position is {0:X}", b.BaseStream.Position);
+                    tmpBone.ReadCompiledBone(b);
+                    tmpBone.WriteCompiledBone();
+                    GetCompiledBones(b);            // calls the recursive method for this root child.
+                    // no else, because if there are no children to the root bone we have a pretty simple armature of one bone
+                }
             }
-            public void ReadCompiledBone(BinaryReader b)        // Read a compiled bone structure (584 bytes) and add it to the CompiledBone dictionary, using Controller ID
+            public void GetCompiledBones(BinaryReader b)        // Recursive call to read the bone at the current seek, and all children.
             {
                 // Start reading all the properties of this bone.
                 CompiledBone tempBone = new CompiledBone();
-                tempBone.controllerID = b.ReadUInt32();
-                PhysicsGeometry[] tempPhysGeo = new PhysicsGeometry[2];  // Need to read 2 of thse, although I've only seen zeroes in these structures
-                for (int i = 0; i < 2; i++)
+                long tmpSeek = b.BaseStream.Position;                   // Will need to go back here.  I think.
+                
+                tempBone.ReadCompiledBone(b);
+                tempBone.WriteCompiledBone();
+                BoneDictionary.Add(tempBone.boneName,tempBone);         // Add this bone to the dictionary.
+                for (int i = 0; i < tempBone.numChildren; i++)
                 {
-                    tempPhysGeo[i].physicsGeom = b.ReadUInt32();
-
+                    //Console.WriteLine("*** Child position read:  Current seek position is {0:X}", b.BaseStream.Position);
+                    b.BaseStream.Seek(584 * i * tempBone.offsetChild, SeekOrigin.Current);
+                    GetCompiledBones(b);
+                    //Console.WriteLine("*** Child position post recursive read:  Current seek position is {0:X}", b.BaseStream.Position);
                 }
 
             }
@@ -900,7 +921,7 @@ namespace CgfConverter
                 }
 
                 NumBones = b.ReadUInt32(); // number of Bones in this chunk.  Will 
-                Console.WriteLine("Number of bones: {0}", NumBones);
+                Console.WriteLine("Number of bones (hitboxes): {0}", NumBones);
                 HitBoxes = new HitBox[NumBones];    // now have an array of hitboxes
                 for (int i = 0; i < NumBones; i++)
                 {
@@ -1025,9 +1046,7 @@ namespace CgfConverter
                 Scale.z = b.ReadSingle();
                 // read the controller pos/rot/scale
 
-
                 // Good enough for now.
-
             }
             public override void WriteChunk()
             {
@@ -1114,7 +1133,7 @@ namespace CgfConverter
                 Console.WriteLine("*** END SceneProp Chunk ***");
             }
         }
-        public class ChunkTimingFormat : Chunk // cccc000e:  Timing format chunk
+        public class ChunkTimingFormat : Chunk  // cccc000e:  Timing format chunk
         {
             public float SecsPerTick;
             public int TicksPerFrame;
@@ -1155,13 +1174,13 @@ namespace CgfConverter
                 Console.WriteLine("*** END TIMING CHUNK ***");
             }
         }
-        public class ChunkController : Chunk   // cccc000d:  Controller chunk
+        public class ChunkController : Chunk    // cccc000d:  Controller chunk
         {
             public CtrlType ControllerType;
             public uint NumKeys;
             public uint ControllerFlags;        // technically a bitstruct to identify a cycle or a loop.
             public uint ControllerID;           // Unique id based on CRC32 of bone name.  Ver 827 only?
-            public Key[] Keys;                    // array length NumKeys.  Ver 827?
+            public Key[] Keys;                  // array length NumKeys.  Ver 827?
 
 
             public override void ReadChunk(BinaryReader b, uint f)
