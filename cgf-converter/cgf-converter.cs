@@ -851,42 +851,33 @@ namespace CgfConverter
                 //  Read the first bone with ReadCompiledBone, then recursively grab all the children for each bone you find.
                 //  Each bone structure is 584 bytes, so will need to seek childOffset * 584 each time, and go back.
                 Console.WriteLine("Pre Root bone read:  Current seek position is {0:X}", b.BaseStream.Position);
-                RootBone.ReadCompiledBone(b);                   // this will read the First bone.  Now go recurse!
-                RootBoneID = RootBone.boneName;
-                BoneDictionary.Add(RootBone.boneName, RootBone);
-                RootBone.WriteCompiledBone();
-                Console.WriteLine("Post Root bone read:  Current seek position is {0:X}, num children = {1}", b.BaseStream.Position, RootBone.numChildren);
-                for (int i = 0; i < RootBone.numChildren; i++)  
-                {
-                    CompiledBone tmpBone = new CompiledBone();
-                    // offset of 1 means the next bone is a child of this one.  So we need to advance current offset + 584 bytes*child number to get to the next bone.
-                    // This bone has children.  We have to read these as well.
-                    Console.WriteLine("Child position read:  Current seek position is {0:X}", b.BaseStream.Position);
-                    b.BaseStream.Seek(584 * i * tmpBone.offsetChild, SeekOrigin.Current);
-                    Console.WriteLine("Child Position read + offset:  Current seek position is {0:X}", b.BaseStream.Position);
-                    tmpBone.ReadCompiledBone(b);
-                    tmpBone.WriteCompiledBone();
-                    GetCompiledBones(b);            // calls the recursive method for this root child.
-                    // no else, because if there are no children to the root bone we have a pretty simple armature of one bone
-                }
+
+                GetCompiledBones(b, "isRoot");                        // Start reading at the root bone
+
             }
-            public void GetCompiledBones(BinaryReader b)        // Recursive call to read the bone at the current seek, and all children.
+            public void GetCompiledBones(BinaryReader b, String parent)        // Recursive call to read the bone at the current seek, and all children.
             {
                 // Start reading all the properties of this bone.
                 CompiledBone tempBone = new CompiledBone();
-                long tmpSeek = b.BaseStream.Position;                   // Will need to go back here.  I think.
-                
+                Console.WriteLine("** Current offset {0:X}", b.BaseStream.Position);
+                tempBone.offset = b.BaseStream.Position;
                 tempBone.ReadCompiledBone(b);
+                tempBone.parentID = parent;
                 tempBone.WriteCompiledBone();
                 BoneDictionary.Add(tempBone.boneName,tempBone);         // Add this bone to the dictionary.
+
                 for (int i = 0; i < tempBone.numChildren; i++)
                 {
-                    //Console.WriteLine("*** Child position read:  Current seek position is {0:X}", b.BaseStream.Position);
-                    b.BaseStream.Seek(584 * i * tempBone.offsetChild, SeekOrigin.Current);
-                    GetCompiledBones(b);
-                    //Console.WriteLine("*** Child position post recursive read:  Current seek position is {0:X}", b.BaseStream.Position);
+                    // If child offset is 1, then we're at the right position anyway.  If it's 2, you want to 584 bytes.  3 is (584*2)...
+                    // Move to the offset of child.  If there are no children, we shouldn't move at all.
+                    b.BaseStream.Seek(tempBone.offset + 584 * tempBone.offsetChild + (i * 584), 0);   // getting close...
+                    Console.WriteLine("*** Child position read:  Current seek position is {0:X}", b.BaseStream.Position);
+                    GetCompiledBones(b, tempBone.boneName);
                 }
-
+                // Need to set the seek position back to the parent at this point?  Can use parent offset * 584...  Parent offset is a neg number
+                //Console.WriteLine("Parent offset: {0}", tempBone.offsetParent);
+                Console.WriteLine("Done with {0}, going back to parent.  Current offset: 0x{1:X}.  Going to: 0x{2:X}", tempBone.boneName,b.BaseStream.Position, b.BaseStream.Position + 0x248 * (tempBone.offsetParent-1));
+                // b.BaseStream.Seek((0x248 * (tempBone.offsetParent+1)), SeekOrigin.Current);
             }
             public override void WriteChunk()
             {

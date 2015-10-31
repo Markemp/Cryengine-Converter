@@ -344,13 +344,13 @@ namespace CgfConverter
         }
         public void WriteWorldToBone()
         {
-            Console.WriteLine();
-            Console.WriteLine("*** World to Bone ***");
-            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}", this.worldToBone[0, 0], this.worldToBone[0, 1], this.worldToBone[0, 2]);
-            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}", this.worldToBone[1, 0], this.worldToBone[1, 1], this.worldToBone[1, 2]);
-            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}", this.worldToBone[2, 0], this.worldToBone[2, 1], this.worldToBone[2, 2]);
-            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}", this.worldToBone[3, 0], this.worldToBone[3, 1], this.worldToBone[3, 2]);
-            Console.WriteLine();
+            //Console.WriteLine();
+            //Console.WriteLine("     *** World to Bone ***");
+            Console.WriteLine("     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[0, 0], this.worldToBone[0, 1], this.worldToBone[0, 2]);
+            Console.WriteLine("     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[1, 0], this.worldToBone[1, 1], this.worldToBone[1, 2]);
+            Console.WriteLine("     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[2, 0], this.worldToBone[2, 1], this.worldToBone[2, 2]);
+            Console.WriteLine("     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[3, 0], this.worldToBone[3, 1], this.worldToBone[3, 2]);
+            //Console.WriteLine();
         }
     }
     public struct BONETOWORLD
@@ -426,8 +426,11 @@ namespace CgfConverter
         public String boneName;             // String256 in old terms; convert to a real null terminated string.
         public UInt32 limbID;               // ID of this limb... usually just 0xFFFFFFFF
         public Int32  offsetParent;         // offset to the parent in number of CompiledBone structs (584 bytes)
-        public UInt32 offsetChild;          // Offset to the first child to this bone in number of CompiledBone structs
+        public Int32 offsetChild;           // Offset to the first child to this bone in number of CompiledBone structs
         public UInt32 numChildren;          // Number of children to this bone
+        public String parentID;             // Not part of the read structure, but the name of the parent bone put into the Bone Dictionary (the key)
+        public long offset;                 // Not part of the structure, but where this one started.
+        public String[] childNames;         // Not part of read struct.  Contains the keys of the children to this bone
 
         public void ReadCompiledBone(BinaryReader b)
         {
@@ -445,18 +448,22 @@ namespace CgfConverter
             boneName = tmpName.ReadString256(b);
             limbID = b.ReadUInt32();
             offsetParent = b.ReadInt32();
-            offsetChild = b.ReadUInt32();
             numChildren = b.ReadUInt32();
+            offsetChild = b.ReadInt32();
+            childNames = new String[numChildren];
         }
         public void WriteCompiledBone()
         {
             // Output the bone to the console
+            Console.WriteLine();
             Console.WriteLine("*** Compiled bone {0}", boneName);
+            Console.WriteLine("    Parent Name: {0}", parentID);
+            Console.WriteLine("    Offset in file: {0:X}", offset);
             Console.WriteLine("    Controller ID: {0}", controllerID);
             Console.WriteLine("    World To Bone:");
             worldToBone.WriteWorldToBone();
-            Console.WriteLine("    Bone To World:");
-            boneToWorld.WriteBoneToWorld();
+            //Console.WriteLine("    Bone To World:");
+            //boneToWorld.WriteBoneToWorld();
             Console.WriteLine("    Limb ID: {0}", limbID);
             Console.WriteLine("    Parent Offset: {0}", offsetParent);
             Console.WriteLine("    Child Offset:  {0}", offsetChild);
