@@ -474,15 +474,24 @@ namespace CgfConverter
 
     public struct HitBox
     {
-        public uint MatID;          // this is a guess for now
+        public uint ID;             // Chunk ID (although not technically a chunk
         public uint FirstIndex;
         public uint NumIndices;
         public uint FirstVertex;
         public uint NumVertices;
         public UInt32 Unknown1;     // unknown
-        public UInt32 Unknown2;     // Unknown
+        public UInt32 Unknown2;     // Size of the weird data at the end of the hitbox structure.
         public Vector3[] Vertices;    // Array of vertices (x,y,z) length NumVertices
         public UInt16[] Indices;      // Array of indices
+
+        public void WriteHitBox()
+        {
+            Console.WriteLine("     ** Hitbox **");
+            Console.WriteLine("        ID: {0:X}", ID);
+            Console.WriteLine("        Num Vertices: {0:X}", NumVertices);
+            Console.WriteLine("        Num Indices:  {0:X}", NumIndices);
+            Console.WriteLine("        Unknown2: {0:X}", Unknown2);
+        }
     }
     // Bone Structures courtesy of revelation
     public struct InitialPosMatrix

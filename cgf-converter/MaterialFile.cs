@@ -283,11 +283,11 @@ namespace CgfConverter
             }
 
             int length = Materials.Count;
-            Console.WriteLine("{0} Materials found in the material file.", length);
-            foreach (MtlFormat mats in Materials)
-            {
-                Console.WriteLine("Material name is {0}", mats.MaterialName);
-            }
+            //Console.WriteLine("{0} Materials found in the material file.", length);
+            //foreach (MtlFormat mats in Materials)
+            //{
+            //    Console.WriteLine("Material name is {0}", mats.MaterialName);
+            //}
             MaterialNameArray = new MtlFormat[Materials.Count];
             MaterialNameArray = Materials.ToArray();
         }

@@ -103,7 +103,7 @@ namespace CgfConverter
                         chkMtlName.ReadChunk(cgfreader, ChkHdr.offset);
                         CgfChunks.Add(chkMtlName);
                         ChunkDictionary.Add(chkMtlName.id, chkMtlName);
-                        //chkMtlName.WriteChunk();
+                        // chkMtlName.WriteChunk();
                         break;
                     }
                     case ChunkType.DataStream:
@@ -449,9 +449,6 @@ namespace CgfConverter
                 }
                 
                 //f.WriteLine();
-
-                //Console.WriteLine("Writing {0} to the output file", chunkNode.Name);
-                //f.WriteLine();
                 string s7 = String.Format("g {0}", chunkNode.Name);
                 f.WriteLine(s7);
                 
@@ -492,11 +489,15 @@ namespace CgfConverter
         {
             // The chunkProx has the vertex and index info, so much like WriteObjNode just need to write it out.  Much simpler than WriteObjNode though in theory
             // Assume only one CompiledPhysicalProxies per .chr file (or any file for that matter).  May not be a safe bet.
+            // Need the materials
+
+            // Console.WriteLine("There are {0} Bones", chunkProx.NumBones);
             for (int i = 0; i < chunkProx.NumBones; i++)        // Write out all the 
             {
                 // write out this bones vertex info.
+                // Need to find a way to get the material name associated with the bone, so we can link the hitbox to the body part.
                 f.WriteLine("g");
-                Console.WriteLine("Num Vertices: {0} ", chunkProx.HitBoxes[i].NumVertices);
+                // Console.WriteLine("Num Vertices: {0} ", chunkProx.HitBoxes[i].NumVertices);
                 for (int j = 0; j < chunkProx.HitBoxes[i].NumVertices; j++)
                 {
                     //Console.WriteLine("{0} {1} {2}", chunkProx.HitBoxes[i].Vertices[j].x, chunkProx.HitBoxes[i].Vertices[j].y, chunkProx.HitBoxes[i].Vertices[j].z);
@@ -850,7 +851,6 @@ namespace CgfConverter
                 }
                 //  Read the first bone with ReadCompiledBone, then recursively grab all the children for each bone you find.
                 //  Each bone structure is 584 bytes, so will need to seek childOffset * 584 each time, and go back.
-                Console.WriteLine("Pre Root bone read:  Current seek position is {0:X}", b.BaseStream.Position);
 
                 GetCompiledBones(b, "isRoot");                        // Start reading at the root bone
 
@@ -859,25 +859,23 @@ namespace CgfConverter
             {
                 // Start reading all the properties of this bone.
                 CompiledBone tempBone = new CompiledBone();
-                Console.WriteLine("** Current offset {0:X}", b.BaseStream.Position);
+                // Console.WriteLine("** Current offset {0:X}", b.BaseStream.Position);
                 tempBone.offset = b.BaseStream.Position;
                 tempBone.ReadCompiledBone(b);
                 tempBone.parentID = parent;
-                tempBone.WriteCompiledBone();
+                //tempBone.WriteCompiledBone();
+                tempBone.childNames = new String[tempBone.numChildren]; 
                 BoneDictionary.Add(tempBone.boneName,tempBone);         // Add this bone to the dictionary.
 
                 for (int i = 0; i < tempBone.numChildren; i++)
                 {
                     // If child offset is 1, then we're at the right position anyway.  If it's 2, you want to 584 bytes.  3 is (584*2)...
                     // Move to the offset of child.  If there are no children, we shouldn't move at all.
-                    b.BaseStream.Seek(tempBone.offset + 584 * tempBone.offsetChild + (i * 584), 0);   // getting close...
-                    Console.WriteLine("*** Child position read:  Current seek position is {0:X}", b.BaseStream.Position);
+                    b.BaseStream.Seek(tempBone.offset + 584 * tempBone.offsetChild + (i * 584), 0);  
                     GetCompiledBones(b, tempBone.boneName);
                 }
                 // Need to set the seek position back to the parent at this point?  Can use parent offset * 584...  Parent offset is a neg number
                 //Console.WriteLine("Parent offset: {0}", tempBone.offsetParent);
-                Console.WriteLine("Done with {0}, going back to parent.  Current offset: 0x{1:X}.  Going to: 0x{2:X}", tempBone.boneName,b.BaseStream.Position, b.BaseStream.Position + 0x248 * (tempBone.offsetParent-1));
-                // b.BaseStream.Seek((0x248 * (tempBone.offsetParent+1)), SeekOrigin.Current);
             }
             public override void WriteChunk()
             {
@@ -891,7 +889,6 @@ namespace CgfConverter
         {
             // Properties.  VERY similar to datastream, since it's essential vertex info.
             public uint Flags2;
-            // public DataStreamType dataStreamType; // type of data (vertices, normals, uv, etc)
             public uint NumBones; // Number of data entries
             public uint BytesPerElement; // Bytes per data entry
             //public uint Reserved1;
@@ -911,13 +908,13 @@ namespace CgfConverter
                     // Console.WriteLine("Chunk ID is {0:X}", id);
                 }
 
-                NumBones = b.ReadUInt32(); // number of Bones in this chunk.  Will 
-                Console.WriteLine("Number of bones (hitboxes): {0}", NumBones);
+                NumBones = b.ReadUInt32(); // number of Bones in this chunk.
+                // Console.WriteLine("Number of bones (hitboxes): {0}", NumBones);
                 HitBoxes = new HitBox[NumBones];    // now have an array of hitboxes
                 for (int i = 0; i < NumBones; i++)
                 {
                     // Start populating the hitbox array
-                    HitBoxes[i].MatID = b.ReadUInt32();
+                    HitBoxes[i].ID = b.ReadUInt32();
                     HitBoxes[i].NumVertices = b.ReadUInt32();
                     HitBoxes[i].NumIndices = b.ReadUInt32();
                     HitBoxes[i].Unknown2 = b.ReadUInt32();      // Probably a fill of some sort?
@@ -944,6 +941,7 @@ namespace CgfConverter
                     {
                         b.ReadUInt16();
                     }
+                    // HitBoxes[i].WriteHitBox();
                 }
 
             }
