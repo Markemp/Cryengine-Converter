@@ -24,11 +24,11 @@ Version 0.9
 - Bug fix so some .obj files import properly to Blender (exploded geometry issue)  **COMPLETE** 8/29
 - Output to a user defined file (default to <object name.obj>)
 - Icon for the exe.
-- Implement controller and meshphysics chunks
+- Implement controller and meshphysics chunks ** COMPLETE 10/31 **
 
 Version 1.0
 - Export directly to .blend files  **IN PROGRESS**
 
 Version 1.1
-- Implement animation and armature files.
+- Implement animation and armature files.  ** IN PROGRESS ** (Armatures imported, but can't export yet)
   
