@@ -1976,7 +1976,7 @@ namespace CgfConverter
         public Boolean FlipUVs=false;       // Doing this by default.  If you want to undo, check this (reversed)
         public FileInfo InputFile;          // File we are reading (need to check for CryTek or CrChF)
         public FileInfo OutputFile = null;         // File we are outputting to
-        public Boolean Obj=true;            // You want to export to a .obj file
+        public Boolean Obj=false;           // You want to export to a .obj file
         public Boolean Blend=false;         // you want to export to a .blend file.
         public DirectoryInfo ObjectDir = null;     // Where the Object files are.
                                             // ALWAYS check submitted directory first.  usemtl isn't always set to the obj dir.
@@ -1997,7 +1997,6 @@ namespace CgfConverter
                     OutputFile = new FileInfo(inputArgs[0] + ".obj");   // is this a bug?  .cgf.obj file output?
                     Obj = true;
                     Blend = false;
-                    
                     return 0;
                 }
                 else
@@ -2009,6 +2008,7 @@ namespace CgfConverter
             else
             {
                 // More than one argument submitted.  Test each value.  For loops?
+
                 if (File.Exists(inputArgs[0]))
                 {
                     InputFile = new FileInfo(inputArgs[0]);
@@ -2058,7 +2058,12 @@ namespace CgfConverter
                         if (inputArgs[i].ToLower() == "-blend")
                         {
                             Blend = true;
-                            Console.WriteLine("Output format set to Blend. (NYI)");
+                            Console.WriteLine("Output format set to Blend.");
+                        }
+                        if (inputArgs[i].ToLower() == "-obj" || inputArgs[i].ToLower() == "-object")
+                        {
+                            Obj = true;
+                            Console.WriteLine("Output format set to .obj.");
                         }
                     }
                 }
@@ -2082,7 +2087,7 @@ namespace CgfConverter
             usage.AppendLine("-output file:     The name of the file to write the output.  Default is <cgf File>.obj.  NYI");
             usage.AppendLine("-objectdir:       The name where the base Objects directory is located.  Used to read mtl file. ");
 		    usage.AppendLine("                  Defaults to current directory.");
-            usage.AppendLine("-obj|-blend:      Export to .obj or .blend format.  Can be both.  Defaults to .obj only.  NYI");
+            usage.AppendLine("-obj|-blend:      Export to .obj or .blend format.  Can be both.  Defaults to .obj only.");
             usage.AppendLine("-flipUVs:         Flips the UV.  Defaults to... true?  Whatever Blender likes by default.  NYI");
             usage.AppendLine();
             Console.WriteLine(usage.ToString());
@@ -2122,13 +2127,21 @@ namespace CgfConverter
                 return;
             }
 
-            // argsHandler.WriteArgs();
             // Console.WriteLine("Input File is '{0}'" , dataFile.Name);
             CgfData cgfData = new CgfData();
             cgfData.ReadCgfData(argsHandler);
             
             // Output to an obj file
-            cgfData.WriteObjFile();  
+            if (argsHandler.Blend == true)
+            {
+                Blender blendFile = new Blender();
+                blendFile.WriteBlend(cgfData);
+            }
+            if (argsHandler.Obj == true)
+            {
+                cgfData.WriteObjFile();  
+            }
+            //argsHandler.WriteArgs();
 
             return;
         }
