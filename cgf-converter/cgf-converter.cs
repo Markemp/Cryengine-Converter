@@ -1966,7 +1966,7 @@ namespace CgfConverter
     public class FileOffset
     { 
         public int Offset;
-    }
+    } // move this to Structs
 
     // classes (aka anything more complicated than a fixed size struct, with methods etc.)
     public class ArgsHandler
@@ -1978,6 +1978,7 @@ namespace CgfConverter
         public FileInfo OutputFile = null;         // File we are outputting to
         public Boolean Obj=false;           // You want to export to a .obj file
         public Boolean Blend=false;         // you want to export to a .blend file.
+        public Boolean COLLADA = false;     // You want to export to a COLALDA (.dae) file.
         public DirectoryInfo ObjectDir = null;     // Where the Object files are.
                                             // ALWAYS check submitted directory first.  usemtl isn't always set to the obj dir.
 
@@ -2065,6 +2066,11 @@ namespace CgfConverter
                             Obj = true;
                             Console.WriteLine("Output format set to .obj.");
                         }
+                        if (inputArgs[i].ToLower() == "-dae" || inputArgs[i].ToLower() == "-collada")
+                        {
+                            COLLADA = true;
+                            Console.WriteLine("Output format set to COLLADA (.dae)");
+                        }
                     }
                 }
                 else
@@ -2087,7 +2093,7 @@ namespace CgfConverter
             usage.AppendLine("-output file:     The name of the file to write the output.  Default is <cgf File>.obj.  NYI");
             usage.AppendLine("-objectdir:       The name where the base Objects directory is located.  Used to read mtl file. ");
 		    usage.AppendLine("                  Defaults to current directory.");
-            usage.AppendLine("-obj|-blend:      Export to .obj or .blend format.  Can be both.  Defaults to .obj only.");
+            usage.AppendLine("-obj|-blend|[-dae|-COLLADA]:      Export to .obj or .blend format.  Can be both.  Defaults to .obj only.");
             usage.AppendLine("-flipUVs:         Flips the UV.  Defaults to... true?  Whatever Blender likes by default.  NYI");
             usage.AppendLine();
             Console.WriteLine(usage.ToString());
@@ -2107,6 +2113,7 @@ namespace CgfConverter
             Console.WriteLine("    Flip UVs:               {0}", FlipUVs);
             Console.WriteLine("    Output to .obj:         {0}", Obj);
             Console.WriteLine("    Output to .blend:       {0}", Blend);
+            Console.WriteLine("    Output to COLLADA:      {0}", COLLADA); 
             Console.WriteLine();
         }
     }
@@ -2140,6 +2147,11 @@ namespace CgfConverter
             if (argsHandler.Obj == true)
             {
                 cgfData.WriteObjFile();  
+            }
+            if (argsHandler.COLLADA == true)
+            {
+                COLLADA daeFile = new COLLADA();
+                daeFile.WriteCollada(cgfData);
             }
             //argsHandler.WriteArgs();
 
