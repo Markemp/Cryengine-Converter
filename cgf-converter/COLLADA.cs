@@ -22,6 +22,14 @@ namespace CgfConverter
             schema.TargetNamespace = "https://www.khronos.org/files/collada_schema_1_5";
         }
 
+        public void WriteHeader()
+        {
+            //  Write the first line of the collada file
+            XmlDeclaration declaration = new XmlDeclaration();
+            declaration.Version = "1.0";
+            declaration.Encoding = "utf-8";
+            daeDoc.AppendChild(declaration);
+        }
         public void WriteCollada(CgfData cgfData)  // Write the dae file
         {
             // The root of the functions to write Collada files
@@ -33,7 +41,10 @@ namespace CgfConverter
             // File name will be "object name.blend"
             daeOutputFile = new FileInfo(cgfData.RootNode.Name + ".dae");
             GetSchema();                                                    // Loads the schema.  Needs error checking in case it's offline.
+            WriteHeader();
 
+            daeDoc.Save(daeOutputFile.FullName); 
+            Console.WriteLine("End of Write Collada");
         }
     }
 }
