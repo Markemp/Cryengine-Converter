@@ -491,8 +491,9 @@ namespace CgfConverter
             // Assume only one CompiledPhysicalProxies per .chr file (or any file for that matter).  May not be a safe bet.
             // Need the materials
 
+            //
             // Console.WriteLine("There are {0} Bones", chunkProx.NumBones);
-            for (int i = 0; i < chunkProx.NumBones; i++)        // Write out all the 
+            for (int i = 0; i < chunkProx.NumBones; i++)        // Write out all the bones
             {
                 // write out this bones vertex info.
                 // Need to find a way to get the material name associated with the bone, so we can link the hitbox to the body part.
@@ -508,6 +509,13 @@ namespace CgfConverter
                     f.WriteLine(s1);
                 }
                 f.WriteLine();
+                string s7 = String.Format("g {0}", i);
+                f.WriteLine(s7);
+
+                // The material file doesn't have any elements with the Name of the material.  Use i
+                string s_material = String.Format("usemtl {0}", i);
+                f.WriteLine(s_material);
+
                 for (int j = 0; j < chunkProx.HitBoxes[i].NumIndices; j++)
                 {
                     //string s2 = String.Format("f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}",
