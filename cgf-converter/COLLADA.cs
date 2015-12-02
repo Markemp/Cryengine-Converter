@@ -25,10 +25,11 @@ namespace CgfConverter
         public void WriteHeader()
         {
             //  Write the first line of the collada file
-            XmlDeclaration declaration = new XmlDeclaration();
-            declaration.Version = "1.0";
-            declaration.Encoding = "utf-8";
-            daeDoc.AppendChild(declaration);
+            //  Can't access XmlDeclaration class directly.  Grrr....
+            //XmlDeclaration declaration = new XmlDeclaration("1.0","utf-8","",daeDoc);
+            XmlDeclaration xmlDecl = daeDoc.CreateXmlDeclaration("1.0", "utf-8", "yes");
+            daeDoc.AppendChild(xmlDecl);
+
         }
         public void WriteCollada(CgfData cgfData)  // Write the dae file
         {
