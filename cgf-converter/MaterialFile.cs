@@ -19,7 +19,7 @@ namespace CgfConverter
     public struct Texture               // The texture object.  This is part of a MtlFormat object
     {
         public String Map;              // Diffuse, Specular, Bumpmap, Environment, Heightamp or Custom
-        public String File;             // The location of the file.  
+        public String File;             // The location of the file.   
     }
     public struct PublicParameters      // After the Textures, general things that apply to the material.  Not really needed
     {
@@ -44,8 +44,8 @@ namespace CgfConverter
         public Color Diffuse;           // 3 values for the Diffuse RGB
         public Color Specular;          // 3 values for the Specular RGB
         public Color Emissive;          // 3 values for the Emissive RGB
-        public float Shininess;        // 0-255 value
-        public float Opacity;           // 0-1 float
+        public float Shininess = 255;        // 0-255 value.  Default to 255 in case there is no value.  This may be wrong.
+        public float Opacity = 1;           // 0-1 float. Set to 1 by default in case there is no value
         public List<Texture> Textures = new List<Texture>();      // All the textures for this material
         public PublicParameters PublicParam; // The public parameters, after textures
     }
@@ -104,7 +104,7 @@ namespace CgfConverter
                         else 
                         {
                             MtlFileName = mtlChunk.Name;                    // will add .mtl later.
-                            //Console.WriteLine("MtlFileName (no slash) is {0}", MtlFileName);
+                            Console.WriteLine("MtlFileName (no slash) is {0}", MtlFileName);
                             XmlMtlFile = new FileInfo(currentDir + @"\" + MtlFileName + ".mtl");
                         }
 
@@ -112,7 +112,7 @@ namespace CgfConverter
 
                         if (XmlMtlFile.Exists)
                         {
-                            //Console.WriteLine("*** Found material file {0}.  Reading it now.", XmlMtlFile.FullName);
+                            Console.WriteLine("*** Found material file {0}.  Reading it now.", XmlMtlFile.FullName);
                             ReadMtlFile(XmlMtlFile);
                         }
                         else
@@ -149,11 +149,11 @@ namespace CgfConverter
                         //Console.WriteLine("MtlFileName (short version) is {0}", MtlFileName);
                     }
 
-                    //Console.WriteLine("MtlFile.Fullname is {0}", XmlMtlFile.FullName);
+                    Console.WriteLine("MtlFile.Fullname is {0}", XmlMtlFile.FullName);
 
                     if (XmlMtlFile.Exists)
                     {
-                        //Console.WriteLine("*** Found material file {0}.  Reading it now.", XmlMtlFile.FullName);
+                        Console.WriteLine("*** Found material file {0}.  Reading it now.", XmlMtlFile.FullName);
                         ReadMtlFile(XmlMtlFile);
                     }
                     else
@@ -264,8 +264,15 @@ namespace CgfConverter
                         material.Emissive.Red = float.Parse(parseemissive[0]);
                         material.Emissive.Blue = float.Parse(parseemissive[1]);
                         material.Emissive.Green = float.Parse(parseemissive[2]);
-                        // material.Shininess = float.Parse(submat.Attribute("Shininess").Value);
-                        // material.Opacity = float.Parse(submat.Attribute("Opacity").Value);
+                        if (submat.Attributes("Shininess").ToString() != "")
+                        {
+                            material.Shininess = float.Parse(submat.Attribute("Shininess").Value);  
+                        }
+                        //Console.WriteLine("Submat: {0}", submat.Attribute("Opacity"));
+                        if (submat.Attribute("Opacity") != null )             // Default is set to 1, but if it exists grab the value.
+                        { 
+                            material.Opacity = float.Parse(submat.Attribute("Opacity").Value);
+                        }
                         // now loop for all the textures
                         int i = 0;
                         foreach (XElement tex in submat.Descendants("Texture"))
