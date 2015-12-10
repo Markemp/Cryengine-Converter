@@ -112,7 +112,7 @@ namespace CgfConverter
 
                         if (XmlMtlFile.Exists)
                         {
-                            Console.WriteLine("*** Found material file {0}.  Reading it now.", XmlMtlFile.FullName);
+                            Console.WriteLine("*** Found material file {0}.", XmlMtlFile.FullName);
                             ReadMtlFile(XmlMtlFile);
                         }
                         else
@@ -149,11 +149,11 @@ namespace CgfConverter
                         //Console.WriteLine("MtlFileName (short version) is {0}", MtlFileName);
                     }
 
-                    Console.WriteLine("MtlFile.Fullname is {0}", XmlMtlFile.FullName);
+                    //Console.WriteLine("MtlFile.Fullname is {0}", XmlMtlFile.FullName);
 
                     if (XmlMtlFile.Exists)
                     {
-                        Console.WriteLine("*** Found material file {0}.  Reading it now.", XmlMtlFile.FullName);
+                        //Console.WriteLine("*** Found material file {0}.", XmlMtlFile.FullName);
                         ReadMtlFile(XmlMtlFile);
                     }
                     else
@@ -264,7 +264,7 @@ namespace CgfConverter
                         material.Emissive.Red = float.Parse(parseemissive[0]);
                         material.Emissive.Blue = float.Parse(parseemissive[1]);
                         material.Emissive.Green = float.Parse(parseemissive[2]);
-                        if (submat.Attributes("Shininess").ToString() != "")
+                        if (submat.Attribute("Shininess") != null)             // default set to 255.
                         {
                             material.Shininess = float.Parse(submat.Attribute("Shininess").Value);  
                         }

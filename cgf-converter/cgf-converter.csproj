@@ -72,6 +72,9 @@
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Grendgine_collada">
+      <HintPath>..\..\Grendgine_collada\Grendgine_collada\bin\Debug\Grendgine_collada.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />

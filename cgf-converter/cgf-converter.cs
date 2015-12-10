@@ -12,7 +12,6 @@ namespace CgfConverter
 {
     public class CgfData // Stores all information about the cgf file format.
     {
-        // public string CgfFile; //the name of the file we are reading.  Removed to use dataFile, a File object
         // Header, ChunkTable and Chunks are what are in a file.  1 header, 1 table, and a chunk for each entry in the table.
         public FileInfo DataFile;
         public FileInfo objOutputFile;          // want this to be the datafile minus the extension and .obj
@@ -103,7 +102,7 @@ namespace CgfConverter
                         chkMtlName.ReadChunk(cgfreader, ChkHdr.offset);
                         CgfChunks.Add(chkMtlName);
                         ChunkDictionary.Add(chkMtlName.id, chkMtlName);
-                        // chkMtlName.WriteChunk();
+                        //chkMtlName.WriteChunk();
                         break;
                     }
                     case ChunkType.DataStream:
@@ -183,13 +182,24 @@ namespace CgfConverter
                     }
                     case ChunkType.Controller:
                     {
+                        // Having a problem with this.  If the id is 0x000000ff, it says dup key for the 300i.
                         ChunkController chkController = new ChunkController();
                         chkController.ReadChunk(cgfreader, ChkHdr.offset);
                         chkController.chunkType = ChkHdr.type;
+                        chkController.version = ChkHdr.version;
                         chkController.id = ChkHdr.id;
                         chkController.size = ChkHdr.size;
                         CgfChunks.Add(chkController);
-                        ChunkDictionary.Add(chkController.id, chkController);
+                        try
+                        {
+                            ChunkDictionary.Add(chkController.id, chkController);
+                        }
+                        catch (ArgumentException)
+                        {
+                            Console.WriteLine("An element with key {0} already exists.", chkController.id);
+                            ChunkDictionary[chkController.id].WriteChunk();
+                        }
+                        
                         //chkController.WriteChunk();
                         break;
                     }
@@ -219,7 +229,8 @@ namespace CgfConverter
                     }
                     default:
                     {
-                        Console.WriteLine("Chunk type found that didn't match known versions: {0}",ChkHdr.type);
+                        // If we hit this point, it's an unimplemented chunk and needs to be added.
+                        //Console.WriteLine("Chunk type found that didn't match known versions: {0}",ChkHdr.type);
                         break;
                     }
                 }
@@ -234,13 +245,13 @@ namespace CgfConverter
             // Each Mesh will have a mesh subset and a series of datastream objects.  Need temporary pointers to these
             // so we can manipulate
             Console.WriteLine();
-            Console.WriteLine("*** Starting WriteObjFile() ***");
+            // Console.WriteLine("*** Starting WriteObjFile() ***");
             Console.WriteLine();
 
             // Get object name.  This is the Root Node chunk Name
             // Get the objOutputFile name
             objOutputFile = new FileInfo(RootNode.Name + ".obj");
-            //Console.WriteLine("Output file is {0}", objOutputFile.Name);
+            Console.WriteLine("Output file is {0}", objOutputFile.Name);
 
             using  (System.IO.StreamWriter file = new System.IO.StreamWriter(objOutputFile.Name))
             {
@@ -620,7 +631,7 @@ namespace CgfConverter
             {
                 // need to seek to the start of the table here.  foffset points to the start of the table
                 b.BaseStream.Seek(f, 0);
-                if (FileVersion == 0)
+                if (FileVersion == 0)           // old 3.4 format
                 {
                     NumChunks = b.ReadUInt32();  // number of Chunks in the table.
                     int i; // counter for loop to read all the chunkHeaders
@@ -643,6 +654,7 @@ namespace CgfConverter
                 if (FileVersion == 1)
                 {
                     int i; // counter for loop to read all the chunkHeaders
+                    Console.WriteLine("Numchunks is {0}", NumChunks);
                     for (i = 0; i < NumChunks; i++)
                     {
                         //Console.WriteLine("Loop {0}", i);
@@ -1191,6 +1203,7 @@ namespace CgfConverter
                     fOffset.Offset = b.ReadInt32();
                     id = b.ReadUInt32();
                 }
+                //Console.WriteLine("ID is:  {0}", id);
                 ControllerType = (CtrlType)Enum.ToObject(typeof(CtrlType), b.ReadUInt32());
                 NumKeys = b.ReadUInt32();
                 ControllerFlags = b.ReadUInt32();
@@ -1200,15 +1213,15 @@ namespace CgfConverter
                 {
                     // Will implement fully later.  Not sure I understand the structure, or if it's necessary.
                     Keys[i].Time = b.ReadInt32();
-                    //Console.WriteLine("Time {0}", Keys[i].Time);
+                    // Console.WriteLine("Time {0}", Keys[i].Time);
                     Keys[i].AbsPos.x = b.ReadSingle();
                     Keys[i].AbsPos.y = b.ReadSingle();
                     Keys[i].AbsPos.z = b.ReadSingle();
-                    //Console.WriteLine("Abs Pos: {0:F7}  {1:F7}  {2:F7}", Keys[i].AbsPos.x, Keys[i].AbsPos.y, Keys[i].AbsPos.z);
+                    // Console.WriteLine("Abs Pos: {0:F7}  {1:F7}  {2:F7}", Keys[i].AbsPos.x, Keys[i].AbsPos.y, Keys[i].AbsPos.z);
                     Keys[i].RelPos.x = b.ReadSingle();
                     Keys[i].RelPos.y = b.ReadSingle();
                     Keys[i].RelPos.z = b.ReadSingle();
-                    //Console.WriteLine("Rel Pos: {0:F7}  {1:F7}  {2:F7}", Keys[i].RelPos.x, Keys[i].RelPos.y, Keys[i].RelPos.z);
+                    // Console.WriteLine("Rel Pos: {0:F7}  {1:F7}  {2:F7}", Keys[i].RelPos.x, Keys[i].RelPos.y, Keys[i].RelPos.z);
                 }
 
             }
@@ -1322,8 +1335,7 @@ namespace CgfConverter
                 char[] tmpAuthor = new char[count];
                 tmpAuthor = b.ReadChars(count + 1);
                 Author = new string(tmpAuthor);
-                id = 0xFF;
-                // chunkSourceInfo = this;
+                // id = 0xFF;  This is wrong.  It should be 0.  Why did I pick FF?
             }
             public override void WriteChunk()
             {
