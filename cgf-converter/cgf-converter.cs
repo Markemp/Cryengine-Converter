@@ -736,7 +736,7 @@ namespace CgfConverter
                 Console.WriteLine("Chunk Type              Version   ID        Size      Offset    ");
                 foreach (ChunkHeader chkHdr in chunkHeaders)
                 {
-                    Console.WriteLine("{0,24}{1,10:X}{2,10:X}{3,10:X}{4,10:X}", chkHdr.type, chkHdr.version, chkHdr.id, chkHdr.size, chkHdr.offset);
+                    Console.WriteLine("{0,-24}{1,-10:X}{2,-10:X}{3,-10:X}{4,-10:X}", chkHdr.type, chkHdr.version, chkHdr.id, chkHdr.size, chkHdr.offset);
                 }
             }
         }

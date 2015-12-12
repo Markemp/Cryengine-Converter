@@ -16,8 +16,9 @@ namespace CgfConverter
         public XmlSchema schema = new XmlSchema();
         public FileInfo daeOutputFile;
         public XmlDocument daeDoc = new XmlDocument();                      // the COLLADA XML doc
+        public CgfData cgfData;                                             // The Cryengine data
 
-        public void WriteCollada(CgfData cgfData)  // Write the dae file
+        public void WriteCollada(CgfData cryData)  // Write the dae file
         {
             // The root of the functions to write Collada files
             // At this point, we should have a CgfData object, fully populated.
@@ -25,11 +26,13 @@ namespace CgfConverter
             Console.WriteLine("*** Starting WriteCOLLADA() ***");
             Console.WriteLine();
 
-            // File name will be "object name.blend"
-            daeOutputFile = new FileInfo(cgfData.RootNode.Name + ".dae");
+            cgfData = cryData;                                              // cgfData is now a pointer to the data object
+            // File name will be "object name.dae"
+            daeOutputFile = new FileInfo(cryData.RootNode.Name + ".dae");
             GetSchema();                                                    // Loads the schema.  Needs error checking in case it's offline.
             WriteHeader();
             WriteRootNode();
+            WriteAsset();
             daeDoc.Save(daeOutputFile.FullName);
             Console.WriteLine("End of Write Collada");
         }
@@ -64,16 +67,24 @@ namespace CgfConverter
         public void WriteAsset()
         {
             // Writes the Asset element in a Collada XML doc
-            DateTime created = DateTime.Now;
-            DateTime modified = DateTime.Now;           // since this only creates, both times should be the same
+            DateTime fileCreated = DateTime.Now;
+            DateTime fileModified = DateTime.Now;           // since this only creates, both times should be the same
             
             Grendgine_Collada_Asset asset = new Grendgine_Collada_Asset();
             Grendgine_Collada_Asset_Contributor contributor = new Grendgine_Collada_Asset_Contributor();
             contributor.Author = "Heffay";
             contributor.Author_Website = "https://github.com/Markemp/Cryengine-Converter";
             contributor.Author_Email = "markemp@gmail.com";
-            //contributor.Source_Data = 
-            
+            contributor.Source_Data = cgfData.RootNode.Name;                    // The cgf/cga/skin/whatever file we read
+            asset.Created = fileCreated;
+            asset.Modified = fileModified;
+            asset.Up_Axis = "Z_UP";
+            asset.Title = cgfData.RootNode.Name;
+
+            // Add this to xml doc
+            XmlNode assetNode = daeDoc.CreateAttribute("asset");
+            daeDoc.AppendChild(assetNode);
+
         }
 
     }
