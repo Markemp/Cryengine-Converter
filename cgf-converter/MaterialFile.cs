@@ -64,8 +64,9 @@ namespace CgfConverter
         public FileInfo XmlMtlFile;                // the Cryengine xml Material file FileInfo
         public FileInfo MtlFile;                // The obj .mtl file that we write.  Should be RootNode.Name + "_mtl.mtl".
         
-        public void GetMtlFileName()        // Get FileInfo Mtlfile name from the MtlName chunks and read it. Assume pwd if no objectdir.
+        public void GetMtlFileName(CgfData cgfData)        // Get FileInfo Mtlfile name from the MtlName chunks and read it. Assume pwd if no objectdir.
         {
+            Datafile = cgfData;
             DirectoryInfo currentDir = new DirectoryInfo(Directory.GetCurrentDirectory());
             String[] stringSeparators = new string[] { @"\", @"/" };    // to split up the paths
             String[] result;                                            // carries the results of the split

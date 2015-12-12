@@ -86,6 +86,34 @@ namespace CgfConverter
             daeDoc.AppendChild(assetNode);
 
         }
+        public void WriteLibrary_Images()
+        {
+
+        }
+        public void WriteLibrary_Materials()
+        {
+
+        }
+        public void WriteLibrary_Effects()
+        {
+
+        }
+        public void WriteLibrary_Geometries()
+        {
+
+        }
+        public void WriteLibrary_Controllers()
+        {
+
+        }
+        public void WriteLibrary_VisualScenes()
+        {
+
+        }
+        public void WriteScene()
+        {
+
+        }
 
     }
 }
