@@ -157,7 +157,7 @@ namespace CgfConverter
                             RootNode = chkNode;
                             //ChunkDictionary[RootNodeID].WriteChunk();
                         }
-                        //chkNode.WriteChunk();
+                        chkNode.WriteChunk();
                         break;
                     }
                     case ChunkType.CompiledBones:
@@ -173,11 +173,12 @@ namespace CgfConverter
                     case ChunkType.Helper:
                     {
                         ChunkHelper chkHelper = new ChunkHelper();
+                        chkHelper.version = ChkHdr.version;
                         chkHelper.ReadChunk(cgfreader, ChkHdr.offset);
                         chkHelper.id = ChkHdr.id;
                         CgfChunks.Add(chkHelper);
                         ChunkDictionary.Add(chkHelper.id, chkHelper);
-                        //chkHelper.WriteChunk();
+                        chkHelper.WriteChunk();
                         break;
                     }
                     case ChunkType.Controller:
@@ -238,6 +239,7 @@ namespace CgfConverter
         }
         public Vector3 GetTransform(ChunkNode chunkNode, Vector3 transform)        //  Calculate the transform of a node by getting parent's transform.
         {
+            Console.WriteLine("Transforming {0}", chunkNode.Name);
             float x = chunkNode.Transform.m41 / 100;
             float y = chunkNode.Transform.m42 / 100;
             float z = chunkNode.Transform.m43 / 100;
@@ -245,6 +247,7 @@ namespace CgfConverter
             // Matrix math here.  final x is x*m11 + y*m12 + z*m13.  Same for y and z
             if (chunkNode.Parent != 0xFFFFFFFF)
             {
+                // Original transforms
                 transform.x += x * chunkNode.Transform.m11 + y * chunkNode.Transform.m12 + z * chunkNode.Transform.m13;
                 transform.y += x * chunkNode.Transform.m21 + y * chunkNode.Transform.m22 + z * chunkNode.Transform.m23;
                 transform.z += x * chunkNode.Transform.m31 + y * chunkNode.Transform.m32 + z * chunkNode.Transform.m33;
@@ -253,7 +256,13 @@ namespace CgfConverter
             }
 
             return transform;
-        } 
+        }
+        public void WriteTransform(Vector3 transform)
+        {
+            Console.WriteLine("Transform:");
+            Console.WriteLine("{0}    {1}    {2}", transform.x, transform.y, transform.z);
+            Console.WriteLine();
+        }
 
         public class Header
         {
@@ -519,6 +528,7 @@ namespace CgfConverter
                     Pos.y = b.ReadSingle();
                     Pos.z = b.ReadSingle();
                 }
+
                 // chunkHelper = this;
             }
             public override void WriteChunk()
@@ -1180,7 +1190,17 @@ namespace CgfConverter
                 uint tmpdataStreamType = b.ReadUInt32();
                 dataStreamType = (DataStreamType)Enum.ToObject(typeof(DataStreamType), tmpdataStreamType);
                 NumElements = b.ReadUInt32(); // number of elements in this chunk
-                BytesPerElement = b.ReadUInt32(); // bytes per element
+
+                if (FileVersion == 0)
+                {
+                    BytesPerElement = b.ReadUInt32(); // bytes per element
+                }
+                if (FileVersion == 1)
+                {
+                    BytesPerElement = (UInt32)b.ReadInt16();        // Star Citizen 2.0 is using an int16 here now.
+                    b.ReadInt16();                                  // unknown value.   Doesn't look like padding though.
+                }
+
                 Reserved1 = b.ReadUInt32();
                 Reserved2 = b.ReadUInt32();
                 // Now do loops to read for each of the different Data Stream Types.  If vertices, need to populate Vector3s for example.

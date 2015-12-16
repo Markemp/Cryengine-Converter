@@ -54,6 +54,7 @@ namespace CgfConverter
 
                 if (cgfData.RootNode.NumChildren == 0)
                 {
+                    //Console.WriteLine("WriteOBJ:  Rootnode.numchildren == 0.");
                     // We have a root node with no children, so simple object.
                     string s3 = String.Format("o {0}", cgfData.RootNode.Name);
                     file.WriteLine(s3);
@@ -63,6 +64,7 @@ namespace CgfConverter
                 else
                 {
                     // Not a simple object.  Will need to call WriteObjNode for each Node Chunk
+                    //Console.WriteLine("WriteOBJ:  Rootnode.numchildren != 0.");
                     foreach (CgfData.ChunkNode tmpNode in cgfData.CgfChunks.Where(a => a.chunkType == ChunkType.Node))
                     {
                         if (tmpNode.MatID != 0)  // because we don't want to process an object with no material.  ...maybe we do
@@ -111,6 +113,7 @@ namespace CgfConverter
                 // add the current node's transform to transform.x, y and z.
                 transform = cgfData.GetTransform(chunkNode, transform);
             }
+            //transform.WriteVector3();
 
             if (cgfData.ChunkDictionary[chunkNode.Object].chunkType == ChunkType.Helper)
             {
@@ -121,7 +124,7 @@ namespace CgfConverter
 
             if (tmpMesh.MeshSubsets == 0)   // This is probably wrong.  These may be parents with no geometry, but still have an offset
             {
-                Console.WriteLine("*********************Found a Mesh chunk with no Submesh ID (ID: {0:X}).  Skipping...", tmpMesh.id);
+                //Console.WriteLine("*********************Found a Mesh chunk with no Submesh ID (ID: {0:X}).  Skipping...", tmpMesh.id);
                 //tmpMesh.WriteChunk();
                 return;
             }

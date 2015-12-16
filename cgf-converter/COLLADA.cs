@@ -15,10 +15,14 @@ namespace CgfConverter
     {
         public XmlSchema schema = new XmlSchema();
         public FileInfo daeOutputFile;
-        public XmlDocument daeDoc = new XmlDocument();                      // the COLLADA XML doc
+        public XmlDocument daeDoc = new XmlDocument();                      // the COLLADA XML doc.  Going to try serialized instead.
         public CgfData cgfData;                                             // The Cryengine data
+        public Grendgine_Collada daeObject = new Grendgine_Collada();       // This is the serializable class.
+        XmlSerializer mySerializer = new XmlSerializer(typeof(Grendgine_Collada));
 
-        public void WriteCollada(CgfData cryData)  // Write the dae file
+        //[XmlRootAttribute("COLLADA", Namespace = "http://www.collada.org/2005/11/COLLADASchema",IsNullable = false)]
+
+        public void WriteCollada(CgfData dataFile)  // Write the dae file
         {
             // The root of the functions to write Collada files
             // At this point, we should have a CgfData object, fully populated.
@@ -26,14 +30,15 @@ namespace CgfConverter
             Console.WriteLine("*** Starting WriteCOLLADA() ***");
             Console.WriteLine();
 
-            cgfData = cryData;                                              // cgfData is now a pointer to the data object
+            cgfData = dataFile;                                              // cgfData is now a pointer to the data object
             // File name will be "object name.dae"
-            daeOutputFile = new FileInfo(cryData.RootNode.Name + ".dae");
+            daeOutputFile = new FileInfo(cgfData.RootNode.Name + ".dae");
             GetSchema();                                                    // Loads the schema.  Needs error checking in case it's offline.
-            WriteHeader();
-            WriteRootNode();
-            WriteAsset();
-            daeDoc.Save(daeOutputFile.FullName);
+            CreateRootNode();
+            CreateAsset();
+            //daeDoc.Save(daeOutputFile.FullName);
+            TextWriter writer = new StreamWriter(daeOutputFile.FullName);   // Makes the Textwriter object for the output
+            mySerializer.Serialize(writer, daeObject);                      // Serializes the daeObject and writes to the writer
             Console.WriteLine("End of Write Collada");
         }
 
@@ -43,28 +48,19 @@ namespace CgfConverter
             schema.TargetNamespace = "https://www.khronos.org/files/collada_schema_1_5";
         }
 
-        public void WriteHeader()
+        public void CreateRootNode()
         {
-            //  Write the first line of the collada file
-            //  Can't access XmlDeclaration class directly.  Grrr....
-            //XmlDeclaration declaration = new XmlDeclaration("1.0","utf-8","",daeDoc);
-            XmlDeclaration xmlDecl = daeDoc.CreateXmlDeclaration("1.0", "utf-8", "yes");
-            daeDoc.AppendChild(xmlDecl);
-        }
-
-        public void WriteRootNode()
-        {
-            XmlNode rootNode = daeDoc.CreateElement("COLLADA");
-            XmlAttribute rootAttributes = daeDoc.CreateAttribute("xmlns");
-            rootAttributes.Value = "http://www.collada.org/2005/11/COLLADASchema";
+            //XmlNode rootNode = daeDoc.CreateElement("COLLADA");
+            //XmlAttribute rootAttributes = daeDoc.CreateAttribute("xmlns");
+            /*rootAttributes.Value = "http://www.collada.org/2005/11/COLLADASchema";
             rootNode.Attributes.Append(rootAttributes);
             XmlAttribute rootAttributes2 = daeDoc.CreateAttribute("version");
             rootAttributes2.Value = "1.5.0";
             rootNode.Attributes.Append(rootAttributes2);
-            daeDoc.AppendChild(rootNode);
+            daeDoc.AppendChild(rootNode);*/
         }
 
-        public void WriteAsset()
+        public void CreateAsset()
         {
             // Writes the Asset element in a Collada XML doc
             DateTime fileCreated = DateTime.Now;
