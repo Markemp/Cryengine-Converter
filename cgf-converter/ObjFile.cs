@@ -32,7 +32,7 @@ namespace CgfConverter
 
             using (StreamWriter file = new StreamWriter(objOutputFile.Name))
             {
-                string s1 = String.Format("# cgf-converter .obj export Version 0.83");
+                string s1 = String.Format("# cgf-converter .obj export Version 0.84");
                 file.WriteLine(s1);
                 file.WriteLine("#");
 

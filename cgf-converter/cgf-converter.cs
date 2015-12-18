@@ -157,7 +157,7 @@ namespace CgfConverter
                             RootNode = chkNode;
                             //ChunkDictionary[RootNodeID].WriteChunk();
                         }
-                        chkNode.WriteChunk();
+                        //chkNode.WriteChunk();
                         break;
                     }
                     case ChunkType.CompiledBones:
@@ -178,7 +178,7 @@ namespace CgfConverter
                         chkHelper.id = ChkHdr.id;
                         CgfChunks.Add(chkHelper);
                         ChunkDictionary.Add(chkHelper.id, chkHelper);
-                        chkHelper.WriteChunk();
+                        //chkHelper.WriteChunk();
                         break;
                     }
                     case ChunkType.Controller:
@@ -239,7 +239,7 @@ namespace CgfConverter
         }
         public Vector3 GetTransform(ChunkNode chunkNode, Vector3 transform)        //  Calculate the transform of a node by getting parent's transform.
         {
-            Console.WriteLine("Transforming {0}", chunkNode.Name);
+            Vector3 resultant = new Vector3();
             float x = chunkNode.Transform.m41 / 100;
             float y = chunkNode.Transform.m42 / 100;
             float z = chunkNode.Transform.m43 / 100;
@@ -247,12 +247,11 @@ namespace CgfConverter
             // Matrix math here.  final x is x*m11 + y*m12 + z*m13.  Same for y and z
             if (chunkNode.Parent != 0xFFFFFFFF)
             {
-                // Original transforms
-                transform.x += x * chunkNode.Transform.m11 + y * chunkNode.Transform.m12 + z * chunkNode.Transform.m13;
-                transform.y += x * chunkNode.Transform.m21 + y * chunkNode.Transform.m22 + z * chunkNode.Transform.m23;
-                transform.z += x * chunkNode.Transform.m31 + y * chunkNode.Transform.m32 + z * chunkNode.Transform.m33;
+                resultant.x += x + (transform.x * chunkNode.Transform.m11) + (transform.y * chunkNode.Transform.m12) + (transform.z * chunkNode.Transform.m13);
+                resultant.y += y + (transform.x * chunkNode.Transform.m21) + (transform.y * chunkNode.Transform.m22) + (transform.z * chunkNode.Transform.m23);
+                resultant.z += z + (transform.x * chunkNode.Transform.m31) + (transform.y * chunkNode.Transform.m32) + (transform.z * chunkNode.Transform.m33);
 
-                transform = GetTransform((ChunkNode)ChunkDictionary[chunkNode.Parent], transform);
+                transform = GetTransform((ChunkNode)ChunkDictionary[chunkNode.Parent], resultant);
             }
 
             return transform;
