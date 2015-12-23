@@ -48,7 +48,7 @@
         BonesBoxes = 0xAAFC0004, // unknown chunk
         UnknownAAFC0005 = 0xAAFC0005 //unknown chunk
     }
-    public enum ChunkType36 : short    // complete
+    public enum ChunkType36 : short    // complete, but never used.
     {
         Any = 0x0,
         Mesh = 0x1000,

@@ -81,7 +81,6 @@ namespace CgfConverter
                 if (mtlChunk.version == 0x800)
                 {
                     // this is a parent material. Should be only one.  Don't care about the rest.
-                    //Console.WriteLine("Type 0x800 found.  {0}", mtlChunk.Name);
                     if (mtlChunk.MatType == 0x01 || mtlChunk.MatType == 0x10)
                     {
                         // parent material.  This is the one we want.
@@ -94,12 +93,26 @@ namespace CgfConverter
                             //Console.WriteLine("MtlFileName (has slash) is {0}", MtlFileName);
                             if (Datafile.Args.ObjectDir != null)                // Check to see if objectdir was set.  if not, just check local dir
                             {
-                                XmlMtlFile = new FileInfo(Datafile.Args.ObjectDir + @"\" + mtlChunk.Name + ".mtl");
+                                if (MtlFileName.EndsWith(".mtl"))
+                                {
+                                    XmlMtlFile = new FileInfo(Datafile.Args.ObjectDir + @"\" + mtlChunk.Name);
+                                }
+                                else
+                                {
+                                    XmlMtlFile = new FileInfo(Datafile.Args.ObjectDir + @"\" + mtlChunk.Name + ".mtl");
+                                }
                             }
                             else
                             {
-                                // We were given a objectdir arg, but the material file is local.  Use currentdir.
-                                XmlMtlFile = new FileInfo(currentDir + @"\" + MtlFileName + ".mtl");
+                                // No objectdir provided.  Only check current directory.
+                                if (MtlFileName.EndsWith(".mtl"))
+                                {
+                                    XmlMtlFile = new FileInfo(currentDir + @"\" + MtlFileName);
+                                }
+                                else
+                                {
+                                    XmlMtlFile = new FileInfo(currentDir + @"\" + MtlFileName + ".mtl");
+                                }
                             }
                         }
                         else 
@@ -129,17 +142,30 @@ namespace CgfConverter
                     if (mtlChunk.Name.Contains(@"\") || mtlChunk.Name.Contains(@"/"))
                     {
                         // I'm a qualified path, but don't know if objectdir exists.  Need to get name+.mtl without the path info.
+                        // Several cases here. Sometimes it has the .mtl ending, sometimes it doesn't.  GRRR
                         result = mtlChunk.Name.Split(stringSeparators, StringSplitOptions.None);
                         MtlFileName = result[result.Length - 1];        // Last element in mtlChunk.Name
                         //Console.WriteLine("MtlFileName is {0}", MtlFileName);
                         if (Datafile.Args.ObjectDir != null)
                         {
-                            XmlMtlFile = new FileInfo(Datafile.Args.ObjectDir + @"\" + mtlChunk.Name + ".mtl");
+                            if (MtlFileName.EndsWith(".mtl"))
+                            {
+                                XmlMtlFile = new FileInfo(Datafile.Args.ObjectDir + @"\" + mtlChunk.Name);
+                            } else
+                            {
+                                XmlMtlFile = new FileInfo(Datafile.Args.ObjectDir + @"\" + mtlChunk.Name + ".mtl");
+                            }
                         }
                         else
                         {
                             // No objectdir provided.  Only check current directory.
-                            XmlMtlFile = new FileInfo(currentDir + @"\" + MtlFileName + ".mtl");
+                            if (MtlFileName.EndsWith(".mtl"))
+                            {
+                                XmlMtlFile = new FileInfo(currentDir + @"\" + MtlFileName);
+                            } else
+                            {
+                                XmlMtlFile = new FileInfo(currentDir + @"\" + MtlFileName + ".mtl");
+                            }
                         }
                     }
                     else 
@@ -154,7 +180,7 @@ namespace CgfConverter
 
                     if (XmlMtlFile.Exists)
                     {
-                        //Console.WriteLine("*** Found material file {0}.", XmlMtlFile.FullName);
+                        Console.WriteLine("*** 0x802 Found material file {0}.", XmlMtlFile.FullName);
                         ReadMtlFile(XmlMtlFile);
                     }
                     else

@@ -286,14 +286,14 @@ namespace CgfConverter
                     fileType = binReader.ReadUInt32();
                     chunkVersion = binReader.ReadUInt32();
                     fileOffset = binReader.ReadInt32();  // location of the chunk table
-                    FileVersion = 0;
+                    FileVersion = 0;                     // File version 0 is Cryengine 3.4 and older
                 }
                 else
                 {
-                    Console.WriteLine("Version 3.6 or newer");
+                    Console.WriteLine("Crytek Version 3.6 or newer");
                     NumChunks = binReader.ReadUInt32();  // number of Chunks in the chunk table
                     fileOffset = binReader.ReadInt32(); // location of the chunk table
-                    FileVersion = 1;
+                    FileVersion = 1;                    // File version 1 is Cryengine 3.6 and newer 
                 }
                 // WriteChunk();
                 return;
@@ -349,10 +349,10 @@ namespace CgfConverter
                         //tempChkHdr.WriteChunk();
                     }
                 }
-                if (FileVersion == 1)
+                if (FileVersion == 1)           // Newer 3.7+ format.  Only know of Star Citizen using this for now.
                 {
                     int i; // counter for loop to read all the chunkHeaders
-                    Console.WriteLine("Numchunks is {0}", NumChunks);
+                    //Console.WriteLine("Numchunks is {0}", NumChunks);
                     for (i = 0; i < NumChunks; i++)
                     {
                         //Console.WriteLine("Loop {0}", i);
@@ -447,15 +447,6 @@ namespace CgfConverter
             public uint size; //  Size of the chunk
 
             // methods
-            /*public void GetChunkHeader()
-            {
-                type = new ChunkType();
-                version = new ChunkVersion();
-                offset = new uint();
-                id = new uint();
-                unknown = new uint();
-            }*/
-            // never used; refactor
             public void WriteChunk()  // write the Chunk Header Table to the console.  For testing.
             {
                 Console.WriteLine("*** CHUNK HEADER ***");
@@ -1704,6 +1695,7 @@ namespace CgfConverter
         public Boolean Usage;               // Usage
         public Boolean FlipUVs=false;       // Doing this by default.  If you want to undo, check this (reversed)
         public FileInfo InputFile;          // File we are reading (need to check for CryTek or CrChF)
+        public FileInfo InputFile2;         // File info for .cgam, the secondary file for Star Citizen files
         public FileInfo OutputFile = null;         // File we are outputting to
         public Boolean Obj=false;           // You want to export to a .obj file
         public Boolean Blend=false;         // you want to export to a .blend file.
@@ -1722,7 +1714,14 @@ namespace CgfConverter
             {
                 if (File.Exists(inputArgs[0])) 
                 {
+                    // test to see if the extension is .cgam.  If so, we want input file to be the .cga, and inputfile2 to be the .cgam
                     InputFile = new FileInfo(inputArgs[0]);
+                    if (InputFile.Extension == ".cgam")  // .cgam file; make this inputfile2, and make inputfile the .cga name
+                    {
+                        InputFile2 = new FileInfo(InputFile.FullName);
+                        String tmpString = InputFile.Name.Substring(0, InputFile.Name.Length - 5) + ".cga";
+                        InputFile = new FileInfo(tmpString);
+                    }
                     FlipUVs = false;
                     OutputFile = new FileInfo(inputArgs[0] + ".obj");   // is this a bug?  .cgf.obj file output?
                     Obj = true;
@@ -1741,7 +1740,26 @@ namespace CgfConverter
 
                 if (File.Exists(inputArgs[0]))
                 {
-                    InputFile = new FileInfo(inputArgs[0]);
+                    if (File.Exists(inputArgs[0]))
+                    {
+                        // test to see if the extension is .cgam.  If so, we want input file to be the .cga, and inputfile2 to be the .cgam
+                        InputFile = new FileInfo(inputArgs[0]);
+                        if (InputFile.Extension == ".cgam")  // .cgam file; make this inputfile2, and make inputfile the .cga name
+                        {
+                            InputFile2 = new FileInfo(InputFile.FullName);
+                            String tmpString = InputFile.Name.Substring(0, InputFile.Name.Length - 5) + ".cga";
+                            InputFile = new FileInfo(tmpString);
+                        }
+                        FlipUVs = false;
+                        OutputFile = new FileInfo(inputArgs[0] + ".obj");   // is this a bug?  .cgf.obj file output?
+                        Obj = true;
+                        Blend = false;
+                    }
+                    else
+                    {
+                        this.GetUsage();
+                        return 1;
+                    }
 
                     for (int i = 0; i < inputArgs.Length; i++)
                     {
@@ -1818,7 +1836,7 @@ namespace CgfConverter
             usage.AppendLine();
             usage.AppendLine("-usage:           Prints out the usage statement");
             usage.AppendLine();
-            usage.AppendLine("<.cgf file>:      Mandatory.  The name of the .cgf or .cga file to process");
+            usage.AppendLine("<.cgf file>:      Mandatory.  The name of the .cgf, .cga or .skin file to process");
             usage.AppendLine("-output file:     The name of the file to write the output.  Default is <cgf File>.obj.  NYI");
             usage.AppendLine("-objectdir:       The name where the base Objects directory is located.  Used to read mtl file. ");
 		    usage.AppendLine("                  Defaults to current directory.");
@@ -1831,6 +1849,10 @@ namespace CgfConverter
         {
             Console.WriteLine("*** Submitted args ***");
             Console.WriteLine("    Input file:             {0}", InputFile.FullName);
+            if (InputFile2 != null)     // This only runs if we get a .cgam file for the input.
+            {
+                Console.WriteLine("    Input File (.cgam):          {0}", InputFile2.FullName); 
+            }
             if (ObjectDir != null)
             {
                 Console.WriteLine("    Object dir:             {0}", ObjectDir.FullName);
@@ -1855,7 +1877,7 @@ namespace CgfConverter
 
             int result = argsHandler.ProcessArgs(args);
             // Assign the argument to a variable
-
+            // argsHandler.WriteArgs();
             if (result == 1)
             {
                 // Error parsing the arguments.  Usage should have been thrown.  Exit with return 1;
