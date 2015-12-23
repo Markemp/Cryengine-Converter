@@ -35,7 +35,11 @@ namespace CgfConverter
 
         public MaterialFile MatFile;    // The material file (from MaterialFile.cs)
 
-        public void ReadCgfData(ArgsHandler args)  // Constructor for CgfFormat.  This populates the structure
+        public void GetCgfData(FileInfo inputFile)        // Does the actual reading.  Called from ReadCgfData, which sets up the data structure.
+        {
+
+        }
+        public void ReadCgfData(ArgsHandler args)  // Constructor for CgfFormat.  This populates the structure.  Modify to handle .cgam files too.
         {
             // CgfFile = cgffile;  // Don't use string, use File Obj
             //using (BinaryReader cgfreader = new BinaryReader(File.Open(dataFile.ToString(), FileMode.Open)))
@@ -69,12 +73,13 @@ namespace CgfConverter
                     }
                     case ChunkType.Timing:
                     {
+                        // Timing chunks don't have IDs for some reason.
                         ChunkTimingFormat chkTiming = new ChunkTimingFormat();
                         chkTiming.ReadChunk(cgfreader, ChkHdr.offset);
-                        chkTiming.id = ChkHdr.id;
+                        chkTiming.id = ChkHdr.id + 0xFFFF0000;  // Hack to try to keep the chunk ID from conflicting.
                         CgfChunks.Add(chkTiming);
                         ChunkDictionary.Add(chkTiming.id, chkTiming);
-                        //chkTiming.WriteChunk();
+                        chkTiming.WriteChunk();
                         break;
                     }
                     case ChunkType.ExportFlags:
@@ -135,7 +140,7 @@ namespace CgfConverter
                         ChunkMeshSubsets chkMeshSubsets = new ChunkMeshSubsets();
                         chkMeshSubsets.id = ChkHdr.id;
                         chkMeshSubsets.chunkType = ChkHdr.type;
-                        chkMeshSubsets.version = chkMeshSubsets.version;
+                        chkMeshSubsets.version = ChkHdr.version;
                         chkMeshSubsets.ReadChunk(cgfreader, ChkHdr.offset);
                         CgfChunks.Add(chkMeshSubsets);
                         ChunkDictionary.Add(chkMeshSubsets.id, chkMeshSubsets);
@@ -342,7 +347,12 @@ namespace CgfConverter
                         //Console.WriteLine("headerType: '{0}'", tempChkHdr.type);
                         tempChkHdr.version = b.ReadUInt32();
                         tempChkHdr.offset = b.ReadUInt32();
-                        tempChkHdr.id = b.ReadUInt32();  // This is the reference number to identify the mesh/datastream
+                        tempChkHdr.id = b.ReadUInt32();  // This is the chunk ID (except timing)
+                        // hack to fix the timing chunk ID, since we don't want it to conflict.  Add 0xFFFF0000 to it.
+                        if ((tempChkHdr.type == ChunkType.Timing) || ((uint)tempChkHdr.type == 0x100E))
+                        {
+                            tempChkHdr.id = tempChkHdr.id + 0xFFFF0000;
+                        }
                         tempChkHdr.size = b.ReadUInt32();
 
                         chunkHeaders.Add(tempChkHdr);
@@ -421,7 +431,12 @@ namespace CgfConverter
                         tempChkHdr.id = b.ReadUInt32();  // This is the reference number to identify the mesh/datastream
                         tempChkHdr.size = b.ReadUInt32();
                         tempChkHdr.offset = b.ReadUInt32();
-                        
+                        // hack to fix the timing chunk ID, since we don't want it to conflict.  Add 0xFFFF0000 to it.
+                        if ((tempChkHdr.type == ChunkType.Timing) || ((uint)tempChkHdr.type == 0x100E))
+                        {
+                            tempChkHdr.id = tempChkHdr.id + 0xFFFF0000;
+                        }
+
                         chunkHeaders.Add(tempChkHdr);  // Add it to the list.
                         //tempChkHdr.WriteChunk();
                     }
@@ -834,6 +849,7 @@ namespace CgfConverter
         }
         public class ChunkTimingFormat : Chunk  // cccc000e:  Timing format chunk
         {
+            // This chunk doesn't have an ID, although one may be assigned in the chunk table.
             public float SecsPerTick;
             public int TicksPerFrame;
             public uint Unknown1; // 4 bytes, not sure what they are
@@ -846,9 +862,7 @@ namespace CgfConverter
                 b.BaseStream.Seek(f, 0); // seek to the beginning of the Timing Format chunk
                 uint tmpChkType = b.ReadUInt32();
                 chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChkType);
-                version = b.ReadUInt32();  //0x00000918 is Far Cry, Crysis, MWO, Aion
-                //fOffset = b.ReadUInt32();
-                //id = b.ReadUInt32();
+                version = b.ReadUInt32();  //0x00000918 is Far Cry, Crysis, MWO, Aion, SC
                 SecsPerTick = b.ReadSingle();
                 TicksPerFrame = b.ReadInt32();
                 Unknown1 = b.ReadUInt32();
@@ -857,7 +871,6 @@ namespace CgfConverter
                 GlobalRange.Name = b.ReadChars(32);  // Name is technically a String32, but F those structs
                 GlobalRange.Start = b.ReadInt32();
                 GlobalRange.End = b.ReadInt32();
-                //chunkTimingFormat = this;
             }
             public override void WriteChunk()
             {
