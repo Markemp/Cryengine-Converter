@@ -118,7 +118,7 @@ namespace CgfConverter
                         else 
                         {
                             MtlFileName = mtlChunk.Name;                    // will add .mtl later.
-                            Console.WriteLine("MtlFileName (no slash) is {0}", MtlFileName);
+                            //Console.WriteLine("MtlFileName (no slash) is {0}", MtlFileName);
                             XmlMtlFile = new FileInfo(currentDir + @"\" + MtlFileName + ".mtl");
                         }
 
@@ -126,7 +126,7 @@ namespace CgfConverter
 
                         if (XmlMtlFile.Exists)
                         {
-                            Console.WriteLine("*** Found material file {0}.", XmlMtlFile.FullName);
+                            //Console.WriteLine("*** Found material file {0}.", XmlMtlFile.FullName);
                             ReadMtlFile(XmlMtlFile);
                         }
                         else

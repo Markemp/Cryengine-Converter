@@ -19,11 +19,12 @@ namespace CgfConverter
         private static uint NumChunks;          // number of chunks in the chunk table
 
         public Header CgfHeader;
-        public ChunkTable CgfChunkTable;
+        public ChunkTable CgfChunkTable = new ChunkTable();                    // CgfChunkTable contains a list of all the Chunks.
         public List<Chunk> CgfChunks = new List<Chunk>();   //  I don't think we want this.  Dictionary is better because of ID
         public Dictionary<UInt32, Chunk> ChunkDictionary = new Dictionary<UInt32, Chunk>();  // ChunkDictionary will let us get the Chunk from the ID.
-        private UInt32 RootNodeID;
+        private UInt32 RootNodeID = 0x0;
         public ChunkNode RootNode;
+        public List<ChunkHeader> ChunkHeaders = new List<ChunkHeader>();
 
         public UInt32 CurrentVertexPosition = 0; //used to recalculate the face indices for files with multiple objects (o)
         public UInt32 TempVertexPosition = 0;
@@ -35,221 +36,230 @@ namespace CgfConverter
 
         public MaterialFile MatFile;    // The material file (from MaterialFile.cs)
 
-        public void GetCgfData(FileInfo inputFile)        // Does the actual reading.  Called from ReadCgfData, which sets up the data structure.
+        public void GetCgfData(FileInfo inputFile)          // Does the actual reading.  Called from ReadCgfData, which sets up the data structure.
         {
+            ChunkTable tmpChunkTable = new ChunkTable();    // Will add this to the cgfdata structure after it's read
+            List<ChunkHeader> tmpChunkHeaders = new List<ChunkHeader>();
+            // Open the file for reading.
+            BinaryReader cgfReader = new BinaryReader(File.Open(inputFile.FullName.ToString(), FileMode.Open));
+            // Get the header.  This isn't essential for .cgam files, but we need this info to find the version and offset to the chunk table
+            CgfHeader = new Header();                       // Gets the header of the file (3-5 objects dep on version)
+            CgfHeader.GetHeader(cgfReader);
+            cgfReader.BaseStream.Seek(CgfHeader.fileOffset, 0);  // will now start to read from the start of the chunk table
+            tmpChunkTable.GetChunkTable(cgfReader, CgfHeader.fileOffset);
+            //tmpChunkTable.WriteChunk();
+            // Add this temp chunk table to the main table.  That will contain the full list of chunks added to the dictionary
+            CgfChunkTable.chkHeaders.AddRange(tmpChunkTable.chkHeaders);
 
-        }
-        public void ReadCgfData(ArgsHandler args)  // Constructor for CgfFormat.  This populates the structure.  Modify to handle .cgam files too.
-        {
-            // CgfFile = cgffile;  // Don't use string, use File Obj
-            //using (BinaryReader cgfreader = new BinaryReader(File.Open(dataFile.ToString(), FileMode.Open)))
-            Args = args;
-            DataFile = Args.InputFile;
-            BinaryReader cgfreader = new BinaryReader(File.Open(Args.InputFile.ToString(), FileMode.Open));
-            CgfHeader = new Header(cgfreader);// Gets the header of the file (3-5 objects dep on version)
-            // CgfHeader.WriteChunk();
-            int offset = CgfHeader.fileOffset;  // location of the Chunk table.
-            cgfreader.BaseStream.Seek(offset, 0);  // will now start to read from the start of the chunk table
-            CgfChunkTable = new ChunkTable();
-            CgfChunkTable.GetChunkTable(cgfreader, offset);
-            CgfChunkTable.WriteChunk();
-
-            foreach (ChunkHeader ChkHdr in CgfChunkTable.chunkHeaders) 
+            foreach (ChunkHeader ChkHdr in tmpChunkTable.chkHeaders)
             {
                 //Console.WriteLine("Processing {0}", ChkHdr.type);
                 switch (ChkHdr.type)
                 {
                     case ChunkType.SourceInfo:
-                    {
-                        ChunkSourceInfo chkSrcInfo = new ChunkSourceInfo();
-                        chkSrcInfo.version = ChkHdr.version;
-                        chkSrcInfo.id = ChkHdr.id;
-                        chkSrcInfo.size = ChkHdr.size;
-                        chkSrcInfo.ReadChunk(cgfreader, ChkHdr.offset);
-                        CgfChunks.Add(chkSrcInfo);
-                        ChunkDictionary.Add(chkSrcInfo.id, chkSrcInfo);
-                        //chkSrcInfo.WriteChunk(); 
-                        break;
-                    }
+                        {
+                            ChunkSourceInfo chkSrcInfo = new ChunkSourceInfo();
+                            chkSrcInfo.version = ChkHdr.version;
+                            chkSrcInfo.id = ChkHdr.id;
+                            chkSrcInfo.size = ChkHdr.size;
+                            chkSrcInfo.ReadChunk(cgfReader, ChkHdr.offset);
+                            CgfChunks.Add(chkSrcInfo);
+                            ChunkDictionary.Add(chkSrcInfo.id, chkSrcInfo);
+                            //chkSrcInfo.WriteChunk(); 
+                            break;
+                        }
                     case ChunkType.Timing:
-                    {
-                        // Timing chunks don't have IDs for some reason.
-                        ChunkTimingFormat chkTiming = new ChunkTimingFormat();
-                        chkTiming.ReadChunk(cgfreader, ChkHdr.offset);
-                        chkTiming.id = ChkHdr.id + 0xFFFF0000;  // Hack to try to keep the chunk ID from conflicting.
-                        CgfChunks.Add(chkTiming);
-                        ChunkDictionary.Add(chkTiming.id, chkTiming);
-                        chkTiming.WriteChunk();
-                        break;
-                    }
+                        {
+                            // Timing chunks don't have IDs for some reason.
+                            ChunkTimingFormat chkTiming = new ChunkTimingFormat();
+                            chkTiming.ReadChunk(cgfReader, ChkHdr.offset);
+                            chkTiming.id = ChkHdr.id;
+                            CgfChunks.Add(chkTiming);
+                            ChunkDictionary.Add(chkTiming.id, chkTiming);
+                            //chkTiming.WriteChunk();
+                            break;
+                        }
                     case ChunkType.ExportFlags:
-                    {
-                        ChunkExportFlags chkExportFlag = new ChunkExportFlags();
-                        chkExportFlag.ReadChunk(cgfreader, ChkHdr.offset);
-                        chkExportFlag.id = ChkHdr.id;
-                        CgfChunks.Add(chkExportFlag);
-                        ChunkDictionary.Add(chkExportFlag.id, chkExportFlag);
-                        //chkExportFlag.WriteChunk();
-                        break;
-                    }
+                        {
+                            ChunkExportFlags chkExportFlag = new ChunkExportFlags();
+                            chkExportFlag.ReadChunk(cgfReader, ChkHdr.offset);
+                            chkExportFlag.id = ChkHdr.id;
+                            CgfChunks.Add(chkExportFlag);
+                            ChunkDictionary.Add(chkExportFlag.id, chkExportFlag);
+                            //chkExportFlag.WriteChunk();
+                            break;
+                        }
                     case ChunkType.Mtl:
-                    {
-                        //Console.WriteLine("Mtl Chunk here");  // Obsolete.  Not used?
-                        break;
-                    }
+                        {
+                            //Console.WriteLine("Mtl Chunk here");  // Obsolete.  Not used?
+                            break;
+                        }
                     case ChunkType.MtlName:
-                    {
-                        ChunkMtlName chkMtlName = new ChunkMtlName();
-                        chkMtlName.version = ChkHdr.version;
-                        chkMtlName.id = ChkHdr.id;  // Should probably check to see if the 2 values match...
-                        chkMtlName.chunkType = ChkHdr.type;
-                        chkMtlName.size = ChkHdr.size;
-                        chkMtlName.ReadChunk(cgfreader, ChkHdr.offset);
-                        CgfChunks.Add(chkMtlName);
-                        ChunkDictionary.Add(chkMtlName.id, chkMtlName);
-                        //chkMtlName.WriteChunk();
-                        break;
-                    }
+                        {
+                            ChunkMtlName chkMtlName = new ChunkMtlName();
+                            chkMtlName.version = ChkHdr.version;
+                            chkMtlName.id = ChkHdr.id;  // Should probably check to see if the 2 values match...
+                            chkMtlName.chunkType = ChkHdr.type;
+                            chkMtlName.size = ChkHdr.size;
+                            chkMtlName.ReadChunk(cgfReader, ChkHdr.offset);
+                            CgfChunks.Add(chkMtlName);
+                            ChunkDictionary.Add(chkMtlName.id, chkMtlName);
+                            //chkMtlName.WriteChunk();
+                            break;
+                        }
                     case ChunkType.DataStream:
-                    {
-                        ChunkDataStream chkDataStream = new ChunkDataStream();
-                        chkDataStream.id = ChkHdr.id;
-                        chkDataStream.chunkType = ChkHdr.type;
-                        chkDataStream.version = ChkHdr.version;
-                        chkDataStream.ReadChunk(cgfreader, ChkHdr.offset);
-                        CgfChunks.Add(chkDataStream);
-                        ChunkDictionary.Add(chkDataStream.id, chkDataStream);
-                        //chkDataStream.WriteChunk();
-                        break;
-                    }
-                         
+                        {
+                            ChunkDataStream chkDataStream = new ChunkDataStream();
+                            chkDataStream.id = ChkHdr.id;
+                            chkDataStream.chunkType = ChkHdr.type;
+                            chkDataStream.version = ChkHdr.version;
+                            chkDataStream.ReadChunk(cgfReader, ChkHdr.offset);
+                            CgfChunks.Add(chkDataStream);
+                            ChunkDictionary.Add(chkDataStream.id, chkDataStream);
+                            //chkDataStream.WriteChunk();
+                            break;
+                        }
+
                     case ChunkType.Mesh:
-                    {
-                        ChunkMesh chkMesh = new ChunkMesh();
-                        chkMesh.id = ChkHdr.id;
-                        chkMesh.chunkType = ChkHdr.type;
-                        chkMesh.version = ChkHdr.version;
-                        chkMesh.ReadChunk(cgfreader, ChkHdr.offset);
-                        CgfChunks.Add(chkMesh);
-                        ChunkDictionary.Add(chkMesh.id, chkMesh);
-                        //chkMesh.WriteChunk();
-                        break;
-                    }
+                        {
+                            ChunkMesh chkMesh = new ChunkMesh();
+                            chkMesh.id = ChkHdr.id;
+                            chkMesh.chunkType = ChkHdr.type;
+                            chkMesh.version = ChkHdr.version;
+                            chkMesh.ReadChunk(cgfReader, ChkHdr.offset);
+                            CgfChunks.Add(chkMesh);
+                            ChunkDictionary.Add(chkMesh.id, chkMesh);
+                            //chkMesh.WriteChunk();
+                            break;
+                        }
                     case ChunkType.MeshSubsets:
-                    {
-                        ChunkMeshSubsets chkMeshSubsets = new ChunkMeshSubsets();
-                        chkMeshSubsets.id = ChkHdr.id;
-                        chkMeshSubsets.chunkType = ChkHdr.type;
-                        chkMeshSubsets.version = ChkHdr.version;
-                        chkMeshSubsets.ReadChunk(cgfreader, ChkHdr.offset);
-                        CgfChunks.Add(chkMeshSubsets);
-                        ChunkDictionary.Add(chkMeshSubsets.id, chkMeshSubsets);
-                        //chkMeshSubsets.WriteChunk();
-                        break;
-                    }
+                        {
+                            ChunkMeshSubsets chkMeshSubsets = new ChunkMeshSubsets();
+                            chkMeshSubsets.id = ChkHdr.id;
+                            chkMeshSubsets.chunkType = ChkHdr.type;
+                            chkMeshSubsets.version = ChkHdr.version;
+                            chkMeshSubsets.ReadChunk(cgfReader, ChkHdr.offset);
+                            CgfChunks.Add(chkMeshSubsets);
+                            ChunkDictionary.Add(chkMeshSubsets.id, chkMeshSubsets);
+                            //chkMeshSubsets.WriteChunk();
+                            break;
+                        }
                     case ChunkType.Node:
-                    {
-                        ChunkNode chkNode = new ChunkNode();
-                        chkNode.ReadChunk(cgfreader, ChkHdr.offset);
-                        chkNode.id = ChkHdr.id;
-                        chkNode.chunkType = ChkHdr.type;
-                        CgfChunks.Add(chkNode);
-                        ChunkDictionary.Add(chkNode.id, chkNode);
-                        if (chkNode.Parent == 0xFFFFFFFF)
                         {
-                            //Console.WriteLine("Found a Parent chunk node.  Adding to the dictionary.");
-                            RootNodeID = chkNode.id;
-                            RootNode = chkNode;
-                            //ChunkDictionary[RootNodeID].WriteChunk();
+                            ChunkNode chkNode = new ChunkNode();
+                            chkNode.ReadChunk(cgfReader, ChkHdr.offset);
+                            chkNode.id = ChkHdr.id;
+                            chkNode.chunkType = ChkHdr.type;
+                            CgfChunks.Add(chkNode);
+                            ChunkDictionary.Add(chkNode.id, chkNode);
+
+                            if (RootNodeID == 0x0)
+                            {
+                                //Console.WriteLine("Found a Parent chunk node.  Adding to the dictionary.");
+                                RootNodeID = chkNode.id;
+                                RootNode = chkNode;
+                                ChunkDictionary[RootNodeID].WriteChunk();
+                            }
+                            //chkNode.WriteChunk();
+                            break;
                         }
-                        //chkNode.WriteChunk();
-                        break;
-                    }
                     case ChunkType.CompiledBones:
-                    {
-                        ChunkCompiledBones chkCompiledBones = new ChunkCompiledBones();
-                        chkCompiledBones.ReadChunk(cgfreader, ChkHdr.offset);
-                        chkCompiledBones.id = ChkHdr.id;
-                        chkCompiledBones.chunkType = ChkHdr.type;
-                        CgfChunks.Add(chkCompiledBones);
-                        ChunkDictionary.Add(chkCompiledBones.id, chkCompiledBones);
-                        break;
-                    }
+                        {
+                            ChunkCompiledBones chkCompiledBones = new ChunkCompiledBones();
+                            chkCompiledBones.ReadChunk(cgfReader, ChkHdr.offset);
+                            chkCompiledBones.id = ChkHdr.id;
+                            chkCompiledBones.chunkType = ChkHdr.type;
+                            CgfChunks.Add(chkCompiledBones);
+                            ChunkDictionary.Add(chkCompiledBones.id, chkCompiledBones);
+                            break;
+                        }
                     case ChunkType.Helper:
-                    {
-                        ChunkHelper chkHelper = new ChunkHelper();
-                        chkHelper.version = ChkHdr.version;
-                        chkHelper.ReadChunk(cgfreader, ChkHdr.offset);
-                        chkHelper.id = ChkHdr.id;
-                        CgfChunks.Add(chkHelper);
-                        ChunkDictionary.Add(chkHelper.id, chkHelper);
-                        //chkHelper.WriteChunk();
-                        break;
-                    }
+                        {
+                            ChunkHelper chkHelper = new ChunkHelper();
+                            chkHelper.version = ChkHdr.version;
+                            chkHelper.chunkType = ChkHdr.type;
+                            chkHelper.ReadChunk(cgfReader, ChkHdr.offset);
+                            chkHelper.id = ChkHdr.id;
+                            CgfChunks.Add(chkHelper);
+                            ChunkDictionary.Add(chkHelper.id, chkHelper);
+                            //chkHelper.WriteChunk();
+                            break;
+                        }
                     case ChunkType.Controller:
-                    {
-                        // Having a problem with this.  If the id is 0x000000ff, it says dup key for the 300i.
-                        ChunkController chkController = new ChunkController();
-                        chkController.ReadChunk(cgfreader, ChkHdr.offset);
-                        chkController.chunkType = ChkHdr.type;
-                        chkController.version = ChkHdr.version;
-                        chkController.id = ChkHdr.id;
-                        chkController.size = ChkHdr.size;
-                        CgfChunks.Add(chkController);
-                        try
                         {
-                            ChunkDictionary.Add(chkController.id, chkController);
+                            // Having a problem with this.  If the id is 0x000000ff, it says dup key for the 300i.
+                            ChunkController chkController = new ChunkController();
+                            chkController.ReadChunk(cgfReader, ChkHdr.offset);
+                            chkController.chunkType = ChkHdr.type;
+                            chkController.version = ChkHdr.version;
+                            chkController.id = ChkHdr.id;
+                            chkController.size = ChkHdr.size;
+                            CgfChunks.Add(chkController);
+                            try
+                            {
+                                ChunkDictionary.Add(chkController.id, chkController);
+                            }
+                            catch (ArgumentException)
+                            {
+                                Console.WriteLine("An element with key {0} already exists.", chkController.id);
+                                ChunkDictionary[chkController.id].WriteChunk();
+                            }
+
+                            //chkController.WriteChunk();
+                            break;
                         }
-                        catch (ArgumentException)
-                        {
-                            Console.WriteLine("An element with key {0} already exists.", chkController.id);
-                            ChunkDictionary[chkController.id].WriteChunk();
-                        }
-                        
-                        //chkController.WriteChunk();
-                        break;
-                    }
                     case ChunkType.SceneProps:
-                    {
-                        ChunkSceneProp chkSceneProp = new ChunkSceneProp();
-                        chkSceneProp.ReadChunk(cgfreader, ChkHdr.offset);
-                        chkSceneProp.chunkType = ChkHdr.type;
-                        chkSceneProp.id = ChkHdr.id;
-                        chkSceneProp.size = ChkHdr.size;
-                        CgfChunks.Add(chkSceneProp);
-                        ChunkDictionary.Add(chkSceneProp.id, chkSceneProp);
-                        //chkSceneProp.WriteChunk();
-                        break;
-                    }
+                        {
+                            ChunkSceneProp chkSceneProp = new ChunkSceneProp();
+                            chkSceneProp.ReadChunk(cgfReader, ChkHdr.offset);
+                            chkSceneProp.chunkType = ChkHdr.type;
+                            chkSceneProp.id = ChkHdr.id;
+                            chkSceneProp.size = ChkHdr.size;
+                            CgfChunks.Add(chkSceneProp);
+                            ChunkDictionary.Add(chkSceneProp.id, chkSceneProp);
+                            //chkSceneProp.WriteChunk();
+                            break;
+                        }
                     case ChunkType.CompiledPhysicalProxies:
-                    {
-                        ChunkCompiledPhysicalProxies chkCompiledPhysicalProxy = new ChunkCompiledPhysicalProxies();
-                        chkCompiledPhysicalProxy.ReadChunk(cgfreader, ChkHdr.offset);
-                        chkCompiledPhysicalProxy.chunkType = ChkHdr.type;
-                        chkCompiledPhysicalProxy.id = ChkHdr.id;
-                        chkCompiledPhysicalProxy.size = ChkHdr.size;
-                        CgfChunks.Add(chkCompiledPhysicalProxy);
-                        ChunkDictionary.Add(chkCompiledPhysicalProxy.id, chkCompiledPhysicalProxy);
-                        //chkCompiledPhysicalProxy.WriteChunk();
-                        break;
-                    }
+                        {
+                            ChunkCompiledPhysicalProxies chkCompiledPhysicalProxy = new ChunkCompiledPhysicalProxies();
+                            chkCompiledPhysicalProxy.ReadChunk(cgfReader, ChkHdr.offset);
+                            chkCompiledPhysicalProxy.chunkType = ChkHdr.type;
+                            chkCompiledPhysicalProxy.id = ChkHdr.id;
+                            chkCompiledPhysicalProxy.size = ChkHdr.size;
+                            CgfChunks.Add(chkCompiledPhysicalProxy);
+                            ChunkDictionary.Add(chkCompiledPhysicalProxy.id, chkCompiledPhysicalProxy);
+                            //chkCompiledPhysicalProxy.WriteChunk();
+                            break;
+                        }
                     default:
-                    {
-                        // If we hit this point, it's an unimplemented chunk and needs to be added.
-                        //Console.WriteLine("Chunk type found that didn't match known versions: {0}",ChkHdr.type);
-                        break;
-                    }
+                        {
+                            // If we hit this point, it's an unimplemented chunk and needs to be added.
+                            //Console.WriteLine("Chunk type found that didn't match known versions: {0}",ChkHdr.type);
+                            break;
+                        }
                 }
             }
+
+        }
+        public void ReadCgfData(FileInfo inputFile, ArgsHandler args)  // Constructor for CgfFormat.  This populates the structure.  Modify to handle .cgam files too.
+        {
+            // Call GetCgfData on the inputfile in args.  If inputfile2 exists, that is a .cgam file and should be called as well.
+            Args = args;                            // in the event something else needs to know what was passed
+            DataFile = args.InputFile;
+            GetCgfData(inputFile);
+
         }
         public Vector3 GetTransform(ChunkNode chunkNode, Vector3 transform)        //  Calculate the transform of a node by getting parent's transform.
         {
             Vector3 resultant = new Vector3();
+            Console.WriteLine("Transforming {0}.  ID: {1:X}", chunkNode.Name, chunkNode.id);
             float x = chunkNode.Transform.m41 / 100;
             float y = chunkNode.Transform.m42 / 100;
             float z = chunkNode.Transform.m43 / 100;
             // if we're at the parent, we just want to return.  Otherwise we want to go up to the next level.
             // Matrix math here.  final x is x*m11 + y*m12 + z*m13.  Same for y and z
+            // in some models, there are multiple 0xFFFFFFFF parent node chunks.  This will need to be resolved
             if (chunkNode.Parent != 0xFFFFFFFF)
             {
                 resultant.x += x + (transform.x * chunkNode.Transform.m11) + (transform.y * chunkNode.Transform.m12) + (transform.z * chunkNode.Transform.m13);
@@ -258,7 +268,7 @@ namespace CgfConverter
 
                 transform = GetTransform((ChunkNode)ChunkDictionary[chunkNode.Parent], resultant);
             }
-
+            Console.WriteLine();
             return transform;
         }
         public void WriteTransform(Vector3 transform)
@@ -277,7 +287,7 @@ namespace CgfConverter
             //public uint numChunks; // Number of chunks in the Chunk Table (3.6 only.  3.5 has it in Chunk Table)
             //public int FileVersion;         // 0 will be 3.4 and older, 1 will be 3.6 and newer.  THIS WILL CHANGE
             // methods
-            public Header(BinaryReader binReader)  //constructor with 1 arg
+            public void GetHeader(BinaryReader binReader)  //constructor with 1 arg
             {
                 //Header cgfHeader = new Header();
                 // populate the Header objects
@@ -325,9 +335,9 @@ namespace CgfConverter
                 return;
             }
         }
-        public class ChunkTable  // reads the chunk table
+        public class ChunkTable  // reads the chunk table into a list of ChunkHeaders
         {
-            public List<ChunkHeader> chunkHeaders = new List<ChunkHeader>();
+            public List<ChunkHeader> chkHeaders = new List<ChunkHeader>();
 
             // methods
             public void GetChunkTable(BinaryReader b, int f)
@@ -355,7 +365,7 @@ namespace CgfConverter
                         }
                         tempChkHdr.size = b.ReadUInt32();
 
-                        chunkHeaders.Add(tempChkHdr);
+                        chkHeaders.Add(tempChkHdr);
                         //tempChkHdr.WriteChunk();
                     }
                 }
@@ -432,12 +442,8 @@ namespace CgfConverter
                         tempChkHdr.size = b.ReadUInt32();
                         tempChkHdr.offset = b.ReadUInt32();
                         // hack to fix the timing chunk ID, since we don't want it to conflict.  Add 0xFFFF0000 to it.
-                        if ((tempChkHdr.type == ChunkType.Timing) || ((uint)tempChkHdr.type == 0x100E))
-                        {
-                            tempChkHdr.id = tempChkHdr.id + 0xFFFF0000;
-                        }
 
-                        chunkHeaders.Add(tempChkHdr);  // Add it to the list.
+                        chkHeaders.Add(tempChkHdr);  // Add it to the list.
                         //tempChkHdr.WriteChunk();
                     }
 
@@ -447,7 +453,7 @@ namespace CgfConverter
             {
                 Console.WriteLine("*** Chunk Header Table***");
                 Console.WriteLine("Chunk Type              Version   ID        Size      Offset    ");
-                foreach (ChunkHeader chkHdr in chunkHeaders)
+                foreach (ChunkHeader chkHdr in chkHeaders)
                 {
                     Console.WriteLine("{0,-24}{1,-10:X}{2,-10:X}{3,-10:X}{4,-10:X}", chkHdr.type, chkHdr.version, chkHdr.id, chkHdr.size, chkHdr.offset);
                 }
@@ -496,6 +502,7 @@ namespace CgfConverter
             public HelperType Type;
             public Vector3 Pos;
             public Matrix44 Transform;
+            
 
             public override void ReadChunk(BinaryReader b, uint f)
             {
@@ -506,6 +513,10 @@ namespace CgfConverter
                     version = b.ReadUInt32();
                     fOffset.Offset = b.ReadInt32();
                     id = b.ReadUInt32();
+                }
+                if (FileVersion == 1)
+                {
+                    //chunkType = 0;
                 }
                 Type = (HelperType)Enum.ToObject(typeof(HelperType), b.ReadUInt32());
                 if (version == 0x744)  // only has the Position.
@@ -680,7 +691,7 @@ namespace CgfConverter
         {
             public string Name;  // String 64.
             public uint Object;  // Mesh or Helper Object chunk ID
-            public uint Parent;  // Node parent.  if 0xFFFFFFFF, it's the top node.
+            public uint Parent;  // Node parent.  if 0xFFFFFFFF, it's the top node.  Maybe...
             public uint NumChildren;
             public uint MatID;  // reference to the material ID for this Node chunk
             public Boolean IsGroupHead; //
@@ -725,6 +736,12 @@ namespace CgfConverter
                 Name = new string(tmpName, 0, stringLength);
                 Object = b.ReadUInt32(); // Object reference ID
                 Parent = b.ReadUInt32();
+                //Console.WriteLine("Node chunk:  {0}. ", Name);
+                if (Parent == 0xFFFFFFFF)
+                {
+                    Console.WriteLine("Found Parent with 0xFFFFFF.  Name:  {0}", Name);
+                }
+
                 NumChildren = b.ReadUInt32();
                 MatID = b.ReadUInt32();  // Material ID?
                 Filler = b.ReadUInt32();  // Actually a couple of booleans and a padding
@@ -759,7 +776,9 @@ namespace CgfConverter
                 Scale.y = b.ReadSingle();
                 Scale.z = b.ReadSingle();
                 // read the controller pos/rot/scale
-
+                PosCtrl = b.ReadUInt32();
+                RotCtrl = b.ReadUInt32();
+                SclCtrl = b.ReadUInt32();
                 // Good enough for now.
             }
             public override void WriteChunk()
@@ -780,110 +799,6 @@ namespace CgfConverter
                 Console.WriteLine("                         {0:F7}  {1:F7}  {2:F7}  {3:F7}", Transform.m41, Transform.m42, Transform.m43, Transform.m44);
                 Console.WriteLine("*** END Node Chunk ***");
 
-            }
-        }
-        public class ChunkSceneProp : Chunk     // cccc0008 
-        {
-            // This chunk isn't really used, but contains some data probably necessary for the game.
-            // Size for 0x744 type is always 0xBB4 (test this)
-            public UInt32 numProps;             // number of elements in the props array  (31 for type 0x744)
-            public String[] prop;
-            public String[] propvalue;
-            public override void ReadChunk(BinaryReader b, uint f)
-            {
-                b.BaseStream.Seek(f, 0); // seek to the beginning of the MeshSubset chunk
-                if (FileVersion == 0)
-                {
-                    uint tmpChunkType = b.ReadUInt32();
-                    chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChunkType);
-                    version = b.ReadUInt32();
-                    fOffset.Offset = b.ReadInt32();  // offset
-                    id = b.ReadUInt32();  
-                }
-                numProps = b.ReadUInt32();          // Should be 31 for 0x744
-                prop = new String[numProps];
-                propvalue = new String[numProps];
-
-                // Read the array of scene props and their associated values
-                for (int i = 0; i < numProps; i++)
-                {
-                    char[] tmpProp = new char[32];
-                    char[] tmpPropValue = new char[64];
-                    tmpProp = b.ReadChars(32);
-                    int stringLength = 0;
-                    for (int j = 0; j < tmpProp.Length; j++)
-                    {
-                        if (tmpProp[j] == 0)
-                        {
-                            stringLength = j;
-                            break;
-                        }
-                    }
-                    prop[i] = new string(tmpProp, 0, stringLength);
-                    
-                    tmpPropValue = b.ReadChars(64);
-                    stringLength = 0;
-                    for (int j = 0; j < tmpPropValue.Length; j++)
-                    {
-                        if (tmpPropValue[j] == 0)
-                        {
-                            stringLength = j;
-                            break;
-                        }
-                    }
-                    propvalue[i] = new string(tmpPropValue, 0, stringLength);
-                }
-            }
-            public override void WriteChunk()
-            {
-                Console.WriteLine("*** START SceneProp Chunk ***");
-                Console.WriteLine("    ChunkType:   {0}", chunkType);
-                Console.WriteLine("    Version:     {0:X}", version);
-                Console.WriteLine("    ID:          {0:X}", id);
-                for (int i = 0; i < numProps; i++)
-                {
-                    Console.WriteLine("{0,30}{1,20}", prop[i], propvalue[i]);
-                }
-                Console.WriteLine("*** END SceneProp Chunk ***");
-            }
-        }
-        public class ChunkTimingFormat : Chunk  // cccc000e:  Timing format chunk
-        {
-            // This chunk doesn't have an ID, although one may be assigned in the chunk table.
-            public float SecsPerTick;
-            public int TicksPerFrame;
-            public uint Unknown1; // 4 bytes, not sure what they are
-            public uint Unknown2; // 4 bytes, not sure what they are
-            public RangeEntity GlobalRange;
-            public int NumSubRanges;
-
-            public override void ReadChunk(BinaryReader b, uint f)
-            {
-                b.BaseStream.Seek(f, 0); // seek to the beginning of the Timing Format chunk
-                uint tmpChkType = b.ReadUInt32();
-                chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChkType);
-                version = b.ReadUInt32();  //0x00000918 is Far Cry, Crysis, MWO, Aion, SC
-                SecsPerTick = b.ReadSingle();
-                TicksPerFrame = b.ReadInt32();
-                Unknown1 = b.ReadUInt32();
-                Unknown2 = b.ReadUInt32();
-                GlobalRange.Name = new char[32];
-                GlobalRange.Name = b.ReadChars(32);  // Name is technically a String32, but F those structs
-                GlobalRange.Start = b.ReadInt32();
-                GlobalRange.End = b.ReadInt32();
-            }
-            public override void WriteChunk()
-            {
-                string tmpName = new string(GlobalRange.Name);
-                Console.WriteLine("*** TIMING CHUNK ***");
-                Console.WriteLine("    ID: {0:X}", id);
-                Console.WriteLine("    Version: {0:X}", version);
-                Console.WriteLine("    Secs Per Tick: {0}", SecsPerTick);
-                Console.WriteLine("    Ticks Per Frame: {0}", TicksPerFrame);
-                Console.WriteLine("    Global Range:  Name: {0}", tmpName);
-                Console.WriteLine("    Global Range:  Start: {0}", GlobalRange.Start);
-                Console.WriteLine("    Global Range:  End:  {0}", GlobalRange.End);
-                Console.WriteLine("*** END TIMING CHUNK ***");
             }
         }
         public class ChunkController : Chunk    // cccc000d:  Controller chunk
@@ -1038,7 +953,6 @@ namespace CgfConverter
                 char[] tmpAuthor = new char[count];
                 tmpAuthor = b.ReadChars(count + 1);
                 Author = new string(tmpAuthor);
-                // id = 0xFF;  This is wrong.  It should be 0.  Why did I pick FF?
             }
             public override void WriteChunk()
             {
@@ -1681,6 +1595,110 @@ namespace CgfConverter
                 Console.WriteLine("*** END MESH CHUNK ***");
             }
         }
+        public class ChunkSceneProp : Chunk     // cccc0008 
+        {
+            // This chunk isn't really used, but contains some data probably necessary for the game.
+            // Size for 0x744 type is always 0xBB4 (test this)
+            public UInt32 numProps;             // number of elements in the props array  (31 for type 0x744)
+            public String[] prop;
+            public String[] propvalue;
+            public override void ReadChunk(BinaryReader b, uint f)
+            {
+                b.BaseStream.Seek(f, 0); // seek to the beginning of the MeshSubset chunk
+                if (FileVersion == 0)
+                {
+                    uint tmpChunkType = b.ReadUInt32();
+                    chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChunkType);
+                    version = b.ReadUInt32();
+                    fOffset.Offset = b.ReadInt32();  // offset
+                    id = b.ReadUInt32();
+                }
+                numProps = b.ReadUInt32();          // Should be 31 for 0x744
+                prop = new String[numProps];
+                propvalue = new String[numProps];
+
+                // Read the array of scene props and their associated values
+                for (int i = 0; i < numProps; i++)
+                {
+                    char[] tmpProp = new char[32];
+                    char[] tmpPropValue = new char[64];
+                    tmpProp = b.ReadChars(32);
+                    int stringLength = 0;
+                    for (int j = 0; j < tmpProp.Length; j++)
+                    {
+                        if (tmpProp[j] == 0)
+                        {
+                            stringLength = j;
+                            break;
+                        }
+                    }
+                    prop[i] = new string(tmpProp, 0, stringLength);
+
+                    tmpPropValue = b.ReadChars(64);
+                    stringLength = 0;
+                    for (int j = 0; j < tmpPropValue.Length; j++)
+                    {
+                        if (tmpPropValue[j] == 0)
+                        {
+                            stringLength = j;
+                            break;
+                        }
+                    }
+                    propvalue[i] = new string(tmpPropValue, 0, stringLength);
+                }
+            }
+            public override void WriteChunk()
+            {
+                Console.WriteLine("*** START SceneProp Chunk ***");
+                Console.WriteLine("    ChunkType:   {0}", chunkType);
+                Console.WriteLine("    Version:     {0:X}", version);
+                Console.WriteLine("    ID:          {0:X}", id);
+                for (int i = 0; i < numProps; i++)
+                {
+                    Console.WriteLine("{0,30}{1,20}", prop[i], propvalue[i]);
+                }
+                Console.WriteLine("*** END SceneProp Chunk ***");
+            }
+        }
+        public class ChunkTimingFormat : Chunk  // cccc000e:  Timing format chunk
+        {
+            // This chunk doesn't have an ID, although one may be assigned in the chunk table.
+            public float SecsPerTick;
+            public int TicksPerFrame;
+            public uint Unknown1; // 4 bytes, not sure what they are
+            public uint Unknown2; // 4 bytes, not sure what they are
+            public RangeEntity GlobalRange;
+            public int NumSubRanges;
+
+            public override void ReadChunk(BinaryReader b, uint f)
+            {
+                b.BaseStream.Seek(f, 0); // seek to the beginning of the Timing Format chunk
+                uint tmpChkType = b.ReadUInt32();
+                chunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpChkType);
+                version = b.ReadUInt32();  //0x00000918 is Far Cry, Crysis, MWO, Aion, SC
+                SecsPerTick = b.ReadSingle();
+                TicksPerFrame = b.ReadInt32();
+                Unknown1 = b.ReadUInt32();
+                Unknown2 = b.ReadUInt32();
+                GlobalRange.Name = new char[32];
+                GlobalRange.Name = b.ReadChars(32);  // Name is technically a String32, but F those structs
+                GlobalRange.Start = b.ReadInt32();
+                GlobalRange.End = b.ReadInt32();
+            }
+            public override void WriteChunk()
+            {
+                string tmpName = new string(GlobalRange.Name);
+                Console.WriteLine("*** TIMING CHUNK ***");
+                Console.WriteLine("    ID: {0:X}", id);
+                Console.WriteLine("    Version: {0:X}", version);
+                Console.WriteLine("    Secs Per Tick: {0}", SecsPerTick);
+                Console.WriteLine("    Ticks Per Frame: {0}", TicksPerFrame);
+                Console.WriteLine("    Global Range:  Name: {0}", tmpName);
+                Console.WriteLine("    Global Range:  Start: {0}", GlobalRange.Start);
+                Console.WriteLine("    Global Range:  End:  {0}", GlobalRange.End);
+                Console.WriteLine("*** END TIMING CHUNK ***");
+            }
+        }
 
         public class FileSignature          // NYI. The signature that Cryengine files start with.  Crytek or CrChF 
         {
@@ -1693,6 +1711,10 @@ namespace CgfConverter
             }
         }
 
+        //public ChunkType GetChunkType(uint type)
+        //{
+
+        //}          // This is to replace the ChunkType enum, since we have to support both 3.4 and 3.6+
     }
 
     // Aliases
@@ -1729,11 +1751,22 @@ namespace CgfConverter
                 {
                     // test to see if the extension is .cgam.  If so, we want input file to be the .cga, and inputfile2 to be the .cgam
                     InputFile = new FileInfo(inputArgs[0]);
-                    if (InputFile.Extension == ".cgam")  // .cgam file; make this inputfile2, and make inputfile the .cga name
+                    if (InputFile.Extension != ".cgam")  // 
                     {
-                        InputFile2 = new FileInfo(InputFile.FullName);
-                        String tmpString = InputFile.Name.Substring(0, InputFile.Name.Length - 5) + ".cga";
-                        InputFile = new FileInfo(tmpString);
+                        // Check to see if there is a .cgam file.  Set that to inputfile2 if it exists.
+                        string tmpName = Path.GetFileNameWithoutExtension(InputFile.Name) + ".cgam";
+                        // Console.WriteLine(".cgam file is  {0}", tmpName);
+                        if (File.Exists(tmpName))
+                        {
+                            InputFile2 = new FileInfo(tmpName);
+                            Console.WriteLine("Found cgam file {0}", InputFile2.Name);
+                        }
+                    }
+                    else
+                    {
+                        // Return an error.  We don't want to process .cgam files.  They should only be handled from the related .cga file
+                        Console.WriteLine("Warning:  .cgam file.  Not processing; instead use the related .cga file.");
+                        return 1;
                     }
                     FlipUVs = false;
                     OutputFile = new FileInfo(inputArgs[0] + ".obj");   // is this a bug?  .cgf.obj file output?
@@ -1750,29 +1783,29 @@ namespace CgfConverter
             else
             {
                 // More than one argument submitted.  Test each value.  For loops?
-
                 if (File.Exists(inputArgs[0]))
                 {
-                    if (File.Exists(inputArgs[0]))
+                    // test to see if the extension is .cgam.  If so, we want input file to be the .cga, and inputfile2 to be the .cgam
+                    InputFile = new FileInfo(inputArgs[0]);
+                    if (InputFile.Extension != ".cgam")  // 
                     {
-                        // test to see if the extension is .cgam.  If so, we want input file to be the .cga, and inputfile2 to be the .cgam
-                        InputFile = new FileInfo(inputArgs[0]);
-                        if (InputFile.Extension == ".cgam")  // .cgam file; make this inputfile2, and make inputfile the .cga name
+                        // Check to see if there is a .cgam file.  Set that to inputfile2 if it exists.
+                        string tmpName = Path.GetFileNameWithoutExtension(InputFile.Name) + ".cgam";
+                        if (File.Exists(tmpName))
                         {
-                            InputFile2 = new FileInfo(InputFile.FullName);
-                            String tmpString = InputFile.Name.Substring(0, InputFile.Name.Length - 5) + ".cga";
-                            InputFile = new FileInfo(tmpString);
+                            InputFile2 = new FileInfo(tmpName);
+                            Console.WriteLine("Found cgam file {0}", InputFile2.Name);
                         }
-                        FlipUVs = false;
-                        OutputFile = new FileInfo(inputArgs[0] + ".obj");   // is this a bug?  .cgf.obj file output?
-                        Obj = true;
-                        Blend = false;
-                    }
-                    else
+                    } else
                     {
-                        this.GetUsage();
+                        // Return an error.  We don't want to process .cgam files.  They should only be handled from the related .cga file
+                        Console.WriteLine("Warning:  .cgam file.  Not processing; instead use the related .cga file.");
                         return 1;
                     }
+                    FlipUVs = false;
+                    OutputFile = new FileInfo(inputArgs[0] + ".obj");   // is this a bug?  .cgf.obj file output?
+                    Obj = true;
+                    Blend = false;
 
                     for (int i = 0; i < inputArgs.Length; i++)
                     {
@@ -1887,6 +1920,8 @@ namespace CgfConverter
         static void Main(string[] @args)
         {
             ArgsHandler argsHandler = new ArgsHandler();
+            // Need to make cgfData an array to be able to process multiple files (like .cga/.cgam pairs)
+            List<CgfData> cgfList = new List<CgfData>();  // contains multiple cgfdata structures
 
             int result = argsHandler.ProcessArgs(args);
             // Assign the argument to a variable
@@ -1899,9 +1934,20 @@ namespace CgfConverter
             }
 
             // Console.WriteLine("Input File is '{0}'" , dataFile.Name);
+
             CgfData cgfData = new CgfData();
-            cgfData.ReadCgfData(argsHandler);
-            
+            CgfData cgfData2 = new CgfData(); // For .cga/.cgam files exported to .obj
+            cgfData.ReadCgfData(argsHandler.InputFile,argsHandler);
+            cgfList.Add(cgfData);
+
+            // Console.WriteLine("Input file 2 is {0}", argsHandler.InputFile2.FullName);
+            if (argsHandler.InputFile2 != null)
+            {
+                Console.WriteLine("Found a .cgam file.  Reading this too.");
+                cgfData2.ReadCgfData(argsHandler.InputFile2,argsHandler);
+                cgfList.Add(cgfData2);
+            }
+
             // Output to an obj file
             if (argsHandler.Blend == true)
             {
@@ -1911,7 +1957,14 @@ namespace CgfConverter
             if (argsHandler.Obj == true)
             {
                 ObjFile objFile = new ObjFile();
-                objFile.WriteObjFile(cgfData);  
+                if (argsHandler.InputFile2 != null)
+                {
+                    Console.WriteLine(".cgam file found.  Processing cgfData2");
+                    objFile.WriteObjFile(cgfData2);
+                } else
+                {
+                    objFile.WriteObjFile(cgfData);
+                }
             }
             if (argsHandler.COLLADA == true)
             {

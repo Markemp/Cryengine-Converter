@@ -48,7 +48,50 @@
         BonesBoxes = 0xAAFC0004, // unknown chunk
         UnknownAAFC0005 = 0xAAFC0005 //unknown chunk
     }
-    public enum ChunkType36 : short    // complete, but never used.
+
+    public enum ChunkTypetmp
+    {
+        Any,
+        Mesh,
+        Helper,
+        VertAnim,
+        BoneAnim,
+        GeomNameList,
+        BoneNameList,
+        MtlList,
+        MRM,
+        SceneProps,
+        Light,
+        PatchMesh,
+        Node,
+        Mtl,
+        Controller,
+        Timing,
+        BoneMesh,
+        BoneLightBinding,
+        MeshMorphTarget,
+        BoneInitialPos,
+        SourceInfo,
+        MtlName,
+        ExportFlags,
+        DataStream,
+        MeshSubsets,
+        MeshPhysicsData,
+        CompiledBones,
+        CompiledPhysicalBones,
+        CompiledMorphtargets,
+        CompiledPhysicalProxies,
+        CompiledIntFaces,
+        CompiledIntSkinVertices,
+        CompiledExt2IntMap,
+        BreakablePhysics,
+        FaceMap,
+        SpeedInfo,
+        FootPlantInfo,
+        BonesBoxes,
+        UnknownAAFC0005
+    }
+    public enum ChunkType36    // complete, but never used.
     {
         Any = 0x0,
         Mesh = 0x1000,

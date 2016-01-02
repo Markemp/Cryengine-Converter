@@ -54,7 +54,7 @@ namespace CgfConverter
 
                 if (cgfData.RootNode.NumChildren == 0)
                 {
-                    //Console.WriteLine("WriteOBJ:  Rootnode.numchildren == 0.");
+                    Console.WriteLine("WriteOBJ:  Rootnode.numchildren == 0.");
                     // We have a root node with no children, so simple object.
                     string s3 = String.Format("o {0}", cgfData.RootNode.Name);
                     file.WriteLine(s3);
@@ -67,19 +67,13 @@ namespace CgfConverter
                     //Console.WriteLine("WriteOBJ:  Rootnode.numchildren != 0.");
                     foreach (CgfData.ChunkNode tmpNode in cgfData.CgfChunks.Where(a => a.chunkType == ChunkType.Node))
                     {
-                        if (tmpNode.MatID != 0)  // because we don't want to process an object with no material.  ...maybe we do
-                        {
                             //tmpNode.WriteChunk();
+                            //Console.WriteLine("Writing {0}", tmpNode.Name);
                             string s3 = String.Format("o {0}", tmpNode.Name);
                             file.WriteLine(s3);
                             // Grab the mesh and process that.
                             WriteObjNode(file, tmpNode);
-                        }
-                        else
-                        {
-                            //Console.WriteLine("****** DIDN'T WRITE THIS NODE *****");
-                            //tmpNode.WriteChunk();
-                        }
+
                     }
                 }
 
@@ -99,14 +93,22 @@ namespace CgfConverter
             // Console.WriteLine("***     Object ID {0:X}", chunkNode.Object);
 
             // We are only processing Nodes that have Materials.  The chunkType should never be Helper.  Check for Nodes to not process
-            CgfData.ChunkMesh tmpMesh = (CgfData.ChunkMesh)cgfData.ChunkDictionary[chunkNode.Object];
+            // This is wrong.  We have to process nodes that have helpers as the mesh info for the transform.
             Vector3 transform = new Vector3();
-
-            // Get the Transform here. It's the node chunk Transform.m(41/42/42) divided by 100, added to the parent transform.
-            // The transform of a child has to add the transforms of ALL the parents.  Need to use regression?  Maybe a while loop...
             transform.x = 0;  // initializing the transform vector.  
             transform.y = 0;
             transform.z = 0;
+            if (cgfData.ChunkDictionary[chunkNode.Object].chunkType == ChunkType.Helper)
+            {
+                // This needs work.
+                transform = cgfData.GetTransform(chunkNode, transform);
+                return;
+            }
+            CgfData.ChunkMesh tmpMesh = (CgfData.ChunkMesh)cgfData.ChunkDictionary[chunkNode.Object];
+
+            // Get the Transform here. It's the node chunk Transform.m(41/42/42) divided by 100, added to the parent transform.
+            // The transform of a child has to add the transforms of ALL the parents.  Need to use regression?  Maybe a while loop...
+
             if (chunkNode.Parent != 0xFFFFFFFF)
             {
                 // Not the parent node.  Parent node shouldn't have a transform, so no need to calculate it.
@@ -117,21 +119,28 @@ namespace CgfConverter
 
             if (cgfData.ChunkDictionary[chunkNode.Object].chunkType == ChunkType.Helper)
             {
+                // This can still have transform, so need to to the transform before skipping.  We should still write an empty, but..obj.
                 Console.WriteLine("*********************Found a node chunk for a Helper (ID: {0:X}).  Skipping...", tmpMesh.id);
                 //tmpMesh.WriteChunk();
+                //Console.WriteLine("Node Chunk: {0}", chunkNode.Name);
+                transform = cgfData.GetTransform(chunkNode, transform);
                 return;
             }
 
             if (tmpMesh.MeshSubsets == 0)   // This is probably wrong.  These may be parents with no geometry, but still have an offset
             {
-                //Console.WriteLine("*********************Found a Mesh chunk with no Submesh ID (ID: {0:X}).  Skipping...", tmpMesh.id);
+                Console.WriteLine("*********************Found a Mesh chunk with no Submesh ID (ID: {0:X}).  Skipping...", tmpMesh.id);
                 //tmpMesh.WriteChunk();
+                //Console.WriteLine("Node Chunk: {0}", chunkNode.Name);
+                transform = cgfData.GetTransform(chunkNode, transform);
                 return;
             }
             if (tmpMesh.VerticesData == 0 && tmpMesh.VertsUVsData == 0)  // This is probably wrong.  These may be parents with no geometry, but still have an offset
             {
                 Console.WriteLine("*********************Found a Mesh chunk with no Vertex info (ID: {0:X}).  Skipping...", tmpMesh.id);
                 //tmpMesh.WriteChunk();
+                //Console.WriteLine("Node Chunk: {0}", chunkNode.Name);
+                transform = cgfData.GetTransform(chunkNode, transform);
                 return;
             }
             CgfData.ChunkMtlName tmpMtlName = (CgfData.ChunkMtlName)cgfData.ChunkDictionary[chunkNode.MatID];

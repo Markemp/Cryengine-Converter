@@ -34,8 +34,9 @@ namespace CgfConverter
             // File name will be "object name.dae"
             daeOutputFile = new FileInfo(cgfData.RootNode.Name + ".dae");
             GetSchema();                                                    // Loads the schema.  Needs error checking in case it's offline.
-            CreateRootNode();
+            //CreateRootNode();
             CreateAsset();
+            WriteLibrary_Images();
             //daeDoc.Save(daeOutputFile.FullName);
             TextWriter writer = new StreamWriter(daeOutputFile.FullName);   // Makes the Textwriter object for the output
             mySerializer.Serialize(writer, daeObject);                      // Serializes the daeObject and writes to the writer
@@ -48,43 +49,49 @@ namespace CgfConverter
             schema.TargetNamespace = "https://www.khronos.org/files/collada_schema_1_5";
         }
 
-        public void CreateRootNode()
-        {
-            //XmlNode rootNode = daeDoc.CreateElement("COLLADA");
-            //XmlAttribute rootAttributes = daeDoc.CreateAttribute("xmlns");
-            /*rootAttributes.Value = "http://www.collada.org/2005/11/COLLADASchema";
-            rootNode.Attributes.Append(rootAttributes);
-            XmlAttribute rootAttributes2 = daeDoc.CreateAttribute("version");
-            rootAttributes2.Value = "1.5.0";
-            rootNode.Attributes.Append(rootAttributes2);
-            daeDoc.AppendChild(rootNode);*/
-        }
 
         public void CreateAsset()
         {
             // Writes the Asset element in a Collada XML doc
             DateTime fileCreated = DateTime.Now;
             DateTime fileModified = DateTime.Now;           // since this only creates, both times should be the same
-            
             Grendgine_Collada_Asset asset = new Grendgine_Collada_Asset();
-            Grendgine_Collada_Asset_Contributor contributor = new Grendgine_Collada_Asset_Contributor();
-            contributor.Author = "Heffay";
-            contributor.Author_Website = "https://github.com/Markemp/Cryengine-Converter";
-            contributor.Author_Email = "markemp@gmail.com";
-            contributor.Source_Data = cgfData.RootNode.Name;                    // The cgf/cga/skin/whatever file we read
+
+            Grendgine_Collada_Asset_Contributor [] contributors = new Grendgine_Collada_Asset_Contributor[2];
+            contributors[0] = new Grendgine_Collada_Asset_Contributor();
+            contributors[0].Author = "Heffay";
+            contributors[0].Author_Website = "https://github.com/Markemp/Cryengine-Converter";
+            contributors[0].Author_Email = "markemp@gmail.com";
+            contributors[0].Source_Data = cgfData.RootNode.Name;                    // The cgf/cga/skin/whatever file we read
+            // Get the actual file creators from the Source Chunk
+            contributors[1] = new Grendgine_Collada_Asset_Contributor();
+            foreach (CgfData.ChunkSourceInfo tmpSource in cgfData.CgfChunks.Where(a => a.chunkType == ChunkType.SourceInfo))
+            {
+                contributors[1].Author = tmpSource.Author;
+                contributors[1].Source_Data = tmpSource.SourceFile;
+            }
             asset.Created = fileCreated;
             asset.Modified = fileModified;
             asset.Up_Axis = "Z_UP";
             asset.Title = cgfData.RootNode.Name;
-
-            // Add this to xml doc
-            XmlNode assetNode = daeDoc.CreateAttribute("asset");
-            daeDoc.AppendChild(assetNode);
+            daeObject.Asset = asset;
+            daeObject.Asset.Contributor = contributors;
 
         }
         public void WriteLibrary_Images()
         {
-
+            // I think this is a  list of all the images used by the asset.
+            // Following the Noesis lead, we're going to make a dummy record here, that points to objectdir
+            Grendgine_Collada_Library_Images libraryImages = new Grendgine_Collada_Library_Images();
+            
+            Grendgine_Collada_Image [] image1 = new Grendgine_Collada_Image[1];
+            image1[0] = new Grendgine_Collada_Image();
+            image1[0].ID = "image";
+            Console.WriteLine("Image is {0}", cgfData.Args.ObjectDir.ToString());
+            image1[0].Init_From = new Grendgine_Collada_Init_From();
+            image1[0].Init_From.Ref = cgfData.Args.ObjectDir.ToString();
+            daeObject.Library_Images = libraryImages;
+            daeObject.Library_Images.Image = image1;
         }
         public void WriteLibrary_Materials()
         {
