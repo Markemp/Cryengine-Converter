@@ -9,8 +9,11 @@ namespace grendgine_collada
 	[System.Diagnostics.DebuggerStepThroughAttribute()]
 	[System.ComponentModel.DesignerCategoryAttribute("code")]
 	[System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true)]
-	[System.Xml.Serialization.XmlRootAttribute(ElementName="COLLADA", Namespace="http://www.collada.org/2005/11/COLLADASchema", IsNullable=false)]
-	public partial class Grendgine_Collada
+    // MODIFIED from original.  Using the new 1.5 schema instead of the old 1.4.1
+	[System.Xml.Serialization.XmlRootAttribute(ElementName="COLLADA", Namespace= "https://www.khronos.org/files/collada_schema_1_5", IsNullable=false)]
+    //[System.Xml.Serialization.XmlRootAttribute(ElementName = "COLLADA", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = false)]
+
+    public partial class Grendgine_Collada
 	{
 		
 		[XmlAttribute("version")]

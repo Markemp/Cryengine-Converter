@@ -254,7 +254,7 @@ namespace CgfConverter
         public Vector3 GetTransform(ChunkNode chunkNode, Vector3 transform)        //  Calculate the transform of a node by getting parent's transform.
         {
             Vector3 resultant = new Vector3();
-            Console.WriteLine("Transforming {0}.  ID: {1:X}", chunkNode.Name, chunkNode.id);
+            Console.WriteLine("Transforming {0}.  ID: {1:X},  Parent ID: {2:X}", chunkNode.Name, chunkNode.id, chunkNode.Parent);
             float x = chunkNode.Transform.m41 / 100;
             float y = chunkNode.Transform.m42 / 100;
             float z = chunkNode.Transform.m43 / 100;

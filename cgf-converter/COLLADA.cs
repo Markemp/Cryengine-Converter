@@ -11,6 +11,9 @@ using grendgine_collada; // No idea how to actually use this.
 
 namespace CgfConverter
 {
+    //[System.Xml.Serialization.XmlRootAttribute(ElementName = "COLLADA", Namespace = "https://www.khronos.org/files/collada_schema_1_5", IsNullable = false)]
+    //[XmlRootAttribute("COLLADA", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = false)]
+
     class COLLADA  // class to export to .dae format (COLLADA)
     {
         public XmlSchema schema = new XmlSchema();
@@ -19,8 +22,6 @@ namespace CgfConverter
         public CgfData cgfData;                                             // The Cryengine data
         public Grendgine_Collada daeObject = new Grendgine_Collada();       // This is the serializable class.
         XmlSerializer mySerializer = new XmlSerializer(typeof(Grendgine_Collada));
-
-        //[XmlRootAttribute("COLLADA", Namespace = "http://www.collada.org/2005/11/COLLADASchema",IsNullable = false)]
 
         public void WriteCollada(CgfData dataFile)  // Write the dae file
         {
@@ -34,14 +35,22 @@ namespace CgfConverter
             // File name will be "object name.dae"
             daeOutputFile = new FileInfo(cgfData.RootNode.Name + ".dae");
             GetSchema();                                                    // Loads the schema.  Needs error checking in case it's offline.
-            //CreateRootNode();
-            CreateAsset();
+            WriteRootNode();
+            WriteAsset();
             WriteLibrary_Images();
             WriteLibrary_Materials();
             //daeDoc.Save(daeOutputFile.FullName);
             TextWriter writer = new StreamWriter(daeOutputFile.FullName);   // Makes the Textwriter object for the output
             mySerializer.Serialize(writer, daeObject);                      // Serializes the daeObject and writes to the writer
             Console.WriteLine("End of Write Collada");
+        }
+
+        private void WriteRootNode()
+        {
+            //Grendgine_Collada collada = new Grendgine_Collada();
+            //collada.Collada_Version = "1.5.0";
+            daeObject.Collada_Version = "1.5.0";
+            
         }
 
         public void GetSchema()                                             // Get the schema from kronos.org.  Needs error checking in case it's offline
@@ -51,7 +60,7 @@ namespace CgfConverter
         }
 
 
-        public void CreateAsset()
+        public void WriteAsset()
         {
             // Writes the Asset element in a Collada XML doc
             DateTime fileCreated = DateTime.Now;
@@ -82,21 +91,48 @@ namespace CgfConverter
         public void WriteLibrary_Images()
         {
             // I think this is a  list of all the images used by the asset.
-            // Following the Noesis lead, we're going to make a dummy record here, that points to objectdir
             Grendgine_Collada_Library_Images libraryImages = new Grendgine_Collada_Library_Images();
-            
-            Grendgine_Collada_Image [] image1 = new Grendgine_Collada_Image[1];
-            image1[0] = new Grendgine_Collada_Image();
-            image1[0].ID = "image";
-            Console.WriteLine("Image is {0}", cgfData.Args.ObjectDir.ToString());
-            image1[0].Init_From = new Grendgine_Collada_Init_From();
-            image1[0].Init_From.Ref = cgfData.Args.ObjectDir.ToString();
             daeObject.Library_Images = libraryImages;
-            daeObject.Library_Images.Image = image1;
+            List<Grendgine_Collada_Image> imageList = new List<Grendgine_Collada_Image>();
+            // We now have the image library set up.  start to populate.
+            int numImages = 0;
+            foreach (MtlFormat mats in cgfData.MatFile.Materials)
+            {
+                // each mat will have a number of texture files.  Need to create an <image> for each of them.
+                int numTextures = mats.Textures.Count;
+                for (int i=0; i < numTextures; i++ )
+                {
+                    // For each texture in the material, we make a new <image> object and add it to the list. 
+                    Grendgine_Collada_Image tmpImage = new Grendgine_Collada_Image();
+                    tmpImage.ID = mats.MaterialName + "_" + mats.Textures[i].Map;
+                    tmpImage.Init_From = new Grendgine_Collada_Init_From();
+                    // Build the URI path to the file as a .dds, clean up the slashes.
+                    StringBuilder builder;
+                    if (mats.Textures[i].File.Contains(@"/") || mats.Textures[i].File.Contains(@"\"))
+                    {
+                        builder = new StringBuilder(cgfData.Args.ObjectDir + @"\" + mats.Textures[i].File);
+                    }
+                    else
+                    {
+                        builder = new StringBuilder(mats.Textures[i].File);
+                    }
+                    builder.Replace(".tif", ".dds");
+                    builder.Replace(@"/", @"\");
+
+                    //tmpImage.Init_From.Ref = mats.Textures[i].File;
+                    tmpImage.Init_From.Ref = builder.ToString();
+                    imageList.Add(tmpImage);
+                    numImages++;                    // increment the number of image files found.
+                }
+            }
+            // images is the array of image (Gredgine_Collada_Image) objects
+            Grendgine_Collada_Image[] images = imageList.ToArray();
+            daeObject.Library_Images.Image = images;
         }
         public void WriteLibrary_Materials()
         {
             // Create the list of materials used in this object
+            // There is just one .mtl file we need to worry about.
             Grendgine_Collada_Library_Materials libraryMaterials = new Grendgine_Collada_Library_Materials();
             // We have our top level.
             daeObject.Library_Materials = libraryMaterials;
@@ -113,7 +149,6 @@ namespace CgfConverter
                 tmpMaterial.Instance_Effect.URL = tmpMaterial.Name;
                 materials[i] = tmpMaterial;
             }
-
             libraryMaterials.Material = materials;
         }
         public void WriteLibrary_Effects()
