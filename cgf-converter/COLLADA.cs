@@ -37,6 +37,7 @@ namespace CgfConverter
             //CreateRootNode();
             CreateAsset();
             WriteLibrary_Images();
+            WriteLibrary_Materials();
             //daeDoc.Save(daeOutputFile.FullName);
             TextWriter writer = new StreamWriter(daeOutputFile.FullName);   // Makes the Textwriter object for the output
             mySerializer.Serialize(writer, daeObject);                      // Serializes the daeObject and writes to the writer
@@ -95,7 +96,25 @@ namespace CgfConverter
         }
         public void WriteLibrary_Materials()
         {
+            // Create the list of materials used in this object
+            Grendgine_Collada_Library_Materials libraryMaterials = new Grendgine_Collada_Library_Materials();
+            // We have our top level.
+            daeObject.Library_Materials = libraryMaterials;
+            int numMaterials = cgfData.MatFile.Materials.Count;
+            // Now create a material for each material in the object
+            Console.WriteLine("Number of materials: {0}", numMaterials);
+            Grendgine_Collada_Material[] materials = new Grendgine_Collada_Material[numMaterials];
+            for (int i=0; i < numMaterials; i++ )
+            {
+                Grendgine_Collada_Material tmpMaterial = new Grendgine_Collada_Material();
+                tmpMaterial.Name = cgfData.MatFile.MaterialNameArray[i].MaterialName;
+                // Create the instance_effect for each material
+                tmpMaterial.Instance_Effect = new Grendgine_Collada_Instance_Effect();
+                tmpMaterial.Instance_Effect.URL = tmpMaterial.Name;
+                materials[i] = tmpMaterial;
+            }
 
+            libraryMaterials.Material = materials;
         }
         public void WriteLibrary_Effects()
         {

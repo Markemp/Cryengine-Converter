@@ -54,13 +54,14 @@ namespace CgfConverter
     {
         // Material information.  This class will read the Cryengine .mtl file, get the material names, and then output a classic .mtl file.
         // If the Cryengine .mtl file doesn't have submaterials, there will just be the one material with the name of the object.
+        // This class is a mess.  It's a combo of the material file and writing to obj.  Needs to be refactored.
         public StreamWriter b;          // the streamreader of the file
         public CgfData Datafile;        // the cgf datafile.  This will have all the data we need to get the mtl file
 
-        private List<String> MaterialNames = new List<String>();                        // Read the mtl file and get the list of mat names.
-        private List<MtlFormat> Materials = new List<MtlFormat>();                      // List of the material structures
+        public List<String> MaterialNames = new List<String>();                        // Read the mtl file and get the list of mat names.
+        public List<MtlFormat> Materials = new List<MtlFormat>();                      // List of the material structures
         public MtlFormat[] MaterialNameArray;   // this has the names organized by ID
-        private String MtlFileName;             // The name of just the file.  no path, no extension 
+        public String MtlFileName;             // The name of just the file.  no path, no extension 
         public FileInfo XmlMtlFile;                // the Cryengine xml Material file FileInfo
         public FileInfo MtlFile;                // The obj .mtl file that we write.  Should be RootNode.Name + "_mtl.mtl".
         
@@ -132,6 +133,15 @@ namespace CgfConverter
                         else
                         {
                             Console.WriteLine("*** 0x800 Unable to find material file {0}.  I'm probably going to not work well.", XmlMtlFile.FullName);
+                            // Set up a dummy material and return.
+                            MtlFormat material = new MtlFormat();
+                            material.MaterialName = Datafile.RootNode.Name;                 // since there is no Name, use the node name.
+                            material.Diffuse.Red = 1;
+                            material.Diffuse.Green = 0;
+                            material.Diffuse.Blue = 1;
+                            Materials.Add(material);
+                            MaterialNameArray = new MtlFormat[Materials.Count];
+                            MaterialNameArray = Materials.ToArray();
                         }
                     }       // Not a material type 0x01 or 0x10.  Will be a child material.  Continue to next mtlname chunk
                 }
@@ -188,6 +198,16 @@ namespace CgfConverter
                         Console.WriteLine();
                         Console.WriteLine("*** 0x802 Unable to find material file {0}.  I'm probably going to not work well.", XmlMtlFile.FullName);
                         Console.WriteLine();
+                        // Set up a dummy material and return.
+                        // Console.WriteLine("Unable to find material file {0}.  Using group names.", Materialfile.FullName);
+                        MtlFormat material = new MtlFormat();
+                        material.MaterialName = Datafile.RootNode.Name;                 // since there is no Name, use the node name.
+                        material.Diffuse.Red = 1;
+                        material.Diffuse.Green = 0;
+                        material.Diffuse.Blue = 1;
+                        Materials.Add(material);
+                        MaterialNameArray = new MtlFormat[Materials.Count];
+                        MaterialNameArray = Materials.ToArray();
                     }
                     return;
                 }
@@ -200,20 +220,6 @@ namespace CgfConverter
             // If I was smart I'd actually get Blender to add this to /scripts/addons/io_scene_obj/import_obj.py
             // Console.WriteLine("Mtl File name is {0}", Materialfile.FullName);
 
-            if (!Materialfile.Exists)
-            {
-                // Set up a dummy material and return.
-                Console.WriteLine("Unable to find material file {0}.  Using group names.", Materialfile.FullName);
-                MtlFormat material = new MtlFormat();
-                material.MaterialName = Datafile.RootNode.Name;                 // since there is no Name, use the node name.
-                material.Diffuse.Red = 1;
-                material.Diffuse.Green = 0;
-                material.Diffuse.Blue = 1;
-                Materials.Add(material);
-                MaterialNameArray = new MtlFormat[Materials.Count];
-                MaterialNameArray = Materials.ToArray();
-                return;
-            }
             XElement materialmap = XElement.Load(Materialfile.FullName);
 
             if (materialmap.Attribute("MtlFlags").Value == "524288")

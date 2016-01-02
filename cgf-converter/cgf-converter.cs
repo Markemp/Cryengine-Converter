@@ -34,7 +34,7 @@ namespace CgfConverter
         const String BasePath = @"E:\Blender Projects\Mechs\";  // for testing.  This will eventually need to be input by user.
         public ArgsHandler Args = new ArgsHandler();
 
-        public MaterialFile MatFile;    // The material file (from MaterialFile.cs)
+        public MaterialFile MatFile = new MaterialFile();    // The material file (from MaterialFile.cs)
 
         public void GetCgfData(FileInfo inputFile)          // Does the actual reading.  Called from ReadCgfData, which sets up the data structure.
         {
@@ -84,6 +84,7 @@ namespace CgfConverter
                             ChunkExportFlags chkExportFlag = new ChunkExportFlags();
                             chkExportFlag.ReadChunk(cgfReader, ChkHdr.offset);
                             chkExportFlag.id = ChkHdr.id;
+                            chkExportFlag.chunkType = ChkHdr.type;
                             CgfChunks.Add(chkExportFlag);
                             ChunkDictionary.Add(chkExportFlag.id, chkExportFlag);
                             //chkExportFlag.WriteChunk();
@@ -1804,7 +1805,7 @@ namespace CgfConverter
                     }
                     FlipUVs = false;
                     OutputFile = new FileInfo(inputArgs[0] + ".obj");   // is this a bug?  .cgf.obj file output?
-                    Obj = true;
+                    Obj = false;
                     Blend = false;
 
                     for (int i = 0; i < inputArgs.Length; i++)
@@ -1938,6 +1939,8 @@ namespace CgfConverter
             CgfData cgfData = new CgfData();
             CgfData cgfData2 = new CgfData(); // For .cga/.cgam files exported to .obj
             cgfData.ReadCgfData(argsHandler.InputFile,argsHandler);
+            // Really need to read the material file as part of the cgfData import.
+            cgfData.MatFile.GetMtlFileName(cgfData);
             cgfList.Add(cgfData);
 
             // Console.WriteLine("Input file 2 is {0}", argsHandler.InputFile2.FullName);
