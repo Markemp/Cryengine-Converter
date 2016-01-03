@@ -39,7 +39,8 @@ namespace CgfConverter
             WriteAsset();
             WriteLibrary_Images();
             WriteLibrary_Materials();
-            //daeDoc.Save(daeOutputFile.FullName);
+            WriteLibrary_Effects();
+            WriteLibrary_Geometries();
             TextWriter writer = new StreamWriter(daeOutputFile.FullName);   // Makes the Textwriter object for the output
             mySerializer.Serialize(writer, daeObject);                      // Serializes the daeObject and writes to the writer
             Console.WriteLine("End of Write Collada");
@@ -48,9 +49,7 @@ namespace CgfConverter
         private void WriteRootNode()
         {
             //Grendgine_Collada collada = new Grendgine_Collada();
-            //collada.Collada_Version = "1.5.0";
             daeObject.Collada_Version = "1.5.0";
-            
         }
 
         public void GetSchema()                                             // Get the schema from kronos.org.  Needs error checking in case it's offline
@@ -58,7 +57,6 @@ namespace CgfConverter
             schema.ElementFormDefault = XmlSchemaForm.Qualified;
             schema.TargetNamespace = "https://www.khronos.org/files/collada_schema_1_5";
         }
-
 
         public void WriteAsset()
         {
@@ -146,18 +144,47 @@ namespace CgfConverter
                 tmpMaterial.Name = cgfData.MatFile.MaterialNameArray[i].MaterialName;
                 // Create the instance_effect for each material
                 tmpMaterial.Instance_Effect = new Grendgine_Collada_Instance_Effect();
-                tmpMaterial.Instance_Effect.URL = tmpMaterial.Name;
+                // The # in front of tmpMaterial.name is needed to reference the effect in Library_effects.
+                tmpMaterial.Instance_Effect.URL = "#" + tmpMaterial.Name;
+                // Need material ID here, so the meshes can reference it.  Use the chunk ID.
+                tmpMaterial.ID = i.ToString();          // this is the order the materials appear in the .mtl file.  Needed for geometries.
                 materials[i] = tmpMaterial;
             }
             libraryMaterials.Material = materials;
         }
         public void WriteLibrary_Effects()
         {
+            // The Effects library.  This is actual material stuff, so... let's get into it!  First, let's make a library effects object
+            Grendgine_Collada_Library_Effects libraryEffects = new Grendgine_Collada_Library_Effects();
+            daeObject.Library_Effects = libraryEffects;
+            // libraryEffects contains a number of effects objects.  One effects object for each material.
 
         }
         public void WriteLibrary_Geometries()
         {
+            // Geometry library.  this is going to be fun...
+            Grendgine_Collada_Library_Geometries libraryGeometries = new Grendgine_Collada_Library_Geometries();
+            libraryGeometries.ID = cgfData.RootNode.Name;
+            daeObject.Library_Geometries = libraryGeometries;
+            // Make a list for all the geometries objects we will need. Will convert to array at end.  Define the array here as well
+            List<Grendgine_Collada_Geometry> geometryList = new List<Grendgine_Collada_Geometry>();
+            Grendgine_Collada_Geometry[] geometry;
+            // For each of the nodes, we need to write the geometry.
+            // Need to figure out how to assign the right material to the node as well.
+            // Use a foreach statement to get all the node chunks.  This will get us the meshes, which will contain the vertex, UV and normal info.
+            foreach (CgfData.ChunkNode nodeChunk in cgfData.CgfChunks.Where(a => a.chunkType == ChunkType.Node))
+            {
+                // Create a geometry object
+                Grendgine_Collada_Geometry tmpGeo = new Grendgine_Collada_Geometry();
+                tmpGeo.Name = nodeChunk.Name;
+                tmpGeo.ID = nodeChunk.id.ToString();
+                // Now make the mesh object.  This will have 3 sources, 1 vertices, and 1 triangles (with material ID)
+                // Will have to figure out transforms here too.
 
+                // Add the tmpGeo geometry to the list
+                geometryList.Add(tmpGeo);
+            }
+            geometry = geometryList.ToArray();
         }
         public void WriteLibrary_Controllers()
         {
