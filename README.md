@@ -1,5 +1,5 @@
 # Cryengine-Converter
-A c# program to convert Crytek files to something more usable (.obj and Collada, maybe .fbx if possible)
+A c# program to convert Crytek Cryengine files to something more usable (.obj and Collada, maybe .fbx if possible)
 
 See the github-master for the actual code. Had some problems syncing up Visual Studio and github, 
 so the master branch is a bit of a lost cause.
