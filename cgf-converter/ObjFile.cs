@@ -144,9 +144,8 @@ namespace CgfConverter
                 return;
             }
             CgfData.ChunkMtlName tmpMtlName = (CgfData.ChunkMtlName)cgfData.ChunkDictionary[chunkNode.MatID];
-            CgfData.ChunkMeshSubsets tmpMeshSubsets = new CgfData.ChunkMeshSubsets();
-            tmpMeshSubsets = (CgfData.ChunkMeshSubsets)cgfData.ChunkDictionary[tmpMesh.MeshSubsets];  // Listed as Object ID for the Node
-
+            CgfData.ChunkMeshSubsets tmpMeshSubsets = (CgfData.ChunkMeshSubsets)cgfData.ChunkDictionary[tmpMesh.MeshSubsets];  // Listed as Object ID for the Node
+            
             // Going to assume that there is only one VerticesData datastream for now.  Need to watch for this.   
             // Some 801 types have vertices and not VertsUVs.
             //Console.WriteLine("TEMPMESH WITH NO CurrentIndicesPosition");

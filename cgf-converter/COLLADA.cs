@@ -165,26 +165,112 @@ namespace CgfConverter
             // Geometry library.  this is going to be fun...
             Grendgine_Collada_Library_Geometries libraryGeometries = new Grendgine_Collada_Library_Geometries();
             libraryGeometries.ID = cgfData.RootNode.Name;
-            daeObject.Library_Geometries = libraryGeometries;
             // Make a list for all the geometries objects we will need. Will convert to array at end.  Define the array here as well
             List<Grendgine_Collada_Geometry> geometryList = new List<Grendgine_Collada_Geometry>();
-            Grendgine_Collada_Geometry[] geometry;
+
             // For each of the nodes, we need to write the geometry.
             // Need to figure out how to assign the right material to the node as well.
             // Use a foreach statement to get all the node chunks.  This will get us the meshes, which will contain the vertex, UV and normal info.
             foreach (CgfData.ChunkNode nodeChunk in cgfData.CgfChunks.Where(a => a.chunkType == ChunkType.Node))
             {
-                // Create a geometry object
+                // Create a geometry object.  Use the chunk ID for the geometry ID
+                // Will have to be careful with this, since with .cga/.cgam pairs will need to match by Name.
                 Grendgine_Collada_Geometry tmpGeo = new Grendgine_Collada_Geometry();
                 tmpGeo.Name = nodeChunk.Name;
                 tmpGeo.ID = nodeChunk.id.ToString();
                 // Now make the mesh object.  This will have 3 sources, 1 vertices, and 1 triangles (with material ID)
+                // If the Object ID of Node chunk points to a Helper or a Controller though, place an empty.
                 // Will have to figure out transforms here too.
+                Grendgine_Collada_Mesh tmpMesh = new Grendgine_Collada_Mesh();
+                // need to make a list of the sources and triangles to add to tmpGeo.Mesh
+                List<Grendgine_Collada_Source> sourceList = new List<Grendgine_Collada_Source>();
+                List<Grendgine_Collada_Triangles> triList = new List<Grendgine_Collada_Triangles>();
+                CgfData.ChunkDataStream tmpNormals = new CgfData.ChunkDataStream();
+                CgfData.ChunkDataStream tmpUVs = new CgfData.ChunkDataStream();
+                CgfData.ChunkDataStream tmpVertices = new CgfData.ChunkDataStream();
+                CgfData.ChunkDataStream tmpVertsUVs = new CgfData.ChunkDataStream();
+
+                if (cgfData.ChunkDictionary[nodeChunk.Object].chunkType == ChunkType.Mesh)
+                {
+                    // Get the mesh chunk and submesh chunk for this node.
+                    CgfData.ChunkMesh tmpMeshChunk = (CgfData.ChunkMesh)cgfData.ChunkDictionary[nodeChunk.Object];
+                    CgfData.ChunkMeshSubsets tmpMeshSubsets = tmpMeshSubsets = (CgfData.ChunkMeshSubsets)cgfData.ChunkDictionary[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
+
+                    // Get pointers to the vertices data
+                    if (tmpMeshChunk.VerticesData != 0)
+                    {
+                        tmpVertices = (CgfData.ChunkDataStream)cgfData.ChunkDictionary[tmpMeshChunk.VerticesData];
+                    }
+                    if (tmpMeshChunk.NormalsData != 0)
+                    {
+                        tmpNormals = (CgfData.ChunkDataStream)cgfData.ChunkDictionary[tmpMeshChunk.NormalsData];
+                    }
+                    if (tmpMeshChunk.UVsData != 0)
+                    {
+                        tmpUVs = (CgfData.ChunkDataStream)cgfData.ChunkDictionary[tmpMeshChunk.UVsData];
+                    }
+                    if (tmpMeshChunk.VertsUVsData != 0)
+                    {
+                        tmpVertsUVs = (CgfData.ChunkDataStream)cgfData.ChunkDictionary[tmpMeshChunk.VertsUVsData];
+                    }
+
+                    // need a collada_source for position, normal, UV and color, what the source is (verts), and the tri index
+                    Grendgine_Collada_Source posSource = new Grendgine_Collada_Source();
+                    Grendgine_Collada_Source normSource = new Grendgine_Collada_Source();
+                    Grendgine_Collada_Source uvSource = new Grendgine_Collada_Source();
+                    Grendgine_Collada_Vertices verts = new Grendgine_Collada_Vertices();
+                    Grendgine_Collada_Triangles tris = new Grendgine_Collada_Triangles();
+
+                    posSource.ID = nodeChunk.Name + "_pos";  // I want to use the chunk ID, but that may be daunting.
+                    posSource.Name = nodeChunk.Name + "_pos";
+                    normSource.ID = nodeChunk.Name + "_norm";
+                    normSource.Name = nodeChunk.Name + "_norm";
+                    uvSource.Name = nodeChunk.Name + "_UV";
+                    uvSource.ID = nodeChunk.Name + "_UV";
+
+                    // Create a float_array object to store all the data
+                    Grendgine_Collada_Float_Array floatArray = new Grendgine_Collada_Float_Array();
+                    floatArray.ID = posSource.Name + "_array";
+                    floatArray.Count = (int)tmpVertices.NumElements;
+                    // Build the string of vertices with a stringbuilder
+                    StringBuilder vertString = new StringBuilder();
+                    for (int i=0; i<floatArray.Count; i++)
+                    {
+                        // this is an array of Vector3s?
+                    }
+                    //floatArray = 
+
+
+                    normSource.ID = nodeChunk.Name + "_pos";
+                    normSource.Name = nodeChunk.Name + "_pos";
+
+                    uvSource.ID = nodeChunk.Name + "_UV";
+                    uvSource.Name = nodeChunk.Name + "_UV";
+
+                    // make a vertices eliment.  Only one, so no list needed.
+
+                    // tris are easy.  Just the index of faces
+
+
+                }
+                else if (cgfData.ChunkDictionary[nodeChunk.Object].chunkType == ChunkType.Helper)
+                {
+                    
+                } else if (cgfData.ChunkDictionary[nodeChunk.Object].chunkType == ChunkType.Controller)
+                {
+
+                }
+                tmpGeo.Mesh = tmpMesh;
 
                 // Add the tmpGeo geometry to the list
+
                 geometryList.Add(tmpGeo);
+                
+                
             }
-            geometry = geometryList.ToArray();
+            libraryGeometries.Geometry = geometryList.ToArray();
+            daeObject.Library_Geometries = libraryGeometries;
+
         }
         public void WriteLibrary_Controllers()
         {
