@@ -1952,8 +1952,6 @@ namespace CgfConverter
                             Console.WriteLine("Output format set to Blender (.blend)");
                             this.Blend = true;
 
-                            throw new NotImplementedException();
-
                             break;
 
                         #endregion
@@ -1973,8 +1971,6 @@ namespace CgfConverter
                         case "-collada":
                             Console.WriteLine("Output format set to COLLADA (.dae)");
                             this.COLLADA = true;
-
-                            throw new NotImplementedException();
 
                             break;
 
