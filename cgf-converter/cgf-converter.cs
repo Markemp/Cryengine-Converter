@@ -1862,9 +1862,6 @@ namespace CgfConverter
                         // Add to list of files to process
                         this.InputFiles.Add(newFile);
 
-                        // Output file is based on first file name
-                        if (i == 0) this.OutputFile = new FileInfo(Path.GetFileNameWithoutExtension(newFile.FullName) + "_out.obj");
-
                         #region .cgam Auto-Detection
 
                         FileInfo cgamFile = new FileInfo(Path.ChangeExtension(inputArgs[i], ".cgam"));
@@ -1982,6 +1979,16 @@ namespace CgfConverter
                             break;
 
                         #endregion
+                        #region case "-noconflict"...
+
+                        case "-noconflict":
+
+                            // Output file is based on first file name
+                            if (i == 0) this.OutputFile = new FileInfo(Path.GetFileNameWithoutExtension(this.InputFiles.First().FullName) + "_out.obj");
+
+                            break;
+
+                        #endregion
                         #region case "-throw"...
 
                         case "-throw":
@@ -2023,8 +2030,9 @@ namespace CgfConverter
             Console.WriteLine("-usage:           Prints out the usage statement");
             Console.WriteLine();
             Console.WriteLine("<.cgf file>:      Mandatory.  The name of the .cgf, .cga or .skin file to process");
-            Console.WriteLine("-output file:     The name of the file to write the output.  Default is <cgf File>.obj.");
-            Console.WriteLine("-objectdir:       The name where the base Objects directory is located.  Used to read mtl file.");
+            Console.WriteLine("-outputfile:      The name of the file to write the output.  Default is [root].obj");
+            Console.WriteLine("-noconflict:      Use non-conflicting naming scheme (<cgf File>_out.obj)");
+            Console.WriteLine("-objectdir:       The name where the base Objects directory is located.  Used to read mtl file");
             Console.WriteLine("                  Defaults to current directory.");
             Console.WriteLine("-obj:             Export Wavefront format files (Default: true)");
             Console.WriteLine("-blend:           Export Blender format files (Not Implemented)");
