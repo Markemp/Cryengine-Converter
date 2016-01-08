@@ -1,7 +1,7 @@
 using System;
 namespace grendgine_collada
 {
-	[System.SerializableAttribute()]
+	[Serializable]
 	[System.Xml.Serialization.XmlTypeAttribute(Namespace="http://www.collada.org/2005/11/COLLADASchema" )]
 	public enum Grendgine_Collada_Argument_Alpha_Operand
 	{

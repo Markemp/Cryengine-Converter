@@ -4,7 +4,7 @@ using System.Xml.Serialization;
 using System.IO;
 namespace grendgine_collada
 {
-	[System.SerializableAttribute()]
+	[Serializable]
 	[System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true)]
 	public partial class Grendgine_Collada_Parabola
 	{
