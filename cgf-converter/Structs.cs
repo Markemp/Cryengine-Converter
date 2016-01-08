@@ -303,6 +303,20 @@ namespace CgfConverter
 
             return result;
         }
+        public Matrix33 To3x3()
+        {
+            Matrix33 result = new Matrix33();
+            result.m11 = m11;
+            result.m12 = m12;
+            result.m13 = m13;
+            result.m21 = m21;
+            result.m22 = m22;
+            result.m23 = m23;
+            result.m31 = m31;
+            result.m32 = m32;
+            result.m33 = m33;
+            return result;
+        }
         public void WriteMatrix44()
         {
             Console.WriteLine("=============================================");

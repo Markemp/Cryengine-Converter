@@ -47,7 +47,7 @@ namespace CgfConverter
             CgfHeader.GetHeader(cgfReader);
             cgfReader.BaseStream.Seek(CgfHeader.fileOffset, 0);  // will now start to read from the start of the chunk table
             tmpChunkTable.GetChunkTable(cgfReader, CgfHeader.fileOffset);
-            tmpChunkTable.WriteChunk();
+            //tmpChunkTable.WriteChunk();
             // Add this temp chunk table to the main table.  That will contain the full list of chunks added to the dictionary
             CgfChunkTable.chkHeaders.AddRange(tmpChunkTable.chkHeaders);
 
@@ -156,29 +156,47 @@ namespace CgfConverter
 
                             if (RootNodeID == 0x0)
                             {
-                                //Console.WriteLine("Found a Parent chunk node.  Adding to the dictionary.");
+                                Console.WriteLine("Found a Parent chunk node.  Adding to the dictionary.");
                                 RootNodeID = chkNode.id;
                                 RootNode = chkNode;
                                 RootNode.TransformSoFar.x = RootNode.Transform.m41;
                                 RootNode.TransformSoFar.y = RootNode.Transform.m42;
                                 RootNode.TransformSoFar.z = RootNode.Transform.m43;
-                                //ChunkDictionary[RootNodeID].WriteChunk();
+                                // Set up RotSoFar
+                                RootNode.RotSoFar.m11 = RootNode.Transform.m11;
+                                RootNode.RotSoFar.m12 = RootNode.Transform.m12;
+                                RootNode.RotSoFar.m13 = RootNode.Transform.m13;
+                                RootNode.RotSoFar.m21 = RootNode.Transform.m21;
+                                RootNode.RotSoFar.m22 = RootNode.Transform.m22;
+                                RootNode.RotSoFar.m23 = RootNode.Transform.m23;
+                                RootNode.RotSoFar.m31 = RootNode.Transform.m31;
+                                RootNode.RotSoFar.m32 = RootNode.Transform.m32;
+                                RootNode.RotSoFar.m33 = RootNode.Transform.m33;
+                                ChunkDictionary[RootNodeID].WriteChunk();
                             } else
                             {
                                 // Get the transform so far.
                                 chkNode.TransformSoFar.x = ((ChunkNode)ChunkDictionary[chkNode.Parent]).TransformSoFar.x + chkNode.Transform.m41/100;
                                 chkNode.TransformSoFar.y = ((ChunkNode)ChunkDictionary[chkNode.Parent]).TransformSoFar.y + chkNode.Transform.m42/100;
                                 chkNode.TransformSoFar.z = ((ChunkNode)ChunkDictionary[chkNode.Parent]).TransformSoFar.z + chkNode.Transform.m43/100;
+                                // Get the rotation so far
+                                //chkNode.RotSoFar.WriteMatrix33();
+                                chkNode.Transform.To3x3().Mult(((ChunkNode)ChunkDictionary[chkNode.Parent]).RotSoFar);
+                                //chkNode.RotSoFar.WriteMatrix33();
                             }
-                            if (chkNode.Name == "Belly_Wing_Right_Decal")
+
+                            if (chkNode.Name.Contains("RearWingLeft"))
                             {
-                                chkNode.WriteChunk();
+                                //chkNode.WriteChunk();
                             }
-                            if (chkNode.id == 0xB26)
+                            if (chkNode.Parent == 0x8E1)
                             {
-                                chkNode.WriteChunk();
+                                chkNode.Transform.WriteMatrix44();
+                                chkNode.RotSoFar.WriteMatrix33();
+                                ((ChunkNode)ChunkDictionary[chkNode.Parent]).RotSoFar.WriteMatrix33();
+                                //chkNode.WriteChunk();
                             }
-                            if (chkNode.id == 0xB0B)
+                            /*if (chkNode.id == 0xB0B)
                             {
                                 chkNode.WriteChunk();
                             }
@@ -189,7 +207,7 @@ namespace CgfConverter
                             if (chkNode.id == 0x8E9)
                             {
                                 chkNode.WriteChunk();
-                            }
+                            }*/
                             //chkNode.WriteChunk();
                             break;
                         }
@@ -303,30 +321,29 @@ namespace CgfConverter
         }
         public Vector3 GetTransform2(ChunkNode chunkNode, Vector3 transform)
         {
-            // This just returns the transpose of each node chunk up to the parent.  Not sure if necessary.
+            // Gets the transform of the vertex.  This will be both the rotation and translation of this vertex, plus all the parents.
             // The transform matrix is a 4x4 matrix.  Vector3 is a 3x1.  We need to convert vector3 to vector4, multiply the matrix, then convert back to vector3
-            //float x = chunkNode.Transform.m41 / 100;
-            //float y = chunkNode.Transform.m42 / 100;
-            //float z = chunkNode.Transform.m43 / 100;
-            //Vector3 resultant = new Vector3();
-            Vector4 vec4 = transform.ToVector4();
+            Vector3 vec3 = transform;
             //Console.WriteLine("vec4.x {0}", vec4.x);
             if (chunkNode.Parent != 0xFFFFFFFF)
             {
-                //resultant.x += x;
-                //resultant.y += y;
-                //resultant.z += z;
-                //transform = GetTransform2((ChunkNode)ChunkDictionary[chunkNode.Parent], resultant);
-                vec4 = chunkNode.Transform.Mult4x1(vec4);
+                // Get the RotSofar  
+                //(chunkNode.Transform).To3x3().WriteMatrix33();     
+                Matrix33 rotSoFar = (chunkNode.Transform).To3x3().Mult(((ChunkNode)ChunkDictionary[chunkNode.Parent]).RotSoFar);
+                //if (chunkNode.Name.Contains("RearWingLeft_Flap"))
+                //{
+                //    rotSoFar.WriteMatrix33();
+                //}
+                vec3 = ((chunkNode.Transform).To3x3()).Mult3x1(vec3);
                 // Apply the parent transform
-                vec4.x += ((ChunkNode)ChunkDictionary[chunkNode.Parent]).TransformSoFar.x;
-                vec4.y += ((ChunkNode)ChunkDictionary[chunkNode.Parent]).TransformSoFar.y;
-                vec4.z += ((ChunkNode)ChunkDictionary[chunkNode.Parent]).TransformSoFar.z;
+                vec3.x += ((ChunkNode)ChunkDictionary[chunkNode.Parent]).TransformSoFar.x;
+                vec3.y += ((ChunkNode)ChunkDictionary[chunkNode.Parent]).TransformSoFar.y;
+                vec3.z += ((ChunkNode)ChunkDictionary[chunkNode.Parent]).TransformSoFar.z;
                 //vec4.WriteVector4();
             }
             //Console.WriteLine();
             //Console.WriteLine("vec4.x {0}", vec4.x);
-            return vec4.ToVector3();
+            return vec3;
             
         }
         public void WriteTransform(Vector3 transform)
@@ -572,10 +589,7 @@ namespace CgfConverter
                     fOffset.Offset = b.ReadInt32();
                     id = b.ReadUInt32();
                 }
-                if (FileVersion == 1)
-                {
-                    //chunkType = 0;
-                }
+
                 Type = (HelperType)Enum.ToObject(typeof(HelperType), b.ReadUInt32());
                 if (version == 0x744)  // only has the Position.
                 {
@@ -768,7 +782,7 @@ namespace CgfConverter
             public ChunkNode[] NodeChildren;
 
             public Vector3 TransformSoFar = new Vector3();  // this is the parent transform plus this transform.
-
+            public Matrix33 RotSoFar = new Matrix33();
 
             public override void ReadChunk(BinaryReader b, uint f)
             {
@@ -857,8 +871,10 @@ namespace CgfConverter
                 Console.WriteLine("    Transformation:      {0:F7}  {1:F7}  {2:F7}  {3:F7}", Transform.m11, Transform.m12, Transform.m13, Transform.m14);
                 Console.WriteLine("                         {0:F7}  {1:F7}  {2:F7}  {3:F7}", Transform.m21, Transform.m22, Transform.m23, Transform.m24);
                 Console.WriteLine("                         {0:F7}  {1:F7}  {2:F7}  {3:F7}", Transform.m31, Transform.m32, Transform.m33, Transform.m34);
-                Console.WriteLine("                         {0:F7}  {1:F7}  {2:F7}  {3:F7}", Transform.m41/100, Transform.m42/100, Transform.m43/100, Transform.m44);
+                Console.WriteLine("                         {0:F7}  {1:F7}  {2:F7}  {3:F7}", Transform.m41 / 100, Transform.m42 / 100, Transform.m43 / 100, Transform.m44);
                 Console.WriteLine("    Transform_sum:       {0:F7}  {1:F7}  {2:F7}", TransformSoFar.x, TransformSoFar.y, TransformSoFar.z);
+                Console.WriteLine("    Rotation_sum:");
+                RotSoFar.WriteMatrix33();
                 Console.WriteLine("*** END Node Chunk ***");
 
             }

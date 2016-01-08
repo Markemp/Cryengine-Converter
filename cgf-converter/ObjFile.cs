@@ -130,7 +130,7 @@ namespace CgfConverter
 
             if (tmpMesh.MeshSubsets == 0)   // This is probably wrong.  These may be parents with no geometry, but still have an offset
             {
-                Console.WriteLine("*********************Found a Mesh chunk with no Submesh ID (ID: {0:X}).  Skipping...", tmpMesh.id);
+                Console.WriteLine("*******Found a Mesh chunk with no Submesh ID (ID: {0:X}, Name: {1}).  Skipping...", tmpMesh.id, chunkNode.Name);
                 //tmpMesh.WriteChunk();
                 //Console.WriteLine("Node Chunk: {0}", chunkNode.Name);
                 //transform = cgfData.GetTransform(chunkNode, transform);
@@ -138,7 +138,7 @@ namespace CgfConverter
             }
             if (tmpMesh.VerticesData == 0 && tmpMesh.VertsUVsData == 0)  // This is probably wrong.  These may be parents with no geometry, but still have an offset
             {
-                Console.WriteLine("*********************Found a Mesh chunk with no Vertex info (ID: {0:X}).  Skipping...", tmpMesh.id);
+                Console.WriteLine("*******Found a Mesh chunk with no Vertex info (ID: {0:X}, Name: {1}).  Skipping...", tmpMesh.id, chunkNode.Name);
                 //tmpMesh.WriteChunk();
                 //Console.WriteLine("Node Chunk: {0}", chunkNode.Name);
                 //transform = cgfData.GetTransform(chunkNode, transform);
