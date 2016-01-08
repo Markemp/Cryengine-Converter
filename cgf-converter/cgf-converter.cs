@@ -246,10 +246,10 @@ namespace CgfConverter
         public void ReadCgfData(FileInfo inputFile, ArgsHandler args)  // Constructor for CgfFormat.  This populates the structure.  Modify to handle .cgam files too.
         {
             // Call GetCgfData on the inputfile in args.  If inputfile2 exists, that is a .cgam file and should be called as well.
-            Args = args;                            // in the event something else needs to know what was passed
-            DataFile = args.InputFile;
-            GetCgfData(inputFile);
-
+            this.Args = args;                            // in the event something else needs to know what was passed
+            this.DataFile = args.InputFiles.First(); // TODO: Process more than one file
+            this.objOutputFile = args.OutputFile;
+            this.GetCgfData(inputFile);
         }
         public Vector3 GetTransform(ChunkNode chunkNode, Vector3 transform)        //  Calculate the transform of a node by getting parent's transform.
         {
@@ -1727,256 +1727,340 @@ namespace CgfConverter
     // classes (aka anything more complicated than a fixed size struct, with methods etc.)
     public class ArgsHandler
     {
-        // all the possible switches
-        public Boolean Usage;               // Usage
-        public Boolean FlipUVs=false;       // Doing this by default.  If you want to undo, check this (reversed)
-        public FileInfo InputFile;          // File we are reading (need to check for CryTek or CrChF)
-        public FileInfo InputFile2;         // File info for .cgam, the secondary file for Star Citizen files
-        public FileInfo OutputFile = null;         // File we are outputting to
-        public Boolean Obj=false;           // You want to export to a .obj file
-        public Boolean Blend=false;         // you want to export to a .blend file.
-        public Boolean COLLADA = false;     // You want to export to a COLALDA (.dae) file.
-        public DirectoryInfo ObjectDir = null;     // Where the Object files are.
-                                            // ALWAYS check submitted directory first.  usemtl isn't always set to the obj dir.
-
-        public int ProcessArgs(string[] inputArgs)      // fill out the args passed in at the command line.
+        /// <summary>
+        /// File extensions processed by the handler
+        /// </summary>
+        private static HashSet<String> _validExtensions = new HashSet<String>
         {
-            if (inputArgs.Length == 0)      // No arguments provided.  Just go to usage and return to exit.
+            ".cgf",
+            ".cga",
+            ".skin",
+        };
+
+        /// <summary>
+        /// Reverse UVs
+        /// </summary>
+        public Boolean FlipUVs { get; set; }
+        /// <summary>
+        /// File to render to
+        /// </summary>
+        public FileInfo OutputFile { get; set; }
+        /// <summary>
+        /// Render Wavefront format files
+        /// </summary>
+        public Boolean Obj { get; set; }
+        /// <summary>
+        /// Render Blender format files
+        /// </summary>
+        public Boolean Blend { get; set; }
+        /// <summary>
+        /// Render COLLADA format files
+        /// </summary>
+        public Boolean COLLADA { get; set; }
+        /// <summary>
+        /// Location of the Object Files
+        /// </summary>
+        public DirectoryInfo ObjectDir { get; set; }
+        /// <summary>
+        /// Flag used to pass exceptions to installed debuggers
+        /// </summary>
+        public Boolean Throw { get; set; }
+
+        /// <summary>
+        /// List of files to process
+        /// </summary>
+        public List<FileInfo> InputFiles { get; set; }
+
+        /// <summary>
+        /// Parse command line arguments
+        /// </summary>
+        /// <param name="inputArgs">list of arguments to parse</param>
+        /// <returns>0 on success, 1 if anything went wrong</returns>
+        public Int32 ProcessArgs(String[] inputArgs)
+        {
+            this.InputFiles = new List<FileInfo> { };
+
+            Boolean inputFileMode = true;
+
+            for (int i = 0; i < inputArgs.Length; i++)
             {
-                this.GetUsage();
-                return 1;
-            }
-            if (inputArgs.Length == 1)      // either have unknown option, or the cgf file to process.
-            {
-                if (File.Exists(inputArgs[0])) 
+                #region Parse Input Files
+
+                if (inputFileMode)
                 {
-                    // test to see if the extension is .cgam.  If so, we want input file to be the .cga, and inputfile2 to be the .cgam
-                    InputFile = new FileInfo(inputArgs[0]);
-                    if (InputFile.Extension != ".cgam")  // 
+                    FileInfo newFile = new FileInfo(inputArgs[i]);
+
+                    if (newFile.Exists)
                     {
-                        // Check to see if there is a .cgam file.  Set that to inputfile2 if it exists.
-                        string tmpName = Path.GetFileNameWithoutExtension(InputFile.Name) + ".cgam";
-                        // Console.WriteLine(".cgam file is  {0}", tmpName);
-                        if (File.Exists(tmpName))
+                        // Validate file extension - handles .cgam
+                        if (!ArgsHandler._validExtensions.Contains(newFile.Extension))
                         {
-                            InputFile2 = new FileInfo(tmpName);
-                            Console.WriteLine("Found cgam file {0}", InputFile2.Name);
+                            Console.WriteLine("Warning: Unsupported file extension - please use a cga or cgf file");
+                            return 1;
                         }
+
+                        // Add to list of files to process
+                        this.InputFiles.Add(newFile);
+
+                        // Output file is based on first file name
+                        if (i == 0) this.OutputFile = new FileInfo(Path.GetFileNameWithoutExtension(newFile.FullName) + "_out.obj");
+
+                        #region .cgam Auto-Detection
+
+                        FileInfo cgamFile = new FileInfo(Path.ChangeExtension(inputArgs[i], ".cgam"));
+                                    
+                        if (cgamFile.Exists)
+                        {
+                            Console.WriteLine("Found cgam file {0}", cgamFile.Name);
+
+                            // Add to list of files to process
+                            this.InputFiles.Add(cgamFile);
+                        }
+
+                        #endregion
+
                     }
                     else
                     {
-                        // Return an error.  We don't want to process .cgam files.  They should only be handled from the related .cga file
-                        Console.WriteLine("Warning:  .cgam file.  Not processing; instead use the related .cga file.");
-                        return 1;
+                        inputFileMode = false;
                     }
-                    FlipUVs = false;
-                    OutputFile = new FileInfo(inputArgs[0] + ".obj");   // is this a bug?  .cgf.obj file output?
-                    Obj = true;
-                    Blend = false;
-                    return 0;
                 }
-                else
-                {
-                    this.GetUsage();
-                    return 1;
-                }
-            }
-            else
-            {
-                // More than one argument submitted.  Test each value.  For loops?
-                if (File.Exists(inputArgs[0]))
-                {
-                    // test to see if the extension is .cgam.  If so, we want input file to be the .cga, and inputfile2 to be the .cgam
-                    InputFile = new FileInfo(inputArgs[0]);
-                    if (InputFile.Extension != ".cgam")  // 
-                    {
-                        // Check to see if there is a .cgam file.  Set that to inputfile2 if it exists.
-                        string tmpName = Path.GetFileNameWithoutExtension(InputFile.Name) + ".cgam";
-                        if (File.Exists(tmpName))
-                        {
-                            InputFile2 = new FileInfo(tmpName);
-                            Console.WriteLine("Found cgam file {0}", InputFile2.Name);
-                        }
-                    } else
-                    {
-                        // Return an error.  We don't want to process .cgam files.  They should only be handled from the related .cga file
-                        Console.WriteLine("Warning:  .cgam file.  Not processing; instead use the related .cga file.");
-                        return 1;
-                    }
-                    FlipUVs = false;
-                    OutputFile = new FileInfo(inputArgs[0] + ".obj");   // is this a bug?  .cgf.obj file output?
-                    Obj = false;
-                    Blend = false;
 
-                    for (int i = 0; i < inputArgs.Length; i++)
+                #endregion
+
+                #region Parse Other Arguments
+
+                if (!inputFileMode)
+                {
+                    switch (inputArgs[i].ToLowerInvariant())
                     {
-                        //Console.WriteLine("Processing inputArg {0}", inputArgs[i]);
-                        if (inputArgs[i].ToLower() == "-objectdir")
-                        {
-                            // Next item in list will be the Object directory
-                            // Console.WriteLine("i is {0}, Length is {1}", i, inputArgs.Length);
-                            if (i + 1 > inputArgs.Length)
+                        #region case "-objectdir"...
+
+                        // Next item in list will be the Object directory
+                        case "-objectdir":
+                            if (++i > inputArgs.Length)
                             {
-                                // nothing after -object dir.  Usage.
-                                GetUsage();
+                                this.PrintUsage();
                                 return 1;
                             }
-                            else
+
+                            this.ObjectDir = new DirectoryInfo(inputArgs[i]);
+
+                            if (!this.ObjectDir.Exists)
+                                throw new DirectoryNotFoundException("Object Directory not found");
+
+                            Console.WriteLine("Object directory set to {0}", inputArgs[i]);
+
+                            break;
+
+                        #endregion
+                        #region case "-outfile" / "-outputfile"...
+
+                        // Next item in list will be the output filename
+                        case "-outfile":
+                        case "-outputfile":
+                            if (++i > inputArgs.Length)
                             {
-                                string s = inputArgs[i + 1].ToLower();
-                                //Console.WriteLine("String s is {0}", s);
-                                ObjectDir = new DirectoryInfo(inputArgs[i + 1]);
-                                //Console.WriteLine("Found Object Dir {0}", ObjectDir.FullName);
-                                //i++; // because we know i+1 is the directory
+                                this.PrintUsage();
+                                return 1;
                             }
-                        }
-                        if (inputArgs[i].ToLower() == "-flipuv")
-                        {
-                            FlipUVs = true;
+
+                            this.OutputFile = new FileInfo(inputArgs[i]);
+
+                            Console.WriteLine("Output file set to {0}", inputArgs[i]);
+
+                            break;
+
+                        #endregion
+                        #region case "-usage"...
+
+                        case "-usage":
+                            this.PrintUsage();
+                            return 1;
+
+                        #endregion
+                        #region case "-flipuv"...
+
+                        case "-flipuv":
                             Console.WriteLine("Flipping UVs.");
-                        }
-                        if (inputArgs[i].ToLower() == "-outputfile")
-                        {
-                            if (i + 1 > inputArgs.Length)
-                            {
-                                // nothing after -object dir.  Usage.
-                                GetUsage();
-                                return 1;
-                            }
-                            else
-                            {
-                                OutputFile = new FileInfo(inputArgs[i + 1]);
-                                //Console.WriteLine("Output file set to {0}", OutputFile.FullName);
-                                i++; // because we know i+1 is the outputfile
-                            }
-                        }
-                        if (inputArgs[i].ToLower() == "-blend")
-                        {
-                            Blend = true;
-                            Console.WriteLine("Output format set to Blend.");
-                        }
-                        if (inputArgs[i].ToLower() == "-obj" || inputArgs[i].ToLower() == "-object")
-                        {
-                            Obj = true;
-                            Console.WriteLine("Output format set to .obj.");
-                        }
-                        if (inputArgs[i].ToLower() == "-dae" || inputArgs[i].ToLower() == "-collada")
-                        {
-                            COLLADA = true;
+                            this.FlipUVs = true;
+
+                            break;
+
+                        #endregion
+                        #region case "-blend" / "-blender"...
+
+                        case "-blend":
+                        case "-blender":
+                            Console.WriteLine("Output format set to Blender (.blend)");
+                            this.Blend = true;
+
+                            throw new NotImplementedException();
+
+                            break;
+
+                        #endregion
+                        #region case "-obj" / "-object" / "wavefront"...
+
+                        case "-obj":
+                        case "-object":
+                        case "-wavefront":
+                            Console.WriteLine("Output format set to Wavefront (.obj)");
+                            this.Obj = true;
+
+                            break;
+
+                        #endregion
+                        #region case "-dae" / "-collada"...
+                        case "-dae":
+                        case "-collada":
                             Console.WriteLine("Output format set to COLLADA (.dae)");
-                        }
+                            this.COLLADA = true;
+
+                            throw new NotImplementedException();
+
+                            break;
+
+                        #endregion
+                        #region case "-throw"...
+
+                        case "-throw":
+                            Console.WriteLine("Exceptions thrown to debugger");
+                            this.Throw = true;
+
+                            break;
+
+                        #endregion
                     }
                 }
-                else
-                {
-                    GetUsage();
-                    return 1;
-                }
-                return 0;
+
+                #endregion
             }
+
+            // Ensure we have files to process
+            if (this.InputFiles.Count == 0)
+            {
+                this.PrintUsage();
+                return 1;
+            }
+
+            // Default to Wavefront (.obj) format
+            if (!this.Blend && !this.COLLADA && !this.Obj)
+                this.Obj = true;
+
+            return 0;
         }
-        private void GetUsage()
+
+        /// <summary>
+        /// Print the usage syntax of the executable
+        /// </summary>
+        public void PrintUsage()
         {
             var usage = new StringBuilder();
-            usage.AppendLine();
-            usage.AppendLine("cgf-converter [-usage] | <.cgf file> [-outputfile <output file>] [-objectdir <ObjectDir>] [-obj|-blend] [-flipUVs]");
-            usage.AppendLine();
-            usage.AppendLine("-usage:           Prints out the usage statement");
-            usage.AppendLine();
-            usage.AppendLine("<.cgf file>:      Mandatory.  The name of the .cgf, .cga or .skin file to process");
-            usage.AppendLine("-output file:     The name of the file to write the output.  Default is <cgf File>.obj.  NYI");
-            usage.AppendLine("-objectdir:       The name where the base Objects directory is located.  Used to read mtl file. ");
-		    usage.AppendLine("                  Defaults to current directory.");
-            usage.AppendLine("-obj|-blend|[-dae|-COLLADA]:      Export to .obj or .blend format.  Can be both.  Defaults to .obj only.");
-            usage.AppendLine("-flipUVs:         Flips the UV.  Defaults to... true?  Whatever Blender likes by default.  NYI");
-            usage.AppendLine();
-            Console.WriteLine(usage.ToString());
+            Console.WriteLine();
+            Console.WriteLine("cgf-converter [-usage] | <.cgf file> [-outputfile <output file>] [-objectdir <ObjectDir>] [-obj] [-blend] [-dae] [-flipUVs] [-throw]");
+            Console.WriteLine();
+            Console.WriteLine("-usage:           Prints out the usage statement");
+            Console.WriteLine();
+            Console.WriteLine("<.cgf file>:      Mandatory.  The name of the .cgf, .cga or .skin file to process");
+            Console.WriteLine("-output file:     The name of the file to write the output.  Default is <cgf File>.obj.");
+            Console.WriteLine("-objectdir:       The name where the base Objects directory is located.  Used to read mtl file.");
+            Console.WriteLine("                  Defaults to current directory.");
+            Console.WriteLine("-obj:             Export Wavefront format files (Default: true)");
+            Console.WriteLine("-blend:           Export Blender format files (Not Implemented)");
+            Console.WriteLine("-dae:             Export Collada format files (Not Implemented)");
+            Console.WriteLine("-flipUVs:         Flip the UVs");
+            Console.WriteLine();
+            Console.WriteLine("-throw:           Throw Exceptions to installed debugger");
+            Console.WriteLine();
         }
+        
+        /// <summary>
+        /// Print the current arguments of the executable
+        /// </summary>
         public void WriteArgs()
         {
+            Console.WriteLine();
             Console.WriteLine("*** Submitted args ***");
-            Console.WriteLine("    Input file:             {0}", InputFile.FullName);
-            if (InputFile2 != null)     // This only runs if we get a .cgam file for the input.
+            Console.WriteLine("    Input files:            {0}", this.InputFiles.First().Name);
+            for (Int32 i = 1, j = this.InputFiles.Count; i < j; i++)
             {
-                Console.WriteLine("    Input File (.cgam):          {0}", InputFile2.FullName); 
+                Console.WriteLine("                            {0}", this.InputFiles[i].Name);
             }
-            if (ObjectDir != null)
+            if (this.ObjectDir != null)
             {
-                Console.WriteLine("    Object dir:             {0}", ObjectDir.FullName);
+                Console.WriteLine("    Object dir:             {0}", this.ObjectDir.FullName);
             }
-            if (OutputFile != null)
+            if (this.OutputFile != null)
             {
-                Console.WriteLine("    Output file:            {0}", OutputFile.FullName);
+                Console.WriteLine("    Output file:            {0}", this.OutputFile.FullName);
             }
-            Console.WriteLine("    Flip UVs:               {0}", FlipUVs);
-            Console.WriteLine("    Output to .obj:         {0}", Obj);
-            Console.WriteLine("    Output to .blend:       {0}", Blend);
-            Console.WriteLine("    Output to COLLADA:      {0}", COLLADA); 
+            Console.WriteLine("    Flip UVs:               {0}", this.FlipUVs);
+            Console.WriteLine("    Output to .obj:         {0}", this.Obj);
+            Console.WriteLine("    Output to .blend:       {0}", this.Blend);
+            Console.WriteLine("    Output to .dae:         {0}", this.COLLADA); 
             Console.WriteLine();
         }
     }
 
     class Program
     {
-        static void Main(string[] @args)
+        static Int32 Main(String[] args)
         {
             ArgsHandler argsHandler = new ArgsHandler();
-            // Need to make cgfData an array to be able to process multiple files (like .cga/.cgam pairs)
-            List<CgfData> cgfList = new List<CgfData>();  // contains multiple cgfdata structures
+            Int32 result = argsHandler.ProcessArgs(args);
 
-            int result = argsHandler.ProcessArgs(args);
-            // Assign the argument to a variable
-            // argsHandler.WriteArgs();
-            if (result == 1)
+            try
             {
-                // Error parsing the arguments.  Usage should have been thrown.  Exit with return 1;
-                Console.WriteLine("Unable to parse arguments.  Exiting...");
-                return;
-            }
-
-            // Console.WriteLine("Input File is '{0}'" , dataFile.Name);
-
-            CgfData cgfData = new CgfData();
-            CgfData cgfData2 = new CgfData(); // For .cga/.cgam files exported to .obj
-            cgfData.ReadCgfData(argsHandler.InputFile,argsHandler);
-            // Really need to read the material file as part of the cgfData import.
-            cgfData.MatFile.GetMtlFileName(cgfData);
-            cgfList.Add(cgfData);
-
-            // Console.WriteLine("Input file 2 is {0}", argsHandler.InputFile2.FullName);
-            if (argsHandler.InputFile2 != null)
-            {
-                Console.WriteLine("Found a .cgam file.  Reading this too.");
-                cgfData2.ReadCgfData(argsHandler.InputFile2,argsHandler);
-                cgfList.Add(cgfData2);
-            }
-
-            // Output to an obj file
-            if (argsHandler.Blend == true)
-            {
-                Blender blendFile = new Blender();
-                blendFile.WriteBlend(cgfData);
-            }
-            if (argsHandler.Obj == true)
-            {
-                ObjFile objFile = new ObjFile();
-                if (argsHandler.InputFile2 != null)
+                if (result == 0)
                 {
-                    Console.WriteLine(".cgam file found.  Processing cgfData2");
-                    objFile.WriteObjFile(cgfData2);
-                } else
-                {
-                    objFile.WriteObjFile(cgfData);
+                    #region Process Input Files
+
+                    List<CgfData> cgfData = new List<CgfData> { };
+
+                    for (Int32 i = 0, j = argsHandler.InputFiles.Count; i < j; i++)
+                    {
+                        var data = new CgfData { };
+
+                        data.ReadCgfData(argsHandler.InputFiles[i], argsHandler);
+
+                        cgfData.Add(data);
+                    }
+
+                    #endregion
+
+                    #region Render Output Files
+
+                    if (argsHandler.Blend == true)
+                    {
+                        Blender blendFile = new Blender();
+                        blendFile.WriteBlend(cgfData.Last());
+                    }
+
+                    if (argsHandler.Obj == true)
+                    {
+                        ObjFile objFile = new ObjFile();
+
+                        foreach (var data in cgfData)
+                            objFile.WriteObjFile(data); // cgfData.Last());
+                    }
+
+                    if (argsHandler.COLLADA == true)
+                    {
+                        COLLADA daeFile = new COLLADA();
+                        daeFile.WriteCollada(cgfData.Last());
+                    }
+
+                    #endregion
                 }
             }
-            if (argsHandler.COLLADA == true)
+            catch (Exception)
             {
-                COLLADA daeFile = new COLLADA();
-                daeFile.WriteCollada(cgfData);
+                if (argsHandler.Throw)
+                    throw;
             }
-            //argsHandler.WriteArgs();
 
-            return;
+            return result;
         }
     }
 }
