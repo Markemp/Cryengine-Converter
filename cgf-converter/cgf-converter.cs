@@ -31,7 +31,6 @@ namespace CgfConverter
         public UInt32 CurrentIndicesPosition = 0;
         public UInt32 TempIndicesPosition = 0;
 
-        const String BasePath = @"E:\Blender Projects\Mechs\";  // for testing.  This will eventually need to be input by user.
         public ArgsHandler Args = new ArgsHandler();
 
         public MaterialFile MatFile = new MaterialFile();    // The material file (from MaterialFile.cs)

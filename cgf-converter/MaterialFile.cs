@@ -72,7 +72,8 @@ namespace CgfConverter
             String[] stringSeparators = new string[] { @"\", @"/" };    // to split up the paths
             String[] result;                                            // carries the results of the split
 
-            this.MtlFile = new FileInfo(Path.ChangeExtension(cgfData.objOutputFile.FullName, ".mtl"));
+            this.MtlFile = cgfData.objOutputFile ?? new FileInfo(cgfData.RootNode.Name + ".obj");
+            this.MtlFile = new FileInfo(Path.ChangeExtension(this.MtlFile.FullName, ".mtl"));
 
             // Console.WriteLine("Current dir is {0}", currentDir.FullName);
             // Find the number of material chunks.  if 1, then name is the mtl file name.  If many, find type 0x01.
