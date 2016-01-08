@@ -7,7 +7,7 @@ using System.IO;
 
 namespace CgfConverter
 {
-    class Blender  //  Class to allow exporting to .blend files.
+    public class Blender  //  Class to allow exporting to .blend files.
     {
         FileInfo blendOutputFile;
 

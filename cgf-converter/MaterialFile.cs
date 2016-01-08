@@ -382,7 +382,11 @@ namespace CgfConverter
                             builder = new StringBuilder(mtl.Textures[i].File);
                         }
 
-                        builder.Replace(".tif", ".dds");
+                        if (!this.Datafile.Args.TiffTextures)
+                            builder.Replace(".tif", ".dds");
+
+                        builder.Replace(@"/", @"\");
+
                         switch (mtl.Textures[i].Map)
                         {
                             case "Diffuse":

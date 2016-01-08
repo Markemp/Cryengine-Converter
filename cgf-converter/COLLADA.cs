@@ -116,7 +116,10 @@ namespace CgfConverter
                     {
                         builder = new StringBuilder(mats.Textures[i].File);
                     }
-                    builder.Replace(".tif", ".dds");
+
+                    if (!this.cgfData.Args.TiffTextures)
+                        builder.Replace(".tif", ".dds");
+
                     builder.Replace(@"/", @"\");
 
                     //tmpImage.Init_From.Ref = mats.Textures[i].File;
