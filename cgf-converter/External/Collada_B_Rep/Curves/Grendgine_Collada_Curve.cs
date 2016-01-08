@@ -5,7 +5,7 @@ using System.IO;
 namespace grendgine_collada
 {
 	[Serializable]
-	[System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true)]
+	[XmlType(AnonymousType=true)]
 	public partial class Grendgine_Collada_Curve
 	{
 		[XmlAttribute("sid")]

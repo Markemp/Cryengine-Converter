@@ -6,7 +6,7 @@ namespace grendgine_collada
 {
 
 	[Serializable]
-	[System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true)]
+	[XmlType(AnonymousType=true)]
 
 	public partial class Grendgine_Collada_Bool_Array_String
 	{
