@@ -243,12 +243,6 @@ namespace CgfConverter
                     //floatArray = 
 
 
-                    normSource.ID = nodeChunk.Name + "_pos";
-                    normSource.Name = nodeChunk.Name + "_pos";
-
-                    uvSource.ID = nodeChunk.Name + "_UV";
-                    uvSource.Name = nodeChunk.Name + "_UV";
-
                     // make a vertices eliment.  Only one, so no list needed.
 
                     // tris are easy.  Just the index of faces

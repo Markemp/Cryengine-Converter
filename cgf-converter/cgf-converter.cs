@@ -47,7 +47,7 @@ namespace CgfConverter
             CgfHeader.GetHeader(cgfReader);
             cgfReader.BaseStream.Seek(CgfHeader.fileOffset, 0);  // will now start to read from the start of the chunk table
             tmpChunkTable.GetChunkTable(cgfReader, CgfHeader.fileOffset);
-            //tmpChunkTable.WriteChunk();
+            tmpChunkTable.WriteChunk();
             // Add this temp chunk table to the main table.  That will contain the full list of chunks added to the dictionary
             CgfChunkTable.chkHeaders.AddRange(tmpChunkTable.chkHeaders);
 
@@ -159,7 +159,36 @@ namespace CgfConverter
                                 //Console.WriteLine("Found a Parent chunk node.  Adding to the dictionary.");
                                 RootNodeID = chkNode.id;
                                 RootNode = chkNode;
-                                ChunkDictionary[RootNodeID].WriteChunk();
+                                RootNode.TransformSoFar.x = RootNode.Transform.m41;
+                                RootNode.TransformSoFar.y = RootNode.Transform.m42;
+                                RootNode.TransformSoFar.z = RootNode.Transform.m43;
+                                //ChunkDictionary[RootNodeID].WriteChunk();
+                            } else
+                            {
+                                // Get the transform so far.
+                                chkNode.TransformSoFar.x = ((ChunkNode)ChunkDictionary[chkNode.Parent]).TransformSoFar.x + chkNode.Transform.m41/100;
+                                chkNode.TransformSoFar.y = ((ChunkNode)ChunkDictionary[chkNode.Parent]).TransformSoFar.y + chkNode.Transform.m42/100;
+                                chkNode.TransformSoFar.z = ((ChunkNode)ChunkDictionary[chkNode.Parent]).TransformSoFar.z + chkNode.Transform.m43/100;
+                            }
+                            if (chkNode.Name == "Belly_Wing_Right_Decal")
+                            {
+                                chkNode.WriteChunk();
+                            }
+                            if (chkNode.id == 0xB26)
+                            {
+                                chkNode.WriteChunk();
+                            }
+                            if (chkNode.id == 0xB0B)
+                            {
+                                chkNode.WriteChunk();
+                            }
+                            if (chkNode.id == 0x9F6)
+                            {
+                                chkNode.WriteChunk();
+                            }
+                            if (chkNode.id == 0x8E9)
+                            {
+                                chkNode.WriteChunk();
                             }
                             //chkNode.WriteChunk();
                             break;
@@ -271,6 +300,34 @@ namespace CgfConverter
             }
             Console.WriteLine();
             return transform;
+        }
+        public Vector3 GetTransform2(ChunkNode chunkNode, Vector3 transform)
+        {
+            // This just returns the transpose of each node chunk up to the parent.  Not sure if necessary.
+            // The transform matrix is a 4x4 matrix.  Vector3 is a 3x1.  We need to convert vector3 to vector4, multiply the matrix, then convert back to vector3
+            //float x = chunkNode.Transform.m41 / 100;
+            //float y = chunkNode.Transform.m42 / 100;
+            //float z = chunkNode.Transform.m43 / 100;
+            //Vector3 resultant = new Vector3();
+            Vector4 vec4 = transform.ToVector4();
+            //Console.WriteLine("vec4.x {0}", vec4.x);
+            if (chunkNode.Parent != 0xFFFFFFFF)
+            {
+                //resultant.x += x;
+                //resultant.y += y;
+                //resultant.z += z;
+                //transform = GetTransform2((ChunkNode)ChunkDictionary[chunkNode.Parent], resultant);
+                vec4 = chunkNode.Transform.Mult4x1(vec4);
+                // Apply the parent transform
+                vec4.x += ((ChunkNode)ChunkDictionary[chunkNode.Parent]).TransformSoFar.x;
+                vec4.y += ((ChunkNode)ChunkDictionary[chunkNode.Parent]).TransformSoFar.y;
+                vec4.z += ((ChunkNode)ChunkDictionary[chunkNode.Parent]).TransformSoFar.z;
+                //vec4.WriteVector4();
+            }
+            //Console.WriteLine();
+            //Console.WriteLine("vec4.x {0}", vec4.x);
+            return vec4.ToVector3();
+            
         }
         public void WriteTransform(Vector3 transform)
         {
@@ -710,6 +767,8 @@ namespace CgfConverter
             public ChunkMtlName MaterialChunk;
             public ChunkNode[] NodeChildren;
 
+            public Vector3 TransformSoFar = new Vector3();  // this is the parent transform plus this transform.
+
 
             public override void ReadChunk(BinaryReader b, uint f)
             {
@@ -780,6 +839,7 @@ namespace CgfConverter
                 PosCtrl = b.ReadUInt32();
                 RotCtrl = b.ReadUInt32();
                 SclCtrl = b.ReadUInt32();
+
                 // Good enough for now.
             }
             public override void WriteChunk()
@@ -797,7 +857,8 @@ namespace CgfConverter
                 Console.WriteLine("    Transformation:      {0:F7}  {1:F7}  {2:F7}  {3:F7}", Transform.m11, Transform.m12, Transform.m13, Transform.m14);
                 Console.WriteLine("                         {0:F7}  {1:F7}  {2:F7}  {3:F7}", Transform.m21, Transform.m22, Transform.m23, Transform.m24);
                 Console.WriteLine("                         {0:F7}  {1:F7}  {2:F7}  {3:F7}", Transform.m31, Transform.m32, Transform.m33, Transform.m34);
-                Console.WriteLine("                         {0:F7}  {1:F7}  {2:F7}  {3:F7}", Transform.m41, Transform.m42, Transform.m43, Transform.m44);
+                Console.WriteLine("                         {0:F7}  {1:F7}  {2:F7}  {3:F7}", Transform.m41/100, Transform.m42/100, Transform.m43/100, Transform.m44);
+                Console.WriteLine("    Transform_sum:       {0:F7}  {1:F7}  {2:F7}", TransformSoFar.x, TransformSoFar.y, TransformSoFar.z);
                 Console.WriteLine("*** END Node Chunk ***");
 
             }

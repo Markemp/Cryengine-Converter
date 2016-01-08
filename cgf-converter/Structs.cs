@@ -65,13 +65,52 @@ namespace CgfConverter
             this.z = b.ReadSingle();
             return;
         }
+        public Vector4 ToVector4()
+        {
+            Vector4 result = new Vector4();
+            result.x = x;
+            result.y = y;
+            result.z = z;
+            result.w = 1;
+            return result;
+        }
         public void WriteVector3()
         {
             Console.WriteLine("*** WriteVector3");
             Console.WriteLine("{0:F7}  {1:F7}  {2:F7}", x, y, z);
             Console.WriteLine();
         }
+
     }  // Vector in 3D space {x,y,z}
+    public struct Vector4
+    {
+        public float x;
+        public float y;
+        public float z;
+        public float w;
+
+        public Vector3 ToVector3()
+        {
+            Vector3 result = new Vector3();
+            if (w == 0)
+            {
+                result.x = x;
+                result.y = y;
+                result.z = z;
+            } else
+            {
+                result.x = x / w;
+                result.y = y / w;
+                result.z = z / w;
+            }
+            return result;
+        }
+        public void WriteVector4()
+        {
+            Console.WriteLine("=============================================");
+            Console.WriteLine("x:{0:F7}  y:{1:F7}  z:{2:F7} w:{3:F7}", x, y, z, w);
+        }
+    }
     public struct Matrix33    // a 3x3 transformation matrix
     {
         public float m11;
@@ -161,6 +200,15 @@ namespace CgfConverter
             mat2.m33 = this.m31 * mat.m13 + this.m32 * mat.m23 + this.m33 * mat.m33;
             return mat2;
         }
+        public Vector3 Mult3x1(Vector3 vector)
+        {
+            // Multiply the 3x3 matrix by a Vector 3 to get the rotation
+            Vector3 result = new Vector3();
+            result.x = (vector.x * m11) + (vector.y * m12) + (vector.z * m13);
+            result.y = (vector.x * m21) + (vector.y * m22) + (vector.z * m23);
+            result.z = (vector.x * m31) + (vector.y * m32) + (vector.z * m33);
+            return result;
+        }
         public bool Is_Scale_Rotation() // Returns true if the matrix decomposes nicely into scale * rotation\
         {
             Matrix33 self_transpose,mat = new Matrix33();
@@ -221,7 +269,7 @@ namespace CgfConverter
         }
             
     }
-    public struct Matrix44    // a 4x4 transformation matrix
+    public struct Matrix44    // a 4x4 transformation matrix.  first value is row, second is column
     {
         public float m11;
         public float m12;
@@ -239,7 +287,34 @@ namespace CgfConverter
         public float m42;
         public float m43;
         public float m44;
+
+        public Vector4 Mult4x1(Vector4 vector)
+        {
+            // Pass the matrix a Vector4 (4x1) vector to get the transform of the vector
+            Vector4 result = new Vector4();
+            //result.x = (m11 * vector.x) + (m12 * vector.y) + (m13 * vector.z) + m14/100;
+            //result.y = (m21 * vector.x) + (m22 * vector.y) + (m23 * vector.z) + m24/100;
+            //result.z = (m31 * vector.x) + (m32 * vector.y) + (m33 * vector.z) + m34/100;
+            //result.w = (m41 * vector.x) + (m42 * vector.y) + (m43 * vector.z) + m44/100;
+            result.x = (m11 * vector.x) + (m21 * vector.y) + (m31 * vector.z) + m41 / 100;
+            result.y = (m12 * vector.x) + (m22 * vector.y) + (m32 * vector.z) + m42 / 100;
+            result.z = (m13 * vector.x) + (m23 * vector.y) + (m33 * vector.z) + m43 / 100;
+            result.w = (m14 * vector.x) + (m24 * vector.y) + (m34 * vector.z) + m44 / 100;
+
+            return result;
+        }
+        public void WriteMatrix44()
+        {
+            Console.WriteLine("=============================================");
+            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}  {3:F7}", m11, m12, m13, m14);
+            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}  {3:F7}", m21, m22, m23, m24);
+            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}  {3:F7}", m31, m32, m33, m34);
+            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}  {3:F7}", m41, m42, m43, m44);
+            Console.WriteLine();
+        }
+
     }
+
     public struct Quat        // A quaternion (x,y,z,w)
     {
         public float x;
