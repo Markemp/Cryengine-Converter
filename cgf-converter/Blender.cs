@@ -21,7 +21,7 @@ namespace CgfConverter
 
             // File name will be "object name.blend"
             blendOutputFile = new FileInfo(cgfData.RootNode.Name + ".blend");
-            using (BinaryWriter b = new BinaryWriter(File.Open(blendOutputFile.Name, FileMode.Create)))
+            using (BinaryWriter b = new BinaryWriter(File.Open(blendOutputFile.FullName, FileMode.Create)))
             {
                 WriteHeader(b);
             }

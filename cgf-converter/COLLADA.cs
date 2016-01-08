@@ -41,6 +41,8 @@ namespace CgfConverter
             WriteLibrary_Materials();
             WriteLibrary_Effects();
             WriteLibrary_Geometries();
+            if (!daeOutputFile.Directory.Exists)
+                daeOutputFile.Directory.Create();
             TextWriter writer = new StreamWriter(daeOutputFile.FullName);   // Makes the Textwriter object for the output
             mySerializer.Serialize(writer, daeObject);                      // Serializes the daeObject and writes to the writer
             Console.WriteLine("End of Write Collada");

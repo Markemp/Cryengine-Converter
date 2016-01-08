@@ -27,10 +27,13 @@ namespace CgfConverter
 
             // Get object name.  This is the Root Node chunk Name
             // Get the objOutputFile name
-            objOutputFile = new FileInfo(cgfData.RootNode.Name + ".obj");
+            objOutputFile = cryData.objOutputFile ?? new FileInfo(cgfData.RootNode.Name + ".obj");
             Console.WriteLine("Output file is {0}", objOutputFile.Name);
 
-            using (StreamWriter file = new StreamWriter(objOutputFile.Name))
+            if (!objOutputFile.Directory.Exists)
+                objOutputFile.Directory.Create();
+
+            using (StreamWriter file = new StreamWriter(objOutputFile.FullName))
             {
                 string s1 = String.Format("# cgf-converter .obj export Version 0.84");
                 file.WriteLine(s1);
@@ -44,7 +47,7 @@ namespace CgfConverter
                 cgfData.MatFile.GetMtlFileName(cgfData);               // Gets the MtlFile name                
                 if (cgfData.MatFile.XmlMtlFile.Exists)
                 {
-                    Console.WriteLine("Matfile Full Name is {0}", cgfData.MatFile.XmlMtlFile.FullName);
+                    Console.WriteLine("Matfile Full Name is {0}", cgfData.MatFile.XmlMtlFile.Name);
                     cgfData.MatFile.WriteMtlLibInfo(file);  // writes the mtllib file.
                 }
                 else

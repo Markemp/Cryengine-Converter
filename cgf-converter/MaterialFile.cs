@@ -72,8 +72,9 @@ namespace CgfConverter
             String[] stringSeparators = new string[] { @"\", @"/" };    // to split up the paths
             String[] result;                                            // carries the results of the split
 
-            //Console.WriteLine("*****  In MaterialFile.cs *****");
-            MtlFile = new FileInfo(Datafile.RootNode.Name + "_mtl.mtl");
+            this.MtlFile = cgfData.objOutputFile ?? new FileInfo(cgfData.RootNode.Name + ".obj");
+            this.MtlFile = new FileInfo(Path.ChangeExtension(this.MtlFile.FullName, ".mtl"));
+
             // Console.WriteLine("Current dir is {0}", currentDir.FullName);
             // Find the number of material chunks.  if 1, then name is the mtl file name.  If many, find type 0x01.
             foreach (CgfData.ChunkMtlName mtlChunk in Datafile.CgfChunks.Where(a => a.chunkType == ChunkType.MtlName))
@@ -342,8 +343,12 @@ namespace CgfConverter
         public void WriteMtlFile()                              // writes the .mtl file for the .obj file we create.
         {
             // Write the .mtl file for the .obj file we create.  This will be rootnode name + _mtl.mtl.
-            FileInfo mtlFile = new FileInfo(MtlFile.Name);
-            using (System.IO.StreamWriter file = new System.IO.StreamWriter(mtlFile.Name))
+            FileInfo mtlFile = new FileInfo(MtlFile.FullName);
+
+            if (!mtlFile.Directory.Exists)
+                mtlFile.Directory.Create();
+
+            using (System.IO.StreamWriter file = new System.IO.StreamWriter(mtlFile.FullName))
             {
                 string s = String.Format("# Material file output from cgf-converter.exe version 0.8");
                 file.WriteLine(s);
