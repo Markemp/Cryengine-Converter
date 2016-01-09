@@ -65,6 +65,14 @@ namespace CgfConverter
             this.z = b.ReadSingle();
             return;
         }
+        public Vector3 Add(Vector3 vector)
+        {
+            Vector3 result = new Vector3();
+            result.x = vector.x + x;
+            result.y = vector.y + y;
+            result.z = vector.z + z;
+            return result;
+        }
         public Vector4 ToVector4()
         {
             Vector4 result = new Vector4();
@@ -204,9 +212,12 @@ namespace CgfConverter
         {
             // Multiply the 3x3 matrix by a Vector 3 to get the rotation
             Vector3 result = new Vector3();
-            result.x = (vector.x * m11) + (vector.y * m12) + (vector.z * m13);
-            result.y = (vector.x * m21) + (vector.y * m22) + (vector.z * m23);
-            result.z = (vector.x * m31) + (vector.y * m32) + (vector.z * m33);
+            //result.x = (vector.x * m11) + (vector.y * m12) + (vector.z * m13);
+            //result.y = (vector.x * m21) + (vector.y * m22) + (vector.z * m23);
+            //result.z = (vector.x * m31) + (vector.y * m32) + (vector.z * m33);
+            result.x = (vector.x * m11) + (vector.y * m21) + (vector.z * m31);
+            result.y = (vector.x * m12) + (vector.y * m22) + (vector.z * m32);
+            result.z = (vector.x * m13) + (vector.y * m23) + (vector.z * m33);
             return result;
         }
         public bool Is_Scale_Rotation() // Returns true if the matrix decomposes nicely into scale * rotation\
@@ -301,6 +312,28 @@ namespace CgfConverter
             result.z = (m13 * vector.x) + (m23 * vector.y) + (m33 * vector.z) + m43 / 100;
             result.w = (m14 * vector.x) + (m24 * vector.y) + (m34 * vector.z) + m44 / 100;
 
+            return result;
+        }
+        public Matrix33 To3x3()
+        {
+            Matrix33 result = new Matrix33();
+            result.m11 = m11;
+            result.m12 = m12;
+            result.m13 = m13;
+            result.m21 = m21;
+            result.m22 = m22;
+            result.m23 = m23;
+            result.m31 = m31;
+            result.m32 = m32;
+            result.m33 = m33;
+            return result;
+        }
+        public Vector3 GetTranslation()
+        {
+            Vector3 result = new Vector3();
+            result.x = m41 / 100;
+            result.y = m42 / 100;
+            result.z = m43 / 100;
             return result;
         }
         public void WriteMatrix44()
