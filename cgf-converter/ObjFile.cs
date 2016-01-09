@@ -200,26 +200,9 @@ namespace CgfConverter
                         vertex.y = tmpVertsUVs.Vertices[j].y;
                         vertex.z = tmpVertsUVs.Vertices[j].z;
 
-                        // rotate the vertex, then apply the transform?  Or transform, then rotate?
-                        //vertex.WriteVector3();
-                        //vertex.x = vertex.x + (vertex.x * chunkNode.Transform.m11) + (vertex.y * chunkNode.Transform.m12) + (vertex.z * chunkNode.Transform.m13);
-                        //vertex.y = vertex.y + (vertex.x * chunkNode.Transform.m21) + (vertex.y * chunkNode.Transform.m22) + (vertex.z * chunkNode.Transform.m23);
-                        //vertex.z = vertex.z + (vertex.x * chunkNode.Transform.m31) + (vertex.y * chunkNode.Transform.m32) + (vertex.z * chunkNode.Transform.m33);
-
                         vertex = cgfData.GetTransform2(chunkNode, vertex); // now we have the transpose.  Do math on the vertices to rotate.
 
-                        /*if (j < 10)
-                        {
-                            vertex.WriteVector3();
-                        }*/
-                        string s4 = String.Format("v {0:F7} {1:F7} {2:F7}",
-                            //tmpVertsUVs.Vertices[j].x + transform.x,   
-                            //tmpVertsUVs.Vertices[j].y + transform.y,
-                            //tmpVertsUVs.Vertices[j].z + transform.z);
-                            //transform.x + (transform.x * chunkNode.Transform.m11) + (transform.y * chunkNode.Transform.m12) + (transform.z * chunkNode.Transform.m13),
-                            //transform.y + (transform.x * chunkNode.Transform.m21) + (transform.y * chunkNode.Transform.m22) + (transform.z * chunkNode.Transform.m23),
-                            //transform.z + (transform.x * chunkNode.Transform.m31) + (transform.y * chunkNode.Transform.m32) + (transform.z * chunkNode.Transform.m33));
-                            vertex.x, vertex.y, vertex.z);
+                        string s4 = String.Format("v {0:F7} {1:F7} {2:F7}", vertex.x, vertex.y, vertex.z);
                         f.WriteLine(s4);
                     }
                     f.WriteLine();

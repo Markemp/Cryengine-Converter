@@ -153,11 +153,12 @@ namespace CgfConverter
                             CgfChunks.Add(chkNode);
                             ChunkDictionary.Add(chkNode.id, chkNode);
 
-                            if (RootNodeID == 0x0)
+                            if (RootNodeID == 0x0)  // Basically the first Node chunk it reads is the Root Node.  Probably not right, but...
                             {
                                 Console.WriteLine("Found a Parent chunk node.  Adding to the dictionary.");
                                 RootNodeID = chkNode.id;
                                 RootNode = chkNode;
+                                // set up TransformSoFar
                                 RootNode.TransformSoFar.x = RootNode.Transform.m41;
                                 RootNode.TransformSoFar.y = RootNode.Transform.m42;
                                 RootNode.TransformSoFar.z = RootNode.Transform.m43;
@@ -174,39 +175,24 @@ namespace CgfConverter
                                 ChunkDictionary[RootNodeID].WriteChunk();
                             } else
                             {
-                                // Get the transform so far.
+                                // Get the transformSoFar and RotSoFar.  These are the rotation and translation of the parent node plus current node.
                                 chkNode.TransformSoFar.x = ((ChunkNode)ChunkDictionary[chkNode.Parent]).TransformSoFar.x + chkNode.Transform.m41/100;
                                 chkNode.TransformSoFar.y = ((ChunkNode)ChunkDictionary[chkNode.Parent]).TransformSoFar.y + chkNode.Transform.m42/100;
                                 chkNode.TransformSoFar.z = ((ChunkNode)ChunkDictionary[chkNode.Parent]).TransformSoFar.z + chkNode.Transform.m43/100;
                                 // Get the rotation so far
                                 //chkNode.RotSoFar.WriteMatrix33();
-                                chkNode.Transform.To3x3().Mult(((ChunkNode)ChunkDictionary[chkNode.Parent]).RotSoFar);
-                                //chkNode.RotSoFar.WriteMatrix33();
+                                chkNode.RotSoFar = ((ChunkNode)ChunkDictionary[chkNode.Parent]).RotSoFar.Mult(chkNode.Transform.To3x3());
+                                //chkNode.RotSoFar = ((ChunkNode)ChunkDictionary[chkNode.Parent]).RotSoFar.Mult(chkNode.Transform.To3x3());
                             }
 
-                            if (chkNode.Name.Contains("RearWingLeft"))
+                            if (chkNode.Name.Contains("FrontWing_Left") || chkNode.id == 0x8E9)
                             {
-                                //chkNode.WriteChunk();
-                            }
-                            if (chkNode.Parent == 0x8E1)
-                            {
+                                Console.WriteLine("Transform matrix and transformsofar for {0}", chkNode.Name);
+                                chkNode.WriteChunk();
                                 chkNode.Transform.WriteMatrix44();
                                 chkNode.RotSoFar.WriteMatrix33();
-                                ((ChunkNode)ChunkDictionary[chkNode.Parent]).RotSoFar.WriteMatrix33();
-                                //chkNode.WriteChunk();
+
                             }
-                            /*if (chkNode.id == 0xB0B)
-                            {
-                                chkNode.WriteChunk();
-                            }
-                            if (chkNode.id == 0x9F6)
-                            {
-                                chkNode.WriteChunk();
-                            }
-                            if (chkNode.id == 0x8E9)
-                            {
-                                chkNode.WriteChunk();
-                            }*/
                             //chkNode.WriteChunk();
                             break;
                         }
@@ -323,22 +309,39 @@ namespace CgfConverter
             // Gets the transform of the vertex.  This will be both the rotation and translation of this vertex, plus all the parents.
             // The transform matrix is a 4x4 matrix.  Vector3 is a 3x1.  We need to convert vector3 to vector4, multiply the matrix, then convert back to vector3
             Vector3 vec3 = transform;
-            //Console.WriteLine("vec4.x {0}", vec4.x);
+            Matrix33 rotation = new Matrix33();
+
             if (chunkNode.Parent != 0xFFFFFFFF)
             {
-                // Get the RotSofar  
-                //(chunkNode.Transform).To3x3().WriteMatrix33();     
-                Matrix33 rotSoFar = (chunkNode.Transform).To3x3().Mult(((ChunkNode)ChunkDictionary[chunkNode.Parent]).RotSoFar);
-                //if (chunkNode.Name.Contains("RearWingLeft_Flap"))
-                //{
-                //    rotSoFar.WriteMatrix33();
-                //}
-                vec3 = ((chunkNode.Transform).To3x3()).Mult3x1(vec3);
-                // Apply the parent transform
-                vec3.x += ((ChunkNode)ChunkDictionary[chunkNode.Parent]).TransformSoFar.x;
-                vec3.y += ((ChunkNode)ChunkDictionary[chunkNode.Parent]).TransformSoFar.y;
-                vec3.z += ((ChunkNode)ChunkDictionary[chunkNode.Parent]).TransformSoFar.z;
-                //vec4.WriteVector4();
+                // Apply the local transforms (rotation and translation) to the vector  
+                //(chunkNode.Transform).To3x3().WriteMatrix33();  
+                // Do rotations
+                //vec3 = chunkNode.Transform.To3x3().Mult3x1(vec3);
+                //rotation = ((ChunkNode)ChunkDictionary[chunkNode.Parent]).RotSoFar.Mult(chunkNode.Transform.To3x3());
+                //vec3 = rotation.Mult3x1(vec3);
+                if (chunkNode.Name == "FrontWing_Left")
+                {
+                    Console.WriteLine("FrontWing_Left");
+                    vec3.WriteVector3();
+                }
+
+                //vec3 = chunkNode.RotSoFar.Mult3x1(vec3);
+                vec3 = chunkNode.Transform.To3x3().Mult3x1(vec3);
+
+                if (chunkNode.Name == "FrontWing_Left")
+                {
+                    vec3.WriteVector3();
+                }
+
+                // Do translations.  I think this is right.  Objects in right place, not rotated right.
+                vec3 = vec3.Add(chunkNode.Transform.GetTranslation());
+                vec3 = vec3.Add(((ChunkNode)ChunkDictionary[chunkNode.Parent]).TransformSoFar);
+                if (chunkNode.Name == "FrontWing_Left")
+                {
+                    vec3.WriteVector3();
+                }
+
+
             }
             //Console.WriteLine();
             //Console.WriteLine("vec4.x {0}", vec4.x);
@@ -1809,6 +1812,7 @@ namespace CgfConverter
         private static HashSet<String> _validExtensions = new HashSet<String>
         {
             ".cgf",
+            ".chr",
             ".cga",
             ".skin",
         };
