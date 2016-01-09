@@ -76,7 +76,7 @@ namespace CgfConverter
 
                     if (newFile.Exists)
                     {
-                        // Validate file extension - handles .cgam
+                        // Validate file extension - handles .cgam / skinm
                         if (!ArgsHandler._validExtensions.Contains(newFile.Extension))
                         {
                             Console.WriteLine("Warning: Unsupported file extension - please use a cga or cgf file");
@@ -86,16 +86,16 @@ namespace CgfConverter
                         // Add to list of files to process
                         this.InputFiles.Add(newFile);
 
-                        #region .cgam Auto-Detection
+                        #region m-File Auto-Detection
 
-                        FileInfo cgamFile = new FileInfo(Path.ChangeExtension(inputArgs[i], ".cgam"));
+                        FileInfo mFile = new FileInfo(Path.ChangeExtension(inputArgs[i], String.Format("{0}m", Path.GetExtension(inputArgs[i]))));
 
-                        if (cgamFile.Exists)
+                        if (mFile.Exists)
                         {
-                            Console.WriteLine("Found cgam file {0}", cgamFile.Name);
+                            Console.WriteLine("Found mFile file {0}", mFile.Name);
 
                             // Add to list of files to process
-                            this.InputFiles.Add(cgamFile);
+                            this.InputFiles.Add(mFile);
                         }
 
                         #endregion

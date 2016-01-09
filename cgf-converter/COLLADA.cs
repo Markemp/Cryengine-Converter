@@ -119,6 +119,8 @@ namespace CgfConverter
 
                     if (!this.cgfData.Args.TiffTextures)
                         builder.Replace(".tif", ".dds");
+                    else
+                        builder.Replace(".dds", ".tif");
 
                     builder.Replace(@"/", @"\");
 
