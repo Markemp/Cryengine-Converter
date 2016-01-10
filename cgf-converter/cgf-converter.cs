@@ -14,58 +14,60 @@ namespace CgfConverter
     {
         public static Int32 Main(String[] args)
         {
+#if DEV_DOLKENSP
+            args = new String[] { @"O:\Mods\SC\2.1d\Objects\Vehicles\ships\drak\herald\DRAK_Herald_Hangar.cga", "-objectdir", @"O:\Mods\SC\2.0", "-tif", "-obj", "-outputfile", "DRAK_Herald_Hangar.obj" };
+            // args = new String[] { @"O:\Mods\SC\2.1d\Objects\Spaceships\Ships\VNCL\Glaive\VNCL_Glaive_flightReady.cga", "-objectdir", @"O:\Mods\SC\2.0", "-tif", "-obj", "-outputfile", "VNCL_Glaive_flightReady.obj" };
+            // args = new String[] { @"D:\Workspaces\github\Cryengine-Converter\cgf-converter\bin\dev_dolkensp\Objects\2.1\RSI_Aurora.cga", "-objectdir", @"O:\Mods\SC\2.0", "-tif", "-obj", "-outputfile", "RSI_Aurora.obj" };
+#endif
+
             ArgsHandler argsHandler = new ArgsHandler();
             Int32 result = argsHandler.ProcessArgs(args);
 
+#if !DEBUG
             try
             {
+#endif
                 if (result == 0)
                 {
-                    #region Process Input Files
-
-                    List<CgfData> cgfData = new List<CgfData> { };
-
-                    for (Int32 i = 0, j = argsHandler.InputFiles.Count; i < j; i++)
-                    {
-                        var data = new CgfData { };
-
-                        data.ReadCgfData(argsHandler.InputFiles[i], argsHandler);
-
-                        cgfData.Add(data);
-                    }
-
-                    #endregion
+                    // Read CryEngine Files
+                    CryEngine cryData = new CryEngine(argsHandler);
 
                     #region Render Output Files
 
-                    if (argsHandler.Output_Blender == true)
-                    {
-                        Blender blendFile = new Blender();
-                        blendFile.WriteBlend(cgfData.Last());
-                    }
+                    // if (argsHandler.Output_Blender == true)
+                    // {
+                    //     Blender blendFile = new Blender(argsHandler);
+                    //     blendFile.WriteBlend();
+                    // }
 
                     if (argsHandler.Output_Wavefront == true)
                     {
-                        ObjFile objFile = new ObjFile();
+                        Wavefront objFile = new Wavefront(argsHandler);
 
-                        foreach (var data in cgfData)
-                            objFile.WriteObjFile(data); // cgfData.Last());
+                        objFile.WriteObjFile(cryData);
                     }
 
-                    if (argsHandler.Output_Collada == true)
-                    {
-                        COLLADA daeFile = new COLLADA();
-                        daeFile.WriteCollada(cgfData.Last());
-                    }
+                    // if (argsHandler.Output_Collada == true)
+                    // {
+                    //     COLLADA daeFile = new COLLADA();
+                    //     daeFile.WriteCollada(cgfData.Last());
+                    // }
 
                     #endregion
                 }
+#if !DEBUG
             }
             catch (Exception)
             {
                 if (argsHandler.Throw)
                     throw;
             }
+#endif
+
+#if DEV_DOLKENSP
+            Console.WriteLine("Done...");
+            Console.ReadKey();
+#endif
 
             return result;
         }

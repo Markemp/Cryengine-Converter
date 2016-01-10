@@ -174,11 +174,11 @@ namespace CgfConverter
         public float Get_Determinant()
         {
             return (m11 * m22 * m33
-                + m12 * m23 * m31
-                + m13 * m21 * m32
-                - m31 * m22 * m13
-                - m21 * m12 * m33
-                - m11 * m32 * m23);
+                  + m12 * m23 * m31
+                  + m13 * m21 * m32
+                  - m31 * m22 * m13
+                  - m21 * m12 * m33
+                  - m11 * m32 * m23);
         }
         public Matrix33 Get_Transpose()    // returns a copy of the matrix33
         {

@@ -1,0 +1,209 @@
+# Material file output from cgf-converter.exe version 0.8
+#
+newmtl Proxy
+Kd 1.0000 0.0097 0.0097
+Ks  0.0000 0.0000 0.0000
+d 0.1000
+illum 2
+
+newmtl WarningTape
+Kd 0.2051 0.2051 0.2051
+Ks  0.0232 0.0232 0.0232
+d 1.0000
+illum 2
+map_Kd e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/warningtape_decal_diff.dds
+map_bump e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/warningtape_decal_ddna.dds
+
+newmtl Glass
+Kd 0.3663 0.3663 0.3663
+Ks  0.0395 0.0395 0.0395
+d 1.0000
+illum 2
+map_Kd e:\blender projects\star citizen\objects/spaceships/ships/aegs/gladius/textures/cockpit_glass_diff.dds
+map_bump e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/cockpit_glass_ddn.dds
+map_Ks e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/cockpit_glass_tint.dds
+
+newmtl vent_alpha
+Kd 1.0000 1.0000 1.0000
+Ks  1.0000 1.0000 1.0000
+d 1.0000
+illum 2
+map_Kd e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/vent_metal_diff.dds
+map_bump e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/vent_metal_ddna.dds
+map_Ks e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/vent_metal_spec.dds
+
+newmtl Metal_White
+Kd 0.7157 0.6105 0.5210
+Ks  0.3372 0.3372 0.3372
+d 1.0000
+illum 2
+map_Kd e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_c_diff.dds
+map_bump e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_ddna.dds
+map_Ks e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_spec.dds
+
+newmtl Metal_Green_A
+Kd 0.5089 0.5089 0.5089
+Ks  0.0160 0.0160 0.0160
+d 1.0000
+illum 2
+map_Kd e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_diff.dds
+map_bump e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_ddna.dds
+
+newmtl Metal_Green_B
+Kd 0.1620 0.1620 0.1620
+Ks  0.0232 0.0232 0.0232
+d 1.0000
+illum 2
+map_Kd e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_diff.dds
+map_bump e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_ddna.dds
+
+newmtl Metal_Green_C
+Kd 0.3763 0.3763 0.3763
+Ks  0.5776 0.5776 0.5776
+d 1.0000
+illum 2
+map_Kd e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_c_diff.dds
+map_bump e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_ddna.dds
+map_Ks e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_spec.dds
+
+newmtl Metal_Black
+Kd 0.1912 0.1912 0.1912
+Ks  0.0176 0.0176 0.0176
+d 1.0000
+illum 2
+map_Kd e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_c_diff.dds
+map_bump e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_ddna.dds
+
+newmtl Metal_Green_D
+Kd 0.0723 0.0723 0.0723
+Ks  0.2789 0.2789 0.2789
+d 1.0000
+illum 2
+map_Kd e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_diff.dds
+map_bump e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_ddna.dds
+map_Ks e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_spec.dds
+
+newmtl Seat
+Kd 1.0000 1.0000 1.0000
+Ks  0.0212 0.0212 0.0212
+d 1.0000
+illum 2
+map_Kd e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/gladius_chair_diff.dds
+map_bump e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/gladius_chair_ddna.dds
+map_bump e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/gladius_chair_detail.dds
+
+newmtl Screen Glass
+Kd 0.0000 0.0000 0.0000
+Ks  0.0000 0.0000 0.0000
+d 1.0000
+illum 2
+map_Kd e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/monitor_screen_illuminated_diff.dds
+map_bump e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/monitor_screen_glass_ddna.dds
+map_Ks e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/monitor_screen_glass_spec.dds
+
+newmtl UI Graphics
+Kd 0.0000 0.0000 0.0000
+Ks  0.0000 0.0000 0.0000
+d 1.0000
+illum 2
+map_Kd e:\blender projects\star citizen\textures/defaults/16_grey.dds
+
+newmtl detail_decals
+Kd 1.0000 1.0000 1.0000
+Ks  1.0000 1.0000 1.0000
+d 1.0000
+illum 2
+map_Kd e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/line_decals_diff.dds
+map_bump e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/line_decals_ddna.dds
+map_Ks e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/line_decals_spec.dds
+
+newmtl detail_decals_pom
+Kd 1.0000 1.0000 1.0000
+Ks  1.0000 1.0000 1.0000
+d 1.0000
+illum 2
+map_Kd e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/line_decals_diff.dds
+map_bump e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/line_decals_ddna.dds
+map_Ks e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/line_decals_spec.dds
+
+newmtl text_decals
+Kd 0.3564 0.3564 0.3564
+Ks  0.0097 0.0097 0.0097
+d 1.0000
+illum 2
+map_Kd e:\blender projects\star citizen\objects/spaceships/ships/aegs/gladius/textures/gladius_text_diff.dds
+
+newmtl GreenMetal_C_Temp
+Kd 0.3763 0.3763 0.3763
+Ks  0.5776 0.5776 0.5776
+d 1.0000
+illum 2
+map_Kd e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_c_diff.dds
+map_bump e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_ddna.dds
+map_Ks e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_spec.dds
+
+newmtl Gladius_Emissive
+Kd 1.0000 1.0000 1.0000
+Ks  0.0273 0.0273 0.0273
+d 1.0000
+illum 2
+map_Kd e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/gladius_emissives_diff.dds
+
+newmtl UEE_Logo
+Kd 1.0000 1.0000 1.0000
+Ks  0.0194 0.0194 0.0194
+d 1.0000
+illum 2
+map_Kd e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/gladius_logos_diff.dds
+
+newmtl ChippedPaint_Decal
+Kd 0.0000 0.0000 0.0000
+Ks  0.5776 0.5776 0.5776
+d 1.0000
+illum 2
+map_Kd e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/decal_metal_scratch_diff.dds
+map_bump e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/decal_metal_scratch_ddna.dds
+map_Ks e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/decal_metal_scratch_spec.dds
+
+newmtl Cockpit_Details
+Kd 0.2462 0.2462 0.2462
+Ks  0.5776 0.5776 0.5776
+d 1.0000
+illum 2
+map_Kd e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/cockpit_details_diff.dds
+map_bump e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/cockpit_details_ddna.dds
+map_Ks e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/cockpit_details_spec.dds
+
+newmtl buttons
+Kd 1.0000 1.0000 1.0000
+Ks  1.0000 1.0000 1.0000
+d 1.0000
+illum 2
+map_Kd e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/aegs_switches_buttons_diff.dds
+map_bump e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/aegs_switches_buttons_ddna.dds
+map_Ks e:\blender projects\star citizen\Objects/Spaceships/Ships/AEGS/Gladius/textures/aegs_switches_buttons_spec.dds
+
+newmtl shield_proxy
+Kd 0.0000 0.7835 1.0000
+Ks  0.0000 0.0000 0.0000
+d 0.1000
+illum 2
+
+newmtl internal_mesh
+Kd 0.1356 0.1022 0.0612
+Ks  0.1195 0.1195 0.1195
+d 1.0000
+illum 2
+map_Kd e:\blender projects\star citizen\objects/spaceships/ships/aegs/gladius/textures/int_structure_a_diff.dds
+map_bump e:\blender projects\star citizen\objects/spaceships/ships/aegs/gladius/textures/int_structure_a_ddna.dds
+map_Ks e:\blender projects\star citizen\objects/spaceships/ships/aegs/gladius/textures/int_structure_a_spec.dds
+
+newmtl internal_pom
+Kd 1.0000 1.0000 1.0000
+Ks  0.2542 0.2542 0.2542
+d 1.0000
+illum 2
+map_Kd e:\blender projects\star citizen\objects/spaceships/ships/aegs/gladius/textures/damage_internals_diff.dds
+map_bump e:\blender projects\star citizen\objects/spaceships/ships/aegs/gladius/textures/damage_internals_ddna.dds
+map_Ks e:\blender projects\star citizen\objects/spaceships/ships/aegs/gladius/textures/damage_internals_spec.dds
+

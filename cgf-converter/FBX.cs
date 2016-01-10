@@ -11,14 +11,13 @@ namespace CgfConverter
     {
         FileInfo fbxOutputFile;
 
-        public void WriteFBXFile(CgfData cgfData)
+        public void WriteFBXFile(CryEngine cryData)
         {
             // The root of the functions to write FBX binary files
             // At this point, we should have a CgfData object, fully populated.
             Console.WriteLine();
             Console.WriteLine("*** Starting WriteFBX() ***");
             Console.WriteLine();
-
         }
     }
 }

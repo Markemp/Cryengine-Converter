@@ -19,11 +19,13 @@ namespace CgfConverter
         public XmlSchema schema = new XmlSchema();
         public FileInfo daeOutputFile;
         public XmlDocument daeDoc = new XmlDocument();                      // the COLLADA XML doc.  Going to try serialized instead.
-        public CgfData cgfData;                                             // The Cryengine data
         public Grendgine_Collada daeObject = new Grendgine_Collada();       // This is the serializable class.
         XmlSerializer mySerializer = new XmlSerializer(typeof(Grendgine_Collada));
 
-        public void WriteCollada(CgfData dataFile)  // Write the dae file
+        public CryEngine.Model cgfData;
+        public CryEngine cryData;
+
+        public void WriteCollada(CryEngine cryData)  // Write the dae file
         {
             // The root of the functions to write Collada files
             // At this point, we should have a CgfData object, fully populated.
@@ -31,7 +33,9 @@ namespace CgfConverter
             Console.WriteLine("*** Starting WriteCOLLADA() ***");
             Console.WriteLine();
 
-            cgfData = dataFile;                                              // cgfData is now a pointer to the data object
+            cryData = cryData;
+            cgfData = cryData.Asset;
+
             // File name will be "object name.dae"
             daeOutputFile = new FileInfo(cgfData.RootNode.Name + ".dae");
             GetSchema();                                                    // Loads the schema.  Needs error checking in case it's offline.
@@ -75,7 +79,7 @@ namespace CgfConverter
             contributors[0].Source_Data = cgfData.RootNode.Name;                    // The cgf/cga/skin/whatever file we read
             // Get the actual file creators from the Source Chunk
             contributors[1] = new Grendgine_Collada_Asset_Contributor();
-            foreach (CgfData.ChunkSourceInfo tmpSource in cgfData.CgfChunks.Where(a => a.chunkType == ChunkType.SourceInfo))
+            foreach (CryEngine.Model.ChunkSourceInfo tmpSource in cgfData.CgfChunks.Where(a => a.chunkType == ChunkType.SourceInfo))
             {
                 contributors[1].Author = tmpSource.Author;
                 contributors[1].Source_Data = tmpSource.SourceFile;
@@ -96,25 +100,25 @@ namespace CgfConverter
             List<Grendgine_Collada_Image> imageList = new List<Grendgine_Collada_Image>();
             // We now have the image library set up.  start to populate.
             int numImages = 0;
-            foreach (MtlFormat mats in cgfData.MatFile.Materials)
+            foreach (CryEngine.Material material in cryData.Materials)
             {
                 // each mat will have a number of texture files.  Need to create an <image> for each of them.
-                int numTextures = mats.Textures.Count;
+                int numTextures = material.Textures.Length;
                 for (int i=0; i < numTextures; i++ )
                 {
                     // For each texture in the material, we make a new <image> object and add it to the list. 
                     Grendgine_Collada_Image tmpImage = new Grendgine_Collada_Image();
-                    tmpImage.ID = mats.MaterialName + "_" + mats.Textures[i].Map;
+                    tmpImage.ID = material.Name + "_" + material.Textures[i].Map;
                     tmpImage.Init_From = new Grendgine_Collada_Init_From();
                     // Build the URI path to the file as a .dds, clean up the slashes.
                     StringBuilder builder;
-                    if (mats.Textures[i].File.Contains(@"/") || mats.Textures[i].File.Contains(@"\"))
+                    if (material.Textures[i].File.Contains(@"/") || material.Textures[i].File.Contains(@"\"))
                     {
-                        builder = new StringBuilder(cgfData.Args.ObjectDir + @"\" + mats.Textures[i].File);
+                        builder = new StringBuilder(cgfData.Args.ObjectDir + @"\" + material.Textures[i].File);
                     }
                     else
                     {
-                        builder = new StringBuilder(mats.Textures[i].File);
+                        builder = new StringBuilder(material.Textures[i].File);
                     }
 
                     if (!this.cgfData.Args.TiffTextures)
@@ -141,14 +145,14 @@ namespace CgfConverter
             Grendgine_Collada_Library_Materials libraryMaterials = new Grendgine_Collada_Library_Materials();
             // We have our top level.
             daeObject.Library_Materials = libraryMaterials;
-            int numMaterials = cgfData.MatFile.Materials.Count;
+            int numMaterials = cryData.Materials.Length;
             // Now create a material for each material in the object
             Console.WriteLine("Number of materials: {0}", numMaterials);
             Grendgine_Collada_Material[] materials = new Grendgine_Collada_Material[numMaterials];
             for (int i=0; i < numMaterials; i++ )
             {
                 Grendgine_Collada_Material tmpMaterial = new Grendgine_Collada_Material();
-                tmpMaterial.Name = cgfData.MatFile.MaterialNameArray[i].MaterialName;
+                tmpMaterial.Name = cryData.Materials[i].Name;
                 // Create the instance_effect for each material
                 tmpMaterial.Instance_Effect = new Grendgine_Collada_Instance_Effect();
                 // The # in front of tmpMaterial.name is needed to reference the effect in Library_effects.
@@ -178,7 +182,7 @@ namespace CgfConverter
             // For each of the nodes, we need to write the geometry.
             // Need to figure out how to assign the right material to the node as well.
             // Use a foreach statement to get all the node chunks.  This will get us the meshes, which will contain the vertex, UV and normal info.
-            foreach (CgfData.ChunkNode nodeChunk in cgfData.CgfChunks.Where(a => a.chunkType == ChunkType.Node))
+            foreach (CryEngine.Model.ChunkNode nodeChunk in cgfData.CgfChunks.Where(a => a.chunkType == ChunkType.Node))
             {
                 // Create a geometry object.  Use the chunk ID for the geometry ID
                 // Will have to be careful with this, since with .cga/.cgam pairs will need to match by Name.
@@ -192,33 +196,33 @@ namespace CgfConverter
                 // need to make a list of the sources and triangles to add to tmpGeo.Mesh
                 List<Grendgine_Collada_Source> sourceList = new List<Grendgine_Collada_Source>();
                 List<Grendgine_Collada_Triangles> triList = new List<Grendgine_Collada_Triangles>();
-                CgfData.ChunkDataStream tmpNormals = new CgfData.ChunkDataStream();
-                CgfData.ChunkDataStream tmpUVs = new CgfData.ChunkDataStream();
-                CgfData.ChunkDataStream tmpVertices = new CgfData.ChunkDataStream();
-                CgfData.ChunkDataStream tmpVertsUVs = new CgfData.ChunkDataStream();
+                CryEngine.Model.ChunkDataStream tmpNormals = new CryEngine.Model.ChunkDataStream();
+                CryEngine.Model.ChunkDataStream tmpUVs = new CryEngine.Model.ChunkDataStream();
+                CryEngine.Model.ChunkDataStream tmpVertices = new CryEngine.Model.ChunkDataStream();
+                CryEngine.Model.ChunkDataStream tmpVertsUVs = new CryEngine.Model.ChunkDataStream();
 
                 if (cgfData.ChunkDictionary[nodeChunk.Object].chunkType == ChunkType.Mesh)
                 {
                     // Get the mesh chunk and submesh chunk for this node.
-                    CgfData.ChunkMesh tmpMeshChunk = (CgfData.ChunkMesh)cgfData.ChunkDictionary[nodeChunk.Object];
-                    CgfData.ChunkMeshSubsets tmpMeshSubsets = tmpMeshSubsets = (CgfData.ChunkMeshSubsets)cgfData.ChunkDictionary[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
+                    CryEngine.Model.ChunkMesh tmpMeshChunk = (CryEngine.Model.ChunkMesh)cgfData.ChunkDictionary[nodeChunk.Object];
+                    CryEngine.Model.ChunkMeshSubsets tmpMeshSubsets = tmpMeshSubsets = (CryEngine.Model.ChunkMeshSubsets)cgfData.ChunkDictionary[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
 
                     // Get pointers to the vertices data
                     if (tmpMeshChunk.VerticesData != 0)
                     {
-                        tmpVertices = (CgfData.ChunkDataStream)cgfData.ChunkDictionary[tmpMeshChunk.VerticesData];
+                        tmpVertices = (CryEngine.Model.ChunkDataStream)cgfData.ChunkDictionary[tmpMeshChunk.VerticesData];
                     }
                     if (tmpMeshChunk.NormalsData != 0)
                     {
-                        tmpNormals = (CgfData.ChunkDataStream)cgfData.ChunkDictionary[tmpMeshChunk.NormalsData];
+                        tmpNormals = (CryEngine.Model.ChunkDataStream)cgfData.ChunkDictionary[tmpMeshChunk.NormalsData];
                     }
                     if (tmpMeshChunk.UVsData != 0)
                     {
-                        tmpUVs = (CgfData.ChunkDataStream)cgfData.ChunkDictionary[tmpMeshChunk.UVsData];
+                        tmpUVs = (CryEngine.Model.ChunkDataStream)cgfData.ChunkDictionary[tmpMeshChunk.UVsData];
                     }
                     if (tmpMeshChunk.VertsUVsData != 0)
                     {
-                        tmpVertsUVs = (CgfData.ChunkDataStream)cgfData.ChunkDictionary[tmpMeshChunk.VertsUVsData];
+                        tmpVertsUVs = (CryEngine.Model.ChunkDataStream)cgfData.ChunkDictionary[tmpMeshChunk.VertsUVsData];
                     }
 
                     // need a collada_source for position, normal, UV and color, what the source is (verts), and the tri index
