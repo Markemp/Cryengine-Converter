@@ -10,9 +10,9 @@ namespace CgfConverter
     {
         // MatType for type 800, 0x1 is material library, 0x12 is child, 0x10 is solo material
 
-		/// <summary>
-		/// CryEngine cgf/cga/skin file handler
-		/// </summary>
+        /// <summary>
+        /// CryEngine cgf/cga/skin file handler
+        /// </summary>
         public class Model // Stores all information about the cgf file format.
         {
             #region Constructor
@@ -21,7 +21,7 @@ namespace CgfConverter
             {
                 this.Args = argsHandler;
 
-                if (this.Args.MergeFiles)
+                if (!this.Args.MergeFiles)
                 {
                     this.GetCgfData(argsHandler.InputFiles.Last());
                 }
@@ -37,7 +37,7 @@ namespace CgfConverter
             #region Properties
 
             public ArgsHandler Args { get; private set; }
-            
+
             #endregion
 
             #region Legacy
@@ -49,7 +49,9 @@ namespace CgfConverter
             public Header CgfHeader;
             public ChunkTable CgfChunkTable = new ChunkTable();                    // CgfChunkTable contains a list of all the Chunks.
             public List<Chunk> CgfChunks = new List<Chunk>();   //  I don't think we want this.  Dictionary is better because of ID
+
             public Dictionary<UInt32, Chunk> ChunkDictionary = new Dictionary<UInt32, Chunk>();  // ChunkDictionary will let us get the Chunk from the ID.
+
             private UInt32 RootNodeID = 0x0;
             public ChunkNode RootNode;
             public List<ChunkHeader> ChunkHeaders = new List<ChunkHeader>();
@@ -81,7 +83,7 @@ namespace CgfConverter
                     {
                         case ChunkType.SourceInfo:
                             {
-                                ChunkSourceInfo chkSrcInfo = new ChunkSourceInfo();
+                                ChunkSourceInfo chkSrcInfo = new ChunkSourceInfo(this);
                                 chkSrcInfo.version = ChkHdr.version;
                                 chkSrcInfo.id = ChkHdr.id;
                                 chkSrcInfo.size = ChkHdr.size;
@@ -94,7 +96,7 @@ namespace CgfConverter
                         case ChunkType.Timing:
                             {
                                 // Timing chunks don't have IDs for some reason.
-                                ChunkTimingFormat chkTiming = new ChunkTimingFormat();
+                                ChunkTimingFormat chkTiming = new ChunkTimingFormat(this);
                                 chkTiming.ReadChunk(cgfReader, ChkHdr.offset);
                                 chkTiming.id = ChkHdr.id;
                                 CgfChunks.Add(chkTiming);
@@ -104,7 +106,7 @@ namespace CgfConverter
                             }
                         case ChunkType.ExportFlags:
                             {
-                                ChunkExportFlags chkExportFlag = new ChunkExportFlags();
+                                ChunkExportFlags chkExportFlag = new ChunkExportFlags(this);
                                 chkExportFlag.ReadChunk(cgfReader, ChkHdr.offset);
                                 chkExportFlag.id = ChkHdr.id;
                                 chkExportFlag.chunkType = ChkHdr.type;
@@ -120,7 +122,7 @@ namespace CgfConverter
                             }
                         case ChunkType.MtlName:
                             {
-                                ChunkMtlName chkMtlName = new ChunkMtlName();
+                                ChunkMtlName chkMtlName = new ChunkMtlName(this);
                                 chkMtlName.version = ChkHdr.version;
                                 chkMtlName.id = ChkHdr.id;  // Should probably check to see if the 2 values match...
                                 chkMtlName.chunkType = ChkHdr.type;
@@ -133,7 +135,7 @@ namespace CgfConverter
                             }
                         case ChunkType.DataStream:
                             {
-                                ChunkDataStream chkDataStream = new ChunkDataStream();
+                                ChunkDataStream chkDataStream = new ChunkDataStream(this);
                                 chkDataStream.id = ChkHdr.id;
                                 chkDataStream.chunkType = ChkHdr.type;
                                 chkDataStream.version = ChkHdr.version;
@@ -146,7 +148,7 @@ namespace CgfConverter
 
                         case ChunkType.Mesh:
                             {
-                                ChunkMesh chkMesh = new ChunkMesh();
+                                ChunkMesh chkMesh = new ChunkMesh(this);
                                 chkMesh.id = ChkHdr.id;
                                 chkMesh.chunkType = ChkHdr.type;
                                 chkMesh.version = ChkHdr.version;
@@ -158,7 +160,7 @@ namespace CgfConverter
                             }
                         case ChunkType.MeshSubsets:
                             {
-                                ChunkMeshSubsets chkMeshSubsets = new ChunkMeshSubsets();
+                                ChunkMeshSubsets chkMeshSubsets = new ChunkMeshSubsets(this);
                                 chkMeshSubsets.id = ChkHdr.id;
                                 chkMeshSubsets.chunkType = ChkHdr.type;
                                 chkMeshSubsets.version = ChkHdr.version;
@@ -170,7 +172,7 @@ namespace CgfConverter
                             }
                         case ChunkType.Node:
                             {
-                                ChunkNode chkNode = new ChunkNode();
+                                ChunkNode chkNode = new ChunkNode(this);
                                 chkNode.ReadChunk(cgfReader, ChkHdr.offset);
                                 chkNode.id = ChkHdr.id;
                                 chkNode.chunkType = ChkHdr.type;
@@ -182,39 +184,7 @@ namespace CgfConverter
                                     // Console.WriteLine("Found a Parent chunk node.  Adding to the dictionary.");
                                     RootNodeID = chkNode.id;
                                     RootNode = chkNode;
-                                    // set up TransformSoFar
-                                    RootNode.TransformSoFar.x = RootNode.Transform.m41;
-                                    RootNode.TransformSoFar.y = RootNode.Transform.m42;
-                                    RootNode.TransformSoFar.z = RootNode.Transform.m43;
-                                    // Set up RotSoFar
-                                    RootNode.RotSoFar.m11 = RootNode.Transform.m11;
-                                    RootNode.RotSoFar.m12 = RootNode.Transform.m12;
-                                    RootNode.RotSoFar.m13 = RootNode.Transform.m13;
-                                    RootNode.RotSoFar.m21 = RootNode.Transform.m21;
-                                    RootNode.RotSoFar.m22 = RootNode.Transform.m22;
-                                    RootNode.RotSoFar.m23 = RootNode.Transform.m23;
-                                    RootNode.RotSoFar.m31 = RootNode.Transform.m31;
-                                    RootNode.RotSoFar.m32 = RootNode.Transform.m32;
-                                    RootNode.RotSoFar.m33 = RootNode.Transform.m33;
-                                    // ChunkDictionary[RootNodeID].WriteChunk();
-                                }
-                                else
-                                {
-                                    if (ChunkDictionary.ContainsKey(chkNode.Parent))
-                                    {
-                                        // Get the transformSoFar and RotSoFar.  These are the rotation and translation of the parent node plus current node.
-                                        //chkNode.TransformSoFar.x = ((ChunkNode)ChunkDictionary[chkNode.Parent]).TransformSoFar.x + chkNode.Transform.m41/100;
-                                        //chkNode.TransformSoFar.y = ((ChunkNode)ChunkDictionary[chkNode.Parent]).TransformSoFar.y + chkNode.Transform.m42/100;
-                                        //chkNode.TransformSoFar.z = ((ChunkNode)ChunkDictionary[chkNode.Parent]).TransformSoFar.z + chkNode.Transform.m43/100;
-                                        chkNode.TransformSoFar = ((ChunkNode)ChunkDictionary[chkNode.Parent]).TransformSoFar.Add(chkNode.Transform.GetTranslation());
-                                        // Get the rotation so far
-                                        //chkNode.RotSoFar.WriteMatrix33();
-                                        chkNode.RotSoFar = chkNode.Transform.To3x3().Mult(((ChunkNode)ChunkDictionary[chkNode.Parent]).RotSoFar);
-                                    }
-                                    else
-                                    {
-                                        Console.WriteLine("Missing Chunk {0}", chkNode.Parent);
-                                    }
+                                    // // ChunkDictionary[RootNodeID].WriteChunk();
                                 }
 
                                 if (chkNode.Name.Contains("RearWingLeft"))
@@ -229,7 +199,7 @@ namespace CgfConverter
                             }
                         case ChunkType.CompiledBones:
                             {
-                                ChunkCompiledBones chkCompiledBones = new ChunkCompiledBones();
+                                ChunkCompiledBones chkCompiledBones = new ChunkCompiledBones(this);
                                 chkCompiledBones.ReadChunk(cgfReader, ChkHdr.offset);
                                 chkCompiledBones.id = ChkHdr.id;
                                 chkCompiledBones.chunkType = ChkHdr.type;
@@ -239,7 +209,7 @@ namespace CgfConverter
                             }
                         case ChunkType.Helper:
                             {
-                                ChunkHelper chkHelper = new ChunkHelper();
+                                ChunkHelper chkHelper = new ChunkHelper(this);
                                 chkHelper.version = ChkHdr.version;
                                 chkHelper.chunkType = ChkHdr.type;
                                 chkHelper.ReadChunk(cgfReader, ChkHdr.offset);
@@ -252,7 +222,7 @@ namespace CgfConverter
                         case ChunkType.Controller:
                             {
                                 // Having a problem with this.  If the id is 0x000000ff, it says dup key for the 300i.
-                                ChunkController chkController = new ChunkController();
+                                ChunkController chkController = new ChunkController(this);
                                 chkController.ReadChunk(cgfReader, ChkHdr.offset);
                                 chkController.chunkType = ChkHdr.type;
                                 chkController.version = ChkHdr.version;
@@ -274,7 +244,7 @@ namespace CgfConverter
                             }
                         case ChunkType.SceneProps:
                             {
-                                ChunkSceneProp chkSceneProp = new ChunkSceneProp();
+                                ChunkSceneProp chkSceneProp = new ChunkSceneProp(this);
                                 chkSceneProp.ReadChunk(cgfReader, ChkHdr.offset);
                                 chkSceneProp.chunkType = ChkHdr.type;
                                 chkSceneProp.id = ChkHdr.id;
@@ -286,7 +256,7 @@ namespace CgfConverter
                             }
                         case ChunkType.CompiledPhysicalProxies:
                             {
-                                ChunkCompiledPhysicalProxies chkCompiledPhysicalProxy = new ChunkCompiledPhysicalProxies();
+                                ChunkCompiledPhysicalProxies chkCompiledPhysicalProxy = new ChunkCompiledPhysicalProxies(this);
                                 chkCompiledPhysicalProxy.ReadChunk(cgfReader, ChkHdr.offset);
                                 chkCompiledPhysicalProxy.chunkType = ChkHdr.type;
                                 chkCompiledPhysicalProxy.id = ChkHdr.id;
@@ -307,69 +277,6 @@ namespace CgfConverter
 
             }
 
-            public Vector3 GetTransform(ChunkNode chunkNode, Vector3 transform)
-            {
-                // Gets the transform of the vertex.  This will be both the rotation and translation of this vertex, plus all the parents.
-                // The transform matrix is a 4x4 matrix.  Vector3 is a 3x1.  We need to convert vector3 to vector4, multiply the matrix, then convert back to vector3
-                Vector3 vec3 = transform;
-
-                if (chunkNode.Parent != 0xFFFFFFFF)
-                {
-                    // Apply the local transforms (rotation and translation) to the vector  
-                    //(chunkNode.Transform).To3x3().WriteMatrix33();  
-                    // Do rotations.  Rotations must come first, then translate.
-                    vec3 = chunkNode.RotSoFar.Mult3x1(vec3);
-                    // Do translations.  I think this is right.  Objects in right place, not rotated right.
-                    //vec3 = vec3.Add(chunkNode.Transform.GetTranslation());
-                    //vec3 = vec3.Add(((ChunkNode)ChunkDictionary[chunkNode.Parent]).TransformSoFar);
-                    vec3 = vec3.Add(chunkNode.TransformSoFar);
-                }
-                return vec3;
-            }
-            public Vector3 GetTransform2(ChunkNode chunkNode, Vector3 transform)
-            {
-                // Gets the transform of the vertex.  This will be both the rotation and translation of this vertex, plus all the parents.
-                // The transform matrix is a 4x4 matrix.  Vector3 is a 3x1.  We need to convert vector3 to vector4, multiply the matrix, then convert back to vector3
-                Vector3 vec3 = transform;
-                Matrix33 rotation = new Matrix33();
-
-                if (chunkNode.Parent != 0xFFFFFFFF)
-                {
-                    // Apply the local transforms (rotation and translation) to the vector  
-                    //(chunkNode.Transform).To3x3().WriteMatrix33();  
-                    // Do rotations
-                    //vec3 = chunkNode.Transform.To3x3().Mult3x1(vec3);
-                    //rotation = ((ChunkNode)ChunkDictionary[chunkNode.Parent]).RotSoFar.Mult(chunkNode.Transform.To3x3());
-                    //vec3 = rotation.Mult3x1(vec3);
-                    if (chunkNode.Name == "FrontWing_Left")
-                    {
-                        Console.WriteLine("FrontWing_Left");
-                        vec3.WriteVector3();
-                    }
-
-                    //vec3 = chunkNode.RotSoFar.Mult3x1(vec3);
-                    vec3 = chunkNode.Transform.To3x3().Mult3x1(vec3);
-
-                    if (chunkNode.Name == "FrontWing_Left")
-                    {
-                        vec3.WriteVector3();
-                    }
-
-                    // Do translations.  I think this is right.  Objects in right place, not rotated right.
-                    vec3 = vec3.Add(chunkNode.Transform.GetTranslation());
-                    vec3 = vec3.Add(((ChunkNode)ChunkDictionary[chunkNode.Parent]).TransformSoFar);
-                    if (chunkNode.Name == "FrontWing_Left")
-                    {
-                        vec3.WriteVector3();
-                    }
-
-
-                }
-                //Console.WriteLine();
-                //Console.WriteLine("vec4.x {0}", vec4.x);
-                return vec3;
-
-            }
             public void WriteTransform(Vector3 transform)
             {
                 Console.WriteLine("Transform:");
@@ -582,13 +489,32 @@ namespace CgfConverter
                 }
             }
 
-            public class Chunk
+            public abstract class Chunk
             {
+                public Chunk(CryEngine.Model model)
+                {
+                    this._model = model;
+                }
+
+                internal Model _model;
+
                 public Int32 ChunkOffset { get; internal set; }
-                public ChunkType chunkType; // Type of chunk
-                public UInt32 version;        // version of this chunk
-                public UInt32 id;             // ID of the chunk.
-                public UInt32 size;           // size of this chunk in bytes
+                /// <summary>
+                /// The Type of the Chunk
+                /// </summary>
+                public ChunkType chunkType;
+                /// <summary>
+                /// The Version of this Chunk
+                /// </summary>
+                public UInt32 version;
+                /// <summary>
+                /// The ID of this Chunk
+                /// </summary>
+                public UInt32 id;
+                /// <summary>
+                /// The Size of this Chunk (in Bytes)
+                /// </summary>
+                public UInt32 size;
 
                 public virtual void ReadChunk(BinaryReader b, UInt32 f)
                 {
@@ -599,7 +525,7 @@ namespace CgfConverter
                     // Don't do anything.  Placeholder
                 }
             }
-            
+
             public class ChunkHelper : Chunk        // cccc0001:  Helper chunk.  This is the top level, then nodes, then mesh, then mesh subsets
             {
                 public String Name;
@@ -607,6 +533,7 @@ namespace CgfConverter
                 public Vector3 Pos;
                 public Matrix44 Transform;
 
+                public ChunkHelper(Model model) : base(model) { }
 
                 public override void ReadChunk(BinaryReader b, UInt32 f)
                 {
@@ -670,6 +597,8 @@ namespace CgfConverter
                 //public Dictionary<UInt32, CompiledBone> BoneDictionary = new Dictionary<UInt32, CompiledBone>();
                 public Dictionary<String, CompiledBone> BoneDictionary = new Dictionary<String, CompiledBone>();  // Name and CompiledBone object
 
+                public ChunkCompiledBones(Model model) : base(model) { }
+
                 public override void ReadChunk(BinaryReader b, UInt32 f)
                 {
                     b.BaseStream.Seek(f, 0); // seek to the beginning of the Node chunk.  f+12(?) will always be the start of this chunk, so us it!
@@ -722,7 +651,7 @@ namespace CgfConverter
 
                 }
             }
-            
+
             public class ChunkCompiledPhysicalProxies : Chunk        // 0xACDC0003:  Hit boxes?
             {
                 // Properties.  VERY similar to datastream, since it's essential vertex info.
@@ -732,6 +661,8 @@ namespace CgfConverter
                 //public UInt32 Reserved1;
                 //public UInt32 Reserved2;
                 public HitBox[] HitBoxes;
+
+                public ChunkCompiledPhysicalProxies(Model model) : base(model) { }
 
                 public override void ReadChunk(BinaryReader b, UInt32 f)
                 {
@@ -791,6 +722,8 @@ namespace CgfConverter
 
             public class ChunkNode : Chunk          // cccc000b:   Node
             {
+                #region Chunk Properties
+
                 public String Name;  // String 64.
                 public UInt32 Object;  // Mesh or Helper Object chunk ID
                 public UInt32 Parent;  // Node parent.  if 0xFFFFFFFF, it's the top node.  Maybe...
@@ -811,8 +744,122 @@ namespace CgfConverter
                 public ChunkMtlName MaterialChunk;
                 public ChunkNode[] NodeChildren;
 
-                public Vector3 TransformSoFar = new Vector3();  // this is the parent transform plus this transform.
-                public Matrix33 RotSoFar = new Matrix33();
+                #endregion
+
+                #region Calculated Properties
+
+                /// <summary>
+                /// Private Data Store for ParentNode
+                /// </summary>
+                private ChunkNode _parentNode = null;
+                public ChunkNode ParentNode
+                {
+                    get
+                    {
+                        // Cache the results of the lazy load
+                        if ((this._parentNode == null) && (this.id != this._model.RootNodeID))
+                        {
+                            Chunk tempChunk = null;
+
+                            if (this.Parent == 0xFFFFFFFF)
+                            {
+                                tempChunk = this._model.RootNode;
+                            }
+                            else if (!this._model.ChunkDictionary.TryGetValue(this.Parent, out tempChunk))
+                            {
+                                tempChunk = this._model.RootNode;
+                                Console.WriteLine("*******Missing Parent (ID: {0:X}, Name: {1}, Parent: {2:X}", this.id, this.Name, this.Parent);
+                            }
+
+                            this._parentNode = tempChunk as ChunkNode;
+                        }
+
+                        return this._parentNode;
+                    }
+                }
+
+                // TODO: Return Here
+
+                // // set up TransformSoFar
+                // RootNode.TransformSoFar.x = RootNode.Transform.m41;
+                // RootNode.TransformSoFar.y = RootNode.Transform.m42;
+                // RootNode.TransformSoFar.z = RootNode.Transform.m43;
+                // // Set up RotSoFar
+                // RootNode.RotSoFar.m11 = RootNode.Transform.m11;
+                // RootNode.RotSoFar.m12 = RootNode.Transform.m12;
+                // RootNode.RotSoFar.m13 = RootNode.Transform.m13;
+                // RootNode.RotSoFar.m21 = RootNode.Transform.m21;
+                // RootNode.RotSoFar.m22 = RootNode.Transform.m22;
+                // RootNode.RotSoFar.m23 = RootNode.Transform.m23;
+                // RootNode.RotSoFar.m31 = RootNode.Transform.m31;
+                // RootNode.RotSoFar.m32 = RootNode.Transform.m32;
+                // RootNode.RotSoFar.m33 = RootNode.Transform.m33;
+
+                public Vector3 TransformSoFar
+                {
+                    get
+                    {
+                        if (this.ParentNode != null)
+                        {
+                            return this.ParentNode.TransformSoFar.Add(this.Transform.GetTranslation());
+                        }
+                        else
+                        {
+                            // TODO: What should this be?
+                            return this.Transform.GetTranslation();
+                        }
+                    }
+                }
+                public Matrix33 RotSoFar
+                {
+                    get
+                    {
+                        if (this.ParentNode != null)
+                        {
+                            return this.Transform.To3x3().Mult(this.ParentNode.RotSoFar);
+                        }
+                        else
+                        {
+                            // TODO: What should this be?
+                            return this.Transform.To3x3();
+                        }
+                    }
+                }
+
+                #endregion
+
+                #region Constructor/s
+
+                public ChunkNode(CryEngine.Model model) : base(model) { }
+
+                #endregion
+
+                #region Methods
+
+                /// <summary>
+                /// Gets the transform of the vertex.  This will be both the rotation and translation of this vertex, plus all the parents.
+                /// 
+                /// The transform matrix is a 4x4 matrix.  Vector3 is a 3x1.  We need to convert vector3 to vector4, multiply the matrix, then convert back to vector3.
+                /// </summary>
+                /// <param name="transform"></param>
+                /// <returns></returns>
+                public Vector3 GetTransform(Vector3 transform)
+                {
+                    Vector3 vec3 = transform;
+
+                    // if (this.id != 0xFFFFFFFF)
+                    // {
+
+                    // Apply the local transforms (rotation and translation) to the vector
+                    // Do rotations.  Rotations must come first, then translate.
+                    vec3 = this.RotSoFar.Mult3x1(vec3);
+                    // Do translations.  I think this is right.  Objects in right place, not rotated right.
+                    vec3 = vec3.Add(this.TransformSoFar);
+
+                    //}
+
+                    return vec3;
+                }
 
                 public override void ReadChunk(BinaryReader b, UInt32 f)
                 {
@@ -843,7 +890,7 @@ namespace CgfConverter
                     //Console.WriteLine("Node chunk:  {0}. ", Name);
                     if (Parent == 0xFFFFFFFF)
                     {
-                        Console.WriteLine("Found Parent with 0xFFFFFF.  Name:  {0}", Name);
+                        Console.WriteLine("Found Node with Parent == 0xFFFFFFFF.  Name:  {0}", Name);
                     }
 
                     NumChildren = b.ReadUInt32();
@@ -908,8 +955,10 @@ namespace CgfConverter
                     Console.WriteLine("*** END Node Chunk ***");
 
                 }
+                
+                #endregion
             }
-            
+
             public class ChunkController : Chunk    // cccc000d:  Controller chunk
             {
                 public CtrlType ControllerType;
@@ -918,6 +967,11 @@ namespace CgfConverter
                 public UInt32 ControllerID;           // Unique id based on CRC32 of bone name.  Ver 827 only?
                 public Key[] Keys;                  // array length NumKeys.  Ver 827?
 
+                #region Constructor/s
+
+                public ChunkController(CryEngine.Model model) : base(model) { }
+
+                #endregion
 
                 public override void ReadChunk(BinaryReader b, UInt32 f)
                 {
@@ -971,7 +1025,7 @@ namespace CgfConverter
                 }
 
             }
-            
+
             public class ChunkExportFlags : Chunk  // cccc0015:  Export Flags
             {
                 public UInt32 ChunkOffset;  // for some reason the offset of Export Flag chunk is stored here.
@@ -980,6 +1034,13 @@ namespace CgfConverter
                 public UInt32[] RCVersion;  // 4 uints
                 public Char[] RCVersionString;  // Technically String16
                 public UInt32[] Reserved;  // 32 uints
+
+                #region Constructor/s
+
+                public ChunkExportFlags(CryEngine.Model model) : base(model) { }
+
+                #endregion
+
                 public override void ReadChunk(BinaryReader b, UInt32 f)
                 {
                     b.BaseStream.Seek(f, 0); // seek to the beginning of the Timing Format chunk
@@ -1023,12 +1084,18 @@ namespace CgfConverter
                     Console.WriteLine("*** END EXPORT FLAGS ***");
                 }
             }
-            
+
             public class ChunkSourceInfo : Chunk  // cccc0013:  Source Info chunk.  Pretty useless overall
             {
                 public String SourceFile;
                 public String Date;
                 public String Author;
+
+                #region Constructor/s
+
+                public ChunkSourceInfo(CryEngine.Model model) : base(model) { }
+
+                #endregion
 
                 public override void ReadChunk(BinaryReader b, UInt32 f)  //
                 {
@@ -1075,7 +1142,7 @@ namespace CgfConverter
                     Console.WriteLine("*** END SOURCE INFO CHUNK ***");
                 }
             }
-            
+
             public class ChunkMtlName : Chunk  // cccc0014:  provides material name as used in the .mtl file
             {
                 // need to find the material ID used by the mesh subsets
@@ -1094,6 +1161,12 @@ namespace CgfConverter
                 public UInt32 AdvancedData;  // probably not used
                 public Single Opacity; // probably not used
                 public Int32[] Reserved;  // array length of 32
+
+                #region Constructor/s
+
+                public ChunkMtlName(CryEngine.Model model) : base(model) { }
+
+                #endregion
 
                 public override void ReadChunk(BinaryReader b, UInt32 f)
                 {
@@ -1179,7 +1252,7 @@ namespace CgfConverter
                     Console.WriteLine("*** END MATERIAL NAMES ***");
                 }
             }
-            
+
             public class ChunkDataStream : Chunk // cccc0016:  Contains data such as vertices, normals, etc.
             {
                 public UInt32 Flags; // not used, but looks like the start of the Data Stream chunk
@@ -1205,6 +1278,13 @@ namespace CgfConverter
                 public Byte[,] BoneMap;      // for dataStreamType of 9, length is NumElements,BytesPerElement.
                 public Byte[,] FaceMap;      // for dataStreamType of 10, length is NumElements,BytesPerElement.
                 public Byte[,] VertMats;     // for dataStreamType of 11, length is NumElements,BytesPerElement.
+
+                #region Constructor/s
+
+                public ChunkDataStream() : base(null) { }
+                public ChunkDataStream(CryEngine.Model model) : base(model) { }
+
+                #endregion
 
                 public override void ReadChunk(BinaryReader b, UInt32 f)
                 {
@@ -1468,7 +1548,7 @@ namespace CgfConverter
 
                 }
             }
-            
+
             public class ChunkMeshSubsets : Chunk // cccc0017:  The different parts of a mesh.  Needed for obj exporting
             {
                 public UInt32 Flags; // probably the offset
@@ -1477,6 +1557,12 @@ namespace CgfConverter
                 public Int32 Reserved2;
                 public Int32 Reserved3;
                 public MeshSubset[] MeshSubsets;
+
+                #region Constructor/s
+
+                public ChunkMeshSubsets(CryEngine.Model model) : base(model) { }
+
+                #endregion
 
                 public override void ReadChunk(BinaryReader b, UInt32 f)
                 {
@@ -1550,7 +1636,7 @@ namespace CgfConverter
                     Console.WriteLine("*** END MESH SUBSET CHUNK ***");
                 }
             }
-            
+
             public class ChunkMesh : Chunk      //  cccc0000:  Object that points to the datastream chunk.
             {
                 // public UInt32 Version;  // 623 Far Cry, 744 Far Cry, Aion, 800 Crysis
@@ -1603,6 +1689,12 @@ namespace CgfConverter
                 public UInt32[] Reserved3 = new uint[32]; // 800 array of 32 UInt32 values.
 
                 //public ChunkMeshSubsets chunkMeshSubset; // pointer to the mesh subset that belongs to this mesh
+
+                #region Constructor/s
+
+                public ChunkMesh(CryEngine.Model model) : base(model) { }
+
+                #endregion
 
                 public override void ReadChunk(BinaryReader b, UInt32 f)
                 {
@@ -1711,7 +1803,7 @@ namespace CgfConverter
                     Console.WriteLine("*** END MESH CHUNK ***");
                 }
             }
-            
+
             public class ChunkSceneProp : Chunk     // cccc0008 
             {
                 // This chunk isn't really used, but contains some data probably necessary for the game.
@@ -1719,6 +1811,12 @@ namespace CgfConverter
                 public UInt32 numProps;             // number of elements in the props array  (31 for type 0x744)
                 public String[] prop;
                 public String[] propvalue;
+
+                #region Constructor/s
+
+                public ChunkSceneProp(CryEngine.Model model) : base(model) { }
+
+                #endregion
 
                 public override void ReadChunk(BinaryReader b, UInt32 f)
                 {
@@ -1778,7 +1876,7 @@ namespace CgfConverter
                     Console.WriteLine("*** END SceneProp Chunk ***");
                 }
             }
-            
+
             public class ChunkTimingFormat : Chunk  // cccc000e:  Timing format chunk
             {
                 // This chunk doesn't have an ID, although one may be assigned in the chunk table.
@@ -1788,6 +1886,12 @@ namespace CgfConverter
                 public UInt32 Unknown2; // 4 bytes, not sure what they are
                 public RangeEntity GlobalRange;
                 public Int32 NumSubRanges;
+
+                #region Constructor/s
+
+                public ChunkTimingFormat(CryEngine.Model model) : base(model) { }
+
+                #endregion
 
                 public override void ReadChunk(BinaryReader b, UInt32 f)
                 {

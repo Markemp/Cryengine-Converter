@@ -68,13 +68,11 @@ namespace CgfConverter
                     //Console.WriteLine("WriteOBJ:  Rootnode.numchildren != 0.");
                     foreach (CryEngine.Model.ChunkNode tmpNode in this.CryData.Asset.CgfChunks.Where(a => a.chunkType == ChunkType.Node))
                     {
-                            //tmpNode.WriteChunk();
-                            //Console.WriteLine("Writing {0}", tmpNode.Name);
-                            string s3 = String.Format("o {0}", tmpNode.Name);
-                            file.WriteLine(s3);
-                            // Grab the mesh and process that.
-                            WriteObjNode(file, tmpNode);
-
+                        //tmpNode.WriteChunk();
+                        //Console.WriteLine("Writing {0}", tmpNode.Name);
+                        file.WriteLine("o {0}", tmpNode.Name);
+                        // Grab the mesh and process that.
+                        WriteObjNode(file, tmpNode);
                     }
                 }
 
@@ -174,7 +172,7 @@ namespace CgfConverter
 
             uint numChildren = chunkNode.NumChildren;           // use in a for loop to print the mesh for each child
 
-            for (uint i = 0; i < tmpMeshSubsets.NumMeshSubset; i++)
+            foreach (var meshSubset in tmpMeshSubsets.MeshSubsets)
             {
                 // Write vertices data for each MeshSubSet (v)
                 f.WriteLine("g");
@@ -184,31 +182,24 @@ namespace CgfConverter
                     #region Write Vertices Out (v, vt)
 
                     // Probably using VertsUVs (3.7+).  Write those vertices out. Do UVs at same time.
-                    for (uint j = tmpMeshSubsets.MeshSubsets[i].FirstVertex;
-                        j < tmpMeshSubsets.MeshSubsets[i].NumVertices + tmpMeshSubsets.MeshSubsets[i].FirstVertex;
+                    for (uint j = meshSubset.FirstVertex;
+                        j < meshSubset.NumVertices + meshSubset.FirstVertex;
                         j++)
                     {
                         // Let's try this using this node chunk's rotation matrix, and the transform is the sum of all the transforms.
                         // Get the transform.
-                        Vector3 vertex = new Vector3();
-                        vertex.x = tmpVertsUVs.Vertices[j].x;
-                        vertex.y = tmpVertsUVs.Vertices[j].y;
-                        vertex.z = tmpVertsUVs.Vertices[j].z;
-
-                        vertex = this.CryData.Asset.GetTransform(chunkNode, vertex);
+                        Vector3 vertex = chunkNode.GetTransform(tmpVertsUVs.Vertices[j]);
 
                         f.WriteLine("v {0:F7} {1:F7} {2:F7}", vertex.x, vertex.y, vertex.z);
                     }
 
                     f.WriteLine();
 
-                    for (uint j = tmpMeshSubsets.MeshSubsets[i].FirstVertex;
-                        j < tmpMeshSubsets.MeshSubsets[i].NumVertices + tmpMeshSubsets.MeshSubsets[i].FirstVertex;
+                    for (uint j = meshSubset.FirstVertex;
+                        j < meshSubset.NumVertices + meshSubset.FirstVertex;
                         j++)
                     {
-                        f.WriteLine("vt {0:F7} {1:F7} 0",
-                            tmpVertsUVs.UVs[j].U,
-                            1 - tmpVertsUVs.UVs[j].V);
+                        f.WriteLine("vt {0:F7} {1:F7} 0", tmpVertsUVs.UVs[j].U, 1 - tmpVertsUVs.UVs[j].V);
                     }
 
                     #endregion
@@ -217,25 +208,20 @@ namespace CgfConverter
                 {
                     #region Write Vertices Out (v, vt)
 
-                    for (uint j = tmpMeshSubsets.MeshSubsets[i].FirstVertex;
-                        j < tmpMeshSubsets.MeshSubsets[i].NumVertices + tmpMeshSubsets.MeshSubsets[i].FirstVertex;
+                    for (uint j = meshSubset.FirstVertex;
+                        j < meshSubset.NumVertices + meshSubset.FirstVertex;
                         j++)
                     {
-                        Vector3 vertex = new Vector3();
-                        vertex.x = tmpVertices.Vertices[j].x;
-                        vertex.y = tmpVertices.Vertices[j].y;
-                        vertex.z = tmpVertices.Vertices[j].z;
-
                         // Rotate/translate the vertex
-                        vertex = this.CryData.Asset.GetTransform(chunkNode, vertex);
+                        Vector3 vertex = chunkNode.GetTransform(tmpVertices.Vertices[j]);
 
                         f.WriteLine("v {0:F7} {1:F7} {2:F7}", vertex.x, vertex.y, vertex.z);
                     }
 
                     f.WriteLine();
 
-                    for (uint j = tmpMeshSubsets.MeshSubsets[i].FirstVertex;
-                        j < tmpMeshSubsets.MeshSubsets[i].NumVertices + tmpMeshSubsets.MeshSubsets[i].FirstVertex;
+                    for (uint j = meshSubset.FirstVertex;
+                        j < meshSubset.NumVertices + meshSubset.FirstVertex;
                         j++)
                     {
                         f.WriteLine("vt {0:F7} {1:F7} 0", tmpUVs.UVs[j].U, 1 - tmpUVs.UVs[j].V);
@@ -250,8 +236,8 @@ namespace CgfConverter
 
                 if (tmpMesh.NormalsData != 0)
                 {
-                    for (uint j = tmpMeshSubsets.MeshSubsets[i].FirstVertex;
-                        j < tmpMeshSubsets.MeshSubsets[i].NumVertices + tmpMeshSubsets.MeshSubsets[i].FirstVertex;
+                    for (uint j = meshSubset.FirstVertex;
+                        j < meshSubset.NumVertices + meshSubset.FirstVertex;
                         j++)
                     {
                         f.WriteLine("vn {0:F7} {1:F7} {2:F7}",
@@ -271,13 +257,13 @@ namespace CgfConverter
 
                 #region Write Material Block (usemtl)
 
-                if (this.CryData.Materials.Length > tmpMeshSubsets.MeshSubsets[i].MatID)
+                if (this.CryData.Materials.Length > meshSubset.MatID)
                 {
-                    f.WriteLine("usemtl {0}", this.CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name);
+                    f.WriteLine("usemtl {0}", this.CryData.Materials[meshSubset.MatID].Name);
                 }
                 else
                 {
-                    Console.WriteLine("Missing Material {0}", tmpMeshSubsets.MeshSubsets[i].MatID);
+                    Console.WriteLine("Missing Material {0}", meshSubset.MatID);
 
                     // The material file doesn't have any elements with the Name of the material.  Use the object name.
                     f.WriteLine("usemtl {0}", this.CryData.Asset.RootNode.Name);
@@ -287,8 +273,8 @@ namespace CgfConverter
                 #endregion
 
                 // Now write out the faces info based on the MtlName
-                for (uint j = tmpMeshSubsets.MeshSubsets[i].FirstIndex;
-                    j < tmpMeshSubsets.MeshSubsets[i].NumIndices + tmpMeshSubsets.MeshSubsets[i].FirstIndex;
+                for (uint j = meshSubset.FirstIndex;
+                    j < meshSubset.NumIndices + meshSubset.FirstIndex;
                     j++)
                 {
                     f.WriteLine("f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}",    // Vertices, UVs, Normals
@@ -299,8 +285,8 @@ namespace CgfConverter
                     j += 2;
                 }
 
-                this.CryData.Asset.TempVertexPosition += tmpMeshSubsets.MeshSubsets[i].NumVertices;  // add the number of vertices so future objects can start at the right place
-                this.CryData.Asset.TempIndicesPosition += tmpMeshSubsets.MeshSubsets[i].NumIndices;  // Not really used...
+                this.CryData.Asset.TempVertexPosition += meshSubset.NumVertices;  // add the number of vertices so future objects can start at the right place
+                this.CryData.Asset.TempIndicesPosition += meshSubset.NumIndices;  // Not really used...
             }
 
             // Extend the current vertex, uv and normal positions by the length of those arrays.

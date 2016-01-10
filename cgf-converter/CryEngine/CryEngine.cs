@@ -30,8 +30,13 @@ namespace CgfConverter
                 if (materialFile.Extension != "mtl")
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
 
-                // TODO: Try different paths
-                // if (!materialFile.Exists)
+                // Then try relative to the ObjectDir
+                if (!materialFile.Exists)
+                    materialFile = new FileInfo(Path.Combine(argsHandler.ObjectDir.FullName, mtlChunk.Name));
+                if (materialFile.Extension != "mtl")
+                    materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
+
+                // TODO: Try more paths
 
                 CryEngine.Material material = CryEngine.Material.FromFile(materialFile);
 
@@ -45,6 +50,8 @@ namespace CgfConverter
                     return;
                 }
             }
+
+            this.Materials = new Material[] { };
         }
 
         #endregion

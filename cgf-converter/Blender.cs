@@ -10,9 +10,17 @@ namespace CgfConverter
     public class Blender  //  Class to allow exporting to .blend files.
     {
         FileInfo blendOutputFile;
+        public ArgsHandler Args { get; private set; }
+        public CryEngine CryData { get; set; }
 
-        public void WriteBlend(CryEngine cryData)
+        public Blender(ArgsHandler argsHandler)
         {
+            this.Args = argsHandler;
+        }
+
+        public void WriteBlend(CryEngine cryEngine)
+        {
+            this.CryData = cryEngine;
             // The root of the functions to write Blend files
             // At this point, we should have a CgfData object, fully populated.
             Console.WriteLine();
