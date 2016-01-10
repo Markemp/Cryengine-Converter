@@ -155,7 +155,7 @@ namespace CgfConverter
 
                             if (RootNodeID == 0x0)  // Basically the first Node chunk it reads is the Root Node.  Probably not right, but...
                             {
-                                Console.WriteLine("Found a Parent chunk node.  Adding to the dictionary.");
+                                //Console.WriteLine("Found a Parent chunk node.  Adding to the dictionary.");
                                 RootNodeID = chkNode.id;
                                 RootNode = chkNode;
                                 // set up TransformSoFar
@@ -172,25 +172,24 @@ namespace CgfConverter
                                 RootNode.RotSoFar.m31 = RootNode.Transform.m31;
                                 RootNode.RotSoFar.m32 = RootNode.Transform.m32;
                                 RootNode.RotSoFar.m33 = RootNode.Transform.m33;
-                                ChunkDictionary[RootNodeID].WriteChunk();
+                                //ChunkDictionary[RootNodeID].WriteChunk();
                             } else
                             {
                                 // Get the transformSoFar and RotSoFar.  These are the rotation and translation of the parent node plus current node.
-                                chkNode.TransformSoFar.x = ((ChunkNode)ChunkDictionary[chkNode.Parent]).TransformSoFar.x + chkNode.Transform.m41/100;
-                                chkNode.TransformSoFar.y = ((ChunkNode)ChunkDictionary[chkNode.Parent]).TransformSoFar.y + chkNode.Transform.m42/100;
-                                chkNode.TransformSoFar.z = ((ChunkNode)ChunkDictionary[chkNode.Parent]).TransformSoFar.z + chkNode.Transform.m43/100;
+                                //chkNode.TransformSoFar.x = ((ChunkNode)ChunkDictionary[chkNode.Parent]).TransformSoFar.x + chkNode.Transform.m41/100;
+                                //chkNode.TransformSoFar.y = ((ChunkNode)ChunkDictionary[chkNode.Parent]).TransformSoFar.y + chkNode.Transform.m42/100;
+                                //chkNode.TransformSoFar.z = ((ChunkNode)ChunkDictionary[chkNode.Parent]).TransformSoFar.z + chkNode.Transform.m43/100;
+                                chkNode.TransformSoFar = ((ChunkNode)ChunkDictionary[chkNode.Parent]).TransformSoFar.Add(chkNode.Transform.GetTranslation());
                                 // Get the rotation so far
                                 //chkNode.RotSoFar.WriteMatrix33();
-                                //chkNode.RotSoFar = ((ChunkNode)ChunkDictionary[chkNode.Parent]).RotSoFar.Mult(chkNode.Transform.To3x3());
                                 chkNode.RotSoFar = chkNode.Transform.To3x3().Mult(((ChunkNode)ChunkDictionary[chkNode.Parent]).RotSoFar);
                             }
 
                             if (chkNode.Name.Contains("RearWingLeft"))
                             {
-                                Console.WriteLine("Transform matrix and transformsofar for {0}", chkNode.Name);
-                                chkNode.WriteChunk();
-                                chkNode.RotSoFar.WriteMatrix33();
-
+                                //Console.WriteLine("Transform matrix and transformsofar for {0}", chkNode.Name);
+                                //chkNode.WriteChunk();
+                                //chkNode.TransformSoFar.WriteVector3();
                             }
                             //chkNode.WriteChunk();
                             break;
@@ -282,56 +281,24 @@ namespace CgfConverter
             this.objOutputFile = args.OutputFile;
             this.GetCgfData(inputFile);
         }
-        public Vector3 GetTransform(ChunkNode chunkNode, Vector3 transform)        //  Calculate the transform of a node by getting parent's transform.
-        {
-            Vector3 resultant = new Vector3();
-            Console.WriteLine("Transforming {0}.  ID: {1:X},  Parent ID: {2:X}", chunkNode.Name, chunkNode.id, chunkNode.Parent);
-            float x = chunkNode.Transform.m41 / 100;
-            float y = chunkNode.Transform.m42 / 100;
-            float z = chunkNode.Transform.m43 / 100;
-            // if we're at the parent, we just want to return.  Otherwise we want to go up to the next level.
-            // Matrix math here.  final x is x*m11 + y*m12 + z*m13.  Same for y and z
-            // in some models, there are multiple 0xFFFFFFFF parent node chunks.  This will need to be resolved
-            if (chunkNode.Parent != 0xFFFFFFFF)
-            {
-                resultant.x += x + (transform.x * chunkNode.Transform.m11) + (transform.y * chunkNode.Transform.m12) + (transform.z * chunkNode.Transform.m13);
-                resultant.y += y + (transform.x * chunkNode.Transform.m21) + (transform.y * chunkNode.Transform.m22) + (transform.z * chunkNode.Transform.m23);
-                resultant.z += z + (transform.x * chunkNode.Transform.m31) + (transform.y * chunkNode.Transform.m32) + (transform.z * chunkNode.Transform.m33);
-
-                transform = GetTransform((ChunkNode)ChunkDictionary[chunkNode.Parent], resultant);
-            }
-            Console.WriteLine();
-            return transform;
-        }
-        public Vector3 GetTransform2(ChunkNode chunkNode, Vector3 transform)
+        public Vector3 GetTransform(ChunkNode chunkNode, Vector3 transform)
         {
             // Gets the transform of the vertex.  This will be both the rotation and translation of this vertex, plus all the parents.
             // The transform matrix is a 4x4 matrix.  Vector3 is a 3x1.  We need to convert vector3 to vector4, multiply the matrix, then convert back to vector3
             Vector3 vec3 = transform;
-            //Matrix33 rotation = new Matrix33();
 
             if (chunkNode.Parent != 0xFFFFFFFF)
             {
                 // Apply the local transforms (rotation and translation) to the vector  
                 //(chunkNode.Transform).To3x3().WriteMatrix33();  
-                // Do rotations
-                //vec3 = chunkNode.Transform.To3x3().Mult3x1(vec3);
-                //rotation = ((ChunkNode)ChunkDictionary[chunkNode.Parent]).RotSoFar.Mult(chunkNode.Transform.To3x3());
-                //vec3 = rotation.Mult3x1(vec3);
-
+                // Do rotations.  Rotations must come first, then translate.
                 vec3 = chunkNode.RotSoFar.Mult3x1(vec3);
-                //vec3 = chunkNode.Transform.To3x3().Mult3x1(vec3);
-
                 // Do translations.  I think this is right.  Objects in right place, not rotated right.
-                vec3 = vec3.Add(chunkNode.Transform.GetTranslation());
-                vec3 = vec3.Add(((ChunkNode)ChunkDictionary[chunkNode.Parent]).TransformSoFar);
-
-
+                //vec3 = vec3.Add(chunkNode.Transform.GetTranslation());
+                //vec3 = vec3.Add(((ChunkNode)ChunkDictionary[chunkNode.Parent]).TransformSoFar);
+                vec3 = vec3.Add(chunkNode.TransformSoFar);
             }
-            //Console.WriteLine();
-            //Console.WriteLine("vec4.x {0}", vec4.x);
             return vec3;
-            
         }
         public void WriteTransform(Vector3 transform)
         {

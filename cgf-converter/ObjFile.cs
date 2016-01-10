@@ -97,10 +97,7 @@ namespace CgfConverter
 
             // We are only processing Nodes that have Materials.  The chunkType should never be Helper.  Check for Nodes to not process
             // This is wrong.  We have to process nodes that have helpers as the mesh info for the transform.
-            Vector3 transform = new Vector3();
-            transform.x = 0;  // initializing the transform vector.  
-            transform.y = 0;
-            transform.z = 0;
+
             if (cgfData.ChunkDictionary[chunkNode.Object].chunkType == ChunkType.Helper)
             {
                 // This needs work.
@@ -116,7 +113,6 @@ namespace CgfConverter
             {
                 // Not the parent node.  Parent node shouldn't have a transform, so no need to calculate it.
                 // add the current node's transform to transform.x, y and z.
-                //transform = cgfData.GetTransform2(chunkNode, transform);
                 //Console.WriteLine("Transform for {0} is {1},{2},{3}", chunkNode.Name, transform.x, transform.y, transform.z);
             }
             //transform.WriteVector3();
@@ -127,7 +123,6 @@ namespace CgfConverter
                 Console.WriteLine("*********************Found a node chunk for a Helper (ID: {0:X}).  Skipping...", tmpMesh.id);
                 //tmpMesh.WriteChunk();
                 //Console.WriteLine("Node Chunk: {0}", chunkNode.Name);
-                //transform = cgfData.GetTransform(chunkNode, transform);
                 return;
             }
 
@@ -136,7 +131,6 @@ namespace CgfConverter
                 Console.WriteLine("*******Found a Mesh chunk with no Submesh ID (ID: {0:X}, Name: {1}).  Skipping...", tmpMesh.id, chunkNode.Name);
                 //tmpMesh.WriteChunk();
                 //Console.WriteLine("Node Chunk: {0}", chunkNode.Name);
-                //transform = cgfData.GetTransform(chunkNode, transform);
                 return;
             }
             if (tmpMesh.VerticesData == 0 && tmpMesh.VertsUVsData == 0)  // This is probably wrong.  These may be parents with no geometry, but still have an offset
@@ -144,7 +138,6 @@ namespace CgfConverter
                 Console.WriteLine("*******Found a Mesh chunk with no Vertex info (ID: {0:X}, Name: {1}).  Skipping...", tmpMesh.id, chunkNode.Name);
                 //tmpMesh.WriteChunk();
                 //Console.WriteLine("Node Chunk: {0}", chunkNode.Name);
-                //transform = cgfData.GetTransform(chunkNode, transform);
                 return;
             }
             CgfData.ChunkMtlName tmpMtlName = (CgfData.ChunkMtlName)cgfData.ChunkDictionary[chunkNode.MatID];
@@ -200,7 +193,8 @@ namespace CgfConverter
                         vertex.y = tmpVertsUVs.Vertices[j].y;
                         vertex.z = tmpVertsUVs.Vertices[j].z;
 
-                        vertex = cgfData.GetTransform2(chunkNode, vertex); // now we have the transpose.  Do math on the vertices to rotate.
+                        // Rotate/translate the vertex
+                        vertex = cgfData.GetTransform(chunkNode, vertex); 
 
                         string s4 = String.Format("v {0:F7} {1:F7} {2:F7}", vertex.x, vertex.y, vertex.z);
                         f.WriteLine(s4);
@@ -224,10 +218,15 @@ namespace CgfConverter
                         j < (int)tmpMeshSubsets.MeshSubsets[i].NumVertices + (int)tmpMeshSubsets.MeshSubsets[i].FirstVertex;
                         j++)
                     {
-                        string s4 = String.Format("v {0:F7} {1:F7} {2:F7}",
-                            tmpVertices.Vertices[j].x + transform.x,
-                            tmpVertices.Vertices[j].y + transform.y,
-                            tmpVertices.Vertices[j].z + transform.z);
+                        Vector3 vertex = new Vector3();
+                        vertex.x = tmpVertices.Vertices[j].x;
+                        vertex.y = tmpVertices.Vertices[j].y;
+                        vertex.z = tmpVertices.Vertices[j].z;
+
+                        // Rotate/translate the vertex
+                        vertex = cgfData.GetTransform(chunkNode, vertex);
+
+                        string s4 = String.Format("v {0:F7} {1:F7} {2:F7}", vertex.x, vertex.y, vertex.z);
                         f.WriteLine(s4);
                     }
                     f.WriteLine();
