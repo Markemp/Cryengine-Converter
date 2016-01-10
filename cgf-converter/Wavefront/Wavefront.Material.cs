@@ -14,10 +14,6 @@ namespace CgfConverter
 {
     public partial class Wavefront
     {
-        // public CryEngine.Model Model { get; set; }
-        // public CryEngine.Material[] Materials { get; set; }
-        // public Dictionary<String, CryEngine.Material> MaterialMap { get; set; }
-
         public void WriteMaterial()
         {
             if (this.CryData.Materials == null)
@@ -26,12 +22,10 @@ namespace CgfConverter
                 return;
             }
 
-            var outFile = this.OutputFile_Material;
+            if (!this.OutputFile_Material.Directory.Exists)
+                this.OutputFile_Material.Directory.Create();
 
-            if (!outFile.Directory.Exists)
-                outFile.Directory.Create();
-
-            using (StreamWriter file = new StreamWriter(outFile.FullName))
+            using (StreamWriter file = new StreamWriter(this.OutputFile_Material.FullName))
             {
                 file.WriteLine("# Material file output from cgf-converter.exe version {0}", Utils.GetVersion());
                 file.WriteLine("#");
