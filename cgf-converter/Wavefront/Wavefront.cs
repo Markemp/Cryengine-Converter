@@ -54,30 +54,31 @@ namespace CgfConverter
                 if (OutputFile_Material.Exists)
                     file.WriteLine("mtllib {0}", OutputFile_Material.Name);
 
-                if (this.CryData.Asset.RootNode.NumChildren == 0)
+                foreach (CryEngine.Model.ChunkNode tmpNode in this.CryData.Asset.ChunksByName.Values)
                 {
-                    Console.WriteLine("WriteOBJ:  Rootnode.numchildren == 0.");
-                    // We have a root node with no children, so simple object.
-                    file.WriteLine("o {0}", this.CryData.Asset.RootNode.Name);
-
-                    WriteObjNode(file, this.CryData.Asset.RootNode);
-                }
-                else
-                {
-                    // Not a simple object.  Will need to call WriteObjNode for each Node Chunk
-                    //Console.WriteLine("WriteOBJ:  Rootnode.numchildren != 0.");
-                    foreach (CryEngine.Model.ChunkNode tmpNode in this.CryData.Asset.CgfChunks.Where(a => a.chunkType == ChunkType.Node))
+                    if (tmpNode.ParentNode == null)
                     {
-                        //tmpNode.WriteChunk();
-                        //Console.WriteLine("Writing {0}", tmpNode.Name);
-                        file.WriteLine("o {0}", tmpNode.Name);
-                        // Grab the mesh and process that.
-                        WriteObjNode(file, tmpNode);
+                        Console.WriteLine("Rendering node with null parent {0}", tmpNode.Name);
                     }
+                    else
+                    {
+                        if (tmpNode.ParentNode.chunkType != ChunkType.Node)
+                        {
+                            Console.WriteLine("Rendering {0} to parent {1}", tmpNode.Name, tmpNode.ParentNodeName);
+                        }
+                    }
+
+                    // TODO: Transform Root Nodes here
+
+                    //tmpNode.WriteChunk();
+                    //Console.WriteLine("Writing {0}", tmpNode.Name);
+                    file.WriteLine("o {0}", tmpNode.Name);
+                    // Grab the mesh and process that.
+                    WriteObjNode(file, tmpNode);
                 }
 
                 // If this is a .chr file, just write out the hitbox info.  OBJ files can't do armatures.
-                foreach (CryEngine.Model.ChunkCompiledPhysicalProxies tmpProxy in this.CryData.Asset.CgfChunks.Where(a => a.chunkType == ChunkType.CompiledPhysicalProxies))
+                foreach (CryEngine.Model.ChunkCompiledPhysicalProxies tmpProxy in this.CryData.Asset.ChunksByID.Values.Where(a => a.chunkType == ChunkType.CompiledPhysicalProxies))
                 {
                     //string s_hitbox = String.Format("o Hitbox");
                     //file.WriteLine(s_hitbox);
@@ -93,18 +94,18 @@ namespace CgfConverter
 
             // We are only processing Nodes that have Materials.  The chunkType should never be Helper.  Check for Nodes to not process
             // This is wrong.  We have to process nodes that have helpers as the mesh info for the transform.
-            if (this.CryData.Asset.ChunkDictionary[chunkNode.Object].chunkType == ChunkType.Helper)
+            if (this.CryData.Asset.ChunksByID[chunkNode.Object].chunkType == ChunkType.Helper)
             {
                 // This needs work.
                 //transform = cgfData.GetTransform(chunkNode, transform);
                 return;
             }
-            CryEngine.Model.ChunkMesh tmpMesh = (CryEngine.Model.ChunkMesh)this.CryData.Asset.ChunkDictionary[chunkNode.Object];
+            CryEngine.Model.ChunkMesh tmpMesh = (CryEngine.Model.ChunkMesh)this.CryData.Asset.ChunksByID[chunkNode.Object];
 
             // Get the Transform here. It's the node chunk Transform.m(41/42/42) divided by 100, added to the parent transform.
             // The transform of a child has to add the transforms of ALL the parents.  Need to use regression?  Maybe a while loop...
 
-            if (chunkNode.Parent != 0xFFFFFFFF)
+            if (chunkNode.ParentNodeID != 0xFFFFFFFF)
             {
                 // Not the parent node.  Parent node shouldn't have a transform, so no need to calculate it.
                 // add the current node's transform to transform.x, y and z.
@@ -113,7 +114,7 @@ namespace CgfConverter
             }
             //transform.WriteVector3();
 
-            if (this.CryData.Asset.ChunkDictionary[chunkNode.Object].chunkType == ChunkType.Helper)
+            if (this.CryData.Asset.ChunksByID[chunkNode.Object].chunkType == ChunkType.Helper)
             {
                 // This can still have transform, so need to to the transform before skipping.  We should still write an empty, but..obj.
                 Console.WriteLine("*********************Found a node chunk for a Helper (ID: {0:X}).  Skipping...", tmpMesh.id);
@@ -139,14 +140,14 @@ namespace CgfConverter
                 //transform = cgfData.GetTransform(chunkNode, transform);
                 return;
             }
-            CryEngine.Model.ChunkMtlName tmpMtlName = (CryEngine.Model.ChunkMtlName)this.CryData.Asset.ChunkDictionary[chunkNode.MatID];
-            CryEngine.Model.ChunkMeshSubsets tmpMeshSubsets = (CryEngine.Model.ChunkMeshSubsets)this.CryData.Asset.ChunkDictionary[tmpMesh.MeshSubsets];  // Listed as Object ID for the Node
+            CryEngine.Model.ChunkMtlName tmpMtlName = (CryEngine.Model.ChunkMtlName)this.CryData.Asset.ChunksByID[chunkNode.MatID];
+            CryEngine.Model.ChunkMeshSubsets tmpMeshSubsets = (CryEngine.Model.ChunkMeshSubsets)this.CryData.Asset.ChunksByID[tmpMesh.MeshSubsets];  // Listed as Object ID for the Node
             
             // Going to assume that there is only one VerticesData datastream for now.  Need to watch for this.   
             // Some 801 types have vertices and not VertsUVs.
             //Console.WriteLine("TEMPMESH WITH NO CurrentIndicesPosition");
             //tmpMesh.WriteChunk();
-            CryEngine.Model.ChunkDataStream tmpIndices = (CryEngine.Model.ChunkDataStream)this.CryData.Asset.ChunkDictionary[tmpMesh.IndicesData];
+            CryEngine.Model.ChunkDataStream tmpIndices = (CryEngine.Model.ChunkDataStream)this.CryData.Asset.ChunksByID[tmpMesh.IndicesData];
             CryEngine.Model.ChunkDataStream tmpNormals = new CryEngine.Model.ChunkDataStream();
             CryEngine.Model.ChunkDataStream tmpUVs = new CryEngine.Model.ChunkDataStream();
             CryEngine.Model.ChunkDataStream tmpVertices = new CryEngine.Model.ChunkDataStream();
@@ -154,23 +155,23 @@ namespace CgfConverter
 
             if (tmpMesh.VerticesData != 0)
             {
-                tmpVertices = (CryEngine.Model.ChunkDataStream)this.CryData.Asset.ChunkDictionary[tmpMesh.VerticesData];
+                tmpVertices = (CryEngine.Model.ChunkDataStream)this.CryData.Asset.ChunksByID[tmpMesh.VerticesData];
             }
             if (tmpMesh.NormalsData != 0)
             {
-                tmpNormals = (CryEngine.Model.ChunkDataStream)this.CryData.Asset.ChunkDictionary[tmpMesh.NormalsData];
+                tmpNormals = (CryEngine.Model.ChunkDataStream)this.CryData.Asset.ChunksByID[tmpMesh.NormalsData];
             }
             if (tmpMesh.UVsData != 0)
             {
-                tmpUVs = (CryEngine.Model.ChunkDataStream)this.CryData.Asset.ChunkDictionary[tmpMesh.UVsData];
+                tmpUVs = (CryEngine.Model.ChunkDataStream)this.CryData.Asset.ChunksByID[tmpMesh.UVsData];
             }
             if (tmpMesh.VertsUVsData != 0)
             {
-                tmpVertsUVs = (CryEngine.Model.ChunkDataStream)this.CryData.Asset.ChunkDictionary[tmpMesh.VertsUVsData];
+                tmpVertsUVs = (CryEngine.Model.ChunkDataStream)this.CryData.Asset.ChunksByID[tmpMesh.VertsUVsData];
             }
             // We only use 3 things in obj files:  vertices, normals and UVs.  No need to process the Tangents.
 
-            uint numChildren = chunkNode.NumChildren;           // use in a for loop to print the mesh for each child
+            uint numChildren = chunkNode.__NumChildren;           // use in a for loop to print the mesh for each child
 
             foreach (var meshSubset in tmpMeshSubsets.MeshSubsets)
             {

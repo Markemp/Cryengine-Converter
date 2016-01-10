@@ -16,8 +16,8 @@ namespace CgfConverter
         {
 #if DEV_DOLKENSP
             args = new String[] { @"O:\Mods\SC\2.1d\Objects\Vehicles\ships\drak\herald\DRAK_Herald_Hangar.cga", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "DRAK_Herald_Hangar.obj" };
-            args = new String[] { @"Objects\1.3\ORIG_300I.cga", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "ORIG_300I.obj" };
-            args = new String[] { @"O:\Mods\SC\2.1d\Objects\brush\planet\uee\flair_objects\model_spaceships\origin_350r\flair_origin_350r.cgf", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "ORIG_350r_flair.obj" };
+            // args = new String[] { @"Objects\1.3\ORIG_300I.cga", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "ORIG_300I.obj" };
+            // args = new String[] { @"O:\Mods\SC\2.1d\Objects\brush\planet\uee\flair_objects\model_spaceships\origin_350r\flair_origin_350r.cgf", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "ORIG_350r_flair.obj" };
             args = new String[] { @"O:\Mods\SC\2.1d\Objects\Spaceships\Ships\AEGS\Gladius\AEGS_Gladius.cga", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "AEGS_Gladius.obj" };
             // args = new String[] { @"O:\Mods\SC\2.1d\Objects\Spaceships\Ships\VNCL\Glaive\VNCL_Glaive_flightReady.cga", "-objectdir", @"O:\Mods\SC\2.0", "-tif", "-obj", "-outputfile", "VNCL_Glaive_flightReady.obj" };
             // args = new String[] { @"D:\Workspaces\github\Cryengine-Converter\cgf-converter\bin\dev_dolkensp\Objects\2.1\RSI_Aurora.cga", "-objectdir", @"O:\Mods\SC\2.0", "-tif", "-obj", "-outputfile", "RSI_Aurora.obj" };
