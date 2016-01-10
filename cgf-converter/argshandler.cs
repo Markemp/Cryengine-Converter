@@ -42,6 +42,10 @@ namespace CgfConverter
         /// </summary>
         public Boolean Output_Collada { get; private set; }
         /// <summary>
+        /// Merge Input file with m-Files
+        /// </summary>
+        public Boolean MergeFiles { get; private set; }
+        /// <summary>
         /// Reverse UVs
         /// </summary>
         public Boolean FlipUVs { get; private set; }
@@ -199,12 +203,22 @@ namespace CgfConverter
                             break;
 
                         #endregion
-                        #region case "-tif" / "-tiff""...
+                        #region case "-tif" / "-tiff"...
 
                         case "-tif":
                         case "-tiff":
 
                             this.TiffTextures = true;
+
+                            break;
+
+                        #endregion
+                        #region case "-merge" / "-mergefiles"...
+
+                        case "-merge":
+                        case "-mergefiles":
+
+                            this.MergeFiles = true;
 
                             break;
 
@@ -267,6 +281,7 @@ namespace CgfConverter
             Console.WriteLine("-blend:           Export Blender format files (Not Implemented)");
             Console.WriteLine("-dae:             Export Collada format files (Not Implemented)");
             Console.WriteLine("-flipUVs:         Flip the UVs");
+            Console.WriteLine("-merge:           Merge input file with m-Files");
             Console.WriteLine();
             Console.WriteLine("-throw:           Throw Exceptions to installed debugger");
             Console.WriteLine();

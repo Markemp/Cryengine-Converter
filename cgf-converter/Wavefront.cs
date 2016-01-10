@@ -97,10 +97,6 @@ namespace CgfConverter
 
             // We are only processing Nodes that have Materials.  The chunkType should never be Helper.  Check for Nodes to not process
             // This is wrong.  We have to process nodes that have helpers as the mesh info for the transform.
-            Vector3 transform = new Vector3();
-            transform.x = 0;  // initializing the transform vector.  
-            transform.y = 0;
-            transform.z = 0;
             if (cgfData.ChunkDictionary[chunkNode.Object].chunkType == ChunkType.Helper)
             {
                 // This needs work.
@@ -201,7 +197,7 @@ namespace CgfConverter
                         vertex.y = tmpVertsUVs.Vertices[j].y;
                         vertex.z = tmpVertsUVs.Vertices[j].z;
 
-                        vertex = cgfData.GetTransform2(chunkNode, vertex); // now we have the transpose.  Do math on the vertices to rotate.
+                        vertex = cgfData.GetTransform(chunkNode, vertex);
 
                         f.WriteLine("v {0:F7} {1:F7} {2:F7}", vertex.x, vertex.y, vertex.z);
                     }
@@ -227,10 +223,15 @@ namespace CgfConverter
                         j < tmpMeshSubsets.MeshSubsets[i].NumVertices + tmpMeshSubsets.MeshSubsets[i].FirstVertex;
                         j++)
                     {
-                        f.WriteLine("v {0:F7} {1:F7} {2:F7}",
-                            tmpVertices.Vertices[j].x + transform.x,
-                            tmpVertices.Vertices[j].y + transform.y,
-                            tmpVertices.Vertices[j].z + transform.z);
+                        Vector3 vertex = new Vector3();
+                        vertex.x = tmpVertices.Vertices[j].x;
+                        vertex.y = tmpVertices.Vertices[j].y;
+                        vertex.z = tmpVertices.Vertices[j].z;
+
+                        // Rotate/translate the vertex
+                        vertex = cgfData.GetTransform(chunkNode, vertex);
+
+                        f.WriteLine("v {0:F7} {1:F7} {2:F7}", vertex.x, vertex.y, vertex.z);
                     }
 
                     f.WriteLine();

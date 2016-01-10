@@ -197,15 +197,15 @@ namespace CgfConverter
         public Matrix33 Mult(Matrix33 mat)
         {
             Matrix33 mat2 = new Matrix33();
-            mat2.m11 = this.m11 * mat.m11 + this.m12 * mat.m21 + this.m13 * mat.m31;
-            mat2.m12 = this.m11 * mat.m12 + this.m12 * mat.m22 + this.m13 * mat.m32;
-            mat2.m13 = this.m11 * mat.m13 + this.m12 * mat.m23 + this.m13 * mat.m33;
-            mat2.m21 = this.m21 * mat.m11 + this.m22 * mat.m21 + this.m23 * mat.m31;
-            mat2.m22 = this.m21 * mat.m12 + this.m22 * mat.m22 + this.m23 * mat.m32;
-            mat2.m23 = this.m21 * mat.m13 + this.m22 * mat.m23 + this.m23 * mat.m33;
-            mat2.m31 = this.m31 * mat.m11 + this.m32 * mat.m21 + this.m33 * mat.m31;
-            mat2.m32 = this.m31 * mat.m12 + this.m32 * mat.m22 + this.m33 * mat.m32;
-            mat2.m33 = this.m31 * mat.m13 + this.m32 * mat.m23 + this.m33 * mat.m33;
+            mat2.m11 = (m11 * mat.m11) + (m12 * mat.m21) + (m13 * mat.m31);
+            mat2.m12 = (m11 * mat.m12) + (m12 * mat.m22) + (m13 * mat.m32);
+            mat2.m13 = (m11 * mat.m13) + (m12 * mat.m23) + (m13 * mat.m33);
+            mat2.m21 = (m21 * mat.m11) + (m22 * mat.m21) + (m23 * mat.m31);
+            mat2.m22 = (m21 * mat.m12) + (m22 * mat.m22) + (m23 * mat.m32);
+            mat2.m23 = (m21 * mat.m13) + (m22 * mat.m23) + (m23 * mat.m33);
+            mat2.m31 = (m31 * mat.m11) + (m32 * mat.m21) + (m33 * mat.m31);
+            mat2.m32 = (m31 * mat.m12) + (m32 * mat.m22) + (m33 * mat.m32);
+            mat2.m33 = (m31 * mat.m13) + (m32 * mat.m23) + (m33 * mat.m33);
             return mat2;
         }
         public Vector3 Mult3x1(Vector3 vector)
