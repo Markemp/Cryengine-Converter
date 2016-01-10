@@ -46,7 +46,7 @@ namespace CgfConverter
             CgfHeader.GetHeader(cgfReader);
             cgfReader.BaseStream.Seek(CgfHeader.fileOffset, 0);  // will now start to read from the start of the chunk table
             tmpChunkTable.GetChunkTable(cgfReader, CgfHeader.fileOffset);
-            //tmpChunkTable.WriteChunk();
+            tmpChunkTable.WriteChunk();
             // Add this temp chunk table to the main table.  That will contain the full list of chunks added to the dictionary
             CgfChunkTable.chkHeaders.AddRange(tmpChunkTable.chkHeaders);
 
