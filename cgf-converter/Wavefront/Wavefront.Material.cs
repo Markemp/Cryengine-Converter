@@ -20,13 +20,13 @@ namespace CgfConverter
 
         public void WriteMaterial()
         {
-            if (this.cryData.Materials == null)
+            if (this.CryData.Materials == null)
             {
                 Console.WriteLine("No materials loaded");
                 return;
             }
 
-            var outFile = this.mtlOutputFile;
+            var outFile = this.OutputFile_Material;
 
             if (!outFile.Directory.Exists)
                 outFile.Directory.Create();
@@ -35,7 +35,7 @@ namespace CgfConverter
             {
                 file.WriteLine("# Material file output from cgf-converter.exe version {0}", Utils.GetVersion());
                 file.WriteLine("#");
-                foreach (CryEngine.Material material in this.cryData.Materials)
+                foreach (CryEngine.Material material in this.CryData.Materials)
                 {
                     file.WriteLine("newmtl {0}", material.Name);
                     file.WriteLine("Kd {0:F4} {1:F4} {2:F4}", material.Diffuse.Red, material.Diffuse.Green, material.Diffuse.Blue);

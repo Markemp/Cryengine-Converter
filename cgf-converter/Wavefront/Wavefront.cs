@@ -17,10 +17,9 @@ namespace CgfConverter
             this.Args = argsHandler;
         }
 
-        FileInfo objOutputFile;
-        FileInfo mtlOutputFile;
-        CryEngine.Model cgfData;
-        CryEngine cryData;
+        FileInfo OutputFile_Model;
+        FileInfo OutputFile_Material;
+        CryEngine CryData;
 
         public void WriteObjFile(CryEngine cryEngine)
         {
@@ -32,43 +31,42 @@ namespace CgfConverter
             Console.WriteLine();
             // Console.WriteLine("*** Starting WriteObjFile() ***");
             Console.WriteLine();
-            this.cgfData = cryEngine.Asset;
-            this.cryData = cryEngine;
+            this.CryData = cryEngine;
 
             // Get object name.  This is the Root Node chunk Name
             // Get the objOutputFile name
-            objOutputFile = this.Args.OutputFile ?? new FileInfo(cgfData.RootNode.Name + ".obj");
-            mtlOutputFile = new FileInfo(Path.ChangeExtension(objOutputFile.FullName, "mtl"));
+            OutputFile_Model = this.Args.OutputFile ?? new FileInfo(this.CryData.Asset.RootNode.Name + ".obj");
+            OutputFile_Material = new FileInfo(Path.ChangeExtension(OutputFile_Model.FullName, "mtl"));
 
-            Console.WriteLine("Output file is {0}", objOutputFile.Name);
+            Console.WriteLine("Output file is {0}", OutputFile_Model.Name);
 
-            if (!objOutputFile.Directory.Exists)
-                objOutputFile.Directory.Create();
+            if (!OutputFile_Model.Directory.Exists)
+                OutputFile_Model.Directory.Create();
 
             this.WriteMaterial();
 
-            using (StreamWriter file = new StreamWriter(objOutputFile.FullName))
+            using (StreamWriter file = new StreamWriter(OutputFile_Model.FullName))
             {
                 string s1 = String.Format("# cgf-converter .obj export Version 0.84");
                 file.WriteLine(s1);
                 file.WriteLine("#");
 
-                if (mtlOutputFile.Exists)
-                    file.WriteLine("mtllib {0}", mtlOutputFile.Name);
-                
-                if (cgfData.RootNode.NumChildren == 0)
+                if (OutputFile_Material.Exists)
+                    file.WriteLine("mtllib {0}", OutputFile_Material.Name);
+
+                if (this.CryData.Asset.RootNode.NumChildren == 0)
                 {
                     Console.WriteLine("WriteOBJ:  Rootnode.numchildren == 0.");
                     // We have a root node with no children, so simple object.
-                    file.WriteLine("o {0}", cgfData.RootNode.Name);
+                    file.WriteLine("o {0}", this.CryData.Asset.RootNode.Name);
 
-                    WriteObjNode(file, cgfData.RootNode);
+                    WriteObjNode(file, this.CryData.Asset.RootNode);
                 }
                 else
                 {
                     // Not a simple object.  Will need to call WriteObjNode for each Node Chunk
                     //Console.WriteLine("WriteOBJ:  Rootnode.numchildren != 0.");
-                    foreach (CryEngine.Model.ChunkNode tmpNode in cgfData.CgfChunks.Where(a => a.chunkType == ChunkType.Node))
+                    foreach (CryEngine.Model.ChunkNode tmpNode in this.CryData.Asset.CgfChunks.Where(a => a.chunkType == ChunkType.Node))
                     {
                             //tmpNode.WriteChunk();
                             //Console.WriteLine("Writing {0}", tmpNode.Name);
@@ -81,7 +79,7 @@ namespace CgfConverter
                 }
 
                 // If this is a .chr file, just write out the hitbox info.  OBJ files can't do armatures.
-                foreach (CryEngine.Model.ChunkCompiledPhysicalProxies tmpProxy in cgfData.CgfChunks.Where(a => a.chunkType == ChunkType.CompiledPhysicalProxies))
+                foreach (CryEngine.Model.ChunkCompiledPhysicalProxies tmpProxy in this.CryData.Asset.CgfChunks.Where(a => a.chunkType == ChunkType.CompiledPhysicalProxies))
                 {
                     //string s_hitbox = String.Format("o Hitbox");
                     //file.WriteLine(s_hitbox);
@@ -97,13 +95,13 @@ namespace CgfConverter
 
             // We are only processing Nodes that have Materials.  The chunkType should never be Helper.  Check for Nodes to not process
             // This is wrong.  We have to process nodes that have helpers as the mesh info for the transform.
-            if (cgfData.ChunkDictionary[chunkNode.Object].chunkType == ChunkType.Helper)
+            if (this.CryData.Asset.ChunkDictionary[chunkNode.Object].chunkType == ChunkType.Helper)
             {
                 // This needs work.
                 //transform = cgfData.GetTransform(chunkNode, transform);
                 return;
             }
-            CryEngine.Model.ChunkMesh tmpMesh = (CryEngine.Model.ChunkMesh)cgfData.ChunkDictionary[chunkNode.Object];
+            CryEngine.Model.ChunkMesh tmpMesh = (CryEngine.Model.ChunkMesh)this.CryData.Asset.ChunkDictionary[chunkNode.Object];
 
             // Get the Transform here. It's the node chunk Transform.m(41/42/42) divided by 100, added to the parent transform.
             // The transform of a child has to add the transforms of ALL the parents.  Need to use regression?  Maybe a while loop...
@@ -117,7 +115,7 @@ namespace CgfConverter
             }
             //transform.WriteVector3();
 
-            if (cgfData.ChunkDictionary[chunkNode.Object].chunkType == ChunkType.Helper)
+            if (this.CryData.Asset.ChunkDictionary[chunkNode.Object].chunkType == ChunkType.Helper)
             {
                 // This can still have transform, so need to to the transform before skipping.  We should still write an empty, but..obj.
                 Console.WriteLine("*********************Found a node chunk for a Helper (ID: {0:X}).  Skipping...", tmpMesh.id);
@@ -143,14 +141,14 @@ namespace CgfConverter
                 //transform = cgfData.GetTransform(chunkNode, transform);
                 return;
             }
-            CryEngine.Model.ChunkMtlName tmpMtlName = (CryEngine.Model.ChunkMtlName)cgfData.ChunkDictionary[chunkNode.MatID];
-            CryEngine.Model.ChunkMeshSubsets tmpMeshSubsets = (CryEngine.Model.ChunkMeshSubsets)cgfData.ChunkDictionary[tmpMesh.MeshSubsets];  // Listed as Object ID for the Node
+            CryEngine.Model.ChunkMtlName tmpMtlName = (CryEngine.Model.ChunkMtlName)this.CryData.Asset.ChunkDictionary[chunkNode.MatID];
+            CryEngine.Model.ChunkMeshSubsets tmpMeshSubsets = (CryEngine.Model.ChunkMeshSubsets)this.CryData.Asset.ChunkDictionary[tmpMesh.MeshSubsets];  // Listed as Object ID for the Node
             
             // Going to assume that there is only one VerticesData datastream for now.  Need to watch for this.   
             // Some 801 types have vertices and not VertsUVs.
             //Console.WriteLine("TEMPMESH WITH NO CurrentIndicesPosition");
             //tmpMesh.WriteChunk();
-            CryEngine.Model.ChunkDataStream tmpIndices = (CryEngine.Model.ChunkDataStream)cgfData.ChunkDictionary[tmpMesh.IndicesData];
+            CryEngine.Model.ChunkDataStream tmpIndices = (CryEngine.Model.ChunkDataStream)this.CryData.Asset.ChunkDictionary[tmpMesh.IndicesData];
             CryEngine.Model.ChunkDataStream tmpNormals = new CryEngine.Model.ChunkDataStream();
             CryEngine.Model.ChunkDataStream tmpUVs = new CryEngine.Model.ChunkDataStream();
             CryEngine.Model.ChunkDataStream tmpVertices = new CryEngine.Model.ChunkDataStream();
@@ -158,19 +156,19 @@ namespace CgfConverter
 
             if (tmpMesh.VerticesData != 0)
             {
-                tmpVertices = (CryEngine.Model.ChunkDataStream)cgfData.ChunkDictionary[tmpMesh.VerticesData];
+                tmpVertices = (CryEngine.Model.ChunkDataStream)this.CryData.Asset.ChunkDictionary[tmpMesh.VerticesData];
             }
             if (tmpMesh.NormalsData != 0)
             {
-                tmpNormals = (CryEngine.Model.ChunkDataStream)cgfData.ChunkDictionary[tmpMesh.NormalsData];
+                tmpNormals = (CryEngine.Model.ChunkDataStream)this.CryData.Asset.ChunkDictionary[tmpMesh.NormalsData];
             }
             if (tmpMesh.UVsData != 0)
             {
-                tmpUVs = (CryEngine.Model.ChunkDataStream)cgfData.ChunkDictionary[tmpMesh.UVsData];
+                tmpUVs = (CryEngine.Model.ChunkDataStream)this.CryData.Asset.ChunkDictionary[tmpMesh.UVsData];
             }
             if (tmpMesh.VertsUVsData != 0)
             {
-                tmpVertsUVs = (CryEngine.Model.ChunkDataStream)cgfData.ChunkDictionary[tmpMesh.VertsUVsData];
+                tmpVertsUVs = (CryEngine.Model.ChunkDataStream)this.CryData.Asset.ChunkDictionary[tmpMesh.VertsUVsData];
             }
             // We only use 3 things in obj files:  vertices, normals and UVs.  No need to process the Tangents.
 
@@ -197,7 +195,7 @@ namespace CgfConverter
                         vertex.y = tmpVertsUVs.Vertices[j].y;
                         vertex.z = tmpVertsUVs.Vertices[j].z;
 
-                        vertex = cgfData.GetTransform(chunkNode, vertex);
+                        vertex = this.CryData.Asset.GetTransform(chunkNode, vertex);
 
                         f.WriteLine("v {0:F7} {1:F7} {2:F7}", vertex.x, vertex.y, vertex.z);
                     }
@@ -229,7 +227,7 @@ namespace CgfConverter
                         vertex.z = tmpVertices.Vertices[j].z;
 
                         // Rotate/translate the vertex
-                        vertex = cgfData.GetTransform(chunkNode, vertex);
+                        vertex = this.CryData.Asset.GetTransform(chunkNode, vertex);
 
                         f.WriteLine("v {0:F7} {1:F7} {2:F7}", vertex.x, vertex.y, vertex.z);
                     }
@@ -273,16 +271,16 @@ namespace CgfConverter
 
                 #region Write Material Block (usemtl)
 
-                if (this.cryData.Materials.Length > tmpMeshSubsets.MeshSubsets[i].MatID)
+                if (this.CryData.Materials.Length > tmpMeshSubsets.MeshSubsets[i].MatID)
                 {
-                    f.WriteLine("usemtl {0}", this.cryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name);
+                    f.WriteLine("usemtl {0}", this.CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name);
                 }
                 else
                 {
                     Console.WriteLine("Missing Material {0}", tmpMeshSubsets.MeshSubsets[i].MatID);
 
                     // The material file doesn't have any elements with the Name of the material.  Use the object name.
-                    f.WriteLine("usemtl {0}", cgfData.RootNode.Name);
+                    f.WriteLine("usemtl {0}", this.CryData.Asset.RootNode.Name);
                     
                 }
 
@@ -294,20 +292,20 @@ namespace CgfConverter
                     j++)
                 {
                     f.WriteLine("f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}",    // Vertices, UVs, Normals
-                        tmpIndices.Indices[j] + 1 + cgfData.CurrentVertexPosition,
-                        tmpIndices.Indices[j + 1] + 1 + cgfData.CurrentVertexPosition,
-                        tmpIndices.Indices[j + 2] + 1 + cgfData.CurrentVertexPosition);
+                        tmpIndices.Indices[j] + 1 + this.CryData.Asset.CurrentVertexPosition,
+                        tmpIndices.Indices[j + 1] + 1 + this.CryData.Asset.CurrentVertexPosition,
+                        tmpIndices.Indices[j + 2] + 1 + this.CryData.Asset.CurrentVertexPosition);
 
                     j += 2;
                 }
-                
-                cgfData.TempVertexPosition += tmpMeshSubsets.MeshSubsets[i].NumVertices;  // add the number of vertices so future objects can start at the right place
-                cgfData.TempIndicesPosition += tmpMeshSubsets.MeshSubsets[i].NumIndices;  // Not really used...
+
+                this.CryData.Asset.TempVertexPosition += tmpMeshSubsets.MeshSubsets[i].NumVertices;  // add the number of vertices so future objects can start at the right place
+                this.CryData.Asset.TempIndicesPosition += tmpMeshSubsets.MeshSubsets[i].NumIndices;  // Not really used...
             }
 
             // Extend the current vertex, uv and normal positions by the length of those arrays.
-            cgfData.CurrentVertexPosition = cgfData.TempVertexPosition;
-            cgfData.CurrentIndicesPosition = cgfData.TempIndicesPosition;
+            this.CryData.Asset.CurrentVertexPosition = this.CryData.Asset.TempVertexPosition;
+            this.CryData.Asset.CurrentIndicesPosition = this.CryData.Asset.TempIndicesPosition;
         }
 
         public void WriteObjHitBox(StreamWriter f, CryEngine.Model.ChunkCompiledPhysicalProxies chunkProx)  // Pass a bone proxy to write to the stream.  For .chr files (armatures)
@@ -345,14 +343,14 @@ namespace CgfConverter
                 {
                     //string s2 = String.Format("f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}",
                     string s2 = String.Format("f {0} {1} {2}",
-                        chunkProx.HitBoxes[i].Indices[j] + 1 + cgfData.CurrentVertexPosition,
-                        chunkProx.HitBoxes[i].Indices[j + 1] + 1 + cgfData.CurrentVertexPosition,
-                        chunkProx.HitBoxes[i].Indices[j + 2] + 1 + cgfData.CurrentVertexPosition);
+                        chunkProx.HitBoxes[i].Indices[j] + 1 + this.CryData.Asset.CurrentVertexPosition,
+                        chunkProx.HitBoxes[i].Indices[j + 1] + 1 + this.CryData.Asset.CurrentVertexPosition,
+                        chunkProx.HitBoxes[i].Indices[j + 2] + 1 + this.CryData.Asset.CurrentVertexPosition);
                     f.WriteLine(s2);
                     j = j + 2;
                 }
-                cgfData.CurrentVertexPosition += chunkProx.HitBoxes[i].NumVertices;
-                cgfData.CurrentIndicesPosition += chunkProx.HitBoxes[i].NumIndices;
+                this.CryData.Asset.CurrentVertexPosition += chunkProx.HitBoxes[i].NumVertices;
+                this.CryData.Asset.CurrentIndicesPosition += chunkProx.HitBoxes[i].NumIndices;
                 f.WriteLine();
             }
             f.WriteLine();
