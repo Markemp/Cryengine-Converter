@@ -41,7 +41,10 @@ namespace CgfConverter
                     {
                         String textureFile = texture.File;
 
-                        // TODO: Translate texture file
+                        if (this.Args.ObjectDir != null)
+                            textureFile = Path.Combine(this.Args.ObjectDir.FullName, textureFile);
+
+                        // TODO: More filehandling here
                         
                         if (!this.Args.TiffTextures)
                             textureFile.Replace(".tif", ".dds");

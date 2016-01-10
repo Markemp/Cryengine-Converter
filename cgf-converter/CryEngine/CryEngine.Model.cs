@@ -19,6 +19,7 @@ namespace CgfConverter
 
             public Model(ArgsHandler argsHandler)
             {
+                this.RootNodeMap = new Dictionary<String, ChunkNode> { };
                 this.Args = argsHandler;
 
                 if (!this.Args.MergeFiles)
@@ -52,8 +53,13 @@ namespace CgfConverter
 
             public Dictionary<UInt32, Chunk> ChunkDictionary = new Dictionary<UInt32, Chunk>();  // ChunkDictionary will let us get the Chunk from the ID.
 
-            private UInt32 RootNodeID = 0x0;
-            public ChunkNode RootNode;
+            public Dictionary<String, ChunkNode> RootNodeMap { get; private set; }
+            public String CurrentFile { get; private set; }
+            public ChunkNode CurrentRootNode { get { return this.RootNodeMap.ContainsKey(this.CurrentFile) ? this.RootNodeMap[this.CurrentFile] : null; } }
+            public ChunkNode RootNode { get { return this.RootNodeMap.Values.Last(); } }
+
+            // private UInt32 RootNodeID = 0x0;
+            // public ChunkNode RootNode;
             public List<ChunkHeader> ChunkHeaders = new List<ChunkHeader>();
 
             public UInt32 CurrentVertexPosition = 0; //used to recalculate the face indices for files with multiple objects (o)
@@ -63,10 +69,12 @@ namespace CgfConverter
 
             public void GetCgfData(FileInfo inputFile)          // Does the actual reading.  Called from ReadCgfData, which sets up the data structure.
             {
+                this.CurrentFile = inputFile.FullName;
+
                 ChunkTable tmpChunkTable = new ChunkTable();    // Will add this to the cgfdata structure after it's read
                 List<ChunkHeader> tmpChunkHeaders = new List<ChunkHeader>();
                 // Open the file for reading.
-                BinaryReader cgfReader = new BinaryReader(File.Open(inputFile.FullName.ToString(), FileMode.Open));
+                BinaryReader cgfReader = new BinaryReader(File.Open(this.CurrentFile, FileMode.Open));
                 // Get the header.  This isn't essential for .cgam files, but we need this info to find the version and offset to the chunk table
                 CgfHeader = new Header();                       // Gets the header of the file (3-5 objects dep on version)
                 CgfHeader.GetHeader(cgfReader);
@@ -179,12 +187,9 @@ namespace CgfConverter
                                 CgfChunks.Add(chkNode);
                                 ChunkDictionary[chkNode.id] = chkNode;
 
-                                if (RootNodeID == 0x0)  // Basically the first Node chunk it reads is the Root Node.  Probably not right, but...
+                                if (this.CurrentRootNode == null)  // Basically the first Node chunk it reads is the Root Node.  Probably not right, but...
                                 {
-                                    // Console.WriteLine("Found a Parent chunk node.  Adding to the dictionary.");
-                                    RootNodeID = chkNode.id;
-                                    RootNode = chkNode;
-                                    // // ChunkDictionary[RootNodeID].WriteChunk();
+                                    this.RootNodeMap[this.CurrentFile] = chkNode;
                                 }
 
                                 if (chkNode.Name.Contains("RearWingLeft"))
@@ -743,11 +748,25 @@ namespace CgfConverter
                 // These are children, materials, etc.
                 public ChunkMtlName MaterialChunk;
                 public ChunkNode[] NodeChildren;
+                public String _nodeFile;
 
                 #endregion
 
                 #region Calculated Properties
 
+                private ChunkNode _rootNode;
+                public ChunkNode RootNode
+                {
+                    get
+                    {
+                        if (this._rootNode == null && this._model.RootNodeMap.ContainsKey(this._nodeFile))
+                        {
+                            this._rootNode = this._model.RootNodeMap[this._nodeFile];
+                        }
+
+                        return this._rootNode;
+                    }
+                }
                 /// <summary>
                 /// Private Data Store for ParentNode
                 /// </summary>
@@ -757,17 +776,18 @@ namespace CgfConverter
                     get
                     {
                         // Cache the results of the lazy load
-                        if ((this._parentNode == null) && (this.id != this._model.RootNodeID))
+                        if ((this._parentNode == null) && (this.id != this.RootNode.id))
                         {
                             Chunk tempChunk = null;
 
                             if (this.Parent == 0xFFFFFFFF)
                             {
-                                tempChunk = this._model.RootNode;
+                                // TODO: Fine file-specific root node
+                                tempChunk = this.RootNode;
                             }
                             else if (!this._model.ChunkDictionary.TryGetValue(this.Parent, out tempChunk))
                             {
-                                tempChunk = this._model.RootNode;
+                                tempChunk = this.RootNode;
                                 Console.WriteLine("*******Missing Parent (ID: {0:X}, Name: {1}, Parent: {2:X}", this.id, this.Name, this.Parent);
                             }
 
@@ -806,7 +826,8 @@ namespace CgfConverter
                         else
                         {
                             // TODO: What should this be?
-                            return this.Transform.GetTranslation();
+                            return this.RootNode.Transform.GetTranslation();
+                            // return this.Transform.GetTranslation();
                         }
                     }
                 }
@@ -820,8 +841,9 @@ namespace CgfConverter
                         }
                         else
                         {
+                            return this.RootNode.Transform.To3x3();
                             // TODO: What should this be?
-                            return this.Transform.To3x3();
+                            // return this.Transform.To3x3();
                         }
                     }
                 }
@@ -830,7 +852,11 @@ namespace CgfConverter
 
                 #region Constructor/s
 
-                public ChunkNode(CryEngine.Model model) : base(model) { }
+                public ChunkNode(CryEngine.Model model)
+                    : base(model)
+                {
+                    this._nodeFile = model.CurrentFile;
+                }
 
                 #endregion
 
