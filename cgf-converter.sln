@@ -15,11 +15,17 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		dev_dolkensp|Any CPU = dev_dolkensp|Any CPU
+		dev_markemp|Any CPU = dev_markemp|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{CF5688EE-1E51-4371-B16A-DF4CBE4FC393}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CF5688EE-1E51-4371-B16A-DF4CBE4FC393}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF5688EE-1E51-4371-B16A-DF4CBE4FC393}.dev_dolkensp|Any CPU.ActiveCfg = dev_dolkensp|Any CPU
+		{CF5688EE-1E51-4371-B16A-DF4CBE4FC393}.dev_dolkensp|Any CPU.Build.0 = dev_dolkensp|Any CPU
+		{CF5688EE-1E51-4371-B16A-DF4CBE4FC393}.dev_markemp|Any CPU.ActiveCfg = dev_markemp|Any CPU
+		{CF5688EE-1E51-4371-B16A-DF4CBE4FC393}.dev_markemp|Any CPU.Build.0 = dev_markemp|Any CPU
 		{CF5688EE-1E51-4371-B16A-DF4CBE4FC393}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CF5688EE-1E51-4371-B16A-DF4CBE4FC393}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection

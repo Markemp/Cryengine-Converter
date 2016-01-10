@@ -5,8 +5,8 @@ using System.IO;
 namespace grendgine_collada
 {
 
-	[System.SerializableAttribute()]
-	[System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true)]
+	[Serializable]
+	[XmlType(AnonymousType=true)]
 	public partial class Grendgine_Collada_Technique_Common_Rigid_Body : Grendgine_Collada_Technique_Common
 	{
 		

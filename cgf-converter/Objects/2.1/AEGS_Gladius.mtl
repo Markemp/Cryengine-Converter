@@ -1,0 +1,402 @@
+<Material MtlFlags="524544" MatTemplate="" MatSubTemplate="" vertModifType="0">
+ <SubMaterials>
+  <Material Name="Proxy" MtlFlags="2622624" MatTemplate="" MatSubTemplate="" Shader="Nodraw" GenMask="0" StringGenMask="" SurfaceType="metal_damageable" Diffuse="1,0.0097212186,0.0097212186" Specular="0,0,0" Emissive="0,0,0" Opacity="0.1" Shininess="199" AlphaTest="1" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures />
+  </Material>
+  <Material Name="WarningTape" MtlFlags="69730464" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="800803000000800" StringGenMask="%DECAL%NORMAL_MAP%SUBSURFACE_SCATTERING%USE_DAMAGE_MAP%VERTCOLORS" SurfaceType="metal_damageable" Diffuse="0.20507877,0.20507877,0.20507877" Specular="0.023153368,0.023153368,0.023153368" Emissive="0,0,0" Opacity="1" Shininess="255" AlphaTest="0.94999999" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/warningtape_decal_diff.tif" Filter="7"/>
+    <Texture Map="Bumpmap" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/warningtape_decal_ddna.tif"/>
+   </Textures>
+   <PublicParams DecalDiffuseOpacity="1" DecalFalloff="1" DecalAlphaMult="1" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="Glass" MtlFlags="2623648" MatTemplate="" MatSubTemplate="" Shader="Glass" GenMask="200400000050050" StringGenMask="%BILINEAR_FP16%BLUR_REFRACTION%DIRT_MAP%ENVIRONMENT_MAP%SPECULAR_MAP%TINT_MAP" SurfaceType="glass_thin" Diffuse="0.36625263,0.36625263,0.36625263" Specular="0.03954624,0.03954624,0.03954624" Emissive="0,0,0" Opacity="1" Shininess="255" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/aegs/gladius/textures/cockpit_glass_diff.tif"/>
+    <Texture Map="Bumpmap" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/cockpit_glass_ddn.tif"/>
+    <Texture Map="Specular" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/cockpit_glass_tint.tif"/>
+    <Texture Map="Environment" File="nearest_cubemap" TexType="7"/>
+   </Textures>
+   <PublicParams BumpMapTile="1" TintColor="0.63075727,0.63759702,0.41254264" BlurAmount="0.092" CloudinessReducesGloss="0.491" CloudinessMasksBlur="0.60399997" TintCloudiness="0.027000001" BackLightScale="0.227" BumpScale="0.197" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="vent_alpha" MtlFlags="2621568" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="C03008000000" StringGenMask="%NORMAL_MAP%PARALLAX_OCCLUSION_MAPPING%SPECULAR_MAP%SUBSURFACE_SCATTERING%VERTCOLORS" SurfaceType="metal_damageable" Diffuse="1,1,1" Specular="1,1,1" Emissive="0,0,0" Opacity="1" Shininess="255" AlphaTest="0.62" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/vent_metal_diff.tif"/>
+    <Texture Map="Bumpmap" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/vent_metal_ddna.tif"/>
+    <Texture Map="Specular" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/vent_metal_spec.tif"/>
+    <Texture Map="Environment" File="nearest_cubemap" TexType="7"/>
+    <Texture Map="Heightmap" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/vent_metal_disp.tif"/>
+   </Textures>
+   <PublicParams POMBumpUVBlend="1" PomDisplacement="0.050000001" SSSIndex="0" SelfShadowStrength="3" HeightBias="1" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="Metal_White" MtlFlags="2621568" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="C03000000020" StringGenMask="%BLENDLAYER%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING%VERTCOLORS" SurfaceType="metal_damageable" Diffuse="0.71569365,0.61049569,0.52099562" Specular="0.33716366,0.33716366,0.33716366" Emissive="0,0,0" Opacity="1" Shininess="104" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_c_diff.tif">
+     <TexMod TexMod_RotateType="0" TexMod_TexGenType="0" TexMod_bTexGenProjected="0" OffsetU="1"/>
+    </Texture>
+    <Texture Map="Bumpmap" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_ddna.tif"/>
+    <Texture Map="Specular" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_spec.tif"/>
+    <Texture Map="Environment" File="nearest_cubemap" TexType="7"/>
+    <Texture Map="Decal" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_c_diff.tif"/>
+    <Texture Map="SubSurface" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_a_spec.tif"/>
+    <Texture Map="Custom" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_a_ddna.tif"/>
+    <Texture Map="Opacity" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/blend_diff.tif"/>
+   </Textures>
+   <PublicParams BlendFalloff="1.8" BlendLayer2SpecularColor="1,1,1" BlendLayer2Tiling="1" SSSIndex="0" BlendMaskTiling="1" BlendLayer2DiffuseColor="1,1,1" BlendLayer2Glossiness="200" BlendFactor="4.0500002" IndirectColor="0.25015831,0.25015831,0.25015831"/>
+  </Material>
+  <Material Name="Metal_Green_A" MtlFlags="2621570" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="800803000000020" StringGenMask="%BLENDLAYER%NORMAL_MAP%SUBSURFACE_SCATTERING%USE_DAMAGE_MAP%VERTCOLORS" SurfaceType="metal_damageable" Diffuse="0.50888133,0.50888133,0.50888133" Specular="0.015996294,0.015996294,0.015996294" Emissive="0,0,0" Opacity="1" Shininess="173" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_diff.tif">
+     <TexMod TexMod_RotateType="0" TexMod_TexGenType="0" TexMod_bTexGenProjected="0" OffsetU="1"/>
+    </Texture>
+    <Texture Map="Bumpmap" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_ddna.tif"/>
+    <Texture Map="Environment" File="nearest_cubemap" TexType="7"/>
+    <Texture Map="Decal" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_a_diff.tif"/>
+    <Texture Map="Custom" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_a_ddna.tif"/>
+    <Texture Map="Opacity" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/blend_diff.tif"/>
+   </Textures>
+   <PublicParams BlendFalloff="2" BlendLayer2SpecularColor="0.035601322,0.035601322,0.035601322" BlendLayer2Tiling="1" SSSIndex="0" BlendMaskTiling="1" BlendLayer2DiffuseColor="0.43965721,0.38642946,0.33716366" BlendLayer2Glossiness="146" BlendFactor="4" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="Metal_Green_B" MtlFlags="2621570" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="800803000000020" StringGenMask="%BLENDLAYER%NORMAL_MAP%SUBSURFACE_SCATTERING%USE_DAMAGE_MAP%VERTCOLORS" SurfaceType="metal_damageable" Diffuse="0.1620294,0.1620294,0.1620294" Specular="0.023153368,0.023153368,0.023153368" Emissive="0,0,0" Opacity="1" Shininess="140" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_diff.tif">
+     <TexMod TexMod_RotateType="0" TexMod_TexGenType="0" TexMod_bTexGenProjected="0" OffsetU="1"/>
+    </Texture>
+    <Texture Map="Bumpmap" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_ddna.tif"/>
+    <Texture Map="Environment" File="nearest_cubemap" TexType="7"/>
+    <Texture Map="Decal" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_a_diff.tif"/>
+    <Texture Map="Custom" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_a_ddna.tif"/>
+    <Texture Map="Opacity" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/blend_diff.tif"/>
+   </Textures>
+   <PublicParams BlendFalloff="2" BlendLayer2SpecularColor="0.023153368,0.023153368,0.023153368" BlendLayer2Tiling="1" SSSIndex="0" BlendMaskTiling="1" BlendLayer2DiffuseColor="0.13286835,0.13286835,0.13286835" BlendLayer2Glossiness="205.10001" BlendFactor="4" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="Metal_Green_C" MtlFlags="2621570" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="800C03000000020" StringGenMask="%BLENDLAYER%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING%USE_DAMAGE_MAP%VERTCOLORS" SurfaceType="metal_damageable" Diffuse="0.37626216,0.37626216,0.37626216" Specular="0.57758057,0.57758057,0.57758057" Emissive="0,0,0" Opacity="1" Shininess="200" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_c_diff.tif">
+     <TexMod TexMod_RotateType="0" TexMod_TexGenType="0" TexMod_bTexGenProjected="0" OffsetU="1"/>
+    </Texture>
+    <Texture Map="Bumpmap" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_ddna.tif"/>
+    <Texture Map="Specular" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_spec.tif"/>
+    <Texture Map="Environment" File="nearest_cubemap" TexType="7"/>
+    <Texture Map="Decal" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_c_diff.tif"/>
+    <Texture Map="SubSurface" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_a_spec.tif"/>
+    <Texture Map="Custom" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_a_ddna.tif"/>
+    <Texture Map="Opacity" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/blend_diff.tif"/>
+   </Textures>
+   <PublicParams BlendFalloff="2" BlendLayer2SpecularColor="1,1,1" BlendLayer2Tiling="1" SSSIndex="0" BlendMaskTiling="1" BlendLayer2DiffuseColor="1,1,1" BlendLayer2Glossiness="200" BlendFactor="2.8" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="Metal_Black" MtlFlags="2621568" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="800803000000020" StringGenMask="%BLENDLAYER%NORMAL_MAP%SUBSURFACE_SCATTERING%USE_DAMAGE_MAP%VERTCOLORS" SurfaceType="metal_damageable" Diffuse="0.19120172,0.19120172,0.19120172" Specular="0.017641956,0.017641956,0.017641956" Emissive="0,0,0" Opacity="1" Shininess="104" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_c_diff.tif">
+     <TexMod TexMod_RotateType="0" TexMod_TexGenType="0" TexMod_bTexGenProjected="0" OffsetU="1"/>
+    </Texture>
+    <Texture Map="Bumpmap" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_ddna.tif"/>
+    <Texture Map="Environment" File="nearest_cubemap" TexType="7"/>
+    <Texture Map="Decal" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_c_diff.tif"/>
+    <Texture Map="Custom" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_a_ddna.tif"/>
+    <Texture Map="Opacity" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/blend_diff.tif"/>
+   </Textures>
+   <PublicParams BlendFalloff="1.8" BlendLayer2SpecularColor="0.027320893,0.027320893,0.027320893" BlendLayer2Tiling="1" SSSIndex="0" BlendMaskTiling="1" BlendLayer2DiffuseColor="0.14995982,0.14995982,0.14995982" BlendLayer2Glossiness="154.3" BlendFactor="4.0500002" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="Metal_Green_D" MtlFlags="2621570" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="800C03000000020" StringGenMask="%BLENDLAYER%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING%USE_DAMAGE_MAP%VERTCOLORS" SurfaceType="metal_damageable" Diffuse="0.072271854,0.072271854,0.072271854" Specular="0.27889431,0.27889431,0.27889431" Emissive="0,0,0" Opacity="1" Shininess="70" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_diff.tif">
+     <TexMod TexMod_RotateType="0" TexMod_TexGenType="0" TexMod_bTexGenProjected="0" OffsetU="1"/>
+    </Texture>
+    <Texture Map="Bumpmap" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_ddna.tif"/>
+    <Texture Map="Specular" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_spec.tif"/>
+    <Texture Map="Environment" File="nearest_cubemap" TexType="7"/>
+    <Texture Map="Decal" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_a_diff.tif"/>
+    <Texture Map="SubSurface" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_a_spec.tif"/>
+    <Texture Map="Custom" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_a_ddna.tif"/>
+    <Texture Map="Opacity" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/blend_diff.tif"/>
+   </Textures>
+   <PublicParams BlendFalloff="2" BlendLayer2SpecularColor="0.45641103,0.45641103,0.45641103" BlendLayer2Tiling="1" SSSIndex="0" BlendMaskTiling="1" BlendLayer2DiffuseColor="0.040915202,0.040915202,0.040915202" BlendLayer2Glossiness="120" BlendFactor="2.8" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="Seat" MtlFlags="2621570" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="803000008004" StringGenMask="%ALPHAMASK_DETAILMAP%DETAIL_MAPPING%NORMAL_MAP%SUBSURFACE_SCATTERING%VERTCOLORS" SurfaceType="fabric" Diffuse="1,1,1" Specular="0.021219011,0.021219011,0.021219011" Emissive="0,0,0" Opacity="1" Shininess="27" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/gladius_chair_diff.tif"/>
+    <Texture Map="Bumpmap" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/gladius_chair_ddna.tif"/>
+    <Texture Map="Detail" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/gladius_chair_detail.tif">
+     <TexMod TexMod_RotateType="0" TexMod_TexGenType="0" TexMod_bTexGenProjected="0" TileU="25" TileV="25"/>
+    </Texture>
+   </Textures>
+   <PublicParams DetailDiffuseScale="0.32699999" SSSIndex="0" DetailBumpScale="0.27000001" DetailGlossScale="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="Screen Glass" MtlFlags="67633280" MatTemplate="" MatSubTemplate="" Shader="HologramCIG" GenMask="84" StringGenMask="" SurfaceType="glass_thin" Diffuse="0,0,0" Specular="0,0,0" Emissive="0,0.0036765076,0.001517635" Opacity="1" GlowAmount="100" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/monitor_screen_illuminated_diff.tif" Filter="7"/>
+    <Texture Map="Bumpmap" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/monitor_screen_glass_ddna.tif"/>
+    <Texture Map="Specular" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/monitor_screen_glass_spec.tif"/>
+   </Textures>
+   <PublicParams RimAlpha="0" SilhouetteColor="0,0,0" DiffuseAlpha="0" InterferenceContrast="5" InterferenceSpeed="1" SilhouetteAlpha="0" SilhouetteThickness="1" RimColor="0,0,0" InterferenceAmount="1" InterferenceTiling="0.0099999998"/>
+  </Material>
+  <Material Name="UI Graphics" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="802000000002" StringGenMask="%ALPHAGLOW%SUBSURFACE_SCATTERING%VERTCOLORS" SurfaceType="metal_damageable" Diffuse="0,0,0" Specular="0,0,0" Emissive="0,0,0" Opacity="1" GlowAmount="10" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="textures/defaults/16_grey.tif">
+     <TexMod TexMod_RotateType="0" TexMod_TexGenType="0" TexMod_bTexGenProjected="0" OffsetU="1"/>
+    </Texture>
+   </Textures>
+   <PublicParams AmbientMultiplier="1" SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="detail_decals" MtlFlags="539492512" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="800C03008000800" StringGenMask="%DECAL%NORMAL_MAP%PARALLAX_OCCLUSION_MAPPING%SPECULAR_MAP%SUBSURFACE_SCATTERING%USE_DAMAGE_MAP%VERTCOLORS" SurfaceType="metal_damageable" Diffuse="1,1,1" Specular="1,1,1" Emissive="0,0,0" Opacity="1" Shininess="255" AlphaTest="0.0099999998" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/line_decals_diff.tif"/>
+    <Texture Map="Bumpmap" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/line_decals_ddna.tif"/>
+    <Texture Map="Specular" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/line_decals_spec.tif"/>
+    <Texture Map="Heightmap" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/line_decals_disp.tif"/>
+   </Textures>
+   <PublicParams DecalDiffuseOpacity="1" POMBumpUVBlend="1" PomDisplacement="0.0085000005" DecalFalloff="9.9999997e-005" SelfShadowStrength="1" HeightBias="0.69499999" DecalAlphaMult="1" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="detail_decals_pom" MtlFlags="537395360" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="800C03008000800" StringGenMask="%DECAL%NORMAL_MAP%PARALLAX_OCCLUSION_MAPPING%SPECULAR_MAP%SUBSURFACE_SCATTERING%USE_DAMAGE_MAP%VERTCOLORS" SurfaceType="metal_damageable" Diffuse="1,1,1" Specular="1,1,1" Emissive="0,0,0" Opacity="1" Shininess="255" AlphaTest="0.0099999998" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/line_decals_diff.tif"/>
+    <Texture Map="Bumpmap" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/line_decals_ddna.tif"/>
+    <Texture Map="Specular" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/line_decals_spec.tif"/>
+    <Texture Map="Heightmap" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/line_decals_disp.tif"/>
+   </Textures>
+   <PublicParams DecalDiffuseOpacity="1" POMBumpUVBlend="1" PomDisplacement="0.021199999" DecalFalloff="9.9999997e-005" SelfShadowStrength="1" HeightBias="0.66100001" DecalAlphaMult="1" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="text_decals" MtlFlags="2621600" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="800802000000800" StringGenMask="%DECAL%SUBSURFACE_SCATTERING%USE_DAMAGE_MAP%VERTCOLORS" SurfaceType="metal_damageable" Diffuse="0.35640016,0.35640016,0.35640016" Specular="0.0097212186,0.0097212186,0.0097212186" Emissive="0,0,0" Opacity="1" Shininess="13" AlphaTest="0.16" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/aegs/gladius/textures/gladius_text_diff.tif"/>
+   </Textures>
+   <PublicParams DecalDiffuseOpacity="1" DecalFalloff="9.9999997e-005" DecalAlphaMult="1" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="GreenMetal_C_Temp" MtlFlags="2621568" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="C03000000020" StringGenMask="%BLENDLAYER%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING%VERTCOLORS" SurfaceType="metal_damageable" Diffuse="0.37626216,0.37626216,0.37626216" Specular="0.57758057,0.57758057,0.57758057" Emissive="0,0,0" Opacity="1" Shininess="200" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_c_diff.tif">
+     <TexMod TexMod_RotateType="0" TexMod_TexGenType="0" TexMod_bTexGenProjected="0" OffsetU="1"/>
+    </Texture>
+    <Texture Map="Bumpmap" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_ddna.tif"/>
+    <Texture Map="Specular" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_b_spec.tif"/>
+    <Texture Map="Environment" File="nearest_cubemap" TexType="7"/>
+    <Texture Map="Decal" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_c_diff.tif"/>
+    <Texture Map="SubSurface" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_a_spec.tif"/>
+    <Texture Map="Custom" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/metal_painted_a_ddna.tif"/>
+    <Texture Map="Opacity" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/blend_diff.tif"/>
+   </Textures>
+   <PublicParams BlendFalloff="2" BlendLayer2SpecularColor="1,1,1" BlendLayer2Tiling="1" SSSIndex="0" BlendMaskTiling="1" BlendLayer2DiffuseColor="1,1,1" BlendLayer2Glossiness="200" BlendFactor="2.8" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="Gladius_Emissive" MtlFlags="67633280" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="800800000000002" StringGenMask="%ALPHAGLOW%SUBSURFACE_SCATTERING%USE_DAMAGE_MAP" SurfaceType="metal_damageable" Diffuse="1,1,1" Specular="0.027320893,0.027320893,0.027320893" Emissive="1,1,1" Opacity="1" Shininess="129" GlowAmount="6.0900002" AlphaTest="0.0099999998" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/gladius_emissives_diff.tif"/>
+   </Textures>
+   <PublicParams AmbientMultiplier="1" SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="UEE_Logo" MtlFlags="524448" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="800800000000800" StringGenMask="%DECAL%SUBSURFACE_SCATTERING%USE_DAMAGE_MAP" SurfaceType="metal_damageable" Diffuse="1,1,1" Specular="0.019382363,0.019382363,0.019382363" Emissive="0,0,0" Opacity="1" Shininess="13" AlphaTest="0.02" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/gladius_logos_diff.tif" Filter="6"/>
+   </Textures>
+   <PublicParams DecalDiffuseOpacity="1" DecalFalloff="1" DecalAlphaMult="1" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="ChippedPaint_Decal" MtlFlags="524448" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="C03000000800" StringGenMask="%DECAL%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING%VERTCOLORS" SurfaceType="metal_damageable" Diffuse="0,0,0" Specular="0.57758057,0.57758057,0.57758057" Emissive="0,0,0" Opacity="1" Shininess="255" AlphaTest="0.0099999998" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/decal_metal_scratch_diff.tif"/>
+    <Texture Map="Bumpmap" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/decal_metal_scratch_ddna.tif"/>
+    <Texture Map="Specular" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/decal_metal_scratch_spec.tif"/>
+   </Textures>
+   <PublicParams DecalDiffuseOpacity="1" DecalFalloff="1" DecalAlphaMult="1" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="Cockpit_Details" MtlFlags="2621568" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="800C03000000020" StringGenMask="%BLENDLAYER%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING%USE_DAMAGE_MAP%VERTCOLORS" SurfaceType="metal_damageable" Diffuse="0.24620135,0.24620135,0.24620135" Specular="0.57758057,0.57758057,0.57758057" Emissive="0,0,0" Opacity="1" Shininess="79" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/cockpit_details_diff.tif">
+     <TexMod TexMod_RotateType="0" TexMod_TexGenType="0" TexMod_bTexGenProjected="0" OffsetU="1"/>
+    </Texture>
+    <Texture Map="Bumpmap" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/cockpit_details_ddna.tif"/>
+    <Texture Map="Specular" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/cockpit_details_spec.tif"/>
+    <Texture Map="Environment" File="nearest_cubemap" TexType="7"/>
+    <Texture Map="Decal" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/cockpit_details_diff.tif"/>
+    <Texture Map="SubSurface" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/cockpit_details_spec.tif"/>
+    <Texture Map="Custom" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/cockpit_details_ddna.tif"/>
+    <Texture Map="Opacity" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/blend_diff.tif"/>
+   </Textures>
+   <PublicParams BlendFalloff="2" BlendLayer2SpecularColor="0.58407855,0.58407855,0.58407855" BlendLayer2Tiling="1" SSSIndex="0" BlendMaskTiling="1" BlendLayer2DiffuseColor="1,1,1" BlendLayer2Glossiness="224.60001" BlendFactor="4.7600002" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="buttons" MtlFlags="524448" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="C03008000000" StringGenMask="%NORMAL_MAP%PARALLAX_OCCLUSION_MAPPING%SPECULAR_MAP%SUBSURFACE_SCATTERING%VERTCOLORS" SurfaceType="metal_damageable" Diffuse="1,1,1" Specular="1,1,1" Emissive="0,0,0" Opacity="1" Shininess="255" AlphaTest="0.0099999998" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/aegs_switches_buttons_diff.tif"/>
+    <Texture Map="Bumpmap" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/aegs_switches_buttons_ddna.tif"/>
+    <Texture Map="Specular" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/aegs_switches_buttons_spec.tif"/>
+    <Texture Map="Heightmap" File="Objects/Spaceships/Ships/AEGS/Gladius/textures/aegs_switches_buttons_disp.tif"/>
+   </Textures>
+   <PublicParams POMBumpUVBlend="1" PomDisplacement="0.047200002" SSSIndex="0" SelfShadowStrength="5" HeightBias="0.51099998" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="shield_proxy" MtlFlags="525472" MatTemplate="" MatSubTemplate="" Shader="Nodraw" GenMask="0" StringGenMask="" SurfaceType="shield_human" Diffuse="0,0.78353792,1" Specular="0,0,0" Emissive="0,0,0" Opacity="0.1" Shininess="10" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures />
+  </Material>
+  <Material Name="internal_mesh" MtlFlags="524418" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="C01008000000" StringGenMask="%NORMAL_MAP%PARALLAX_OCCLUSION_MAPPING%SPECULAR_MAP%SUBSURFACE_SCATTERING" SurfaceType="metal_dense" Diffuse="0.13563335,0.10224174,0.06124606" Specular="0.11953845,0.11953845,0.11953845" Emissive="0,0,0" Opacity="1" Shininess="255" AlphaTest="0.0099999998" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/aegs/gladius/textures/int_structure_a_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/ships/aegs/gladius/textures/int_structure_a_ddna.tif"/>
+    <Texture Map="Specular" File="objects/spaceships/ships/aegs/gladius/textures/int_structure_a_spec.tif"/>
+    <Texture Map="Heightmap" File="objects/spaceships/ships/aegs/gladius/textures/int_structure_a_disp.tif"/>
+   </Textures>
+   <PublicParams POMBumpUVBlend="1" PomDisplacement="0" SSSIndex="0" SelfShadowStrength="3" HeightBias="0.64200002" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="internal_pom" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="C01008000000" StringGenMask="%NORMAL_MAP%PARALLAX_OCCLUSION_MAPPING%SPECULAR_MAP%SUBSURFACE_SCATTERING" SurfaceType="metal_dense" Diffuse="1,1,1" Specular="0.25415212,0.25415212,0.25415212" Emissive="0,0,0" Opacity="1" Shininess="200" AlphaTest="1" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/aegs/gladius/textures/damage_internals_diff.tif" Filter="7"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/ships/aegs/gladius/textures/damage_internals_ddna.tif" Filter="4"/>
+    <Texture Map="Specular" File="objects/spaceships/ships/aegs/gladius/textures/damage_internals_spec.tif"/>
+    <Texture Map="Heightmap" File="objects/spaceships/ships/aegs/gladius/textures/damage_internals_disp.tif" Filter="7"/>
+    <Texture Map="Decal" File="objects/spaceships/ships/aegs/gladius/textures/damage_internals_diff.tif"/>
+    <Texture Map="SubSurface" File="objects/spaceships/ships/aegs/gladius/textures/damage_internals_spec.tif"/>
+    <Texture Map="Custom" File="objects/spaceships/ships/aegs/gladius/textures/damage_internals_ddna.tif"/>
+    <Texture Map="[1] Custom" File="objects/spaceships/ships/aegs/gladius/textures/damage_internals_disp.tif"/>
+   </Textures>
+   <PublicParams POMBumpUVBlend="1" PomDisplacement="0.050000001" SSSIndex="0" SelfShadowStrength="5" HeightBias="0.5" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+ </SubMaterials>
+ <PublicParams SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+</Material>

@@ -1,0 +1,205 @@
+<Material MtlFlags="524544" MatTemplate="" MatSubTemplate="" vertModifType="0">
+ <SubMaterials>
+  <Material Name="panels" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="2000A040000010" StringGenMask="%BLENDLAYER%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING%VERTCOLORS" SurfaceType="metal_dense" Diffuse="1,1,1" Specular="1,1,1" Emissive="0,0,0" Opacity="1" Shininess="255" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/orig/300i/textures/300i_panels_a_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/ships/orig/300i/textures/300i_panels_a_ddna.tif"/>
+    <Texture Map="Specular" File="objects/spaceships/ships/orig/300i/textures/300i_panels_a_spec.tif"/>
+    <Texture Map="Decal" File="objects/spaceships/ships/orig/300i/textures/300i_panels_a_bare_diff.tif"/>
+    <Texture Map="Custom" File="objects/spaceships/ships/orig/300i/textures/300i_panels_a_bare_ddna.tif"/>
+    <Texture Map="Opacity" File="objects/spaceships/ships/orig/300i/textures/300i_panels_a_blend.tif"/>
+   </Textures>
+   <PublicParams BlendFalloff="14.1" BlendLayer2SpecularColor="0.068999998,0.068999998,0.068999998" BlendLayer2Tiling="1" SSSIndex="0" BlendMaskTiling="1" BlendLayer2DiffuseColor="1,1,1" BlendLayer2Glossiness="255" BlendFactor="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="panels_dark" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="2000A040000010" StringGenMask="%BLENDLAYER%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING%VERTCOLORS" SurfaceType="metal_dense" Diffuse="1,1,1" Specular="1,1,1" Emissive="0,0,0" Opacity="1" Shininess="255" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/orig/300i/textures/300i_panels_a_dark_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/ships/orig/300i/textures/300i_panels_a_ddna.tif"/>
+    <Texture Map="Specular" File="objects/spaceships/ships/orig/300i/textures/300i_panels_a_spec.tif"/>
+    <Texture Map="Decal" File="objects/spaceships/ships/orig/300i/textures/300i_panels_a_bare_diff.tif"/>
+    <Texture Map="Custom" File="objects/spaceships/ships/orig/300i/textures/300i_panels_a_bare_ddna.tif"/>
+    <Texture Map="Opacity" File="objects/spaceships/ships/orig/300i/textures/300i_panels_a_blend.tif"/>
+   </Textures>
+   <PublicParams BlendFalloff="62" BlendLayer2SpecularColor="0.037,0.037,0.037" BlendLayer2Tiling="1" SSSIndex="0" BlendMaskTiling="1" BlendLayer2DiffuseColor="1,1,1" BlendLayer2Glossiness="255" BlendFactor="0.090000004" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="detail" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="A040000000" StringGenMask="%NORMAL_MAP%SUBSURFACE_SCATTERING%VERTCOLORS" SurfaceType="metal_dense" Diffuse="1,1,1" Specular="0.029556835,0.029556835,0.029556835" Emissive="0,0,0" Opacity="1" Shininess="255" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/orig/300i/textures/300i_detail_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/ships/orig/300i/textures/300i_detail_ddna.tif"/>
+   </Textures>
+   <PublicParams SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="decals" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="2000A040000800" StringGenMask="%DECAL%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING%VERTCOLORS" SurfaceType="metal_dense" Diffuse="1,1,1" Specular="0.098689198,0.098689198,0.098689198" Emissive="0,0,0" Opacity="1" Shininess="255" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/orig/300i/textures/300i_decals_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/ships/orig/300i/textures/300i_decals_ddna.tif"/>
+    <Texture Map="Specular" File="objects/spaceships/ships/orig/300i/textures/300i_decals_spec.tif"/>
+   </Textures>
+   <PublicParams DecalDiffuseOpacity="1" DecalFalloff="1" DecalAlphaMult="1" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="metal_a" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="2000A040000000" StringGenMask="%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING%VERTCOLORS" SurfaceType="metal_dense" Diffuse="1,1,1" Specular="1,1,1" Emissive="0,0,0" Opacity="1" Shininess="255" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/orig/300i/textures/300i_metal_a_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/ships/orig/300i/textures/300i_metal_a_ddna.tif"/>
+    <Texture Map="Specular" File="objects/spaceships/ships/orig/300i/textures/300i_metal_a_spec.tif"/>
+   </Textures>
+   <PublicParams SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="metal_b" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="2000A040000000" StringGenMask="%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING%VERTCOLORS" SurfaceType="metal_dense" Diffuse="1,1,1" Specular="1,1,1" Emissive="0,0,0" Opacity="1" Shininess="255" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/orig/300i/textures/300i_metal_b_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/ships/orig/300i/textures/300i_metal_b_ddna.tif"/>
+    <Texture Map="Specular" File="objects/spaceships/ships/orig/300i/textures/300i_metal_b_spec.tif"/>
+   </Textures>
+   <PublicParams SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="Interior_leather" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="2000A040000000" StringGenMask="%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING%VERTCOLORS" SurfaceType="fabric" Diffuse="1,1,1" Specular="1,1,1" Emissive="0,0,0" Opacity="1" Shininess="255" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/orig/300i/textures/300i_leather_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/ships/orig/300i/textures/300i_leather_ddna.tif"/>
+    <Texture Map="Specular" File="objects/spaceships/ships/orig/300i/textures/300i_leather_spec.tif"/>
+   </Textures>
+   <PublicParams SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="Glass" MtlFlags="2623648" MatTemplate="" MatSubTemplate="" Shader="Glass" GenMask="110000" StringGenMask="%DIRT_MAP%ENVIRONMENT_MAP" SurfaceType="glass_dense" Diffuse="1,1,1" Specular="1,1,1" Emissive="1,1,1" Opacity="0.95999998" Shininess="208" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/orig/300i/textures/300i_windshield_diff.tif"/>
+    <Texture Map="Environment" File="nearest_cubemap" TexType="7"/>
+   </Textures>
+   <PublicParams SpecFromDiffAlphaBias="0" BumpMapTile="0" TintColor="0.17464741,0.18116425,0.27049783" SpecFromDiffAlphaMult="1" TintCloudiness="0.0040000002" BackLightScale="0.142" BumpScale="0.016000001" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="proxy" MtlFlags="525440" MatTemplate="" MatSubTemplate="" Shader="Nodraw" GenMask="0" StringGenMask="" SurfaceType="nodraw" Diffuse="0.58823532,0.15294118,0.15294118" Specular="0,0,0" Emissive="0,0,0" Opacity="0.050000001" Shininess="10" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures />
+  </Material>
+  <Material Name="damage" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="20008040000000" StringGenMask="%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING" SurfaceType="metal_dense" Diffuse="0.588,0.588,0.588" Specular="0,0,0" Emissive="0,0,0" Opacity="1" Shininess="10" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/textures/damage/spaceships_damaged_parts_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/textures/damage/spaceships_damaged_parts_ddna.tif"/>
+    <Texture Map="Specular" File="objects/spaceships/textures/damage/spaceships_damaged_parts_spec.tif"/>
+   </Textures>
+   <PublicParams SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="$shield_proxy" MtlFlags="525440" MatTemplate="" MatSubTemplate="" Shader="Nodraw" GenMask="0" StringGenMask="" SurfaceType="shield_human" Diffuse="0.588,0.588,0.588" Specular="0,0,0" Emissive="0,0,0" Opacity="1" Shininess="10" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures />
+  </Material>
+  <Material Name="glow" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="8000000000" StringGenMask="%SUBSURFACE_SCATTERING" SurfaceType="glass_thin" Diffuse="1,1,1" Specular="0,0,0" Emissive="0,0,0" Opacity="1" Shininess="10" GlowAmount="1.4400001" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/orig/300i/textures/300i_glow_diff.tif"/>
+   </Textures>
+   <PublicParams SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="floors" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="2000A040000000" StringGenMask="%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING%VERTCOLORS" SurfaceType="metal_dense" Diffuse="1,1,1" Specular="1.4,1.4,1.4" Emissive="0,0,0" Opacity="1" Shininess="255" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/orig/300i/textures/300i_floors_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/ships/orig/300i/textures/300i_floors_ddna.tif"/>
+    <Texture Map="Specular" File="objects/spaceships/ships/orig/300i/textures/300i_floors_spec.tif"/>
+   </Textures>
+   <PublicParams SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="detail_temp" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="2000A040000000" StringGenMask="%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING%VERTCOLORS" SurfaceType="metal_dense" Diffuse="1,1,1" Specular="1,1,1" Emissive="0,0,0" Opacity="1" Shininess="255" AlphaTest="0.88999999" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/orig/300i/textures/300i_detail2_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/ships/orig/300i/textures/300i_detail2_ddna.tif"/>
+    <Texture Map="Specular" File="objects/spaceships/ships/orig/300i/textures/300i_detail2_spec.tif"/>
+   </Textures>
+   <PublicParams SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="glass_clear" MtlFlags="2623648" MatTemplate="" MatSubTemplate="" Shader="Glass" GenMask="100000" StringGenMask="%DIRT_MAP" SurfaceType="glass_dense" Diffuse="1,1,1" Specular="1,1,1" Emissive="1,1,1" Opacity="0.2" Shininess="75" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/orig/300i/textures/300i_windshield_clear_diff.tif"/>
+   </Textures>
+   <PublicParams SpecFromDiffAlphaBias="0" BumpMapTile="0.16" TintColor="0.94730651,0.94730651,0.96468627" SpecFromDiffAlphaMult="-5.1300001" TintCloudiness="0.0040000002" BackLightScale="0.093999997" BumpScale="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+ </SubMaterials>
+ <PublicParams SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+</Material>

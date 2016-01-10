@@ -7,11 +7,11 @@ using System.IO;
 
 namespace CgfConverter
 {
-    class Blender  //  Class to allow exporting to .blend files.
+    public class Blender  //  Class to allow exporting to .blend files.
     {
         FileInfo blendOutputFile;
 
-        public void WriteBlend(CgfData cgfData)
+        public void WriteBlend(CryEngine cryData)
         {
             // The root of the functions to write Blend files
             // At this point, we should have a CgfData object, fully populated.
@@ -20,11 +20,11 @@ namespace CgfConverter
             Console.WriteLine();
 
             // File name will be "object name.blend"
-            blendOutputFile = new FileInfo(cgfData.RootNode.Name + ".blend");
-            using (BinaryWriter b = new BinaryWriter(File.Open(blendOutputFile.FullName, FileMode.Create)))
-            {
-                WriteHeader(b);
-            }
+            // blendOutputFile = new FileInfo(cgfData.RootNode.Name + ".blend");
+            // using (BinaryWriter b = new BinaryWriter(File.Open(blendOutputFile.FullName, FileMode.Create)))
+            // {
+            //     WriteHeader(b);
+            // }
         }
 
         public void WriteHeader(BinaryWriter b)

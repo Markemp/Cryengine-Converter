@@ -174,11 +174,11 @@ namespace CgfConverter
         public float Get_Determinant()
         {
             return (m11 * m22 * m33
-                + m12 * m23 * m31
-                + m13 * m21 * m32
-                - m31 * m22 * m13
-                - m21 * m12 * m33
-                - m11 * m32 * m23);
+                  + m12 * m23 * m31
+                  + m13 * m21 * m32
+                  - m31 * m22 * m13
+                  - m21 * m12 * m33
+                  - m11 * m32 * m23);
         }
         public Matrix33 Get_Transpose()    // returns a copy of the matrix33
         {
@@ -206,13 +206,15 @@ namespace CgfConverter
             mat2.m31 = (m31 * mat.m11) + (m32 * mat.m21) + (m33 * mat.m31);
             mat2.m32 = (m31 * mat.m12) + (m32 * mat.m22) + (m33 * mat.m32);
             mat2.m33 = (m31 * mat.m13) + (m32 * mat.m23) + (m33 * mat.m33);
-
             return mat2;
         }
         public Vector3 Mult3x1(Vector3 vector)
         {
             // Multiply the 3x3 matrix by a Vector 3 to get the rotation
             Vector3 result = new Vector3();
+            //result.x = (vector.x * m11) + (vector.y * m12) + (vector.z * m13);
+            //result.y = (vector.x * m21) + (vector.y * m22) + (vector.z * m23);
+            //result.z = (vector.x * m31) + (vector.y * m32) + (vector.z * m33);
             result.x = (vector.x * m11) + (vector.y * m21) + (vector.z * m31);
             result.y = (vector.x * m12) + (vector.y * m22) + (vector.z * m32);
             result.z = (vector.x * m13) + (vector.y * m23) + (vector.z * m33);

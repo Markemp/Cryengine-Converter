@@ -1,0 +1,308 @@
+<Material MtlFlags="524544" MatTemplate="" MatSubTemplate="" vertModifType="0">
+ <SubMaterials>
+  <Material Name="Exterior_Tile" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="2000A040000000" StringGenMask="%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING%VERTCOLORS" SurfaceType="metal_dense" Diffuse="0.68668544,0.94730669,1" Specular="0.93868583,0.93011099,0.87136728" Emissive="0,0,0" Opacity="1" Shininess="255" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/rsi/aurora/textures/white_panneling_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/ships/rsi/aurora/textures/white_panneling_ddna.tif"/>
+    <Texture Map="Specular" File="objects/spaceships/ships/rsi/aurora/textures/white_panneling_spec.tif">
+     <TexMod TexMod_RotateType="0" TexMod_TexGenType="0" TexMod_bTexGenProjected="0" TileU="2" TileV="2"/>
+    </Texture>
+   </Textures>
+   <PublicParams SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="Exterior_FloatedDetails" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="20008048000800" StringGenMask="%DECAL%NORMAL_MAP%PARALLAX_OCCLUSION_MAPPING%SPECULAR_MAP%SUBSURFACE_SCATTERING" SurfaceType="metal_dense" Diffuse="1,1,1" Specular="1,1,1" Emissive="0,0,0" Opacity="1" Shininess="255" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/RSI/Aurora/textures/aurora_exterior_details_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/ships/RSI/Aurora/textures/aurora_exterior_details_ddna.tif"/>
+    <Texture Map="Specular" File="objects/spaceships/ships/RSI/Aurora/textures/aurora_exterior_details_spec.tif"/>
+    <Texture Map="Heightmap" File="objects/spaceships/ships/RSI/Aurora/textures/aurora_exterior_details_displ.tif"/>
+   </Textures>
+   <PublicParams DecalDiffuseOpacity="0" POMBumpUVBlend="1" PomDisplacement="0.050000001" DecalFalloff="1.8" SelfShadowStrength="5" HeightBias="0.51099998" DecalAlphaMult="0.79000002" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="Exterior_metal_Tile" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="2000A040000000" StringGenMask="%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING%VERTCOLORS" SurfaceType="metal_dense" Diffuse="1,1,1" Specular="1,1,1" Emissive="0,0,0" Opacity="1" Shininess="200" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/rsi/aurora/textures/white_panneling_dark_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/ships/RSI/archive/textures/paneling/white_paneling_dark_ddna.tif"/>
+    <Texture Map="Specular" File="objects/spaceships/ships/rsi/aurora/textures/white_panneling_dark_spec.tif">
+     <TexMod TexMod_RotateType="0" TexMod_TexGenType="0" TexMod_bTexGenProjected="0" TileU="2" TileV="2"/>
+    </Texture>
+   </Textures>
+   <PublicParams SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="Interior" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="2000A040000010" StringGenMask="%BLENDLAYER%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING%VERTCOLORS" SurfaceType="metal_thin" Diffuse="1,1,1" Specular="1,1,1" Emissive="0,0,0" Opacity="1" Shininess="255" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/RSI/Aurora/textures/aurora_interior_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/ships/RSI/Aurora/textures/aurora_interior_ddna.tif"/>
+    <Texture Map="Specular" File="objects/spaceships/ships/RSI/Aurora/textures/aurora_interior_spec.tif"/>
+    <Texture Map="Heightmap" File="objects/spaceships/ships/RSI/Aurora/textures/aurora_interior_displ.tif"/>
+    <Texture Map="Decal" File="objects/spaceships/ships/RSI/Aurora/textures/aurora_interior_bare_diff.tif"/>
+    <Texture Map="Custom" File="objects/spaceships/ships/RSI/Aurora/textures/aurora_interior_ddna.tif"/>
+    <Texture Map="Opacity" File="objects/spaceships/ships/RSI/Aurora/textures/aurora_interior_blend.tif"/>
+   </Textures>
+   <PublicParams BlendFalloff="52.599998" BlendLayer2SpecularColor="0.039999999,0.039999999,0.039999999" BlendLayer2Tiling="1" SSSIndex="0" BlendMaskTiling="1" BlendLayer2DiffuseColor="1,1,1" BlendLayer2Glossiness="255" BlendFactor="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="Exterior_Unique" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="2000A040000010" StringGenMask="%BLENDLAYER%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING%VERTCOLORS" SurfaceType="metal_dense" Diffuse="0.50888133,0.50888133,0.50888133" Specular="0.27049783,0.27049783,0.27049783" Emissive="0,0,0" Opacity="1" Shininess="255" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/RSI/Aurora/textures/aurora_exterior_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/ships/RSI/Aurora/textures/aurora_exterior_ddna.tif"/>
+    <Texture Map="Specular" File="objects/spaceships/ships/RSI/Aurora/textures/aurora_exterior_spec.tif"/>
+    <Texture Map="Decal" File="objects/spaceships/ships/RSI/Aurora/textures/aurora_exterior_bare_diff.tif"/>
+    <Texture Map="Custom" File="objects/spaceships/ships/RSI/Aurora/textures/aurora_exterior_ddna.tif"/>
+    <Texture Map="Opacity" File="objects/spaceships/ships/RSI/Aurora/textures/aurora_exterior_blend.tif"/>
+   </Textures>
+   <PublicParams BlendFalloff="0.89999998" BlendLayer2SpecularColor="0.046665091,0.046665091,0.046665091" BlendLayer2Tiling="1" SSSIndex="0" BlendMaskTiling="1" BlendLayer2DiffuseColor="0.1620294,0.1620294,0.1620294" BlendLayer2Glossiness="255" BlendFactor="0.44" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="Decals" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="20008040000800" StringGenMask="%DECAL%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING" SurfaceType="mat_nodraw" Diffuse="1,1,1" Specular="1,1,1" Emissive="0,0,0" Opacity="1" Shininess="255" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/RSI/Aurora/textures/aurora_decals_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/ships/RSI/Aurora/textures/aurora_decals_ddna.tif"/>
+    <Texture Map="Specular" File="objects/spaceships/ships/RSI/Aurora/textures/aurora_decals_spec.tif"/>
+   </Textures>
+   <PublicParams DecalDiffuseOpacity="1" DecalFalloff="1" DecalAlphaMult="1" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="screens" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="8000040002" StringGenMask="%ALPHAGLOW%ENABLE_TRANSPARENT_GLOW_PASS%SUBSURFACE_SCATTERING" SurfaceType="glass_thin" Diffuse="0.010960096,0.048171829,0.084376216" Specular="0,0,0" Emissive="0,0,0" Opacity="0.85000002" GlowAmount="2" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="textures/defaults/16_grey.tif"/>
+   </Textures>
+   <PublicParams AmbientMultiplier="1" SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="Glass" MtlFlags="2623648" MatTemplate="" MatSubTemplate="" Shader="Glass" GenMask="100000" StringGenMask="%DIRT_MAP" SurfaceType="glass_dense" Diffuse="0.017641956,0.015996294,0.013702083" Specular="0.03954624,0.03954624,0.03954624" Emissive="0,0,0" Opacity="0.34999999" Shininess="15" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/RSI/Aurora/textures/aurora_glass_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/ships/rsi/aurora/textures/aurora_glass_ddna.tif"/>
+    <Texture Map="Environment" File="nearest_cubemap" TexType="7"/>
+   </Textures>
+   <PublicParams SpecFromDiffAlphaBias="-3.30667" BumpMapTile="5" TintColor="0.79129797,0.8069523,0.79129797" SpecFromDiffAlphaMult="-9.1999998" TintCloudiness="0" BackLightScale="0.2" BumpScale="0.02" IndirectColor="0.24620135,0.24620135,0.24620135"/>
+  </Material>
+  <Material Name="Holo" MtlFlags="526464" MatTemplate="" MatSubTemplate="" Shader="Hologram" GenMask="0" StringGenMask="" SurfaceType="mat_nodraw" Diffuse="1,1,1" Specular="2.4000001,2.4000001,2.4000001" Emissive="0,0,0" Opacity="1" Shininess="33" GlowAmount="2" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/RSI/Aurora/textures/bridge_interior_main_screen_diff.tif"/>
+   </Textures>
+   <PublicParams InterferenceContrast="1" InterferenceSpeedScale="1" EdgeColor="1,1,1" InterferenceSizeScale="0.89999998" FresnelBias="0"/>
+  </Material>
+  <Material Name="bed" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="20008848000000" StringGenMask="%NORMAL_MAP%PARALLAX_OCCLUSION_MAPPING%PN_TESSELLATION%SPECULAR_MAP%SUBSURFACE_SCATTERING" SurfaceType="fabric" Diffuse="1,1,1" Specular="1,1,1" Emissive="0,0,0" Opacity="1" Shininess="255" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/RSI/Aurora/textures/bed_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/ships/RSI/Aurora/textures/bed_ddna.tif"/>
+    <Texture Map="Specular" File="objects/spaceships/ships/RSI/Aurora/textures/bed_spec.tif"/>
+    <Texture Map="Heightmap" File="objects/spaceships/ships/RSI/Aurora/textures/bed_displ.tif"/>
+   </Textures>
+   <PublicParams POMBumpUVBlend="1" PomDisplacement="0.050000001" SSSIndex="0" SelfShadowStrength="5" HeightBias="0.41499999" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="glassScreen" MtlFlags="526466" MatTemplate="" MatSubTemplate="" Shader="Glass" GenMask="2020" StringGenMask="%BLUR_REFRACTION%DEPTH_FOG" SurfaceType="glass_thin" Diffuse="0.096266121,0.38891026,0.43681276" Specular="1.0292701,1.0115936,0.93411112" Emissive="0,0,0" Opacity="1" Shininess="255" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Environment" File="textures/cubemaps/squadron_42/light_ibl_hanger_back_cm.tif"/>
+   </Textures>
+   <PublicParams FogColor="0.7299189,0.81996369,0.81996369" BumpMapTile="1" TintColor="0.97430021,0.90754718,0.70829779" BlurAmount="0.039000001" FogCutoffEnd="1" FogDensity="0.0080000004" TintCloudiness="0.001" BackLightScale="0.95200002" BumpScale="0"/>
+  </Material>
+  <Material Name="Pipes" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="20008048000000" StringGenMask="%NORMAL_MAP%PARALLAX_OCCLUSION_MAPPING%SPECULAR_MAP%SUBSURFACE_SCATTERING" SurfaceType="metal_hollow" Diffuse="0.69408053,0.69408053,0.69408053" Specular="0.77422732,0.77422732,0.77422732" Emissive="0,0,0" Opacity="1" Shininess="204" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/RSI/Aurora/textures/aurora_exterior_pipes_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/ships/RSI/Aurora/textures/aurora_exterior_pipes_ddna.tif"/>
+    <Texture Map="Specular" File="objects/spaceships/ships/RSI/Aurora/textures/aurora_exterior_pipes_spec.tif"/>
+    <Texture Map="Heightmap" File="objects/spaceships/ships/RSI/Aurora/textures/aurora_exterior_pipes_displ.tif"/>
+   </Textures>
+   <PublicParams POMBumpUVBlend="1" PomDisplacement="0.050000001" SSSIndex="0" SelfShadowStrength="3" HeightBias="0.5" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="Proxy" MtlFlags="525440" MatTemplate="" MatSubTemplate="" Shader="NoDraw" GenMask="0" StringGenMask="" SurfaceType="nodraw" Diffuse="1,0.0041161771,0.0041161771" Specular="0,0,0" Emissive="0,0,0" Opacity="0.44999999" Shininess="10" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures />
+  </Material>
+  <Material Name="Seat belt" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="20008040000000" StringGenMask="%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING" SurfaceType="metal_thin" Diffuse="0.17677432,0.17677432,0.17677432" Specular="0.86931992,0.86931992,0.86931992" Emissive="0,0,0" Opacity="1" Shininess="184" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/RSI/Aurora/textures/seat_belt_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/ships/RSI/Aurora/textures/seat_belt_ddna.tif"/>
+    <Texture Map="Specular" File="objects/spaceships/ships/RSI/Aurora/textures/seat_belt_spec.tif"/>
+    <Texture Map="Heightmap" File="objects/spaceships/ships/RSI/Aurora/textures/seat_belt_displ.tif"/>
+   </Textures>
+   <PublicParams SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="voshkod_energia_iv" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="20008040000000" StringGenMask="%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING" SurfaceType="metal_dense" Diffuse="1,1,1" Specular="1,1,1" Emissive="0,0,0" Opacity="1" Shininess="255" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/thrusters/okb/textures/voshkod_energia_iv_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/thrusters/okb/textures/voshkod_energia_iv_ddn.tif"/>
+    <Texture Map="Specular" File="objects/spaceships/thrusters/okb/textures/voshkod_energia_iv_spec.tif"/>
+   </Textures>
+   <PublicParams SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="Damage" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="20008040000000" StringGenMask="%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING" SurfaceType="metal_dense" Diffuse="0.588,0.588,0.588" Specular="0,0,0" Emissive="0,0,0" Opacity="1" Shininess="10" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/textures/damage/spaceships_damaged_parts_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/textures/damage/spaceships_damaged_parts_ddna.tif"/>
+    <Texture Map="Specular" File="objects/spaceships/textures/damage/spaceships_damaged_parts_spec.tif"/>
+   </Textures>
+   <PublicParams SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="glow" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="8000000002" StringGenMask="%ALPHAGLOW%SUBSURFACE_SCATTERING" SurfaceType="mat_nodraw" Diffuse="1,1,1" Specular="0,0,0" Emissive="0,0,0" Opacity="1" GlowAmount="10" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="textures/glow/spaceship_glows.tif"/>
+   </Textures>
+   <PublicParams AmbientMultiplier="1" SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="Glass_Dark" MtlFlags="2623648" MatTemplate="" MatSubTemplate="" Shader="Glass" GenMask="800000010000" StringGenMask="%ENVIRONMENT_MAP%TINT_MAP" SurfaceType="glass_hollow" Diffuse="0.37626216,0.37626216,0.37626216" Specular="0.03954624,0.03954624,0.03954624" Emissive="0,0,0" Opacity="0.91000003" Shininess="249" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/rsi/aurora/textures/aurora_glass_dark_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/ships/rsi/aurora/textures/aurora_glass_ddna.tif"/>
+    <Texture Map="Environment" File="nearest_cubemap" TexType="7"/>
+   </Textures>
+   <PublicParams BumpMapTile="5" TintColor="0.010960096,0.006512091,0.016807377" CloudinessReducesGloss="0.5" TintCloudiness="0.5" BackLightScale="0.2" BumpScale="0.02" IndirectColor="0.24620135,0.24620135,0.24620135"/>
+  </Material>
+  <Material Name="shield_proxy" MtlFlags="525440" MatTemplate="" MatSubTemplate="" Shader="NoDraw" GenMask="0" StringGenMask="" SurfaceType="shield_human" Diffuse="1,0.0041161771,0.0041161771" Specular="0,0,0" Emissive="0,0,0" Opacity="0.44999999" Shininess="10" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures />
+  </Material>
+  <Material Name="HUD" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="20008040000000" StringGenMask="%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING" SurfaceType="metal_dense" Diffuse="1,1,1" Specular="0.34886485,0.34886485,0.34886485" Emissive="0,0,0" Opacity="1" Shininess="255" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/rsi/aurora/textures/aurora_hud_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/ships/rsi/aurora/textures/aurora_hud_ddna.tif"/>
+    <Texture Map="Specular" File="objects/spaceships/ships/rsi/aurora/textures/aurora_hud_spec.tif"/>
+   </Textures>
+   <PublicParams SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="Thruster_glow" MtlFlags="524448" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="8000000002" StringGenMask="%ALPHAGLOW%SUBSURFACE_SCATTERING" SurfaceType="metal_dense" Diffuse="1,1,1" Specular="0,0,0" Emissive="0.52099562,0.8069523,0.95597333" Opacity="1" Shininess="10" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/rsi/aurora/textures/aurora_dstc_thuster_glow_diff.tif"/>
+   </Textures>
+   <PublicParams AmbientMultiplier="1" SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="Paint" MtlFlags="524416" MatTemplate="" MatSubTemplate="" Shader="Illum" GenMask="20008040000000" StringGenMask="%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING" SurfaceType="metal_dense" Diffuse="1,1,1" Specular="1,1,1" Emissive="0,0,0" Opacity="1" Shininess="255" CloakAmount="0" vertModifType="0">
+   <TimeOfDay>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="0" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+    <Glow Time="1" Glow="0"/>
+   </TimeOfDay>
+   <Textures>
+    <Texture Map="Diffuse" File="objects/spaceships/ships/rsi/aurora/textures/white_panneling_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/spaceships/ships/rsi/aurora/textures/white_panneling_ddna.tif"/>
+    <Texture Map="Specular" File="objects/spaceships/ships/rsi/aurora/textures/white_panneling_spec.tif"/>
+   </Textures>
+   <PublicParams SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+ </SubMaterials>
+ <PublicParams SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+</Material>
