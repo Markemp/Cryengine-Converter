@@ -22,7 +22,8 @@ namespace CgfConverter
 #endif
 
 #if DEV_MARKEMP
-            args = new String[] { @"C:\Users\Geoff\Documents\Visual Studio 2013\Projects\cgf-converter\cgf-converter\bin\Debug\AEGS_Gladius.cga", "-objectdir", @"e:\blender projects\star citizen", "-dds", "-obj" };
+            //args = new String[] { @"C:\Users\Geoff\Documents\Visual Studio 2013\Projects\cgf-converter\cgf-converter\bin\Debug\AEGS_Gladius.cga", "-objectdir", @"e:\blender projects\star citizen", "-dds", "-obj" };
+            args = new String[] { @"e:\blender projects\star citizen\objects\ships\spaceships\aegs\AEGS_Gladius.cga", "-objectdir", @"e:\blender projects\star citizen", "-dds", "-obj" };
             //args = new String[] { @"C:\Users\Geoff\Documents\Visual Studio 2013\Projects\cgf-converter\cgf-converter\bin\Debug\RSI_Aurora.cga", "-objectdir", @"e:\blender projects\star citizen", "-dds", "-obj" };
             //args = new String[] { @"C:\Users\Geoff\Documents\Visual Studio 2013\Projects\cgf-converter\cgf-converter\bin\Debug\adder_a_cockpit_standard", "-objectdir", @"e:\blender projects\mechs", "-dds", "-obj" };
 
@@ -75,7 +76,7 @@ namespace CgfConverter
             }
 #endif
 
-#if DEV_DOLKENSP
+#if (DEV_DOLKENSP || DEV_MARKEMP)
             Console.WriteLine("Done...");
             Console.ReadKey();
 #endif
