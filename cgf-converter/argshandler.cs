@@ -20,6 +20,10 @@ namespace CgfConverter
         /// </summary>
         public String OutputFile { get; private set; }
         /// <summary>
+        /// Name to group all meshes under
+        /// </summary>
+        public String ModelName { get; private set; }
+        /// <summary>
         /// Render Wavefront format files
         /// </summary>
         public Boolean Output_Wavefront { get; private set; }
@@ -31,10 +35,6 @@ namespace CgfConverter
         /// Render COLLADA format files
         /// </summary>
         public Boolean Output_Collada { get; private set; }
-        /// <summary>
-        /// Merge Input file with m-Files
-        /// </summary>
-        public Boolean MergeFiles { get; private set; }
         /// <summary>
         /// Reverse UVs
         /// </summary>
@@ -186,16 +186,6 @@ namespace CgfConverter
                         break;
 
                     #endregion
-                    #region case "-merge" / "-mergefiles"...
-
-                    case "-merge":
-                    case "-mergefiles":
-
-                        this.MergeFiles = true;
-
-                        break;
-
-                    #endregion
                     #region case "-noconflict"...
 
                     case "-noconflict":
@@ -203,6 +193,17 @@ namespace CgfConverter
                         // TODO: Add support
                         // Output file is based on first file name
                         // this.OutputFile = new FileInfo(Path.GetFileNameWithoutExtension(this.InputFile) + "_out.obj").FullName;
+
+                        break;
+
+                    #endregion
+                    #region case "-group"...
+
+                    case "-group":
+
+                        this.ModelName = Path.GetFileNameWithoutExtension(this.InputFile);
+
+                        Console.WriteLine("Model Name set to {0}", this.ModelName);
 
                         break;
 
@@ -254,7 +255,7 @@ namespace CgfConverter
             Console.WriteLine("-blend:           Export Blender format files (Not Implemented)");
             Console.WriteLine("-dae:             Export Collada format files (Not Implemented)");
             Console.WriteLine("-flipUVs:         Flip the UVs");
-            Console.WriteLine("-merge:           Merge input file with m-Files");
+            Console.WriteLine("-group:           Group meshes into single model");
             Console.WriteLine();
             Console.WriteLine("-throw:           Throw Exceptions to installed debugger");
             Console.WriteLine();

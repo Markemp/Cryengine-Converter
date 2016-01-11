@@ -274,7 +274,7 @@ namespace CgfConverter
             /// Value between 0 and 1 that controls opacity
             /// </summary>
             [XmlAttribute(AttributeName = "Opacity")]
-            [DefaultValue(0)]
+            [DefaultValue(1)]
             public Single Opacity { get; set; }
 
             [XmlAttribute(AttributeName = "CloakAmount")]

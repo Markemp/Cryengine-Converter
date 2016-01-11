@@ -3,55 +3,11 @@ using System.IO;
 
 namespace CgfConverter
 {
-    public struct String16
-    {
-        public char[] Data;
-    }   // 16 byte char array.  THESE MUST BE CALLED WITH THE PROPER LENGTH!
-    public struct String32
-    {
-        public char[] Data;
-    }    // 32 byte char array 
-    public struct String64
-    {
-        public char[] Data;
-    }  // 64 byte char array 
-    public struct String128
-    {
-        public char[] Data;
-    }   // 128 byte char array 
-    public struct String256
-    {
-        public char[] Data;
-
-        public String ReadString256(BinaryReader b)  // Read 256 chars, return a String.
-        {
-            char[] tempData = new char[256];
-            int stringLength = 0;
-            String tempString;
-
-            //Console.WriteLine("Pos: {0:X}", b.BaseStream.Position);
-            tempData = b.ReadChars(256);
-            //for (int i = 0; i < 256; i++)
-            //{
-            //    tempdata[i] = b.readchar();
-            //}
-            for (int i = 0; i < tempData.Length; i++)
-            {
-                if (tempData[i] == 0)
-                {
-                    stringLength = i;
-                    break;
-                }
-            }
-            tempString = new string(tempData, 0, stringLength);
-            return tempString;
-        }
-    }   // 256 byte char array 
     public struct RangeEntity
     {
-        public char[] Name; // String32!  32 byte char array.
-        public int Start;
-        public int End;
+        public String Name; // String32!  32 byte char array.
+        public Int32 Start;
+        public Int32 End;
     } // String32 Name, int Start, int End - complete
     public struct Vector3
     {
@@ -538,13 +494,12 @@ namespace CgfConverter
         public Int32 offsetChild;           // Offset to the first child to this bone in number of CompiledBone structs
         public UInt32 numChildren;          // Number of children to this bone
         public String parentID;             // Not part of the read structure, but the name of the parent bone put into the Bone Dictionary (the key)
-        public long offset;                 // Not part of the structure, but where this one started.
+        public Int64 offset;                 // Not part of the structure, but where this one started.
         public String[] childNames;         // Not part of read struct.  Contains the keys of the children to this bone
 
         public void ReadCompiledBone(BinaryReader b)
         {
             // Reads just a single 584 byte entry of a bone. At the end the seek position will be advanced, so keep that in mind.
-            String256 tmpName = new String256();
             controllerID = b.ReadUInt32();
             physicsGeometry = new PhysicsGeometry[2];
             physicsGeometry[0].ReadPhysicsGeometry(b);
@@ -554,7 +509,7 @@ namespace CgfConverter
             worldToBone.GetWorldToBone(b);
             boneToWorld = new BONETOWORLD();
             boneToWorld.GetBoneToWorld(b);
-            boneName = tmpName.ReadString256(b);
+            boneName = b.ReadFString(256);
             limbID = b.ReadUInt32();
             offsetParent = b.ReadInt32();
             numChildren = b.ReadUInt32();

@@ -1,7 +1,12 @@
 ﻿namespace CgfConverter
 {
+    public enum FileVersionEnum : uint
+    {
+        CryTek_3_6,
+        CryTek_3_5,
+    }
     // Enums
-    public enum FileType : uint
+    public enum FileTypeEnum : uint
     {
         GEOM = 0xFFFF0000,
         ANIM = 0xFFFF0001

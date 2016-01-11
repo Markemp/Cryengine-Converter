@@ -14,9 +14,9 @@ namespace CgfConverter
 {
     public partial class Wavefront
     {
-        public void WriteMaterial()
+        public void WriteMaterial(CryEngine cryEngine)
         {
-            if (this.CryData.Materials == null)
+            if (cryEngine.Materials == null)
             {
                 Console.WriteLine("No materials loaded");
                 return;
@@ -29,13 +29,46 @@ namespace CgfConverter
             {
                 file.WriteLine("# Material file output from cgf-converter.exe version {0}", Utils.GetVersion());
                 file.WriteLine("#");
-                foreach (CryEngine.Material material in this.CryData.Materials)
+                foreach (CryEngine.Material material in cryEngine.Materials)
                 {
+#if DUMP_JSON
+                    File.WriteAllText(String.Format("_material-{0}.json", material.Name.Replace(@"/", "").Replace(@"\", "")), material.ToJSON());
+#endif
+       
                     file.WriteLine("newmtl {0}", material.Name);
-                    file.WriteLine("Kd {0:F4} {1:F4} {2:F4}", material.Diffuse.Red, material.Diffuse.Green, material.Diffuse.Blue);
-                    file.WriteLine("Ks  {0:F4} {1:F4} {2:F4}", material.Specular.Red, material.Specular.Green, material.Specular.Blue);
+                    if (material.Diffuse != null)
+                    {
+                        file.WriteLine("Kd {0:F4} {1:F4} {2:F4}", material.Diffuse.Red, material.Diffuse.Green, material.Diffuse.Blue);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Skipping Diffuse for {0}", material.Name);
+                    }
+                    if (material.Specular != null)
+                    {
+                        file.WriteLine("Ks  {0:F4} {1:F4} {2:F4}", material.Specular.Red, material.Specular.Green, material.Specular.Blue);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Skipping Specular for {0}", material.Name);
+                    }
                     file.WriteLine("d {0:F4}", material.Opacity);
+
                     file.WriteLine("illum 2");  // Highlight on. This is a guess.
+
+                    // Phong materials
+
+                    // 0. Color on and Ambient off
+                    // 1. Color on and Ambient on
+                    // 2. Highlight on
+                    // 3. Reflection on and Ray trace on
+                    // 4. Transparency: Glass on, Reflection: Ray trace on
+                    // 5. Reflection: Fresnel on and Ray trace on
+                    // 6. Transparency: Refraction on, Reflection: Fresnel off and Ray trace on
+                    // 7. Transparency: Refraction on, Reflection: Fresnel on and Ray trace on
+                    // 8. Reflection on and Ray trace off
+                    // 9. Transparency: Glass on, Reflection: Ray trace off
+                    // 10. Casts shadows onto invisible surfaces
 
                     foreach (CryEngine.Material.Texture texture in material.Textures)
                     {
