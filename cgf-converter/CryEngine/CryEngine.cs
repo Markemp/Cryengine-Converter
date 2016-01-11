@@ -36,6 +36,12 @@ namespace CgfConverter
                 if (materialFile.Extension != "mtl")
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
 
+                // Then try just the original file name
+                if (!materialFile.Exists)
+                    materialFile = new FileInfo(argsHandler.InputFiles.First().FullName);
+                if (materialFile.Extension != "mtl")
+                    materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
+
                 // TODO: Try more paths
 
                 CryEngine.Material material = CryEngine.Material.FromFile(materialFile);
