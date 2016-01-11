@@ -29,86 +29,6 @@ namespace CgfConverter
                 this.Headers = new ChunkTable();                    
             }
 
-            //private Dictionary<UInt32, Chunk> _chunksByID;
-            //public Dictionary<UInt32, Chunk> ChunksByID
-            //{
-            //    get
-            //    {
-            //        if (this._chunksByID == null)
-            //            this._MapChunks();
-
-            //        return this._chunksByID;
-            //    }
-            //}
-
-            //private Dictionary<String, ChunkNode> _chunksByName;
-            //public Dictionary<String, ChunkNode> ChunksByName
-            //{
-            //    get
-            //    {
-            //        if (this._chunksByName == null)
-            //            this._MapChunks();
-
-            //        return this._chunksByName;
-            //    }
-            //}
-
-            //private void _MapChunks()
-            //{
-            //    HashSet<String> watchlist = new HashSet<String>
-            //    {
-            //        "LG_Hatch_Front_Outboard_Left",
-            //        "LG_Skid_Front_Right",
-            //        "LG_Arm_Front_Right"
-            //    };
-
-            //    this._chunksByID = new Dictionary<UInt32, Chunk>();
-            //    this._chunksByName = new Dictionary<String, ChunkNode>();
-
-            //    foreach (var chunk in this.CgfChunks)
-            //    {
-            //        this._chunksByID[chunk.id] = chunk;
-            //        if (chunk.ChunkType == ChunkType.Node)
-            //        {
-            //            var node = (chunk as ChunkNode);
-
-            //            // if (this._chunksByName.ContainsKey(node.Name))
-            //            //     Console.WriteLine("Overwriting Part {0} > {1} with {2} > {3}", this._chunksByName[node.Name].ParentNodeName, this._chunksByName[node.Name].Name, node.ParentNodeName, node.Name);
-            //            // else
-            //            // {
-
-            //            // LG_Hatch_Front_Outboard_Left
-            //            // LG_Skid_Front_Right
-                        
-            //            // if (watchlist.Contains(node.Name))
-            //            // {
-            //            //     node.WriteChunk();
-            //            // }
-
-            //            if (this._chunksByName.ContainsKey(node.Name))
-            //            {
-            //                var oldNode = this._chunksByName[node.Name];
-
-            //                if ((node.NodeFile != this.Args.InputFiles.First().FullName) && (node.ParentNodeName != oldNode.ParentNodeName))
-            //                {
-            //                    Console.WriteLine("Discarding mFile Parent for {2}.{1}", node.ParentNodeName, node.Name, oldNode.ParentNodeName);
-            //                    node.ParentNode = oldNode.ParentNode;
-            //                    this._chunksByName[node.Name] = node;
-            //                }
-            //                else
-            //                {
-
-            //                }
-            //            }
-            //            else
-            //            {
-            //                this._chunksByName[node.Name] = node;
-            //            }
-            //        }
-            //    }
-            //}
-            // public List<Chunk> CgfChunks = new List<Chunk>();   //  I don't think we want this.  Dictionary is better because of ID
-
             #region Legacy
 
             // Header, ChunkTable and Chunks are what are in a file.  1 header, 1 table, and a chunk for each entry in the table.
@@ -121,7 +41,7 @@ namespace CgfConverter
             /// </summary>
             public ChunkTable Headers { get; private set; }
             public Dictionary<UInt32, Model.Chunk> ChunkMap { get; private set; }
-            public ChunkNode RootNode { get; private set; }
+            public ChunkNode RootNode { get; set; }
             public List<ChunkHeader> ChunkHeaders {get; private set; }
 
             /// <summary>
@@ -799,8 +719,28 @@ namespace CgfConverter
 
                         return this._parentNode;
                     }
-                    set { this._parentNode = value; }
+                    set
+                    {
+                        this.ParentNodeID = value == null ? 0xFFFFFFFF : value.ID;
+                        this._parentNode = value;
+                    }
                 }
+
+                private Chunk _objectChunk;
+                public Chunk ObjectChunk
+                {
+                    get
+                    {
+                        if ((this._objectChunk == null) && this._model.ChunkMap.ContainsKey(this.Object))
+                        {
+                            this._objectChunk = this._model.ChunkMap[this.Object];
+                        }
+
+                        return this._objectChunk;
+                    }
+                    set { this._objectChunk = value; }
+                }
+
 
                 public Vector3 TransformSoFar
                 {
@@ -1681,7 +1621,6 @@ namespace CgfConverter
                 //public IRGB[] VertexColors; // 744 not implemented
                 public UInt32 VerticesData; // 800, 801.  Need an array because some 801 files have NumVertSubsets
                 public UInt32 NumBuffs;
-                public UInt32[] Buffer;       // 801.  For some reason there is a weird buffer here.
                 public UInt32 NormalsData; // 800
                 public UInt32 UVsData; // 800
                 public UInt32 ColorsData; // 800

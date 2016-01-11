@@ -10,16 +10,19 @@ namespace CgfConverter
 {
     public partial class Wavefront
     {
-        public ArgsHandler Args { get; private set; }
-
         public Wavefront(ArgsHandler argsHandler)
         {
             this.Args = argsHandler;
         }
 
-        FileInfo OutputFile_Model;
-        FileInfo OutputFile_Material;
-        CryEngine CryData;
+        public ArgsHandler Args { get; private set; }
+        public FileInfo OutputFile_Model { get; private set; }
+        public FileInfo OutputFile_Material { get; private set; }
+        public CryEngine CryData { get; private set; }
+        public UInt32 CurrentVertexPosition { get; private set; }
+        public UInt32 TempIndicesPosition { get; private set; }
+        public UInt32 TempVertexPosition { get; private set; }
+        public UInt32 CurrentIndicesPosition { get; private set; }
 
         public void WriteObjFile(CryEngine cryEngine)
         {
@@ -96,14 +99,12 @@ namespace CgfConverter
 
         public void WriteObjNode(StreamWriter f, CryEngine.Model.ChunkNode chunkNode)  // Pass a node to this to have it write to the Stream
         {
-            CryEngine.Model.Chunk objectChunk = this.CryData.Chunks.Where(c => c.ID == chunkNode.Object).FirstOrDefault();
-
             // Console.WriteLine("\n*** Processing Chunk node {0:X}", chunkNode.id);
             // Console.WriteLine("***     Object ID {0:X}", chunkNode.Object);
 
             // We are only processing Nodes that have Materials.  The chunkType should never be Helper.  Check for Nodes to not process
             // This is wrong.  We have to process nodes that have helpers as the mesh info for the transform.
-            if (objectChunk.ChunkType == ChunkTypeEnum.Helper)
+            if (chunkNode.ObjectChunk.ChunkType == ChunkTypeEnum.Helper)
             {
                 // This needs work.
                 //transform = cgfData.GetTransform(chunkNode, transform);
@@ -122,12 +123,12 @@ namespace CgfConverter
             }
             //transform.WriteVector3();
 
-            CryEngine.Model.ChunkMesh tmpMesh = objectChunk as CryEngine.Model.ChunkMesh;
+            CryEngine.Model.ChunkMesh tmpMesh = chunkNode.ObjectChunk as CryEngine.Model.ChunkMesh;
 
             if (tmpMesh == null)
                 return;
 
-            if (objectChunk.ChunkType == ChunkTypeEnum.Helper)
+            if (chunkNode.ObjectChunk.ChunkType == ChunkTypeEnum.Helper)
             {
                 // This can still have transform, so need to to the transform before skipping.  We should still write an empty, but..obj.
                 Console.WriteLine("*********************Found a node chunk for a Helper (ID: {0:X}).  Skipping...", tmpMesh.ID);
@@ -154,19 +155,25 @@ namespace CgfConverter
                 return;
             }
 
-            CryEngine.Model.ChunkMtlName tmpMtlName = this.CryData.Chunks.Where(c => c.ID == chunkNode.MatID).FirstOrDefault() as CryEngine.Model.ChunkMtlName;
-            CryEngine.Model.ChunkMeshSubsets tmpMeshSubsets = this.CryData.Chunks.Where(c => c.ID == tmpMesh.MeshSubsets).FirstOrDefault() as CryEngine.Model.ChunkMeshSubsets; // Listed as Object ID for the Node
+            CryEngine.Model.ChunkMtlName tmpMtlName = chunkNode._model.ChunkMap[chunkNode.MatID] as CryEngine.Model.ChunkMtlName;
+            CryEngine.Model.ChunkMeshSubsets tmpMeshSubsets = tmpMesh._model.ChunkMap[tmpMesh.MeshSubsets] as CryEngine.Model.ChunkMeshSubsets; // Listed as Object ID for the Node
             
             // Going to assume that there is only one VerticesData datastream for now.  Need to watch for this.   
             // Some 801 types have vertices and not VertsUVs.
             //Console.WriteLine("TEMPMESH WITH NO CurrentIndicesPosition");
             //tmpMesh.WriteChunk();
 
-            CryEngine.Model.ChunkDataStream tmpIndices = this.CryData.Chunks.Where(c => c.ID == tmpMesh.IndicesData).FirstOrDefault() as CryEngine.Model.ChunkDataStream;
-            CryEngine.Model.ChunkDataStream tmpNormals = this.CryData.Chunks.Where(c => c.ID == tmpMesh.VerticesData).FirstOrDefault() as CryEngine.Model.ChunkDataStream;
-            CryEngine.Model.ChunkDataStream tmpUVs = this.CryData.Chunks.Where(c => c.ID == tmpMesh.NormalsData).FirstOrDefault() as CryEngine.Model.ChunkDataStream;
-            CryEngine.Model.ChunkDataStream tmpVertices = this.CryData.Chunks.Where(c => c.ID == tmpMesh.UVsData).FirstOrDefault() as CryEngine.Model.ChunkDataStream;
-            CryEngine.Model.ChunkDataStream tmpVertsUVs = this.CryData.Chunks.Where(c => c.ID == tmpMesh.VertsUVsData).FirstOrDefault() as CryEngine.Model.ChunkDataStream;
+            CryEngine.Model.ChunkDataStream tmpIndices = tmpMesh._model.ChunkMap[tmpMesh.IndicesData] as CryEngine.Model.ChunkDataStream;
+
+            CryEngine.Model.ChunkDataStream tmpNormals = new CryEngine.Model.ChunkDataStream();
+            CryEngine.Model.ChunkDataStream tmpUVs = new CryEngine.Model.ChunkDataStream();
+            CryEngine.Model.ChunkDataStream tmpVertices = new CryEngine.Model.ChunkDataStream();
+            CryEngine.Model.ChunkDataStream tmpVertsUVs = new CryEngine.Model.ChunkDataStream();
+
+            if (tmpMesh.VerticesData != 0) tmpNormals = tmpMesh._model.ChunkMap[tmpMesh.VerticesData] as CryEngine.Model.ChunkDataStream;
+            if (tmpMesh.NormalsData != 0) tmpUVs = tmpMesh._model.ChunkMap[tmpMesh.NormalsData] as CryEngine.Model.ChunkDataStream;
+            if (tmpMesh.UVsData != 0) tmpVertices = tmpMesh._model.ChunkMap[tmpMesh.UVsData] as CryEngine.Model.ChunkDataStream;
+            if (tmpMesh.VertsUVsData != 0) tmpVertsUVs = tmpMesh._model.ChunkMap[tmpMesh.VertsUVsData] as CryEngine.Model.ChunkDataStream;
 
             // We only use 3 things in obj files:  vertices, normals and UVs.  No need to process the Tangents.
 
@@ -278,20 +285,20 @@ namespace CgfConverter
                     j++)
                 {
                     f.WriteLine("f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}",    // Vertices, UVs, Normals
-                        tmpIndices.Indices[j] + 1 + this.CryData.CurrentVertexPosition,
-                        tmpIndices.Indices[j + 1] + 1 + this.CryData.CurrentVertexPosition,
-                        tmpIndices.Indices[j + 2] + 1 + this.CryData.CurrentVertexPosition);
+                        tmpIndices.Indices[j] + 1 + this.CurrentVertexPosition,
+                        tmpIndices.Indices[j + 1] + 1 + this.CurrentVertexPosition,
+                        tmpIndices.Indices[j + 2] + 1 + this.CurrentVertexPosition);
 
                     j += 2;
                 }
 
-                this.CryData.TempVertexPosition += meshSubset.NumVertices;  // add the number of vertices so future objects can start at the right place
-                this.CryData.TempIndicesPosition += meshSubset.NumIndices;  // Not really used...
+                this.TempVertexPosition += meshSubset.NumVertices;  // add the number of vertices so future objects can start at the right place
+                this.TempIndicesPosition += meshSubset.NumIndices;  // Not really used...
             }
 
             // Extend the current vertex, uv and normal positions by the length of those arrays.
-            this.CryData.CurrentVertexPosition = this.CryData.TempVertexPosition;
-            this.CryData.CurrentIndicesPosition = this.CryData.TempIndicesPosition;
+            this.CurrentVertexPosition = this.TempVertexPosition;
+            this.CurrentIndicesPosition = this.TempIndicesPosition;
         }
 
         public void WriteObjHitBox(StreamWriter f, CryEngine.Model.ChunkCompiledPhysicalProxies chunkProx)  // Pass a bone proxy to write to the stream.  For .chr files (armatures)
@@ -329,14 +336,14 @@ namespace CgfConverter
                 {
                     //string s2 = String.Format("f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}",
                     string s2 = String.Format("f {0} {1} {2}",
-                        chunkProx.HitBoxes[i].Indices[j] + 1 + this.CryData.CurrentVertexPosition,
-                        chunkProx.HitBoxes[i].Indices[j + 1] + 1 + this.CryData.CurrentVertexPosition,
-                        chunkProx.HitBoxes[i].Indices[j + 2] + 1 + this.CryData.CurrentVertexPosition);
+                        chunkProx.HitBoxes[i].Indices[j] + 1 + this.CurrentVertexPosition,
+                        chunkProx.HitBoxes[i].Indices[j + 1] + 1 + this.CurrentVertexPosition,
+                        chunkProx.HitBoxes[i].Indices[j + 2] + 1 + this.CurrentVertexPosition);
                     f.WriteLine(s2);
                     j = j + 2;
                 }
-                this.CryData.CurrentVertexPosition += chunkProx.HitBoxes[i].NumVertices;
-                this.CryData.CurrentIndicesPosition += chunkProx.HitBoxes[i].NumIndices;
+                this.CurrentVertexPosition += chunkProx.HitBoxes[i].NumVertices;
+                this.CurrentIndicesPosition += chunkProx.HitBoxes[i].NumIndices;
                 f.WriteLine();
             }
             f.WriteLine();

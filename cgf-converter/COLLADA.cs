@@ -209,7 +209,7 @@ namespace CgfConverter
                 {
                     // Get the mesh chunk and submesh chunk for this node.
                     CryEngine.Model.ChunkMesh tmpMeshChunk = (CryEngine.Model.ChunkMesh)this.CryData.ChunksByID[nodeChunk.Object];
-                    CryEngine.Model.ChunkMeshSubsets tmpMeshSubsets = tmpMeshSubsets = (CryEngine.Model.ChunkMeshSubsets)this.CryData.ChunksByID[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
+                    CryEngine.Model.ChunkMeshSubsets tmpMeshSubsets = (CryEngine.Model.ChunkMeshSubsets)this.CryData.ChunksByID[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
 
                     // Get pointers to the vertices data
                     if (tmpMeshChunk.VerticesData != 0)

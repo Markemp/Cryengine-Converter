@@ -169,20 +169,27 @@ namespace CgfConverter
                 if (this._nodeMap == null)
                 {
                     this._nodeMap = new Dictionary<String, Model.ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
+
+                    Model.ChunkNode rootNode = null;
+
                     foreach (Model model in this.Models)
                     {
+                        model.RootNode = rootNode = (rootNode ?? model.RootNode);
+
                         foreach (Model.ChunkNode node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as Model.ChunkNode))
                         {
-                            if (node.ParentNodeID == 0xFFFFFFFF && this._nodeMap.ContainsKey(node.Name))
+                            // Preserve existing parents
+                            if (this._nodeMap.ContainsKey(node.Name))
                             {
-                                node.ParentNode = this._nodeMap[node.Name].ParentNode;
-                                node.ParentNodeID = this._nodeMap[node.Name].ParentNodeID;
-                                this._nodeMap[node.Name] = node;
+                                Model.ChunkNode parentNode = this._nodeMap[node.Name].ParentNode;
+
+                                if (parentNode != null)
+                                    parentNode = this._nodeMap[parentNode.Name];
+
+                                node.ParentNode = parentNode;
                             }
-                            else
-                            {
-                                this._nodeMap[node.Name] = node;
-                            }
+
+                            this._nodeMap[node.Name] = node;
                         }
                     }
                 }
@@ -192,13 +199,5 @@ namespace CgfConverter
         }
 
         #endregion
-
-        public uint CurrentVertexPosition { get; set; }
-
-        public uint TempIndicesPosition { get; set; }
-
-        public uint TempVertexPosition { get; set; }
-
-        public uint CurrentIndicesPosition { get; set; }
     }
 }
