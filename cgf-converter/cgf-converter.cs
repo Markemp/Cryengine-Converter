@@ -16,6 +16,25 @@ namespace CgfConverter
         {
 #if DEV_DOLKENSP
             args = new String[] { @"O:\Mods\SC\2.1d\Objects\Vehicles\ships\drak\herald\DRAK_Herald_Hangar.cga", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "DRAK_Herald_Hangar.obj" };
+            
+            args = new String[] { @"O:\Mods\SC\2.1d\Objects\Spaceships\Ships\RSI\Constellation\RSI_Constellation.cga", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "RSI_Constellation.obj" };
+            args = new String[] { @"O:\Mods\SC\2.1d\Objects\Spaceships\Ships\RSI\Constellation\RSI_Constellation_Exterior.cga", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "RSI_Constellation_Exterior.obj" };
+            args = new String[] { @"O:\Mods\SC\2.1d\Objects\Spaceships\Ships\RSI\Constellation\RSI_Constellation_Aquarius.cga", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "RSI_Constellation_Aquarius.obj" };
+            // args = new String[] { @"O:\Mods\SC\2.1d\Objects\Spaceships\Ships\RSI\Constellation\RSI_Constellation_Cygnus.cga", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "RSI_Constellation_Cygnus.obj" };
+
+            args = new String[] { @"O:\Mods\SC\2.1d\Objects\Spaceships\Ships\MISC\Freelancer\MISC_Freelancer.cga", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "MISC_Freelancer.obj" };
+            args = new String[] { @"O:\Mods\SC\2.1d\Objects\Spaceships\Ships\MISC\Freelancer\MISC_Freelancer_DUR.cga", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "MISC_Freelancer_DUR.obj" };
+            args = new String[] { @"O:\Mods\SC\2.1d\Objects\Spaceships\Ships\MISC\Freelancer\MISC_Freelancer_MAX.cga", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "MISC_Freelancer_MAX.obj" };
+            // args = new String[] { @"O:\Mods\SC\2.1d\Objects\Spaceships\Ships\MISC\Freelancer\MISC_Freelancer_MIS.cga", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "MISC_Freelancer_MIS.obj" };
+
+            args = new String[] { @"O:\Mods\SC\2.1d\Objects\Spaceships\Ships\ORIG\M50\ORIG_M50.cga", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "ORIG_M50.obj" };
+
+            args = new String[] { @"O:\Mods\SC\2.1d\Objects\Spaceships\Ships\ANVL\Hornet\ANVL_Hornet.cga", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "ANVL_Hornet.obj" };
+            args = new String[] { @"O:\Mods\SC\2.1d\Objects\Spaceships\Ships\ANVL\Hornet\F7C_M\ANVL_Hornet_F7C_M.cga", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "ANVL_Hornet_F7C_M.obj" };
+            // args = new String[] { @"O:\Mods\SC\2.1d\Objects\Spaceships\Ships\ANVL\Hornet\MISC_Freelancer_MIS.cga", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "MISC_Freelancer_MIS.obj" };
+            // args = new String[] { @"O:\Mods\SC\2.1d\Objects\Spaceships\Ships\MISC\Freelancer\MISC_Freelancer_MIS.cga", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "MISC_Freelancer_MIS.obj" };
+            // args = new String[] { @"O:\Mods\SC\2.1d\Objects\Spaceships\Ships\MISC\Freelancer\MISC_Freelancer_MIS.cga", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "MISC_Freelancer_MIS.obj" };
+
             // args = new String[] { @"Objects\1.3\ORIG_300I.cga", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "ORIG_300I.obj" };
             // args = new String[] { @"O:\Mods\SC\2.1d\Objects\brush\planet\uee\flair_objects\model_spaceships\origin_350r\flair_origin_350r.cgf", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "ORIG_350r_flair.obj" };
             // args = new String[] { @"O:\Mods\SC\2.1d\Objects\Spaceships\Ships\AEGS\Gladius\AEGS_Gladius.cga", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "AEGS_Gladius.obj" };

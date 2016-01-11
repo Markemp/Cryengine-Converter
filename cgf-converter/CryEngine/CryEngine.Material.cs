@@ -81,8 +81,10 @@ namespace CgfConverter
                 {
                     [XmlEnum("0")]
                     Default = 0,
+                    [XmlEnum("5")]
+                    Interface = 5,
                     [XmlEnum("7")]
-                    Special = 7,
+                    CubeMap = 7,
                 }
 
                 public enum MapTypeEnum
@@ -166,15 +168,15 @@ namespace CgfConverter
 
                 [XmlAttribute(AttributeName = "TileU")]
                 [DefaultValue(0)]
-                public Int32 TileU { get; set; }
+                public Single TileU { get; set; }
 
                 [XmlAttribute(AttributeName = "TileV")]
                 [DefaultValue(0)]
-                public Int32 TileV { get; set; }
+                public Single TileV { get; set; }
 
                 [XmlAttribute(AttributeName = "OffsetU")]
                 [DefaultValue(0)]
-                public Int32 OffsetU { get; set; }
+                public Single OffsetU { get; set; }
             }
 
             /// <summary>
@@ -294,8 +296,6 @@ namespace CgfConverter
             [XmlAttribute(AttributeName = "AlphaTest")]
             [DefaultValue(0)]
             public Single AlphaTest { get; set; }
-
-
 
             #endregion
 

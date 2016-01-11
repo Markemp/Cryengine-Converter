@@ -15,6 +15,8 @@ namespace CgfConverter
         /// </summary>
         public class Model
         {
+            public Int32 NodeCount { get { return this.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Count(); } }
+
             public static Model FromFile(String fileName)
             {
                 Model buffer = new Model();
@@ -753,8 +755,8 @@ namespace CgfConverter
                         else
                         {
                             // TODO: What should this be?
-                            return this._model.RootNode.Transform.GetTranslation();
-                            // return this.Transform.GetTranslation();
+                            // return this._model.RootNode.Transform.GetTranslation();
+                            return this.Transform.GetTranslation();
                         }
                     }
                 }

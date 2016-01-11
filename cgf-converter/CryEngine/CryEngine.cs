@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -161,6 +162,30 @@ namespace CgfConverter
             }
         }
 
+
+        private static HashSet<String> _watchedNodes = new HashSet<String>
+        {
+            // Misbehaving
+            // "LG_Hatch_Aft_Inboard_Left",
+            // "LG_Hatch_Aft_Inboard_Right",
+            // "LG_Hatch_Aft_Outboard_Left",
+            // "LG_Hatch_Aft_Outboard_Right",
+            // "LG_Hatch_Front_Center_Left",
+            // "LG_Hatch_Front_Center_Right",
+            // "LG_Hatch_Front_Inboard_Left",
+            // "LG_Hatch_Front_Inboard_Right",
+            // "LG_Hatch_Front_Outboard_Left",
+            // "LG_Hatch_Front_Outboard_Right",
+            // "LG_Skid_Aft_Right",
+            // "LG_Skid_Front_Right",
+            // "LG_Skid_Aft_Left",
+            // "LG_Skid_Front_Left",
+
+            // Behaving
+            "LandingGear_Pod_Aft_Left",
+            "LandingGear_Pod_Aft_Right"
+        };
+
         public Dictionary<String, Model.ChunkNode> _nodeMap;
         public Dictionary<String, Model.ChunkNode> NodeMap
         {
@@ -176,8 +201,33 @@ namespace CgfConverter
                     {
                         model.RootNode = rootNode = (rootNode ?? model.RootNode);
 
+                        foreach (Model.ChunkHelper helper in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Helper).Select(c => c as Model.ChunkHelper))
+                        {
+                            if (CryEngine._watchedNodes.Contains(helper.Name))
+                            {
+                                Console.WriteLine("Transform Helper {0}", helper.Name);
+                                // node.Transform.WriteMatrix44();
+                                helper.Transform.WriteMatrix44();
+                                helper.Pos.WriteVector3();
+                            }
+                        }
+
                         foreach (Model.ChunkNode node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as Model.ChunkNode))
                         {
+                            if (CryEngine._watchedNodes.Contains(node.Name))
+                            {
+                                var parentNode = node.ParentNode;
+                                var nullNode = new Model.ChunkNode(model) { Name = "NULL" };
+
+                                Console.WriteLine("Transform {0}", node.Name);
+                                // node.Transform.WriteMatrix44();
+                                node.Transform.WriteMatrix44();
+                                Console.WriteLine("{0:X} {1:X} {2:X}", node.PosCtrl, node.RotCtrl, node.SclCtrl);
+                                // (node).TransformSoFar.WriteVector3();
+
+                                // Debug.WriteLine(node.Name, "Watched Node");
+                            }
+
                             // Preserve existing parents
                             if (this._nodeMap.ContainsKey(node.Name))
                             {
