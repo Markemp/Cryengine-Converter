@@ -15,6 +15,7 @@ namespace CgfConverter
             ".cgf",
             ".cga",
             ".skin",
+            ".chr",
         };
 
         /// <summary>
