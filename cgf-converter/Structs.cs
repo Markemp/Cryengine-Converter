@@ -58,6 +58,7 @@ namespace CgfConverter
         public float x;
         public float y;
         public float z;
+        public float w; // Currently Unused
         public void ReadVector3(BinaryReader b)
         {
             this.x = b.ReadSingle();

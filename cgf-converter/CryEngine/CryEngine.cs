@@ -9,36 +9,77 @@ namespace CgfConverter
 {
     public partial class CryEngine
     {
+        /// <summary>
+        /// File extensions processed by CryEngine
+        /// </summary>
+        private static HashSet<String> _validExtensions = new HashSet<String>
+        {
+            ".cgf",
+            ".cga",
+            ".skin",
+        };
+
         #region Constructors
 
-        public CryEngine(ArgsHandler argsHandler)
+        public Model.ChunkNode RootNode { get; private set; }
+
+        public CryEngine(String fileName, String dataDir)
         {
-            this.Asset = new CryEngine.Model(argsHandler);
+            FileInfo inputFile = new FileInfo(fileName);
+            List<FileInfo> inputFiles = new List<FileInfo> { inputFile };
 
-            // TODO: Check for mFile
+            // Validate file extension - handles .cgam / skinm
+            if (!CryEngine._validExtensions.Contains(inputFile.Extension))
+            {
+                Console.WriteLine("Warning: Unsupported file extension - please use a cga, cgf or skin file");
+                throw new FileLoadException("Warning: Unsupported file extension - please use a cga, cgf or skin file", fileName);
+            }
 
-            foreach (CryEngine.Model.ChunkMtlName mtlChunk in this.Asset.CgfChunks.Where(c => c.chunkType == ChunkType.MtlName))
+            #region m-File Auto-Detection
+
+            FileInfo mFile = new FileInfo(Path.ChangeExtension(fileName, String.Format("{0}m", inputFile.Extension)));
+
+            if (mFile.Exists)
+            {
+                Console.WriteLine("Found mFile file {0}", mFile.Name);
+
+                // Add to list of files to process
+                inputFiles.Add(mFile);
+            }
+
+            #endregion
+
+            this.Models = new List<Model> { };
+
+            foreach (var file in inputFiles)
+            {
+                Model model = Model.FromFile(file.FullName);
+                this.RootNode = this.RootNode ?? model.RootNode;
+                this.Models.Add(model);
+            }
+
+            foreach (CryEngine.Model.ChunkMtlName mtlChunk in this.Models.SelectMany(a => a.ChunkMap.Values).Where(c => c.ChunkType == ChunkTypeEnum.MtlName))
             {
                 // Don't process child materials for now
-                if (mtlChunk.version == 0x800 && !(mtlChunk.MatType == 0x01 || mtlChunk.MatType == 0x10))
+                if (mtlChunk.Version == 0x800 && !(mtlChunk.MatType == 0x01 || mtlChunk.MatType == 0x10))
                     continue;
 
                 Console.WriteLine("Found material {0}", mtlChunk.Name);
 
                 // First try relative to file being processed
-                FileInfo materialFile = new FileInfo(Path.Combine(argsHandler.InputFiles.First().Directory.FullName, mtlChunk.Name));
+                FileInfo materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(fileName), mtlChunk.Name));
                 if (materialFile.Extension != "mtl")
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
 
                 // Then try relative to the ObjectDir
                 if (!materialFile.Exists)
-                    materialFile = new FileInfo(Path.Combine(argsHandler.ObjectDir.FullName, mtlChunk.Name));
+                    materialFile = new FileInfo(Path.Combine(dataDir, mtlChunk.Name));
                 if (materialFile.Extension != "mtl")
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
 
-                // Then try just the original file name
+                // Then try just the fileName.mtl
                 if (!materialFile.Exists)
-                    materialFile = new FileInfo(argsHandler.InputFiles.First().FullName);
+                    materialFile = new FileInfo(fileName);
                 if (materialFile.Extension != "mtl")
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
 
@@ -64,8 +105,8 @@ namespace CgfConverter
 
         #region Properties
 
-        public CryEngine.Model Asset { get; private set; }
-        public CryEngine.Material[] Materials { get; private set; }
+        public List<Model> Models { get; private set; }
+        public Material[] Materials { get; private set; }
 
         #endregion
 
@@ -76,7 +117,7 @@ namespace CgfConverter
         /// </summary>
         /// <param name="material"></param>
         /// <returns></returns>
-        private IEnumerable<CryEngine.Material> FlattenMaterials(CryEngine.Material material)
+        private IEnumerable<Material> FlattenMaterials(Material material)
         {
             if (material != null)
             {
@@ -88,6 +129,76 @@ namespace CgfConverter
             }
         }
 
+        private Model.Chunk[] _chunks;
+        public Model.Chunk[] Chunks
+        {
+            get
+            {
+                if (this._chunks == null)
+                {
+                    this._chunks = this.Models.SelectMany(m => m.ChunkMap.Values).ToArray();
+                }
+
+                return this._chunks;
+            }
+        }
+
+        public Dictionary<UInt32, Model.Chunk> _chunksByID;
+        public Dictionary<UInt32, Model.Chunk> ChunksByID
+        {
+            get
+            {
+                if (this._chunksByID == null)
+                {
+                    this._chunksByID = new Dictionary<UInt32, Model.Chunk> { };
+                    foreach (Model.Chunk chunk in this.Chunks)
+                    {
+                        this._chunksByID[chunk.ID] = chunk;
+                    }
+                }
+
+                return this._chunksByID;
+            }
+        }
+
+        public Dictionary<String, Model.ChunkNode> _nodeMap;
+        public Dictionary<String, Model.ChunkNode> NodeMap
+        {
+            get
+            {
+                if (this._nodeMap == null)
+                {
+                    this._nodeMap = new Dictionary<String, Model.ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
+                    foreach (Model model in this.Models)
+                    {
+                        foreach (Model.ChunkNode node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as Model.ChunkNode))
+                        {
+                            if (node.ParentNodeID == 0xFFFFFFFF && this._nodeMap.ContainsKey(node.Name))
+                            {
+                                node.ParentNode = this._nodeMap[node.Name].ParentNode;
+                                node.ParentNodeID = this._nodeMap[node.Name].ParentNodeID;
+                                this._nodeMap[node.Name] = node;
+                            }
+                            else
+                            {
+                                this._nodeMap[node.Name] = node;
+                            }
+                        }
+                    }
+                }
+
+                return this._nodeMap;
+            }
+        }
+
         #endregion
+
+        public uint CurrentVertexPosition { get; set; }
+
+        public uint TempIndicesPosition { get; set; }
+
+        public uint TempVertexPosition { get; set; }
+
+        public uint CurrentIndicesPosition { get; set; }
     }
 }

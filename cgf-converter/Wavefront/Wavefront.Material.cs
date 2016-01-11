@@ -41,8 +41,8 @@ namespace CgfConverter
                     {
                         String textureFile = texture.File;
 
-                        if (this.Args.ObjectDir != null)
-                            textureFile = Path.Combine(this.Args.ObjectDir.FullName, textureFile);
+                        if (this.Args.DataDir != null)
+                            textureFile = Path.Combine(this.Args.DataDir, textureFile);
 
                         // TODO: More filehandling here
                         

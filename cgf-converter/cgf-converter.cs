@@ -41,7 +41,7 @@ namespace CgfConverter
             if (result == 0)
             {
                 // Read CryEngine Files
-                CryEngine cryData = new CryEngine(argsHandler);
+                CryEngine cryData = new CryEngine(argsHandler.InputFile, argsHandler.DataDir);
 
                 #region Render Output Files
 
