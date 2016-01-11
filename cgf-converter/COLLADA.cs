@@ -258,15 +258,36 @@ namespace CgfConverter
                         floatArray.Count = (int)tmpVertices.NumElements;
                         // Build the string of vertices with a stringbuilder
                         StringBuilder vertString = new StringBuilder();
+                        // Vertices
                         for (uint j = meshSubset.FirstVertex; j < meshSubset.NumVertices + meshSubset.FirstVertex; j++)
                         {
                             // Rotate/translate the vertex
                             Vector3 vertex = nodeChunk.GetTransform(tmpVertices.Vertices[j]);
                             vertString.AppendFormat("{0} {1} {2} ",vertex.x, vertex.y, vertex.z);
                         }
+                        // Normals
+                        for (uint j = meshSubset.FirstVertex; j < meshSubset.NumVertices + meshSubset.FirstVertex; j++)
+                        {
+                            // Rotate/translate the vertex
+                            Vector3 vertex = nodeChunk.GetTransform(tmpVertices.Vertices[j]);
+                            vertString.AppendFormat("{0} {1} {2} ", vertex.x, vertex.y, vertex.z);
+                        }
+                        verts.ID = nodeChunk.Name + "_" + meshSubset.MatID + "_vertices";
+                        // get the 3 inputs for verts
+                        Grendgine_Collada_Input_Shared[] inputshared = new Grendgine_Collada_Input_Shared[3];
+                        Grendgine_Collada_Input_Semantic semantic = new Grendgine_Collada_Input_Semantic();
+                        semantic = Grendgine_Collada_Input_Semantic.POSITION;
+                        
+                        inputshared[0].Semantic = semantic; inputshared[0].source = posSource.ID;
+                        semantic = Grendgine_Collada_Input_Semantic.NORMAL;
+                        inputshared[1].Semantic = semantic; inputshared[1].source = normSource.ID;
+                        semantic = Grendgine_Collada_Input_Semantic.TEXCOORD;
+                        inputshared[2].Semantic = semantic; inputshared[2].source = uvSource.ID;
+                        verts.Input = inputshared;
                         floatArray.Value_As_String = vertString.ToString();
                         source[0].Float_Array = floatArray;
                         tmpGeo.Mesh.Source = source;
+                        tmpGeo.Mesh.Vertices = verts;
                         // make a vertices element.  Only one, so no list needed.
 
                         // tris are easy.  Just the index of faces
