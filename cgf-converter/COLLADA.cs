@@ -201,6 +201,7 @@ namespace CgfConverter
                 CryEngine.Model.ChunkDataStream tmpUVs = new CryEngine.Model.ChunkDataStream();
                 CryEngine.Model.ChunkDataStream tmpVertices = new CryEngine.Model.ChunkDataStream();
                 CryEngine.Model.ChunkDataStream tmpVertsUVs = new CryEngine.Model.ChunkDataStream();
+                CryEngine.Model.ChunkDataStream tmpIndices = new CryEngine.Model.ChunkDataStream();
 
                 if (this.CryData.ChunksByID[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Mesh)
                 {
@@ -225,88 +226,128 @@ namespace CgfConverter
                     {
                         tmpVertsUVs = (CryEngine.Model.ChunkDataStream)this.CryData.ChunksByID[tmpMeshChunk.VertsUVsData];
                     }
-                    foreach (var meshSubset in tmpMeshSubsets.MeshSubsets)
+                    if (tmpMeshChunk.IndicesData != 0)
                     {
-                        // tmpGeo is a Geometry object for each meshsubset.  Name will be "Nodechunk name_matID".  Hopefully there is only one matID used per submesh
-                        Grendgine_Collada_Geometry tmpGeo = new Grendgine_Collada_Geometry();
-                        tmpGeo.Name = nodeChunk.Name + "_" + meshSubset.MatID;
-                        tmpGeo.ID = nodeChunk.Name + "_" + meshSubset.MatID;
-                        Grendgine_Collada_Mesh tmpMesh = new Grendgine_Collada_Mesh();
-                        tmpGeo.Mesh = tmpMesh;
-                        Grendgine_Collada_Source[] source = new Grendgine_Collada_Source[3];
-
-                        // need a collada_source for position, normal, UV and color, what the source is (verts), and the tri index
-                        Grendgine_Collada_Source posSource = new Grendgine_Collada_Source();
-                        Grendgine_Collada_Source normSource = new Grendgine_Collada_Source();
-                        Grendgine_Collada_Source uvSource = new Grendgine_Collada_Source();
-                        source[0] = posSource;
-                        source[1] = normSource;
-                        source[2] = uvSource;
-                        Grendgine_Collada_Vertices verts = new Grendgine_Collada_Vertices();
-                        Grendgine_Collada_Triangles tris = new Grendgine_Collada_Triangles();
-
-                        posSource.ID = nodeChunk.Name + "_" + meshSubset.MatID + "_pos";  
-                        posSource.Name = nodeChunk.Name + "_" + meshSubset.MatID + "_pos";
-                        normSource.ID = nodeChunk.Name + "_" + meshSubset.MatID + "_norm";
-                        normSource.Name = nodeChunk.Name + "_" + meshSubset.MatID + "_norm";
-                        uvSource.Name = nodeChunk.Name + "_" + meshSubset.MatID + "_UV";
-                        uvSource.ID = nodeChunk.Name + "_" + meshSubset.MatID + "_UV";
-
-                        // Create a float_array object to store all the data
-                        Grendgine_Collada_Float_Array floatArrayVerts = new Grendgine_Collada_Float_Array();
-                        Grendgine_Collada_Float_Array floatArrayNormals = new Grendgine_Collada_Float_Array();
-                        Grendgine_Collada_Float_Array floatArrayUVs = new Grendgine_Collada_Float_Array();
-
-                        floatArrayVerts.ID = posSource.Name + "_array";
-                        floatArrayVerts.Count = (int)tmpVertices.NumElements;
-                        floatArrayNormals.ID = normSource.Name + "_array";
-                        floatArrayNormals.Count = (int)tmpNormals.NumElements;
-                        floatArrayUVs.ID = uvSource.Name + "_array";
-                        floatArrayUVs.Count = (int)tmpUVs.NumElements;
-
-                        // Build the string of vertices with a stringbuilder
-                        StringBuilder vertString = new StringBuilder();
-                        StringBuilder normString = new StringBuilder();
-                        StringBuilder uvString = new StringBuilder();
-                        // Vertices
-                        for (uint j = meshSubset.FirstVertex; j < meshSubset.NumVertices + meshSubset.FirstVertex; j++)
-                        {
-                            // Rotate/translate the vertex
-                            Vector3 vertex = nodeChunk.GetTransform(tmpVertices.Vertices[j]);
-                            vertString.AppendFormat("{0} {1} {2} ",vertex.x, vertex.y, vertex.z);
-                        }
-                        // Normals
-                        for (uint j = meshSubset.FirstVertex; j < meshSubset.NumVertices + meshSubset.FirstVertex; j++)
-                        {
-                            // Rotate/translate the vertex
-                            Vector3 normal = tmpNormals.Normals[j];
-                            normString.AppendFormat("{0} {1} {2} ", normal.x, normal.y, normal.z);
-                        }
-                        verts.ID = nodeChunk.Name + "_" + meshSubset.MatID + "_vertices";
-                        // get the 3 inputs for verts
-                        Grendgine_Collada_Input_Shared[] inputshared = new Grendgine_Collada_Input_Shared[3];
-                        Grendgine_Collada_Input_Shared posInput = new Grendgine_Collada_Input_Shared();
-                        Grendgine_Collada_Input_Shared normInput = new Grendgine_Collada_Input_Shared();
-                        Grendgine_Collada_Input_Shared uvInput = new Grendgine_Collada_Input_Shared();
-
-                        posInput.Semantic = Grendgine_Collada_Input_Semantic.POSITION;  posInput.source = posSource.ID;
-                        normInput.Semantic = Grendgine_Collada_Input_Semantic.NORMAL; normInput.source = normSource.ID;
-                        uvInput.Semantic = Grendgine_Collada_Input_Semantic.UV; uvInput.source = uvSource.ID;  // might need to replace UV with TEXCOORD
-
-                        verts.Input = inputshared;
-                        floatArrayVerts.Value_As_String = vertString.ToString();
-
-                        inputshared[0] = posInput;
-                        inputshared[1] = normInput;
-                        inputshared[2] = uvInput;
-                        source[0].Float_Array = floatArrayVerts;
-                        tmpGeo.Mesh.Source = source;
-                        tmpGeo.Mesh.Vertices = verts;
-                        // make a vertices element.  Only one, so no list needed.
-
-                        // tris are easy.  Just the index of faces
-                        geometryList.Add(tmpGeo);
+                        tmpIndices = (CryEngine.Model.ChunkDataStream)this.CryData.ChunksByID[tmpMeshChunk.IndicesData];
                     }
+
+                    // tmpGeo is a Geometry object for each meshsubset.  Name will be "Nodechunk name_matID".  Hopefully there is only one matID used per submesh
+                    Grendgine_Collada_Geometry tmpGeo = new Grendgine_Collada_Geometry();
+                    tmpGeo.Name = nodeChunk.Name;
+                    tmpGeo.ID = nodeChunk.Name;
+                    Grendgine_Collada_Mesh tmpMesh = new Grendgine_Collada_Mesh();
+                    tmpGeo.Mesh = tmpMesh;
+                    Grendgine_Collada_Source[] source = new Grendgine_Collada_Source[3];
+                    // need a collada_source for position, normal, UV and color, what the source is (verts), and the tri index
+                    Grendgine_Collada_Source posSource = new Grendgine_Collada_Source();
+                    Grendgine_Collada_Source normSource = new Grendgine_Collada_Source();
+                    Grendgine_Collada_Source uvSource = new Grendgine_Collada_Source();
+                    source[0] = posSource;
+                    source[1] = normSource;
+                    source[2] = uvSource;
+                    Grendgine_Collada_Vertices verts = new Grendgine_Collada_Vertices();
+                    Grendgine_Collada_Triangles[] tri = new Grendgine_Collada_Triangles[tmpMeshSubsets.NumMeshSubset];
+
+                    posSource.ID = nodeChunk.Name + "_pos";  
+                    posSource.Name = nodeChunk.Name + "_pos";
+                    normSource.ID = nodeChunk.Name + "_norm";
+                    normSource.Name = nodeChunk.Name + "_norm";
+                    uvSource.Name = nodeChunk.Name + "_UV";
+                    uvSource.ID = nodeChunk.Name + "_UV";
+                    verts.ID = nodeChunk.Name + "_verts";
+                    //tris.Material = meshSubset.MatID.ToString();
+                    // Create a float_array object to store all the data
+                    Grendgine_Collada_Float_Array floatArrayVerts = new Grendgine_Collada_Float_Array();
+                    Grendgine_Collada_Float_Array floatArrayNormals = new Grendgine_Collada_Float_Array();
+                    Grendgine_Collada_Float_Array floatArrayUVs = new Grendgine_Collada_Float_Array();
+
+                    floatArrayVerts.ID = posSource.Name + "_array";
+                    floatArrayVerts.Count = (int)tmpVertices.NumElements * 3;
+                    floatArrayNormals.ID = normSource.Name + "_array";
+                    floatArrayNormals.Count = (int)tmpNormals.NumElements * 3;
+                    floatArrayUVs.ID = uvSource.Name + "_array";
+                    floatArrayUVs.Count = (int)tmpUVs.NumElements * 3 /2 ;
+
+                    // Build the string of vertices with a stringbuilder
+                    StringBuilder vertString = new StringBuilder();
+                    StringBuilder normString = new StringBuilder();
+                    StringBuilder uvString = new StringBuilder();
+                    // Vertices
+                    for (uint j = 0; j < tmpMeshChunk.NumVertices; j++)    
+                    //uint j = meshSubset.FirstVertex; j < meshSubset.NumVertices + meshSubset.FirstVertex; j++
+                    {
+                        // Rotate/translate the vertex
+                        Vector3 vertex = nodeChunk.GetTransform(tmpVertices.Vertices[j]);
+                        vertString.AppendFormat("{0:F7} {1:F7} {2:F7} ", vertex.x, vertex.y, vertex.z);
+                        Vector3 normal = tmpNormals.Normals[j];
+                        normString.AppendFormat("{0:F7} {1:F7} {2:F7} ", normal.x, normal.y, normal.z);
+                    }
+                    // Create UV string
+                    for (uint j=0; j < tmpMeshChunk.NumVertices / 3 *2; j++)
+                    {
+                        uvString.AppendFormat("{0:F7} {1:F7}", tmpUVs.UVs[j].U, tmpUVs.UVs[j].V);   //1 - tmpUVs.UVs[j].V
+                    }
+
+                    // Create the Triangles string
+                    // Need to iterate through each of the submeshes to get the faces for each material.
+                    Grendgine_Collada_Triangles[] tris = new Grendgine_Collada_Triangles[tmpMeshSubsets.NumMeshSubset]; // one tri for each matID
+                    for (uint j=0; j < tmpMeshSubsets.NumMeshSubset; j++) // Need to make a new Triangle entry for each submesh.
+                    {
+                        /// <summary> Write the triangles for each geometry.mesh object.  There can be multiple triangles for each mesh.</summary>
+                        /// 
+                        tris[j] = new Grendgine_Collada_Triangles();
+                        tris[j].Material = tmpMeshSubsets.MeshSubsets[j].MatID.ToString();
+                        tris[j].Count = (int)tmpMeshSubsets.MeshSubsets[j].NumIndices;
+                        Grendgine_Collada_Input_Shared []triInput = new Grendgine_Collada_Input_Shared[1];
+                        triInput[0] = new Grendgine_Collada_Input_Shared();
+                        triInput[0].source = "#" + posSource.ID;
+                        triInput[0].Semantic = Grendgine_Collada_Input_Semantic.VERTEX;
+                        tris[j].Input = triInput;
+                        StringBuilder p = new StringBuilder();
+                        for (int k=0; k< (int)tmpMeshSubsets.MeshSubsets[j].NumIndices; k++)
+                        {
+                            p.AppendFormat("{0} ", tmpIndices.Indices[k]);
+                           
+                        }
+                        //Console.WriteLine("Indices {0}", p);
+                        tris[j].Input = triInput;
+                        tris[j].P = new Grendgine_Collada_Int_Array_String();
+                        tris[j].P.Value_As_String = p.ToString();
+                        triList.Add(tris[j]);
+                    }
+                    tris = triList.ToArray();
+
+                    // get the 3 inputs for verts
+                    Grendgine_Collada_Input_Unshared[] inputshared = new Grendgine_Collada_Input_Unshared[3];
+                    Grendgine_Collada_Input_Unshared posInput = new Grendgine_Collada_Input_Unshared();
+                    Grendgine_Collada_Input_Unshared normInput = new Grendgine_Collada_Input_Unshared();
+                    Grendgine_Collada_Input_Unshared uvInput = new Grendgine_Collada_Input_Unshared();
+
+                    posInput.Semantic = Grendgine_Collada_Input_Semantic.POSITION;
+                    normInput.Semantic = Grendgine_Collada_Input_Semantic.NORMAL;
+                    uvInput.Semantic = Grendgine_Collada_Input_Semantic.TEXCOORD;   // might need to replace UV with UV
+                    posInput.source = "#"+posSource.ID;
+                    normInput.source = "#" + normSource.ID;
+                    uvInput.source = "#" + uvSource.ID; 
+
+                    verts.Input = inputshared;
+                    floatArrayVerts.Value_As_String = vertString.ToString();
+                    floatArrayNormals.Value_As_String = normString.ToString();
+                    floatArrayUVs.Value_As_String = uvString.ToString();
+
+                    inputshared[0] = posInput;
+                    inputshared[1] = normInput;
+                    inputshared[2] = uvInput;
+                    source[0].Float_Array = floatArrayVerts;
+                    source[1].Float_Array = floatArrayNormals;
+                    source[2].Float_Array = floatArrayUVs;
+                    tmpGeo.Mesh.Source = source;
+                    tmpGeo.Mesh.Vertices = verts;
+                    tmpGeo.Mesh.Triangles = tris;
+
+                    // tris are easy.  Just the index of faces
+                    geometryList.Add(tmpGeo);
+                    
 
                     }
                 else if (this.CryData.ChunksByID[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Helper)
