@@ -67,7 +67,7 @@ namespace CgfConverter
                     {
                         Wavefront objFile = new Wavefront(argsHandler, cryData);
 
-                        objFile.WriteObjFile(argsHandler.OutputDir);
+                        objFile.WriteObjFile(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
                     }
 
                     if (argsHandler.Output_Collada == true)
