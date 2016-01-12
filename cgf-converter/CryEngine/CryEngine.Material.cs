@@ -9,6 +9,7 @@ using System.IO;
 using System.Xml.Serialization;
 using System.ComponentModel;
 using System.Runtime.Serialization;
+using System.Diagnostics;
 
 namespace CgfConverter
 {
@@ -81,6 +82,8 @@ namespace CgfConverter
                 {
                     [XmlEnum("0")]
                     Default = 0,
+                    [XmlEnum("3")]
+                    Environment = 3,
                     [XmlEnum("5")]
                     Interface = 5,
                     [XmlEnum("7")]
@@ -323,12 +326,20 @@ namespace CgfConverter
                 if (!materialfile.Exists)
                     return null;
 
-                XmlSerializer xs = new XmlSerializer(typeof(CryEngine.Material));
+                try
+                {
+                    XmlSerializer xs = new XmlSerializer(typeof(CryEngine.Material));
 
-                using (Stream fileStream = materialfile.OpenRead())
-                    return xs.Deserialize(fileStream) as CryEngine.Material;
+                    using (Stream fileStream = materialfile.OpenRead())
+                        return xs.Deserialize(fileStream) as CryEngine.Material;
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine("{0} failed deserialize - {1}", materialfile, ex.Message);
+                }
+
+                return null;
             }
-
             #endregion
         }
     }
