@@ -276,15 +276,19 @@ namespace CgfConverter
                         // get the 3 inputs for verts
                         Grendgine_Collada_Input_Shared[] inputshared = new Grendgine_Collada_Input_Shared[3];
                         Grendgine_Collada_Input_Semantic semantic = new Grendgine_Collada_Input_Semantic();
-                        semantic = Grendgine_Collada_Input_Semantic.POSITION;
-                        
-                        inputshared[0].Semantic = semantic; inputshared[0].source = posSource.ID;
-                        semantic = Grendgine_Collada_Input_Semantic.NORMAL;
-                        inputshared[1].Semantic = semantic; inputshared[1].source = normSource.ID;
-                        semantic = Grendgine_Collada_Input_Semantic.TEXCOORD;
-                        inputshared[2].Semantic = semantic; inputshared[2].source = uvSource.ID;
+
+                        Grendgine_Collada_Input_Shared posInput = new Grendgine_Collada_Input_Shared();
+                        Grendgine_Collada_Input_Shared normInput = new Grendgine_Collada_Input_Shared();
+                        Grendgine_Collada_Input_Shared uvInput = new Grendgine_Collada_Input_Shared();
+
+                        posInput.Semantic = Grendgine_Collada_Input_Semantic.POSITION;  posInput.source = posSource.ID;
+                        normInput.Semantic = Grendgine_Collada_Input_Semantic.NORMAL; normInput.source = normSource.ID;
+                        uvInput.Semantic = Grendgine_Collada_Input_Semantic.UV; uvInput.source = uvSource.ID;  // might need to replace UV with TEXCOORD
                         verts.Input = inputshared;
                         floatArray.Value_As_String = vertString.ToString();
+                        inputshared[0] = posInput;
+                        inputshared[1] = normInput;
+                        inputshared[2] = uvInput;
                         source[0].Float_Array = floatArray;
                         tmpGeo.Mesh.Source = source;
                         tmpGeo.Mesh.Vertices = verts;
