@@ -237,10 +237,10 @@ namespace CgfConverter
 
                         // need a collada_source for position, normal, UV and color, what the source is (verts), and the tri index
                         Grendgine_Collada_Source posSource = new Grendgine_Collada_Source();
-                        source[0] = posSource;
                         Grendgine_Collada_Source normSource = new Grendgine_Collada_Source();
-                        source[1] = normSource;
                         Grendgine_Collada_Source uvSource = new Grendgine_Collada_Source();
+                        source[0] = posSource;
+                        source[1] = normSource;
                         source[2] = uvSource;
                         Grendgine_Collada_Vertices verts = new Grendgine_Collada_Vertices();
                         Grendgine_Collada_Triangles tris = new Grendgine_Collada_Triangles();
@@ -292,8 +292,10 @@ namespace CgfConverter
                         posInput.Semantic = Grendgine_Collada_Input_Semantic.POSITION;  posInput.source = posSource.ID;
                         normInput.Semantic = Grendgine_Collada_Input_Semantic.NORMAL; normInput.source = normSource.ID;
                         uvInput.Semantic = Grendgine_Collada_Input_Semantic.UV; uvInput.source = uvSource.ID;  // might need to replace UV with TEXCOORD
+
                         verts.Input = inputshared;
                         floatArrayVerts.Value_As_String = vertString.ToString();
+
                         inputshared[0] = posInput;
                         inputshared[1] = normInput;
                         inputshared[2] = uvInput;
