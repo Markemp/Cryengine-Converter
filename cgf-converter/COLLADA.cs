@@ -237,10 +237,10 @@ namespace CgfConverter
 
                         // need a collada_source for position, normal, UV and color, what the source is (verts), and the tri index
                         Grendgine_Collada_Source posSource = new Grendgine_Collada_Source();
-                        source[0] = posSource;
                         Grendgine_Collada_Source normSource = new Grendgine_Collada_Source();
-                        source[1] = normSource;
                         Grendgine_Collada_Source uvSource = new Grendgine_Collada_Source();
+                        source[0] = posSource;
+                        source[1] = normSource;
                         source[2] = uvSource;
                         Grendgine_Collada_Vertices verts = new Grendgine_Collada_Vertices();
                         Grendgine_Collada_Triangles tris = new Grendgine_Collada_Triangles();
@@ -253,11 +253,21 @@ namespace CgfConverter
                         uvSource.ID = nodeChunk.Name + "_" + meshSubset.MatID + "_UV";
 
                         // Create a float_array object to store all the data
-                        Grendgine_Collada_Float_Array floatArray = new Grendgine_Collada_Float_Array();
-                        floatArray.ID = posSource.Name + "_array";
-                        floatArray.Count = (int)tmpVertices.NumElements;
+                        Grendgine_Collada_Float_Array floatArrayVerts = new Grendgine_Collada_Float_Array();
+                        Grendgine_Collada_Float_Array floatArrayNormals = new Grendgine_Collada_Float_Array();
+                        Grendgine_Collada_Float_Array floatArrayUVs = new Grendgine_Collada_Float_Array();
+
+                        floatArrayVerts.ID = posSource.Name + "_array";
+                        floatArrayVerts.Count = (int)tmpVertices.NumElements;
+                        floatArrayNormals.ID = normSource.Name + "_array";
+                        floatArrayNormals.Count = (int)tmpNormals.NumElements;
+                        floatArrayUVs.ID = uvSource.Name + "_array";
+                        floatArrayUVs.Count = (int)tmpUVs.NumElements;
+
                         // Build the string of vertices with a stringbuilder
                         StringBuilder vertString = new StringBuilder();
+                        StringBuilder normString = new StringBuilder();
+                        StringBuilder uvString = new StringBuilder();
                         // Vertices
                         for (uint j = meshSubset.FirstVertex; j < meshSubset.NumVertices + meshSubset.FirstVertex; j++)
                         {
@@ -269,14 +279,12 @@ namespace CgfConverter
                         for (uint j = meshSubset.FirstVertex; j < meshSubset.NumVertices + meshSubset.FirstVertex; j++)
                         {
                             // Rotate/translate the vertex
-                            Vector3 vertex = nodeChunk.GetTransform(tmpVertices.Vertices[j]);
-                            vertString.AppendFormat("{0} {1} {2} ", vertex.x, vertex.y, vertex.z);
+                            Vector3 normal = tmpNormals.Normals[j];
+                            normString.AppendFormat("{0} {1} {2} ", normal.x, normal.y, normal.z);
                         }
                         verts.ID = nodeChunk.Name + "_" + meshSubset.MatID + "_vertices";
                         // get the 3 inputs for verts
                         Grendgine_Collada_Input_Shared[] inputshared = new Grendgine_Collada_Input_Shared[3];
-                        Grendgine_Collada_Input_Semantic semantic = new Grendgine_Collada_Input_Semantic();
-
                         Grendgine_Collada_Input_Shared posInput = new Grendgine_Collada_Input_Shared();
                         Grendgine_Collada_Input_Shared normInput = new Grendgine_Collada_Input_Shared();
                         Grendgine_Collada_Input_Shared uvInput = new Grendgine_Collada_Input_Shared();
@@ -284,12 +292,14 @@ namespace CgfConverter
                         posInput.Semantic = Grendgine_Collada_Input_Semantic.POSITION;  posInput.source = posSource.ID;
                         normInput.Semantic = Grendgine_Collada_Input_Semantic.NORMAL; normInput.source = normSource.ID;
                         uvInput.Semantic = Grendgine_Collada_Input_Semantic.UV; uvInput.source = uvSource.ID;  // might need to replace UV with TEXCOORD
+
                         verts.Input = inputshared;
-                        floatArray.Value_As_String = vertString.ToString();
+                        floatArrayVerts.Value_As_String = vertString.ToString();
+
                         inputshared[0] = posInput;
                         inputshared[1] = normInput;
                         inputshared[2] = uvInput;
-                        source[0].Float_Array = floatArray;
+                        source[0].Float_Array = floatArrayVerts;
                         tmpGeo.Mesh.Source = source;
                         tmpGeo.Mesh.Vertices = verts;
                         // make a vertices element.  Only one, so no list needed.
