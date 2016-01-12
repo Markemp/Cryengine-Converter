@@ -9,6 +9,7 @@ using System.IO;
 using System.Xml.Serialization;
 using System.ComponentModel;
 using System.Runtime.Serialization;
+using System.Diagnostics;
 
 namespace CgfConverter
 {
@@ -81,8 +82,12 @@ namespace CgfConverter
                 {
                     [XmlEnum("0")]
                     Default = 0,
+                    [XmlEnum("3")]
+                    Environment = 3,
+                    [XmlEnum("5")]
+                    Interface = 5,
                     [XmlEnum("7")]
-                    Special = 7,
+                    CubeMap = 7,
                 }
 
                 public enum MapTypeEnum
@@ -166,15 +171,15 @@ namespace CgfConverter
 
                 [XmlAttribute(AttributeName = "TileU")]
                 [DefaultValue(0)]
-                public Int32 TileU { get; set; }
+                public Single TileU { get; set; }
 
                 [XmlAttribute(AttributeName = "TileV")]
                 [DefaultValue(0)]
-                public Int32 TileV { get; set; }
+                public Single TileV { get; set; }
 
                 [XmlAttribute(AttributeName = "OffsetU")]
                 [DefaultValue(0)]
-                public Int32 OffsetU { get; set; }
+                public Single OffsetU { get; set; }
             }
 
             /// <summary>
@@ -272,7 +277,7 @@ namespace CgfConverter
             /// Value between 0 and 1 that controls opacity
             /// </summary>
             [XmlAttribute(AttributeName = "Opacity")]
-            [DefaultValue(0)]
+            [DefaultValue(1)]
             public Single Opacity { get; set; }
 
             [XmlAttribute(AttributeName = "CloakAmount")]
@@ -294,8 +299,6 @@ namespace CgfConverter
             [XmlAttribute(AttributeName = "AlphaTest")]
             [DefaultValue(0)]
             public Single AlphaTest { get; set; }
-
-
 
             #endregion
 
@@ -323,12 +326,20 @@ namespace CgfConverter
                 if (!materialfile.Exists)
                     return null;
 
-                XmlSerializer xs = new XmlSerializer(typeof(CryEngine.Material));
+                try
+                {
+                    XmlSerializer xs = new XmlSerializer(typeof(CryEngine.Material));
 
-                using (Stream fileStream = materialfile.OpenRead())
-                    return xs.Deserialize(fileStream) as CryEngine.Material;
+                    using (Stream fileStream = materialfile.OpenRead())
+                        return xs.Deserialize(fileStream) as CryEngine.Material;
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine("{0} failed deserialize - {1}", materialfile, ex.Message);
+                }
+
+                return null;
             }
-
             #endregion
         }
     }

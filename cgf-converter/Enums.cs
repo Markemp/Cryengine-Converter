@@ -1,12 +1,17 @@
 ﻿namespace CgfConverter
 {
+    public enum FileVersionEnum : uint
+    {
+        CryTek_3_6,
+        CryTek_3_5,
+    }
     // Enums
-    public enum FileType : uint
+    public enum FileTypeEnum : uint
     {
         GEOM = 0xFFFF0000,
         ANIM = 0xFFFF0001
     }  // complete
-    public enum ChunkType : uint    // complete
+    public enum ChunkTypeEnum : uint    // complete
     {
         Any = 0x0,
         Mesh = 0xCCCC0000,
@@ -143,7 +148,7 @@
     {
         ChkVersion36
     }
-    public enum HelperType : uint
+    public enum HelperTypeEnum : uint
     {
         POINT,
         DUMMY,
@@ -200,7 +205,7 @@
         CUBIC,
         AUTOCUBIC
     }  //complete
-    public enum DataStreamType : uint
+    public enum DataStreamTypeEnum : uint
     {
         VERTICES,
         NORMALS,

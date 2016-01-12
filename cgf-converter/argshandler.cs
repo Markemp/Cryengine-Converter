@@ -8,28 +8,25 @@ namespace CgfConverter
     public class ArgsHandler
     {
         /// <summary>
-        /// File extensions processed by the handler
+        /// Files to process
         /// </summary>
-        private static HashSet<String> _validExtensions = new HashSet<String>
-        {
-            ".cgf",
-            ".cga",
-            ".skin",
-            ".chr",
-        };
-
-        /// <summary>
-        /// List of files to process
-        /// </summary>
-        public List<FileInfo> InputFiles { get; private set; }
+        public List<String> InputFiles { get; private set; }
         /// <summary>
         /// Location of the Object Files
         /// </summary>
-        public DirectoryInfo ObjectDir { get; private set; }
+        public String DataDir { get; private set; }
         /// <summary>
         /// File to render to
         /// </summary>
-        public FileInfo OutputFile { get; private set; }
+        // public String OutputFile { get; private set; }
+        /// <summary>
+        /// Directory to render to
+        /// </summary>
+        public String OutputDir { get; private set; }
+        /// <summary>
+        /// Name to group all meshes under
+        /// </summary>
+        public Boolean GroupMeshes { get; private set; }
         /// <summary>
         /// Render Wavefront format files
         /// </summary>
@@ -43,10 +40,6 @@ namespace CgfConverter
         /// </summary>
         public Boolean Output_Collada { get; private set; }
         /// <summary>
-        /// Merge Input file with m-Files
-        /// </summary>
-        public Boolean MergeFiles { get; private set; }
-        /// <summary>
         /// Reverse UVs
         /// </summary>
         public Boolean FlipUVs { get; private set; }
@@ -59,6 +52,31 @@ namespace CgfConverter
         /// </summary>
         public Boolean Throw { get; private set; }
 
+        public ArgsHandler()
+        {
+            this.InputFiles = new List<String> { };
+        }
+
+        /// <summary>
+        /// Take a string, and expand it into a list of files if it is a file filter
+        /// 
+        /// TODO: Make it understand /**/ format, instead of ONLY supporting FileName wildcards
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        private String[] GetFiles(String filter)
+        {
+            if (File.Exists(filter))
+                return new String[] { new FileInfo(filter).FullName };
+
+            String directory = Path.GetDirectoryName(filter);
+            if (String.IsNullOrWhiteSpace(directory))
+                directory = ".";
+
+            String fileName = Path.GetFileName(filter);
+
+            return Directory.GetFiles(directory, fileName, fileName.Contains('?') || fileName.Contains('*') ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+        }
 
         /// <summary>
         /// Parse command line arguments
@@ -67,189 +85,169 @@ namespace CgfConverter
         /// <returns>0 on success, 1 if anything went wrong</returns>
         public Int32 ProcessArgs(String[] inputArgs)
         {
-            this.InputFiles = new List<FileInfo> { };
+            #region Attempt to treat first argument as Input File
 
-            Boolean inputFileMode = true;
+            if (inputArgs.Length > 0)
+            {
+                this.InputFiles.AddRange(this.GetFiles(inputArgs[0]));
+            }
+
+            #endregion
 
             for (int i = 0; i < inputArgs.Length; i++)
             {
-                #region Parse Input Files
+                #region Parse Arguments
 
-                if (inputFileMode)
+                switch (inputArgs[i].ToLowerInvariant())
                 {
-                    FileInfo newFile = new FileInfo(inputArgs[i]);
+                    #region case "-objectdir" / "-datadir"...
 
-                    if (newFile.Exists)
-                    {
-                        // Validate file extension - handles .cgam / skinm
-                        if (!ArgsHandler._validExtensions.Contains(newFile.Extension))
+                    // Next item in list will be the Object directory
+                    case "-datadir":
+                    case "-objectdir":
+                        if (++i > inputArgs.Length)
                         {
-                            Console.WriteLine("Warning: Unsupported file extension - please use a cga or cgf file");
-                            return 1;
-                        }
-
-                        // Add to list of files to process
-                        this.InputFiles.Add(newFile);
-
-                        #region m-File Auto-Detection
-
-                        FileInfo mFile = new FileInfo(Path.ChangeExtension(inputArgs[i], String.Format("{0}m", Path.GetExtension(inputArgs[i]))));
-
-                        if (mFile.Exists)
-                        {
-                            Console.WriteLine("Found mFile file {0}", mFile.Name);
-
-                            // Add to list of files to process
-                            this.InputFiles.Add(mFile);
-                        }
-
-                        #endregion
-
-                    }
-                    else
-                    {
-                        inputFileMode = false;
-                    }
-                }
-
-                #endregion
-
-                #region Parse Other Arguments
-
-                if (!inputFileMode)
-                {
-                    switch (inputArgs[i].ToLowerInvariant())
-                    {
-                        #region case "-objectdir"...
-
-                        // Next item in list will be the Object directory
-                        case "-objectdir":
-                            if (++i > inputArgs.Length)
-                            {
-                                this.PrintUsage();
-                                return 1;
-                            }
-
-                            this.ObjectDir = new DirectoryInfo(inputArgs[i]);
-
-                            if (!this.ObjectDir.Exists)
-                                throw new DirectoryNotFoundException("Object Directory not found");
-
-                            Console.WriteLine("Object directory set to {0}", inputArgs[i]);
-
-                            break;
-
-                        #endregion
-                        #region case "-outfile" / "-outputfile"...
-
-                        // Next item in list will be the output filename
-                        case "-outfile":
-                        case "-outputfile":
-                            if (++i > inputArgs.Length)
-                            {
-                                this.PrintUsage();
-                                return 1;
-                            }
-
-                            this.OutputFile = new FileInfo(inputArgs[i]);
-
-                            Console.WriteLine("Output file set to {0}", inputArgs[i]);
-
-                            break;
-
-                        #endregion
-                        #region case "-usage"...
-
-                        case "-usage":
                             this.PrintUsage();
                             return 1;
+                        }
 
-                        #endregion
-                        #region case "-flipuv"...
+                        this.DataDir = new DirectoryInfo(inputArgs[i]).FullName;
 
-                        case "-flipuv":
-                            Console.WriteLine("Flipping UVs.");
-                            this.FlipUVs = true;
+                        Console.WriteLine("Data directory set to {0}", inputArgs[i]);
 
-                            break;
+                        break;
 
-                        #endregion
-                        #region case "-blend" / "-blender"...
+                    #endregion
+                    #region case "-infile" / "-inputfile"...
 
-                        case "-blend":
-                        case "-blender":
-                            Console.WriteLine("Output format set to Blender (.blend)");
-                            this.Output_Blender = true;
+                    // Next item in list will be the output filename
+                    case "-infile":
+                    case "-inputfile":
+                        if (++i > inputArgs.Length)
+                        {
+                            this.PrintUsage();
+                            return 1;
+                        }
 
-                            break;
+                        this.InputFiles.AddRange(this.GetFiles(inputArgs[0]));
 
-                        #endregion
-                        #region case "-obj" / "-object" / "wavefront"...
+                        Console.WriteLine("Input file set to {0}", inputArgs[i]);
 
-                        case "-obj":
-                        case "-object":
-                        case "-wavefront":
-                            Console.WriteLine("Output format set to Wavefront (.obj)");
-                            this.Output_Wavefront = true;
+                        break;
 
-                            break;
+                    #endregion
+                    #region case "-out" / "-outdir" / "-outputdir"...
 
-                        #endregion
-                        #region case "-dae" / "-collada"...
-                        case "-dae":
-                        case "-collada":
-                            Console.WriteLine("Output format set to COLLADA (.dae)");
-                            this.Output_Collada = true;
+                    // Next item in list will be the output directory
+                    case "-out":
+                    case "-outdir":
+                    case "-outputdir":
+                        if (++i > inputArgs.Length)
+                        {
+                            this.PrintUsage();
+                            return 1;
+                        }
 
-                            break;
+                        this.OutputDir = new DirectoryInfo(inputArgs[i]).FullName;
 
-                        #endregion
-                        #region case "-tif" / "-tiff"...
+                        Console.WriteLine("Output directory set to {0}", inputArgs[i]);
 
-                        case "-tif":
-                        case "-tiff":
+                        break;
 
-                            this.TiffTextures = true;
+                    #endregion
+                    #region case "-usage"...
 
-                            break;
+                    case "-usage":
+                        this.PrintUsage();
+                        return 1;
 
-                        #endregion
-                        #region case "-merge" / "-mergefiles"...
+                    #endregion
+                    #region case "-flipuv"...
 
-                        case "-merge":
-                        case "-mergefiles":
+                    case "-flipuv":
+                        Console.WriteLine("Flipping UVs.");
+                        this.FlipUVs = true;
 
-                            this.MergeFiles = true;
+                        break;
 
-                            break;
+                    #endregion
+                    #region case "-blend" / "-blender"...
 
-                        #endregion
-                        #region case "-noconflict"...
+                    case "-blend":
+                    case "-blender":
+                        Console.WriteLine("Output format set to Blender (.blend)");
+                        this.Output_Blender = true;
 
-                        case "-noconflict":
+                        break;
 
-                            // Output file is based on first file name
-                            if (i == 0) this.OutputFile = new FileInfo(Path.GetFileNameWithoutExtension(this.InputFiles.First().FullName) + "_out.obj");
+                    #endregion
+                    #region case "-obj" / "-object" / "wavefront"...
 
-                            break;
+                    case "-obj":
+                    case "-object":
+                    case "-wavefront":
+                        Console.WriteLine("Output format set to Wavefront (.obj)");
+                        this.Output_Wavefront = true;
 
-                        #endregion
-                        #region case "-throw"...
+                        break;
 
-                        case "-throw":
-                            Console.WriteLine("Exceptions thrown to debugger");
-                            this.Throw = true;
+                    #endregion
+                    #region case "-dae" / "-collada"...
+                    case "-dae":
+                    case "-collada":
+                        Console.WriteLine("Output format set to COLLADA (.dae)");
+                        this.Output_Collada = true;
 
-                            break;
+                        break;
 
-                        #endregion
-                    }
+                    #endregion
+                    #region case "-tif" / "-tiff"...
+
+                    case "-tif":
+                    case "-tiff":
+
+                        this.TiffTextures = true;
+
+                        break;
+
+                    #endregion
+                    #region case "-noconflict"...
+
+                    case "-noconflict":
+
+                        // TODO: Add support
+                        // Output file is based on first file name
+                        // this.OutputFile = new FileInfo(Path.GetFileNameWithoutExtension(this.InputFile) + "_out.obj").FullName;
+
+                        break;
+
+                    #endregion
+                    #region case "-group"...
+
+                    case "-group":
+
+                        this.GroupMeshes = true;
+
+                        Console.WriteLine("Grouping set to {0}", this.GroupMeshes);
+
+                        break;
+
+                    #endregion
+                    #region case "-throw"...
+
+                    case "-throw":
+                        Console.WriteLine("Exceptions thrown to debugger");
+                        this.Throw = true;
+
+                        break;
+
+                    #endregion
                 }
 
                 #endregion
             }
 
-            // Ensure we have files to process
+            // Ensure we have a file to process
             if (this.InputFiles.Count == 0)
             {
                 this.PrintUsage();
@@ -282,7 +280,7 @@ namespace CgfConverter
             Console.WriteLine("-blend:           Export Blender format files (Not Implemented)");
             Console.WriteLine("-dae:             Export Collada format files (Not Implemented)");
             Console.WriteLine("-flipUVs:         Flip the UVs");
-            Console.WriteLine("-merge:           Merge input file with m-Files");
+            Console.WriteLine("-group:           Group meshes into single model");
             Console.WriteLine();
             Console.WriteLine("-throw:           Throw Exceptions to installed debugger");
             Console.WriteLine();
@@ -295,18 +293,14 @@ namespace CgfConverter
         {
             Console.WriteLine();
             Console.WriteLine("*** Submitted args ***");
-            Console.WriteLine("    Input files:            {0}", this.InputFiles.First().Name);
-            for (Int32 i = 1, j = this.InputFiles.Count; i < j; i++)
+            // Console.WriteLine("    Input files:            {0}", this.InputFile);
+            if (!String.IsNullOrWhiteSpace(this.DataDir))
             {
-                Console.WriteLine("                            {0}", this.InputFiles[i].Name);
+                Console.WriteLine("    Object dir:             {0}", this.DataDir);
             }
-            if (this.ObjectDir != null)
+            if (!String.IsNullOrWhiteSpace(this.OutputDir))
             {
-                Console.WriteLine("    Object dir:             {0}", this.ObjectDir.FullName);
-            }
-            if (this.OutputFile != null)
-            {
-                Console.WriteLine("    Output file:            {0}", this.OutputFile.FullName);
+                Console.WriteLine("    Output file:            {0}", this.OutputDir);
             }
             Console.WriteLine("    Flip UVs:               {0}", this.FlipUVs);
             Console.WriteLine("    Output to .obj:         {0}", this.Output_Wavefront);

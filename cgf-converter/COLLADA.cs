@@ -41,7 +41,7 @@ namespace CgfConverter
             this.CryData = cryEngine;
 
             // File name will be "object name.dae"
-            daeOutputFile = new FileInfo(CryData.Asset.RootNode.Name + ".dae");
+            daeOutputFile = new FileInfo(CryData.RootNode.Name + ".dae");
             GetSchema();                                                    // Loads the schema.  Needs error checking in case it's offline.
             WriteRootNode();
             WriteAsset();
@@ -80,10 +80,10 @@ namespace CgfConverter
             contributors[0].Author = "Heffay";
             contributors[0].Author_Website = "https://github.com/Markemp/Cryengine-Converter";
             contributors[0].Author_Email = "markemp@gmail.com";
-            contributors[0].Source_Data = this.CryData.Asset.RootNode.Name;                    // The cgf/cga/skin/whatever file we read
+            contributors[0].Source_Data = this.CryData.RootNode.Name;                    // The cgf/cga/skin/whatever file we read
             // Get the actual file creators from the Source Chunk
             contributors[1] = new Grendgine_Collada_Asset_Contributor();
-            foreach (CryEngine.Model.ChunkSourceInfo tmpSource in this.CryData.Asset.CgfChunks.Where(a => a.chunkType == ChunkType.SourceInfo))
+            foreach (CryEngine.Model.ChunkSourceInfo tmpSource in this.CryData.Chunks.Where(a => a.ChunkType == ChunkTypeEnum.SourceInfo))
             {
                 contributors[1].Author = tmpSource.Author;
                 contributors[1].Source_Data = tmpSource.SourceFile;
@@ -91,7 +91,7 @@ namespace CgfConverter
             asset.Created = fileCreated;
             asset.Modified = fileModified;
             asset.Up_Axis = "Z_UP";
-            asset.Title = this.CryData.Asset.RootNode.Name;
+            asset.Title = this.CryData.RootNode.Name;
             daeObject.Asset = asset;
             daeObject.Asset.Contributor = contributors;
 
@@ -118,7 +118,7 @@ namespace CgfConverter
                     StringBuilder builder;
                     if (material.Textures[i].File.Contains(@"/") || material.Textures[i].File.Contains(@"\"))
                     {
-                        builder = new StringBuilder(this.Args.ObjectDir + @"\" + material.Textures[i].File);
+                        builder = new StringBuilder(this.Args.DataDir + @"\" + material.Textures[i].File);
                     }
                     else
                     {
@@ -179,7 +179,7 @@ namespace CgfConverter
         {
             // Geometry library.  this is going to be fun...
             Grendgine_Collada_Library_Geometries libraryGeometries = new Grendgine_Collada_Library_Geometries();
-            libraryGeometries.ID = this.CryData.Asset.RootNode.Name;
+            libraryGeometries.ID = this.CryData.RootNode.Name;
             // Make a list for all the geometries objects we will need. Will convert to array at end.  Define the array here as well
             // Unfortunately we have to define a Geometry for EACH meshsubset in the meshsubsets, since the mesh can contain multiple materials
             List<Grendgine_Collada_Geometry> geometryList = new List<Grendgine_Collada_Geometry>();
@@ -187,7 +187,7 @@ namespace CgfConverter
             // For each of the nodes, we need to write the geometry.
             // Need to figure out how to assign the right material to the node as well.
             // Use a foreach statement to get all the node chunks.  This will get us the meshes, which will contain the vertex, UV and normal info.
-            foreach (CryEngine.Model.ChunkNode nodeChunk in this.CryData.Asset.CgfChunks.Where(a => a.chunkType == ChunkType.Node))
+            foreach (CryEngine.Model.ChunkNode nodeChunk in this.CryData.Chunks.Where(a => a.ChunkType == ChunkTypeEnum.Node))
             {
                 // Create a geometry object.  Use the chunk ID for the geometry ID
                 // Will have to be careful with this, since with .cga/.cgam pairs will need to match by Name.
@@ -202,28 +202,28 @@ namespace CgfConverter
                 CryEngine.Model.ChunkDataStream tmpVertices = new CryEngine.Model.ChunkDataStream();
                 CryEngine.Model.ChunkDataStream tmpVertsUVs = new CryEngine.Model.ChunkDataStream();
 
-                if (this.CryData.Asset.ChunksByID[nodeChunk.Object].chunkType == ChunkType.Mesh)
+                if (this.CryData.ChunksByID[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Mesh)
                 {
                     // Get the mesh chunk and submesh chunk for this node.
-                    CryEngine.Model.ChunkMesh tmpMeshChunk = (CryEngine.Model.ChunkMesh)this.CryData.Asset.ChunksByID[nodeChunk.Object];
-                    CryEngine.Model.ChunkMeshSubsets tmpMeshSubsets = (CryEngine.Model.ChunkMeshSubsets)this.CryData.Asset.ChunksByID[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
+                    CryEngine.Model.ChunkMesh tmpMeshChunk = (CryEngine.Model.ChunkMesh)this.CryData.ChunksByID[nodeChunk.ObjectNodeID];
+                    CryEngine.Model.ChunkMeshSubsets tmpMeshSubsets = (CryEngine.Model.ChunkMeshSubsets)this.CryData.ChunksByID[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
 
                     // Get pointers to the vertices data
                     if (tmpMeshChunk.VerticesData != 0)
                     {
-                        tmpVertices = (CryEngine.Model.ChunkDataStream)this.CryData.Asset.ChunksByID[tmpMeshChunk.VerticesData];
+                        tmpVertices = (CryEngine.Model.ChunkDataStream)this.CryData.ChunksByID[tmpMeshChunk.VerticesData];
                     }
                     if (tmpMeshChunk.NormalsData != 0)
                     {
-                        tmpNormals = (CryEngine.Model.ChunkDataStream)this.CryData.Asset.ChunksByID[tmpMeshChunk.NormalsData];
+                        tmpNormals = (CryEngine.Model.ChunkDataStream)this.CryData.ChunksByID[tmpMeshChunk.NormalsData];
                     }
                     if (tmpMeshChunk.UVsData != 0)
                     {
-                        tmpUVs = (CryEngine.Model.ChunkDataStream)this.CryData.Asset.ChunksByID[tmpMeshChunk.UVsData];
+                        tmpUVs = (CryEngine.Model.ChunkDataStream)this.CryData.ChunksByID[tmpMeshChunk.UVsData];
                     }
                     if (tmpMeshChunk.VertsUVsData != 0)
                     {
-                        tmpVertsUVs = (CryEngine.Model.ChunkDataStream)this.CryData.Asset.ChunksByID[tmpMeshChunk.VertsUVsData];
+                        tmpVertsUVs = (CryEngine.Model.ChunkDataStream)this.CryData.ChunksByID[tmpMeshChunk.VertsUVsData];
                     }
                     foreach (var meshSubset in tmpMeshSubsets.MeshSubsets)
                     {
@@ -299,11 +299,11 @@ namespace CgfConverter
                     }
 
                     }
-                else if (this.CryData.Asset.ChunksByID[nodeChunk.Object].chunkType == ChunkType.Helper)
+                else if (this.CryData.ChunksByID[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Helper)
                 {
 
                 }
-                else if (this.CryData.Asset.ChunksByID[nodeChunk.Object].chunkType == ChunkType.Controller)
+                else if (this.CryData.ChunksByID[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Controller)
                 {
 
                 }

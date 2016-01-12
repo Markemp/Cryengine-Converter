@@ -15,12 +15,19 @@ namespace CgfConverter
         public static Int32 Main(String[] args)
         {
 #if DEV_DOLKENSP
-            args = new String[] { @"O:\Mods\SC\2.1d\Objects\Vehicles\ships\drak\herald\DRAK_Herald_Hangar.cga", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "DRAK_Herald_Hangar.obj" };
-            // args = new String[] { @"Objects\1.3\ORIG_300I.cga", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "ORIG_300I.obj" };
-            // args = new String[] { @"O:\Mods\SC\2.1d\Objects\brush\planet\uee\flair_objects\model_spaceships\origin_350r\flair_origin_350r.cgf", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "ORIG_350r_flair.obj" };
-            args = new String[] { @"O:\Mods\SC\2.1d\Objects\Spaceships\Ships\AEGS\Gladius\AEGS_Gladius.cga", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", "AEGS_Gladius.obj" };
-            // args = new String[] { @"O:\Mods\SC\2.1d\Objects\Spaceships\Ships\VNCL\Glaive\VNCL_Glaive_flightReady.cga", "-objectdir", @"O:\Mods\SC\2.0", "-tif", "-obj", "-outputfile", "VNCL_Glaive_flightReady.obj" };
-            // args = new String[] { @"D:\Workspaces\github\Cryengine-Converter\cgf-converter\bin\dev_dolkensp\Objects\2.1\RSI_Aurora.cga", "-objectdir", @"O:\Mods\SC\2.0", "-tif", "-obj", "-outputfile", "RSI_Aurora.obj" };
+
+            // var ships1 = Directory.GetFiles(@"O:\Mods\SC\2.1d\Objects\Spaceships\Ships", "*.cga", SearchOption.AllDirectories);
+            // var ships2 = Directory.GetFiles(@"O:\Mods\SC\2.1d\Objects\Spaceships\Ships", "*.cgf", SearchOption.AllDirectories);
+            // var ships3 = Directory.GetFiles(@"O:\Mods\SC\2.1d\Objects\Spaceships\Ships", "*.cgf", SearchOption.AllDirectories);
+            // var ships4 = Directory.GetFiles(@"O:\Mods\SC\2.1d\Objects\Vehicles\ships", "*.cga", SearchOption.AllDirectories);
+            // var ships5 = Directory.GetFiles(@"O:\Mods\SC\2.1d\Objects\Vehicles\ships", "*.cgf", SearchOption.AllDirectories);
+            // var ships6 = Directory.GetFiles(@"O:\Mods\SC\2.1d\Objects\Vehicles\ships", "*.cgf", SearchOption.AllDirectories);
+            // var ships7 = Directory.GetFiles(@"Objects", "*.cga", SearchOption.AllDirectories);
+            // var ships8 = Directory.GetFiles(@"Objects", "*.cgf", SearchOption.AllDirectories);
+            // var ships9 = Directory.GetFiles(@"Objects", "*.cgf", SearchOption.AllDirectories);
+
+            args = new String[] { "*.cg?", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outdir", "export", "-group" };
+
 #endif
 
 #if DEV_MARKEMP
@@ -31,6 +38,7 @@ namespace CgfConverter
             args = new String[] { @"C:\Users\Geoff\Documents\Visual Studio 2013\Projects\cgf-converter\cgf-converter\bin\Debug\candycane_a.chr", "-objectdir", @"e:\blender projects\mechs", "-dds", "-dae" };
             //args = new String[] { @"C:\Users\Geoff\Documents\Visual Studio 2013\Projects\cgf-converter\cgf-converter\bin\Debug\ar03.chr", "-dds", "-obj" };
 #endif
+
             ArgsHandler argsHandler = new ArgsHandler();
             Int32 result = argsHandler.ProcessArgs(args);
 
@@ -41,33 +49,36 @@ namespace CgfConverter
 
             if (result == 0)
             {
-                // Read CryEngine Files
-                CryEngine cryData = new CryEngine(argsHandler);
-
-                #region Render Output Files
-
-                if (argsHandler.Output_Blender == true)
+                foreach (String inputFile in argsHandler.InputFiles)
                 {
-                    Blender blendFile = new Blender(argsHandler);
+                    // Read CryEngine Files
+                    CryEngine cryData = new CryEngine(inputFile, argsHandler.DataDir);
 
-                    blendFile.WriteBlend(cryData);
+                    #region Render Output Files
+
+                    if (argsHandler.Output_Blender == true)
+                    {
+                        Blender blendFile = new Blender(argsHandler);
+
+                        blendFile.WriteBlend(cryData);
+                    }
+
+                    if (argsHandler.Output_Wavefront == true)
+                    {
+                        Wavefront objFile = new Wavefront(argsHandler, cryData);
+
+                        objFile.WriteObjFile(argsHandler.OutputDir);
+                    }
+
+                    if (argsHandler.Output_Collada == true)
+                    {
+                        COLLADA daeFile = new COLLADA(argsHandler);
+
+                        daeFile.WriteCollada(cryData);
+                    }
+
+                    #endregion
                 }
-
-                if (argsHandler.Output_Wavefront == true)
-                {
-                    Wavefront objFile = new Wavefront(argsHandler);
-
-                    objFile.WriteObjFile(cryData);
-                }
-
-                if (argsHandler.Output_Collada == true)
-                {
-                    COLLADA daeFile = new COLLADA(argsHandler);
-
-                    daeFile.WriteCollada(cryData);
-                }
-
-                #endregion
             }
 
 #if !DEBUG

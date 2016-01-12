@@ -3,61 +3,18 @@ using System.IO;
 
 namespace CgfConverter
 {
-    public struct String16
-    {
-        public char[] Data;
-    }   // 16 byte char array.  THESE MUST BE CALLED WITH THE PROPER LENGTH!
-    public struct String32
-    {
-        public char[] Data;
-    }    // 32 byte char array 
-    public struct String64
-    {
-        public char[] Data;
-    }  // 64 byte char array 
-    public struct String128
-    {
-        public char[] Data;
-    }   // 128 byte char array 
-    public struct String256
-    {
-        public char[] Data;
-
-        public String ReadString256(BinaryReader b)  // Read 256 chars, return a String.
-        {
-            char[] tempData = new char[256];
-            int stringLength = 0;
-            String tempString;
-
-            //Console.WriteLine("Pos: {0:X}", b.BaseStream.Position);
-            tempData = b.ReadChars(256);
-            //for (int i = 0; i < 256; i++)
-            //{
-            //    tempdata[i] = b.readchar();
-            //}
-            for (int i = 0; i < tempData.Length; i++)
-            {
-                if (tempData[i] == 0)
-                {
-                    stringLength = i;
-                    break;
-                }
-            }
-            tempString = new string(tempData, 0, stringLength);
-            return tempString;
-        }
-    }   // 256 byte char array 
     public struct RangeEntity
     {
-        public char[] Name; // String32!  32 byte char array.
-        public int Start;
-        public int End;
+        public String Name; // String32!  32 byte char array.
+        public Int32 Start;
+        public Int32 End;
     } // String32 Name, int Start, int End - complete
     public struct Vector3
     {
-        public float x;
-        public float y;
-        public float z;
+        public Double x;
+        public Double y;
+        public Double z;
+        public Double w; // Currently Unused
         public void ReadVector3(BinaryReader b)
         {
             this.x = b.ReadSingle();
@@ -92,10 +49,10 @@ namespace CgfConverter
     }  // Vector in 3D space {x,y,z}
     public struct Vector4
     {
-        public float x;
-        public float y;
-        public float z;
-        public float w;
+        public Double x;
+        public Double y;
+        public Double z;
+        public Double w;
 
         public Vector3 ToVector3()
         {
@@ -121,15 +78,15 @@ namespace CgfConverter
     }
     public struct Matrix33    // a 3x3 transformation matrix
     {
-        public float m11;
-        public float m12;
-        public float m13;
-        public float m21;
-        public float m22;
-        public float m23;
-        public float m31;
-        public float m32;
-        public float m33;
+        public Double m11;
+        public Double m12;
+        public Double m13;
+        public Double m21;
+        public Double m22;
+        public Double m23;
+        public Double m31;
+        public Double m32;
+        public Double m33;
 
         public void ReadMatrix33(BinaryReader b)
         {
@@ -171,7 +128,7 @@ namespace CgfConverter
             mat.m33 = m33;
             return mat;
         }
-        public float Get_Determinant()
+        public Double Get_Determinant()
         {
             return (m11 * m22 * m33
                   + m12 * m23 * m31
@@ -239,9 +196,9 @@ namespace CgfConverter
             // Get the scale, assuming is_scale_rotation is true
             Matrix33 mat = this.Mult(this.Get_Transpose());
             Vector3 scale = new Vector3();
-            scale.x = (float)System.Math.Pow(mat.m11, 0.5);
-            scale.y = (float)System.Math.Pow(mat.m22, 0.5);
-            scale.z = (float)System.Math.Pow(mat.m33, 0.5);
+            scale.x = (Double)System.Math.Pow(mat.m11, 0.5);
+            scale.y = (Double)System.Math.Pow(mat.m22, 0.5);
+            scale.z = (Double)System.Math.Pow(mat.m33, 0.5);
             if (this.Get_Determinant() < 0)
             {
                 scale.x = 0 - scale.x;
@@ -282,31 +239,31 @@ namespace CgfConverter
     }
     public struct Matrix44    // a 4x4 transformation matrix.  first value is row, second is column
     {
-        public float m11;
-        public float m12;
-        public float m13;
-        public float m14;
-        public float m21;
-        public float m22;
-        public float m23;
-        public float m24;
-        public float m31;
-        public float m32;
-        public float m33;
-        public float m34;
-        public float m41;
-        public float m42;
-        public float m43;
-        public float m44;
+        public Double m11;
+        public Double m12;
+        public Double m13;
+        public Double m14;
+        public Double m21;
+        public Double m22;
+        public Double m23;
+        public Double m24;
+        public Double m31;
+        public Double m32;
+        public Double m33;
+        public Double m34;
+        public Double m41;
+        public Double m42;
+        public Double m43;
+        public Double m44;
 
         public Vector4 Mult4x1(Vector4 vector)
         {
             // Pass the matrix a Vector4 (4x1) vector to get the transform of the vector
             Vector4 result = new Vector4();
-            //result.x = (m11 * vector.x) + (m12 * vector.y) + (m13 * vector.z) + m14/100;
-            //result.y = (m21 * vector.x) + (m22 * vector.y) + (m23 * vector.z) + m24/100;
-            //result.z = (m31 * vector.x) + (m32 * vector.y) + (m33 * vector.z) + m34/100;
-            //result.w = (m41 * vector.x) + (m42 * vector.y) + (m43 * vector.z) + m44/100;
+            // result.x = (m11 * vector.x) + (m12 * vector.y) + (m13 * vector.z) + m14 / 100;
+            // result.y = (m21 * vector.x) + (m22 * vector.y) + (m23 * vector.z) + m24 / 100;
+            // result.z = (m31 * vector.x) + (m32 * vector.y) + (m33 * vector.z) + m34 / 100;
+            // result.w = (m41 * vector.x) + (m42 * vector.y) + (m43 * vector.z) + m44 / 100;
             result.x = (m11 * vector.x) + (m21 * vector.y) + (m31 * vector.z) + m41 / 100;
             result.y = (m12 * vector.x) + (m22 * vector.y) + (m32 * vector.z) + m42 / 100;
             result.z = (m13 * vector.x) + (m23 * vector.y) + (m33 * vector.z) + m43 / 100;
@@ -350,10 +307,10 @@ namespace CgfConverter
 
     public struct Quat        // A quaternion (x,y,z,w)
     {
-        public float x;
-        public float y;
-        public float z;
-        public float w;
+        public Double x;
+        public Double y;
+        public Double z;
+        public Double w;
     }
     public struct Vertex      // position p(Vector3) and normal n(Vector3)
     {
@@ -375,7 +332,7 @@ namespace CgfConverter
         public uint FirstVertex;
         public uint NumVertices;
         public uint MatID;
-        public float Radius;
+        public Double Radius;
         public Vector3 Center;
     }  // Contains data about the parts of a mesh, such as vertices, radius and center.
     public struct Key
@@ -385,12 +342,12 @@ namespace CgfConverter
         public Vector3 RelPos; // relative position
         public Quat RelQuat; //Relative Quaternion if ARG==1?
         public Vector3 Unknown1; // If ARG==6 or 10?
-        public float[] Unknown2; // If ARG==9?  array length = 2
+        public Double[] Unknown2; // If ARG==9?  array length = 2
     }
     public struct UV
     {
-        public float U;
-        public float V;
+        public Double U;
+        public Double V;
     }
     public struct UVFace
     {
@@ -419,9 +376,9 @@ namespace CgfConverter
     }
     public struct FRGB
     {
-        public float r; // float Red
-        public float g; // float green
-        public float b; // float blue
+        public Double r; // Double Red
+        public Double g; // Double green
+        public Double b; // Double blue
     }
     public struct Tangent
     {
@@ -433,11 +390,11 @@ namespace CgfConverter
     }
     public struct WORLDTOBONE
     {
-        public float[,] worldToBone;   //  4x3 structure
+        public Double[,] worldToBone;   //  4x3 structure
         
         public void GetWorldToBone(BinaryReader b)
         {
-            worldToBone = new float[4,3];
+            worldToBone = new Double[4,3];
             //Console.WriteLine("GetWorldToBone {0:X}", b.BaseStream.Position);
             for (int i = 0; i<4; i++) 
             {
@@ -463,12 +420,12 @@ namespace CgfConverter
     }
     public struct BONETOWORLD
     {
-        public float[,] boneToWorld;   //  4x3 structure
+        public Double[,] boneToWorld;   //  4x3 structure
 
         public void GetBoneToWorld(BinaryReader b)
         {
             //BONETOWORLD tempB2W = new BONETOWORLD();
-            boneToWorld = new float[4, 3];
+            boneToWorld = new Double[4, 3];
             //Console.WriteLine("GetBoneToWorld");
             for (int i = 0; i < 4; i++)
             {
@@ -528,7 +485,7 @@ namespace CgfConverter
     {
         public UInt32 controllerID;
         public PhysicsGeometry[] physicsGeometry; // 2 of these.
-        public float mass;                  // 0xD8 ?
+        public Double mass;                  // 0xD8 ?
         public WORLDTOBONE worldToBone;     // 4x3 matrix
         public BONETOWORLD boneToWorld;     // 4x3 matrix
         public String boneName;             // String256 in old terms; convert to a real null terminated string.
@@ -537,13 +494,12 @@ namespace CgfConverter
         public Int32 offsetChild;           // Offset to the first child to this bone in number of CompiledBone structs
         public UInt32 numChildren;          // Number of children to this bone
         public String parentID;             // Not part of the read structure, but the name of the parent bone put into the Bone Dictionary (the key)
-        public long offset;                 // Not part of the structure, but where this one started.
+        public Int64 offset;                 // Not part of the structure, but where this one started.
         public String[] childNames;         // Not part of read struct.  Contains the keys of the children to this bone
 
         public void ReadCompiledBone(BinaryReader b)
         {
             // Reads just a single 584 byte entry of a bone. At the end the seek position will be advanced, so keep that in mind.
-            String256 tmpName = new String256();
             controllerID = b.ReadUInt32();
             physicsGeometry = new PhysicsGeometry[2];
             physicsGeometry[0].ReadPhysicsGeometry(b);
@@ -553,7 +509,7 @@ namespace CgfConverter
             worldToBone.GetWorldToBone(b);
             boneToWorld = new BONETOWORLD();
             boneToWorld.GetBoneToWorld(b);
-            boneName = tmpName.ReadString256(b);
+            boneName = b.ReadFString(256);
             limbID = b.ReadUInt32();
             offsetParent = b.ReadInt32();
             numChildren = b.ReadUInt32();
