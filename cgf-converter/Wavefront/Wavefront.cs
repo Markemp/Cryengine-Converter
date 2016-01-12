@@ -26,7 +26,12 @@ namespace CgfConverter
         public UInt32 CurrentIndicesPosition { get; private set; }
         public String GroupOverride { get; private set; }
 
-        public void WriteObjFile(String outputDir)
+        /// <summary>
+        /// Renders an .obj file, and matching .mat file for the current model
+        /// </summary>
+        /// <param name="outputDir">Folder to write files to</param>
+        /// <param name="preservePath">When using an <paramref name="outputDir"/>, preserve the original hierarchy</param>
+        public void WriteObjFile(String outputDir, Boolean preservePath)
         {
             // We need to create the obj header, then for each submesh write the vertex, UV and normal data.
             // First, let's figure out the name of the output file.  Should be <object name>.obj
@@ -39,10 +44,22 @@ namespace CgfConverter
 
             // String outputFile = outputFile;
 
-            if (String.IsNullOrWhiteSpace(outputDir))
-                outputDir = new FileInfo(this.CryData.InputFile).DirectoryName;
+            String outputFile = "temp.obj";
 
-            String outputFile = Path.Combine(outputDir, Path.ChangeExtension(String.Format("{0}{1}", Path.GetFileNameWithoutExtension(this.CryData.InputFile), String.IsNullOrWhiteSpace(outputDir) ? "_out" : String.Empty), "obj"));
+            if (String.IsNullOrWhiteSpace(outputDir))
+            {
+                // Empty output directory means place alongside original models
+                // If you want relative path, use "."
+
+                outputFile = Path.Combine(new FileInfo(this.CryData.InputFile).DirectoryName, String.Format("{0}_out.obj", Path.GetFileNameWithoutExtension(this.CryData.InputFile)));
+            }
+            else
+            {
+                // If we have an output directory
+                String preserveDir = preservePath ? Path.GetDirectoryName(this.CryData.InputFile) : "";
+                outputFile = Path.Combine(outputDir, preserveDir, Path.GetFileNameWithoutExtension(Path.ChangeExtension(this.CryData.InputFile, "obj")));
+            }
+
             
             if (this.Args.GroupMeshes)
                 this.GroupOverride = Path.GetFileNameWithoutExtension(outputFile);
