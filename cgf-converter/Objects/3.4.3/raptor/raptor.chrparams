@@ -1,0 +1,63 @@
+<?xml version="1.0" ?><Params>
+
+	<AnimationList>
+		<Animation name="#filepath" path="Animations/dinosaurs/raptor/"/>
+		<Animation name="draft_walk" path="draft_walk.caf"/>
+		<Animation name="draft_run" path="draft_run.caf"/>
+		<Animation name="final_sprint" path="final_sprint.caf"/>
+		<Animation name="final_idle" path="final_idle.caf"/>
+		<Animation name="final_idle_left_turn" path="final_idle_left_turn.caf"/>
+		<Animation name="final_idle_right_turn" path="final_idle_right_turn.caf"/>
+		<Animation name="final_attack" path="final_attack.caf"/>
+		<Animation name="final_sleep" path="final_sleep.caf"/>
+		<Animation name="final_standup" path="final_standup.caf"/>
+		<Animation name="final_call" path="final_call.caf"/>
+	</AnimationList>
+	
+	
+	<IK_Definition>
+	
+	<LimbIK_Definition>
+   <IK EndEffector="Bip01 R Foot" Handle="RgtLeg01" Root="Bip01 R Thigh" Solver="2BIK"/>
+   <IK EndEffector="Bip01 L Foot" Handle="LftLeg01" Root="Bip01 L Thigh" Solver="2BIK"/>
+	</LimbIK_Definition>
+
+	<FeetLock_Definition>
+		<RIKHandle Handle="RgtLeg01"/>
+		<LIKHandle Handle="LftLeg01"/>
+	</FeetLock_Definition>
+		
+     <LookIK_Definition>
+             <LEyeAttachment Name="eye_left"/>
+             <REyeAttachment Name="eye_right"/>
+
+             <DirectionalBlends>
+                 <Joint AnimToken="LookPoses" ParameterJoint="Bip01 Look" ReferenceJoint="Bip01 Pelvis" StartJoint="Bip01 Look"/>
+             </DirectionalBlends>
+
+         <DefaultLookPose name="LookPoses_sdk_Head"/>
+
+             <RotationList>
+                 
+                 <Rotation Additive="1" JointName="Bip01 Pelvis" Primary="1"/>
+                 <Rotation Additive="1" JointName="Bip01 Spine" Primary="1"/>
+                 <Rotation Additive="1" JointName="Bip01 Spine1" Primary="1"/>
+                 <Rotation Additive="1" JointName="Bip01 Spine2" Primary="1"/>
+                 <Rotation Additive="1" JointName="Bip01 Spine3" Primary="1"/>
+                 <Rotation Additive="1" JointName="Bip01 Neck" Primary="1"/>
+                 <Rotation Additive="1" JointName="Bip01 Head" Primary="1"/>
+                 <Rotation Additive="1" JointName="Bip01 Look" Primary="1"/>
+             </RotationList>
+
+             <PositionList>
+                 <Position Additive="1" JointName="Bip01 Pelvis"/>
+             </PositionList>
+      </LookIK_Definition>
+
+	
+		
+
+	</IK_Definition>
+	
+	
+	</Params>

@@ -57,7 +57,7 @@ namespace CgfConverter
             {
                 // If we have an output directory
                 String preserveDir = preservePath ? Path.GetDirectoryName(this.CryData.InputFile) : "";
-                outputFile = Path.Combine(outputDir, preserveDir, Path.GetFileNameWithoutExtension(Path.ChangeExtension(this.CryData.InputFile, "obj")));
+                outputFile = Path.Combine(outputDir, preserveDir, Path.ChangeExtension(Path.GetFileNameWithoutExtension(this.CryData.InputFile), "obj"));
             }
 
             

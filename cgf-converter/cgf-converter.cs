@@ -26,7 +26,8 @@ namespace CgfConverter
             // var ships8 = Directory.GetFiles(@"Objects", "*.cgf", SearchOption.AllDirectories);
             // var ships9 = Directory.GetFiles(@"Objects", "*.cgf", SearchOption.AllDirectories);
 
-            args = new String[] { "*.cg?", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outdir", "export", "-group" };
+            args = new String[] { @"Objects\3.4\*.chr", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outdir", "export", "-group" };
+            args = new String[] { @"Objects\3.4\*.chr", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-dae", "-outdir", "export", "-group" };
 
 #endif
 
