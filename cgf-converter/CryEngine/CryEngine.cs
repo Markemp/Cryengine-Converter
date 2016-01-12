@@ -25,8 +25,12 @@ namespace CgfConverter
 
         public Model.ChunkNode RootNode { get; private set; }
 
+        public String InputFile { get; private set; }
+
         public CryEngine(String fileName, String dataDir)
         {
+            this.InputFile = fileName;
+
             FileInfo inputFile = new FileInfo(fileName);
             List<FileInfo> inputFiles = new List<FileInfo> { inputFile };
 

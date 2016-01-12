@@ -14,29 +14,20 @@ namespace CgfConverter
     {
         public static Int32 Main(String[] args)
         {
-            Int32 result = 0;
 #if DEV_DOLKENSP
-            List<String[]> argArray = new List<String[]>();
-            var ships1 = Directory.GetFiles(@"O:\Mods\SC\2.1d\Objects\Spaceships\Ships", "*.cga", SearchOption.AllDirectories);
-            var ships2 = Directory.GetFiles(@"O:\Mods\SC\2.1d\Objects\Spaceships\Ships", "*.cgf", SearchOption.AllDirectories);
-            var ships3 = Directory.GetFiles(@"O:\Mods\SC\2.1d\Objects\Spaceships\Ships", "*.cgf", SearchOption.AllDirectories);
-            var ships4 = Directory.GetFiles(@"O:\Mods\SC\2.1d\Objects\Vehicles\ships", "*.cga", SearchOption.AllDirectories);
-            var ships5 = Directory.GetFiles(@"O:\Mods\SC\2.1d\Objects\Vehicles\ships", "*.cgf", SearchOption.AllDirectories);
-            var ships6 = Directory.GetFiles(@"O:\Mods\SC\2.1d\Objects\Vehicles\ships", "*.cgf", SearchOption.AllDirectories);
-            var ships7 = Directory.GetFiles(@"Objects", "*.cga", SearchOption.AllDirectories);
-            var ships8 = Directory.GetFiles(@"Objects", "*.cgf", SearchOption.AllDirectories);
-            var ships9 = Directory.GetFiles(@"Objects", "*.cgf", SearchOption.AllDirectories);
 
-            argArray = (from file in ships1.Concat(ships2).Concat(ships3)
-                        .Concat(ships4).Concat(ships5).Concat(ships6)
-                        .Concat(ships7).Concat(ships8).Concat(ships9)
-                        where !file.ToLowerInvariant().Contains("damaged")
-                        where !file.ToLowerInvariant().Contains("lod")
-                        select new String[] { file, "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outputfile", @"bulk\" + Path.ChangeExtension(Path.GetFileName(file), "obj"), "-group" }).ToList();
+            // var ships1 = Directory.GetFiles(@"O:\Mods\SC\2.1d\Objects\Spaceships\Ships", "*.cga", SearchOption.AllDirectories);
+            // var ships2 = Directory.GetFiles(@"O:\Mods\SC\2.1d\Objects\Spaceships\Ships", "*.cgf", SearchOption.AllDirectories);
+            // var ships3 = Directory.GetFiles(@"O:\Mods\SC\2.1d\Objects\Spaceships\Ships", "*.cgf", SearchOption.AllDirectories);
+            // var ships4 = Directory.GetFiles(@"O:\Mods\SC\2.1d\Objects\Vehicles\ships", "*.cga", SearchOption.AllDirectories);
+            // var ships5 = Directory.GetFiles(@"O:\Mods\SC\2.1d\Objects\Vehicles\ships", "*.cgf", SearchOption.AllDirectories);
+            // var ships6 = Directory.GetFiles(@"O:\Mods\SC\2.1d\Objects\Vehicles\ships", "*.cgf", SearchOption.AllDirectories);
+            // var ships7 = Directory.GetFiles(@"Objects", "*.cga", SearchOption.AllDirectories);
+            // var ships8 = Directory.GetFiles(@"Objects", "*.cgf", SearchOption.AllDirectories);
+            // var ships9 = Directory.GetFiles(@"Objects", "*.cgf", SearchOption.AllDirectories);
 
-            foreach (var arg in argArray)
-            {
-                args = arg;
+            args = new String[] { "*.cg?", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outdir", "export", "-group" };
+
 #endif
 
 #if DEV_MARKEMP
@@ -46,18 +37,21 @@ namespace CgfConverter
             //args = new String[] { @"C:\Users\Geoff\Documents\Visual Studio 2013\Projects\cgf-converter\cgf-converter\bin\Debug\adder_a_cockpit_standard", "-objectdir", @"e:\blender projects\mechs", "-dds", "-obj" };
             args = new String[] { @"C:\Users\Geoff\Documents\Visual Studio 2013\Projects\cgf-converter\cgf-converter\bin\Debug\candycane_a.chr", "-objectdir", @"e:\blender projects\mechs", "-dds", "-dae" };
 #endif
-                ArgsHandler argsHandler = new ArgsHandler();
-                result = argsHandler.ProcessArgs(args);
+
+            ArgsHandler argsHandler = new ArgsHandler();
+            Int32 result = argsHandler.ProcessArgs(args);
 
 #if !DEBUG
             try
             {
 #endif
 
-                if (result == 0)
+            if (result == 0)
+            {
+                foreach (String inputFile in argsHandler.InputFiles)
                 {
                     // Read CryEngine Files
-                    CryEngine cryData = new CryEngine(argsHandler.InputFile, argsHandler.DataDir);
+                    CryEngine cryData = new CryEngine(inputFile, argsHandler.DataDir);
 
                     #region Render Output Files
 
@@ -70,9 +64,9 @@ namespace CgfConverter
 
                     if (argsHandler.Output_Wavefront == true)
                     {
-                        Wavefront objFile = new Wavefront(argsHandler);
+                        Wavefront objFile = new Wavefront(argsHandler, cryData);
 
-                        objFile.WriteObjFile(cryData);
+                        objFile.WriteObjFile(argsHandler.OutputDir);
                     }
 
                     if (argsHandler.Output_Collada == true)
@@ -84,6 +78,7 @@ namespace CgfConverter
 
                     #endregion
                 }
+            }
 
 #if !DEBUG
             }
@@ -95,8 +90,7 @@ namespace CgfConverter
 #endif
 
 #if (DEV_DOLKENSP || DEV_MARKEMP)
-                Console.WriteLine("Done...");
-            }
+            Console.WriteLine("Done...");
             Console.ReadKey();
 #endif
 

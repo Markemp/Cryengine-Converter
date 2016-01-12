@@ -10,9 +10,10 @@ namespace CgfConverter
 {
     public partial class Wavefront
     {
-        public Wavefront(ArgsHandler argsHandler)
+        public Wavefront(ArgsHandler argsHandler, CryEngine cryEngine)
         {
             this.Args = argsHandler;
+            this.CryData = cryEngine;
         }
 
         public ArgsHandler Args { get; private set; }
@@ -23,23 +24,28 @@ namespace CgfConverter
         public UInt32 TempIndicesPosition { get; private set; }
         public UInt32 TempVertexPosition { get; private set; }
         public UInt32 CurrentIndicesPosition { get; private set; }
+        public String GroupOverride { get; private set; }
 
-        public void WriteObjFile(CryEngine cryEngine)
+        public void WriteObjFile(String outputDir)
         {
             // We need to create the obj header, then for each submesh write the vertex, UV and normal data.
             // First, let's figure out the name of the output file.  Should be <object name>.obj
 
             // Each Mesh will have a mesh subset and a series of datastream objects.  Need temporary pointers to these
             // so we can manipulate
-            this.CryData = cryEngine;
 
             // Get object name.  This is the Root Node chunk Name
             // Get the objOutputFile name
 
-            String outputFile = this.Args.OutputFile;
+            // String outputFile = outputFile;
 
-            if (String.IsNullOrWhiteSpace(outputFile))
-                outputFile = Path.ChangeExtension(cryEngine.RootNode.Name, "obj");
+            if (String.IsNullOrWhiteSpace(outputDir))
+                outputDir = new FileInfo(this.CryData.InputFile).DirectoryName;
+
+            String outputFile = Path.Combine(outputDir, Path.ChangeExtension(String.Format("{0}{1}", Path.GetFileNameWithoutExtension(this.CryData.InputFile), String.IsNullOrWhiteSpace(outputDir) ? "_out" : String.Empty), "obj"));
+            
+            if (this.Args.GroupMeshes)
+                this.GroupOverride = Path.GetFileNameWithoutExtension(outputFile);
 
             this.OutputFile_Model = new FileInfo(outputFile);
             this.OutputFile_Material = new FileInfo(Path.ChangeExtension(OutputFile_Model.FullName, "mtl"));
@@ -49,7 +55,7 @@ namespace CgfConverter
             if (!OutputFile_Model.Directory.Exists)
                 OutputFile_Model.Directory.Create();
 
-            this.WriteMaterial(cryEngine);
+            this.WriteMaterial(this.CryData);
 
             using (StreamWriter file = new StreamWriter(OutputFile_Model.FullName))
             {
@@ -60,7 +66,7 @@ namespace CgfConverter
                 if (OutputFile_Material.Exists)
                     file.WriteLine("mtllib {0}", OutputFile_Material.Name);
 
-                foreach (CryEngine.Model.ChunkNode node in cryEngine.NodeMap.Values)
+                foreach (CryEngine.Model.ChunkNode node in this.CryData.NodeMap.Values)
                 {
                     if (node.ObjectChunk == null)
                     {
@@ -117,7 +123,7 @@ namespace CgfConverter
                 }
 
                 // If this is a .chr file, just write out the hitbox info.  OBJ files can't do armatures.
-                foreach (CryEngine.Model.ChunkCompiledPhysicalProxies tmpProxy in cryEngine.ChunksByID.Values.Where(a => a.ChunkType == ChunkTypeEnum.CompiledPhysicalProxies))
+                foreach (CryEngine.Model.ChunkCompiledPhysicalProxies tmpProxy in this.CryData.ChunksByID.Values.Where(a => a.ChunkType == ChunkTypeEnum.CompiledPhysicalProxies))
                 {
                     // TODO: align these properly
                     WriteObjHitBox(file, tmpProxy);
@@ -181,7 +187,7 @@ namespace CgfConverter
             foreach (var meshSubset in tmpMeshSubsets.MeshSubsets)
             {
                 // Write vertices data for each MeshSubSet (v)
-                f.WriteLine("g {0}", this.Args.ModelName ?? chunkNode.Name);
+                f.WriteLine("g {0}", this.GroupOverride ?? chunkNode.Name);
 
                 if (tmpMesh.VerticesData == 0)
                 {
@@ -264,7 +270,7 @@ namespace CgfConverter
 
                 #region Write Group (g)
 
-                f.WriteLine("g {0}", this.Args.ModelName ?? chunkNode.Name);
+                f.WriteLine("g {0}", this.GroupOverride ?? chunkNode.Name);
 
                 #endregion
 

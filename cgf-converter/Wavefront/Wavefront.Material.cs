@@ -80,11 +80,11 @@ namespace CgfConverter
                         // TODO: More filehandling here
                         
                         if (!this.Args.TiffTextures)
-                            textureFile.Replace(".tif", ".dds");
+                            textureFile = textureFile.Replace(".tif", ".dds");
                         else
-                            textureFile.Replace(".dds", ".tif");
+                            textureFile = textureFile.Replace(".dds", ".tif");
 
-                        textureFile.Replace(@"/", @"\");
+                        textureFile = textureFile.Replace(@"/", @"\");
                         
                         switch (texture.Map)
                         {

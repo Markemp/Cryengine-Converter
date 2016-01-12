@@ -8,9 +8,9 @@ namespace CgfConverter
     public class ArgsHandler
     {
         /// <summary>
-        /// File to process
+        /// Files to process
         /// </summary>
-        public String InputFile { get; private set; }
+        public List<String> InputFiles { get; private set; }
         /// <summary>
         /// Location of the Object Files
         /// </summary>
@@ -18,11 +18,15 @@ namespace CgfConverter
         /// <summary>
         /// File to render to
         /// </summary>
-        public String OutputFile { get; private set; }
+        // public String OutputFile { get; private set; }
+        /// <summary>
+        /// Directory to render to
+        /// </summary>
+        public String OutputDir { get; private set; }
         /// <summary>
         /// Name to group all meshes under
         /// </summary>
-        public String ModelName { get; private set; }
+        public Boolean GroupMeshes { get; private set; }
         /// <summary>
         /// Render Wavefront format files
         /// </summary>
@@ -48,6 +52,31 @@ namespace CgfConverter
         /// </summary>
         public Boolean Throw { get; private set; }
 
+        public ArgsHandler()
+        {
+            this.InputFiles = new List<String> { };
+        }
+
+        /// <summary>
+        /// Take a string, and expand it into a list of files if it is a file filter
+        /// 
+        /// TODO: Make it understand /**/ format, instead of ONLY supporting FileName wildcards
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        private String[] GetFiles(String filter)
+        {
+            if (File.Exists(filter))
+                return new String[] { new FileInfo(filter).FullName };
+
+            String directory = Path.GetDirectoryName(filter);
+            if (String.IsNullOrWhiteSpace(directory))
+                directory = ".";
+
+            String fileName = Path.GetFileName(filter);
+
+            return Directory.GetFiles(directory, fileName, fileName.Contains('?') || fileName.Contains('*') ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+        }
 
         /// <summary>
         /// Parse command line arguments
@@ -60,12 +89,7 @@ namespace CgfConverter
 
             if (inputArgs.Length > 0)
             {
-                FileInfo newFile = new FileInfo(inputArgs[0]);
-
-                if (newFile.Exists)
-                {
-                    this.InputFile = newFile.FullName;
-                }
+                this.InputFiles.AddRange(this.GetFiles(inputArgs[0]));
             }
 
             #endregion
@@ -105,27 +129,28 @@ namespace CgfConverter
                             return 1;
                         }
 
-                        this.InputFile = new FileInfo(inputArgs[i]).FullName;
+                        this.InputFiles.AddRange(this.GetFiles(inputArgs[0]));
 
                         Console.WriteLine("Input file set to {0}", inputArgs[i]);
 
                         break;
 
                     #endregion
-                    #region case "-outfile" / "-outputfile"...
+                    #region case "-out" / "-outdir" / "-outputdir"...
 
-                    // Next item in list will be the output filename
-                    case "-outfile":
-                    case "-outputfile":
+                    // Next item in list will be the output directory
+                    case "-out":
+                    case "-outdir":
+                    case "-outputdir":
                         if (++i > inputArgs.Length)
                         {
                             this.PrintUsage();
                             return 1;
                         }
 
-                        this.OutputFile = new FileInfo(inputArgs[i]).FullName;
+                        this.OutputDir = new DirectoryInfo(inputArgs[i]).FullName;
 
-                        Console.WriteLine("Output file set to {0}", inputArgs[i]);
+                        Console.WriteLine("Output directory set to {0}", inputArgs[i]);
 
                         break;
 
@@ -201,9 +226,9 @@ namespace CgfConverter
 
                     case "-group":
 
-                        this.ModelName = Path.GetFileNameWithoutExtension(this.InputFile);
+                        this.GroupMeshes = true;
 
-                        Console.WriteLine("Model Name set to {0}", this.ModelName);
+                        Console.WriteLine("Grouping set to {0}", this.GroupMeshes);
 
                         break;
 
@@ -223,7 +248,7 @@ namespace CgfConverter
             }
 
             // Ensure we have a file to process
-            if (String.IsNullOrWhiteSpace(this.InputFile))
+            if (this.InputFiles.Count == 0)
             {
                 this.PrintUsage();
                 return 1;
@@ -268,14 +293,14 @@ namespace CgfConverter
         {
             Console.WriteLine();
             Console.WriteLine("*** Submitted args ***");
-            Console.WriteLine("    Input files:            {0}", this.InputFile);
+            // Console.WriteLine("    Input files:            {0}", this.InputFile);
             if (!String.IsNullOrWhiteSpace(this.DataDir))
             {
                 Console.WriteLine("    Object dir:             {0}", this.DataDir);
             }
-            if (!String.IsNullOrWhiteSpace(this.OutputFile))
+            if (!String.IsNullOrWhiteSpace(this.OutputDir))
             {
-                Console.WriteLine("    Output file:            {0}", this.OutputFile);
+                Console.WriteLine("    Output file:            {0}", this.OutputDir);
             }
             Console.WriteLine("    Flip UVs:               {0}", this.FlipUVs);
             Console.WriteLine("    Output to .obj:         {0}", this.Output_Wavefront);
