@@ -306,9 +306,9 @@ namespace CgfConverter
                         triInput[0].Semantic = Grendgine_Collada_Input_Semantic.VERTEX;
                         tris[j].Input = triInput;
                         StringBuilder p = new StringBuilder();
-                        // Might have to modify this to be firstindex-1 to get the proper index.
                         for (uint k=tmpMeshSubsets.MeshSubsets[j].FirstIndex; k< tmpMeshSubsets.MeshSubsets[j].NumIndices; k++)
                         {
+                            //Console.Write("{0} ", tmpIndices.Indices[k]);
                             p.AppendFormat("{0} ", tmpIndices.Indices[k]);
                         }
                         //Console.WriteLine("Indices {0}", p);
