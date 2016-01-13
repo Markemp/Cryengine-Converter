@@ -334,6 +334,19 @@ namespace CgfConverter
         public uint MatID;
         public Double Radius;
         public Vector3 Center;
+
+        public void WriteMeshSubset()
+        {
+            Console.WriteLine("*** Mesh Subset ***");
+            Console.WriteLine("    First Index:  {0}", FirstIndex);
+            Console.WriteLine("    Num Indices:  {0}", NumIndices);
+            Console.WriteLine("    First Vertex: {0}", FirstVertex);
+            Console.WriteLine("    Num Vertices: {0}", NumVertices);
+            Console.WriteLine("    Mat ID:       {0}", MatID);
+            Console.WriteLine("    Radius:       {0:F7}", Radius);
+            Console.WriteLine("    Center:");
+            Center.WriteVector3();
+        }
     }  // Contains data about the parts of a mesh, such as vertices, radius and center.
     public struct Key
     {
