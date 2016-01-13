@@ -236,7 +236,7 @@ namespace CgfConverter
                     #region default...
 
                     default:
-                        this.InputFiles.AddRange(this.GetFiles(inputArgs[0]));
+                        this.InputFiles.AddRange(this.GetFiles(inputArgs[i]));
 
                         Console.WriteLine("Input file set to {0}", inputArgs[i]);
 
