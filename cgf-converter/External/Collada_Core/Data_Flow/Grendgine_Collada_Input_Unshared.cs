@@ -9,7 +9,8 @@ namespace grendgine_collada
 	public partial class Grendgine_Collada_Input_Unshared
 	{
 		[XmlAttribute("semantic")]
-		[System.ComponentModel.DefaultValueAttribute(Grendgine_Collada_Input_Semantic.NORMAL)]
+        // Commenting out default value as it won't write.
+		//[System.ComponentModel.DefaultValueAttribute(Grendgine_Collada_Input_Semantic.NORMAL)]
 		public Grendgine_Collada_Input_Semantic Semantic;	
 
 		[XmlAttribute("source")]
