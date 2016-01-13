@@ -49,6 +49,7 @@ namespace CgfConverter
             WriteLibrary_Materials();
             WriteLibrary_Effects();
             WriteLibrary_Geometries();
+            WriteLibrary_VisualScenes();
             if (!daeOutputFile.Directory.Exists)
                 daeOutputFile.Directory.Create();
             TextWriter writer = new StreamWriter(daeOutputFile.FullName);   // Makes the Textwriter object for the output
@@ -295,6 +296,7 @@ namespace CgfConverter
                     {
                         /// <summary> Write the triangles for each geometry.mesh object.  There can be multiple triangles for each mesh.</summary>
                         /// 
+                        tmpMeshSubsets.MeshSubsets[j].WriteMeshSubset();
                         tris[j] = new Grendgine_Collada_Triangles();
                         tris[j].Material = tmpMeshSubsets.MeshSubsets[j].MatID.ToString();
                         tris[j].Count = (int)tmpMeshSubsets.MeshSubsets[j].NumIndices;
@@ -304,10 +306,10 @@ namespace CgfConverter
                         triInput[0].Semantic = Grendgine_Collada_Input_Semantic.VERTEX;
                         tris[j].Input = triInput;
                         StringBuilder p = new StringBuilder();
-                        for (int k=0; k< (int)tmpMeshSubsets.MeshSubsets[j].NumIndices; k++)
+                        // Might have to modify this to be firstindex-1 to get the proper index.
+                        for (uint k=tmpMeshSubsets.MeshSubsets[j].FirstIndex; k< tmpMeshSubsets.MeshSubsets[j].NumIndices; k++)
                         {
                             p.AppendFormat("{0} ", tmpIndices.Indices[k]);
-                           
                         }
                         //Console.WriteLine("Indices {0}", p);
                         tris[j].Input = triInput;
@@ -376,6 +378,26 @@ namespace CgfConverter
         }
         public void WriteLibrary_VisualScenes()
         {
+            /// <summary> Provides a library in which to place visual_scene elements. </summary>
+            /// 
+            // Set up the library
+            Grendgine_Collada_Library_Visual_Scenes libraryVisualScenes = new Grendgine_Collada_Library_Visual_Scenes();
+            // There can be multiple visual scenes.  Need one for each node chunk, and one for skeleton (if it exists)
+            List<Grendgine_Collada_Visual_Scene> visualScene = new List<Grendgine_Collada_Visual_Scene>();
+            List<Grendgine_Collada_Node> nodes = new List<Grendgine_Collada_Node>();
+
+            foreach (CryEngine.Model.ChunkNode nodeChunk in this.CryData.Chunks.Where(a => a.ChunkType == ChunkTypeEnum.Node))
+            {
+                // For each nodechunk, create a scene and add it to visualScene list
+                Grendgine_Collada_Visual_Scene tmpVisualScene = new Grendgine_Collada_Visual_Scene();
+                tmpVisualScene.Name = CryData.RootNode.Name;
+                // now make a list of Nodes that correspond with each node chunk.
+                Grendgine_Collada_Node tmpNode = new Grendgine_Collada_Node();
+                tmpNode.Type = Grendgine_Collada_Node_Type.NODE;
+
+
+                nodes.Add(tmpNode);
+            }
 
         }
         public void WriteScene()

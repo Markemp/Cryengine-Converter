@@ -116,7 +116,7 @@ namespace CgfConverter
                             chkMeshSubsets.ReadChunk(cgfReader, chkHdr);
                             this.ChunkMap[chkHdr.ID] = chkMeshSubsets;
 #if DEV_MARKEMP
-                            chkMeshSubsets.WriteChunk();
+                            //chkMeshSubsets.WriteChunk();
 #endif
                             break;
                         case ChunkTypeEnum.Node:
