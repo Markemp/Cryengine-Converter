@@ -22,7 +22,7 @@ namespace CgfConverter
         public Grendgine_Collada daeObject = new Grendgine_Collada();       // This is the serializable class.
         XmlSerializer mySerializer = new XmlSerializer(typeof(Grendgine_Collada));
 
-        public ArgsHandler Args { get; private set; }
+        public ArgsHandler Args { get; internal set; }
         public CryEngine CryData { get; set; }
 
         public COLLADA(ArgsHandler argsHandler)
@@ -198,11 +198,11 @@ namespace CgfConverter
                 // need to make a list of the sources and triangles to add to tmpGeo.Mesh
                 List<Grendgine_Collada_Source> sourceList = new List<Grendgine_Collada_Source>();
                 List<Grendgine_Collada_Triangles> triList = new List<Grendgine_Collada_Triangles>();
-                CryEngine.Model.ChunkDataStream tmpNormals = new CryEngine.Model.ChunkDataStream();
-                CryEngine.Model.ChunkDataStream tmpUVs = new CryEngine.Model.ChunkDataStream();
-                CryEngine.Model.ChunkDataStream tmpVertices = new CryEngine.Model.ChunkDataStream();
-                CryEngine.Model.ChunkDataStream tmpVertsUVs = new CryEngine.Model.ChunkDataStream();
-                CryEngine.Model.ChunkDataStream tmpIndices = new CryEngine.Model.ChunkDataStream();
+                CryEngine.Model.ChunkDataStream tmpNormals = null;
+                CryEngine.Model.ChunkDataStream tmpUVs = null;
+                CryEngine.Model.ChunkDataStream tmpVertices = null;
+                CryEngine.Model.ChunkDataStream tmpVertsUVs = null;
+                CryEngine.Model.ChunkDataStream tmpIndices = null;
 
                 if (this.CryData.ChunksByID[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Mesh)
                 {

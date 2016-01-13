@@ -10,7 +10,7 @@ namespace CgfConverter
     public class Blender  //  Class to allow exporting to .blend files.
     {
         FileInfo blendOutputFile;
-        public ArgsHandler Args { get; private set; }
+        public ArgsHandler Args { get; internal set; }
         public CryEngine CryData { get; set; }
 
         public Blender(ArgsHandler argsHandler)

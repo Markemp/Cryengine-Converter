@@ -108,6 +108,9 @@
     <Compile Include="COLLADA.cs" />
     <Compile Include="CryEngine\CryEngine.cs" />
     <Compile Include="CryEngine\CryEngine.Material.cs" />
+    <Compile Include="CryEngine\CryEngine_3_4.cs" />
+    <Compile Include="CryEngine\CryEngine_3_5.cs" />
+    <Compile Include="CryEngine\CryEngine_3_6.cs" />
     <Compile Include="External\Collada_B_Rep\Curves\Grendgine_Collada_Circle.cs" />
     <Compile Include="External\Collada_B_Rep\Curves\Grendgine_Collada_Curve.cs" />
     <Compile Include="External\Collada_B_Rep\Curves\Grendgine_Collada_Curves.cs" />

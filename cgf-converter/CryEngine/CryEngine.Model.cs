@@ -18,8 +18,11 @@ namespace CgfConverter
         public class Model
         {
             public Int32 NodeCount { get { return this.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Count(); } }
+            public String FileName { get; internal set; }
 
-            public String FileName { get; private set; }
+            // Header, ChunkTable and Chunks are what are in a file.  1 header, 1 table, and a chunk for each entry in the table.
+            private static FileVersionEnum FILE_VERSION;
+            private static UInt32 NUM_CHUNKS;          // number of chunks in the chunk table
 
             public static Model FromFile(String fileName)
             {
@@ -37,18 +40,14 @@ namespace CgfConverter
 
             #region Legacy
 
-            // Header, ChunkTable and Chunks are what are in a file.  1 header, 1 table, and a chunk for each entry in the table.
-            private static FileVersionEnum FILE_VERSION;
-            private static UInt32 NUM_CHUNKS;          // number of chunks in the chunk table
-
-            public FileHeader CgfHeader { get; private set; }
+            public FileHeader CgfHeader { get; internal set; }
             /// <summary>
             /// CgfChunkTable contains a list of all the Chunks.
             /// </summary>
-            public ChunkTable Headers { get; private set; }
-            public Dictionary<UInt32, Model.Chunk> ChunkMap { get; private set; }
+            public ChunkTable Headers { get; internal set; }
+            public Dictionary<UInt32, Model.Chunk> ChunkMap { get; internal set; }
             public ChunkNode RootNode { get; set; }
-            public List<ChunkHeader> ChunkHeaders {get; private set; }
+            public List<ChunkHeader> ChunkHeaders {get; internal set; }
 
             /// <summary>
             /// Load a cgf/cga/skin file
@@ -57,6 +56,9 @@ namespace CgfConverter
             public void Load(String fileName)
             {
                 FileInfo inputFile = new FileInfo(fileName);
+
+                Console.Title = String.Format("Processing {0}...", inputFile.Name);
+
                 this.FileName = inputFile.Name;
 
                 if (!inputFile.Exists)
@@ -66,9 +68,30 @@ namespace CgfConverter
                 BinaryReader cgfReader = new BinaryReader(File.Open(fileName, FileMode.Open));
                 // Get the header.  This isn't essential for .cgam files, but we need this info to find the version and offset to the chunk table
                 this.CgfHeader = new FileHeader();                       // Gets the header of the file (3-5 objects dep on version)
-                this.CgfHeader.GetHeader(cgfReader);
+                this.CgfHeader.Read(cgfReader);
+
+                this.CgfHeader.WriteChunk();
+
                 NUM_CHUNKS = this.CgfHeader.NumChunks;
-                this.Headers.GetChunkTable(cgfReader, CgfHeader.ChunkTableOffset);
+
+                switch (this.CgfHeader.ChunkVersion)
+                {
+                    case (0x744):
+                        this.Headers.GetChunkTable<CryEngine_3_4.ChunkHeader>(cgfReader, CgfHeader.ChunkTableOffset);
+                        break;
+                    case (0x745):
+                        this.Headers.GetChunkTable<CryEngine_3_5.ChunkHeader>(cgfReader, CgfHeader.ChunkTableOffset);
+                        break;
+                    case (0x746):
+                        this.Headers.GetChunkTable<CryEngine_3_6.ChunkHeader>(cgfReader, CgfHeader.ChunkTableOffset);
+                        break;
+                    default:
+                        Console.WriteLine("Unknown Header");
+                        this.CgfHeader.WriteChunk();
+                        break;
+                }
+
+                Console.ReadKey();
                 // this.Headers.WriteChunk();
 
                 foreach (ChunkHeader chkHdr in this.Headers.Items)
@@ -77,51 +100,51 @@ namespace CgfConverter
                     switch (chkHdr.ChunkType)
                     {
                         case ChunkTypeEnum.SourceInfo:
-                            ChunkSourceInfo chkSrcInfo = new ChunkSourceInfo(this);
-                            chkSrcInfo.ReadChunk(cgfReader, chkHdr);
+                            ChunkSourceInfo chkSrcInfo = new ChunkSourceInfo(this, chkHdr);
+                            chkSrcInfo.Read(cgfReader);
                             this.ChunkMap[chkHdr.ID] = chkSrcInfo;
                             break;
                         case ChunkTypeEnum.Timing:
                             // Timing chunks don't have IDs for some reason.
-                            ChunkTimingFormat chkTiming = new ChunkTimingFormat(this);
-                            chkTiming.ReadChunk(cgfReader, chkHdr);
+                            ChunkTimingFormat chkTiming = new ChunkTimingFormat(this, chkHdr);
+                            chkTiming.Read(cgfReader);
                             this.ChunkMap[chkHdr.ID] = chkTiming;
                             break;
                         case ChunkTypeEnum.ExportFlags:
-                            ChunkExportFlags chkExportFlag = new ChunkExportFlags(this);
-                            chkExportFlag.ReadChunk(cgfReader, chkHdr);
+                            ChunkExportFlags chkExportFlag = new ChunkExportFlags(this, chkHdr);
+                            chkExportFlag.Read(cgfReader);
                             this.ChunkMap[chkHdr.ID] = chkExportFlag;
                             break;
                         case ChunkTypeEnum.Mtl:
                             //Console.WriteLine("Mtl Chunk here");  // Obsolete.  Not used?
                             break;
                         case ChunkTypeEnum.MtlName:
-                            ChunkMtlName chkMtlName = new ChunkMtlName(this);
+                            ChunkMtlName chkMtlName = new ChunkMtlName(this, chkHdr);
                             chkMtlName.Version = chkHdr.Version;
-                            chkMtlName.ReadChunk(cgfReader, chkHdr);
+                            chkMtlName.Read(cgfReader);
                             this.ChunkMap[chkHdr.ID] = chkMtlName;
                             break;
                         case ChunkTypeEnum.DataStream:
-                            ChunkDataStream chkDataStream = new ChunkDataStream(this);
-                            chkDataStream.ReadChunk(cgfReader, chkHdr);
+                            ChunkDataStream chkDataStream = new ChunkDataStream(this, chkHdr);
+                            chkDataStream.Read(cgfReader);
                             this.ChunkMap[chkHdr.ID] = chkDataStream;
                             break;
                         case ChunkTypeEnum.Mesh:
-                            ChunkMesh chkMesh = new ChunkMesh(this);
-                            chkMesh.ReadChunk(cgfReader, chkHdr);
+                            ChunkMesh chkMesh = new ChunkMesh(this, chkHdr);
+                            chkMesh.Read(cgfReader);
                             this.ChunkMap[chkHdr.ID] = chkMesh;
                             break;
                         case ChunkTypeEnum.MeshSubsets:
-                            ChunkMeshSubsets chkMeshSubsets = new ChunkMeshSubsets(this);
-                            chkMeshSubsets.ReadChunk(cgfReader, chkHdr);
+                            ChunkMeshSubsets chkMeshSubsets = new ChunkMeshSubsets(this, chkHdr);
+                            chkMeshSubsets.Read(cgfReader);
                             this.ChunkMap[chkHdr.ID] = chkMeshSubsets;
 #if DEV_MARKEMP
                             //chkMeshSubsets.WriteChunk();
 #endif
                             break;
                         case ChunkTypeEnum.Node:
-                            ChunkNode chkNode = new ChunkNode(this);
-                            chkNode.ReadChunk(cgfReader, chkHdr);
+                            ChunkNode chkNode = new ChunkNode(this, chkHdr);
+                            chkNode.Read(cgfReader);
                             this.ChunkMap[chkHdr.ID] = chkNode;
 
                             // TODO: Change this to detect node with NULL or 0xFFFFFFFF parent ID
@@ -132,33 +155,33 @@ namespace CgfConverter
                             }
                             break;
                         case ChunkTypeEnum.CompiledBones:
-                            ChunkCompiledBones chkCompiledBones = new ChunkCompiledBones(this);
-                            chkCompiledBones.ReadChunk(cgfReader, chkHdr);
+                            ChunkCompiledBones chkCompiledBones = new ChunkCompiledBones(this, chkHdr);
+                            chkCompiledBones.Read(cgfReader);
                             this.ChunkMap[chkHdr.ID] = chkCompiledBones;
                             break;
                         case ChunkTypeEnum.Helper:
-                            ChunkHelper chkHelper = new ChunkHelper(this);
-                            chkHelper.ReadChunk(cgfReader, chkHdr);
+                            ChunkHelper chkHelper = new ChunkHelper(this, chkHdr);
+                            chkHelper.Read(cgfReader);
                             this.ChunkMap[chkHdr.ID] = chkHelper;
                             break;
                         case ChunkTypeEnum.Controller:
-                            ChunkController chkController = new ChunkController(this);
-                            chkController.ReadChunk(cgfReader, chkHdr);
+                            ChunkController chkController = new ChunkController(this, chkHdr);
+                            chkController.Read(cgfReader);
                             this.ChunkMap[chkHdr.ID] = chkController;
                             break;
                         case ChunkTypeEnum.SceneProps:
-                            ChunkSceneProp chkSceneProp = new ChunkSceneProp(this);
-                            chkSceneProp.ReadChunk(cgfReader, chkHdr);
+                            ChunkSceneProp chkSceneProp = new ChunkSceneProp(this, chkHdr);
+                            chkSceneProp.Read(cgfReader);
                             this.ChunkMap[chkHdr.ID] = chkSceneProp;
                             break;
                         case ChunkTypeEnum.CompiledPhysicalProxies:
-                            ChunkCompiledPhysicalProxies chkCompiledPhysicalProxy = new ChunkCompiledPhysicalProxies(this);
-                            chkCompiledPhysicalProxy.ReadChunk(cgfReader, chkHdr);
+                            ChunkCompiledPhysicalProxies chkCompiledPhysicalProxy = new ChunkCompiledPhysicalProxies(this, chkHdr);
+                            chkCompiledPhysicalProxy.Read(cgfReader);
                             this.ChunkMap[chkHdr.ID] = chkCompiledPhysicalProxy;
                             break;
                         default:
-                            Chunk chunk = new Chunk(this);
-                            chunk.ReadChunk(cgfReader, chkHdr);
+                            Chunk chunk = new Chunk(this, chkHdr);
+                            chunk.Read(cgfReader);
                             this.ChunkMap[chkHdr.ID] = chunk;
                             // If we hit this point, it's an unimplemented chunk and needs to be added.
                             // Console.WriteLine("Chunk type found that didn't match known versions: {0}", chkHdr.ChunkType);
@@ -166,7 +189,7 @@ namespace CgfConverter
                     }
 
                     // Ensure we read to end of structure
-                    this.ChunkMap[chkHdr.ID].SkipBytes();
+                    this.ChunkMap[chkHdr.ID].SkipBytes(cgfReader);
                 }
             }
 
@@ -181,17 +204,17 @@ namespace CgfConverter
 
             public class FileHeader
             {
-                public String FileSignature; // The CGF file signature.  CryTek for 3.5, CrChF for 3.6
+                public String FileSignature; // The CGF file signature.  CryTek for 3.5, CrCh for 3.6
                 public FileTypeEnum FileType; // The CGF file type (geometry or animation)  3.5 only
                 public UInt32 ChunkVersion; // The version of the chunk table 3.5 only
                 public Int32 ChunkTableOffset; // Position of the chunk table in the CGF file
                 /// <summary>
                 /// 3.6 Only - Number of chunks in the Chunk Table
                 /// </summary>
-                public UInt32 NumChunks { get; private set; }
+                public UInt32 NumChunks { get; internal set; }
                 //public Int32 FileVersion;         // 0 will be 3.4 and older, 1 will be 3.6 and newer.  THIS WILL CHANGE
                 // methods
-                public void GetHeader(BinaryReader b)  //constructor with 1 arg
+                public void Read(BinaryReader b)  //constructor with 1 arg
                 {
                     #region Detect FileSignature v3.6+
 
@@ -203,7 +226,7 @@ namespace CgfConverter
                         FILE_VERSION = FileVersionEnum.CryTek_3_6;
 
                         // Version 3.6 or later
-                        this.ChunkVersion = b.ReadUInt32();
+                        this.ChunkVersion = b.ReadUInt32();    // 0x746
                         this.NumChunks = b.ReadUInt32();       // number of Chunks in the chunk table
                         this.ChunkTableOffset = b.ReadInt32(); // location of the chunk table
 
@@ -223,8 +246,9 @@ namespace CgfConverter
 
                         // Version 3.5 or earlier
                         this.FileType = (FileTypeEnum)b.ReadUInt32();
-                        this.ChunkVersion = b.ReadUInt32();
-                        this.ChunkTableOffset = b.ReadInt32();
+                        this.ChunkVersion = b.ReadUInt32();    // 0x744 0x745
+                        this.ChunkTableOffset = b.ReadInt32() + 4;
+                        this.NumChunks = b.ReadUInt32();       // number of Chunks in the chunk table
 
                         return;
                     }
@@ -234,6 +258,11 @@ namespace CgfConverter
                     throw new NotSupportedException(String.Format("Unsupported FileSignature {0}", this.FileSignature));
                 }
 
+                public void Write(BinaryWriter writer)
+                {
+                    throw new NotImplementedException();
+                }
+
                 public void WriteChunk()  // output header to console for testing
                 {
                     Console.WriteLine("*** HEADER ***");
@@ -241,135 +270,87 @@ namespace CgfConverter
                     Console.WriteLine("    FileType:            {0:X}", this.FileType);
                     Console.WriteLine("    ChunkVersion:        {0:X}", this.ChunkVersion);
                     Console.WriteLine("    ChunkTableOffset:    {0:X}", this.ChunkTableOffset);
-                    Console.WriteLine("    NumChunks:           {0:X}", NUM_CHUNKS);
-                    Console.WriteLine("    ChunktableOffset:    {0:X}", this.ChunkTableOffset);
+                    Console.WriteLine("    NumChunks:           {0:X}", this.NumChunks);
 
                     Console.WriteLine("*** END HEADER ***");
                     return;
                 }
             }
 
-            public class ChunkTable  // reads the chunk table into a list of ChunkHeaders
+            /// <summary>
+            /// Table that contains list of Chunk Headers
+            /// </summary>
+            public class ChunkTable
             {
                 public List<ChunkHeader> Items = new List<ChunkHeader>();
 
-                // methods
-                public void GetChunkTable(BinaryReader b, Int32 f)
+                public void GetChunkTable<TChunkHeader>(BinaryReader b, Int32 f) where TChunkHeader : ChunkHeader, new()
                 {
                     // need to seek to the start of the table here.  foffset points to the start of the table
                     b.BaseStream.Seek(f, SeekOrigin.Begin);
 
-                    if (Model.FILE_VERSION == FileVersionEnum.CryTek_3_5)           // old 3.4 format
-                    {
-                        NUM_CHUNKS = b.ReadUInt32();  // number of Chunks in the table.
-                    }
-
                     for (Int32 i = 0; i < NUM_CHUNKS; i++)
                     {
-                        ChunkHeader tempChkHdr = new ChunkHeader();
-                        tempChkHdr.ReadChunk(b);
-                        Items.Add(tempChkHdr);
+                        TChunkHeader tempChkHdr = new TChunkHeader();
+
+                        tempChkHdr.Read(b);
+
+                        this.Items.Add(tempChkHdr);
                     }
                 }
+
                 public void WriteChunk()
                 {
                     Console.WriteLine("*** Chunk Header Table***");
                     Console.WriteLine("Chunk Type              Version   ID        Size      Offset    ");
-                    foreach (ChunkHeader chkHdr in Items)
+                    foreach (ChunkHeader chkHdr in this.Items)
                     {
-                        Console.WriteLine("{0,-24}{1,-10:X}{2,-10:X}{3,-10:X}{4,-10:X}", chkHdr.ChunkType, chkHdr.Version, chkHdr.ID, chkHdr.Size, chkHdr.Offset);
+                        Console.WriteLine("{0,-24:X}{1,-10:X}{2,-10:X}{3,-10:X}{4,-10:X}", chkHdr.ChunkType.ToString(), chkHdr.Version, chkHdr.ID, chkHdr.Size, chkHdr.Offset);
                     }
                 }
             }
 
-            public class ChunkHeader
+            public abstract class ChunkHeader
             {
-                public ChunkTypeEnum ChunkType { get; private set; }
-                public UInt32 Version { get; private set; }
-                public UInt32 Offset { get; private set; }
-                public UInt32 ID { get; private set; }
-                public UInt32 Size { get; private set; }
+                public ChunkTypeEnum ChunkType { get; internal set; }
+                public UInt32 Version { get; internal set; }
+                public UInt32 Offset { get; internal set; }
+                public UInt32 ID { get; internal set; }
+                public UInt32 Size { get; internal set; }
 
-                public void ReadChunk(BinaryReader b)
-                {
-                    if (Model.FILE_VERSION == FileVersionEnum.CryTek_3_5)
-                    {
-                        UInt32 headerType = b.ReadUInt32(); // read the value, then parse it
-                        this.ChunkType = (ChunkTypeEnum)Enum.ToObject(typeof(ChunkTypeEnum), headerType);
-                        this.Version = b.ReadUInt32();
-                        this.Offset = b.ReadUInt32();
-                        this.ID = b.ReadUInt32();  // This is the chunk ID (except timing)
-                        // hack to fix the timing chunk ID, since we don't want it to conflict.  Add 0xFFFF0000 to it.
-                        if ((this.ChunkType == ChunkTypeEnum.Timing) || ((UInt32)this.ChunkType == 0x100E))
-                        {
-                            this.ID = this.ID + 0xFFFF0000;
-                        }
-                        this.Size = b.ReadUInt32();
-                    }
-                    else if (Model.FILE_VERSION == FileVersionEnum.CryTek_3_6) // Newer 3.7+ format.  Only know of Star Citizen using this for now.
-                    {
-                        UInt16 headerType = b.ReadUInt16();
-                        switch (headerType)
-                        {
-                            case 0x1000: this.ChunkType = ChunkTypeEnum.Mesh; break;
-                            case 0x1001: this.ChunkType = ChunkTypeEnum.Helper; break;
-                            case 0x1002: this.ChunkType = ChunkTypeEnum.VertAnim; break;
-                            case 0x1003: this.ChunkType = ChunkTypeEnum.BoneAnim; break;
-                            case 0x1004: this.ChunkType = ChunkTypeEnum.GeomNameList; break;
-                            case 0x1005: this.ChunkType = ChunkTypeEnum.BoneNameList; break;
-                            case 0x1006: this.ChunkType = ChunkTypeEnum.MtlList; break;
-                            case 0x1007: this.ChunkType = ChunkTypeEnum.MRM; break;
-                            case 0x1008: this.ChunkType = ChunkTypeEnum.SceneProps; break;
-                            case 0x1009: this.ChunkType = ChunkTypeEnum.Light; break;
-                            case 0x100A: this.ChunkType = ChunkTypeEnum.PatchMesh; break;
-                            case 0x100B: this.ChunkType = ChunkTypeEnum.Node; break;
-                            case 0x100C: this.ChunkType = ChunkTypeEnum.Mtl; break;
-                            case 0x100D: this.ChunkType = ChunkTypeEnum.Controller; break;
-                            case 0x100E: this.ChunkType = ChunkTypeEnum.Timing; break;
-                            case 0x100F: this.ChunkType = ChunkTypeEnum.BoneMesh; break;
-                            case 0x1010: this.ChunkType = ChunkTypeEnum.BoneLightBinding; break;
-                            case 0x1011: this.ChunkType = ChunkTypeEnum.MeshMorphTarget; break;
-                            case 0x1012: this.ChunkType = ChunkTypeEnum.BoneInitialPos; break;
-                            case 0x1013: this.ChunkType = ChunkTypeEnum.SourceInfo; break;
-                            case 0x1014: this.ChunkType = ChunkTypeEnum.MtlName; break;
-                            case 0x1015: this.ChunkType = ChunkTypeEnum.ExportFlags; break;
-                            case 0x1016: this.ChunkType = ChunkTypeEnum.DataStream; break;
-                            case 0x1017: this.ChunkType = ChunkTypeEnum.MeshSubsets; break;
-                            case 0x1018: this.ChunkType = ChunkTypeEnum.MeshPhysicsData; break;
-                            default:
-                                Console.WriteLine("Unknown Chunk Type found {0:X}.  Skipping...", headerType);
-                                break;
-                        }
-                        //this.type36 = (ChunkType36)Enum.ToObject(typeof(ChunkType36), this);
-                        //Console.WriteLine("headerType: '{0}'", this.type);
-                        this.Version = (uint)b.ReadUInt16();
-                        this.ID = b.ReadUInt32();  // This is the reference number to identify the mesh/datastream
-                        this.Size = b.ReadUInt32();
-                        this.Offset = b.ReadUInt32();
-                    }
-                }
+                public abstract void Read(BinaryReader reader);
+                public abstract void Write(BinaryWriter writer);
 
-                // methods
-                public void WriteChunk()  // write the Chunk Header Table to the console.  For testing.
+                public override String ToString()
                 {
-                    Console.WriteLine("*** CHUNK HEADER ***");
-                    Console.WriteLine("    ChunkType: {0}", ChunkType);
-                    Console.WriteLine("    ChunkVersion: {0:X}", Version);
-                    Console.WriteLine("    offset: {0:X}", Offset);
-                    Console.WriteLine("    ID: {0:X}", ID);
-                    Console.WriteLine("*** END CHUNK HEADER ***");
+                    StringBuilder sb = new StringBuilder();
+
+                    sb.AppendFormat("*** CHUNK HEADER ***");
+                    sb.AppendFormat("    ChunkType: {0}", this.ChunkType);
+                    sb.AppendFormat("    ChunkVersion: {0:X}", this.Version);
+                    sb.AppendFormat("    Offset: {0:X}", this.Offset);
+                    sb.AppendFormat("    ID: {0:X}", this.ID);
+                    sb.AppendFormat("    Size: {0:X}", this.Size);
+                    sb.AppendFormat("*** END CHUNK HEADER ***");
+
+                    return sb.ToString();
                 }
             }
 
             public class Chunk
             {
-                public Chunk(CryEngine.Model model)
+                public Chunk(CryEngine.Model model, ChunkHeader header)
                 {
                     this._model = model;
+                    this._header = header;
                 }
 
+                internal ChunkHeader _header;
                 internal Model _model;
 
+                /// <summary>
+                /// Position of the start of the chunk
+                /// </summary>
                 public UInt32 Offset { get; internal set; }
                 /// <summary>
                 /// The Type of the Chunk
@@ -387,40 +368,46 @@ namespace CgfConverter
                 /// The Size of this Chunk (in Bytes)
                 /// </summary>
                 public UInt32 Size;
-                private BinaryReader _binaryReader;
-                public Dictionary<Int64, Byte> SkippedBytes = new Dictionary<Int64, Byte> { };
-                public Dictionary<Int64, Char> SkippedChars
-                {
-                    get { return this.SkippedBytes.ToDictionary(k => k.Key, v => (Char)v.Value); }
-                    set { }
-                }
 
-                public void SkipBytes(Int64? bytesToSkip = null)
+                public Dictionary<Int64, Byte> SkippedBytes = new Dictionary<Int64, Byte> { };
+
+                public void SkipBytes(BinaryReader reader, Int64? bytesToSkip = null)
                 {
-                    if (this._binaryReader.BaseStream.Position > this.Offset + this.Size)
-                        Console.WriteLine("Buffer Overflow in {2} 0x{0:X} ({1} bytes)", this.ID, this._binaryReader.BaseStream.Position - this.Offset - this.Size, this.GetType().Name);
+                    if (reader == null)
+                        return;
+
+                    if (reader.BaseStream.Position > this.Offset + this.Size)
+                        Console.WriteLine("Buffer Overflow in {2} 0x{0:X} ({1} bytes)", this.ID, reader.BaseStream.Position - this.Offset - this.Size, this.GetType().Name);
 
                     if (!bytesToSkip.HasValue)
-                        bytesToSkip = (Int64)(this.Size - Math.Max(this._binaryReader.BaseStream.Position - this.Offset, 0));
+                        bytesToSkip = (Int64)(this.Size - Math.Max(reader.BaseStream.Position - this.Offset, 0));
 
                     for (Int64 i = 0; i < bytesToSkip; i++)
                     {
-                        this.SkippedBytes[this._binaryReader.BaseStream.Position - this.Offset] = this._binaryReader.ReadByte();
-                        if (this.SkippedBytes[this._binaryReader.BaseStream.Position - this.Offset - 1] == 0)
-                            this.SkippedBytes.Remove(this._binaryReader.BaseStream.Position - this.Offset - 1);
+                        this.SkippedBytes[reader.BaseStream.Position - this.Offset] = reader.ReadByte();
+
+                        // if (this.SkippedBytes[reader.BaseStream.Position - this.Offset - 1] == 0)
+                        //     this.SkippedBytes.Remove(reader.BaseStream.Position - this.Offset - 1);
                     }
                 }
 
-                public virtual void ReadChunk(BinaryReader b, ChunkHeader hdr)
+                public virtual void Read(BinaryReader reader)
                 {
-                    this._binaryReader = b;
-                    this.ChunkType = hdr.ChunkType;
-                    this.Version = hdr.Version;
-                    this.Offset = hdr.Offset;
-                    this.ID = hdr.ID;
-                    this.Size = hdr.Size;
+                    this.ChunkType = this._header.ChunkType;
+                    this.Version = this._header.Version;
+                    this.Offset = this._header.Offset;
+                    this.ID = this._header.ID;
+                    this.Size = this._header.Size;
 
-                    b.BaseStream.Seek(hdr.Offset, 0);
+                    reader.BaseStream.Seek(this._header.Offset, 0);
+
+                    if (Model.FILE_VERSION == FileVersionEnum.CryTek_3_5)
+                    {
+                        this.ChunkType = (ChunkTypeEnum)Enum.ToObject(typeof(ChunkTypeEnum), reader.ReadUInt32());
+                        this.Version = reader.ReadUInt32();
+                        this.Offset = reader.ReadUInt32();
+                        this.ID = reader.ReadUInt32();
+                    }
                 }
 
                 public virtual void WriteChunk()
@@ -442,19 +429,11 @@ namespace CgfConverter
                 public Vector3 Pos;
                 public Matrix44 Transform;
 
-                public ChunkHelper(Model model) : base(model) { }
+                public ChunkHelper(Model model, ChunkHeader header) : base(model, header) { }
 
-                public override void ReadChunk(BinaryReader b, ChunkHeader hdr)
+                public override void Read(BinaryReader b)
                 {
-                    base.ReadChunk(b, hdr);
-
-                    if (Model.FILE_VERSION == FileVersionEnum.CryTek_3_5)
-                    {
-                        this.ChunkType = (ChunkTypeEnum)Enum.ToObject(typeof(ChunkTypeEnum), b.ReadUInt32());
-                        this.Version = b.ReadUInt32();
-                        this.Offset = b.ReadUInt32();
-                        this.ID = b.ReadUInt32();
-                    }
+                    base.Read(b);
 
                     this.HelperType = (HelperTypeEnum)Enum.ToObject(typeof(HelperTypeEnum), b.ReadUInt32());
                     if (this.Version == 0x744)  // only has the Position.
@@ -506,20 +485,12 @@ namespace CgfConverter
                 //public Dictionary<UInt32, CompiledBone> BoneDictionary = new Dictionary<UInt32, CompiledBone>();
                 public Dictionary<String, CompiledBone> BoneDictionary = new Dictionary<String, CompiledBone>();  // Name and CompiledBone object
 
-                public ChunkCompiledBones(Model model) : base(model) { }
+                public ChunkCompiledBones(Model model, ChunkHeader header) : base(model, header) { }
 
-                public override void ReadChunk(BinaryReader b, ChunkHeader hdr)
+                public override void Read(BinaryReader b)
                 {
-                    base.ReadChunk(b, hdr);
+                    base.Read(b);
 
-                    if (Model.FILE_VERSION == FileVersionEnum.CryTek_3_5)
-                    {
-                        UInt32 tmpNodeChunk = b.ReadUInt32();
-                        this.ChunkType = (ChunkTypeEnum)Enum.ToObject(typeof(ChunkTypeEnum), tmpNodeChunk);
-                        this.Version = b.ReadUInt32();
-                        this.Offset = b.ReadUInt32();
-                        this.ID = b.ReadUInt32();
-                    }
                     this.Reserved = new uint[8];
                     for (Int32 i = 0; i < 8; i++)
                     {
@@ -573,21 +544,11 @@ namespace CgfConverter
                 //public UInt32 Reserved2;
                 public HitBox[] HitBoxes;
 
-                public ChunkCompiledPhysicalProxies(Model model) : base(model) { }
+                public ChunkCompiledPhysicalProxies(Model model, ChunkHeader header) : base(model, header) { }
 
-                public override void ReadChunk(BinaryReader b, ChunkHeader hdr)
+                public override void Read(BinaryReader b)
                 {
-                    base.ReadChunk(b, hdr);
-
-                    if (Model.FILE_VERSION == FileVersionEnum.CryTek_3_5)
-                    {
-                        UInt32 tmpNodeChunk = b.ReadUInt32();
-                        this.ChunkType = (ChunkTypeEnum)Enum.ToObject(typeof(ChunkTypeEnum), tmpNodeChunk);
-                        this.Version = b.ReadUInt32();
-                        this.Offset = b.ReadUInt32();
-                        this.ID = b.ReadUInt32();
-                        // Console.WriteLine("Chunk ID is {0:X}", id);
-                    }
+                    base.Read(b);
 
                     this.NumBones = b.ReadUInt32(); // number of Bones in this chunk.
                     // Console.WriteLine("Number of bones (hitboxes): {0}", NumBones);
@@ -769,7 +730,7 @@ namespace CgfConverter
 
                 #region Constructor/s
 
-                public ChunkNode(CryEngine.Model model) : base(model) { }
+                public ChunkNode(Model model, ChunkHeader header) : base(model, header) { }
 
                 #endregion
 
@@ -800,18 +761,10 @@ namespace CgfConverter
                     return vec3;
                 }
 
-                public override void ReadChunk(BinaryReader b, ChunkHeader hdr)
+                public override void Read(BinaryReader b)
                 {
-                    base.ReadChunk(b, hdr);
+                    base.Read(b);
 
-                    if (Model.FILE_VERSION == FileVersionEnum.CryTek_3_5)
-                    {
-                        UInt32 tmpNodeChunk = b.ReadUInt32();
-                        this.ChunkType = (ChunkTypeEnum)Enum.ToObject(typeof(ChunkTypeEnum), tmpNodeChunk);
-                        this.Version = b.ReadUInt32();
-                        this.Offset = b.ReadUInt32();
-                        this.ID = b.ReadUInt32();
-                    }
                     // Read the Name string
                     this.Name = b.ReadFString(64);
                     // new string(tmpName, 0, stringLength);
@@ -825,7 +778,7 @@ namespace CgfConverter
 
                     this.__NumChildren = b.ReadUInt32();
                     this.MatID = b.ReadUInt32();  // Material ID?
-                    this.SkipBytes(4);
+                    this.SkipBytes(b, 4);
                     
                     // Read the 4x4 transform matrix.  Should do a couple of for loops, but data structures...
                     this.Transform = new Matrix44
@@ -881,6 +834,7 @@ namespace CgfConverter
                     this.Properties = b.ReadPString();
                     // Good enough for now.
                 }
+
                 public override void WriteChunk()
                 {
                     Console.WriteLine("*** START Node Chunk ***");
@@ -908,30 +862,22 @@ namespace CgfConverter
 
             public class ChunkController : Chunk    // cccc000d:  Controller chunk
             {
-                public CtrlType ControllerType { get; private set; }
-                public UInt32 NumKeys { get; private set; }
-                public UInt32 ControllerFlags { get; private set; }        // technically a bitstruct to identify a cycle or a loop.
-                public UInt32 ControllerID { get; private set; }           // Unique id based on CRC32 of bone name.  Ver 827 only?
-                public Key[] Keys { get; private set; }                  // array length NumKeys.  Ver 827?
+                public CtrlType ControllerType { get; internal set; }
+                public UInt32 NumKeys { get; internal set; }
+                public UInt32 ControllerFlags { get; internal set; }        // technically a bitstruct to identify a cycle or a loop.
+                public UInt32 ControllerID { get; internal set; }           // Unique id based on CRC32 of bone name.  Ver 827 only?
+                public Key[] Keys { get; internal set; }                  // array length NumKeys.  Ver 827?
 
                 #region Constructor/s
 
-                public ChunkController(CryEngine.Model model) : base(model) { }
+                public ChunkController(Model model, ChunkHeader header) : base(model, header) { }
 
                 #endregion
 
-                public override void ReadChunk(BinaryReader b, ChunkHeader hdr)
+                public override void Read(BinaryReader b)
                 {
-                    base.ReadChunk(b, hdr);
+                    base.Read(b);
 
-                    if (Model.FILE_VERSION == FileVersionEnum.CryTek_3_5)
-                    {
-                        UInt32 tmpChkType = b.ReadUInt32();
-                        this.ChunkType = (ChunkTypeEnum)Enum.ToObject(typeof(ChunkTypeEnum), tmpChkType);
-                        this.Version = b.ReadUInt32();  //0x00000918 is Far Cry, Crysis, MWO, Aion
-                        this.Offset = b.ReadUInt32();
-                        this.ID = b.ReadUInt32();
-                    }
                     //Console.WriteLine("ID is:  {0}", id);
                     this.ControllerType = (CtrlType)Enum.ToObject(typeof(CtrlType), b.ReadUInt32());
                     this.NumKeys = b.ReadUInt32();
@@ -982,13 +928,13 @@ namespace CgfConverter
 
                 #region Constructor/s
 
-                public ChunkExportFlags(CryEngine.Model model) : base(model) { }
+                public ChunkExportFlags(Model model, ChunkHeader header) : base(model, header) { }
 
                 #endregion
 
-                public override void ReadChunk(BinaryReader b, ChunkHeader hdr)
+                public override void Read(BinaryReader b)
                 {
-                    base.ReadChunk(b, hdr);
+                    base.Read(b);
 
                     UInt32 tmpExportFlag = b.ReadUInt32();
                     this.ChunkType = (ChunkTypeEnum)Enum.ToObject(typeof(ChunkTypeEnum), tmpExportFlag);
@@ -996,7 +942,7 @@ namespace CgfConverter
                     this.ChunkOffset = b.ReadUInt32();
                     this.ID = b.ReadUInt32();
 
-                    this.SkipBytes(4);
+                    this.SkipBytes(b, 4);
 
                     this.RCVersion = new uint[4];
                     Int32 count = 0;
@@ -1006,7 +952,7 @@ namespace CgfConverter
                     }
                     this.RCVersionString = b.ReadFString(16);
 
-                    this.SkipBytes();
+                    this.SkipBytes(b);
                 }
 
                 public override void WriteChunk()
@@ -1035,13 +981,13 @@ namespace CgfConverter
 
                 #region Constructor/s
 
-                public ChunkSourceInfo(CryEngine.Model model) : base(model) { }
+                public ChunkSourceInfo(Model model, ChunkHeader header) : base(model, header) { }
 
                 #endregion
 
-                public override void ReadChunk(BinaryReader b, ChunkHeader hdr)
+                public override void Read(BinaryReader b)
                 {
-                    base.ReadChunk(b, hdr);
+                    base.Read(b);
 
                     this.ChunkType = ChunkTypeEnum.SourceInfo; // this chunk doesn't actually have the chunktype header.
                     this.SourceFile = b.ReadCString();
@@ -1063,38 +1009,29 @@ namespace CgfConverter
             public class ChunkMtlName : Chunk  // cccc0014:  provides material name as used in the .mtl file
             {
                 // need to find the material ID used by the mesh subsets
-                public UInt32 Flags1 { get; private set; }  // pointer to the start of this chunk?
-                public UInt32 MatType { get; private set; } // for type 800, 0x1 is material library, 0x12 is child, 0x10 is solo material
+                public UInt32 Flags1 { get; internal set; }  // pointer to the start of this chunk?
+                public UInt32 MatType { get; internal set; } // for type 800, 0x1 is material library, 0x12 is child, 0x10 is solo material
                 //public UInt32 NumChildren802; // for type 802, NumChildren
-                public String Name { get; private set; } // technically a String128 class
-                public MtlNamePhysicsType PhysicsType { get; private set; } // enum of a 4 byte UInt32  For 802 it's an array, 800 a single element.
-                public MtlNamePhysicsType[] PhysicsTypeArray { get; private set; } // enum of a 4 byte UInt32  For 802 it's an array, 800 a single element.
-                public UInt32 NumChildren { get; private set; } // number of materials in this name. Max is 66
+                public String Name { get; internal set; } // technically a String128 class
+                public MtlNamePhysicsType PhysicsType { get; internal set; } // enum of a 4 byte UInt32  For 802 it's an array, 800 a single element.
+                public MtlNamePhysicsType[] PhysicsTypeArray { get; internal set; } // enum of a 4 byte UInt32  For 802 it's an array, 800 a single element.
+                public UInt32 NumChildren { get; internal set; } // number of materials in this name. Max is 66
                 // need to implement an array of references here?  Name of Children
-                public UInt32[] Children { get; private set; }
-                public UInt32[] Padding { get; private set; }  // array length of 32
-                public UInt32 AdvancedData { get; private set; }  // probably not used
-                public Single Opacity { get; private set; } // probably not used
-                public Int32[] Reserved { get; private set; }  // array length of 32
+                public UInt32[] Children { get; internal set; }
+                public UInt32[] Padding { get; internal set; }  // array length of 32
+                public UInt32 AdvancedData { get; internal set; }  // probably not used
+                public Single Opacity { get; internal set; } // probably not used
+                public Int32[] Reserved { get; internal set; }  // array length of 32
 
                 #region Constructor/s
 
-                public ChunkMtlName(CryEngine.Model model) : base(model) { }
+                public ChunkMtlName(Model model, ChunkHeader header) : base(model, header) { }
 
                 #endregion
 
-                public override void ReadChunk(BinaryReader b, ChunkHeader hdr)
+                public override void Read(BinaryReader b)
                 {
-                    base.ReadChunk(b, hdr);
-
-                    if (Model.FILE_VERSION == FileVersionEnum.CryTek_3_5)
-                    {
-                        UInt32 tmpChunkMtlName = b.ReadUInt32();
-                        this.ChunkType = (ChunkTypeEnum)Enum.ToObject(typeof(ChunkTypeEnum), tmpChunkMtlName);
-                        this.Version = b.ReadUInt32();
-                        this.Offset = b.ReadUInt32();  // offset to this chunk
-                        this.ID = b.ReadUInt32();  // ref/chunk number
-                    }
+                    base.Read(b);
 
                     Char[] tmpName = new Char[128];
                     Int32 stringLength = 0;
@@ -1105,7 +1042,7 @@ namespace CgfConverter
                         case 0x800:
                         case 0x744: // guessing on the 744. Aion.
                             this.MatType = b.ReadUInt32();  // if 0x1, then material lib.  If 0x12, mat name.  This is actually a bitstruct.
-                            this.SkipBytes(4);
+                            this.SkipBytes(b, 4);
                             this.Name = b.ReadFString(128);
                             this.PhysicsType = (MtlNamePhysicsType)Enum.ToObject(typeof(MtlNamePhysicsType), b.ReadUInt32());
                             this.NumChildren = b.ReadUInt32();
@@ -1179,22 +1116,13 @@ namespace CgfConverter
 
                 #region Constructor/s
 
-                public ChunkDataStream() : base(null) { }
-                public ChunkDataStream(CryEngine.Model model) : base(model) { }
+                public ChunkDataStream(Model model, ChunkHeader header) : base(model, header) { }
 
                 #endregion
 
-                public override void ReadChunk(BinaryReader b, ChunkHeader hdr)
+                public override void Read(BinaryReader b)
                 {
-                    base.ReadChunk(b, hdr);
-
-                    if (Model.FILE_VERSION == FileVersionEnum.CryTek_3_5)
-                    {
-                        this.ChunkType = (ChunkTypeEnum)b.ReadUInt32();
-                        this.Version = b.ReadUInt32();
-                        this.Offset = b.ReadUInt32();  // Offset to this chunk
-                        this.ID = b.ReadUInt32();  // Reference to the data stream type.
-                    }
+                    base.Read(b);
 
                     this.Flags2 = b.ReadUInt32(); // another filler
                     UInt32 tmpdataStreamType = b.ReadUInt32();
@@ -1211,7 +1139,7 @@ namespace CgfConverter
                         b.ReadInt16();                                  // unknown value.   Doesn't look like padding though.
                     }
 
-                    this.SkipBytes(8);
+                    this.SkipBytes(b, 8);
 
                     // Now do loops to read for each of the different Data Stream Types.  If vertices, need to populate Vector3s for example.
                     switch (this.DataStreamType)
@@ -1453,56 +1381,29 @@ namespace CgfConverter
 
                 #region Constructor/s
 
-                public ChunkMeshSubsets(CryEngine.Model model) : base(model) { }
+                public ChunkMeshSubsets(Model model, ChunkHeader header) : base(model, header) { }
 
                 #endregion
 
-                public override void ReadChunk(BinaryReader b, ChunkHeader hdr)
+                public override void Read(BinaryReader b)
                 {
-                    base.ReadChunk(b, hdr);
+                    base.Read(b);
 
-                    if (Model.FILE_VERSION == FileVersionEnum.CryTek_3_5)
+                    this.Flags = b.ReadUInt32();   // Might be a ref to this chunk
+                    this.NumMeshSubset = b.ReadUInt32();  // number of mesh subsets
+                    this.SkipBytes(b, 8);
+                    this.MeshSubsets = new MeshSubset[NumMeshSubset];
+                    for (Int32 i = 0; i < NumMeshSubset; i++)
                     {
-                        UInt32 tmpChunkType = b.ReadUInt32();
-                        this.ChunkType = (ChunkTypeEnum)Enum.ToObject(typeof(ChunkTypeEnum), tmpChunkType);
-                        this.Version = b.ReadUInt32(); // probably 800
-                        this.Offset = b.ReadUInt32();  // offset to this chunk
-                        this.ID = b.ReadUInt32(); // ID of this chunk.  Used to reference the mesh chunk
-                        this.Flags = b.ReadUInt32();   // Might be a ref to this chunk
-                        this.NumMeshSubset = b.ReadUInt32();  // number of mesh subsets
-                        this.SkipBytes(8);
-                        this.MeshSubsets = new MeshSubset[NumMeshSubset];
-                        for (Int32 i = 0; i < NumMeshSubset; i++)
-                        {
-                            this.MeshSubsets[i].FirstIndex = b.ReadUInt32();
-                            this.MeshSubsets[i].NumIndices = b.ReadUInt32();
-                            this.MeshSubsets[i].FirstVertex = b.ReadUInt32();
-                            this.MeshSubsets[i].NumVertices = b.ReadUInt32();
-                            this.MeshSubsets[i].MatID = b.ReadUInt32();
-                            this.MeshSubsets[i].Radius = b.ReadSingle();
-                            this.MeshSubsets[i].Center.x = b.ReadSingle();
-                            this.MeshSubsets[i].Center.y = b.ReadSingle();
-                            this.MeshSubsets[i].Center.z = b.ReadSingle();
-                        }
-                    }
-                    if (Model.FILE_VERSION == FileVersionEnum.CryTek_3_6)  // 3.6 and newer files
-                    {
-                        this.Flags = b.ReadUInt32();   // Might be a ref to this chunk
-                        this.NumMeshSubset = b.ReadUInt32();  // number of mesh subsets
-                        this.SkipBytes(8); 
-                        this.MeshSubsets = new MeshSubset[NumMeshSubset];
-                        for (Int32 i = 0; i < NumMeshSubset; i++)
-                        {
-                            this.MeshSubsets[i].FirstIndex = b.ReadUInt32();
-                            this.MeshSubsets[i].NumIndices = b.ReadUInt32();
-                            this.MeshSubsets[i].FirstVertex = b.ReadUInt32();
-                            this.MeshSubsets[i].NumVertices = b.ReadUInt32();
-                            this.MeshSubsets[i].MatID = b.ReadUInt32();
-                            this.MeshSubsets[i].Radius = b.ReadSingle();
-                            this.MeshSubsets[i].Center.x = b.ReadSingle();
-                            this.MeshSubsets[i].Center.y = b.ReadSingle();
-                            this.MeshSubsets[i].Center.z = b.ReadSingle();
-                        }
+                        this.MeshSubsets[i].FirstIndex = b.ReadUInt32();
+                        this.MeshSubsets[i].NumIndices = b.ReadUInt32();
+                        this.MeshSubsets[i].FirstVertex = b.ReadUInt32();
+                        this.MeshSubsets[i].NumVertices = b.ReadUInt32();
+                        this.MeshSubsets[i].MatID = b.ReadUInt32();
+                        this.MeshSubsets[i].Radius = b.ReadSingle();
+                        this.MeshSubsets[i].Center.x = b.ReadSingle();
+                        this.MeshSubsets[i].Center.y = b.ReadSingle();
+                        this.MeshSubsets[i].Center.z = b.ReadSingle();
                     }
                 }
                 public override void WriteChunk()
@@ -1575,31 +1476,23 @@ namespace CgfConverter
 
                 #region Constructor/s
 
-                public ChunkMesh(CryEngine.Model model) : base(model) { }
+                public ChunkMesh(Model model, ChunkHeader header) : base(model, header) { }
 
                 #endregion
 
-                public override void ReadChunk(BinaryReader b, ChunkHeader hdr)
+                public override void Read(BinaryReader b)
                 {
-                    base.ReadChunk(b, hdr);
+                    base.Read(b);
 
-                    if (Model.FILE_VERSION == FileVersionEnum.CryTek_3_5)
-                    {
-                        UInt32 tmpChunkType = b.ReadUInt32();
-                        this.ChunkType = (ChunkTypeEnum)Enum.ToObject(typeof(ChunkTypeEnum), tmpChunkType);
-                        this.Version = b.ReadUInt32();
-                        this.Flags1 = b.ReadUInt32();  // offset
-                        this.ID = b.ReadUInt32();  // Chunk ID  0x23 for candle
-                    }
                     if (Version == 0x800)
                     {
                         this.NumVertSubsets = 1;
-                        this.SkipBytes(8);
+                        this.SkipBytes(b, 8);
                         this.NumVertices = b.ReadUInt32();
                         this.NumIndices = b.ReadUInt32();   //  Number of indices
-                        this.SkipBytes(4);
+                        this.SkipBytes(b, 4);
                         this.MeshSubsets = b.ReadUInt32();  // refers to ID in mesh subsets  1d for candle.  Just 1 for 0x800 type
-                        this.SkipBytes(4);
+                        this.SkipBytes(b, 4);
                         this.VerticesData = b.ReadUInt32();  // ID of the datastream for the vertices for this mesh
                         this.NormalsData = b.ReadUInt32();   // ID of the datastream for the normals for this mesh
                         this.UVsData = b.ReadUInt32();     // refers to the ID in the Normals datastream?
@@ -1612,7 +1505,7 @@ namespace CgfConverter
                         this.BoneMapData = b.ReadUInt32();
                         this.FaceMapData = b.ReadUInt32();
                         this.VertMatsData = b.ReadUInt32();
-                        this.SkipBytes(16);
+                        this.SkipBytes(b, 16);
                         for (Int32 i = 0; i < 4; i++)
                         {
                             this.PhysicsData[i] = b.ReadUInt32();
@@ -1626,12 +1519,12 @@ namespace CgfConverter
                     }
                     else if (Version == 0x801)
                     {
-                        this.SkipBytes(8);
+                        this.SkipBytes(b, 8);
                         this.NumVertices = b.ReadUInt32();
                         this.NumIndices = b.ReadUInt32();
-                        this.SkipBytes(4);
+                        this.SkipBytes(b, 4);
                         this.MeshSubsets = b.ReadUInt32();  // refers to ID in mesh subsets 
-                        this.SkipBytes(4);
+                        this.SkipBytes(b, 4);
                         this.VerticesData = b.ReadUInt32();
                         this.NormalsData = b.ReadUInt32();           // ID of the datastream for the normals for this mesh
                         this.UVsData = b.ReadUInt32();               // refers to the ID in the Normals datastream
@@ -1639,7 +1532,7 @@ namespace CgfConverter
                         this.Colors2Data = b.ReadUInt32();
                         this.IndicesData = b.ReadUInt32();
                         this.TangentsData = b.ReadUInt32();
-                        this.SkipBytes(16);
+                        this.SkipBytes(b, 16);
                         for (Int32 i = 0; i < 4; i++)
                         {
                             this.PhysicsData[i] = b.ReadUInt32();
@@ -1686,22 +1579,14 @@ namespace CgfConverter
 
                 #region Constructor/s
 
-                public ChunkSceneProp(CryEngine.Model model) : base(model) { }
+                public ChunkSceneProp(Model model, ChunkHeader header) : base(model, header) { }
 
                 #endregion
 
-                public override void ReadChunk(BinaryReader b, ChunkHeader hdr)
+                public override void Read(BinaryReader b)
                 {
-                    base.ReadChunk(b, hdr);
+                    base.Read(b);
 
-                    if (Model.FILE_VERSION == FileVersionEnum.CryTek_3_5)
-                    {
-                        UInt32 tmpChunkType = b.ReadUInt32();
-                        this.ChunkType = (ChunkTypeEnum)Enum.ToObject(typeof(ChunkTypeEnum), tmpChunkType);
-                        this.Version = b.ReadUInt32();
-                        this.Offset = b.ReadUInt32();  // offset
-                        this.ID = b.ReadUInt32();
-                    }
                     this.NumProps = b.ReadUInt32();          // Should be 31 for 0x744
                     this.PropKey = new String[this.NumProps];
                     this.PropValue = new String[this.NumProps];
@@ -1739,25 +1624,29 @@ namespace CgfConverter
 
                 #region Constructor/s
 
-                public ChunkTimingFormat(CryEngine.Model model) : base(model) { }
+                public ChunkTimingFormat(Model model, ChunkHeader header) : base(model, header) { }
 
                 #endregion
 
-                public override void ReadChunk(BinaryReader b, ChunkHeader hdr)
+                public override void Read(BinaryReader reader)
                 {
-                    base.ReadChunk(b, hdr);
+                    base.Read(reader);
 
-                    UInt32 tmpChkType = b.ReadUInt32();
-                    this.ChunkType = (ChunkTypeEnum)Enum.ToObject(typeof(ChunkTypeEnum), tmpChkType);
-                    this.Version = b.ReadUInt32();  //0x00000918 is Far Cry, Crysis, MWO, Aion, SC
-                    this.SecsPerTick = b.ReadSingle();
-                    this.TicksPerFrame = b.ReadInt32();
-                    this.Unknown1 = b.ReadUInt32();
-                    this.Unknown2 = b.ReadUInt32();
-                    this.GlobalRange.Name = b.ReadFString(32);  // Name is technically a String32, but F those structs
-                    this.GlobalRange.Start = b.ReadInt32();
-                    this.GlobalRange.End = b.ReadInt32();
+                    if (Model.FILE_VERSION == FileVersionEnum.CryTek_3_6)
+                    {
+                        this.ChunkType = (ChunkTypeEnum)Enum.ToObject(typeof(ChunkTypeEnum), reader.ReadUInt32());
+                        this.Version = reader.ReadUInt32();
+                    }
+
+                    this.SecsPerTick = reader.ReadSingle();
+                    this.TicksPerFrame = reader.ReadInt32();
+                    this.Unknown1 = reader.ReadUInt32();
+                    this.Unknown2 = reader.ReadUInt32();
+                    this.GlobalRange.Name = reader.ReadFString(32);  // Name is technically a String32, but F those structs
+                    this.GlobalRange.Start = reader.ReadInt32();
+                    this.GlobalRange.End = reader.ReadInt32();
                 }
+
                 public override void WriteChunk()
                 {
                     Console.WriteLine("*** TIMING CHUNK ***");

@@ -15,10 +15,13 @@ namespace CgfConverter
     {
         public static Int32 Main(String[] args)
         {
+            String oldTitle = Console.Title;
+
 #if DEV_DOLKENSP
 
             args = new String[] { @"O:\Mods\Models\*.cg?", @"O:\Mods\Models\*.skin", @"O:\Mods\Models\*.chr", "-objectdir", @"O:\Mods\SC\Latest", "-tif", "-merge", "-obj", "-outdir", @"O:\Mods\Models\Export" };
             args = new String[] { @"O:\Mods\SC\Latest\*.cg?", @"O:\Mods\SC\Latest\*.skin", @"O:\Mods\SC\Latest\*.chr", "-objectdir", @"O:\Mods\SC\Latest", "-tif", "-merge", "-obj", "-outdir", @"O:\Mods\Models\Export" };
+            args = new String[] { @"Objects\*.cg?", @"Objects\*.skin", @"Objects\*.chr", "-objectdir", @"O:\Mods\SC\Latest", "-tif", "-merge", "-obj", "-outdir", @"Export" };
 
 #endif
 
@@ -102,6 +105,8 @@ namespace CgfConverter
             Console.WriteLine("Done...");
             Console.ReadKey();
 #endif
+
+            Console.Title = oldTitle;
 
             return result;
         }

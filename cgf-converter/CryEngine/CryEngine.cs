@@ -23,9 +23,9 @@ namespace CgfConverter
 
         #region Constructors
 
-        public Model.ChunkNode RootNode { get; private set; }
+        public Model.ChunkNode RootNode { get; internal set; }
 
-        public String InputFile { get; private set; }
+        public String InputFile { get; internal set; }
 
         public CryEngine(String fileName, String dataDir)
         {
@@ -124,8 +124,8 @@ namespace CgfConverter
 
         #region Properties
 
-        public List<Model> Models { get; private set; }
-        public Material[] Materials { get; private set; }
+        public List<Model> Models { get; internal set; }
+        public Material[] Materials { get; internal set; }
 
         #endregion
 

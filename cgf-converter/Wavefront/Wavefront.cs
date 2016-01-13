@@ -16,17 +16,17 @@ namespace CgfConverter
             this.CryData = cryEngine;
         }
 
-        public ArgsHandler Args { get; private set; }
-        public FileInfo OutputFile_Model { get; private set; }
-        public FileInfo OutputFile_Material { get; private set; }
-        public CryEngine CryData { get; private set; }
-        public UInt32 CurrentVertexPosition { get; private set; }
-        public UInt32 TempIndicesPosition { get; private set; }
-        public UInt32 TempVertexPosition { get; private set; }
-        public UInt32 CurrentIndicesPosition { get; private set; }
-        public String GroupOverride { get; private set; }
+        public ArgsHandler Args { get; internal set; }
+        public FileInfo OutputFile_Model { get; internal set; }
+        public FileInfo OutputFile_Material { get; internal set; }
+        public CryEngine CryData { get; internal set; }
+        public UInt32 CurrentVertexPosition { get; internal set; }
+        public UInt32 TempIndicesPosition { get; internal set; }
+        public UInt32 TempVertexPosition { get; internal set; }
+        public UInt32 CurrentIndicesPosition { get; internal set; }
+        public String GroupOverride { get; internal set; }
 
-        public Int32 FaceIndex { get; private set; }
+        public Int32 FaceIndex { get; internal set; }
         /// <summary>
         /// Renders an .obj file, and matching .mat file for the current model
         /// </summary>
@@ -187,11 +187,11 @@ namespace CgfConverter
             // Some 801 types have vertices and not VertsUVs.
             CryEngine.Model.ChunkMtlName tmpMtlName = null;
             CryEngine.Model.ChunkMeshSubsets tmpMeshSubsets = null;
-            CryEngine.Model.ChunkDataStream tmpIndices = new CryEngine.Model.ChunkDataStream();
-            CryEngine.Model.ChunkDataStream tmpNormals = new CryEngine.Model.ChunkDataStream();
-            CryEngine.Model.ChunkDataStream tmpUVs = new CryEngine.Model.ChunkDataStream();
-            CryEngine.Model.ChunkDataStream tmpVertices = new CryEngine.Model.ChunkDataStream();
-            CryEngine.Model.ChunkDataStream tmpVertsUVs = new CryEngine.Model.ChunkDataStream();
+            CryEngine.Model.ChunkDataStream tmpIndices = null;
+            CryEngine.Model.ChunkDataStream tmpNormals = null;
+            CryEngine.Model.ChunkDataStream tmpUVs = null;
+            CryEngine.Model.ChunkDataStream tmpVertices = null;
+            CryEngine.Model.ChunkDataStream tmpVertsUVs = null;
 
             if (chunkNode.MatID != 0) tmpMtlName = chunkNode._model.ChunkMap[chunkNode.MatID] as CryEngine.Model.ChunkMtlName;
             if (tmpMesh.MeshSubsets != 0) tmpMeshSubsets = tmpMesh._model.ChunkMap[tmpMesh.MeshSubsets] as CryEngine.Model.ChunkMeshSubsets; // Listed as Object ID for the Node
