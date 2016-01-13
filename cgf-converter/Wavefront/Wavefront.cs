@@ -58,7 +58,13 @@ namespace CgfConverter
             {
                 // If we have an output directory
                 String preserveDir = preservePath ? Path.GetDirectoryName(this.CryData.InputFile) : "";
-                preserveDir = preserveDir.Replace(Path.GetPathRoot(preserveDir), "");
+
+                // Remove drive letter if necessary
+                if (!String.IsNullOrWhiteSpace(Path.GetPathRoot(preserveDir)))
+                {
+                    preserveDir = preserveDir.Replace(Path.GetPathRoot(preserveDir), "");
+                }
+
                 outputFile = Path.Combine(outputDir, preserveDir, Path.ChangeExtension(Path.GetFileNameWithoutExtension(this.CryData.InputFile), "obj"));
             }
 
