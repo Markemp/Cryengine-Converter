@@ -28,9 +28,9 @@ namespace CgfConverter
             /// </summary>
             public class Color
             {
-                public Single Red;
-                public Single Green;
-                public Single Blue;
+                public Double Red;
+                public Double Green;
+                public Double Blue;
 
                 /// <summary>
                 /// Deserialize a string into a Color object
@@ -49,13 +49,13 @@ namespace CgfConverter
 
                     Color buffer = new Color();
 
-                    if (!Single.TryParse(parts[0], out buffer.Red))
+                    if (!Double.TryParse(parts[0], out buffer.Red))
                         return null;
 
-                    if (!Single.TryParse(parts[1], out buffer.Green))
+                    if (!Double.TryParse(parts[1], out buffer.Green))
                         return null;
 
-                    if (!Single.TryParse(parts[2], out buffer.Blue))
+                    if (!Double.TryParse(parts[2], out buffer.Blue))
                         return null;
 
                     return buffer;
@@ -171,15 +171,15 @@ namespace CgfConverter
 
                 [XmlAttribute(AttributeName = "TileU")]
                 [DefaultValue(0)]
-                public Single TileU { get; set; }
+                public Double TileU { get; set; }
 
                 [XmlAttribute(AttributeName = "TileV")]
                 [DefaultValue(0)]
-                public Single TileV { get; set; }
+                public Double TileV { get; set; }
 
                 [XmlAttribute(AttributeName = "OffsetU")]
                 [DefaultValue(0)]
-                public Single OffsetU { get; set; }
+                public Double OffsetU { get; set; }
             }
 
             /// <summary>
@@ -278,27 +278,27 @@ namespace CgfConverter
             /// </summary>
             [XmlAttribute(AttributeName = "Opacity")]
             [DefaultValue(1)]
-            public Single Opacity { get; set; }
+            public Double Opacity { get; set; }
 
             [XmlAttribute(AttributeName = "CloakAmount")]
             [DefaultValue(1)]
-            public Single Cloak { get; set; }
+            public Double Cloak { get; set; }
 
             [XmlAttribute(AttributeName = "Shininess")]
             [DefaultValue(0)]
-            public Single Shininess { get; set; }
+            public Double Shininess { get; set; }
 
             [XmlAttribute(AttributeName = "Glossiness")]
             [DefaultValue(0)]
-            public Single Glossiness { get; set; }
+            public Double Glossiness { get; set; }
 
             [XmlAttribute(AttributeName = "GlowAmount")]
             [DefaultValue(0)]
-            public Single GlowAmount { get; set; }
+            public Double GlowAmount { get; set; }
 
             [XmlAttribute(AttributeName = "AlphaTest")]
             [DefaultValue(0)]
-            public Single AlphaTest { get; set; }
+            public Double AlphaTest { get; set; }
 
             #endregion
 

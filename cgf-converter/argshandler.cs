@@ -40,9 +40,9 @@ namespace CgfConverter
         /// </summary>
         public Boolean Output_Collada { get; private set; }
         /// <summary>
-        /// Reverse UVs
+        /// Smooth Faces
         /// </summary>
-        public Boolean FlipUVs { get; private set; }
+        public Boolean Smooth { get; private set; }
         /// <summary>
         /// Flag used to indicate we should convert texture paths to use TIFF instead of DDS
         /// </summary>
@@ -85,15 +85,6 @@ namespace CgfConverter
         /// <returns>0 on success, 1 if anything went wrong</returns>
         public Int32 ProcessArgs(String[] inputArgs)
         {
-            #region Attempt to treat first argument as Input File
-
-            if (inputArgs.Length > 0)
-            {
-                this.InputFiles.AddRange(this.GetFiles(inputArgs[0]));
-            }
-
-            #endregion
-
             for (int i = 0; i < inputArgs.Length; i++)
             {
                 #region Parse Arguments
@@ -114,24 +105,6 @@ namespace CgfConverter
                         this.DataDir = new DirectoryInfo(inputArgs[i]).FullName;
 
                         Console.WriteLine("Data directory set to {0}", inputArgs[i]);
-
-                        break;
-
-                    #endregion
-                    #region case "-infile" / "-inputfile"...
-
-                    // Next item in list will be the output filename
-                    case "-infile":
-                    case "-inputfile":
-                        if (++i > inputArgs.Length)
-                        {
-                            this.PrintUsage();
-                            return 1;
-                        }
-
-                        this.InputFiles.AddRange(this.GetFiles(inputArgs[0]));
-
-                        Console.WriteLine("Input file set to {0}", inputArgs[i]);
 
                         break;
 
@@ -162,11 +135,11 @@ namespace CgfConverter
                         return 1;
 
                     #endregion
-                    #region case "-flipuv"...
+                    #region case "-smooth"...
 
-                    case "-flipuv":
-                        Console.WriteLine("Flipping UVs.");
-                        this.FlipUVs = true;
+                    case "-smooth":
+                        Console.WriteLine("Smoothing Faces");
+                        this.Smooth = true;
 
                         break;
 
@@ -242,6 +215,34 @@ namespace CgfConverter
                         break;
 
                     #endregion
+                    #region case "-infile" / "-inputfile"...
+
+                    // Next item in list will be the output filename
+                    case "-infile":
+                    case "-inputfile":
+                        if (++i > inputArgs.Length)
+                        {
+                            this.PrintUsage();
+                            return 1;
+                        }
+
+                        this.InputFiles.AddRange(this.GetFiles(inputArgs[0]));
+
+                        Console.WriteLine("Input file set to {0}", inputArgs[i]);
+
+                        break;
+
+                    #endregion
+                    #region default...
+
+                    default:
+                        this.InputFiles.AddRange(this.GetFiles(inputArgs[0]));
+
+                        Console.WriteLine("Input file set to {0}", inputArgs[i]);
+
+                        break;
+
+                    #endregion
                 }
 
                 #endregion
@@ -267,7 +268,7 @@ namespace CgfConverter
         public void PrintUsage()
         {
             Console.WriteLine();
-            Console.WriteLine("cgf-converter [-usage] | <.cgf file> [-outputfile <output file>] [-objectdir <ObjectDir>] [-obj] [-blend] [-dae] [-flipUVs] [-throw]");
+            Console.WriteLine("cgf-converter [-usage] | <.cgf file> [-outputfile <output file>] [-objectdir <ObjectDir>] [-obj] [-blend] [-dae] [-smooth] [-throw]");
             Console.WriteLine();
             Console.WriteLine("-usage:           Prints out the usage statement");
             Console.WriteLine();
@@ -279,7 +280,7 @@ namespace CgfConverter
             Console.WriteLine("-obj:             Export Wavefront format files (Default: true)");
             Console.WriteLine("-blend:           Export Blender format files (Not Implemented)");
             Console.WriteLine("-dae:             Export Collada format files (Not Implemented)");
-            Console.WriteLine("-flipUVs:         Flip the UVs");
+            Console.WriteLine("-smooth:          Smooth Faces");
             Console.WriteLine("-group:           Group meshes into single model");
             Console.WriteLine();
             Console.WriteLine("-throw:           Throw Exceptions to installed debugger");
@@ -302,7 +303,7 @@ namespace CgfConverter
             {
                 Console.WriteLine("    Output file:            {0}", this.OutputDir);
             }
-            Console.WriteLine("    Flip UVs:               {0}", this.FlipUVs);
+            Console.WriteLine("    Smooth Faces:           {0}", this.Smooth);
             Console.WriteLine("    Output to .obj:         {0}", this.Output_Wavefront);
             Console.WriteLine("    Output to .blend:       {0}", this.Output_Blender);
             Console.WriteLine("    Output to .dae:         {0}", this.Output_Collada);

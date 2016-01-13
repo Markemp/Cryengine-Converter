@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using OpenTK.Math;
 using System.Xml;
 using System.Xml.Schema;
+using System.Diagnostics;
 
 namespace CgfConverter
 {
@@ -16,18 +17,8 @@ namespace CgfConverter
         {
 #if DEV_DOLKENSP
 
-            // var ships1 = Directory.GetFiles(@"O:\Mods\SC\2.1d\Objects\Spaceships\Ships", "*.cga", SearchOption.AllDirectories);
-            // var ships2 = Directory.GetFiles(@"O:\Mods\SC\2.1d\Objects\Spaceships\Ships", "*.cgf", SearchOption.AllDirectories);
-            // var ships3 = Directory.GetFiles(@"O:\Mods\SC\2.1d\Objects\Spaceships\Ships", "*.cgf", SearchOption.AllDirectories);
-            // var ships4 = Directory.GetFiles(@"O:\Mods\SC\2.1d\Objects\Vehicles\ships", "*.cga", SearchOption.AllDirectories);
-            // var ships5 = Directory.GetFiles(@"O:\Mods\SC\2.1d\Objects\Vehicles\ships", "*.cgf", SearchOption.AllDirectories);
-            // var ships6 = Directory.GetFiles(@"O:\Mods\SC\2.1d\Objects\Vehicles\ships", "*.cgf", SearchOption.AllDirectories);
-            // var ships7 = Directory.GetFiles(@"Objects", "*.cga", SearchOption.AllDirectories);
-            // var ships8 = Directory.GetFiles(@"Objects", "*.cgf", SearchOption.AllDirectories);
-            // var ships9 = Directory.GetFiles(@"Objects", "*.cgf", SearchOption.AllDirectories);
-
-            args = new String[] { @"Objects\3.4\*.chr", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-obj", "-outdir", "export", "-group" };
-            args = new String[] { @"Objects\3.4\*.chr", "-objectdir", @"O:\Mods\SC\2.1d", "-tif", "-merge", "-dae", "-outdir", "export", "-group" };
+            args = new String[] { @"O:\Mods\Models\*.cg?", @"O:\Mods\Models\*.skin", @"O:\Mods\Models\*.chr", "-objectdir", @"O:\Mods\SC\Latest", "-tif", "-merge", "-obj", "-outdir", @"O:\Mods\Models\Export" };
+            args = new String[] { @"O:\Mods\SC\Latest\*.cg?", @"O:\Mods\SC\Latest\*.skin", @"O:\Mods\SC\Latest\*.chr", "-objectdir", @"O:\Mods\SC\Latest", "-tif", "-merge", "-obj", "-outdir", @"O:\Mods\Models\Export" };
 
 #endif
 
@@ -53,33 +44,48 @@ namespace CgfConverter
             {
                 foreach (String inputFile in argsHandler.InputFiles)
                 {
-                    // Read CryEngine Files
-                    CryEngine cryData = new CryEngine(inputFile, argsHandler.DataDir);
-
-                    #region Render Output Files
-
-                    if (argsHandler.Output_Blender == true)
+                    try
                     {
-                        Blender blendFile = new Blender(argsHandler);
+                        // Read CryEngine Files
+                        CryEngine cryData = new CryEngine(inputFile, argsHandler.DataDir);
 
-                        blendFile.WriteBlend(cryData);
+                        #region Render Output Files
+
+                        if (argsHandler.Output_Blender == true)
+                        {
+                            Blender blendFile = new Blender(argsHandler);
+
+                            blendFile.WriteBlend(cryData);
+                        }
+
+                        if (argsHandler.Output_Wavefront == true)
+                        {
+                            Wavefront objFile = new Wavefront(argsHandler, cryData);
+
+                            objFile.WriteObjFile(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+                        }
+
+                        if (argsHandler.Output_Collada == true)
+                        {
+                            COLLADA daeFile = new COLLADA(argsHandler);
+
+                            daeFile.WriteCollada(cryData);
+                        }
+
+                        #endregion
                     }
-
-                    if (argsHandler.Output_Wavefront == true)
+                    catch (Exception ex)
                     {
-                        Wavefront objFile = new Wavefront(argsHandler, cryData);
-
-                        objFile.WriteObjFile(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+                        Console.WriteLine();
+                        Console.WriteLine("********************************************************************************");
+                        Console.WriteLine("There was an error rendering {0}", inputFile);
+                        Console.WriteLine();
+                        Console.WriteLine(ex.Message);
+                        Console.WriteLine();
+                        Console.WriteLine(ex.StackTrace);
+                        Console.WriteLine("********************************************************************************");
+                        Console.WriteLine();
                     }
-
-                    if (argsHandler.Output_Collada == true)
-                    {
-                        COLLADA daeFile = new COLLADA(argsHandler);
-
-                        daeFile.WriteCollada(cryData);
-                    }
-
-                    #endregion
                 }
             }
 

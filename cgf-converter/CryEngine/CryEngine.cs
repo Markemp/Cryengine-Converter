@@ -70,10 +70,14 @@ namespace CgfConverter
                 if (mtlChunk.Version == 0x800 && !(mtlChunk.MatType == 0x01 || mtlChunk.MatType == 0x10))
                     continue;
 
-                Console.WriteLine("Found material {0}", mtlChunk.Name);
-
                 // First try relative to file being processed
                 FileInfo materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(fileName), mtlChunk.Name));
+                if (materialFile.Extension != "mtl")
+                    materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
+
+                // Then try just the last part of the chunk, relative to the file being processed
+                if (!materialFile.Exists)
+                    materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileName(mtlChunk.Name)));
                 if (materialFile.Extension != "mtl")
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
 
@@ -95,6 +99,8 @@ namespace CgfConverter
 
                 if (material != null)
                 {
+                    Console.WriteLine("Located material file {0}", materialFile.Name);
+
                     this.Materials = this.FlattenMaterials(material).Skip(1).ToArray();
                     // UInt32 i = 0;
                     // this.MaterialMap = this.Materials.Skip(1).ToArray(); // .ToDictionary(k => ++i, v => v);
@@ -102,7 +108,14 @@ namespace CgfConverter
                     // Early return - we have the material map
                     return;
                 }
+                else
+                {
+                    // Use original name, as that's what we were originally trying to locate
+                    Console.WriteLine("Unable to locate material file {0}.mtl", mtlChunk.Name);
+                }
             }
+
+            Console.WriteLine("Unable to locate any material file");
 
             this.Materials = new Material[] { };
         }

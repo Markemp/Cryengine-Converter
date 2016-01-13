@@ -156,7 +156,6 @@ namespace CgfConverter
                         default:
                             Chunk chunk = new Chunk(this);
                             chunk.ReadChunk(cgfReader, chkHdr);
-                            chunk.SkipBytes();
                             this.ChunkMap[chkHdr.ID] = chunk;
                             // If we hit this point, it's an unimplemented chunk and needs to be added.
                             // Console.WriteLine("Chunk type found that didn't match known versions: {0}", chkHdr.ChunkType);
@@ -399,7 +398,7 @@ namespace CgfConverter
                         Console.WriteLine("Buffer Overflow in {2} 0x{0:X} ({1} bytes)", this.ID, this._binaryReader.BaseStream.Position - this.Offset - this.Size, this.GetType().Name);
 
                     if (!bytesToSkip.HasValue)
-                        bytesToSkip = (Int64)(this.Size - (this._binaryReader.BaseStream.Position - this.Offset));
+                        bytesToSkip = (Int64)(this.Size - Math.Max(this._binaryReader.BaseStream.Position - this.Offset, 0));
 
                     for (Int64 i = 0; i < bytesToSkip; i++)
                     {

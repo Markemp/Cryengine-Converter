@@ -38,7 +38,8 @@ namespace CgfConverter
                     file.WriteLine("newmtl {0}", material.Name);
                     if (material.Diffuse != null)
                     {
-                        file.WriteLine("Kd {0:F4} {1:F4} {2:F4}", material.Diffuse.Red, material.Diffuse.Green, material.Diffuse.Blue);
+                        file.WriteLine("Ka {0:F6} {1:F6} {2:F6}", material.Diffuse.Red, material.Diffuse.Green, material.Diffuse.Blue);    // Ambient
+                        file.WriteLine("Kd {0:F6} {1:F6} {2:F6}", material.Diffuse.Red, material.Diffuse.Green, material.Diffuse.Blue);    // Diffuse
                     }
                     else
                     {
@@ -46,13 +47,14 @@ namespace CgfConverter
                     }
                     if (material.Specular != null)
                     {
-                        file.WriteLine("Ks  {0:F4} {1:F4} {2:F4}", material.Specular.Red, material.Specular.Green, material.Specular.Blue);
+                        file.WriteLine("Ks {0:F6} {1:F6} {2:F6}", material.Specular.Red, material.Specular.Green, material.Specular.Blue); // Specular
+                        file.WriteLine("Ns {0:F6}", material.Shininess / 255D);                                                            // Specular Exponent
                     }
                     else
                     {
                         Console.WriteLine("Skipping Specular for {0}", material.Name);
                     }
-                    file.WriteLine("d {0:F4}", material.Opacity);
+                    file.WriteLine("d {0:F6}", material.Opacity);                                                                          // Dissolve
 
                     file.WriteLine("illum 2");  // Highlight on. This is a guess.
 
@@ -94,6 +96,7 @@ namespace CgfConverter
 
                             case CryEngine.Material.Texture.MapTypeEnum.Specular:
                                 file.WriteLine("map_Ks {0}", textureFile);
+                                file.WriteLine("map_Ns {0}", textureFile);
                                 break;
 
                             case CryEngine.Material.Texture.MapTypeEnum.Bumpmap:
@@ -104,18 +107,22 @@ namespace CgfConverter
 
                             case CryEngine.Material.Texture.MapTypeEnum.Heightmap:
                                 // <Texture Map="Heightmap" File="objects/spaceships/ships/aegs/gladius/textures/aegs_switches_buttons_disp.tif"/>
+                                file.WriteLine("disp {0}", textureFile);
                                 break;
 
                             case CryEngine.Material.Texture.MapTypeEnum.Decal:
                                 // <Texture Map="Decal" File="objects/spaceships/ships/aegs/textures/interior/metal/aegs_int_metal_alum_bare_diff.tif"/>
+                                file.WriteLine("decal {0}", textureFile);
                                 break;
 
                             case CryEngine.Material.Texture.MapTypeEnum.SubSurface:
                                 // <Texture Map="SubSurface" File="objects/spaceships/ships/aegs/textures/interior/atlas/aegs_int_atlas_retaliator_spec.tif"/>
+                                file.WriteLine("map_Ns {0}", textureFile);
                                 break;
 
                             case CryEngine.Material.Texture.MapTypeEnum.Custom:
                                 // <Texture Map="Custom" File="objects/spaceships/ships/aegs/textures/interior/metal/aegs_int_metal_painted_red_ddna.tif"/>
+                                // file.WriteLine("decal {0}", textureFile);
                                 break;
 
                             case CryEngine.Material.Texture.MapTypeEnum.BlendDetail:
@@ -124,6 +131,7 @@ namespace CgfConverter
 
                             case CryEngine.Material.Texture.MapTypeEnum.Opacity:
                                 // <Texture Map="Opacity" File="objects/spaceships/ships/aegs/textures/interior/blend/interior_blnd_a_diff.tif"/>
+                                file.WriteLine("map_d {0}", textureFile);
                                 break;
 
                             case CryEngine.Material.Texture.MapTypeEnum.Environment:

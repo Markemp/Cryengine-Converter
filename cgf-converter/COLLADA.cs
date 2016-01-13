@@ -245,7 +245,7 @@ namespace CgfConverter
                         Grendgine_Collada_Vertices verts = new Grendgine_Collada_Vertices();
                         Grendgine_Collada_Triangles tris = new Grendgine_Collada_Triangles();
 
-                        posSource.ID = nodeChunk.Name + "_" + meshSubset.MatID + "_pos";  
+                        posSource.ID = nodeChunk.Name + "_" + meshSubset.MatID + "_pos";
                         posSource.Name = nodeChunk.Name + "_" + meshSubset.MatID + "_pos";
                         normSource.ID = nodeChunk.Name + "_" + meshSubset.MatID + "_norm";
                         normSource.Name = nodeChunk.Name + "_" + meshSubset.MatID + "_norm";
@@ -273,7 +273,7 @@ namespace CgfConverter
                         {
                             // Rotate/translate the vertex
                             Vector3 vertex = nodeChunk.GetTransform(tmpVertices.Vertices[j]);
-                            vertString.AppendFormat("{0} {1} {2} ",vertex.x, vertex.y, vertex.z);
+                            vertString.AppendFormat("{0} {1} {2} ", vertex.x, vertex.y, vertex.z);
                         }
                         // Normals
                         for (uint j = meshSubset.FirstVertex; j < meshSubset.NumVertices + meshSubset.FirstVertex; j++)
@@ -284,12 +284,12 @@ namespace CgfConverter
                         }
                         verts.ID = nodeChunk.Name + "_" + meshSubset.MatID + "_vertices";
                         // get the 3 inputs for verts
-                        Grendgine_Collada_Input_Shared[] inputshared = new Grendgine_Collada_Input_Shared[3];
-                        Grendgine_Collada_Input_Shared posInput = new Grendgine_Collada_Input_Shared();
-                        Grendgine_Collada_Input_Shared normInput = new Grendgine_Collada_Input_Shared();
-                        Grendgine_Collada_Input_Shared uvInput = new Grendgine_Collada_Input_Shared();
+                        Grendgine_Collada_Input_Unshared[] inputshared = new Grendgine_Collada_Input_Unshared[3];
+                        Grendgine_Collada_Input_Unshared posInput = new Grendgine_Collada_Input_Unshared();
+                        Grendgine_Collada_Input_Unshared normInput = new Grendgine_Collada_Input_Unshared();
+                        Grendgine_Collada_Input_Unshared uvInput = new Grendgine_Collada_Input_Unshared();
 
-                        posInput.Semantic = Grendgine_Collada_Input_Semantic.POSITION;  posInput.source = posSource.ID;
+                        posInput.Semantic = Grendgine_Collada_Input_Semantic.POSITION; posInput.source = posSource.ID;
                         normInput.Semantic = Grendgine_Collada_Input_Semantic.NORMAL; normInput.source = normSource.ID;
                         uvInput.Semantic = Grendgine_Collada_Input_Semantic.UV; uvInput.source = uvSource.ID;  // might need to replace UV with TEXCOORD
 
@@ -308,7 +308,7 @@ namespace CgfConverter
                         geometryList.Add(tmpGeo);
                     }
 
-                    }
+                }
                 else if (this.CryData.ChunksByID[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Helper)
                 {
 
@@ -321,7 +321,7 @@ namespace CgfConverter
 
                 // Add the tmpGeo geometry to the list
 
-                
+
 
 
             }

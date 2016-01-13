@@ -26,6 +26,7 @@ namespace CgfConverter
         public UInt32 CurrentIndicesPosition { get; private set; }
         public String GroupOverride { get; private set; }
 
+        public Int32 FaceIndex { get; private set; }
         /// <summary>
         /// Renders an .obj file, and matching .mat file for the current model
         /// </summary>
@@ -57,6 +58,7 @@ namespace CgfConverter
             {
                 // If we have an output directory
                 String preserveDir = preservePath ? Path.GetDirectoryName(this.CryData.InputFile) : "";
+                preserveDir = preserveDir.Replace(Path.GetPathRoot(preserveDir), "");
                 outputFile = Path.Combine(outputDir, preserveDir, Path.ChangeExtension(Path.GetFileNameWithoutExtension(this.CryData.InputFile), "obj"));
             }
 
@@ -83,6 +85,8 @@ namespace CgfConverter
                 if (OutputFile_Material.Exists)
                     file.WriteLine("mtllib {0}", OutputFile_Material.Name);
 
+                this.FaceIndex = 1;
+
                 foreach (CryEngine.Model.ChunkNode node in this.CryData.NodeMap.Values)
                 {
                     if (node.ObjectChunk == null)
@@ -102,12 +106,9 @@ namespace CgfConverter
                             {
                                 Console.WriteLine("Rendering node with null parent {0}", node.Name);
                             }
-                            else
+                            else if (node.ParentNode.ChunkType != ChunkTypeEnum.Node)
                             {
-                                if (node.ParentNode.ChunkType != ChunkTypeEnum.Node)
-                                {
-                                    Console.WriteLine("Rendering {0} to parent {1}", node.Name, node.ParentNode.Name);
-                                }
+                                Console.WriteLine("Rendering {0} to parent {1}", node.Name, node.ParentNode.Name);
                             }
 
                             // TODO: Transform Root Nodes here
@@ -132,7 +133,7 @@ namespace CgfConverter
 
                         default:
                             // Warn us if we're skipping other nodes of interest
-                            Console.WriteLine("Skipped a {0} chunk", node.ObjectChunk.ChunkType.ToDescription());
+                            Console.WriteLine("Skipped a {0} chunk", node.ObjectChunk.ChunkType);
                             break;
 
                         #endregion
@@ -176,18 +177,18 @@ namespace CgfConverter
                 return;
             }
 
-            CryEngine.Model.ChunkMtlName tmpMtlName = chunkNode._model.ChunkMap[chunkNode.MatID] as CryEngine.Model.ChunkMtlName;
-            CryEngine.Model.ChunkMeshSubsets tmpMeshSubsets = tmpMesh._model.ChunkMap[tmpMesh.MeshSubsets] as CryEngine.Model.ChunkMeshSubsets; // Listed as Object ID for the Node
-            
             // Going to assume that there is only one VerticesData datastream for now.  Need to watch for this.   
             // Some 801 types have vertices and not VertsUVs.
-
+            CryEngine.Model.ChunkMtlName tmpMtlName = null;
+            CryEngine.Model.ChunkMeshSubsets tmpMeshSubsets = null;
             CryEngine.Model.ChunkDataStream tmpIndices = new CryEngine.Model.ChunkDataStream();
             CryEngine.Model.ChunkDataStream tmpNormals = new CryEngine.Model.ChunkDataStream();
             CryEngine.Model.ChunkDataStream tmpUVs = new CryEngine.Model.ChunkDataStream();
             CryEngine.Model.ChunkDataStream tmpVertices = new CryEngine.Model.ChunkDataStream();
             CryEngine.Model.ChunkDataStream tmpVertsUVs = new CryEngine.Model.ChunkDataStream();
 
+            if (chunkNode.MatID != 0) tmpMtlName = chunkNode._model.ChunkMap[chunkNode.MatID] as CryEngine.Model.ChunkMtlName;
+            if (tmpMesh.MeshSubsets != 0) tmpMeshSubsets = tmpMesh._model.ChunkMap[tmpMesh.MeshSubsets] as CryEngine.Model.ChunkMeshSubsets; // Listed as Object ID for the Node
             if (tmpMesh.IndicesData != 0) tmpIndices = tmpMesh._model.ChunkMap[tmpMesh.IndicesData] as CryEngine.Model.ChunkDataStream;
             if (tmpMesh.VerticesData != 0) tmpVertices = tmpMesh._model.ChunkMap[tmpMesh.VerticesData] as CryEngine.Model.ChunkDataStream;
             if (tmpMesh.NormalsData != 0) tmpNormals = tmpMesh._model.ChunkMap[tmpMesh.NormalsData] as CryEngine.Model.ChunkDataStream;
@@ -285,11 +286,15 @@ namespace CgfConverter
 
                 #endregion
 
-                #region Write Group (g)
-
-                f.WriteLine("g {0}", this.GroupOverride ?? chunkNode.Name);
-
-                #endregion
+                // #region Write Group (g)
+                // 
+                // f.WriteLine("g {0}", this.GroupOverride ?? chunkNode.Name);
+                // 
+                // #endregion
+                if (this.Args.Smooth)
+                {
+                    f.WriteLine("s {0}", this.FaceIndex++);
+                }
 
                 #region Write Material Block (usemtl)
 
@@ -299,11 +304,13 @@ namespace CgfConverter
                 }
                 else
                 {
-                    Console.WriteLine("Missing Material {0}", meshSubset.MatID);
+                    if (this.CryData.Materials.Length > 0)
+                    {
+                        Console.WriteLine("Missing Material {0}", meshSubset.MatID);
+                    }
 
                     // The material file doesn't have any elements with the Name of the material.  Use the object name.
-                    f.WriteLine("usemtl {0}", this.CryData.RootNode.Name);
-                    
+                    f.WriteLine("usemtl {0}_{1}", this.CryData.RootNode.Name, meshSubset.MatID);
                 }
 
                 #endregion
