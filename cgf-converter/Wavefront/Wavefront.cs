@@ -93,7 +93,7 @@ namespace CgfConverter
 
                 this.FaceIndex = 1;
 
-                foreach (CryEngine.Model.ChunkNode node in this.CryData.NodeMap.Values)
+                foreach (CryEngine_Core.ChunkNode node in this.CryData.NodeMap.Values)
                 {
                     if (node.ObjectChunk == null)
                     {
@@ -147,7 +147,7 @@ namespace CgfConverter
                 }
 
                 // If this is a .chr file, just write out the hitbox info.  OBJ files can't do armatures.
-                foreach (CryEngine.Model.ChunkCompiledPhysicalProxies tmpProxy in this.CryData.ChunksByID.Values.Where(a => a.ChunkType == ChunkTypeEnum.CompiledPhysicalProxies))
+                foreach (CryEngine_Core.ChunkCompiledPhysicalProxies tmpProxy in this.CryData.ChunksByID.Values.Where(a => a.ChunkType == ChunkTypeEnum.CompiledPhysicalProxies))
                 {
                     // TODO: align these properly
                     WriteObjHitBox(file, tmpProxy);
@@ -156,12 +156,12 @@ namespace CgfConverter
             }  // End of writing the output file
         }
 
-        public void WriteObjNode(StreamWriter f, CryEngine.Model.ChunkNode chunkNode)  // Pass a node to this to have it write to the Stream
+        public void WriteObjNode(StreamWriter f, CryEngine_Core.ChunkNode chunkNode)  // Pass a node to this to have it write to the Stream
         {
             // Get the Transform here. It's the node chunk Transform.m(41/42/42) divided by 100, added to the parent transform.
             // The transform of a child has to add the transforms of ALL the parents.  Need to use regression?  Maybe a while loop...
 
-            CryEngine.Model.ChunkMesh tmpMesh = chunkNode.ObjectChunk as CryEngine.Model.ChunkMesh;
+            CryEngine_Core.ChunkMesh tmpMesh = chunkNode.ObjectChunk as CryEngine_Core.ChunkMesh;
 
             if (tmpMesh == null)
                 return;
@@ -185,21 +185,21 @@ namespace CgfConverter
 
             // Going to assume that there is only one VerticesData datastream for now.  Need to watch for this.   
             // Some 801 types have vertices and not VertsUVs.
-            CryEngine.Model.ChunkMtlName tmpMtlName = null;
-            CryEngine.Model.ChunkMeshSubsets tmpMeshSubsets = null;
-            CryEngine.Model.ChunkDataStream tmpIndices = null;
-            CryEngine.Model.ChunkDataStream tmpNormals = null;
-            CryEngine.Model.ChunkDataStream tmpUVs = null;
-            CryEngine.Model.ChunkDataStream tmpVertices = null;
-            CryEngine.Model.ChunkDataStream tmpVertsUVs = null;
+            CryEngine_Core.ChunkMtlName tmpMtlName = null;
+            CryEngine_Core.ChunkMeshSubsets tmpMeshSubsets = null;
+            CryEngine_Core.ChunkDataStream tmpIndices = null;
+            CryEngine_Core.ChunkDataStream tmpNormals = null;
+            CryEngine_Core.ChunkDataStream tmpUVs = null;
+            CryEngine_Core.ChunkDataStream tmpVertices = null;
+            CryEngine_Core.ChunkDataStream tmpVertsUVs = null;
 
-            if (chunkNode.MatID != 0) tmpMtlName = chunkNode._model.ChunkMap[chunkNode.MatID] as CryEngine.Model.ChunkMtlName;
-            if (tmpMesh.MeshSubsets != 0) tmpMeshSubsets = tmpMesh._model.ChunkMap[tmpMesh.MeshSubsets] as CryEngine.Model.ChunkMeshSubsets; // Listed as Object ID for the Node
-            if (tmpMesh.IndicesData != 0) tmpIndices = tmpMesh._model.ChunkMap[tmpMesh.IndicesData] as CryEngine.Model.ChunkDataStream;
-            if (tmpMesh.VerticesData != 0) tmpVertices = tmpMesh._model.ChunkMap[tmpMesh.VerticesData] as CryEngine.Model.ChunkDataStream;
-            if (tmpMesh.NormalsData != 0) tmpNormals = tmpMesh._model.ChunkMap[tmpMesh.NormalsData] as CryEngine.Model.ChunkDataStream;
-            if (tmpMesh.UVsData != 0) tmpUVs = tmpMesh._model.ChunkMap[tmpMesh.UVsData] as CryEngine.Model.ChunkDataStream;
-            if (tmpMesh.VertsUVsData != 0) tmpVertsUVs = tmpMesh._model.ChunkMap[tmpMesh.VertsUVsData] as CryEngine.Model.ChunkDataStream;
+            if (chunkNode.MatID != 0) tmpMtlName = chunkNode._model.ChunkMap[chunkNode.MatID] as CryEngine_Core.ChunkMtlName;
+            if (tmpMesh.MeshSubsets != 0) tmpMeshSubsets = tmpMesh._model.ChunkMap[tmpMesh.MeshSubsets] as CryEngine_Core.ChunkMeshSubsets; // Listed as Object ID for the Node
+            if (tmpMesh.IndicesData != 0) tmpIndices = tmpMesh._model.ChunkMap[tmpMesh.IndicesData] as CryEngine_Core.ChunkDataStream;
+            if (tmpMesh.VerticesData != 0) tmpVertices = tmpMesh._model.ChunkMap[tmpMesh.VerticesData] as CryEngine_Core.ChunkDataStream;
+            if (tmpMesh.NormalsData != 0) tmpNormals = tmpMesh._model.ChunkMap[tmpMesh.NormalsData] as CryEngine_Core.ChunkDataStream;
+            if (tmpMesh.UVsData != 0) tmpUVs = tmpMesh._model.ChunkMap[tmpMesh.UVsData] as CryEngine_Core.ChunkDataStream;
+            if (tmpMesh.VertsUVsData != 0) tmpVertsUVs = tmpMesh._model.ChunkMap[tmpMesh.VertsUVsData] as CryEngine_Core.ChunkDataStream;
 
             // We only use 3 things in obj files:  vertices, normals and UVs.  No need to process the Tangents.
 
@@ -343,7 +343,7 @@ namespace CgfConverter
             this.CurrentIndicesPosition = tempIndicesPosition;
         }
 
-        public void WriteObjHitBox(StreamWriter f, CryEngine.Model.ChunkCompiledPhysicalProxies chunkProx)  // Pass a bone proxy to write to the stream.  For .chr files (armatures)
+        public void WriteObjHitBox(StreamWriter f, CryEngine_Core.ChunkCompiledPhysicalProxies chunkProx)  // Pass a bone proxy to write to the stream.  For .chr files (armatures)
         {
             // The chunkProx has the vertex and index info, so much like WriteObjNode just need to write it out.  Much simpler than WriteObjNode though in theory
             // Assume only one CompiledPhysicalProxies per .chr file (or any file for that matter).  May not be a safe bet.

@@ -9,6 +9,7 @@ using System.IO;
 using System.Xml.Serialization;
 using System.ComponentModel;
 using System.Runtime.Serialization;
+using System.Reflection;
 
 namespace CgfConverter
 {
@@ -27,7 +28,7 @@ namespace CgfConverter
 
             using (StreamWriter file = new StreamWriter(this.OutputFile_Material.FullName))
             {
-                file.WriteLine("# Material file output from cgf-converter.exe version {0}", Utils.GetVersion());
+                file.WriteLine("# Material file output from cgf-converter.exe version {0}", Assembly.GetExecutingAssembly().GetName().Version.ToString());
                 file.WriteLine("#");
                 foreach (CryEngine.Material material in cryEngine.Materials)
                 {

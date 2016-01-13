@@ -23,7 +23,7 @@ namespace CgfConverter
 
         #region Constructors
 
-        public Model.ChunkNode RootNode { get; internal set; }
+        public CryEngine_Core.ChunkNode RootNode { get; internal set; }
 
         public String InputFile { get; internal set; }
 
@@ -64,7 +64,7 @@ namespace CgfConverter
                 this.Models.Add(model);
             }
 
-            foreach (CryEngine.Model.ChunkMtlName mtlChunk in this.Models.SelectMany(a => a.ChunkMap.Values).Where(c => c.ChunkType == ChunkTypeEnum.MtlName))
+            foreach (CryEngine_Core.ChunkMtlName mtlChunk in this.Models.SelectMany(a => a.ChunkMap.Values).Where(c => c.ChunkType == ChunkTypeEnum.MtlName))
             {
                 // Don't process child materials for now
                 if (mtlChunk.Version == 0x800 && !(mtlChunk.MatType == 0x01 || mtlChunk.MatType == 0x10))
@@ -148,8 +148,8 @@ namespace CgfConverter
             }
         }
 
-        private Model.Chunk[] _chunks;
-        public Model.Chunk[] Chunks
+        private CryEngine_Core.Chunk[] _chunks;
+        public CryEngine_Core.Chunk[] Chunks
         {
             get
             {
@@ -162,16 +162,16 @@ namespace CgfConverter
             }
         }
 
-        public Dictionary<UInt32, Model.Chunk> _chunksByID;
-        public Dictionary<UInt32, Model.Chunk> ChunksByID
+        public Dictionary<UInt32, CryEngine_Core.Chunk> _chunksByID;
+        public Dictionary<UInt32, CryEngine_Core.Chunk> ChunksByID
         {
             get
             {
                 if (this._chunksByID == null)
                 {
-                    this._chunksByID = new Dictionary<UInt32, Model.Chunk> { };
+                    this._chunksByID = new Dictionary<UInt32, CryEngine_Core.Chunk> { };
 
-                    foreach (Model.Chunk chunk in this.Chunks)
+                    foreach (CryEngine_Core.Chunk chunk in this.Chunks)
                     {
                         this._chunksByID[chunk.ID] = chunk;
                     }
@@ -218,16 +218,16 @@ namespace CgfConverter
             // "LandingGear_Pod_Aft_Right"
         };
 
-        public Dictionary<String, Model.ChunkNode> _nodeMap;
-        public Dictionary<String, Model.ChunkNode> NodeMap
+        public Dictionary<String, CryEngine_Core.ChunkNode> _nodeMap;
+        public Dictionary<String, CryEngine_Core.ChunkNode> NodeMap
         {
             get
             {
                 if (this._nodeMap == null)
                 {
-                    this._nodeMap = new Dictionary<String, Model.ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
+                    this._nodeMap = new Dictionary<String, CryEngine_Core.ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
 
-                    Model.ChunkNode rootNode = null;
+                    CryEngine_Core.ChunkNode rootNode = null;
 
                     Debug.WriteLine("Mapping Nodes");
 
@@ -235,12 +235,12 @@ namespace CgfConverter
                     {
                         model.RootNode = rootNode = (rootNode ?? model.RootNode);
 
-                        foreach (Model.ChunkNode node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as Model.ChunkNode))
+                        foreach (CryEngine_Core.ChunkNode node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as CryEngine_Core.ChunkNode))
                         {
                             // Preserve existing parents
                             if (this._nodeMap.ContainsKey(node.Name))
                             {
-                                Model.ChunkNode parentNode = this._nodeMap[node.Name].ParentNode;
+                                CryEngine_Core.ChunkNode parentNode = this._nodeMap[node.Name].ParentNode;
 
                                 if (parentNode != null)
                                     parentNode = this._nodeMap[parentNode.Name];

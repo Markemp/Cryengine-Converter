@@ -2,8 +2,9 @@
 {
     public enum FileVersionEnum : uint
     {
-        CryTek_3_6,
-        CryTek_3_5,
+        CryTek_3_4 = 0x744,
+        CryTek_3_5 = 0x745,
+        CryTek_3_6 = 0x746,
     }
     // Enums
     public enum FileTypeEnum : uint

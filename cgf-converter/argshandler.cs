@@ -74,8 +74,13 @@ namespace CgfConverter
                 directory = ".";
 
             String fileName = Path.GetFileName(filter);
+            String extension = Path.GetExtension(filter);
 
-            return Directory.GetFiles(directory, fileName, fileName.Contains('?') || fileName.Contains('*') ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+            Boolean flexibleExtension = extension.Contains('*');
+
+            return Directory.GetFiles(directory, fileName, fileName.Contains('?') || fileName.Contains('*') ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)
+                .Where(f => flexibleExtension || Path.GetExtension(f).Length == extension.Length)
+                .ToArray();
         }
 
         /// <summary>
