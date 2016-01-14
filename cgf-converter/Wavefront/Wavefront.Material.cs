@@ -28,7 +28,7 @@ namespace CgfConverter
 
             using (StreamWriter file = new StreamWriter(this.OutputFile_Material.FullName))
             {
-                file.WriteLine("# Material file output from cgf-converter.exe version {0}", Assembly.GetExecutingAssembly().GetName().Version.ToString());
+                file.WriteLine("# cgf-converter .mtl export version {0}", Assembly.GetExecutingAssembly().GetName().Version.ToString());
                 file.WriteLine("#");
                 foreach (CryEngine.Material material in cryEngine.Materials)
                 {
