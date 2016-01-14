@@ -296,7 +296,7 @@ namespace CgfConverter
                     {
                         /// <summary> Write the triangles for each geometry.mesh object.  There can be multiple triangles for each mesh.</summary>
                         /// 
-                        tmpMeshSubsets.MeshSubsets[j].WriteMeshSubset();
+                        //tmpMeshSubsets.MeshSubsets[j].WriteMeshSubset();
                         tris[j] = new Grendgine_Collada_Triangles();
                         tris[j].Material = tmpMeshSubsets.MeshSubsets[j].MatID.ToString();
                         tris[j].Count = (int)tmpMeshSubsets.MeshSubsets[j].NumIndices;
