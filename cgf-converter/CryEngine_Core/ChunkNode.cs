@@ -175,15 +175,8 @@ namespace CgfConverter.CryEngine_Core
 
             // Read the Name string
             this.Name = b.ReadFString(64);
-            // new string(tmpName, 0, stringLength);
             this.ObjectNodeID = b.ReadUInt32(); // Object reference ID
             this.ParentNodeID = b.ReadUInt32();
-            //Utils.Log(LogLevelEnum.Debug, "Node chunk:  {0}. ", Name);
-            // if (this.ParentNodeID == 0xFFFFFFFF)
-            // {
-            //     Utils.Log(LogLevelEnum.Debug, "Found Node with Parent == 0xFFFFFFFF.  Name:  {0}", Name);
-            // }
-
             this.__NumChildren = b.ReadUInt32();
             this.MatID = b.ReadUInt32();  // Material ID?
             this.SkipBytes(b, 4);

@@ -15,33 +15,6 @@ namespace CgfConverter.CryEngine_Core
         public UInt32 ControllerID { get; internal set; }           // Unique id based on CRC32 of bone name.  Ver 827 only?
         public Key[] Keys { get; internal set; }                  // array length NumKeys.  Ver 827?
 
-        public override void Read(BinaryReader b)
-        {
-            base.Read(b);
-
-            //Utils.Log(LogLevelEnum.Debug, "ID is:  {0}", id);
-            this.ControllerType = (CtrlType)Enum.ToObject(typeof(CtrlType), b.ReadUInt32());
-            this.NumKeys = b.ReadUInt32();
-            this.ControllerFlags = b.ReadUInt32();
-            this.ControllerID = b.ReadUInt32();
-            this.Keys = new Key[NumKeys];
-
-            for (Int32 i = 0; i < this.NumKeys; i++)
-            {
-                // Will implement fully later.  Not sure I understand the structure, or if it's necessary.
-                this.Keys[i].Time = b.ReadInt32();
-                // Utils.Log(LogLevelEnum.Debug, "Time {0}", Keys[i].Time);
-                this.Keys[i].AbsPos.x = b.ReadSingle();
-                this.Keys[i].AbsPos.y = b.ReadSingle();
-                this.Keys[i].AbsPos.z = b.ReadSingle();
-                // Utils.Log(LogLevelEnum.Debug, "Abs Pos: {0:F7}  {1:F7}  {2:F7}", Keys[i].AbsPos.x, Keys[i].AbsPos.y, Keys[i].AbsPos.z);
-                this.Keys[i].RelPos.x = b.ReadSingle();
-                this.Keys[i].RelPos.y = b.ReadSingle();
-                this.Keys[i].RelPos.z = b.ReadSingle();
-                // Utils.Log(LogLevelEnum.Debug, "Rel Pos: {0:F7}  {1:F7}  {2:F7}", Keys[i].RelPos.x, Keys[i].RelPos.y, Keys[i].RelPos.z);
-            }
-        }
-
         public override void WriteChunk()
         {
             Utils.Log(LogLevelEnum.Verbose, "*** Controller Chunk ***");
