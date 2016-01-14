@@ -107,8 +107,7 @@
     <Compile Include="cgf-converter.cs" />
     <Compile Include="COLLADA.cs" />
     <Compile Include="CryEngine\CryEngine.cs" />
-    <Compile Include="CryEngine\CryEngine.Material.cs" />
-    <Compile Include="CryEngine\IBinaryChunk.cs" />
+    <Compile Include="CryEngine_Core\IBinaryChunk.cs" />
     <Compile Include="CryEngine_Core\ChunkCompiledBones.cs" />
     <Compile Include="CryEngine_Core\ChunkCompiledPhysicalProxies_800.cs" />
     <Compile Include="CryEngine_Core\ChunkCompiledBones_800.cs" />
@@ -145,6 +144,8 @@
     <Compile Include="CryEngine_Core\ChunkUnknown.cs" />
     <Compile Include="CryEngine_Core\Chunk.cs" />
     <Compile Include="CryEngine_Core\ChunkHeader.cs" />
+    <Compile Include="CryEngine_Core\Material.cs" />
+    <Compile Include="CryEngine_Core\Model.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="External\Collada_B_Rep\Curves\Grendgine_Collada_Circle.cs" />
     <Compile Include="External\Collada_B_Rep\Curves\Grendgine_Collada_Curve.cs" />
@@ -501,7 +502,6 @@
     <None Include="App.config" />
     <None Include="cgf-converter_1_TemporaryKey.pfx" />
     <None Include="cgf-converter_TemporaryKey.pfx" />
-    <Compile Include="CryEngine\CryEngine.Model.cs" />
     <None Include="Properties\app.manifest" />
   </ItemGroup>
   <ItemGroup>

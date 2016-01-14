@@ -105,7 +105,7 @@ namespace CgfConverter
             List<Grendgine_Collada_Image> imageList = new List<Grendgine_Collada_Image>();
             // We now have the image library set up.  start to populate.
             int numImages = 0;
-            foreach (CryEngine.Material material in CryData.Materials)
+            foreach (CryEngine_Core.Material material in CryData.Materials)
             {
                 // each mat will have a number of texture files.  Need to create an <image> for each of them.
                 int numTextures = material.Textures.Length;

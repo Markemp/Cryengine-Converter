@@ -87,14 +87,14 @@ namespace CgfConverter.CryEngine_Core
             throw new NotSupportedException(String.Format("Version {0:X} of {1} is not supported", version, typeof(T).Name));
         }
 
-        public void Load(CryEngine.Model model, ChunkHeader header)
+        public void Load(CryEngine_Core.Model model, ChunkHeader header)
         {
             this._model = model;
             this._header = header;
         }
 
         internal ChunkHeader _header;
-        internal CryEngine.Model _model;
+        internal CryEngine_Core.Model _model;
 
         /// <summary>
         /// Position of the start of the chunk
@@ -124,7 +124,7 @@ namespace CgfConverter.CryEngine_Core
             if (reader == null)
                 return;
 
-            if (reader.BaseStream.Position > this.Offset + this.Size)
+            if ((reader.BaseStream.Position > this.Offset + this.Size) && (this.Size > 0))
                 Utils.Log(LogLevelEnum.Debug, "Buffer Overflow in {2} 0x{0:X} ({1} bytes)", this.ID, reader.BaseStream.Position - this.Offset - this.Size, this.GetType().Name);
 
             if (reader.BaseStream.Length < this.Offset + this.Size)
@@ -152,7 +152,7 @@ namespace CgfConverter.CryEngine_Core
 
             reader.BaseStream.Seek(this._header.Offset, 0);
 
-            if (CryEngine.Model.FILE_VERSION == FileVersionEnum.CryTek_3_4 || CryEngine.Model.FILE_VERSION == FileVersionEnum.CryTek_3_5)
+            if (this._model.FileVersion == FileVersionEnum.CryTek_3_4 || this._model.FileVersion == FileVersionEnum.CryTek_3_5)
             {
                 this.ChunkType = (ChunkTypeEnum)Enum.ToObject(typeof(ChunkTypeEnum), reader.ReadUInt32());
                 this.Version = reader.ReadUInt32();

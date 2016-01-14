@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace CgfConverter
 {
+    // TODO: Move this to CryEngine_Core
     public partial class CryEngine
     {
         /// <summary>
@@ -55,11 +56,11 @@ namespace CgfConverter
 
             #endregion
 
-            this.Models = new List<Model> { };
+            this.Models = new List<CryEngine_Core.Model> { };
 
             foreach (var file in inputFiles)
             {
-                Model model = Model.FromFile(file.FullName);
+                CryEngine_Core.Model model = CryEngine_Core.Model.FromFile(file.FullName);
                 this.RootNode = this.RootNode ?? model.RootNode;
                 this.Models.Add(model);
             }
@@ -107,7 +108,7 @@ namespace CgfConverter
 
                 // TODO: Try more paths
 
-                CryEngine.Material material = CryEngine.Material.FromFile(materialFile);
+                CryEngine_Core.Material material = CryEngine_Core.Material.FromFile(materialFile);
 
                 if (material != null)
                 {
@@ -126,15 +127,15 @@ namespace CgfConverter
 
             // Utils.Log(LogLevelEnum.Debug, "Unable to locate any material file");
 
-            this.Materials = new Material[] { };
+            this.Materials = new CryEngine_Core.Material[] { };
         }
 
         #endregion
 
         #region Properties
 
-        public List<Model> Models { get; internal set; }
-        public Material[] Materials { get; internal set; }
+        public List<CryEngine_Core.Model> Models { get; internal set; }
+        public CryEngine_Core.Material[] Materials { get; internal set; }
 
         #endregion
 
@@ -167,7 +168,7 @@ namespace CgfConverter
 
                     Utils.Log(LogLevelEnum.Info, "Mapping Nodes");
 
-                    foreach (Model model in this.Models)
+                    foreach (CryEngine_Core.Model model in this.Models)
                     {
                         model.RootNode = rootNode = (rootNode ?? model.RootNode);
 
@@ -202,7 +203,7 @@ namespace CgfConverter
         /// </summary>
         /// <param name="material"></param>
         /// <returns></returns>
-        private IEnumerable<Material> FlattenMaterials(Material material)
+        private IEnumerable<CryEngine_Core.Material> FlattenMaterials(CryEngine_Core.Material material)
         {
             if (material != null)
             {

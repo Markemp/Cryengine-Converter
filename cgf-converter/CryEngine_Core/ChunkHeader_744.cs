@@ -16,7 +16,7 @@ namespace CgfConverter.CryEngine_Core
             this.Version = (UInt32)reader.ReadUInt32();
             this.Offset = reader.ReadUInt32();
             this.ID = reader.ReadUInt32();
-            this.Size = 0; // TODO: Figure out how to return a size
+            this.Size = 0; // TODO: Figure out how to return a size - postprocess header table maybe?
 
             // if (this.ChunkType == ChunkTypeEnum.Timing)
             // {
