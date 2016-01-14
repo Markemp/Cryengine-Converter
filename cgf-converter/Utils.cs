@@ -135,12 +135,12 @@ namespace CgfConverter
         {
             if (Utils.LogLevel <= logLevel)
             {
-                Console.WriteLine(format, args);
+                Console.WriteLine(format ?? String.Empty, args);
             }
             
             if (Utils.DebugLevel <= logLevel)
             {
-                Debug.WriteLine(format, args);
+                Debug.WriteLine(format ?? String.Empty, args);
             }
         }
     }
