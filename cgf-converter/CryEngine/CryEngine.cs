@@ -67,7 +67,7 @@ namespace CgfConverter
             foreach (CryEngine_Core.ChunkMtlName mtlChunk in this.Models.SelectMany(a => a.ChunkMap.Values).Where(c => c.ChunkType == ChunkTypeEnum.MtlName))
             {
                 // Don't process child materials for now
-                if (mtlChunk.Version == 0x800 && !(mtlChunk.MatType == 0x01 || mtlChunk.MatType == 0x10))
+                if (mtlChunk.MatType == MtlNameTypeEnum.Child)
                     continue;
 
                 String cleanName = mtlChunk.Name;
@@ -138,24 +138,7 @@ namespace CgfConverter
 
         #endregion
 
-        #region Private Methods
-
-        /// <summary>
-        /// Flatten all child materials into a one dimensional list
-        /// </summary>
-        /// <param name="material"></param>
-        /// <returns></returns>
-        private IEnumerable<Material> FlattenMaterials(Material material)
-        {
-            if (material != null)
-            {
-                yield return material;
-
-                if (material.SubMaterials != null)
-                    foreach (var subMaterial in material.SubMaterials.SelectMany(m => this.FlattenMaterials(m)))
-                        yield return subMaterial;
-            }
-        }
+        #region Calculater Properties
 
         private CryEngine_Core.Chunk[] _chunks;
         public CryEngine_Core.Chunk[] Chunks
@@ -170,62 +153,6 @@ namespace CgfConverter
                 return this._chunks;
             }
         }
-
-        public Dictionary<UInt32, CryEngine_Core.Chunk> _chunksByID;
-        public Dictionary<UInt32, CryEngine_Core.Chunk> ChunksByID
-        {
-            get
-            {
-                if (this._chunksByID == null)
-                {
-                    this._chunksByID = new Dictionary<UInt32, CryEngine_Core.Chunk> { };
-
-                    foreach (CryEngine_Core.Chunk chunk in this.Chunks)
-                    {
-                        this._chunksByID[chunk.ID] = chunk;
-                    }
-                }
-
-                return this._chunksByID;
-            }
-        }
-
-        private static HashSet<UInt32> _watchedNodeIDs = new HashSet<UInt32>
-        {
-            0x2228,
-            0x2234,
-            0x2294,
-            0x2300,
-            0x506,
-            0x512,
-            0x560,
-            0x566,
-        };
-
-        private static HashSet<String> _watchedNodes = new HashSet<String>
-        {
-            // Misbehaving
-            // "LG_Hatch_Aft_Inboard_Left",
-            // "LG_Hatch_Aft_Inboard_Right",
-            // "LG_Hatch_Aft_Outboard_Left",
-            // "LG_Hatch_Aft_Outboard_Right",
-            // "LG_Hatch_Front_Center_Left",
-            // "LG_Hatch_Front_Center_Right",
-            // "LG_Hatch_Front_Inboard_Left",
-            // "LG_Hatch_Front_Inboard_Right",
-            // "LG_Hatch_Front_Outboard_Left",
-            // "LG_Hatch_Front_Outboard_Right",
-            "LG_Skid_Aft_Right",
-            // "LG_Skid_Front_Right",
-            "LG_Skid_Aft_Left",
-            // "LG_Skid_Front_Left",
-
-            // Behaving
-            // "LG_Arm_Aft_Left",
-            // "LG_Arm_Front_Left",
-            // "LandingGear_Pod_Aft_Left",
-            // "LandingGear_Pod_Aft_Right"
-        };
 
         public Dictionary<String, CryEngine_Core.ChunkNode> _nodeMap;
         public Dictionary<String, CryEngine_Core.ChunkNode> NodeMap
@@ -258,17 +185,32 @@ namespace CgfConverter
                             }
 
                             this._nodeMap[node.Name] = node;
-
-                            
-#if DUMP_JSON
-                            File.WriteAllText(String.Format("_node-{0}{1}.json", node.Name, Path.GetExtension(model.FileName)), node.ToJSON());
-#endif
-
                         }
                     }
                 }
 
                 return this._nodeMap;
+            }
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        /// <summary>
+        /// Flatten all child materials into a one dimensional list
+        /// </summary>
+        /// <param name="material"></param>
+        /// <returns></returns>
+        private IEnumerable<Material> FlattenMaterials(Material material)
+        {
+            if (material != null)
+            {
+                yield return material;
+
+                if (material.SubMaterials != null)
+                    foreach (var subMaterial in material.SubMaterials.SelectMany(m => this.FlattenMaterials(m)))
+                        yield return subMaterial;
             }
         }
 
