@@ -48,12 +48,22 @@ namespace CgfConverter
         /// </summary>
         public Boolean TiffTextures { get; internal set; }
         /// <summary>
+        /// Flag used to skip the rendering of nodes containing $shield
+        /// </summary>
+        public Boolean SkipShieldNodes { get; internal set; }
+        /// <summary>
+        /// Flag used to skip the rendering of nodes containing $proxy
+        /// </summary>
+        public Boolean SkipProxyNodes { get; internal set; }
+        /// <summary>
         /// Flag used to pass exceptions to installed debuggers
         /// </summary>
         public Boolean Throw { get; internal set; }
 
         public ArgsHandler()
         {
+            this.SkipShieldNodes = true;
+            this.SkipProxyNodes = true;
             this.InputFiles = new List<String> { };
         }
 
