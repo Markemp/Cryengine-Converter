@@ -13,28 +13,50 @@ namespace CgfConverter.CryEngine_Core
         public String Date;
         public String Author;
 
-        public override void Read(BinaryReader b)
+        public override void Read(BinaryReader reader)
         {
-            Console.WriteLine("{0:X}+{1:X}", this._header.Offset, this._header.Size);
-            base.Read(b);
-            Console.WriteLine("{0:X}+{1:X}", this.Offset, this.Size);
+            this.ChunkType = this._header.ChunkType;
+            this.Version = this._header.Version;
+            this.Offset = this._header.Offset;
+            this.ID = this._header.ID;
+            this.Size = this._header.Size;
+
+            reader.BaseStream.Seek(this._header.Offset, 0);
+
+            UInt32 peek = reader.ReadUInt32();
+
+            // Try and detect SourceInfo type - if it's there, we need to skip ahead a few bytes
+            if ((peek == (UInt32)ChunkTypeEnum.SourceInfo) || (peek + 0xCCCBF000 == (UInt32)ChunkTypeEnum.SourceInfo))
+            {
+                this.SkipBytes(reader, 12);
+            }
+            else
+            {
+                reader.BaseStream.Seek(this._header.Offset, 0);
+            }
+
+            if (this.Offset != this._header.Offset || this.Size != this._header.Size)
+            {
+                Utils.Log(LogLevelEnum.Warning, "Conflict in chunk definition");
+                Utils.Log(LogLevelEnum.Warning, "{0:X}+{1:X}", this._header.Offset, this._header.Size);
+                Utils.Log(LogLevelEnum.Warning, "{0:X}+{1:X}", this.Offset, this.Size);
+                this.WriteChunk();
+            }
 
             this.ChunkType = ChunkTypeEnum.SourceInfo; // this chunk doesn't actually have the chunktype header.
-            this.SourceFile = b.ReadCString();
-            this.Date = b.ReadCString().TrimEnd(); // Strip off last 2 Characters, because it contains a return
-            this.Author = b.ReadCString();
-
-            this.WriteChunk();
+            this.SourceFile = reader.ReadCString();
+            this.Date = reader.ReadCString().TrimEnd(); // Strip off last 2 Characters, because it contains a return
+            this.Author = reader.ReadCString();
         }
 
         public override void WriteChunk()
         {
-            Console.WriteLine("*** SOURCE INFO CHUNK ***");
-            Console.WriteLine("    ID: {0:X}", ID);
-            Console.WriteLine("    Sourcefile: {0}.  Length {1}", SourceFile, SourceFile.Length);
-            Console.WriteLine("    Date:       {0}.  Length {1}", Date, Date.Length);
-            Console.WriteLine("    Author:     {0}.  Length {1}", Author, Author.Length);
-            Console.WriteLine("*** END SOURCE INFO CHUNK ***");
+            Utils.Log(LogLevelEnum.Verbose, "*** SOURCE INFO CHUNK ***");
+            Utils.Log(LogLevelEnum.Verbose, "    ID: {0:X}", this.ID);
+            Utils.Log(LogLevelEnum.Verbose, "    Sourcefile: {0}.", this.SourceFile);
+            Utils.Log(LogLevelEnum.Verbose, "    Date:       {0}.", this.Date);
+            Utils.Log(LogLevelEnum.Verbose, "    Author:     {0}.", this.Author);
+            Utils.Log(LogLevelEnum.Verbose, "*** END SOURCE INFO CHUNK ***");
         }
     }
 

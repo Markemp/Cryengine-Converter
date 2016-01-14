@@ -14,9 +14,9 @@ namespace CgfConverter.CryEngine_Core
     {
         public override void Read(BinaryReader b)
         {
-            Console.WriteLine("Reading ChunkMtlName_802");
-
             base.Read(b);
+
+            // Appears to have 4 more Bytes than ChunkMtlName_744
         }
     }
 }

@@ -36,23 +36,23 @@ namespace CgfConverter.CryEngine_Core
         }
         public override void WriteChunk()
         {
-            Console.WriteLine("*** START MESH SUBSET CHUNK ***");
-            Console.WriteLine("    ChunkType:       {0}", ChunkType);
-            Console.WriteLine("    Mesh SubSet ID:  {0:X}", ID);
-            Console.WriteLine("    Number of Mesh Subsets: {0}", NumMeshSubset);
+            Utils.Log(LogLevelEnum.Verbose, "*** START MESH SUBSET CHUNK ***");
+            Utils.Log(LogLevelEnum.Verbose, "    ChunkType:       {0}", ChunkType);
+            Utils.Log(LogLevelEnum.Verbose, "    Mesh SubSet ID:  {0:X}", ID);
+            Utils.Log(LogLevelEnum.Verbose, "    Number of Mesh Subsets: {0}", NumMeshSubset);
             for (Int32 i = 0; i < NumMeshSubset; i++)
             {
-                Console.WriteLine("        ** Mesh Subset:          {0}", i);
-                Console.WriteLine("           First Index:          {0}", MeshSubsets[i].FirstIndex);
-                Console.WriteLine("           Number of Indices:    {0}", MeshSubsets[i].NumIndices);
-                Console.WriteLine("           First Vertex:         {0}", MeshSubsets[i].FirstVertex);
-                Console.WriteLine("           Number of Vertices:   {0}  (next will be {1})", MeshSubsets[i].NumVertices, MeshSubsets[i].NumVertices + MeshSubsets[i].FirstVertex);
-                Console.WriteLine("           Material ID:          {0}", MeshSubsets[i].MatID);
-                Console.WriteLine("           Radius:               {0}", MeshSubsets[i].Radius);
-                Console.WriteLine("           Center:   {0},{1},{2}", MeshSubsets[i].Center.x, MeshSubsets[i].Center.y, MeshSubsets[i].Center.z);
-                Console.WriteLine("        ** Mesh Subset {0} End", i);
+                Utils.Log(LogLevelEnum.Verbose, "        ** Mesh Subset:          {0}", i);
+                Utils.Log(LogLevelEnum.Verbose, "           First Index:          {0}", MeshSubsets[i].FirstIndex);
+                Utils.Log(LogLevelEnum.Verbose, "           Number of Indices:    {0}", MeshSubsets[i].NumIndices);
+                Utils.Log(LogLevelEnum.Verbose, "           First Vertex:         {0}", MeshSubsets[i].FirstVertex);
+                Utils.Log(LogLevelEnum.Verbose, "           Number of Vertices:   {0}  (next will be {1})", MeshSubsets[i].NumVertices, MeshSubsets[i].NumVertices + MeshSubsets[i].FirstVertex);
+                Utils.Log(LogLevelEnum.Verbose, "           Material ID:          {0}", MeshSubsets[i].MatID);
+                Utils.Log(LogLevelEnum.Verbose, "           Radius:               {0}", MeshSubsets[i].Radius);
+                Utils.Log(LogLevelEnum.Verbose, "           Center:   {0},{1},{2}", MeshSubsets[i].Center.x, MeshSubsets[i].Center.y, MeshSubsets[i].Center.z);
+                Utils.Log(LogLevelEnum.Verbose, "        ** Mesh Subset {0} End", i);
             }
-            Console.WriteLine("*** END MESH SUBSET CHUNK ***");
+            Utils.Log(LogLevelEnum.Verbose, "*** END MESH SUBSET CHUNK ***");
         }
     }
 }

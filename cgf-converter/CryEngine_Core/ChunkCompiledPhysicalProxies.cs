@@ -22,7 +22,7 @@ namespace CgfConverter.CryEngine_Core
             base.Read(b);
 
             this.NumBones = b.ReadUInt32(); // number of Bones in this chunk.
-            // Console.WriteLine("Number of bones (hitboxes): {0}", NumBones);
+            // Utils.Log(LogLevelEnum.Debug, "Number of bones (hitboxes): {0}", NumBones);
             this.HitBoxes = new HitBox[NumBones];    // now have an array of hitboxes
             for (Int32 i = 0; i < NumBones; i++)
             {
@@ -34,21 +34,21 @@ namespace CgfConverter.CryEngine_Core
                 this.HitBoxes[i].Vertices = new Vector3[HitBoxes[i].NumVertices];
                 this.HitBoxes[i].Indices = new UInt16[HitBoxes[i].NumIndices];
 
-                //Console.WriteLine("Hitbox {0}, {1:X} Vertices and {2:X} Indices", i, HitBoxes[i].NumVertices, HitBoxes[i].NumIndices);
+                //Utils.Log(LogLevelEnum.Debug, "Hitbox {0}, {1:X} Vertices and {2:X} Indices", i, HitBoxes[i].NumVertices, HitBoxes[i].NumIndices);
                 for (Int32 j = 0; j < HitBoxes[i].NumVertices; j++)
                 {
                     HitBoxes[i].Vertices[j].x = b.ReadSingle();
                     HitBoxes[i].Vertices[j].y = b.ReadSingle();
                     HitBoxes[i].Vertices[j].z = b.ReadSingle();
-                    // Console.WriteLine("{0} {1} {2}",HitBoxes[i].Vertices[j].x,HitBoxes[i].Vertices[j].y,HitBoxes[i].Vertices[j].z);
+                    // Utils.Log(LogLevelEnum.Debug, "{0} {1} {2}",HitBoxes[i].Vertices[j].x,HitBoxes[i].Vertices[j].y,HitBoxes[i].Vertices[j].z);
                 }
                 // Read the indices
                 for (Int32 j = 0; j < HitBoxes[i].NumIndices; j++)
                 {
                     HitBoxes[i].Indices[j] = b.ReadUInt16();
-                    //Console.WriteLine("Indices: {0}", HitBoxes[i].Indices[j]);
+                    //Utils.Log(LogLevelEnum.Debug, "Indices: {0}", HitBoxes[i].Indices[j]);
                 }
-                // Console.WriteLine("Index 0 is {0}, Index 9 is {1}", HitBoxes[i].Indices[0],HitBoxes[i].Indices[9]);
+                // Utils.Log(LogLevelEnum.Debug, "Index 0 is {0}, Index 9 is {1}", HitBoxes[i].Indices[0],HitBoxes[i].Indices[9]);
                 // read the crap at the end so we can move on.
                 for (Int32 j = 0; j < HitBoxes[i].Unknown2 / 2; j++)
                 {

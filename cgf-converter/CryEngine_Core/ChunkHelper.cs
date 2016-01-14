@@ -19,13 +19,13 @@ namespace CgfConverter.CryEngine_Core
 
         public override void WriteChunk()
         {
-            Console.WriteLine("*** START Helper Chunk ***");
-            Console.WriteLine("    ChunkType:   {0}", ChunkType);
-            Console.WriteLine("    Version:     {0:X}", Version);
-            Console.WriteLine("    ID:          {0:X}", ID);
-            Console.WriteLine("    HelperType:  {0}", HelperType);
-            Console.WriteLine("    Position:    {0}, {1}, {2}", Pos.x, Pos.y, Pos.z);
-            Console.WriteLine("*** END Helper Chunk ***");
+            Utils.Log(LogLevelEnum.Verbose, "*** START Helper Chunk ***");
+            Utils.Log(LogLevelEnum.Verbose, "    ChunkType:   {0}", ChunkType);
+            Utils.Log(LogLevelEnum.Verbose, "    Version:     {0:X}", Version);
+            Utils.Log(LogLevelEnum.Verbose, "    ID:          {0:X}", ID);
+            Utils.Log(LogLevelEnum.Verbose, "    HelperType:  {0}", HelperType);
+            Utils.Log(LogLevelEnum.Verbose, "    Position:    {0}, {1}, {2}", Pos.x, Pos.y, Pos.z);
+            Utils.Log(LogLevelEnum.Verbose, "*** END Helper Chunk ***");
         }
     }
 }

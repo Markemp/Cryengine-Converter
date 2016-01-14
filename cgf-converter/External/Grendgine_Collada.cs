@@ -2,6 +2,7 @@ using System;
 using System.Xml;
 using System.Xml.Serialization;
 using System.IO;
+using CgfConverter;
 namespace grendgine_collada
 {
 
@@ -127,7 +128,7 @@ namespace grendgine_collada
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                Utils.Log(LogLevelEnum.Error, ex.ToString());
                 Console.ReadLine();
                 return null;
             }			

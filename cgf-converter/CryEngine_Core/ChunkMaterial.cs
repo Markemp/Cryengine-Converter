@@ -24,15 +24,15 @@ namespace CgfConverter.CryEngine_Core
 
         public override void WriteChunk()
         {
-            Console.WriteLine("*** START MATERIAL NAMES ***");
-            Console.WriteLine("    ChunkType:           {0}", this.ChunkType);
-            Console.WriteLine("    Material Name:       {0}", this.Name);
-            Console.WriteLine("    Material ID:         {0:X}", this.ID);
-            Console.WriteLine("    Version:             {0:X}", this.Version);
-            Console.WriteLine("    Number of Children:  {0}", this.NumChildren);
-            Console.WriteLine("    Material Type:       {0:X}", this.MatType); // 0x1 is mtllib w children, 0x10 is mtl no children, 0x18 is child
-            Console.WriteLine("    Physics Type:        {0}", this.PhysicsType);
-            Console.WriteLine("*** END MATERIAL NAMES ***");
+            Utils.Log(LogLevelEnum.Verbose, "*** START MATERIAL NAMES ***");
+            Utils.Log(LogLevelEnum.Verbose, "    ChunkType:           {0}", this.ChunkType);
+            Utils.Log(LogLevelEnum.Verbose, "    Material Name:       {0}", this.Name);
+            Utils.Log(LogLevelEnum.Verbose, "    Material ID:         {0:X}", this.ID);
+            Utils.Log(LogLevelEnum.Verbose, "    Version:             {0:X}", this.Version);
+            Utils.Log(LogLevelEnum.Verbose, "    Number of Children:  {0}", this.NumChildren);
+            Utils.Log(LogLevelEnum.Verbose, "    Material Type:       {0:X}", this.MatType); // 0x1 is mtllib w children, 0x10 is mtl no children, 0x18 is child
+            Utils.Log(LogLevelEnum.Verbose, "    Physics Type:        {0}", this.PhysicsType);
+            Utils.Log(LogLevelEnum.Verbose, "*** END MATERIAL NAMES ***");
         }
     }
 }

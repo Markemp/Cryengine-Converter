@@ -15,9 +15,9 @@ namespace CgfConverter
         {
             // The root of the functions to write FBX binary files
             // At this point, we should have a CgfData object, fully populated.
-            Console.WriteLine();
-            Console.WriteLine("*** Starting WriteFBX() ***");
-            Console.WriteLine();
+            Utils.Log(LogLevelEnum.Verbose);
+            Utils.Log(LogLevelEnum.Verbose, "*** Starting WriteFBX() ***");
+            Utils.Log(LogLevelEnum.Verbose);
         }
     }
 }

@@ -39,19 +39,20 @@ namespace CgfConverter.CryEngine_Core
 
         public override void WriteChunk()
         {
-            Console.WriteLine("*** START EXPORT FLAGS ***");
-            Console.WriteLine("    Export Chunk ID: {0:X}", ID);
-            Console.WriteLine("    ChunkType: {0}", ChunkType);
-            Console.WriteLine("    Version: {0}", Version);
-            Console.WriteLine("    Flags: {0}", Flags);
-            Console.Write("    RC Version: ");
+            Utils.Log(LogLevelEnum.Verbose, "*** START EXPORT FLAGS ***");
+            Utils.Log(LogLevelEnum.Verbose, "    Export Chunk ID: {0:X}", ID);
+            Utils.Log(LogLevelEnum.Verbose, "    ChunkType: {0}", ChunkType);
+            Utils.Log(LogLevelEnum.Verbose, "    Version: {0}", Version);
+            Utils.Log(LogLevelEnum.Verbose, "    Flags: {0}", Flags);
+            StringBuilder sb = new StringBuilder("    RC Version: ");
             for (Int32 i = 0; i < 4; i++)
             {
-                Console.Write(RCVersion[i]);
+                sb.Append(RCVersion[i]);
             }
-            Console.WriteLine();
-            Console.WriteLine("    RCVersion String: {0}", this.RCVersionString);
-            Console.WriteLine("*** END EXPORT FLAGS ***");
+            Utils.Log(LogLevelEnum.Verbose, sb.ToString());
+            Utils.Log(LogLevelEnum.Verbose);
+            Utils.Log(LogLevelEnum.Verbose, "    RCVersion String: {0}", this.RCVersionString);
+            Utils.Log(LogLevelEnum.Verbose, "*** END EXPORT FLAGS ***");
         }
     }
 }

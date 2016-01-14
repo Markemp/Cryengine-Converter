@@ -314,5 +314,7 @@ namespace CgfConverter
             Console.WriteLine("    Output to .dae:         {0}", this.Output_Collada);
             Console.WriteLine();
         }
+
+        public bool Verbose { get; set; }
     }
 }

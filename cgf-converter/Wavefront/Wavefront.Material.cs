@@ -19,7 +19,7 @@ namespace CgfConverter
         {
             if (cryEngine.Materials == null)
             {
-                Console.WriteLine("No materials loaded");
+                Utils.Log(LogLevelEnum.Debug, "No materials loaded");
                 return;
             }
 
@@ -44,7 +44,7 @@ namespace CgfConverter
                     }
                     else
                     {
-                        Console.WriteLine("Skipping Diffuse for {0}", material.Name);
+                        Utils.Log(LogLevelEnum.Debug, "Skipping Diffuse for {0}", material.Name);
                     }
                     if (material.Specular != null)
                     {
@@ -53,7 +53,7 @@ namespace CgfConverter
                     }
                     else
                     {
-                        Console.WriteLine("Skipping Specular for {0}", material.Name);
+                        Utils.Log(LogLevelEnum.Debug, "Skipping Specular for {0}", material.Name);
                     }
                     file.WriteLine("d {0:F6}", material.Opacity);                                                                          // Dissolve
 

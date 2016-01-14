@@ -178,10 +178,10 @@ namespace CgfConverter.CryEngine_Core
             // new string(tmpName, 0, stringLength);
             this.ObjectNodeID = b.ReadUInt32(); // Object reference ID
             this.ParentNodeID = b.ReadUInt32();
-            //Console.WriteLine("Node chunk:  {0}. ", Name);
+            //Utils.Log(LogLevelEnum.Debug, "Node chunk:  {0}. ", Name);
             // if (this.ParentNodeID == 0xFFFFFFFF)
             // {
-            //     Console.WriteLine("Found Node with Parent == 0xFFFFFFFF.  Name:  {0}", Name);
+            //     Utils.Log(LogLevelEnum.Debug, "Found Node with Parent == 0xFFFFFFFF.  Name:  {0}", Name);
             // }
 
             this.__NumChildren = b.ReadUInt32();
@@ -245,24 +245,24 @@ namespace CgfConverter.CryEngine_Core
 
         public override void WriteChunk()
         {
-            Console.WriteLine("*** START Node Chunk ***");
-            Console.WriteLine("    ChunkType:           {0}", ChunkType);
-            Console.WriteLine("    Node ID:             {0:X}", ID);
-            Console.WriteLine("    Node Name:           {0}", Name);
-            Console.WriteLine("    Object ID:           {0:X}", ObjectNodeID);
-            Console.WriteLine("    Parent ID:           {0:X}", ParentNodeID);
-            Console.WriteLine("    Number of Children:  {0}", __NumChildren);
-            Console.WriteLine("    Material ID:         {0:X}", MatID); // 0x1 is mtllib w children, 0x10 is mtl no children, 0x18 is child
-            Console.WriteLine("    Position:            {0:F7}   {1:F7}   {2:F7}", Pos.x, Pos.y, Pos.z);
-            Console.WriteLine("    Scale:               {0:F7}   {1:F7}   {2:F7}", Scale.x, Scale.y, Scale.z);
-            Console.WriteLine("    Transformation:      {0:F7}  {1:F7}  {2:F7}  {3:F7}", Transform.m11, Transform.m12, Transform.m13, Transform.m14);
-            Console.WriteLine("                         {0:F7}  {1:F7}  {2:F7}  {3:F7}", Transform.m21, Transform.m22, Transform.m23, Transform.m24);
-            Console.WriteLine("                         {0:F7}  {1:F7}  {2:F7}  {3:F7}", Transform.m31, Transform.m32, Transform.m33, Transform.m34);
-            Console.WriteLine("                         {0:F7}  {1:F7}  {2:F7}  {3:F7}", Transform.m41 / 100, Transform.m42 / 100, Transform.m43 / 100, Transform.m44);
-            Console.WriteLine("    Transform_sum:       {0:F7}  {1:F7}  {2:F7}", TransformSoFar.x, TransformSoFar.y, TransformSoFar.z);
-            Console.WriteLine("    Rotation_sum:");
-            RotSoFar.WriteMatrix33();
-            Console.WriteLine("*** END Node Chunk ***");
+            Utils.Log(LogLevelEnum.Verbose, "*** START Node Chunk ***");
+            Utils.Log(LogLevelEnum.Verbose, "    ChunkType:           {0}", ChunkType);
+            Utils.Log(LogLevelEnum.Verbose, "    Node ID:             {0:X}", ID);
+            Utils.Log(LogLevelEnum.Verbose, "    Node Name:           {0}", Name);
+            Utils.Log(LogLevelEnum.Verbose, "    Object ID:           {0:X}", ObjectNodeID);
+            Utils.Log(LogLevelEnum.Verbose, "    Parent ID:           {0:X}", ParentNodeID);
+            Utils.Log(LogLevelEnum.Verbose, "    Number of Children:  {0}", __NumChildren);
+            Utils.Log(LogLevelEnum.Verbose, "    Material ID:         {0:X}", MatID); // 0x1 is mtllib w children, 0x10 is mtl no children, 0x18 is child
+            Utils.Log(LogLevelEnum.Verbose, "    Position:            {0:F7}   {1:F7}   {2:F7}", Pos.x, Pos.y, Pos.z);
+            Utils.Log(LogLevelEnum.Verbose, "    Scale:               {0:F7}   {1:F7}   {2:F7}", Scale.x, Scale.y, Scale.z);
+            Utils.Log(LogLevelEnum.Verbose, "    Transformation:      {0:F7}  {1:F7}  {2:F7}  {3:F7}", Transform.m11, Transform.m12, Transform.m13, Transform.m14);
+            Utils.Log(LogLevelEnum.Verbose, "                         {0:F7}  {1:F7}  {2:F7}  {3:F7}", Transform.m21, Transform.m22, Transform.m23, Transform.m24);
+            Utils.Log(LogLevelEnum.Verbose, "                         {0:F7}  {1:F7}  {2:F7}  {3:F7}", Transform.m31, Transform.m32, Transform.m33, Transform.m34);
+            Utils.Log(LogLevelEnum.Verbose, "                         {0:F7}  {1:F7}  {2:F7}  {3:F7}", Transform.m41 / 100, Transform.m42 / 100, Transform.m43 / 100, Transform.m44);
+            Utils.Log(LogLevelEnum.Verbose, "    Transform_sum:       {0:F7}  {1:F7}  {2:F7}", TransformSoFar.x, TransformSoFar.y, TransformSoFar.z);
+            Utils.Log(LogLevelEnum.Verbose, "    Rotation_sum:");
+            this.RotSoFar.WriteMatrix33();
+            Utils.Log(LogLevelEnum.Verbose, "*** END Node Chunk ***");
         }
 
         #endregion

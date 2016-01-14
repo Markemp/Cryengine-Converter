@@ -23,9 +23,9 @@ namespace CgfConverter
             this.CryData = cryEngine;
             // The root of the functions to write Blend files
             // At this point, we should have a CgfData object, fully populated.
-            Console.WriteLine();
-            Console.WriteLine("*** Starting WriteBlend() ***");
-            Console.WriteLine();
+            Utils.Log(LogLevelEnum.Debug);
+            Utils.Log(LogLevelEnum.Debug, "*** Starting WriteBlend() ***");
+            Utils.Log(LogLevelEnum.Debug);
 
             // File name will be "object name.blend"
             // blendOutputFile = new FileInfo(cgfData.RootNode.Name + ".blend");

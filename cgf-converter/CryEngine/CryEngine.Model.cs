@@ -88,7 +88,7 @@ namespace CgfConverter
                         this.Headers.GetChunkTable<CryEngine_Core.ChunkHeader_746>(cgfReader, CgfHeader.ChunkTableOffset);
                         break;
                     default:
-                        Console.WriteLine("Unknown Header");
+                        Utils.Log(LogLevelEnum.Debug, "Unknown Header");
                         this.CgfHeader.WriteChunk();
                         break;
                 }
@@ -113,9 +113,9 @@ namespace CgfConverter
 
             public void WriteTransform(Vector3 transform)
             {
-                Console.WriteLine("Transform:");
-                Console.WriteLine("{0}    {1}    {2}", transform.x, transform.y, transform.z);
-                Console.WriteLine();
+                Utils.Log(LogLevelEnum.Debug, "Transform:");
+                Utils.Log(LogLevelEnum.Debug, "{0}    {1}    {2}", transform.x, transform.y, transform.z);
+                Utils.Log(LogLevelEnum.Debug);
             }
 
             #region DataTypes
@@ -180,14 +180,14 @@ namespace CgfConverter
 
                 public void WriteChunk()  // output header to console for testing
                 {
-                    Console.WriteLine("*** HEADER ***");
-                    Console.WriteLine("    Header Filesignature: {0}", this.FileSignature);
-                    Console.WriteLine("    FileType:            {0:X}", this.FileType);
-                    Console.WriteLine("    ChunkVersion:        {0:X}", this.FileVersion);
-                    Console.WriteLine("    ChunkTableOffset:    {0:X}", this.ChunkTableOffset);
-                    Console.WriteLine("    NumChunks:           {0:X}", this.NumChunks);
+                    Utils.Log(LogLevelEnum.Debug, "*** HEADER ***");
+                    Utils.Log(LogLevelEnum.Debug, "    Header Filesignature: {0}", this.FileSignature);
+                    Utils.Log(LogLevelEnum.Debug, "    FileType:            {0:X}", this.FileType);
+                    Utils.Log(LogLevelEnum.Debug, "    ChunkVersion:        {0:X}", this.FileVersion);
+                    Utils.Log(LogLevelEnum.Debug, "    ChunkTableOffset:    {0:X}", this.ChunkTableOffset);
+                    Utils.Log(LogLevelEnum.Debug, "    NumChunks:           {0:X}", this.NumChunks);
 
-                    Console.WriteLine("*** END HEADER ***");
+                    Utils.Log(LogLevelEnum.Debug, "*** END HEADER ***");
                     return;
                 }
             }
@@ -216,11 +216,11 @@ namespace CgfConverter
 
                 public void WriteChunk()
                 {
-                    Console.WriteLine("*** Chunk Header Table***");
-                    Console.WriteLine("Chunk Type              Version   ID        Size      Offset    ");
+                    Utils.Log(LogLevelEnum.Debug, "*** Chunk Header Table***");
+                    Utils.Log(LogLevelEnum.Debug, "Chunk Type              Version   ID        Size      Offset    ");
                     foreach (ChunkHeader chkHdr in this.Items)
                     {
-                        Console.WriteLine("{0,-24:X}{1,-10:X}{2,-10:X}{3,-10:X}{4,-10:X}", chkHdr.ChunkType.ToString(), chkHdr.Version, chkHdr.ID, chkHdr.Size, chkHdr.Offset);
+                        Utils.Log(LogLevelEnum.Debug, "{0,-24:X}{1,-10:X}{2,-10:X}{3,-10:X}{4,-10:X}", chkHdr.ChunkType.ToString(), chkHdr.Version, chkHdr.ID, chkHdr.Size, chkHdr.Offset);
                     }
                 }
             }

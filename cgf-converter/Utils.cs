@@ -12,6 +12,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Diagnostics;
 
 namespace CgfConverter
 {
@@ -20,6 +21,38 @@ namespace CgfConverter
         Int8 = 1,
         Int16 = 2,
         Int32 = 4,
+    }
+
+    public enum LogLevelEnum
+    {
+        /// <summary>
+        /// Log Everything
+        /// </summary>
+        Verbose = 0x01,
+        /// <summary>
+        /// Log Some Stuff Useful For Debugging
+        /// </summary>
+        Debug = 0x02,
+        /// <summary>
+        /// Log Information/Progress Updates
+        /// </summary>
+        Info = 0x04,
+        /// <summary>
+        /// Log Warnings (Default)
+        /// </summary>
+        Warning = 0x08,
+        /// <summary>
+        /// Log Errors
+        /// </summary>
+        Error = 0x0F,
+        /// <summary>
+        /// Log Critical Errors
+        /// </summary>
+        Critical = 0x10,
+        /// <summary>
+        /// Don't Log Anything
+        /// </summary>
+        None = 0xFF,
     }
 
     public static class Utils
@@ -93,6 +126,21 @@ namespace CgfConverter
         public static T Max<T>(T first, T second) where T : IComparable<T>
         {
             return Comparer<T>.Default.Compare(first, second) > 0 ? first : second;
+        }
+
+        public static LogLevelEnum LogLevel { get; set; }
+        public static LogLevelEnum DebugLevel { get; set; }
+        public static void Log(LogLevelEnum logLevel, String format = null, params Object[] args)
+        {
+            if (Utils.LogLevel <= logLevel)
+            {
+                Console.WriteLine(format, args);
+            }
+            
+            if (Utils.DebugLevel <= logLevel)
+            {
+                Debug.WriteLine(format, args);
+            }
         }
     }
 }

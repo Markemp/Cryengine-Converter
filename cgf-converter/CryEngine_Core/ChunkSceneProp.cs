@@ -32,15 +32,15 @@ namespace CgfConverter.CryEngine_Core
         }
         public override void WriteChunk()
         {
-            Console.WriteLine("*** START SceneProp Chunk ***");
-            Console.WriteLine("    ChunkType:   {0}", ChunkType);
-            Console.WriteLine("    Version:     {0:X}", Version);
-            Console.WriteLine("    ID:          {0:X}", ID);
+            Utils.Log(LogLevelEnum.Verbose, "*** START SceneProp Chunk ***");
+            Utils.Log(LogLevelEnum.Verbose, "    ChunkType:   {0}", ChunkType);
+            Utils.Log(LogLevelEnum.Verbose, "    Version:     {0:X}", Version);
+            Utils.Log(LogLevelEnum.Verbose, "    ID:          {0:X}", ID);
             for (Int32 i = 0; i < NumProps; i++)
             {
-                Console.WriteLine("{0,30}{1,20}", PropKey[i], PropValue[i]);
+                Utils.Log(LogLevelEnum.Verbose, "{0,30}{1,20}", PropKey[i], PropValue[i]);
             }
-            Console.WriteLine("*** END SceneProp Chunk ***");
+            Utils.Log(LogLevelEnum.Verbose, "*** END SceneProp Chunk ***");
         }
     }
 }

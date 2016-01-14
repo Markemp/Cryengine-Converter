@@ -19,7 +19,7 @@ namespace CgfConverter.CryEngine_Core
         {
             base.Read(b);
 
-            //Console.WriteLine("ID is:  {0}", id);
+            //Utils.Log(LogLevelEnum.Debug, "ID is:  {0}", id);
             this.ControllerType = (CtrlType)Enum.ToObject(typeof(CtrlType), b.ReadUInt32());
             this.NumKeys = b.ReadUInt32();
             this.ControllerFlags = b.ReadUInt32();
@@ -30,32 +30,32 @@ namespace CgfConverter.CryEngine_Core
             {
                 // Will implement fully later.  Not sure I understand the structure, or if it's necessary.
                 this.Keys[i].Time = b.ReadInt32();
-                // Console.WriteLine("Time {0}", Keys[i].Time);
+                // Utils.Log(LogLevelEnum.Debug, "Time {0}", Keys[i].Time);
                 this.Keys[i].AbsPos.x = b.ReadSingle();
                 this.Keys[i].AbsPos.y = b.ReadSingle();
                 this.Keys[i].AbsPos.z = b.ReadSingle();
-                // Console.WriteLine("Abs Pos: {0:F7}  {1:F7}  {2:F7}", Keys[i].AbsPos.x, Keys[i].AbsPos.y, Keys[i].AbsPos.z);
+                // Utils.Log(LogLevelEnum.Debug, "Abs Pos: {0:F7}  {1:F7}  {2:F7}", Keys[i].AbsPos.x, Keys[i].AbsPos.y, Keys[i].AbsPos.z);
                 this.Keys[i].RelPos.x = b.ReadSingle();
                 this.Keys[i].RelPos.y = b.ReadSingle();
                 this.Keys[i].RelPos.z = b.ReadSingle();
-                // Console.WriteLine("Rel Pos: {0:F7}  {1:F7}  {2:F7}", Keys[i].RelPos.x, Keys[i].RelPos.y, Keys[i].RelPos.z);
+                // Utils.Log(LogLevelEnum.Debug, "Rel Pos: {0:F7}  {1:F7}  {2:F7}", Keys[i].RelPos.x, Keys[i].RelPos.y, Keys[i].RelPos.z);
             }
         }
 
         public override void WriteChunk()
         {
-            Console.WriteLine("*** Controller Chunk ***");
-            Console.WriteLine("Version:                 {0:X}", Version);
-            Console.WriteLine("ID:                      {0:X}", ID);
-            Console.WriteLine("Number of Keys:          {0}", NumKeys);
-            Console.WriteLine("Controller Type:         {0}", ControllerType);
-            Console.WriteLine("Conttroller Flags:       {0}", ControllerFlags);
-            Console.WriteLine("Controller ID:           {0}", ControllerID);
+            Utils.Log(LogLevelEnum.Verbose, "*** Controller Chunk ***");
+            Utils.Log(LogLevelEnum.Verbose, "Version:                 {0:X}", Version);
+            Utils.Log(LogLevelEnum.Verbose, "ID:                      {0:X}", ID);
+            Utils.Log(LogLevelEnum.Verbose, "Number of Keys:          {0}", NumKeys);
+            Utils.Log(LogLevelEnum.Verbose, "Controller Type:         {0}", ControllerType);
+            Utils.Log(LogLevelEnum.Verbose, "Conttroller Flags:       {0}", ControllerFlags);
+            Utils.Log(LogLevelEnum.Verbose, "Controller ID:           {0}", ControllerID);
             for (Int32 i = 0; i < NumKeys; i++)
             {
-                Console.WriteLine("        Key {0}:       Time: {1}", i, Keys[i].Time);
-                Console.WriteLine("        AbsPos {0}:    {1:F7}, {2:F7}, {3:F7}", i, Keys[i].AbsPos.x, Keys[i].AbsPos.y, Keys[i].AbsPos.z);
-                Console.WriteLine("        RelPos {0}:    {1:F7}, {2:F7}, {3:F7}", i, Keys[i].RelPos.x, Keys[i].RelPos.y, Keys[i].RelPos.z);
+                Utils.Log(LogLevelEnum.Verbose, "        Key {0}:       Time: {1}", i, Keys[i].Time);
+                Utils.Log(LogLevelEnum.Verbose, "        AbsPos {0}:    {1:F7}, {2:F7}, {3:F7}", i, Keys[i].AbsPos.x, Keys[i].AbsPos.y, Keys[i].AbsPos.z);
+                Utils.Log(LogLevelEnum.Verbose, "        RelPos {0}:    {1:F7}, {2:F7}, {3:F7}", i, Keys[i].RelPos.x, Keys[i].RelPos.y, Keys[i].RelPos.z);
             }
         }
     }

@@ -28,15 +28,15 @@ namespace CgfConverter.CryEngine_Core
 
         public override void WriteChunk()
         {
-            Console.WriteLine("*** TIMING CHUNK ***");
-            Console.WriteLine("    ID: {0:X}", this.ID);
-            Console.WriteLine("    Version: {0:X}", this.Version);
-            Console.WriteLine("    Secs Per Tick: {0}", this.SecsPerTick);
-            Console.WriteLine("    Ticks Per Frame: {0}", this.TicksPerFrame);
-            Console.WriteLine("    Global Range:  Name: {0}", this.GlobalRange.Name);
-            Console.WriteLine("    Global Range:  Start: {0}", this.GlobalRange.Start);
-            Console.WriteLine("    Global Range:  End:  {0}", this.GlobalRange.End);
-            Console.WriteLine("*** END TIMING CHUNK ***");
+            Utils.Log(LogLevelEnum.Verbose, "*** TIMING CHUNK ***");
+            Utils.Log(LogLevelEnum.Verbose, "    ID: {0:X}", this.ID);
+            Utils.Log(LogLevelEnum.Verbose, "    Version: {0:X}", this.Version);
+            Utils.Log(LogLevelEnum.Verbose, "    Secs Per Tick: {0}", this.SecsPerTick);
+            Utils.Log(LogLevelEnum.Verbose, "    Ticks Per Frame: {0}", this.TicksPerFrame);
+            Utils.Log(LogLevelEnum.Verbose, "    Global Range:  Name: {0}", this.GlobalRange.Name);
+            Utils.Log(LogLevelEnum.Verbose, "    Global Range:  Start: {0}", this.GlobalRange.Start);
+            Utils.Log(LogLevelEnum.Verbose, "    Global Range:  End:  {0}", this.GlobalRange.End);
+            Utils.Log(LogLevelEnum.Verbose, "*** END TIMING CHUNK ***");
         }
     }
 }

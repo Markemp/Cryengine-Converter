@@ -32,7 +32,7 @@ namespace CgfConverter.CryEngine_Core
         {
             // Start reading all the properties of this bone.
             CompiledBone tempBone = new CompiledBone();
-            // Console.WriteLine("** Current offset {0:X}", b.BaseStream.Position);
+            // Utils.Log(LogLevelEnum.Debug, "** Current offset {0:X}", b.BaseStream.Position);
             tempBone.offset = b.BaseStream.Position;
             tempBone.ReadCompiledBone(b);
             tempBone.parentID = parent;
@@ -48,14 +48,14 @@ namespace CgfConverter.CryEngine_Core
                 this.GetCompiledBones(b, tempBone.boneName);
             }
             // Need to set the seek position back to the parent at this point?  Can use parent offset * 584...  Parent offset is a neg number
-            //Console.WriteLine("Parent offset: {0}", tempBone.offsetParent);
+            //Utils.Log(LogLevelEnum.Debug, "Parent offset: {0}", tempBone.offsetParent);
         }
 
         public override void WriteChunk()
         {
-            Console.WriteLine("*** START CompiledBone Chunk ***");
-            Console.WriteLine("    ChunkType:           {0}", ChunkType);
-            Console.WriteLine("    Node ID:             {0:X}", ID);
+            Utils.Log(LogLevelEnum.Debug, "*** START CompiledBone Chunk ***");
+            Utils.Log(LogLevelEnum.Debug, "    ChunkType:           {0}", ChunkType);
+            Utils.Log(LogLevelEnum.Debug, "    Node ID:             {0:X}", ID);
         }
     }
 

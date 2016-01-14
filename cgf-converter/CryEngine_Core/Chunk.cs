@@ -24,7 +24,7 @@ namespace CgfConverter.CryEngine_Core
                 case ChunkTypeEnum.ExportFlags:
                     return Chunk.New<ChunkExportFlags>(version);
                 case ChunkTypeEnum.Mtl:
-                    //Console.WriteLine("Mtl Chunk here");  // Obsolete.  Not used?
+                    //Utils.Log(LogLevelEnum.Debug, "Mtl Chunk here");  // Obsolete.  Not used?
                 case ChunkTypeEnum.MtlName:
                     return Chunk.New<ChunkMtlName>(version);
                 case ChunkTypeEnum.DataStream:
@@ -125,10 +125,10 @@ namespace CgfConverter.CryEngine_Core
                 return;
 
             if (reader.BaseStream.Position > this.Offset + this.Size)
-                Console.WriteLine("Buffer Overflow in {2} 0x{0:X} ({1} bytes)", this.ID, reader.BaseStream.Position - this.Offset - this.Size, this.GetType().Name);
+                Utils.Log(LogLevelEnum.Debug, "Buffer Overflow in {2} 0x{0:X} ({1} bytes)", this.ID, reader.BaseStream.Position - this.Offset - this.Size, this.GetType().Name);
 
             if (reader.BaseStream.Length < this.Offset + this.Size)
-                Console.WriteLine("Corrupt Headers in {1} 0x{0:X}", this.ID, this.GetType().Name);
+                Utils.Log(LogLevelEnum.Debug, "Corrupt Headers in {1} 0x{0:X}", this.ID, this.GetType().Name);
 
             if (!bytesToSkip.HasValue)
                 bytesToSkip = (Int64)(this.Size - Math.Max(reader.BaseStream.Position - this.Offset, 0));
@@ -152,9 +152,6 @@ namespace CgfConverter.CryEngine_Core
 
             reader.BaseStream.Seek(this._header.Offset, 0);
 
-            if (this.ChunkType == ChunkTypeEnum.SourceInfo && CryEngine.Model.FILE_VERSION == FileVersionEnum.CryTek_3_5)
-                return;
-
             if (CryEngine.Model.FILE_VERSION == FileVersionEnum.CryTek_3_4 || CryEngine.Model.FILE_VERSION == FileVersionEnum.CryTek_3_5)
             {
                 this.ChunkType = (ChunkTypeEnum)Enum.ToObject(typeof(ChunkTypeEnum), reader.ReadUInt32());
@@ -162,19 +159,26 @@ namespace CgfConverter.CryEngine_Core
                 this.Offset = reader.ReadUInt32();
                 this.ID = reader.ReadUInt32();
             }
+
+            if (this.Offset != this._header.Offset || this.Size != this._header.Size)
+            {
+                Utils.Log(LogLevelEnum.Warning, "Conflict in chunk definition");
+                Utils.Log(LogLevelEnum.Warning, "{0:X}+{1:X}", this._header.Offset, this._header.Size);
+                Utils.Log(LogLevelEnum.Warning, "{0:X}+{1:X}", this.Offset, this.Size);
+            }
         }
 
         public virtual void Write(BinaryWriter writer) { throw new NotImplementedException(); }
 
         public virtual void WriteChunk()
         {
-            Console.WriteLine("*** CHUNK ***");
-            Console.WriteLine("    ChunkType: {0}", this.ChunkType);
-            Console.WriteLine("    ChunkVersion: {0:X}", this.Version);
-            Console.WriteLine("    Offset: {0:X}", this.Offset);
-            Console.WriteLine("    ID: {0:X}", this.ID);
-            Console.WriteLine("    Size: {0:X}", this.Size);
-            Console.WriteLine("*** END CHUNK ***");
+            Utils.Log(LogLevelEnum.Verbose, "*** CHUNK ***");
+            Utils.Log(LogLevelEnum.Verbose, "    ChunkType: {0}", this.ChunkType);
+            Utils.Log(LogLevelEnum.Verbose, "    ChunkVersion: {0:X}", this.Version);
+            Utils.Log(LogLevelEnum.Verbose, "    Offset: {0:X}", this.Offset);
+            Utils.Log(LogLevelEnum.Verbose, "    ID: {0:X}", this.ID);
+            Utils.Log(LogLevelEnum.Verbose, "    Size: {0:X}", this.Size);
+            Utils.Log(LogLevelEnum.Verbose, "*** END CHUNK ***");
         }
     }
 }

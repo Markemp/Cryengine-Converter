@@ -34,9 +34,9 @@ namespace CgfConverter
         {
             // The root of the functions to write Collada files
             // At this point, we should have a cryData.Asset object, fully populated.
-            Console.WriteLine();
-            Console.WriteLine("*** Starting WriteCOLLADA() ***");
-            Console.WriteLine();
+            Utils.Log(LogLevelEnum.Debug);
+            Utils.Log(LogLevelEnum.Debug, "*** Starting WriteCOLLADA() ***");
+            Utils.Log(LogLevelEnum.Debug);
 
             this.CryData = cryEngine;
 
@@ -54,7 +54,7 @@ namespace CgfConverter
                 daeOutputFile.Directory.Create();
             TextWriter writer = new StreamWriter(daeOutputFile.FullName);   // Makes the Textwriter object for the output
             mySerializer.Serialize(writer, daeObject);                      // Serializes the daeObject and writes to the writer
-            Console.WriteLine("End of Write Collada");
+            Utils.Log(LogLevelEnum.Debug, "End of Write Collada");
         }
 
         private void WriteRootNode()
@@ -152,7 +152,7 @@ namespace CgfConverter
             daeObject.Library_Materials = libraryMaterials;
             int numMaterials = CryData.Materials.Length;
             // Now create a material for each material in the object
-            Console.WriteLine("Number of materials: {0}", numMaterials);
+            Utils.Log(LogLevelEnum.Debug, "Number of materials: {0}", numMaterials);
             Grendgine_Collada_Material[] materials = new Grendgine_Collada_Material[numMaterials];
             for (int i = 0; i < numMaterials; i++)
             {
@@ -249,7 +249,7 @@ namespace CgfConverter
                     Grendgine_Collada_Vertices verts = new Grendgine_Collada_Vertices();
                     Grendgine_Collada_Triangles[] tri = new Grendgine_Collada_Triangles[tmpMeshSubsets.NumMeshSubset];
 
-                    posSource.ID = nodeChunk.Name + "_pos";  
+                    posSource.ID = nodeChunk.Name + "_pos";
                     posSource.Name = nodeChunk.Name + "_pos";
                     normSource.ID = nodeChunk.Name + "_norm";
                     normSource.Name = nodeChunk.Name + "_norm";
@@ -267,14 +267,14 @@ namespace CgfConverter
                     floatArrayNormals.ID = normSource.Name + "_array";
                     floatArrayNormals.Count = (int)tmpNormals.NumElements * 3;
                     floatArrayUVs.ID = uvSource.Name + "_array";
-                    floatArrayUVs.Count = (int)tmpUVs.NumElements * 3 /2 ;
+                    floatArrayUVs.Count = (int)tmpUVs.NumElements * 3 / 2;
 
                     // Build the string of vertices with a stringbuilder
                     StringBuilder vertString = new StringBuilder();
                     StringBuilder normString = new StringBuilder();
                     StringBuilder uvString = new StringBuilder();
                     // Vertices
-                    for (uint j = 0; j < tmpMeshChunk.NumVertices; j++)    
+                    for (uint j = 0; j < tmpMeshChunk.NumVertices; j++)
                     //uint j = meshSubset.FirstVertex; j < meshSubset.NumVertices + meshSubset.FirstVertex; j++
                     {
                         // Rotate/translate the vertex
@@ -284,7 +284,7 @@ namespace CgfConverter
                         normString.AppendFormat("{0:F7} {1:F7} {2:F7} ", normal.x, normal.y, normal.z);
                     }
                     // Create UV string
-                    for (uint j=0; j < tmpMeshChunk.NumVertices / 3 *2; j++)
+                    for (uint j = 0; j < tmpMeshChunk.NumVertices / 3 * 2; j++)
                     {
                         uvString.AppendFormat("{0:F7} {1:F7}", tmpUVs.UVs[j].U, tmpUVs.UVs[j].V);   //1 - tmpUVs.UVs[j].V
                     }
@@ -292,7 +292,7 @@ namespace CgfConverter
                     // Create the Triangles string
                     // Need to iterate through each of the submeshes to get the faces for each material.
                     Grendgine_Collada_Triangles[] tris = new Grendgine_Collada_Triangles[tmpMeshSubsets.NumMeshSubset]; // one tri for each matID
-                    for (uint j=0; j < tmpMeshSubsets.NumMeshSubset; j++) // Need to make a new Triangle entry for each submesh.
+                    for (uint j = 0; j < tmpMeshSubsets.NumMeshSubset; j++) // Need to make a new Triangle entry for each submesh.
                     {
                         /// <summary> Write the triangles for each geometry.mesh object.  There can be multiple triangles for each mesh.</summary>
                         /// 
@@ -300,18 +300,18 @@ namespace CgfConverter
                         tris[j] = new Grendgine_Collada_Triangles();
                         tris[j].Material = tmpMeshSubsets.MeshSubsets[j].MatID.ToString();
                         tris[j].Count = (int)tmpMeshSubsets.MeshSubsets[j].NumIndices;
-                        Grendgine_Collada_Input_Shared []triInput = new Grendgine_Collada_Input_Shared[1];
-                        triInput[0] = new Grendgine_Collada_Input_Shared();
-                        triInput[0].source = "#" + posSource.ID;
-                        triInput[0].Semantic = Grendgine_Collada_Input_Semantic.VERTEX;
+                        Grendgine_Collada_Input_Shared[] triInput = new Grendgine_Collada_Input_Shared[tmpMeshSubsets.NumMeshSubset];
+                        triInput[j] = new Grendgine_Collada_Input_Shared();
+                        triInput[j].source = "#" + posSource.ID;
+                        triInput[j].Semantic = Grendgine_Collada_Input_Semantic.VERTEX;
                         tris[j].Input = triInput;
                         StringBuilder p = new StringBuilder();
-                        for (uint k=tmpMeshSubsets.MeshSubsets[j].FirstIndex; k< tmpMeshSubsets.MeshSubsets[j].NumIndices; k++)
+                        for (uint k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices; k++)
                         {
                             //Console.Write("{0} ", tmpIndices.Indices[k]);
                             p.AppendFormat("{0} ", tmpIndices.Indices[k]);
                         }
-                        //Console.WriteLine("Indices {0}", p);
+                        //Utils.Log(LogLevelEnum.Debug, "Indices {0}", p);
                         tris[j].Input = triInput;
                         tris[j].P = new Grendgine_Collada_Int_Array_String();
                         tris[j].P.Value_As_String = p.ToString();
@@ -328,9 +328,9 @@ namespace CgfConverter
                     posInput.Semantic = Grendgine_Collada_Input_Semantic.POSITION;
                     normInput.Semantic = Grendgine_Collada_Input_Semantic.NORMAL;
                     uvInput.Semantic = Grendgine_Collada_Input_Semantic.TEXCOORD;   // might need to replace UV with UV
-                    posInput.source = "#"+posSource.ID;
+                    posInput.source = "#" + posSource.ID;
                     normInput.source = "#" + normSource.ID;
-                    uvInput.source = "#" + uvSource.ID; 
+                    uvInput.source = "#" + uvSource.ID;
 
                     verts.Input = inputshared;
                     floatArrayVerts.Value_As_String = vertString.ToString();
@@ -349,9 +349,9 @@ namespace CgfConverter
 
                     // tris are easy.  Just the index of faces
                     geometryList.Add(tmpGeo);
-                    
 
-                    }
+
+                }
                 else if (this.CryData.ChunksByID[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Helper)
                 {
 
@@ -364,7 +364,7 @@ namespace CgfConverter
 
                 // Add the tmpGeo geometry to the list
 
-                
+
 
 
             }

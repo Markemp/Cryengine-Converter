@@ -127,7 +127,7 @@ namespace CgfConverter.CryEngine_Core
                             this.Indices[i] = b.ReadUInt32();
                         }
                     }
-                    //Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
+                    //Utils.Log(LogLevelEnum.Debug, "Offset is {0:X}", b.BaseStream.Position);
                     break;
 
                 #endregion
@@ -141,7 +141,7 @@ namespace CgfConverter.CryEngine_Core
                         this.Normals[i].y = b.ReadSingle();
                         this.Normals[i].z = b.ReadSingle();
                     }
-                    //Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
+                    //Utils.Log(LogLevelEnum.Debug, "Offset is {0:X}", b.BaseStream.Position);
                     break;
 
                 #endregion
@@ -154,7 +154,7 @@ namespace CgfConverter.CryEngine_Core
                         this.UVs[i].U = b.ReadSingle();
                         this.UVs[i].V = b.ReadSingle();
                     }
-                    //Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
+                    //Utils.Log(LogLevelEnum.Debug, "Offset is {0:X}", b.BaseStream.Position);
                     break;
 
                 #endregion
@@ -175,7 +175,7 @@ namespace CgfConverter.CryEngine_Core
                         this.Tangents[i, 1].z = b.ReadInt16();
                         this.Tangents[i, 1].w = b.ReadInt16();
                     }
-                    // Console.WriteLine("Offset is {0:X}", b.BaseStream.Position);
+                    // Utils.Log(LogLevelEnum.Debug, "Offset is {0:X}", b.BaseStream.Position);
                     break;
 
                 #endregion
@@ -209,7 +209,7 @@ namespace CgfConverter.CryEngine_Core
                 #region case DataStreamTypeEnum.VERTSUVS:
 
                 case DataStreamTypeEnum.VERTSUVS:  // 3 half floats for verts, 6 unknown, 2 half floats for UVs
-                    // Console.WriteLine("In VertsUVs...");
+                    // Utils.Log(LogLevelEnum.Debug, "In VertsUVs...");
                     this.Vertices = new Vector3[this.NumElements];
                     this.Normals = new Vector3[this.NumElements];
                     this.UVs = new UV[this.NumElements];
@@ -252,7 +252,7 @@ namespace CgfConverter.CryEngine_Core
                             //short w = b.ReadInt16();  // dump this as not needed.  Last 2 bytes are surplus...sort of.
                             //if (i < 20)
                             //{
-                            //    Console.WriteLine("{0:F7} {1:F7} {2:F7} {3:F7} {4:F7}",
+                            //    Utils.Log(LogLevelEnum.Debug, "{0:F7} {1:F7} {2:F7} {3:F7} {4:F7}",
                             //        Vertices[i].x, Vertices[i].y, Vertices[i].z,
                             //        UVs[i].U, UVs[i].V);
                             //}
@@ -264,7 +264,7 @@ namespace CgfConverter.CryEngine_Core
                 #region default:
 
                 default:
-                    Console.WriteLine("***** Unknown DataStream Type *****");
+                    Utils.Log(LogLevelEnum.Debug, "***** Unknown DataStream Type *****");
                     break;
 
                 #endregion
@@ -274,15 +274,15 @@ namespace CgfConverter.CryEngine_Core
         public override void WriteChunk()
         {
             //string tmpDataStream = new string(Name);
-            Console.WriteLine("*** START DATASTREAM ***");
-            Console.WriteLine("    ChunkType:                       {0}", ChunkType);
-            Console.WriteLine("    Version:                         {0:X}", Version);
-            Console.WriteLine("    DataStream chunk starting point: {0:X}", Flags);
-            Console.WriteLine("    Chunk ID:                        {0:X}", ID);
-            Console.WriteLine("    DataStreamType:                  {0}", DataStreamType);
-            Console.WriteLine("    Number of Elements:              {0}", NumElements);
-            Console.WriteLine("    Bytes per Element:               {0}", BytesPerElement);
-            Console.WriteLine("*** END DATASTREAM ***");
+            Utils.Log(LogLevelEnum.Verbose, "*** START DATASTREAM ***");
+            Utils.Log(LogLevelEnum.Verbose, "    ChunkType:                       {0}", ChunkType);
+            Utils.Log(LogLevelEnum.Verbose, "    Version:                         {0:X}", Version);
+            Utils.Log(LogLevelEnum.Verbose, "    DataStream chunk starting point: {0:X}", Flags);
+            Utils.Log(LogLevelEnum.Verbose, "    Chunk ID:                        {0:X}", ID);
+            Utils.Log(LogLevelEnum.Verbose, "    DataStreamType:                  {0}", DataStreamType);
+            Utils.Log(LogLevelEnum.Verbose, "    Number of Elements:              {0}", NumElements);
+            Utils.Log(LogLevelEnum.Verbose, "    Bytes per Element:               {0}", BytesPerElement);
+            Utils.Log(LogLevelEnum.Verbose, "*** END DATASTREAM ***");
 
         }
     }

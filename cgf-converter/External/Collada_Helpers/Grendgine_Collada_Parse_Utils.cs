@@ -1,3 +1,4 @@
+using CgfConverter;
 using System;
 
 namespace grendgine_collada
@@ -17,9 +18,9 @@ namespace grendgine_collada
 			}
 			catch (Exception e)
 			{
-				Console.WriteLine(e.ToString());
-				Console.WriteLine();
-				Console.WriteLine(int_array);
+				Utils.Log(LogLevelEnum.Error, e.ToString());
+                Utils.Log(LogLevelEnum.Error);
+                Utils.Log(LogLevelEnum.Error, int_array);
 			}
 			return array;
 		}
@@ -37,9 +38,9 @@ namespace grendgine_collada
 			}
 			catch (Exception e)
 			{
-				Console.WriteLine(e.ToString());
-				Console.WriteLine();
-				Console.WriteLine(float_array);
+                Utils.Log(LogLevelEnum.Error, e.ToString());
+                Utils.Log(LogLevelEnum.Error);
+                Utils.Log(LogLevelEnum.Error, float_array);
 			}
 			return array;
 		}
@@ -57,9 +58,9 @@ namespace grendgine_collada
 			}
 			catch (Exception e)
 			{
-				Console.WriteLine(e.ToString());
-				Console.WriteLine();
-				Console.WriteLine(bool_array);
+                Utils.Log(LogLevelEnum.Error, e.ToString());
+                Utils.Log(LogLevelEnum.Error);
+                Utils.Log(LogLevelEnum.Error, bool_array);
 			}
 			return array;
 		}
