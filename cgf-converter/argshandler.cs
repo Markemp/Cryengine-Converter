@@ -62,8 +62,6 @@ namespace CgfConverter
 
         public ArgsHandler()
         {
-            this.SkipShieldNodes = true;
-            this.SkipProxyNodes = true;
             this.InputFiles = new List<String> { };
         }
 
@@ -199,13 +197,21 @@ namespace CgfConverter
                         break;
 
                     #endregion
-                    #region case "-noconflict"...
+                    #region case "-skipshield" / "-skipshields"...
 
-                    case "-noconflict":
+                    case "-skipshield":
+                    case "-skipshields":
 
-                        // TODO: Add support
-                        // Output file is based on first file name
-                        // this.OutputFile = new FileInfo(Path.GetFileNameWithoutExtension(this.InputFile) + "_out.obj").FullName;
+                        this.SkipShieldNodes = true;
+
+                        break;
+
+                    #endregion
+                    #region case "-skipproxy"...
+
+                    case "-skipproxy":
+
+                        this.SkipProxyNodes = true;
 
                         break;
 
