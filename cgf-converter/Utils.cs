@@ -6,6 +6,14 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Diagnostics;
+
 namespace CgfConverter
 {
     public enum StringSizeEnum
@@ -15,101 +23,125 @@ namespace CgfConverter
         Int32 = 4,
     }
 
+    public enum LogLevelEnum
+    {
+        /// <summary>
+        /// Log Everything
+        /// </summary>
+        Verbose = 0x01,
+        /// <summary>
+        /// Log Some Stuff Useful For Debugging
+        /// </summary>
+        Debug = 0x02,
+        /// <summary>
+        /// Log Information/Progress Updates
+        /// </summary>
+        Info = 0x04,
+        /// <summary>
+        /// Log Warnings (Default)
+        /// </summary>
+        Warning = 0x08,
+        /// <summary>
+        /// Log Errors
+        /// </summary>
+        Error = 0x0F,
+        /// <summary>
+        /// Log Critical Errors
+        /// </summary>
+        Critical = 0x10,
+        /// <summary>
+        /// Don't Log Anything
+        /// </summary>
+        None = 0xFF,
+    }
+
     public static class Utils
     {
-        public static Version GetVersion()
-        {
-            AssemblyVersionAttribute assemblyVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyVersionAttribute>();
-
-            if (assemblyVersion != null)
-                return new Version(assemblyVersion.Version);
-
-            AssemblyFileVersionAttribute assemblyFileVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyFileVersionAttribute>();
-            
-            if (assemblyFileVersion != null)
-                return new Version(assemblyFileVersion.Version);
-
-            return new Version(0, 8, 0, 1);
-        }
+        /// <summary>
+        /// Private DataStore for the DateTimeFormats property.
+        /// </summary>
+        private static String[] _dateTimeFormats = new String[] { 
+            @"yyyy-MM-dd\THHmm", // 2010-12-31T2359
+        };
 
         /// <summary>
-        /// Read a Length-prefixed string from the stream
+        /// Custom DateTime formats supported by the parser.
         /// </summary>
-        /// <param name="binaryReader"></param>
-        /// <param name="byteLength">Size of the Length representation</param>
-        /// <returns></returns>
-        public static String ReadPString(this BinaryReader binaryReader, StringSizeEnum byteLength = StringSizeEnum.Int32)
+        public static String[] DateTimeFormats
         {
-            Int32 stringLength = 0;
-
-            switch (byteLength)
-            {
-                case StringSizeEnum.Int8:
-                    stringLength = binaryReader.ReadByte();
-                    break;
-                case StringSizeEnum.Int16:
-                    stringLength = binaryReader.ReadInt16();
-                    break;
-                case StringSizeEnum.Int32:
-                    stringLength = binaryReader.ReadInt32();
-                    break;
-                default:
-                    throw new NotSupportedException("Only Int8, Int16, and Int32 string sizes are supported");
-            }
-
-            // If there is actually a string to read
-            if (stringLength > 0)
-            {
-                return new String(binaryReader.ReadChars(stringLength));
-            }
-
-            return null;
+            get { return Utils._dateTimeFormats; }
+            set { Utils._dateTimeFormats = value; }
         }
 
-        /// <summary>
-        /// Read a NULL-Terminated string from the stream
-        /// </summary>
-        /// <param name="binaryReader"></param>
-        /// <returns></returns>
-        public static String ReadCString(this BinaryReader binaryReader)
+        #region Gets the build date and time (by reading the COFF header)
+
+        // http://msdn.microsoft.com/en-us/library/ms680313
+
+        struct _IMAGE_FILE_HEADER
         {
-            Int32 stringLength = 0;
+            public ushort Machine;
+            public ushort NumberOfSections;
+            public uint TimeDateStamp;
+            public uint PointerToSymbolTable;
+            public uint NumberOfSymbols;
+            public ushort SizeOfOptionalHeader;
+            public ushort Characteristics;
+        };
 
-            while (binaryReader.ReadByte() != 0)
-                stringLength++;
-
-            binaryReader.BaseStream.Seek(0 - stringLength - 1, SeekOrigin.Current);
-
-            Char[] chars = binaryReader.ReadChars(stringLength + 1);
-
-            // If there is actually a string to read
-            if (stringLength > 0)
-            {
-                return new String(chars, 0, stringLength);
-            }
-            
-            return null;
-        }
-
-        /// <summary>
-        /// Read a Fixed-Length string from the stream
-        /// </summary>
-        /// <param name="binaryReader"></param>
-        /// <param name="stringLength">Size of the String</param>
-        /// <returns></returns>
-        public static String ReadFString(this BinaryReader binaryReader, Int32 stringLength)
+        public static DateTime GetBuildDateTime(Assembly assembly)
         {
-            Char[] chars = binaryReader.ReadChars(stringLength);
-                
-            for (Int32 i = 0; i < stringLength; i++)
+            if (File.Exists(assembly.Location))
             {
-                if (chars[i] == 0)
+                var buffer = new byte[Math.Max(Marshal.SizeOf(typeof(_IMAGE_FILE_HEADER)), 4)];
+                using (var fileStream = new FileStream(assembly.Location, FileMode.Open, FileAccess.Read))
                 {
-                    return new String(chars, 0, i);
+                    fileStream.Position = 0x3C;
+                    fileStream.Read(buffer, 0, 4);
+                    fileStream.Position = BitConverter.ToUInt32(buffer, 0); // COFF header offset
+                    fileStream.Read(buffer, 0, 4); // "PE\0\0"
+                    fileStream.Read(buffer, 0, buffer.Length);
+                }
+                var pinnedBuffer = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+                try
+                {
+                    var coffHeader = (_IMAGE_FILE_HEADER)Marshal.PtrToStructure(pinnedBuffer.AddrOfPinnedObject(), typeof(_IMAGE_FILE_HEADER));
+
+                    return TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1) + new TimeSpan(coffHeader.TimeDateStamp * TimeSpan.TicksPerSecond));
+                }
+                finally
+                {
+                    pinnedBuffer.Free();
                 }
             }
+            return new DateTime();
+        }
 
-            return new String(chars);
+        #endregion
+
+        public static T Min<T>(T first, T second) where T : IComparable<T>
+        {
+            return Comparer<T>.Default.Compare(first, second) > 0 ? second : first;
+        }
+
+        public static T Max<T>(T first, T second) where T : IComparable<T>
+        {
+            return Comparer<T>.Default.Compare(first, second) > 0 ? first : second;
+        }
+
+        public static LogLevelEnum LogLevel { get; set; }
+        public static LogLevelEnum DebugLevel { get; set; }
+        public static void Log(String format = null, params Object[] args) { Utils.Log(LogLevelEnum.Debug, format, args); }
+        public static void Log(LogLevelEnum logLevel, String format = null, params Object[] args)
+        {
+            if (Utils.LogLevel <= logLevel)
+            {
+                Console.WriteLine(format, args);
+            }
+            
+            if (Utils.DebugLevel <= logLevel)
+            {
+                Debug.WriteLine(format, args);
+            }
         }
     }
 }

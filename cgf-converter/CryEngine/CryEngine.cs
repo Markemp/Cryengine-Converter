@@ -23,9 +23,9 @@ namespace CgfConverter
 
         #region Constructors
 
-        public Model.ChunkNode RootNode { get; private set; }
+        public CryEngine_Core.ChunkNode RootNode { get; internal set; }
 
-        public String InputFile { get; private set; }
+        public String InputFile { get; internal set; }
 
         public CryEngine(String fileName, String dataDir)
         {
@@ -37,7 +37,7 @@ namespace CgfConverter
             // Validate file extension - handles .cgam / skinm
             if (!CryEngine._validExtensions.Contains(inputFile.Extension))
             {
-                Console.WriteLine("Warning: Unsupported file extension - please use a cga, cgf or skin file");
+                Utils.Log(LogLevelEnum.Debug, "Warning: Unsupported file extension - please use a cga, cgf or skin file");
                 throw new FileLoadException("Warning: Unsupported file extension - please use a cga, cgf or skin file", fileName);
             }
 
@@ -47,7 +47,7 @@ namespace CgfConverter
 
             if (mFile.Exists)
             {
-                Console.WriteLine("Found mFile file {0}", mFile.Name);
+                Utils.Log(LogLevelEnum.Debug, "Found mFile file {0}", mFile.Name);
 
                 // Add to list of files to process
                 inputFiles.Add(mFile);
@@ -64,26 +64,38 @@ namespace CgfConverter
                 this.Models.Add(model);
             }
 
-            foreach (CryEngine.Model.ChunkMtlName mtlChunk in this.Models.SelectMany(a => a.ChunkMap.Values).Where(c => c.ChunkType == ChunkTypeEnum.MtlName))
+            foreach (CryEngine_Core.ChunkMtlName mtlChunk in this.Models.SelectMany(a => a.ChunkMap.Values).Where(c => c.ChunkType == ChunkTypeEnum.MtlName))
             {
                 // Don't process child materials for now
                 if (mtlChunk.Version == 0x800 && !(mtlChunk.MatType == 0x01 || mtlChunk.MatType == 0x10))
                     continue;
 
+                String cleanName = mtlChunk.Name;
+
+                // TODO: Investigate if we want to clean paths nicer
+                var charsToClean = cleanName.ToCharArray().Intersect(Path.GetInvalidFileNameChars()).ToArray();
+                if (charsToClean.Length > 0)
+                {
+                    foreach(Char character in charsToClean)
+                    {
+                        cleanName = cleanName.Replace(character.ToString(), "");
+                    }
+                }
+
                 // First try relative to file being processed
-                FileInfo materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(fileName), mtlChunk.Name));
+                FileInfo materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(fileName), cleanName));
                 if (materialFile.Extension != "mtl")
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
 
                 // Then try just the last part of the chunk, relative to the file being processed
                 if (!materialFile.Exists)
-                    materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileName(mtlChunk.Name)));
+                    materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileName(cleanName)));
                 if (materialFile.Extension != "mtl")
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
 
                 // Then try relative to the ObjectDir
                 if (!materialFile.Exists)
-                    materialFile = new FileInfo(Path.Combine(dataDir, mtlChunk.Name));
+                    materialFile = new FileInfo(Path.Combine(dataDir, cleanName));
                 if (materialFile.Extension != "mtl")
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
 
@@ -99,23 +111,20 @@ namespace CgfConverter
 
                 if (material != null)
                 {
-                    Console.WriteLine("Located material file {0}", materialFile.Name);
+                    // Utils.Log(LogLevelEnum.Debug, "Located material file {0}", materialFile.Name);
 
                     this.Materials = this.FlattenMaterials(material).Skip(1).ToArray();
-                    // UInt32 i = 0;
-                    // this.MaterialMap = this.Materials.Skip(1).ToArray(); // .ToDictionary(k => ++i, v => v);
 
                     // Early return - we have the material map
                     return;
                 }
                 else
                 {
-                    // Use original name, as that's what we were originally trying to locate
-                    Console.WriteLine("Unable to locate material file {0}.mtl", mtlChunk.Name);
+                    // Utils.Log(LogLevelEnum.Debug, "Unable to locate material file {0}.mtl", mtlChunk.Name);
                 }
             }
 
-            Console.WriteLine("Unable to locate any material file");
+            // Utils.Log(LogLevelEnum.Debug, "Unable to locate any material file");
 
             this.Materials = new Material[] { };
         }
@@ -124,8 +133,8 @@ namespace CgfConverter
 
         #region Properties
 
-        public List<Model> Models { get; private set; }
-        public Material[] Materials { get; private set; }
+        public List<Model> Models { get; internal set; }
+        public Material[] Materials { get; internal set; }
 
         #endregion
 
@@ -148,8 +157,8 @@ namespace CgfConverter
             }
         }
 
-        private Model.Chunk[] _chunks;
-        public Model.Chunk[] Chunks
+        private CryEngine_Core.Chunk[] _chunks;
+        public CryEngine_Core.Chunk[] Chunks
         {
             get
             {
@@ -162,16 +171,16 @@ namespace CgfConverter
             }
         }
 
-        public Dictionary<UInt32, Model.Chunk> _chunksByID;
-        public Dictionary<UInt32, Model.Chunk> ChunksByID
+        public Dictionary<UInt32, CryEngine_Core.Chunk> _chunksByID;
+        public Dictionary<UInt32, CryEngine_Core.Chunk> ChunksByID
         {
             get
             {
                 if (this._chunksByID == null)
                 {
-                    this._chunksByID = new Dictionary<UInt32, Model.Chunk> { };
+                    this._chunksByID = new Dictionary<UInt32, CryEngine_Core.Chunk> { };
 
-                    foreach (Model.Chunk chunk in this.Chunks)
+                    foreach (CryEngine_Core.Chunk chunk in this.Chunks)
                     {
                         this._chunksByID[chunk.ID] = chunk;
                     }
@@ -218,29 +227,29 @@ namespace CgfConverter
             // "LandingGear_Pod_Aft_Right"
         };
 
-        public Dictionary<String, Model.ChunkNode> _nodeMap;
-        public Dictionary<String, Model.ChunkNode> NodeMap
+        public Dictionary<String, CryEngine_Core.ChunkNode> _nodeMap;
+        public Dictionary<String, CryEngine_Core.ChunkNode> NodeMap
         {
             get
             {
                 if (this._nodeMap == null)
                 {
-                    this._nodeMap = new Dictionary<String, Model.ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
+                    this._nodeMap = new Dictionary<String, CryEngine_Core.ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
 
-                    Model.ChunkNode rootNode = null;
+                    CryEngine_Core.ChunkNode rootNode = null;
 
-                    Debug.WriteLine("Mapping Nodes");
+                    Utils.Log(LogLevelEnum.Info, "Mapping Nodes");
 
                     foreach (Model model in this.Models)
                     {
                         model.RootNode = rootNode = (rootNode ?? model.RootNode);
 
-                        foreach (Model.ChunkNode node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as Model.ChunkNode))
+                        foreach (CryEngine_Core.ChunkNode node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as CryEngine_Core.ChunkNode))
                         {
                             // Preserve existing parents
                             if (this._nodeMap.ContainsKey(node.Name))
                             {
-                                Model.ChunkNode parentNode = this._nodeMap[node.Name].ParentNode;
+                                CryEngine_Core.ChunkNode parentNode = this._nodeMap[node.Name].ParentNode;
 
                                 if (parentNode != null)
                                     parentNode = this._nodeMap[parentNode.Name];
