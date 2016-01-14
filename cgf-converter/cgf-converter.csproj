@@ -103,10 +103,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ArgsHandler.cs" />
+    <Compile Include="BaseRenderer.cs" />
     <Compile Include="Blender.cs" />
     <Compile Include="cgf-converter.cs" />
     <Compile Include="COLLADA.cs" />
     <Compile Include="CryEngine\CryEngine.cs" />
+    <Compile Include="CryEngine\CryRender.cs" />
     <Compile Include="CryEngine_Core\IBinaryChunk.cs" />
     <Compile Include="CryEngine_Core\ChunkCompiledBones.cs" />
     <Compile Include="CryEngine_Core\ChunkCompiledPhysicalProxies_800.cs" />

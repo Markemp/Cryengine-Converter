@@ -14,7 +14,7 @@ namespace CgfConverter
     //[System.Xml.Serialization.XmlRootAttribute(ElementName = "COLLADA", Namespace = "https://www.khronos.org/files/collada_schema_1_5", IsNullable = false)]
     //[XmlRootAttribute("COLLADA", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = false)]
 
-    public class COLLADA  // class to export to .dae format (COLLADA)
+    public class COLLADA : BaseRenderer // class to export to .dae format (COLLADA)
     {
         public XmlSchema schema = new XmlSchema();
         public FileInfo daeOutputFile;
@@ -22,15 +22,9 @@ namespace CgfConverter
         public Grendgine_Collada daeObject = new Grendgine_Collada();       // This is the serializable class.
         XmlSerializer mySerializer = new XmlSerializer(typeof(Grendgine_Collada));
 
-        public ArgsHandler Args { get; internal set; }
-        public CryEngine CryData { get; set; }
+        public COLLADA(ArgsHandler argsHandler, CryEngine cryEngine) : base(argsHandler, cryEngine) { }
 
-        public COLLADA(ArgsHandler argsHandler)
-        {
-            this.Args = argsHandler;
-        }
-
-        public void WriteCollada(CryEngine cryEngine)  // Write the dae file
+        public override void Render(String outputDir = null, Boolean preservePath = true)
         {
             // The root of the functions to write Collada files
             // At this point, we should have a cryData.Asset object, fully populated.
@@ -38,10 +32,8 @@ namespace CgfConverter
             Utils.Log(LogLevelEnum.Debug, "*** Starting WriteCOLLADA() ***");
             Utils.Log(LogLevelEnum.Debug);
 
-            this.CryData = cryEngine;
-
             // File name will be "object name.dae"
-            daeOutputFile = new FileInfo(CryData.RootNode.Name + ".dae");
+            daeOutputFile = new FileInfo(this.GetOutputFile("dae", outputDir, preservePath));
             GetSchema();                                                    // Loads the schema.  Needs error checking in case it's offline.
             WriteRootNode();
             WriteAsset();

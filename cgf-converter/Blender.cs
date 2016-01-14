@@ -7,20 +7,14 @@ using System.IO;
 
 namespace CgfConverter
 {
-    public class Blender  //  Class to allow exporting to .blend files.
+    public class Blender : BaseRenderer  //  Class to allow exporting to .blend files.
     {
         FileInfo blendOutputFile;
-        public ArgsHandler Args { get; internal set; }
-        public CryEngine CryData { get; set; }
+        
+        public Blender(ArgsHandler argsHandler, CryEngine cryEngine) : base(argsHandler, cryEngine) { }
 
-        public Blender(ArgsHandler argsHandler)
+        public override void Render(String outputDir = null, Boolean preservePath = true)
         {
-            this.Args = argsHandler;
-        }
-
-        public void WriteBlend(CryEngine cryEngine)
-        {
-            this.CryData = cryEngine;
             // The root of the functions to write Blend files
             // At this point, we should have a CgfData object, fully populated.
             Utils.Log(LogLevelEnum.Debug);
@@ -28,7 +22,7 @@ namespace CgfConverter
             Utils.Log(LogLevelEnum.Debug);
 
             // File name will be "object name.blend"
-            // blendOutputFile = new FileInfo(cgfData.RootNode.Name + ".blend");
+            blendOutputFile = new FileInfo(this.GetOutputFile("blend", outputDir, preservePath));
             // using (BinaryWriter b = new BinaryWriter(File.Open(blendOutputFile.FullName, FileMode.Create)))
             // {
             //     WriteHeader(b);

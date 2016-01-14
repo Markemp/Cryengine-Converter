@@ -28,6 +28,10 @@ namespace CgfConverter
         /// </summary>
         public Boolean GroupMeshes { get; internal set; }
         /// <summary>
+        /// Render CryTek format files
+        /// </summary>
+        public Boolean Output_CryTek { get; internal set; }
+        /// <summary>
         /// Render Wavefront format files
         /// </summary>
         public Boolean Output_Wavefront { get; internal set; }
@@ -183,6 +187,15 @@ namespace CgfConverter
                     case "-collada":
                         Console.WriteLine("Output format set to COLLADA (.dae)");
                         this.Output_Collada = true;
+
+                        break;
+
+                    #endregion
+                    #region case "-crytek"...
+                    case "-cry":
+                    case "-crytek":
+                        Console.WriteLine("Output format set to CryTek (.cga/.cgf/.chr/.skin)");
+                        this.Output_CryTek = true;
 
                         break;
 

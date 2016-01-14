@@ -28,7 +28,7 @@ namespace CgfConverter
             args = new String[] { @"O:\Mods\SC\Latest\*.cg?", @"O:\Mods\SC\Latest\*.skin", @"O:\Mods\SC\Latest\*.chr", "-objectdir", @"O:\Mods\SC\Latest", "-tif", "-merge", "-obj", "-outdir", @"O:\Mods\Assets_Out" };
             args = new String[] { @"Objects\*.cg?", @"Objects\*.skin", @"Objects\*.chr", "-objectdir", @"O:\Mods\SC\Latest", "-tif", "-merge", "-obj", "-outdir", @"Export" };
             // args = new String[] { @"O:\Mods\Assets\*.cg?", "-objectdir", @"O:\Mods\SC\Latest", "-tif", "-merge", "-dae", "-outdir", @"O:\Mods\Assets_Out" };
-            args = new String[] { @"Objects\*.cg?", @"Objects\*.skin", @"Objects\*.chr", "-objectdir", @"O:\Mods\SC\Latest", "-tif", "-merge", "-obj", "-outdir", @"Export", "-skipshield", "-skipproxy" };
+            args = new String[] { @"Objects\*.cg?", @"Objects\*.skin", @"Objects\*.chr", "-objectdir", @"O:\Mods\SC\Latest", "-tif", "-merge", "-obj", "-cry", "-dae", "-outdir", @"Export", "-skipshield", "-skipproxy" };
 
 #endif
 
@@ -67,23 +67,30 @@ namespace CgfConverter
 
                         if (argsHandler.Output_Blender == true)
                         {
-                            Blender blendFile = new Blender(argsHandler);
+                            Blender blendFile = new Blender(argsHandler, cryData);
 
-                            blendFile.WriteBlend(cryData);
+                            blendFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
                         }
 
                         if (argsHandler.Output_Wavefront == true)
                         {
                             Wavefront objFile = new Wavefront(argsHandler, cryData);
 
-                            objFile.WriteObjFile(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+                            objFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+                        }
+
+                        if (argsHandler.Output_CryTek == true)
+                        {
+                            CryRender cryFile = new CryRender(argsHandler, cryData);
+
+                            cryFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
                         }
 
                         if (argsHandler.Output_Collada == true)
                         {
-                            COLLADA daeFile = new COLLADA(argsHandler);
+                            COLLADA daeFile = new COLLADA(argsHandler, cryData);
 
-                            daeFile.WriteCollada(cryData);
+                            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
                         }
 
                         #endregion
