@@ -28,9 +28,9 @@ namespace CgfConverter
 
             using (StreamWriter file = new StreamWriter(this.OutputFile_Material.FullName))
             {
-                file.WriteLine("# Material file output from cgf-converter.exe version {0}", Assembly.GetExecutingAssembly().GetName().Version.ToString());
+                file.WriteLine("# cgf-converter .mtl export version {0}", Assembly.GetExecutingAssembly().GetName().Version.ToString());
                 file.WriteLine("#");
-                foreach (CryEngine.Material material in cryEngine.Materials)
+                foreach (CryEngine_Core.Material material in cryEngine.Materials)
                 {
 #if DUMP_JSON
                     File.WriteAllText(String.Format("_material-{0}.json", material.Name.Replace(@"/", "").Replace(@"\", "")), material.ToJSON());
@@ -73,7 +73,7 @@ namespace CgfConverter
                     // 9. Transparency: Glass on, Reflection: Ray trace off
                     // 10. Casts shadows onto invisible surfaces
 
-                    foreach (CryEngine.Material.Texture texture in material.Textures)
+                    foreach (CryEngine_Core.Material.Texture texture in material.Textures)
                     {
                         String textureFile = texture.File;
 
@@ -91,51 +91,51 @@ namespace CgfConverter
                         
                         switch (texture.Map)
                         {
-                            case CryEngine.Material.Texture.MapTypeEnum.Diffuse:
+                            case CryEngine_Core.Material.Texture.MapTypeEnum.Diffuse:
                                 file.WriteLine("map_Kd {0}", textureFile);
                                 break;
 
-                            case CryEngine.Material.Texture.MapTypeEnum.Specular:
+                            case CryEngine_Core.Material.Texture.MapTypeEnum.Specular:
                                 file.WriteLine("map_Ks {0}", textureFile);
                                 file.WriteLine("map_Ns {0}", textureFile);
                                 break;
 
-                            case CryEngine.Material.Texture.MapTypeEnum.Bumpmap:
-                            case CryEngine.Material.Texture.MapTypeEnum.Detail:
+                            case CryEngine_Core.Material.Texture.MapTypeEnum.Bumpmap:
+                            case CryEngine_Core.Material.Texture.MapTypeEnum.Detail:
                                 // <Texture Map="Detail" File="textures/unified_detail/metal/metal_scratches_a_detail.tif" />
                                 file.WriteLine("map_bump {0}", textureFile);
                                 break;
 
-                            case CryEngine.Material.Texture.MapTypeEnum.Heightmap:
+                            case CryEngine_Core.Material.Texture.MapTypeEnum.Heightmap:
                                 // <Texture Map="Heightmap" File="objects/spaceships/ships/aegs/gladius/textures/aegs_switches_buttons_disp.tif"/>
                                 file.WriteLine("disp {0}", textureFile);
                                 break;
 
-                            case CryEngine.Material.Texture.MapTypeEnum.Decal:
+                            case CryEngine_Core.Material.Texture.MapTypeEnum.Decal:
                                 // <Texture Map="Decal" File="objects/spaceships/ships/aegs/textures/interior/metal/aegs_int_metal_alum_bare_diff.tif"/>
                                 file.WriteLine("decal {0}", textureFile);
                                 break;
 
-                            case CryEngine.Material.Texture.MapTypeEnum.SubSurface:
+                            case CryEngine_Core.Material.Texture.MapTypeEnum.SubSurface:
                                 // <Texture Map="SubSurface" File="objects/spaceships/ships/aegs/textures/interior/atlas/aegs_int_atlas_retaliator_spec.tif"/>
                                 file.WriteLine("map_Ns {0}", textureFile);
                                 break;
 
-                            case CryEngine.Material.Texture.MapTypeEnum.Custom:
+                            case CryEngine_Core.Material.Texture.MapTypeEnum.Custom:
                                 // <Texture Map="Custom" File="objects/spaceships/ships/aegs/textures/interior/metal/aegs_int_metal_painted_red_ddna.tif"/>
                                 // file.WriteLine("decal {0}", textureFile);
                                 break;
 
-                            case CryEngine.Material.Texture.MapTypeEnum.BlendDetail:
+                            case CryEngine_Core.Material.Texture.MapTypeEnum.BlendDetail:
                                 // <Texture Map="BlendDetail" File="textures/unified_detail/metal/metal_scratches-01_detail.tif">
                                 break;
 
-                            case CryEngine.Material.Texture.MapTypeEnum.Opacity:
+                            case CryEngine_Core.Material.Texture.MapTypeEnum.Opacity:
                                 // <Texture Map="Opacity" File="objects/spaceships/ships/aegs/textures/interior/blend/interior_blnd_a_diff.tif"/>
                                 file.WriteLine("map_d {0}", textureFile);
                                 break;
 
-                            case CryEngine.Material.Texture.MapTypeEnum.Environment:
+                            case CryEngine_Core.Material.Texture.MapTypeEnum.Environment:
                                 // <Texture Map="Environment" File="nearest_cubemap" TexType="7"/>
                                 break;
 

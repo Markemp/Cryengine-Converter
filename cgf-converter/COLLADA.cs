@@ -105,7 +105,7 @@ namespace CgfConverter
             List<Grendgine_Collada_Image> imageList = new List<Grendgine_Collada_Image>();
             // We now have the image library set up.  start to populate.
             int numImages = 0;
-            foreach (CryEngine.Material material in CryData.Materials)
+            foreach (CryEngine_Core.Material material in CryData.Materials)
             {
                 // each mat will have a number of texture files.  Need to create an <image> for each of them.
                 int numTextures = material.Textures.Length;
@@ -204,32 +204,32 @@ namespace CgfConverter
                 CryEngine_Core.ChunkDataStream tmpVertsUVs = null;
                 CryEngine_Core.ChunkDataStream tmpIndices = null;
 
-                if (this.CryData.ChunksByID[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Mesh)
+                if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Mesh)
                 {
                     // Get the mesh chunk and submesh chunk for this node.
-                    CryEngine_Core.ChunkMesh tmpMeshChunk = (CryEngine_Core.ChunkMesh)this.CryData.ChunksByID[nodeChunk.ObjectNodeID];
-                    CryEngine_Core.ChunkMeshSubsets tmpMeshSubsets = (CryEngine_Core.ChunkMeshSubsets)this.CryData.ChunksByID[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
+                    CryEngine_Core.ChunkMesh tmpMeshChunk = (CryEngine_Core.ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID];
+                    CryEngine_Core.ChunkMeshSubsets tmpMeshSubsets = (CryEngine_Core.ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
 
                     // Get pointers to the vertices data
                     if (tmpMeshChunk.VerticesData != 0)
                     {
-                        tmpVertices = (CryEngine_Core.ChunkDataStream)this.CryData.ChunksByID[tmpMeshChunk.VerticesData];
+                        tmpVertices = (CryEngine_Core.ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.VerticesData];
                     }
                     if (tmpMeshChunk.NormalsData != 0)
                     {
-                        tmpNormals = (CryEngine_Core.ChunkDataStream)this.CryData.ChunksByID[tmpMeshChunk.NormalsData];
+                        tmpNormals = (CryEngine_Core.ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.NormalsData];
                     }
                     if (tmpMeshChunk.UVsData != 0)
                     {
-                        tmpUVs = (CryEngine_Core.ChunkDataStream)this.CryData.ChunksByID[tmpMeshChunk.UVsData];
+                        tmpUVs = (CryEngine_Core.ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.UVsData];
                     }
                     if (tmpMeshChunk.VertsUVsData != 0)
                     {
-                        tmpVertsUVs = (CryEngine_Core.ChunkDataStream)this.CryData.ChunksByID[tmpMeshChunk.VertsUVsData];
+                        tmpVertsUVs = (CryEngine_Core.ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.VertsUVsData];
                     }
                     if (tmpMeshChunk.IndicesData != 0)
                     {
-                        tmpIndices = (CryEngine_Core.ChunkDataStream)this.CryData.ChunksByID[tmpMeshChunk.IndicesData];
+                        tmpIndices = (CryEngine_Core.ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.IndicesData];
                     }
 
                     // tmpGeo is a Geometry object for each meshsubset.  Name will be "Nodechunk name_matID".  Hopefully there is only one matID used per submesh
@@ -296,7 +296,7 @@ namespace CgfConverter
                     {
                         /// <summary> Write the triangles for each geometry.mesh object.  There can be multiple triangles for each mesh.</summary>
                         /// 
-                        tmpMeshSubsets.MeshSubsets[j].WriteMeshSubset();
+                        //tmpMeshSubsets.MeshSubsets[j].WriteMeshSubset();
                         tris[j] = new Grendgine_Collada_Triangles();
                         tris[j].Material = tmpMeshSubsets.MeshSubsets[j].MatID.ToString();
                         tris[j].Count = (int)tmpMeshSubsets.MeshSubsets[j].NumIndices;
@@ -352,11 +352,11 @@ namespace CgfConverter
 
 
                 }
-                else if (this.CryData.ChunksByID[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Helper)
+                else if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Helper)
                 {
 
                 }
-                else if (this.CryData.ChunksByID[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Controller)
+                else if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Controller)
                 {
 
                 }

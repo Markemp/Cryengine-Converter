@@ -15,17 +15,6 @@ namespace CgfConverter.CryEngine_Core
         public RangeEntity GlobalRange;
         public Int32 NumSubRanges;
 
-        public override void Read(BinaryReader reader)
-        {
-            base.Read(reader);
-
-            this.SecsPerTick = reader.ReadSingle();
-            this.TicksPerFrame = reader.ReadInt32();
-            this.GlobalRange.Name = reader.ReadFString(32);  // Name is technically a String32, but F those structs
-            this.GlobalRange.Start = reader.ReadInt32();
-            this.GlobalRange.End = reader.ReadInt32();
-        }
-
         public override void WriteChunk()
         {
             Utils.Log(LogLevelEnum.Verbose, "*** TIMING CHUNK ***");
