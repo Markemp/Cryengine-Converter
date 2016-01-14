@@ -41,9 +41,9 @@ namespace CgfConverter
         }
         public void WriteVector3()
         {
-            Console.WriteLine("*** WriteVector3");
-            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}", x, y, z);
-            Console.WriteLine();
+            Utils.Log(LogLevelEnum.Debug, "*** WriteVector3");
+            Utils.Log(LogLevelEnum.Debug, "{0:F7}  {1:F7}  {2:F7}", x, y, z);
+            Utils.Log(LogLevelEnum.Debug);
         }
 
     }  // Vector in 3D space {x,y,z}
@@ -72,8 +72,8 @@ namespace CgfConverter
         }
         public void WriteVector4()
         {
-            Console.WriteLine("=============================================");
-            Console.WriteLine("x:{0:F7}  y:{1:F7}  z:{2:F7} w:{3:F7}", x, y, z, w);
+            Utils.Log(LogLevelEnum.Debug, "=============================================");
+            Utils.Log(LogLevelEnum.Debug, "x:{0:F7}  y:{1:F7}  z:{2:F7} w:{3:F7}", x, y, z, w);
         }
     }
     public struct Matrix33    // a 3x3 transformation matrix
@@ -185,10 +185,10 @@ namespace CgfConverter
             if (System.Math.Abs(mat.m12) + System.Math.Abs(mat.m13)
                 + System.Math.Abs(mat.m21) + System.Math.Abs(mat.m23)
                 + System.Math.Abs(mat.m31) + System.Math.Abs(mat.m32) > 0.01) {
-                    Console.WriteLine(" is a Scale_Rot matrix");
+                    Utils.Log(LogLevelEnum.Debug, " is a Scale_Rot matrix");
                     return false;
                 }
-            Console.WriteLine(" is not a Scale_Rot matrix"); 
+            Utils.Log(LogLevelEnum.Debug, " is not a Scale_Rot matrix"); 
             return true;
         }
         public Vector3 Get_Scale()
@@ -230,10 +230,10 @@ namespace CgfConverter
         }
         public void WriteMatrix33()
         {
-            Console.WriteLine("=============================================");
-            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}", m11, m12, m13);
-            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}", m21, m22, m23);
-            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}", m31, m32, m33);
+            Utils.Log(LogLevelEnum.Verbose, "=============================================");
+            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}", m11, m12, m13);
+            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}", m21, m22, m23);
+            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}", m31, m32, m33);
         }
             
     }
@@ -295,12 +295,12 @@ namespace CgfConverter
         }
         public void WriteMatrix44()
         {
-            Console.WriteLine("=============================================");
-            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}  {3:F7}", m11, m12, m13, m14);
-            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}  {3:F7}", m21, m22, m23, m24);
-            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}  {3:F7}", m31, m32, m33, m34);
-            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}  {3:F7}", m41, m42, m43, m44);
-            Console.WriteLine();
+            Utils.Log(LogLevelEnum.Verbose, "=============================================");
+            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}  {3:F7}", m11, m12, m13, m14);
+            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}  {3:F7}", m21, m22, m23, m24);
+            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}  {3:F7}", m31, m32, m33, m34);
+            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}  {3:F7}", m41, m42, m43, m44);
+            Utils.Log(LogLevelEnum.Verbose);
         }
 
     }
@@ -337,14 +337,14 @@ namespace CgfConverter
 
         public void WriteMeshSubset()
         {
-            Console.WriteLine("*** Mesh Subset ***");
-            Console.WriteLine("    First Index:  {0}", FirstIndex);
-            Console.WriteLine("    Num Indices:  {0}", NumIndices);
-            Console.WriteLine("    First Vertex: {0}", FirstVertex);
-            Console.WriteLine("    Num Vertices: {0}", NumVertices);
-            Console.WriteLine("    Mat ID:       {0}", MatID);
-            Console.WriteLine("    Radius:       {0:F7}", Radius);
-            Console.WriteLine("    Center:");
+            Utils.Log(LogLevelEnum.Verbose, "*** Mesh Subset ***");
+            Utils.Log(LogLevelEnum.Verbose, "    First Index:  {0}", FirstIndex);
+            Utils.Log(LogLevelEnum.Verbose, "    Num Indices:  {0}", NumIndices);
+            Utils.Log(LogLevelEnum.Verbose, "    First Vertex: {0}", FirstVertex);
+            Utils.Log(LogLevelEnum.Verbose, "    Num Vertices: {0}", NumVertices);
+            Utils.Log(LogLevelEnum.Verbose, "    Mat ID:       {0}", MatID);
+            Utils.Log(LogLevelEnum.Verbose, "    Radius:       {0:F7}", Radius);
+            Utils.Log(LogLevelEnum.Verbose, "    Center:");
             Center.WriteVector3();
         }
     }  // Contains data about the parts of a mesh, such as vertices, radius and center.
@@ -408,27 +408,27 @@ namespace CgfConverter
         public void GetWorldToBone(BinaryReader b)
         {
             worldToBone = new Double[4,3];
-            //Console.WriteLine("GetWorldToBone {0:X}", b.BaseStream.Position);
+            //Utils.Log(LogLevelEnum.Debug, "GetWorldToBone {0:X}", b.BaseStream.Position);
             for (int i = 0; i<4; i++) 
             {
                 for (int j = 0; j < 3; j++)
                 {
                     worldToBone[i, j] = b.ReadSingle();  // this might have to be switched to [j,i].  Who knows???
                     //tempW2B.worldToBone[i, j] = b.ReadSingle();  // this might have to be switched to [j,i].  Who knows???
-                    //Console.WriteLine("worldToBone: {0:F7}", worldToBone[i, j]);
+                    //Utils.Log(LogLevelEnum.Debug, "worldToBone: {0:F7}", worldToBone[i, j]);
                 }
             }
             return;
         }
         public void WriteWorldToBone()
         {
-            //Console.WriteLine();
-            //Console.WriteLine("     *** World to Bone ***");
-            Console.WriteLine("     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[0, 0], this.worldToBone[0, 1], this.worldToBone[0, 2]);
-            Console.WriteLine("     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[1, 0], this.worldToBone[1, 1], this.worldToBone[1, 2]);
-            Console.WriteLine("     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[2, 0], this.worldToBone[2, 1], this.worldToBone[2, 2]);
-            Console.WriteLine("     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[3, 0], this.worldToBone[3, 1], this.worldToBone[3, 2]);
-            //Console.WriteLine();
+            //Utils.Log(LogLevelEnum.Verbose);
+            //Utils.Log(LogLevelEnum.Verbose, "     *** World to Bone ***");
+            Utils.Log(LogLevelEnum.Verbose, "     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[0, 0], this.worldToBone[0, 1], this.worldToBone[0, 2]);
+            Utils.Log(LogLevelEnum.Verbose, "     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[1, 0], this.worldToBone[1, 1], this.worldToBone[1, 2]);
+            Utils.Log(LogLevelEnum.Verbose, "     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[2, 0], this.worldToBone[2, 1], this.worldToBone[2, 2]);
+            Utils.Log(LogLevelEnum.Verbose, "     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[3, 0], this.worldToBone[3, 1], this.worldToBone[3, 2]);
+            //Utils.Log(LogLevelEnum.Verbose);
         }
     }
     public struct BONETOWORLD
@@ -439,26 +439,26 @@ namespace CgfConverter
         {
             //BONETOWORLD tempB2W = new BONETOWORLD();
             boneToWorld = new Double[4, 3];
-            //Console.WriteLine("GetBoneToWorld");
+            //Utils.Log(LogLevelEnum.Debug, "GetBoneToWorld");
             for (int i = 0; i < 4; i++)
             {
                 for (int j = 0; j < 3; j++)
                 {
                     boneToWorld[i, j] = b.ReadSingle();  // this might have to be switched to [j,i].  Who knows???
-                    //Console.WriteLine("boneToWorld: {0:F7}", boneToWorld[i, j]);
+                    //Utils.Log(LogLevelEnum.Debug, "boneToWorld: {0:F7}", boneToWorld[i, j]);
                 }
             }
             return;
         }
         public void WriteBoneToWorld()
         {
-            Console.WriteLine();
-            Console.WriteLine("*** Bone to World ***");
-            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}", this.boneToWorld[0, 0], this.boneToWorld[0, 1], this.boneToWorld[0, 2]);
-            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}", this.boneToWorld[1, 0], this.boneToWorld[1, 1], this.boneToWorld[1, 2]);
-            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}", this.boneToWorld[2, 0], this.boneToWorld[2, 1], this.boneToWorld[2, 2]);
-            Console.WriteLine("{0:F7}  {1:F7}  {2:F7}", this.boneToWorld[3, 0], this.boneToWorld[3, 1], this.boneToWorld[3, 2]);
-            Console.WriteLine();
+            Utils.Log(LogLevelEnum.Verbose);
+            Utils.Log(LogLevelEnum.Verbose, "*** Bone to World ***");
+            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}", this.boneToWorld[0, 0], this.boneToWorld[0, 1], this.boneToWorld[0, 2]);
+            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}", this.boneToWorld[1, 0], this.boneToWorld[1, 1], this.boneToWorld[1, 2]);
+            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}", this.boneToWorld[2, 0], this.boneToWorld[2, 1], this.boneToWorld[2, 2]);
+            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}", this.boneToWorld[3, 0], this.boneToWorld[3, 1], this.boneToWorld[3, 2]);
+            Utils.Log(LogLevelEnum.Verbose);
         }
 
     }
@@ -490,7 +490,7 @@ namespace CgfConverter
         }
         public void WritePhysicsGeometry()
         {
-            Console.WriteLine("WritePhysicsGeometry");
+            Utils.Log(LogLevelEnum.Verbose, "WritePhysicsGeometry");
         }
         
     }
@@ -532,20 +532,20 @@ namespace CgfConverter
         public void WriteCompiledBone()
         {
             // Output the bone to the console
-            Console.WriteLine();
-            Console.WriteLine("*** Compiled bone {0}", boneName);
-            Console.WriteLine("    Parent Name: {0}", parentID);
-            Console.WriteLine("    Offset in file: {0:X}", offset);
-            Console.WriteLine("    Controller ID: {0}", controllerID);
-            Console.WriteLine("    World To Bone:");
+            Utils.Log(LogLevelEnum.Verbose);
+            Utils.Log(LogLevelEnum.Verbose, "*** Compiled bone {0}", boneName);
+            Utils.Log(LogLevelEnum.Verbose, "    Parent Name: {0}", parentID);
+            Utils.Log(LogLevelEnum.Verbose, "    Offset in file: {0:X}", offset);
+            Utils.Log(LogLevelEnum.Verbose, "    Controller ID: {0}", controllerID);
+            Utils.Log(LogLevelEnum.Verbose, "    World To Bone:");
             worldToBone.WriteWorldToBone();
-            //Console.WriteLine("    Bone To World:");
+            //Utils.Log(LogLevelEnum.Verbose, "    Bone To World:");
             //boneToWorld.WriteBoneToWorld();
-            Console.WriteLine("    Limb ID: {0}", limbID);
-            Console.WriteLine("    Parent Offset: {0}", offsetParent);
-            Console.WriteLine("    Child Offset:  {0}", offsetChild);
-            Console.WriteLine("    Number of Children:  {0}", numChildren);
-            Console.WriteLine("*** End Bone {0}", boneName);
+            Utils.Log(LogLevelEnum.Verbose, "    Limb ID: {0}", limbID);
+            Utils.Log(LogLevelEnum.Verbose, "    Parent Offset: {0}", offsetParent);
+            Utils.Log(LogLevelEnum.Verbose, "    Child Offset:  {0}", offsetChild);
+            Utils.Log(LogLevelEnum.Verbose, "    Number of Children:  {0}", numChildren);
+            Utils.Log(LogLevelEnum.Verbose, "*** End Bone {0}", boneName);
         }
     }
 
@@ -563,11 +563,11 @@ namespace CgfConverter
 
         public void WriteHitBox()
         {
-            Console.WriteLine("     ** Hitbox **");
-            Console.WriteLine("        ID: {0:X}", ID);
-            Console.WriteLine("        Num Vertices: {0:X}", NumVertices);
-            Console.WriteLine("        Num Indices:  {0:X}", NumIndices);
-            Console.WriteLine("        Unknown2: {0:X}", Unknown2);
+            Utils.Log(LogLevelEnum.Verbose, "     ** Hitbox **");
+            Utils.Log(LogLevelEnum.Verbose, "        ID: {0:X}", ID);
+            Utils.Log(LogLevelEnum.Verbose, "        Num Vertices: {0:X}", NumVertices);
+            Utils.Log(LogLevelEnum.Verbose, "        Num Indices:  {0:X}", NumIndices);
+            Utils.Log(LogLevelEnum.Verbose, "        Unknown2: {0:X}", Unknown2);
         }
     }
     // Bone Structures courtesy of revelation

@@ -10,47 +10,47 @@ namespace CgfConverter
         /// <summary>
         /// Files to process
         /// </summary>
-        public List<String> InputFiles { get; private set; }
+        public List<String> InputFiles { get; internal set; }
         /// <summary>
         /// Location of the Object Files
         /// </summary>
-        public String DataDir { get; private set; }
+        public String DataDir { get; internal set; }
         /// <summary>
         /// File to render to
         /// </summary>
-        // public String OutputFile { get; private set; }
+        // public String OutputFile { get; internal set; }
         /// <summary>
         /// Directory to render to
         /// </summary>
-        public String OutputDir { get; private set; }
+        public String OutputDir { get; internal set; }
         /// <summary>
         /// Name to group all meshes under
         /// </summary>
-        public Boolean GroupMeshes { get; private set; }
+        public Boolean GroupMeshes { get; internal set; }
         /// <summary>
         /// Render Wavefront format files
         /// </summary>
-        public Boolean Output_Wavefront { get; private set; }
+        public Boolean Output_Wavefront { get; internal set; }
         /// <summary>
         /// Render Blender format files
         /// </summary>
-        public Boolean Output_Blender { get; private set; }
+        public Boolean Output_Blender { get; internal set; }
         /// <summary>
         /// Render COLLADA format files
         /// </summary>
-        public Boolean Output_Collada { get; private set; }
+        public Boolean Output_Collada { get; internal set; }
         /// <summary>
         /// Smooth Faces
         /// </summary>
-        public Boolean Smooth { get; private set; }
+        public Boolean Smooth { get; internal set; }
         /// <summary>
         /// Flag used to indicate we should convert texture paths to use TIFF instead of DDS
         /// </summary>
-        public Boolean TiffTextures { get; private set; }
+        public Boolean TiffTextures { get; internal set; }
         /// <summary>
         /// Flag used to pass exceptions to installed debuggers
         /// </summary>
-        public Boolean Throw { get; private set; }
+        public Boolean Throw { get; internal set; }
 
         public ArgsHandler()
         {
@@ -74,8 +74,13 @@ namespace CgfConverter
                 directory = ".";
 
             String fileName = Path.GetFileName(filter);
+            String extension = Path.GetExtension(filter);
 
-            return Directory.GetFiles(directory, fileName, fileName.Contains('?') || fileName.Contains('*') ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+            Boolean flexibleExtension = extension.Contains('*');
+
+            return Directory.GetFiles(directory, fileName, fileName.Contains('?') || fileName.Contains('*') ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)
+                .Where(f => flexibleExtension || Path.GetExtension(f).Length == extension.Length)
+                .ToArray();
         }
 
         /// <summary>
@@ -226,7 +231,7 @@ namespace CgfConverter
                             return 1;
                         }
 
-                        this.InputFiles.AddRange(this.GetFiles(inputArgs[0]));
+                        this.InputFiles.AddRange(this.GetFiles(inputArgs[i]));
 
                         Console.WriteLine("Input file set to {0}", inputArgs[i]);
 
@@ -309,5 +314,7 @@ namespace CgfConverter
             Console.WriteLine("    Output to .dae:         {0}", this.Output_Collada);
             Console.WriteLine();
         }
+
+        public bool Verbose { get; set; }
     }
 }

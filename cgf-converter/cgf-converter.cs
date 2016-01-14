@@ -15,18 +15,30 @@ namespace CgfConverter
     {
         public static Int32 Main(String[] args)
         {
+            Utils.LogLevel = LogLevelEnum.Warning;
+            Utils.DebugLevel = LogLevelEnum.None;
+
+            String oldTitle = Console.Title;
+
 #if DEV_DOLKENSP
+            Utils.LogLevel = LogLevelEnum.None;      // Display NO error logs
+            Utils.DebugLevel = LogLevelEnum.Debug;
 
             args = new String[] { @"O:\Mods\Models\*.cg?", @"O:\Mods\Models\*.skin", @"O:\Mods\Models\*.chr", "-objectdir", @"O:\Mods\SC\Latest", "-tif", "-merge", "-obj", "-outdir", @"O:\Mods\Models\Export" };
-            args = new String[] { @"O:\Mods\SC\Latest\*.cg?", @"O:\Mods\SC\Latest\*.skin", @"O:\Mods\SC\Latest\*.chr", "-objectdir", @"O:\Mods\SC\Latest", "-tif", "-merge", "-obj", "-outdir", @"O:\Mods\Models\Export" };
-
+            args = new String[] { @"O:\Mods\SC\Latest\*.cg?", @"O:\Mods\SC\Latest\*.skin", @"O:\Mods\SC\Latest\*.chr", "-objectdir", @"O:\Mods\SC\Latest", "-tif", "-merge", "-obj", "-outdir", @"O:\Mods\Assets_Out" };
+            args = new String[] { @"Objects\*.cg?", @"Objects\*.skin", @"Objects\*.chr", "-objectdir", @"O:\Mods\SC\Latest", "-tif", "-merge", "-obj", "-outdir", @"Export" };
+            // args = new String[] { @"O:\Mods\Assets\*.cg?", "-objectdir", @"O:\Mods\SC\Latest", "-tif", "-merge", "-dae", "-outdir", @"O:\Mods\Assets_Out" };
 #endif
 
 #if DEV_MARKEMP
+            Utils.LogLevel = LogLevelEnum.Verbose; // Display ALL error logs in the console
+            Utils.DebugLevel = LogLevelEnum.None;  // Send nothing to the IDE Output window
+
             //args = new String[] { @"C:\Users\Geoff\Documents\Visual Studio 2013\Projects\cgf-converter\cgf-converter\bin\Debug\AEGS_Gladius.cga", "-objectdir", @"e:\blender projects\star citizen", "-dds", "-obj" };
             //args = new String[] { @"E:\Blender Projects\Star Citizen\Objects\Spaceships\Ships\AEGS\Gladius\AEGS_Gladius.cga", "-objectdir", @"e:\blender projects\star citizen", "-dds", "-obj" , "-merge"};
             //args = new String[] { @"C:\Users\Geoff\Documents\Visual Studio 2013\Projects\cgf-converter\cgf-converter\bin\Debug\RSI_Aurora.cga", "-objectdir", @"e:\blender projects\star citizen", "-dds", "-obj" };
-            args = new String[] { @"C:\Users\Geoff\Documents\Visual Studio 2013\Projects\cgf-converter\cgf-converter\bin\Debug\adder_a_cockpit_standard.cga", "-objectdir", @"e:\blender projects\mechs", "-dds", "-dae" };
+            //args = new String[] { @"C:\Users\Geoff\Documents\Visual Studio 2013\Projects\cgf-converter\cgf-converter\bin\Debug\adder_a_cockpit_standard.cga", "-objectdir", @"e:\blender projects\mechs", "-dds", "-dae" };
+            args = new String[] { @"C:\Users\Geoff\Documents\Visual Studio 2013\Projects\cgf-converter\cgf-converter\bin\Debug\adder_a_cockpit_standard.cga", "-dds", "-dae" };
             //args = new String[] { @"C:\Users\Geoff\Documents\Visual Studio 2013\Projects\cgf-converter\cgf-converter\bin\Debug\candycane_a.chr", "-objectdir", @"e:\blender projects\mechs", "-dds", "-dae" };
             //args = new String[] { @"C:\Users\Geoff\Documents\Visual Studio 2013\Projects\cgf-converter\cgf-converter\bin\Debug\raptor.chr", "-dds", "-dae" };
             //args = new String[] { @"C:\Users\Geoff\Documents\Visual Studio 2013\Projects\cgf-converter\cgf-converter\bin\Debug\ar03.chr", "-dds", "-obj" };
@@ -76,15 +88,15 @@ namespace CgfConverter
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine();
-                        Console.WriteLine("********************************************************************************");
-                        Console.WriteLine("There was an error rendering {0}", inputFile);
-                        Console.WriteLine();
-                        Console.WriteLine(ex.Message);
-                        Console.WriteLine();
-                        Console.WriteLine(ex.StackTrace);
-                        Console.WriteLine("********************************************************************************");
-                        Console.WriteLine();
+                        Utils.Log(LogLevelEnum.Critical);
+                        Utils.Log(LogLevelEnum.Critical, "********************************************************************************");
+                        Utils.Log(LogLevelEnum.Critical, "There was an error rendering {0}", inputFile);
+                        Utils.Log(LogLevelEnum.Critical);
+                        Utils.Log(LogLevelEnum.Critical, ex.Message);
+                        Utils.Log(LogLevelEnum.Critical);
+                        Utils.Log(LogLevelEnum.Critical, ex.StackTrace);
+                        Utils.Log(LogLevelEnum.Critical, "********************************************************************************");
+                        Utils.Log(LogLevelEnum.Critical);
                     }
                 }
             }
@@ -102,6 +114,8 @@ namespace CgfConverter
             Console.WriteLine("Done...");
             Console.ReadKey();
 #endif
+
+            Console.Title = oldTitle;
 
             return result;
         }

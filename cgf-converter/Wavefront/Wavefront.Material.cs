@@ -9,6 +9,7 @@ using System.IO;
 using System.Xml.Serialization;
 using System.ComponentModel;
 using System.Runtime.Serialization;
+using System.Reflection;
 
 namespace CgfConverter
 {
@@ -18,7 +19,7 @@ namespace CgfConverter
         {
             if (cryEngine.Materials == null)
             {
-                Console.WriteLine("No materials loaded");
+                Utils.Log(LogLevelEnum.Debug, "No materials loaded");
                 return;
             }
 
@@ -27,7 +28,7 @@ namespace CgfConverter
 
             using (StreamWriter file = new StreamWriter(this.OutputFile_Material.FullName))
             {
-                file.WriteLine("# Material file output from cgf-converter.exe version {0}", Utils.GetVersion());
+                file.WriteLine("# cgf-converter .mtl export version {0}", Assembly.GetExecutingAssembly().GetName().Version.ToString());
                 file.WriteLine("#");
                 foreach (CryEngine.Material material in cryEngine.Materials)
                 {
@@ -43,7 +44,7 @@ namespace CgfConverter
                     }
                     else
                     {
-                        Console.WriteLine("Skipping Diffuse for {0}", material.Name);
+                        Utils.Log(LogLevelEnum.Debug, "Skipping Diffuse for {0}", material.Name);
                     }
                     if (material.Specular != null)
                     {
@@ -52,7 +53,7 @@ namespace CgfConverter
                     }
                     else
                     {
-                        Console.WriteLine("Skipping Specular for {0}", material.Name);
+                        Utils.Log(LogLevelEnum.Debug, "Skipping Specular for {0}", material.Name);
                     }
                     file.WriteLine("d {0:F6}", material.Opacity);                                                                          // Dissolve
 
