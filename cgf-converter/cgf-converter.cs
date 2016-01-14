@@ -16,7 +16,7 @@ namespace CgfConverter
         public static Int32 Main(String[] args)
         {
             Utils.LogLevel = LogLevelEnum.Warning;
-            Utils.DebugLevel = LogLevelEnum.None;
+            Utils.DebugLevel = LogLevelEnum.Debug;
 
             String oldTitle = Console.Title;
 
