@@ -304,9 +304,9 @@ namespace CgfConverter
                         triInput[0] = new Grendgine_Collada_Input_Shared();
                         triInput[0].source = "#" + posSource.ID;
                         triInput[0].Semantic = Grendgine_Collada_Input_Semantic.VERTEX;
-                        tris[j].Input = triInput;
+                        //tris[j].Input = triInput;
                         StringBuilder p = new StringBuilder();
-                        for (uint k=tmpMeshSubsets.MeshSubsets[j].FirstIndex; k< tmpMeshSubsets.MeshSubsets[j].NumIndices; k++)
+                        for (uint k=tmpMeshSubsets.MeshSubsets[j].FirstIndex; k< tmpMeshSubsets.MeshSubsets[j].NumIndices + tmpMeshSubsets.MeshSubsets[j].FirstIndex; k++)
                         {
                             //Console.Write("{0} ", tmpIndices.Indices[k]);
                             p.AppendFormat("{0} ", tmpIndices.Indices[k]);
