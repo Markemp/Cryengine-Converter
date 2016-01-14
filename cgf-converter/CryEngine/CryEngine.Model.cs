@@ -20,12 +20,48 @@ namespace CgfConverter
         /// </summary>
         public class Model
         {
-            public Int32 NodeCount { get { return this.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Count(); } }
-            public String FileName { get; internal set; }
-
             // Header, ChunkTable and Chunks are what are in a file.  1 header, 1 table, and a chunk for each entry in the table.
             internal static FileVersionEnum FILE_VERSION;
-            internal  static UInt32 NUM_CHUNKS;          // number of chunks in the chunk table
+            internal static UInt32 NUM_CHUNKS;          // number of chunks in the chunk table
+
+            #region Public Properties
+
+            public ChunkNode RootNode { get; internal set; }
+            public Dictionary<UInt32, CryEngine_Core.Chunk> ChunkMap { get; internal set; }
+            public List<ChunkHeader> ChunkHeaders { get; internal set; }
+
+            public String FileName { get; internal set; }
+            public String FileSignature { get; internal set; } // The CGF file signature.  CryTek for 3.5, CrCh for 3.6
+            public FileTypeEnum FileType { get; internal set; } // The CGF file type (geometry or animation)  3.5 only
+            public FileVersionEnum FileVersion { get; internal set; } // The version of the chunk table 3.5 only
+            public Int32 ChunkTableOffset { get; internal set; } // Position of the chunk table in the CGF file
+            public UInt32 NumChunks { get; internal set; }
+            
+            #endregion
+
+            #region Private Fields
+
+            public List<ChunkHeader> _chunks = new List<ChunkHeader> { };
+
+            #endregion
+
+            #region Calculated Properties
+
+            public Int32 NodeCount { get { return this.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Count(); } }
+
+            #endregion
+
+            #region Constructor/s
+
+            public Model()
+            {
+                this.ChunkMap = new Dictionary<UInt32, CryEngine_Core.Chunk> { };
+                this.ChunkHeaders = new List<ChunkHeader> { };
+            }
+
+            #endregion
+
+            #region Public Methods
 
             public static Model FromFile(String fileName)
             {
@@ -33,24 +69,6 @@ namespace CgfConverter
                 buffer.Load(fileName);
                 return buffer;
             }
-
-            public Model()
-            {
-                this.ChunkMap = new Dictionary<UInt32, CryEngine_Core.Chunk> { };
-                this.ChunkHeaders = new List<ChunkHeader> { };
-                this.Headers = new ChunkTable { };
-            }
-
-            #region Legacy
-
-            public FileHeader CgfHeader { get; internal set; }
-            /// <summary>
-            /// CgfChunkTable contains a list of all the Chunks.
-            /// </summary>
-            public ChunkTable Headers { get; internal set; }
-            public Dictionary<UInt32, CryEngine_Core.Chunk> ChunkMap { get; internal set; }
-            public ChunkNode RootNode { get; set; }
-            public List<ChunkHeader> ChunkHeaders {get; internal set; }
 
             /// <summary>
             /// Load a cgf/cga/skin file
@@ -68,40 +86,123 @@ namespace CgfConverter
                     throw new FileNotFoundException();
 
                 // Open the file for reading.
-                BinaryReader cgfReader = new BinaryReader(File.Open(fileName, FileMode.Open));
+                BinaryReader reader = new BinaryReader(File.Open(fileName, FileMode.Open));
                 // Get the header.  This isn't essential for .cgam files, but we need this info to find the version and offset to the chunk table
-                this.CgfHeader = new FileHeader();                       // Gets the header of the file (3-5 objects dep on version)
-                this.CgfHeader.Read(cgfReader);
+                this.LoadHeader(reader);
 
-                FILE_VERSION = this.CgfHeader.FileVersion;
-                NUM_CHUNKS = this.CgfHeader.NumChunks;
+                FILE_VERSION = this.FileVersion;
+                NUM_CHUNKS = this.NumChunks;
 
-                switch (this.CgfHeader.FileVersion)
+                switch (this.FileVersion)
                 {
                     case (FileVersionEnum.CryTek_3_4):
-                        this.Headers.GetChunkTable<CryEngine_Core.ChunkHeader_744>(cgfReader, CgfHeader.ChunkTableOffset);
+                        this.LoadChunkHeaders<CryEngine_Core.ChunkHeader_744>(reader, this.ChunkTableOffset);
                         break;
                     case (FileVersionEnum.CryTek_3_5):
-                        this.Headers.GetChunkTable<CryEngine_Core.ChunkHeader_745>(cgfReader, CgfHeader.ChunkTableOffset);
+                        this.LoadChunkHeaders<CryEngine_Core.ChunkHeader_745>(reader, this.ChunkTableOffset);
                         break;
                     case (FileVersionEnum.CryTek_3_6):
-                        this.Headers.GetChunkTable<CryEngine_Core.ChunkHeader_746>(cgfReader, CgfHeader.ChunkTableOffset);
+                        this.LoadChunkHeaders<CryEngine_Core.ChunkHeader_746>(reader, this.ChunkTableOffset);
                         break;
                     default:
                         Utils.Log(LogLevelEnum.Debug, "Unknown Header");
-                        this.CgfHeader.WriteChunk();
+                        this.WriteHeaderChunk();
                         break;
                 }
 
-                foreach (ChunkHeader chkHdr in this.Headers.Items)
+                this.LoadChunks(reader);
+            }
+
+            public void LoadHeader(BinaryReader b)
+            {
+                #region Detect FileSignature v3.6+
+
+                b.BaseStream.Seek(0, 0);
+                this.FileSignature = b.ReadFString(4);
+
+                if (this.FileSignature == "CrCh")
+                {
+                    // Version 3.6 or later
+                    this.FileVersion = (FileVersionEnum)b.ReadUInt32();    // 0x746
+                    this.NumChunks = b.ReadUInt32();       // number of Chunks in the chunk table
+                    this.ChunkTableOffset = b.ReadInt32(); // location of the chunk table
+
+                    return;
+                }
+
+                #endregion
+
+                #region Detect FileSignature v3.5-
+
+                b.BaseStream.Seek(0, 0);
+                this.FileSignature = b.ReadFString(8);
+
+                if (this.FileSignature == "CryTek")
+                {
+
+                    // Version 3.5 or earlier
+                    this.FileType = (FileTypeEnum)b.ReadUInt32();
+                    this.FileVersion = (FileVersionEnum)b.ReadUInt32();    // 0x744 0x745
+                    this.ChunkTableOffset = b.ReadInt32() + 4;
+                    this.NumChunks = b.ReadUInt32();       // number of Chunks in the chunk table
+
+                    return;
+                }
+
+                #endregion
+
+                throw new NotSupportedException(String.Format("Unsupported FileSignature {0}", this.FileSignature));
+            }
+
+            public void WriteHeaderChunk()  // output header to console for testing
+            {
+                Utils.Log(LogLevelEnum.Debug, "*** HEADER ***");
+                Utils.Log(LogLevelEnum.Debug, "    Header Filesignature: {0}", this.FileSignature);
+                Utils.Log(LogLevelEnum.Debug, "    FileType:            {0:X}", this.FileType);
+                Utils.Log(LogLevelEnum.Debug, "    ChunkVersion:        {0:X}", this.FileVersion);
+                Utils.Log(LogLevelEnum.Debug, "    ChunkTableOffset:    {0:X}", this.ChunkTableOffset);
+                Utils.Log(LogLevelEnum.Debug, "    NumChunks:           {0:X}", this.NumChunks);
+
+                Utils.Log(LogLevelEnum.Debug, "*** END HEADER ***");
+                return;
+            }
+
+            public void LoadChunkHeaders<TChunkHeader>(BinaryReader b, Int32 f) where TChunkHeader : ChunkHeader, new()
+            {
+                // need to seek to the start of the table here.  foffset points to the start of the table
+                b.BaseStream.Seek(f, SeekOrigin.Begin);
+
+                for (Int32 i = 0; i < NUM_CHUNKS; i++)
+                {
+                    TChunkHeader tempChkHdr = new TChunkHeader();
+
+                    tempChkHdr.Read(b);
+
+                    this._chunks.Add(tempChkHdr);
+                }
+            }
+
+            public void WriteChunkTable()
+            {
+                Utils.Log(LogLevelEnum.Debug, "*** Chunk Header Table***");
+                Utils.Log(LogLevelEnum.Debug, "Chunk Type              Version   ID        Size      Offset    ");
+                foreach (ChunkHeader chkHdr in this._chunks)
+                {
+                    Utils.Log(LogLevelEnum.Debug, "{0,-24:X}{1,-10:X}{2,-10:X}{3,-10:X}{4,-10:X}", chkHdr.ChunkType.ToString(), chkHdr.Version, chkHdr.ID, chkHdr.Size, chkHdr.Offset);
+                }
+            }
+
+            public void LoadChunks(BinaryReader reader)
+            {
+                foreach (ChunkHeader chkHdr in this._chunks)
                 {
                     this.ChunkMap[chkHdr.ID] = Chunk.New(chkHdr.ChunkType, chkHdr.Version);
                     this.ChunkMap[chkHdr.ID].Load(this, chkHdr);
-                    this.ChunkMap[chkHdr.ID].Read(cgfReader);
+                    this.ChunkMap[chkHdr.ID].Read(reader);
 
                     // Ensure we read to end of structure
-                    this.ChunkMap[chkHdr.ID].SkipBytes(cgfReader);
-                    
+                    this.ChunkMap[chkHdr.ID].SkipBytes(reader);
+
                     // TODO: Change this to detect node with NULL or 0xFFFFFFFF parent ID
                     // Assume first node read is root node
                     if (chkHdr.ChunkType == ChunkTypeEnum.Node && this.RootNode == null)
@@ -110,122 +211,6 @@ namespace CgfConverter
                     }
                 }
             }
-
-            public void WriteTransform(Vector3 transform)
-            {
-                Utils.Log(LogLevelEnum.Debug, "Transform:");
-                Utils.Log(LogLevelEnum.Debug, "{0}    {1}    {2}", transform.x, transform.y, transform.z);
-                Utils.Log(LogLevelEnum.Debug);
-            }
-
-            #region DataTypes
-
-            public class FileHeader
-            {
-                public String FileSignature; // The CGF file signature.  CryTek for 3.5, CrCh for 3.6
-                public FileTypeEnum FileType; // The CGF file type (geometry or animation)  3.5 only
-                public FileVersionEnum FileVersion; // The version of the chunk table 3.5 only
-                public Int32 ChunkTableOffset; // Position of the chunk table in the CGF file
-                /// <summary>
-                /// 3.6 Only - Number of chunks in the Chunk Table
-                /// </summary>
-                public UInt32 NumChunks { get; internal set; }
-                //public Int32 FileVersion;         // 0 will be 3.4 and older, 1 will be 3.6 and newer.  THIS WILL CHANGE
-                // methods
-                public void Read(BinaryReader b)  //constructor with 1 arg
-                {
-                    #region Detect FileSignature v3.6+
-
-                    b.BaseStream.Seek(0, 0);
-                    this.FileSignature = b.ReadFString(4);
-
-                    if (this.FileSignature == "CrCh")
-                    {
-                        // Version 3.6 or later
-                        this.FileVersion = (FileVersionEnum)b.ReadUInt32();    // 0x746
-                        this.NumChunks = b.ReadUInt32();       // number of Chunks in the chunk table
-                        this.ChunkTableOffset = b.ReadInt32(); // location of the chunk table
-
-                        return;
-                    }
-
-                    #endregion
-
-                    #region Detect FileSignature v3.5-
-
-                    b.BaseStream.Seek(0, 0);
-                    this.FileSignature = b.ReadFString(8);
-
-                    if (this.FileSignature == "CryTek")
-                    {
-
-                        // Version 3.5 or earlier
-                        this.FileType = (FileTypeEnum)b.ReadUInt32();
-                        this.FileVersion = (FileVersionEnum)b.ReadUInt32();    // 0x744 0x745
-                        this.ChunkTableOffset = b.ReadInt32() + 4;
-                        this.NumChunks = b.ReadUInt32();       // number of Chunks in the chunk table
-                        
-                        return;
-                    }
-
-                    #endregion
-
-                    throw new NotSupportedException(String.Format("Unsupported FileSignature {0}", this.FileSignature));
-                }
-
-                public void Write(BinaryWriter writer)
-                {
-                    throw new NotImplementedException();
-                }
-
-                public void WriteChunk()  // output header to console for testing
-                {
-                    Utils.Log(LogLevelEnum.Debug, "*** HEADER ***");
-                    Utils.Log(LogLevelEnum.Debug, "    Header Filesignature: {0}", this.FileSignature);
-                    Utils.Log(LogLevelEnum.Debug, "    FileType:            {0:X}", this.FileType);
-                    Utils.Log(LogLevelEnum.Debug, "    ChunkVersion:        {0:X}", this.FileVersion);
-                    Utils.Log(LogLevelEnum.Debug, "    ChunkTableOffset:    {0:X}", this.ChunkTableOffset);
-                    Utils.Log(LogLevelEnum.Debug, "    NumChunks:           {0:X}", this.NumChunks);
-
-                    Utils.Log(LogLevelEnum.Debug, "*** END HEADER ***");
-                    return;
-                }
-            }
-
-            /// <summary>
-            /// Table that contains list of Chunk Headers
-            /// </summary>
-            public class ChunkTable
-            {
-                public List<ChunkHeader> Items = new List<ChunkHeader>();
-
-                public void GetChunkTable<TChunkHeader>(BinaryReader b, Int32 f) where TChunkHeader : ChunkHeader, new()
-                {
-                    // need to seek to the start of the table here.  foffset points to the start of the table
-                    b.BaseStream.Seek(f, SeekOrigin.Begin);
-
-                    for (Int32 i = 0; i < NUM_CHUNKS; i++)
-                    {
-                        TChunkHeader tempChkHdr = new TChunkHeader();
-
-                        tempChkHdr.Read(b);
-
-                        this.Items.Add(tempChkHdr);
-                    }
-                }
-
-                public void WriteChunk()
-                {
-                    Utils.Log(LogLevelEnum.Debug, "*** Chunk Header Table***");
-                    Utils.Log(LogLevelEnum.Debug, "Chunk Type              Version   ID        Size      Offset    ");
-                    foreach (ChunkHeader chkHdr in this.Items)
-                    {
-                        Utils.Log(LogLevelEnum.Debug, "{0,-24:X}{1,-10:X}{2,-10:X}{3,-10:X}{4,-10:X}", chkHdr.ChunkType.ToString(), chkHdr.Version, chkHdr.ID, chkHdr.Size, chkHdr.Offset);
-                    }
-                }
-            }
-
-            #endregion
 
             #endregion
         }

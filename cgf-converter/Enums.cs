@@ -12,6 +12,12 @@
         GEOM = 0xFFFF0000,
         ANIM = 0xFFFF0001
     }  // complete
+    public enum MtlNameTypeEnum : uint
+    {
+        Library = 0x01,
+        Single = 0x10,
+        Child = 0x12,
+    }
     public enum ChunkTypeEnum : uint    // complete
     {
         Any = 0x0,
@@ -170,7 +176,8 @@
         DEFAULT = 0x00000000,
         NOCOLLIDE = 0x00000001,
         OBSTRUCT = 0x00000002,
-        DEFAULTPROXY = 0x000000FF  // this needs to be checked.  cgf.xml says 256; not sure if hex or dec
+        DEFAULTPROXY = 0x000000FF,  // this needs to be checked.  cgf.xml says 256; not sure if hex or dec
+        UNKNOWN = 0x00001100,
     }
     public enum LightType : uint         //complete
     {

@@ -127,13 +127,13 @@
     <Compile Include="CryEngine_Core\ChunkExportFlags.cs" />
     <Compile Include="CryEngine_Core\ChunkHeader_744.cs" />
     <Compile Include="CryEngine_Core\ChunkHelper_744.cs" />
-    <Compile Include="CryEngine_Core\ChunkMaterial_744.cs" />
+    <Compile Include="CryEngine_Core\ChunkMtlName_744.cs" />
     <Compile Include="CryEngine_Core\ChunkHeader_745.cs" />
     <Compile Include="CryEngine_Core\ChunkHeader_746.cs" />
-    <Compile Include="CryEngine_Core\ChunkMaterial_800.cs" />
-    <Compile Include="CryEngine_Core\ChunkMaterial_802.cs" />
+    <Compile Include="CryEngine_Core\ChunkMtlName_800.cs" />
+    <Compile Include="CryEngine_Core\ChunkMtlName_802.cs" />
     <Compile Include="CryEngine_Core\ChunkHelper.cs" />
-    <Compile Include="CryEngine_Core\ChunkMaterial.cs" />
+    <Compile Include="CryEngine_Core\ChunkMtlName.cs" />
     <Compile Include="CryEngine_Core\ChunkMesh.cs" />
     <Compile Include="CryEngine_Core\ChunkMeshSubsets.cs" />
     <Compile Include="CryEngine_Core\ChunkNode.cs" />

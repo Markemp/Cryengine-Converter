@@ -16,11 +16,12 @@ namespace CgfConverter.CryEngine_Core
 
             this.Name = b.ReadFString(128);
             this.NumChildren = b.ReadUInt32();
-            this.PhysicsTypeArray = new MtlNamePhysicsType[NumChildren];
+            this.PhysicsType = new MtlNamePhysicsType[NumChildren];
+            this.MatType = this.NumChildren == 0 ? MtlNameTypeEnum.Single : MtlNameTypeEnum.Library;
 
             for (Int32 i = 0; i < NumChildren; i++)
             {
-                this.PhysicsTypeArray[i] = (MtlNamePhysicsType)Enum.ToObject(typeof(MtlNamePhysicsType), b.ReadUInt32());
+                this.PhysicsType[i] = (MtlNamePhysicsType)Enum.ToObject(typeof(MtlNamePhysicsType), b.ReadUInt32());
             }
         }
     }
