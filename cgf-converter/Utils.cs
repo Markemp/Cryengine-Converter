@@ -130,6 +130,7 @@ namespace CgfConverter
 
         public static LogLevelEnum LogLevel { get; set; }
         public static LogLevelEnum DebugLevel { get; set; }
+        public static void Log(String format = null, params Object[] args) { Utils.Log(LogLevelEnum.Debug, format, args); }
         public static void Log(LogLevelEnum logLevel, String format = null, params Object[] args)
         {
             if (Utils.LogLevel <= logLevel)
