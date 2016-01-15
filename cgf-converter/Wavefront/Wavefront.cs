@@ -189,7 +189,7 @@ namespace CgfConverter
 
             // Going to assume that there is only one VerticesData datastream for now.  Need to watch for this.   
             // Some 801 types have vertices and not VertsUVs.
-            CryEngine_Core.ChunkMtlName tmpMtlName = chunkNode._model.ChunkMap.GetValue(chunkNode.MatID, null) as CryEngine_Core.ChunkMtlName
+            CryEngine_Core.ChunkMtlName tmpMtlName = chunkNode._model.ChunkMap.GetValue(chunkNode.MatID, null) as CryEngine_Core.ChunkMtlName;
             CryEngine_Core.ChunkMeshSubsets tmpMeshSubsets = tmpMesh._model.ChunkMap.GetValue(tmpMesh.MeshSubsets, null) as CryEngine_Core.ChunkMeshSubsets; // Listed as Object ID for the Node
             CryEngine_Core.ChunkDataStream tmpIndices = tmpMesh._model.ChunkMap.GetValue(tmpMesh.IndicesData, null) as CryEngine_Core.ChunkDataStream;
             CryEngine_Core.ChunkDataStream tmpVertices = tmpMesh._model.ChunkMap.GetValue(tmpMesh.VerticesData, null) as CryEngine_Core.ChunkDataStream;

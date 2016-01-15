@@ -8,6 +8,7 @@ using System.Xml.Xsl;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using grendgine_collada; // No idea how to actually use this.
+using System.Reflection;
 
 namespace CgfConverter
 {
@@ -75,7 +76,7 @@ namespace CgfConverter
             DateTime fileCreated = DateTime.Now;
             DateTime fileModified = DateTime.Now;           // since this only creates, both times should be the same
             Grendgine_Collada_Asset asset = new Grendgine_Collada_Asset();
-
+            asset.Revision = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             Grendgine_Collada_Asset_Contributor[] contributors = new Grendgine_Collada_Asset_Contributor[2];
             contributors[0] = new Grendgine_Collada_Asset_Contributor();
             contributors[0].Author = "Heffay";
