@@ -28,6 +28,10 @@ namespace CgfConverter
         /// </summary>
         public Boolean GroupMeshes { get; internal set; }
         /// <summary>
+        /// Render CryTek format files
+        /// </summary>
+        public Boolean Output_CryTek { get; internal set; }
+        /// <summary>
         /// Render Wavefront format files
         /// </summary>
         public Boolean Output_Wavefront { get; internal set; }
@@ -47,6 +51,14 @@ namespace CgfConverter
         /// Flag used to indicate we should convert texture paths to use TIFF instead of DDS
         /// </summary>
         public Boolean TiffTextures { get; internal set; }
+        /// <summary>
+        /// Flag used to skip the rendering of nodes containing $shield
+        /// </summary>
+        public Boolean SkipShieldNodes { get; internal set; }
+        /// <summary>
+        /// Flag used to skip the rendering of nodes containing $proxy
+        /// </summary>
+        public Boolean SkipProxyNodes { get; internal set; }
         /// <summary>
         /// Flag used to pass exceptions to installed debuggers
         /// </summary>
@@ -179,6 +191,15 @@ namespace CgfConverter
                         break;
 
                     #endregion
+                    #region case "-crytek"...
+                    case "-cry":
+                    case "-crytek":
+                        Console.WriteLine("Output format set to CryTek (.cga/.cgf/.chr/.skin)");
+                        this.Output_CryTek = true;
+
+                        break;
+
+                    #endregion
                     #region case "-tif" / "-tiff"...
 
                     case "-tif":
@@ -189,13 +210,21 @@ namespace CgfConverter
                         break;
 
                     #endregion
-                    #region case "-noconflict"...
+                    #region case "-skipshield" / "-skipshields"...
 
-                    case "-noconflict":
+                    case "-skipshield":
+                    case "-skipshields":
 
-                        // TODO: Add support
-                        // Output file is based on first file name
-                        // this.OutputFile = new FileInfo(Path.GetFileNameWithoutExtension(this.InputFile) + "_out.obj").FullName;
+                        this.SkipShieldNodes = true;
+
+                        break;
+
+                    #endregion
+                    #region case "-skipproxy"...
+
+                    case "-skipproxy":
+
+                        this.SkipProxyNodes = true;
 
                         break;
 

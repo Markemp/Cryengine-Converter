@@ -9,31 +9,25 @@ using System.Reflection;
 
 namespace CgfConverter
 {
-    public partial class Wavefront
+    public partial class Wavefront : BaseRenderer
     {
-        public Wavefront(ArgsHandler argsHandler, CryEngine cryEngine)
-        {
-            this.Args = argsHandler;
-            this.CryData = cryEngine;
-        }
+        public Wavefront(ArgsHandler argsHandler, CryEngine cryEngine) : base(argsHandler, cryEngine) { }
 
-        public ArgsHandler Args { get; internal set; }
         public FileInfo OutputFile_Model { get; internal set; }
         public FileInfo OutputFile_Material { get; internal set; }
-        public CryEngine CryData { get; internal set; }
         public UInt32 CurrentVertexPosition { get; internal set; }
         public UInt32 TempIndicesPosition { get; internal set; }
         public UInt32 TempVertexPosition { get; internal set; }
         public UInt32 CurrentIndicesPosition { get; internal set; }
         public String GroupOverride { get; internal set; }
-
         public Int32 FaceIndex { get; internal set; }
+
         /// <summary>
         /// Renders an .obj file, and matching .mat file for the current model
         /// </summary>
         /// <param name="outputDir">Folder to write files to</param>
         /// <param name="preservePath">When using an <paramref name="outputDir"/>, preserve the original hierarchy</param>
-        public void WriteObjFile(String outputDir, Boolean preservePath)
+        public override void Render(String outputDir = null, Boolean preservePath = true)
         {
             // We need to create the obj header, then for each submesh write the vertex, UV and normal data.
             // First, let's figure out the name of the output file.  Should be <object name>.obj
@@ -46,35 +40,11 @@ namespace CgfConverter
 
             // String outputFile = outputFile;
 
-            String outputFile = "temp.obj";
-
-            if (String.IsNullOrWhiteSpace(outputDir))
-            {
-                // Empty output directory means place alongside original models
-                // If you want relative path, use "."
-
-                outputFile = Path.Combine(new FileInfo(this.CryData.InputFile).DirectoryName, String.Format("{0}_out.obj", Path.GetFileNameWithoutExtension(this.CryData.InputFile)));
-            }
-            else
-            {
-                // If we have an output directory
-                String preserveDir = preservePath ? Path.GetDirectoryName(this.CryData.InputFile) : "";
-
-                // Remove drive letter if necessary
-                if (!String.IsNullOrWhiteSpace(Path.GetPathRoot(preserveDir)))
-                {
-                    preserveDir = preserveDir.Replace(Path.GetPathRoot(preserveDir), "");
-                }
-
-                outputFile = Path.Combine(outputDir, preserveDir, Path.ChangeExtension(Path.GetFileNameWithoutExtension(this.CryData.InputFile), "obj"));
-            }
-
+            this.OutputFile_Model = new FileInfo(this.GetOutputFile("obj", outputDir, preservePath));
+            this.OutputFile_Material = new FileInfo(this.GetOutputFile("mtl", outputDir, preservePath));
 
             if (this.Args.GroupMeshes)
-                this.GroupOverride = Path.GetFileNameWithoutExtension(outputFile);
-
-            this.OutputFile_Model = new FileInfo(outputFile);
-            this.OutputFile_Material = new FileInfo(Path.ChangeExtension(OutputFile_Model.FullName, "mtl"));
+                this.GroupOverride = Path.GetFileNameWithoutExtension(this.OutputFile_Model.Name);
 
             Console.WriteLine(@"Output file is {0}\...\{1}", outputDir, this.OutputFile_Model.Name);
 
@@ -105,6 +75,20 @@ namespace CgfConverter
 
                 foreach (CryEngine_Core.ChunkNode node in this.CryData.NodeMap.Values)
                 {
+                    // Don't render shields
+                    if (this.Args.SkipShieldNodes && node.Name.StartsWith("$shield"))
+                    {
+                        Utils.Log(LogLevelEnum.Debug, "Skipped shields node {0}", node.Name);
+                        continue;
+                    }
+
+                    // Don't render shields
+                    if (this.Args.SkipProxyNodes && node.Name.StartsWith("proxy"))
+                    {
+                        Utils.Log(LogLevelEnum.Debug, "Skipped proxy node {0}", node.Name);
+                        continue;
+                    }
+
                     if (node.ObjectChunk == null)
                     {
                         Utils.Log(LogLevelEnum.Warning, "Skipped node with missing Object {0}", node.Name);
