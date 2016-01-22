@@ -38,8 +38,8 @@ namespace CgfConverter
             // Validate file extension - handles .cgam / skinm
             if (!CryEngine._validExtensions.Contains(inputFile.Extension))
             {
-                Utils.Log(LogLevelEnum.Debug, "Warning: Unsupported file extension - please use a cga, cgf or skin file");
-                throw new FileLoadException("Warning: Unsupported file extension - please use a cga, cgf or skin file", fileName);
+                Utils.Log(LogLevelEnum.Debug, "Warning: Unsupported file extension - please use a cga, cgf, chr or skin file");
+                throw new FileLoadException("Warning: Unsupported file extension - please use a cga, cgf, chr or skin file", fileName);
             }
 
             #region m-File Auto-Detection
@@ -72,19 +72,41 @@ namespace CgfConverter
                     continue;
 
                 String cleanName = mtlChunk.Name;
+                Console.WriteLine("CleanName is {0}", mtlChunk.Name);
 
                 // TODO: Investigate if we want to clean paths nicer
-                var charsToClean = cleanName.ToCharArray().Intersect(Path.GetInvalidFileNameChars()).ToArray();
-                if (charsToClean.Length > 0)
-                {
-                    foreach(Char character in charsToClean)
-                    {
-                        cleanName = cleanName.Replace(character.ToString(), "");
-                    }
-                }
+                // TODO: Modify this so mtlfile chunks with slashes (object/mechs/adder/cockpit/adr_cockpit.mtl) work properly
+                FileInfo materialFile;
 
+                if (mtlChunk.Name.Contains(@"/") || mtlChunk.Name.Contains(@"\"))
+                {
+                    // The mtlname has a path.  Most likely starts at the Objects directory.
+                    // 
+                    string[] stringSeparators = new string[] { @"\", @"/" };
+                    string[] result;
+                    // if objectdir is provided, check objectdir + mtlchunk.name
+                    if (dataDir != null)
+                    {
+                        materialFile = new FileInfo(Path.Combine(dataDir, mtlChunk.Name));
+                    } else
+                    {
+                        // object dir not provided, but we have a path.  Just grab the last part of the name and check the dir of the cga file
+                        result = mtlChunk.Name.Split(stringSeparators, StringSplitOptions.None);
+                        materialFile = new FileInfo(result[result.Length - 1]);
+                    }
+                } else
+                {
+                    var charsToClean = cleanName.ToCharArray().Intersect(Path.GetInvalidFileNameChars()).ToArray();
+                    if (charsToClean.Length > 0)
+                    {
+                        foreach(Char character in charsToClean)
+                        {
+                            cleanName = cleanName.Replace(character.ToString(), "");
+                        }
+                    }
+                    materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(fileName), cleanName));
+                }
                 // First try relative to file being processed
-                FileInfo materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(fileName), cleanName));
                 if (materialFile.Extension != "mtl")
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
 

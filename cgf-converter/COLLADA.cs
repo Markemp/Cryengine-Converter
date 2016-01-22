@@ -35,10 +35,12 @@ namespace CgfConverter
 
             // File name will be "object name.dae"
             daeOutputFile = new FileInfo(this.GetOutputFile("dae", outputDir, preservePath));
+            Console.WriteLine("output file: {0}", outputDir);
             GetSchema();                                                    // Loads the schema.  Needs error checking in case it's offline.
             WriteRootNode();
             WriteAsset();
             WriteLibrary_Images();
+            WriteScene();
             WriteLibrary_Materials();
             WriteLibrary_Effects();
             WriteLibrary_Geometries();
@@ -395,6 +397,11 @@ namespace CgfConverter
         }
         public void WriteScene()
         {
+            Grendgine_Collada_Scene scene = new Grendgine_Collada_Scene();
+            Grendgine_Collada_Instance_Visual_Scene visualScene = new Grendgine_Collada_Instance_Visual_Scene();
+            visualScene.URL = "#world";
+            scene.Visual_Scene = visualScene;
+            daeObject.Scene = scene;
 
         }
 
