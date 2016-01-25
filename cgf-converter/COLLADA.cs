@@ -342,6 +342,30 @@ namespace CgfConverter
                     tmpGeo.Mesh.Vertices = verts;
                     tmpGeo.Mesh.Triangles = tris;
 
+                    // create the technique_common for each of these
+                    posSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source();
+                    posSource.Technique_Common.Accessor = new Grendgine_Collada_Accessor();
+                    posSource.Technique_Common.Accessor.Source = "#" + floatArrayVerts.ID;
+                    posSource.Technique_Common.Accessor.Stride = 3;
+                    posSource.Technique_Common.Accessor.Count = tmpMeshChunk.NumVertices;
+                    posSource.Technique_Common.Accessor.Param = new Grendgine_Collada_Param[3];
+                    posSource.Technique_Common.Accessor.Param[0].Name = "X";
+                    posSource.Technique_Common.Accessor.Param[0].Type = "float";
+                    posSource.Technique_Common.Accessor.Param[1].Name = "Y";
+                    posSource.Technique_Common.Accessor.Param[1].Type = "float";
+                    posSource.Technique_Common.Accessor.Param[2].Name = "Z";
+                    posSource.Technique_Common.Accessor.Param[2].Type = "float";
+                    normSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source();
+                    normSource.Technique_Common.Accessor = new Grendgine_Collada_Accessor();
+                    normSource.Technique_Common.Accessor.Source = "#" + floatArrayNormals.ID;
+                    normSource.Technique_Common.Accessor.Stride = 3;
+                    normSource.Technique_Common.Accessor.Count = tmpMeshChunk.NumVertices;
+                    uvSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source();
+                    uvSource.Technique_Common.Accessor = new Grendgine_Collada_Accessor();
+                    uvSource.Technique_Common.Accessor.Source = "#" + floatArrayUVs.ID;
+                    uvSource.Technique_Common.Accessor.Stride = 2;
+                    uvSource.Technique_Common.Accessor.Count = tmpMeshChunk.NumVertices * 3 / 2;
+
                     // tris are easy.  Just the index of faces
                     geometryList.Add(tmpGeo);
 
@@ -377,22 +401,58 @@ namespace CgfConverter
             /// 
             // Set up the library
             Grendgine_Collada_Library_Visual_Scenes libraryVisualScenes = new Grendgine_Collada_Library_Visual_Scenes();
-            // There can be multiple visual scenes.  Need one for each node chunk, and one for skeleton (if it exists)
-            List<Grendgine_Collada_Visual_Scene> visualScene = new List<Grendgine_Collada_Visual_Scene>();
+            // There can be multiple visual scenes.  Will just have one (World) for now.  All node chunks go under Nodes for that visual scene
+            List<Grendgine_Collada_Visual_Scene> visualScenes = new List<Grendgine_Collada_Visual_Scene>();
+            Grendgine_Collada_Visual_Scene visualScene = new Grendgine_Collada_Visual_Scene();
             List<Grendgine_Collada_Node> nodes = new List<Grendgine_Collada_Node>();
 
             foreach (CryEngine_Core.ChunkNode nodeChunk in this.CryData.Chunks.Where(a => a.ChunkType == ChunkTypeEnum.Node))
             {
-                // For each nodechunk, create a scene and add it to visualScene list
-                Grendgine_Collada_Visual_Scene tmpVisualScene = new Grendgine_Collada_Visual_Scene();
-                tmpVisualScene.Name = CryData.RootNode.Name;
-                // now make a list of Nodes that correspond with each node chunk.
-                Grendgine_Collada_Node tmpNode = new Grendgine_Collada_Node();
-                tmpNode.Type = Grendgine_Collada_Node_Type.NODE;
+                // Chunks we will need for this node chunk
+                if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Mesh)
+                {
+                    CryEngine_Core.ChunkMesh tmpMeshChunk = (CryEngine_Core.ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID];
+                    CryEngine_Core.ChunkMeshSubsets tmpMeshSubsets = (CryEngine_Core.ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
+
+                    // For each nodechunk with a non helper or controller object ID, create a node and add it to nodes list
+                    // now make a list of Nodes that correspond with each node chunk.
+
+                    Grendgine_Collada_Node tmpNode = new Grendgine_Collada_Node();
+                    tmpNode.Name = nodeChunk.Name;
+                    // Get the mesh chunk
+                    CryEngine_Core.ChunkMesh tmpMesh = nodeChunk.ObjectChunk as CryEngine_Core.ChunkMesh;
+                    Grendgine_Collada_Node_Type nodeType = new Grendgine_Collada_Node_Type();
+                    nodeType = Grendgine_Collada_Node_Type.NODE;
+                    tmpNode.Type = nodeType;
+                    List<Grendgine_Collada_Matrix> matrices = new List<Grendgine_Collada_Matrix>();
+                    Grendgine_Collada_Matrix matrix = new Grendgine_Collada_Matrix();
+                    matrix.Value_As_String = "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1";
+                    matrices.Add(matrix);
+                    tmpNode.Matrix = matrices.ToArray();
+                    // Make a set of instance_geometry objects.  One for each submesh, and assign the material to it.
+                    List<Grendgine_Collada_Instance_Geometry> instanceGeometries = new List<Grendgine_Collada_Instance_Geometry>();
+                    // rethink this.  Might just want one instance geometry per node.
+                    /*for (int i = 0; i < tmpMeshSubsets.NumMeshSubset; i++)
+                    {
+                        // For each mesh subset, we want to create an instance geometry and add it to instanceGeometries list.
+                        Console.WriteLine("{0}", i);
+                        Grendgine_Collada_Instance_Geometry instanceGeometry = new Grendgine_Collada_Instance_Geometry();
+                        instanceGeometry.URL = "#" + this.CryData.RootNode.Name;
+                        instanceGeometries.Add(instanceGeometry);
+                        
+                    }*/
+                    tmpNode.Instance_Geometry = instanceGeometries.ToArray();
+                    nodes.Add(tmpNode);
+                }
 
 
-                nodes.Add(tmpNode);
             }
+            visualScene.Node = nodes.ToArray();
+            visualScene.Name = "world";
+            visualScenes.Add(visualScene);
+            libraryVisualScenes.Visual_Scene = visualScenes.ToArray();
+            daeObject.Library_Visual_Scene = libraryVisualScenes;
+
 
         }
         public void WriteScene()

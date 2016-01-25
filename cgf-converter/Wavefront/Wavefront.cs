@@ -340,6 +340,9 @@ namespace CgfConverter
                 for (int j = 0; j < chunkProx.HitBoxes[i].NumVertices; j++)
                 {
                     //Utils.Log(LogLevelEnum.Debug, "{0} {1} {2}", chunkProx.HitBoxes[i].Vertices[j].x, chunkProx.HitBoxes[i].Vertices[j].y, chunkProx.HitBoxes[i].Vertices[j].z);
+                    // Transform the vertex
+                    //Vector3 vertex = chunkNode.GetTransform(tmpVertsUVs.Vertices[j]);
+
                     string s1 = String.Format("v {0:F7} {1:F7} {2:F7}",
                         chunkProx.HitBoxes[i].Vertices[j].x,
                         chunkProx.HitBoxes[i].Vertices[j].y,
