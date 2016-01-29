@@ -47,6 +47,7 @@ namespace CgfConverter
             WriteLibrary_VisualScenes();
             if (!daeOutputFile.Directory.Exists)
                 daeOutputFile.Directory.Create();
+            //ValidateXml();
             TextWriter writer = new StreamWriter(daeOutputFile.FullName);   // Makes the Textwriter object for the output
             mySerializer.Serialize(writer, daeObject);                      // Serializes the daeObject and writes to the writer
             Utils.Log(LogLevelEnum.Debug, "End of Write Collada");
@@ -435,41 +436,16 @@ namespace CgfConverter
                 {
                     CryEngine_Core.ChunkMesh tmpMeshChunk = (CryEngine_Core.ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID];
                     CryEngine_Core.ChunkMeshSubsets tmpMeshSubsets = (CryEngine_Core.ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
+                    List<Grendgine_Collada_Instance_Geometry> instanceGeometries = new List<Grendgine_Collada_Instance_Geometry>();
 
                     // For each nodechunk with a non helper or controller object ID, create a node and add it to nodes list
                     // now make a list of Nodes that correspond with each node chunk.
 
                     Grendgine_Collada_Node tmpNode = new Grendgine_Collada_Node();
-                    tmpNode.Name = nodeChunk.Name;
+                    tmpNode = CreateNode(nodeChunk);
                     // Get the mesh chunk
                     CryEngine_Core.ChunkMesh tmpMesh = nodeChunk.ObjectChunk as CryEngine_Core.ChunkMesh;
-                    Grendgine_Collada_Node_Type nodeType = new Grendgine_Collada_Node_Type();
-                    nodeType = Grendgine_Collada_Node_Type.NODE;
-                    tmpNode.Type = nodeType;
-                    List<Grendgine_Collada_Matrix> matrices = new List<Grendgine_Collada_Matrix>();
-                    Grendgine_Collada_Matrix matrix = new Grendgine_Collada_Matrix();
-                    StringBuilder matrixString = new StringBuilder();
-                    matrixString.AppendFormat("{0:F7} {1:F7} {2:F7} {3:F7} {4:F7} {5:F7} {6:F7} {7:F7} {8:F7} {9:F7} {10:F7} {11:F7} {12:F7} {13:F7} {14:F7} {15:F7}",
-                        nodeChunk.Transform.m11, nodeChunk.Transform.m12, nodeChunk.Transform.m13, nodeChunk.Transform.m14,
-                        nodeChunk.Transform.m21, nodeChunk.Transform.m22, nodeChunk.Transform.m23, nodeChunk.Transform.m24,
-                        nodeChunk.Transform.m31, nodeChunk.Transform.m32, nodeChunk.Transform.m33, nodeChunk.Transform.m34,
-                        nodeChunk.Transform.m41 / 100, nodeChunk.Transform.m42 / 100, nodeChunk.Transform.m43 / 100, nodeChunk.Transform.m44);
-                    matrix.Value_As_String = matrixString.ToString();
-                    matrices.Add(matrix);
-                    tmpNode.Matrix = matrices.ToArray();
-                    // Make a set of instance_geometry objects.  One for each submesh, and assign the material to it.
-                    List<Grendgine_Collada_Instance_Geometry> instanceGeometries = new List<Grendgine_Collada_Instance_Geometry>();
-                    // rethink this.  Might just want one instance geometry per node.
-                    /*for (int i = 0; i < tmpMeshSubsets.NumMeshSubset; i++)
-                    {
-                        // For each mesh subset, we want to create an instance geometry and add it to instanceGeometries list.
-                        Console.WriteLine("{0}", i);
-                        Grendgine_Collada_Instance_Geometry instanceGeometry = new Grendgine_Collada_Instance_Geometry();
-                        instanceGeometry.URL = "#" + this.CryData.RootNode.Name;
-                        instanceGeometries.Add(instanceGeometry);
-                        
-                    }*/
-                    tmpNode.Instance_Geometry = instanceGeometries.ToArray();
+
                     nodes.Add(tmpNode);
                 }
 
@@ -495,42 +471,51 @@ namespace CgfConverter
                 Grendgine_Collada_Node_Type nodeType = new Grendgine_Collada_Node_Type();
                 nodeType = Grendgine_Collada_Node_Type.NODE;
                 tmpNode.Type = nodeType;
+                // Make the lists necessary for this Node.
                 List<Grendgine_Collada_Matrix> matrices = new List<Grendgine_Collada_Matrix>();
+                List<Grendgine_Collada_Instance_Geometry> instanceGeometries = new List<Grendgine_Collada_Instance_Geometry>();
+                List<Grendgine_Collada_Bind_Material> bindMaterials = new List<Grendgine_Collada_Bind_Material>();
+                List<Grendgine_Collada_Instance_Material_Geometry> instanceMaterials = new List<Grendgine_Collada_Instance_Material_Geometry>();
+
                 Grendgine_Collada_Matrix matrix = new Grendgine_Collada_Matrix();
                 StringBuilder matrixString = new StringBuilder();
                 matrixString.AppendFormat("{0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12} {13} {14} {15}",
                     nodeChunk.Transform.m11, nodeChunk.Transform.m12, nodeChunk.Transform.m13, nodeChunk.Transform.m14,
                     nodeChunk.Transform.m21, nodeChunk.Transform.m22, nodeChunk.Transform.m23, nodeChunk.Transform.m24,
                     nodeChunk.Transform.m31, nodeChunk.Transform.m32, nodeChunk.Transform.m33, nodeChunk.Transform.m34,
-                    nodeChunk.Transform.m41/100, nodeChunk.Transform.m42/100, nodeChunk.Transform.m43/100, nodeChunk.Transform.m44);
+                    nodeChunk.Transform.m41 / 100, nodeChunk.Transform.m42 / 100, nodeChunk.Transform.m43 / 100, nodeChunk.Transform.m44);
                 matrix.Value_As_String = matrixString.ToString();
                 matrix.sID = "transform";
                 matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
                 tmpNode.Matrix = matrices.ToArray();
-                // Make a set of instance_geometry objects.  One for each node, and add an instance_material for each material bind
+
+                // Each node will have one instance geometry, although it could be a list.
                 Grendgine_Collada_Instance_Geometry instanceGeometry = new Grendgine_Collada_Instance_Geometry();
-                Grendgine_Collada_Instance_Geometry[] instanceGeometries = new Grendgine_Collada_Instance_Geometry[1];
                 instanceGeometry.Name = nodeChunk.Name;
                 instanceGeometry.URL = "#" + nodeChunk.Name;  // this is the ID of the geometry.
-                Grendgine_Collada_Bind_Material[] bindMaterials = new Grendgine_Collada_Bind_Material[1];
+
                 Grendgine_Collada_Bind_Material bindMaterial = new Grendgine_Collada_Bind_Material();
-                instanceGeometry.Bind_Material[0] = bindMaterial;
+                bindMaterial.Technique_Common = new Grendgine_Collada_Technique_Common_Bind_Material();
+                bindMaterial.Technique_Common.Instance_Material = new Grendgine_Collada_Instance_Material_Geometry[tmpMeshSubsets.NumMeshSubset];
+                bindMaterials.Add(bindMaterial);
+                instanceGeometry.Bind_Material = bindMaterials.ToArray();
+                instanceGeometries.Add(instanceGeometry);
+
+                tmpNode.Instance_Geometry = instanceGeometries.ToArray();
+
                 // This gets complicated.  We need to make one instance_material for each material used in this node chunk.  The mat IDs used in this
                 // node chunk are stored in meshsubsets, so for each subset we need to grab the mat, get the target (id), and make an instance_material for it.
-                Grendgine_Collada_Instance_Material_Geometry[] instanceMats = new Grendgine_Collada_Instance_Material_Geometry[1];
+                //Grendgine_Collada_Instance_Material_Geometry instanceMats = new Grendgine_Collada_Instance_Material_Geometry();
 
-                /*for (int i = 0; i < tmpMeshSubsets.NumMeshSubset; i++)
+                for (int i = 0; i < tmpMeshSubsets.NumMeshSubset; i++)
                 {
-                    // For each mesh subset, we want to create an instance geometry and add it to instanceGeometries list.
-                    Console.WriteLine("{0}", i);
-                    Grendgine_Collada_Instance_Geometry instanceGeometry = new Grendgine_Collada_Instance_Geometry();
-                    instanceGeometry.URL = "#" + this.CryData.RootNode.Name;
-                    instanceGeometries.Add(instanceGeometry);
-
-                }*/
-                instanceGeometries[0] = instanceGeometry;
-                tmpNode.Instance_Geometry = instanceGeometries;
-
+                    // For each mesh subset, we want to create an instance material and add it to instanceMaterials list.
+                    Grendgine_Collada_Instance_Material_Geometry tmpInstanceMat = new Grendgine_Collada_Instance_Material_Geometry();
+                    tmpInstanceMat.Target = "#" + tmpMeshSubsets.MeshSubsets[i].MatID;
+                    tmpInstanceMat.Symbol = CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name;
+                    instanceMaterials.Add(tmpInstanceMat);
+                }
+                tmpNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material = instanceMaterials.ToArray();
             }
             return tmpNode;
         }
@@ -539,10 +524,49 @@ namespace CgfConverter
             Grendgine_Collada_Scene scene = new Grendgine_Collada_Scene();
             Grendgine_Collada_Instance_Visual_Scene visualScene = new Grendgine_Collada_Instance_Visual_Scene();
             visualScene.URL = "#world";
+            visualScene.Name = "My Scene";
             scene.Visual_Scene = visualScene;
             daeObject.Scene = scene;
 
         }
 
+        public void ValidateXml()
+        {
+            try
+            {
+                XmlReaderSettings settings = new XmlReaderSettings();
+                settings.Schemas.Add(null, @"C:\Users\Geoff\Documents\Visual Studio 2013\Projects\cgf-converter\cgf-converter\COLLADA_1_5.xsd");
+                settings.ValidationType = ValidationType.Schema;
+
+                XmlReader reader = XmlReader.Create(daeOutputFile.FullName, settings);
+                XmlDocument document = new XmlDocument();
+                document.Load(reader);
+
+                ValidationEventHandler eventHandler = new ValidationEventHandler(ValidationEventHandler);
+
+                Console.WriteLine("Validating Schema...");
+                // the following call to Validate succeeds.
+                document.Validate(eventHandler);
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+        }
+        static void ValidationEventHandler(object sender, ValidationEventArgs e)
+        {
+            switch (e.Severity)
+            {
+                case XmlSeverityType.Error:
+                    Console.WriteLine("Error: {0}", e.Message);
+                    break;
+                case XmlSeverityType.Warning:
+                    Console.WriteLine("Warning {0}", e.Message);
+                    break;
+            }
+
+        }
     }
 }
