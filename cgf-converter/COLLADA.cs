@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Xsl;
+using System.Xml.Linq;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using grendgine_collada; 
@@ -16,7 +17,7 @@ namespace CgfConverter
     {
         public XmlSchema schema = new XmlSchema();
         public FileInfo daeOutputFile;
-        public XmlDocument daeDoc = new XmlDocument();                      // the COLLADA XML doc.  Going to try serialized instead.
+        //public XmlDocument daeDoc = new XmlDocument();                      // the COLLADA XML doc.  Going to try serialized instead.
         public Grendgine_Collada daeObject = new Grendgine_Collada();       // This is the serializable class.
         XmlSerializer mySerializer = new XmlSerializer(typeof(Grendgine_Collada));
         List<string> idList = new List<string>();
@@ -49,6 +50,9 @@ namespace CgfConverter
             //ValidateXml();
             TextWriter writer = new StreamWriter(daeOutputFile.FullName);   // Makes the Textwriter object for the output
             mySerializer.Serialize(writer, daeObject);                      // Serializes the daeObject and writes to the writer
+            // Validate that the Collada document is ok
+            writer.Close();
+            ValidateDoc();
             Utils.Log(LogLevelEnum.Debug, "End of Write Collada");
         }
 
@@ -179,6 +183,27 @@ namespace CgfConverter
                 tmpEffect.ID = CryData.Materials[i].Name + "_effect";
                 idList.Add(tmpEffect.ID);
                 effects[i] = tmpEffect;
+
+                // create the profile_common for the effect
+                List<Grendgine_Collada_Profile_COMMON> profiles = new List<Grendgine_Collada_Profile_COMMON>();
+                Grendgine_Collada_Profile_COMMON profile = new Grendgine_Collada_Profile_COMMON();
+                profiles.Add(profile);
+                // Make the techniques for the profile
+                Grendgine_Collada_Effect_Technique_COMMON technique = new Grendgine_Collada_Effect_Technique_COMMON();
+                Grendgine_Collada_Phong phong = new Grendgine_Collada_Phong();
+                technique.Phong = phong;
+                technique.sID = "common";
+                profile.Technique = technique;
+                // Add all the emissive, etc features to the phong
+                phong.Eission = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type();
+                phong.Eission.Color = new Grendgine_Collada_Color();
+                phong.Eission.Color.sID = "emission";
+                phong.Eission.Color.Value_As_String = CryData.Materials[i].__Emissive;
+                phong.Diffuse = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type();
+                phong.Diffuse.Color = new Grendgine_Collada_Color();
+                phong.Diffuse.Color.Value_As_String = CryData.Materials[i].__Diffuse;
+                phong.Diffuse.Color.sID = "diffuse";
+                tmpEffect.Profile_COMMON = profiles.ToArray();
             }
             libraryEffects.Effect = effects;
             daeObject.Library_Effects = libraryEffects;
@@ -492,7 +517,7 @@ namespace CgfConverter
 
                 Grendgine_Collada_Matrix matrix = new Grendgine_Collada_Matrix();
                 StringBuilder matrixString = new StringBuilder();
-                matrixString.AppendFormat("{0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12} {13} {14} {15}",
+                matrixString.AppendFormat("{0:F7} {1:F7} {2:F7} {3:F7} {4:F7} {5:F7} {6:F7} {7:F7} {8:F7} {9:F7} {10:F7} {11:F7} {12:F7} {13:F7} {14:F7} {15:F7}",
                     nodeChunk.Transform.m11, nodeChunk.Transform.m12, nodeChunk.Transform.m13, nodeChunk.Transform.m14,
                     nodeChunk.Transform.m21, nodeChunk.Transform.m22, nodeChunk.Transform.m23, nodeChunk.Transform.m24,
                     nodeChunk.Transform.m31, nodeChunk.Transform.m32, nodeChunk.Transform.m33, nodeChunk.Transform.m34,
@@ -541,7 +566,7 @@ namespace CgfConverter
 
                 Grendgine_Collada_Matrix matrix = new Grendgine_Collada_Matrix();
                 StringBuilder matrixString = new StringBuilder();
-                matrixString.AppendFormat("{0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12} {13} {14} {15}",
+                matrixString.AppendFormat("{0:F7} {1:F7} {2:F7} {3:F7} {4:F7} {5:F7} {6:F7} {7:F7} {8:F7} {9:F7} {10:F7} {11:F7} {12:F7} {13:F7} {14:F7} {15:F7}",
                     nodeChunk.Transform.m11, nodeChunk.Transform.m12, nodeChunk.Transform.m13, nodeChunk.Transform.m14,
                     nodeChunk.Transform.m21, nodeChunk.Transform.m22, nodeChunk.Transform.m23, nodeChunk.Transform.m24,
                     nodeChunk.Transform.m31, nodeChunk.Transform.m32, nodeChunk.Transform.m33, nodeChunk.Transform.m34,
@@ -616,6 +641,24 @@ namespace CgfConverter
             {
                 Console.WriteLine("ID: {0}", ID);
             }
+        }
+        public void ValidateDoc()
+        {
+            /// <summary> This method will check all the URLs used in the Collada object and see if any reference IDs that don't exist.  It will
+            /// also check for duplicate IDs</summary>
+            /// 
+            // Check for duplicate IDs.  Populate the idList with all the IDs.
+            Console.WriteLine("In ValidateDoc");
+            XElement root = XElement.Load(daeOutputFile.FullName);
+            //Console.WriteLine("{0}", root.Value) ;
+            var nodes = root.Descendants("asset");//.Where(x => x.Attribute("id").Value == "adder_a_cockpit_standard");
+            foreach (var node in nodes)
+            {
+                // Write out the node for now.
+                Console.WriteLine("ID: {0}", node);
+            }
+
+            // Create a list of URLs and see if any reference an ID that doesn't exist.
         }
     }
 }
