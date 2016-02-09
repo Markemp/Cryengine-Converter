@@ -10,9 +10,9 @@ namespace grendgine_collada
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [XmlType(AnonymousType = true)]
-    // MODIFIED from original.  Using the new 1.5 schema instead of the old 1.4.1
-    [System.Xml.Serialization.XmlRootAttribute(ElementName = "COLLADA", Namespace = "https://www.khronos.org/files/collada_schema_1_5", IsNullable = false)]
+    //[System.Xml.Serialization.XmlRootAttribute(ElementName = "COLLADA", Namespace = "https://www.khronos.org/files/collada_schema_1_5", IsNullable = false)]
     //[System.Xml.Serialization.XmlRootAttribute(ElementName = "COLLADA", Namespace = "http://www.khronos.org/files/collada_schema_1_4", IsNullable = false)]
+    [System.Xml.Serialization.XmlRootAttribute(ElementName = "COLLADA", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = false)]
     public partial class Grendgine_Collada
     {
         [XmlAttribute("version")]
@@ -21,6 +21,18 @@ namespace grendgine_collada
         [XmlElement(ElementName = "asset")]
         public Grendgine_Collada_Asset Asset;
 
+        #region FX Elements
+        [XmlElement(ElementName = "library_images")]
+        public Grendgine_Collada_Library_Images Library_Images;
+
+        [XmlElement(ElementName = "library_effects")]
+        public Grendgine_Collada_Library_Effects Library_Effects;
+
+        [XmlElement(ElementName = "library_materials")]
+        public Grendgine_Collada_Library_Materials Library_Materials;
+
+        #endregion
+        
         #region Core Elements
 
         [XmlElement(ElementName = "library_animation_clips")]
@@ -65,19 +77,6 @@ namespace grendgine_collada
 
         [XmlElement(ElementName = "library_physics_scenes")]
         public Grendgine_Collada_Library_Physics_Scenes Library_Physics_Scenes;
-
-        #endregion
-
-        #region FX Elements
-
-        [XmlElement(ElementName = "library_effects")]
-        public Grendgine_Collada_Library_Effects Library_Effects;
-
-        [XmlElement(ElementName = "library_materials")]
-        public Grendgine_Collada_Library_Materials Library_Materials;
-
-        [XmlElement(ElementName = "library_images")]
-        public Grendgine_Collada_Library_Images Library_Images;
 
         #endregion
 

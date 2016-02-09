@@ -94,6 +94,7 @@ namespace CgfConverter.CryEngine_Core
                         for (Int32 i = 0; i < this.NumElements; i++)
                         {
                             this.Indices[i] = (UInt32)b.ReadUInt16();
+                            //Console.WriteLine("Indices {0}: {1}", i, this.Indices[i]);
                         }
                     }
                     if (this.BytesPerElement == 4)
