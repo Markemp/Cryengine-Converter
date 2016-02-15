@@ -102,7 +102,6 @@ namespace CgfConverter
             daeObject.Library_Images = libraryImages;
             List<Grendgine_Collada_Image> imageList = new List<Grendgine_Collada_Image>();
             // We now have the image library set up.  start to populate.
-            int numImages = 0;
             foreach (CryEngine_Core.Material material in CryData.Materials)
             {
                 // each mat will have a number of texture files.  Need to create an <image> for each of them.
@@ -111,14 +110,13 @@ namespace CgfConverter
                 {
                     // For each texture in the material, we make a new <image> object and add it to the list. 
                     Grendgine_Collada_Image tmpImage = new Grendgine_Collada_Image();
-                    //tmpImage.ID = material.Name + "_" + material.Textures[i].Map;
-                    tmpImage.sID = material.Name + "_" + material.Textures[i].Map;
+                    tmpImage.ID = material.Name + "_" + material.Textures[i].Map;
                     tmpImage.Init_From = new Grendgine_Collada_Init_From();
                     // Build the URI path to the file as a .dds, clean up the slashes.
                     StringBuilder builder;
                     if (material.Textures[i].File.Contains(@"/") || material.Textures[i].File.Contains(@"\"))
                     {
-                        builder = new StringBuilder(this.Args.DataDir + @"\" + material.Textures[i].File);
+                        builder = new StringBuilder(@"/" + this.Args.DataDir.Replace(@"\", @"/").Replace(" ", @"%20")  + @"/" + material.Textures[i].File);
                     }
                     else
                     {
@@ -130,12 +128,15 @@ namespace CgfConverter
                     else
                         builder.Replace(".dds", ".tif");
 
-                    builder.Replace(@"/", @"\");
-
-                    //tmpImage.Init_From.Ref = mats.Textures[i].File;
-                    tmpImage.Init_From.Ref = builder.ToString();
+                    // if 1.4.1, use URI.  If 1.5.0, use Ref.
+                    if (daeObject.Collada_Version == "1.4.1")
+                    {
+                        tmpImage.Init_From.Uri = builder.ToString();
+                    } else
+                    {
+                        tmpImage.Init_From.Ref = builder.ToString();
+                    }
                     imageList.Add(tmpImage);
-                    numImages++;                    // increment the number of image files found.
                 }
             }
             // images is the array of image (Gredgine_Collada_Image) objects
@@ -179,12 +180,18 @@ namespace CgfConverter
                 Grendgine_Collada_Effect tmpEffect = new Grendgine_Collada_Effect();
                 //tmpEffect.Name = CryData.Materials[i].Name;
                 tmpEffect.ID = CryData.Materials[i].Name + "-effect";
+                tmpEffect.Name = CryData.Materials[i].Name;
                 effects[i] = tmpEffect;
 
                 // create the profile_common for the effect
                 List<Grendgine_Collada_Profile_COMMON> profiles = new List<Grendgine_Collada_Profile_COMMON>();
                 Grendgine_Collada_Profile_COMMON profile = new Grendgine_Collada_Profile_COMMON();
                 profiles.Add(profile);
+
+                // Create a list for the new_params
+                List<Grendgine_Collada_New_Param> newparams = new List<Grendgine_Collada_New_Param>();
+
+                #region Create the Technique
                 // Make the techniques for the profile
                 Grendgine_Collada_Effect_Technique_COMMON technique = new Grendgine_Collada_Effect_Technique_COMMON();
                 Grendgine_Collada_Phong phong = new Grendgine_Collada_Phong();
@@ -192,18 +199,58 @@ namespace CgfConverter
                 technique.sID = "common";
                 profile.Technique = technique;
                 // Add all the emissive, etc features to the phong
-                phong.Eission = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type();
-                phong.Eission.Color = new Grendgine_Collada_Color();
-                phong.Eission.Color.sID = "emission";
-                phong.Eission.Color.Value_As_String = CryData.Materials[i].__Emissive.Replace(","," ");
+                phong.Emission = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type();
+                phong.Emission.Color = new Grendgine_Collada_Color();
+                phong.Emission.Color.sID = "emission";
+                phong.Emission.Color.Value_As_String = CryData.Materials[i].__Emissive.Replace(","," ");
                 phong.Diffuse = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type();
                 phong.Diffuse.Color = new Grendgine_Collada_Color();
                 phong.Diffuse.Color.Value_As_String = CryData.Materials[i].__Diffuse.Replace(",", " ");
                 phong.Diffuse.Color.sID = "diffuse";
+                phong.Specular = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type();
+                phong.Specular.Color = new Grendgine_Collada_Color();
+                phong.Specular.Color.sID = "specular";
+                phong.Specular.Color.Value_As_String = CryData.Materials[i].__Specular.Replace(",", " "); 
                 tmpEffect.Profile_COMMON = profiles.ToArray();
-                //phong.Shininess.Float = new Grendgine_Collada_SID_Float();
-                //phong.Shininess.Float.sID = "shininess";
+                phong.Shininess = new Grendgine_Collada_FX_Common_Float_Or_Param_Type();
+                phong.Shininess.Float = new Grendgine_Collada_SID_Float();
+                phong.Shininess.Float.sID = "shininess";
+                phong.Shininess.Float.Value = (float)CryData.Materials[i].Shininess;
+                phong.Index_Of_Refraction = new Grendgine_Collada_FX_Common_Float_Or_Param_Type();
+                phong.Index_Of_Refraction.Float = new Grendgine_Collada_SID_Float();
+                
+                #region set up the sampler and surface for the materials. 
+                // Check to see if the texture exists, and if so make a sampler and surface.
+                //foreach (var material in CryData.Materials.SelectMany(m => m.SelectMany(CryEngine.FlattenMaterials(m)))
+                foreach (var texture in CryData.Materials[i].Textures)
+                {
+                    Grendgine_Collada_New_Param texSurface = new Grendgine_Collada_New_Param();
+                    texSurface.sID = CleanName(texture.File) + "-surface";
+                    Grendgine_Collada_Surface surface = new Grendgine_Collada_Surface();
+                    texSurface.Surface = surface;
+                    surface.Init_From = new Grendgine_Collada_Init_From();
+                    //surface.Init_From.Uri = 
 
+
+                    Grendgine_Collada_New_Param texSampler = new Grendgine_Collada_New_Param();
+                    texSampler.sID = CleanName(texture.File) + "-sampler";
+
+                    // Add the Surface node
+                    Grendgine_Collada_Surface sampler2D = new Grendgine_Collada_Surface();
+                    texSurface.sID = CleanName(texture.File) + "-surface";
+                    texSurface.Surface.Type = "2D";
+                    texSurface.Surface.Init_From = new Grendgine_Collada_Init_From();
+                    //texSurface.Surface.Init_From.Uri = CleanName(texture.File);
+                    texSurface.Surface.Init_From.Uri = CryData.Materials[i].Name + "-effect";
+
+                    newparams.Add(texSurface);
+                    newparams.Add(texSampler);
+                }
+                profile.New_Param = new Grendgine_Collada_New_Param[newparams.Count];
+                profile.New_Param = newparams.ToArray();
+
+                #endregion
+                #endregion
             }
             libraryEffects.Effect = effects;
             daeObject.Library_Effects = libraryEffects;
@@ -347,7 +394,8 @@ namespace CgfConverter
                     // Create UV string
                     for (uint j = 0; j < tmpUVs.NumElements; j++)
                     {
-                        uvString.AppendFormat("{0:F7} {1:F7} ", tmpUVs.UVs[j].U, tmpUVs.UVs[j].V);   //1 - tmpUVs.UVs[j].V
+                        //uvString.AppendFormat("{0:F7} {1:F7} ", tmpUVs.UVs[j].U, tmpUVs.UVs[j].V);   //1 - tmpUVs.UVs[j].V
+                        uvString.AppendFormat("{0} {1} ", tmpUVs.UVs[j].U, tmpUVs.UVs[j].V);   //1 - tmpUVs.UVs[j].V
                     }
 
                     #region Create triangles string - Deprecated
@@ -723,5 +771,28 @@ namespace CgfConverter
 
             // Create a list of URLs and see if any reference an ID that doesn't exist.
         }
+
+        #region Private Methods
+        private string CleanName(string cleanMe) 
+        {
+            string[] stringSeparators = new string[] { @"\", @"/" };
+            string[] result;
+
+            if (cleanMe.Contains(@"/") || cleanMe.Contains(@"\"))
+            {
+                // Take out path info
+                result = cleanMe.Split(stringSeparators, StringSplitOptions.None);
+                cleanMe = result[result.Length - 1];
+            }
+            // Check to see if extension is added, and if so strip it out. Look for "."
+            if (cleanMe.Contains(@"."))
+            {
+                string[] periodSep = new string[] { @"." }; 
+                result = cleanMe.Split(periodSep,StringSplitOptions.None);
+                cleanMe = result[0];
+            }
+            return cleanMe;
+        }
+        #endregion
     }
 }
