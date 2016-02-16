@@ -14,27 +14,27 @@ namespace grendgine_collada
 		public Grendgine_Collada_TexCoord_Semantic TexCoord_Semantic;		
 			
 		[XmlElement(ElementName = "wrap_s")]
-		[System.ComponentModel.DefaultValueAttribute(Grendgine_Collada_FX_Sampler_Common_Wrap_Mode.WRAP)]		
+		//[System.ComponentModel.DefaultValueAttribute(Grendgine_Collada_FX_Sampler_Common_Wrap_Mode.WRAP)]		
 		public Grendgine_Collada_FX_Sampler_Common_Wrap_Mode Wrap_S;		
 		
 		[XmlElement(ElementName = "wrap_t")]
-		[System.ComponentModel.DefaultValueAttribute(Grendgine_Collada_FX_Sampler_Common_Wrap_Mode.WRAP)]		
+		//[System.ComponentModel.DefaultValueAttribute(Grendgine_Collada_FX_Sampler_Common_Wrap_Mode.WRAP)]		
 		public Grendgine_Collada_FX_Sampler_Common_Wrap_Mode Wrap_T;		
 		
 		[XmlElement(ElementName = "wrap_p")]
-		[System.ComponentModel.DefaultValueAttribute(Grendgine_Collada_FX_Sampler_Common_Wrap_Mode.WRAP)]		
+		//[System.ComponentModel.DefaultValueAttribute(Grendgine_Collada_FX_Sampler_Common_Wrap_Mode.WRAP)]		
 		public Grendgine_Collada_FX_Sampler_Common_Wrap_Mode Wrap_P;		
 		
 		[XmlElement(ElementName = "minfilter")]
-		[System.ComponentModel.DefaultValueAttribute(Grendgine_Collada_FX_Sampler_Common_Filter_Type.LINEAR)]		
+		//[System.ComponentModel.DefaultValueAttribute(Grendgine_Collada_FX_Sampler_Common_Filter_Type.LINEAR)]		
 		public Grendgine_Collada_FX_Sampler_Common_Filter_Type MinFilter;		
 		
 		[XmlElement(ElementName = "magfilter")]
-		[System.ComponentModel.DefaultValueAttribute(Grendgine_Collada_FX_Sampler_Common_Filter_Type.LINEAR)]		
+		//[System.ComponentModel.DefaultValueAttribute(Grendgine_Collada_FX_Sampler_Common_Filter_Type.LINEAR)]		
 		public Grendgine_Collada_FX_Sampler_Common_Filter_Type MagFilter;		
 		
 		[XmlElement(ElementName = "mipfilter")]
-		[System.ComponentModel.DefaultValueAttribute(Grendgine_Collada_FX_Sampler_Common_Filter_Type.LINEAR)]		
+		//[System.ComponentModel.DefaultValueAttribute(Grendgine_Collada_FX_Sampler_Common_Filter_Type.LINEAR)]		
 		public Grendgine_Collada_FX_Sampler_Common_Filter_Type MipFilter;		
 		
 		[XmlElement(ElementName = "border_color")]

@@ -102,25 +102,27 @@ namespace CgfConverter
             daeObject.Library_Images = libraryImages;
             List<Grendgine_Collada_Image> imageList = new List<Grendgine_Collada_Image>();
             // We now have the image library set up.  start to populate.
-            foreach (CryEngine_Core.Material material in CryData.Materials)
+            //foreach (CryEngine_Core.Material material in CryData.Materials)
+            for (int k=0; k < CryData.Materials.Length; k++)
             {
                 // each mat will have a number of texture files.  Need to create an <image> for each of them.
-                int numTextures = material.Textures.Length;
+                //int numTextures = material.Textures.Length;
+                int numTextures = CryData.Materials[k].Textures.Length;
                 for (int i = 0; i < numTextures; i++)
                 {
                     // For each texture in the material, we make a new <image> object and add it to the list. 
                     Grendgine_Collada_Image tmpImage = new Grendgine_Collada_Image();
-                    tmpImage.ID = material.Name + "_" + material.Textures[i].Map;
+                    tmpImage.ID = CryData.Materials[k].Name + "_" + CryData.Materials[k].Textures[i].Map;
                     tmpImage.Init_From = new Grendgine_Collada_Init_From();
                     // Build the URI path to the file as a .dds, clean up the slashes.
                     StringBuilder builder;
-                    if (material.Textures[i].File.Contains(@"/") || material.Textures[i].File.Contains(@"\"))
+                    if (CryData.Materials[k].Textures[i].File.Contains(@"/") || CryData.Materials[k].Textures[i].File.Contains(@"\"))
                     {
-                        builder = new StringBuilder(@"/" + this.Args.DataDir.Replace(@"\", @"/").Replace(" ", @"%20")  + @"/" + material.Textures[i].File);
+                        builder = new StringBuilder(@"/" + this.Args.DataDir.Replace(@"\", @"/").Replace(" ", @"%20")  + @"/" + CryData.Materials[k].Textures[i].File);
                     }
                     else
                     {
-                        builder = new StringBuilder(material.Textures[i].File);
+                        builder = new StringBuilder(CryData.Materials[k].Textures[i].File);
                     }
 
                     if (!this.Args.TiffTextures)
@@ -218,38 +220,41 @@ namespace CgfConverter
                 phong.Shininess.Float.Value = (float)CryData.Materials[i].Shininess;
                 phong.Index_Of_Refraction = new Grendgine_Collada_FX_Common_Float_Or_Param_Type();
                 phong.Index_Of_Refraction.Float = new Grendgine_Collada_SID_Float();
-                
+
                 #region set up the sampler and surface for the materials. 
                 // Check to see if the texture exists, and if so make a sampler and surface.
-                //foreach (var material in CryData.Materials.SelectMany(m => m.SelectMany(CryEngine.FlattenMaterials(m)))
-                foreach (var texture in CryData.Materials[i].Textures)
+                int numTextures = CryData.Materials[i].Textures.Length;
+                for (int j=0; j< CryData.Materials[i].Textures.Length; j++)
                 {
+                    // Add the Surface node
                     Grendgine_Collada_New_Param texSurface = new Grendgine_Collada_New_Param();
-                    texSurface.sID = CleanName(texture.File) + "-surface";
+                    texSurface.sID = CleanName(CryData.Materials[i].Textures[j].File) + "-surface";
                     Grendgine_Collada_Surface surface = new Grendgine_Collada_Surface();
                     texSurface.Surface = surface;
                     surface.Init_From = new Grendgine_Collada_Init_From();
-                    //surface.Init_From.Uri = 
-
-
-                    Grendgine_Collada_New_Param texSampler = new Grendgine_Collada_New_Param();
-                    texSampler.sID = CleanName(texture.File) + "-sampler";
-
-                    // Add the Surface node
-                    Grendgine_Collada_Surface sampler2D = new Grendgine_Collada_Surface();
-                    texSurface.sID = CleanName(texture.File) + "-surface";
+                    Grendgine_Collada_Surface surface2D = new Grendgine_Collada_Surface();
+                    //texSurface.sID = CleanName(CryData.Materials[i].Textures[j].File) + CryData.Materials[i].Textures[j].Map + "-surface";
                     texSurface.Surface.Type = "2D";
                     texSurface.Surface.Init_From = new Grendgine_Collada_Init_From();
                     //texSurface.Surface.Init_From.Uri = CleanName(texture.File);
-                    texSurface.Surface.Init_From.Uri = CryData.Materials[i].Name + "-effect";
+                    texSurface.Surface.Init_From.Uri = CryData.Materials[i].Name + "_" + CryData.Materials[i].Textures[j].Map;
+
+                    // Add the Sampler node
+                    Grendgine_Collada_New_Param texSampler = new Grendgine_Collada_New_Param();
+                    texSampler.sID = CleanName(CryData.Materials[i].Textures[j].File)  + "-sampler";
+                    Grendgine_Collada_Sampler2D sampler2D = new Grendgine_Collada_Sampler2D();
+                    texSampler.Sampler2D = sampler2D;
+                    Grendgine_Collada_Source samplerSource = new Grendgine_Collada_Source();
+                    texSampler.Sampler2D.Source = texSurface.sID;
 
                     newparams.Add(texSurface);
                     newparams.Add(texSampler);
                 }
+                #endregion
+
                 profile.New_Param = new Grendgine_Collada_New_Param[newparams.Count];
                 profile.New_Param = newparams.ToArray();
 
-                #endregion
                 #endregion
             }
             libraryEffects.Effect = effects;

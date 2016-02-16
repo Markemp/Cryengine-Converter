@@ -38,7 +38,11 @@ namespace grendgine_collada
 		public Grendgine_Collada_Technique[] Technique;			
 		
 		[XmlElement(ElementName = "asset")]
-		public Grendgine_Collada_Asset Asset;	
+		public Grendgine_Collada_Asset Asset;
+
+        // ggerber 1.4.1 compatibilitiy
+        [XmlAttribute("source")]
+        public string Source;
 	}
 }
 
