@@ -158,26 +158,35 @@ namespace CgfConverter.CryEngine_Core
                 #region case DataStreamTypeEnum.COLORS:
 
                 case DataStreamTypeEnum.COLORS:
-                    if (this.BytesPerElement == 3)
+                    switch (this.BytesPerElement)
                     {
-                        this.RGBColors = new IRGB[this.NumElements];
-                        for (Int32 i = 0; i < NumElements; i++)
-                        {
-                            this.RGBColors[i].r = b.ReadByte();
-                            this.RGBColors[i].g = b.ReadByte();
-                            this.RGBColors[i].b = b.ReadByte();
-                        }
-                    }
-                    if (this.BytesPerElement == 4)
-                    {
-                        this.RGBAColors = new IRGBA[this.NumElements];
-                        for (Int32 i = 0; i < this.NumElements; i++)
-                        {
-                            this.RGBAColors[i].r = b.ReadByte();
-                            this.RGBAColors[i].g = b.ReadByte();
-                            this.RGBAColors[i].b = b.ReadByte();
-                            this.RGBAColors[i].a = b.ReadByte();
-                        }
+                        case 3:
+                            this.RGBColors = new IRGB[this.NumElements];
+                            for (Int32 i = 0; i < NumElements; i++)
+                            {
+                                this.RGBColors[i].r = b.ReadByte();
+                                this.RGBColors[i].g = b.ReadByte();
+                                this.RGBColors[i].b = b.ReadByte();
+                            }
+                            break;
+                     
+                        case 4:
+                            this.RGBAColors = new IRGBA[this.NumElements];
+                            for (Int32 i = 0; i < this.NumElements; i++)
+                            {
+                                this.RGBAColors[i].r = b.ReadByte();
+                                this.RGBAColors[i].g = b.ReadByte();
+                                this.RGBAColors[i].b = b.ReadByte();
+                                this.RGBAColors[i].a = b.ReadByte();
+                            }
+                            break;
+                        default:
+                            Utils.Log("Unknown Color Depth");
+                            for (Int32 i = 0; i < this.NumElements; i++)
+                            {
+                                this.SkipBytes(b, this.BytesPerElement);
+                            }
+                            break;
                     }
                     break;
 
@@ -189,50 +198,59 @@ namespace CgfConverter.CryEngine_Core
                     this.Vertices = new Vector3[this.NumElements];
                     this.Normals = new Vector3[this.NumElements];
                     this.UVs = new UV[this.NumElements];
-                    if (this.BytesPerElement == 16)  // new Star Citizen files
+                    switch (this.BytesPerElement)  // new Star Citizen files
                     {
-                        for (Int32 i = 0; i < this.NumElements; i++)
-                        {
-                            Half xshort = new Half();
-                            xshort.bits = b.ReadUInt16();
-                            this.Vertices[i].x = xshort.ToSingle();
+                        case 16:
+                            for (Int32 i = 0; i < this.NumElements; i++)
+                            {
+                                Half xshort = new Half();
+                                xshort.bits = b.ReadUInt16();
+                                this.Vertices[i].x = xshort.ToSingle();
 
-                            Half yshort = new Half();
-                            yshort.bits = b.ReadUInt16();
-                            this.Vertices[i].y = yshort.ToSingle();
+                                Half yshort = new Half();
+                                yshort.bits = b.ReadUInt16();
+                                this.Vertices[i].y = yshort.ToSingle();
 
-                            Half zshort = new Half();
-                            zshort.bits = b.ReadUInt16();
-                            this.Vertices[i].z = zshort.ToSingle();
+                                Half zshort = new Half();
+                                zshort.bits = b.ReadUInt16();
+                                this.Vertices[i].z = zshort.ToSingle();
 
-                            Half xnorm = new Half();
-                            xnorm.bits = b.ReadUInt16();
-                            this.Normals[i].x = xnorm.ToSingle();
+                                Half xnorm = new Half();
+                                xnorm.bits = b.ReadUInt16();
+                                this.Normals[i].x = xnorm.ToSingle();
 
-                            Half ynorm = new Half();
-                            ynorm.bits = b.ReadUInt16();
-                            this.Normals[i].y = ynorm.ToSingle();
+                                Half ynorm = new Half();
+                                ynorm.bits = b.ReadUInt16();
+                                this.Normals[i].y = ynorm.ToSingle();
 
-                            Half znorm = new Half();
-                            znorm.bits = b.ReadUInt16();
-                            this.Normals[i].z = znorm.ToSingle();
+                                Half znorm = new Half();
+                                znorm.bits = b.ReadUInt16();
+                                this.Normals[i].z = znorm.ToSingle();
 
-                            Half uvu = new Half();
-                            uvu.bits = b.ReadUInt16();
-                            this.UVs[i].U = uvu.ToSingle();
+                                Half uvu = new Half();
+                                uvu.bits = b.ReadUInt16();
+                                this.UVs[i].U = uvu.ToSingle();
 
-                            Half uvv = new Half();
-                            uvv.bits = b.ReadUInt16();
-                            this.UVs[i].V = uvv.ToSingle();
+                                Half uvv = new Half();
+                                uvv.bits = b.ReadUInt16();
+                                this.UVs[i].V = uvv.ToSingle();
 
-                            //short w = b.ReadInt16();  // dump this as not needed.  Last 2 bytes are surplus...sort of.
-                            //if (i < 20)
-                            //{
-                            //    Utils.Log(LogLevelEnum.Debug, "{0:F7} {1:F7} {2:F7} {3:F7} {4:F7}",
-                            //        Vertices[i].x, Vertices[i].y, Vertices[i].z,
-                            //        UVs[i].U, UVs[i].V);
-                            //}
-                        }
+                                //short w = b.ReadInt16();  // dump this as not needed.  Last 2 bytes are surplus...sort of.
+                                //if (i < 20)
+                                //{
+                                //    Utils.Log(LogLevelEnum.Debug, "{0:F7} {1:F7} {2:F7} {3:F7} {4:F7}",
+                                //        Vertices[i].x, Vertices[i].y, Vertices[i].z,
+                                //        UVs[i].U, UVs[i].V);
+                                //}
+                            }
+                            break;
+                        default:
+                            Utils.Log("Unknown VertUV structure");
+                            for (Int32 i = 0; i < this.NumElements; i++)
+                            {
+                                this.SkipBytes(b, this.BytesPerElement);
+                            }
+                            break;
                     }
                     break;
 

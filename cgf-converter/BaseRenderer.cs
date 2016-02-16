@@ -37,7 +37,7 @@ namespace CgfConverter
                 String preserveDir = preservePath ? Path.GetDirectoryName(this.CryData.InputFile) : "";
 
                 // Remove drive letter if necessary
-                if (!String.IsNullOrWhiteSpace(Path.GetPathRoot(preserveDir)))
+                if (!String.IsNullOrWhiteSpace(preserveDir) && !String.IsNullOrWhiteSpace(Path.GetPathRoot(preserveDir)))
                 {
                     preserveDir = preserveDir.Replace(Path.GetPathRoot(preserveDir), "");
                 }
