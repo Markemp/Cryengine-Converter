@@ -144,6 +144,19 @@ namespace CgfConverter
             }  // End of writing the output file
         }
 
+        public Double safe(Double value)
+        {
+            if (value == Double.NegativeInfinity)
+                return Double.MinValue;
+
+            if (value == Double.PositiveInfinity)
+                return Double.MaxValue;
+
+            if (value == Double.NaN)
+                return 0;
+
+            return value;
+        }
         public void WriteObjNode(StreamWriter f, CryEngine_Core.ChunkNode chunkNode)  // Pass a node to this to have it write to the Stream
         {
             // Get the Transform here. It's the node chunk Transform.m(41/42/42) divided by 100, added to the parent transform.
@@ -206,7 +219,7 @@ namespace CgfConverter
                         // Get the transform.
                         Vector3 vertex = chunkNode.GetTransform(tmpVertsUVs.Vertices[j]);
 
-                        f.WriteLine("v {0:F7} {1:F7} {2:F7}", vertex.x, vertex.y, vertex.z);
+                        f.WriteLine("v {0:F7} {1:F7} {2:F7}", safe(vertex.x), safe(vertex.y), safe(vertex.z));
                     }
 
                     f.WriteLine();
@@ -215,7 +228,7 @@ namespace CgfConverter
                         j < meshSubset.NumVertices + meshSubset.FirstVertex;
                         j++)
                     {
-                        f.WriteLine("vt {0:F7} {1:F7} 0", tmpVertsUVs.UVs[j].U, 1 - tmpVertsUVs.UVs[j].V);
+                        f.WriteLine("vt {0:F7} {1:F7} 0", safe(tmpVertsUVs.UVs[j].U), safe(1 - tmpVertsUVs.UVs[j].V));
                     }
 
                     #endregion
@@ -233,7 +246,7 @@ namespace CgfConverter
                             // Rotate/translate the vertex
                             Vector3 vertex = chunkNode.GetTransform(tmpVertices.Vertices[j]);
 
-                            f.WriteLine("v {0:F7} {1:F7} {2:F7}", vertex.x, vertex.y, vertex.z);
+                            f.WriteLine("v {0:F7} {1:F7} {2:F7}", safe(vertex.x), safe(vertex.y), safe(vertex.z));
                         }
                         else
                         {
@@ -247,7 +260,7 @@ namespace CgfConverter
                         j < meshSubset.NumVertices + meshSubset.FirstVertex;
                         j++)
                     {
-                        f.WriteLine("vt {0:F7} {1:F7} 0", tmpUVs.UVs[j].U, 1 - tmpUVs.UVs[j].V);
+                        f.WriteLine("vt {0:F7} {1:F7} 0", safe(tmpUVs.UVs[j].U), safe(1 - tmpUVs.UVs[j].V));
                     }
 
                     #endregion

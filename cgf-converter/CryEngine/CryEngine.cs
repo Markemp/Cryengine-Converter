@@ -117,7 +117,7 @@ namespace CgfConverter
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
 
                 // Then try relative to the ObjectDir
-                if (!materialFile.Exists)
+                if (!materialFile.Exists && dataDir != null)
                     materialFile = new FileInfo(Path.Combine(dataDir, cleanName));
                 if (materialFile.Extension != "mtl")
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
