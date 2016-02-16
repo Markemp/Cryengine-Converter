@@ -11,9 +11,12 @@ namespace grendgine_collada
 		
 		
 	    [XmlElement(ElementName = "source")]
-		public Grendgine_Collada_Source[] Source;		
-		
-	    [XmlElement(ElementName = "lines")]
+		public Grendgine_Collada_Source[] Source;
+
+        [XmlElement(ElementName = "vertices")]
+        public Grendgine_Collada_Vertices Vertices;
+
+        [XmlElement(ElementName = "lines")]
 		public Grendgine_Collada_Lines[] Lines;		
 	    
 		[XmlElement(ElementName = "linestrips")]
@@ -34,9 +37,7 @@ namespace grendgine_collada
 	    [XmlElement(ElementName = "tristrips")]
 		public Grendgine_Collada_Tristrips[] Tristrips;
 		
-		
-	    [XmlElement(ElementName = "vertices")]
-		public Grendgine_Collada_Vertices Vertices;		
+	
 		
 	    [XmlElement(ElementName = "extra")]
 		public Grendgine_Collada_Extra[] Extra;		

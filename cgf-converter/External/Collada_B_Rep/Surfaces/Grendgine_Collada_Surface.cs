@@ -13,7 +13,10 @@ namespace grendgine_collada
 		
 		[XmlAttribute("sid")]
 		public string sID;
-		
+
+        // ggerber 1.4.1 attribue
+        [XmlAttribute("type")]
+        public string Type;
 
 		[XmlElement(ElementName = "cone")]
 		public Grendgine_Collada_Cone Cone;
@@ -36,13 +39,15 @@ namespace grendgine_collada
 	    [XmlElement(ElementName = "swept_surface")]
 		public Grendgine_Collada_Swept_Surface Swept_Surface;
 	
-
-		
 		[XmlElement(ElementName = "orient")]
 		public Grendgine_Collada_Orient[] Orient;		
 		
 	    [XmlElement(ElementName = "origin")]
 		public Grendgine_Collada_Origin Origin;
+
+        //ggerber 1.4.1
+        [XmlElement(ElementName = "init_from")]
+        public Grendgine_Collada_Init_From Init_From;
 
 	}
 }

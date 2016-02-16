@@ -10,7 +10,7 @@ namespace grendgine_collada
 	public partial class Grendgine_Collada_Phong
 	{
 		[XmlElement(ElementName = "emission")]
-		public Grendgine_Collada_FX_Common_Color_Or_Texture_Type Eission;		
+		public Grendgine_Collada_FX_Common_Color_Or_Texture_Type Emission;		
 		
 		[XmlElement(ElementName = "ambient")]
 		public Grendgine_Collada_FX_Common_Color_Or_Texture_Type Ambient;		

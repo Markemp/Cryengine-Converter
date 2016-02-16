@@ -9,7 +9,8 @@ namespace grendgine_collada
 	[System.Xml.Serialization.XmlRootAttribute(ElementName="init_from", Namespace="http://www.collada.org/2005/11/COLLADASchema", IsNullable=true)]
 	public partial class Grendgine_Collada_Init_From
 	{
-		[XmlAttribute("mips_generate")]
+
+        [XmlAttribute("mips_generate")]
 		public bool Mips_Generate;
 		
 		[XmlAttribute("array_index")]
@@ -17,8 +18,12 @@ namespace grendgine_collada
 		
 		[XmlAttribute("mip_index")]
 		public int Mip_Index;
-		
-		[XmlAttribute("depth")]
+
+        // Uri added to support 1.4.1 formats
+        [XmlText()]
+        public string Uri;
+
+        [XmlAttribute("depth")]
 		public int Depth;
 		
 		[XmlAttribute("face")]

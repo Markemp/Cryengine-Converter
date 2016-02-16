@@ -28,8 +28,13 @@ namespace CgfConverter
             {
                 // Empty output directory means place alongside original models
                 // If you want relative path, use "."
-
-                outputFile = Path.Combine(new FileInfo(this.CryData.InputFile).DirectoryName, String.Format("{0}_out.{1}", Path.GetFileNameWithoutExtension(this.CryData.InputFile), extension));
+                if (Args.AllowConflicts )
+                {
+                    outputFile = Path.Combine(new FileInfo(this.CryData.InputFile).DirectoryName, String.Format("{0}.{1}", Path.GetFileNameWithoutExtension(this.CryData.InputFile), extension));
+                } else
+                {
+                    outputFile = Path.Combine(new FileInfo(this.CryData.InputFile).DirectoryName, String.Format("{0}_out.{1}", Path.GetFileNameWithoutExtension(this.CryData.InputFile), extension));
+                }
             }
             else
             {

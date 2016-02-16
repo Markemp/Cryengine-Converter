@@ -17,18 +17,20 @@ Version 0.8
 
 Version 0.9
 - .mtl files - convert Cryengine .mtl files to .obj .mtl files.  Better mtl file handling (search given obj dirs) **COMPLETE**
-- Break classes into separate files.      ** IN PROGRESS **
-- Input validation, error checking, etc.  ** IN PROGRESS **
+- Break classes into separate files.      **COMPLETE**
+- Input validation, error checking, etc.  **COMPLETE**
 - Move version, id, type and offset so they are read from the chunk table, not the chunks.  **COMPLETE**  8/29
-- add build version into the output
+- add build version into the output       **COMPLETE**
 - Bug fix so some .obj files import properly to Blender (exploded geometry issue)  **COMPLETE** 8/29
-- Output to a user defined file (default to <object name.obj>)
+- Output to a user defined file (default to <object name.obj>)    **COMPLETE** 12/2015
 - Icon for the exe.
 - Implement controller and meshphysics chunks ** COMPLETE 10/31 **
+- Collada exporter ** IN PROGRESS **
 
 Version 1.0
+- Implement animation and armature files.  ** IN PROGRESS ** (Armatures imported, but can't export yet)
 - Export directly to .blend files  **IN PROGRESS**
 
 Version 1.1
-- Implement animation and armature files.  ** IN PROGRESS ** (Armatures imported, but can't export yet)
+- TBD
   

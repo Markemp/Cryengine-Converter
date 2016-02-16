@@ -136,7 +136,7 @@ namespace CgfConverter
                 {
                     // Utils.Log(LogLevelEnum.Debug, "Located material file {0}", materialFile.Name);
 
-                    this.Materials = this.FlattenMaterials(material).Skip(1).ToArray();
+                    this.Materials = CryEngine.FlattenMaterials(material).Skip(1).ToArray();
 
                     // Early return - we have the material map
                     return;
@@ -218,24 +218,26 @@ namespace CgfConverter
 
         #endregion
 
-        #region Private Methods
-
         /// <summary>
         /// Flatten all child materials into a one dimensional list
         /// </summary>
         /// <param name="material"></param>
         /// <returns></returns>
-        private IEnumerable<CryEngine_Core.Material> FlattenMaterials(CryEngine_Core.Material material)
+        public static IEnumerable<CryEngine_Core.Material> FlattenMaterials(CryEngine_Core.Material material)
         {
             if (material != null)
             {
                 yield return material;
 
                 if (material.SubMaterials != null)
-                    foreach (var subMaterial in material.SubMaterials.SelectMany(m => this.FlattenMaterials(m)))
+                    foreach (var subMaterial in material.SubMaterials.SelectMany(m => CryEngine.FlattenMaterials(m)))
                         yield return subMaterial;
             }
         }
+
+        #region Private Methods
+
+
 
         #endregion
     }

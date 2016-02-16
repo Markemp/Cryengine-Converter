@@ -18,7 +18,7 @@ namespace grendgine_collada
 		public string Name;				
 
 		[XmlAttribute("type")]
-		[System.ComponentModel.DefaultValueAttribute(Grendgine_Collada_Node_Type.NODE)]
+		//[System.ComponentModel.DefaultValueAttribute(Grendgine_Collada_Node_Type.NODE)]
 		public Grendgine_Collada_Node_Type Type;				
 
 		[XmlAttribute("layer")]

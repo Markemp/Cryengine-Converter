@@ -26,6 +26,11 @@ namespace CgfConverter
         /// <summary>
         /// Name to group all meshes under
         /// </summary>
+        /// 
+        public Boolean AllowConflicts { get; internal set; }
+        /// <summary>
+        /// Allows naming conflicts for mtl file
+        /// </summary>
         public Boolean GroupMeshes { get; internal set; }
         /// <summary>
         /// Render CryTek format files
@@ -267,6 +272,13 @@ namespace CgfConverter
                         break;
 
                     #endregion
+                    #region case "-allowconflict"...
+                    case "-allowconflict":
+                        AllowConflicts = true;
+                        Console.WriteLine("Allow conflicts for mtl files enabled");
+                        break;
+                    #endregion
+
                     #region default...
 
                     default:
@@ -309,6 +321,7 @@ namespace CgfConverter
             Console.WriteLine("<.cgf file>:      Mandatory.  The name of the .cgf, .cga or .skin file to process");
             Console.WriteLine("-outputfile:      The name of the file to write the output.  Default is [root].obj");
             Console.WriteLine("-noconflict:      Use non-conflicting naming scheme (<cgf File>_out.obj)");
+            Console.WriteLine("-allowconflict:   Allows conflicts in .mtl file name");
             Console.WriteLine("-objectdir:       The name where the base Objects directory is located.  Used to read mtl file");
             Console.WriteLine("                  Defaults to current directory.");
             Console.WriteLine("-obj:             Export Wavefront format files (Default: true)");
