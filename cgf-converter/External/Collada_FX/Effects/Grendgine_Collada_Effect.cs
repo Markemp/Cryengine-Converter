@@ -18,9 +18,6 @@ namespace grendgine_collada
 		[XmlElement(ElementName = "asset")]
 		public Grendgine_Collada_Asset Asset;
 		
-	    [XmlElement(ElementName = "extra")]
-		public Grendgine_Collada_Extra[] Extra;	
-		
 		[XmlElement(ElementName = "annotate")]
 		public Grendgine_Collada_Annotate[] Annotate;
 		
@@ -44,7 +41,9 @@ namespace grendgine_collada
 		
 		[XmlElement(ElementName = "profile_COMMON")]
 		public Grendgine_Collada_Profile_COMMON[] Profile_COMMON;
-				
-	}
+
+        [XmlElement(ElementName = "extra")]
+        public Grendgine_Collada_Extra[] Extra;
+    }
 }
 

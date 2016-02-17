@@ -192,39 +192,10 @@ namespace CgfConverter
 
                 // Create a list for the new_params
                 List<Grendgine_Collada_New_Param> newparams = new List<Grendgine_Collada_New_Param>();
-
-                #region Create the Technique
-                // Make the techniques for the profile
-                Grendgine_Collada_Effect_Technique_COMMON technique = new Grendgine_Collada_Effect_Technique_COMMON();
-                Grendgine_Collada_Phong phong = new Grendgine_Collada_Phong();
-                technique.Phong = phong;
-                technique.sID = "common";
-                profile.Technique = technique;
-                // Add all the emissive, etc features to the phong
-                phong.Emission = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type();
-                phong.Emission.Color = new Grendgine_Collada_Color();
-                phong.Emission.Color.sID = "emission";
-                phong.Emission.Color.Value_As_String = CryData.Materials[i].__Emissive.Replace(","," ");
-                phong.Diffuse = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type();
-                phong.Diffuse.Color = new Grendgine_Collada_Color();
-                phong.Diffuse.Color.Value_As_String = CryData.Materials[i].__Diffuse.Replace(",", " ");
-                phong.Diffuse.Color.sID = "diffuse";
-                phong.Specular = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type();
-                phong.Specular.Color = new Grendgine_Collada_Color();
-                phong.Specular.Color.sID = "specular";
-                phong.Specular.Color.Value_As_String = CryData.Materials[i].__Specular.Replace(",", " "); 
-                tmpEffect.Profile_COMMON = profiles.ToArray();
-                phong.Shininess = new Grendgine_Collada_FX_Common_Float_Or_Param_Type();
-                phong.Shininess.Float = new Grendgine_Collada_SID_Float();
-                phong.Shininess.Float.sID = "shininess";
-                phong.Shininess.Float.Value = (float)CryData.Materials[i].Shininess;
-                phong.Index_Of_Refraction = new Grendgine_Collada_FX_Common_Float_Or_Param_Type();
-                phong.Index_Of_Refraction.Float = new Grendgine_Collada_SID_Float();
-
                 #region set up the sampler and surface for the materials. 
                 // Check to see if the texture exists, and if so make a sampler and surface.
                 int numTextures = CryData.Materials[i].Textures.Length;
-                for (int j=0; j< CryData.Materials[i].Textures.Length; j++)
+                for (int j = 0; j < CryData.Materials[i].Textures.Length; j++)
                 {
                     // Add the Surface node
                     Grendgine_Collada_New_Param texSurface = new Grendgine_Collada_New_Param();
@@ -241,7 +212,7 @@ namespace CgfConverter
 
                     // Add the Sampler node
                     Grendgine_Collada_New_Param texSampler = new Grendgine_Collada_New_Param();
-                    texSampler.sID = CleanName(CryData.Materials[i].Textures[j].File)  + "-sampler";
+                    texSampler.sID = CleanName(CryData.Materials[i].Textures[j].File) + "-sampler";
                     Grendgine_Collada_Sampler2D sampler2D = new Grendgine_Collada_Sampler2D();
                     texSampler.Sampler2D = sampler2D;
                     Grendgine_Collada_Source samplerSource = new Grendgine_Collada_Source();
@@ -252,10 +223,106 @@ namespace CgfConverter
                 }
                 #endregion
 
+                #region Create the Technique
+                // Make the techniques for the profile
+                Grendgine_Collada_Effect_Technique_COMMON technique = new Grendgine_Collada_Effect_Technique_COMMON();
+                Grendgine_Collada_Phong phong = new Grendgine_Collada_Phong();
+                technique.Phong = phong;
+                technique.sID = "common";
+                profile.Technique = technique;
+
+                phong.Diffuse = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type();
+                phong.Specular = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type();
+
+                // Add all the emissive, etc features to the phong
+                // Need to check if a texture exists.  If so, refer to the sampler.  Should be a <Texture Map="Diffuse" line if there is a map.
+                bool diffound = false;
+                bool specfound = false;
+
+                foreach (var texture in CryData.Materials[i].Textures)
+                //for (int j=0; j < CryData.Materials[i].Textures.Length; j++)
+                {
+                    //Console.WriteLine("Processing material texture {0}", CleanName(texture.File));
+                    if (texture.Map == CryEngine_Core.Material.Texture.MapTypeEnum.Diffuse)
+                    {
+                        //Console.WriteLine("Found Diffuse Map");
+                        diffound = true;
+                        phong.Diffuse.Texture = new Grendgine_Collada_Texture();
+                        // Texcoord is the ID of the UV source in geometries.  Not needed.
+                        phong.Diffuse.Texture.Texture = CleanName(texture.File) + "-sampler";
+                    }
+                    if (texture.Map == CryEngine_Core.Material.Texture.MapTypeEnum.Specular)
+                    {
+                        //Console.WriteLine("Found spec map");
+                        specfound = true;
+                        phong.Specular.Texture = new Grendgine_Collada_Texture();
+                        phong.Specular.Texture.Texture = CleanName(texture.File) + "-sampler";
+                    }
+                    if (texture.Map == CryEngine_Core.Material.Texture.MapTypeEnum.Bumpmap)
+                    {
+                        // Bump maps go in an extra node.
+                        // bump maps are added to an extra node.
+                        Grendgine_Collada_Extra[] extras = new Grendgine_Collada_Extra[1];
+                        Grendgine_Collada_Extra extra = new Grendgine_Collada_Extra();
+                        extras[0] = extra;
+
+                        technique.Extra = extras;
+                        // Create the technique for the extra
+                        
+                        Grendgine_Collada_Technique[] extraTechniques = new Grendgine_Collada_Technique[1];
+                        Grendgine_Collada_Technique extraTechnique = new Grendgine_Collada_Technique();
+                        extraTechniques[0] = extraTechnique;
+                        extra.Technique = extraTechniques;
+                        extraTechnique.profile = "FCOLLADA";
+                        extraTechnique.Data = new XmlElement[1];
+                        //extraTechnique.Bump = new string('');
+                        
+                        //extraTechnique.Data = 
+                        // create the texture node
+                        Grendgine_Collada_Texture bumpTex = new Grendgine_Collada_Texture();
+                        bumpTex.Texture = CleanName(texture.File) + "-sampler";
+
+                    }
+                }
+                if (diffound == false)
+                {
+                    phong.Diffuse.Color = new Grendgine_Collada_Color();
+                    phong.Diffuse.Color.Value_As_String = CryData.Materials[i].__Diffuse.Replace(",", " ");
+                    phong.Diffuse.Color.sID = "diffuse";
+                }
+                if (specfound == false)
+                {
+                    //Console.WriteLine("No spec found, using color");
+                    phong.Specular.Color = new Grendgine_Collada_Color();
+                    phong.Specular.Color.sID = "specular";
+                    phong.Specular.Color.Value_As_String = CryData.Materials[i].__Specular.Replace(",", " ");
+                }
+
+                phong.Emission = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type();
+                phong.Emission.Color = new Grendgine_Collada_Color();
+                phong.Emission.Color.sID = "emission";
+                phong.Emission.Color.Value_As_String = CryData.Materials[i].__Emissive.Replace(","," ");
+                phong.Shininess = new Grendgine_Collada_FX_Common_Float_Or_Param_Type();
+                phong.Shininess.Float = new Grendgine_Collada_SID_Float();
+                phong.Shininess.Float.sID = "shininess";
+                phong.Shininess.Float.Value = (float)CryData.Materials[i].Shininess;
+                phong.Index_Of_Refraction = new Grendgine_Collada_FX_Common_Float_Or_Param_Type();
+                phong.Index_Of_Refraction.Float = new Grendgine_Collada_SID_Float();
+
+                phong.Transparent = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type();
+                phong.Transparent.Color = new Grendgine_Collada_Color();
+                phong.Transparent.Opaque = new Grendgine_Collada_FX_Opaque_Channel();
+                phong.Transparent.Color.Value_As_String = (1 - CryData.Materials[i].Opacity).ToString();  // Subtract from 1 for proper value.
+
+                #endregion
+
+
+
+                tmpEffect.Profile_COMMON = profiles.ToArray();
                 profile.New_Param = new Grendgine_Collada_New_Param[newparams.Count];
                 profile.New_Param = newparams.ToArray();
 
-                #endregion
+                
             }
             libraryEffects.Effect = effects;
             daeObject.Library_Effects = libraryEffects;
@@ -317,7 +384,7 @@ namespace CgfConverter
                     if (tmpMeshChunk.IndicesData != 0)
                     {
                         tmpIndices = (CryEngine_Core.ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.IndicesData];
-                        tmpIndices.WriteChunk();
+                        //tmpIndices.WriteChunk();
                     }
 
                     // tmpGeo is a Geometry object for each meshsubset.  Name will be "Nodechunk name_matID".  Hopefully there is only one matID used per submesh
@@ -399,8 +466,7 @@ namespace CgfConverter
                     // Create UV string
                     for (uint j = 0; j < tmpUVs.NumElements; j++)
                     {
-                        //uvString.AppendFormat("{0:F7} {1:F7} ", tmpUVs.UVs[j].U, tmpUVs.UVs[j].V);   //1 - tmpUVs.UVs[j].V
-                        uvString.AppendFormat("{0} {1} ", tmpUVs.UVs[j].U, tmpUVs.UVs[j].V);   //1 - tmpUVs.UVs[j].V
+                        uvString.AppendFormat("{0} {1} ", tmpUVs.UVs[j].U, 1 - tmpUVs.UVs[j].V);  
                     }
 
                     #region Create triangles string - Deprecated
@@ -467,7 +533,7 @@ namespace CgfConverter
                         // Create the vcount list.  All triangles, so the subset number of indices.
                         // This will have to get tuned as we get multiple polylists for a submesh
                         StringBuilder vc = new StringBuilder();
-                        Console.WriteLine("Creating vcount for Indices {0} to {1}", tmpMeshSubsets.MeshSubsets[j].FirstIndex, (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices));
+                        //Console.WriteLine("Creating vcount for Indices {0} to {1}", tmpMeshSubsets.MeshSubsets[j].FirstIndex, (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices));
                         for (uint k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
                         {
                             vc.AppendFormat("3 ");
@@ -754,7 +820,7 @@ namespace CgfConverter
             /// also check for duplicate IDs</summary>
             /// 
             // Check for duplicate IDs.  Populate the idList with all the IDs.
-            Console.WriteLine("In ValidateDoc");
+            //Console.WriteLine("In ValidateDoc");
             XElement root = XElement.Load(daeOutputFile.FullName);
             //Console.WriteLine("{0}", root.Value) ;
             //var nodes = root.Descendants("asset");//.Where(x => x.Attribute("id").Value == "adder_a_cockpit_standard");
