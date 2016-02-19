@@ -19,11 +19,6 @@ namespace grendgine_collada
 
 		[XmlAnyElement]
 		public XmlElement[] Data;
-
-        // ggerber FCOLLADA bump map stuff
-        [XmlElement("bump")]
-        public string Bump;
-
 	}
 }
 

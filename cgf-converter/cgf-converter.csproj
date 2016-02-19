@@ -107,6 +107,8 @@
     <Compile Include="Blender.cs" />
     <Compile Include="cgf-converter.cs" />
     <Compile Include="COLLADA.cs" />
+    <Compile Include="Collada\Grendgine_Collada_BumpMap.cs" />
+    <Compile Include="Collada\Grendgine_Collada_Technique.cs" />
     <Compile Include="CryEngine\CryEngine.cs" />
     <Compile Include="CryEngine\CryRender.cs" />
     <Compile Include="CryEngine_Core\IBinaryChunk.cs" />
