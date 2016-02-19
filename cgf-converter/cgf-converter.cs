@@ -27,14 +27,14 @@ namespace CgfConverter
 
             grendgine_collada.Grendgine_Collada_Technique option1 = new grendgine_collada.Grendgine_Collada_Technique
             {
-                Data = new XmlElement[] {
+                Bump = new Grendgine_Collada_BumpMap[] {
                     bump
                 }
             };
-
+            
             grendgine_collada.Grendgine_Collada_Technique option2 = new grendgine_collada.Grendgine_Collada_Technique
             {
-                Bump = new Grendgine_Collada_BumpMap[] {
+                Data = new XmlElement[] {
                     bump
                 }
             };
