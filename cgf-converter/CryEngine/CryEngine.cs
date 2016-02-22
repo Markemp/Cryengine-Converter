@@ -72,10 +72,7 @@ namespace CgfConverter
                     continue;
 
                 String cleanName = mtlChunk.Name;
-                Console.WriteLine("CleanName is {0}", mtlChunk.Name);
 
-                // TODO: Investigate if we want to clean paths nicer
-                // TODO: Modify this so mtlfile chunks with slashes (object/mechs/adder/cockpit/adr_cockpit.mtl) work properly
                 FileInfo materialFile;
 
                 if (mtlChunk.Name.Contains(@"/") || mtlChunk.Name.Contains(@"\"))
@@ -137,6 +134,7 @@ namespace CgfConverter
                     // Utils.Log(LogLevelEnum.Debug, "Located material file {0}", materialFile.Name);
 
                     this.Materials = CryEngine.FlattenMaterials(material).Skip(1).ToArray();
+                    Console.WriteLine("Flattened material {0}", material.Name);
 
                     // Early return - we have the material map
                     return;

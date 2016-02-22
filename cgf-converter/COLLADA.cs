@@ -39,8 +39,8 @@ namespace CgfConverter
             WriteAsset();
             WriteLibrary_Images();
             WriteScene();
-            WriteLibrary_Materials();
             WriteLibrary_Effects();
+            WriteLibrary_Materials();
             WriteLibrary_Geometries();
             WriteLibrary_VisualScenes();
             WriteIDs();
@@ -242,7 +242,7 @@ namespace CgfConverter
                 foreach (var texture in CryData.Materials[i].Textures)
                 //for (int j=0; j < CryData.Materials[i].Textures.Length; j++)
                 {
-                    //Console.WriteLine("Processing material texture {0}", CleanName(texture.File));
+                    Console.WriteLine("Processing material texture {0}", CleanName(texture.File));
                     if (texture.Map == CryEngine_Core.Material.Texture.MapTypeEnum.Diffuse)
                     {
                         //Console.WriteLine("Found Diffuse Map");
@@ -267,21 +267,23 @@ namespace CgfConverter
                         extras[0] = extra;
 
                         technique.Extra = extras;
+                        
                         // Create the technique for the extra
                         
                         Grendgine_Collada_Technique[] extraTechniques = new Grendgine_Collada_Technique[1];
                         Grendgine_Collada_Technique extraTechnique = new Grendgine_Collada_Technique();
-                        extraTechniques[0] = extraTechnique;
                         extra.Technique = extraTechniques;
-                        extraTechnique.profile = "FCOLLADA";
-                        extraTechnique.Data = new XmlElement[1];
-                        //extraTechnique.Bump = new string('');
-                        
-                        //extraTechnique.Data = 
-                        // create the texture node
-                        Grendgine_Collada_Texture bumpTex = new Grendgine_Collada_Texture();
-                        bumpTex.Texture = CleanName(texture.File) + "-sampler";
+                        //extraTechnique.Data[0] = new XmlElement();
 
+                        extraTechniques[0] = extraTechnique;
+                        extraTechnique.profile = "FCOLLADA";
+                        
+                        Grendgine_Collada_BumpMap bumpMap = new Grendgine_Collada_BumpMap();
+                        bumpMap.Textures = new Grendgine_Collada_Texture[1];
+                        bumpMap.Textures[0] = new Grendgine_Collada_Texture();
+                        bumpMap.Textures[0].Texture = CleanName(texture.File) + "-sampler";
+                        extraTechnique.Data = new XmlElement[1];
+                        extraTechnique.Data[0] = bumpMap;
                     }
                 }
                 if (diffound == false)
@@ -358,6 +360,8 @@ namespace CgfConverter
                 CryEngine_Core.ChunkDataStream tmpVertsUVs = null;
                 CryEngine_Core.ChunkDataStream tmpIndices = null;
 
+                nodeChunk.WriteChunk();
+
                 if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Mesh)
                 {
                     // Get the mesh chunk and submesh chunk for this node.
@@ -430,7 +434,9 @@ namespace CgfConverter
                     tmpGeo.Mesh.Vertices = vertices;
 
                     #endregion
+                    
                     //tris.Material = meshSubset.MatID.ToString();
+
                     // Create a float_array object to store all the data
                     Grendgine_Collada_Float_Array floatArrayVerts = new Grendgine_Collada_Float_Array();
                     Grendgine_Collada_Float_Array floatArrayNormals = new Grendgine_Collada_Float_Array();
@@ -509,10 +515,14 @@ namespace CgfConverter
                     #region Create the polylist node.
                     Grendgine_Collada_Polylist[] polylists = new Grendgine_Collada_Polylist[tmpMeshSubsets.NumMeshSubset];
                     tmpGeo.Mesh.Polylist = polylists;
+                    //tmpMeshSubsets.WriteChunk();
+                    Console.WriteLine("{0} materials in Crydata.Materials", CryData.Materials.Length);
+                    
                     for (uint j = 0; j < tmpMeshSubsets.NumMeshSubset; j++) // Need to make a new Polylist entry for each submesh.
                     {
                         polylists[j] = new Grendgine_Collada_Polylist();
                         polylists[j].Count = (int)tmpMeshSubsets.MeshSubsets[j].NumIndices / 3;
+                        Console.WriteLine("Mat Index is {0}", tmpMeshSubsets.MeshSubsets[j].MatID);
                         polylists[j].Material = CryData.Materials[tmpMeshSubsets.MeshSubsets[j].MatID].Name + "-material";
                         // Create the 3 inputs.  vertex, normal, texcoord
                         polylists[j].Input = new Grendgine_Collada_Input_Shared[3];
@@ -844,6 +854,8 @@ namespace CgfConverter
         }
 
         #region Private Methods
+
+        /// <summary>Takes the Material file name and returns just the file name with no extension</summary>
         private string CleanName(string cleanMe) 
         {
             string[] stringSeparators = new string[] { @"\", @"/" };
@@ -861,6 +873,7 @@ namespace CgfConverter
                 string[] periodSep = new string[] { @"." }; 
                 result = cleanMe.Split(periodSep,StringSplitOptions.None);
                 cleanMe = result[0];
+                Console.WriteLine("Cleanme is {0}", cleanMe);
             }
             return cleanMe;
         }
