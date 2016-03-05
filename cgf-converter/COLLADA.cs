@@ -359,13 +359,16 @@ namespace CgfConverter
                 CryEngine_Core.ChunkDataStream tmpVertices = null;
                 CryEngine_Core.ChunkDataStream tmpVertsUVs = null;
                 CryEngine_Core.ChunkDataStream tmpIndices = null;
-
+                Console.WriteLine("Writing node chunk ID {0:X}", nodeChunk.ID);
                 nodeChunk.WriteChunk();
 
                 if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Mesh)
                 {
                     // Get the mesh chunk and submesh chunk for this node.
                     CryEngine_Core.ChunkMesh tmpMeshChunk = (CryEngine_Core.ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID];
+                    Console.WriteLine("tmpMeshChunk ID is {0:X}", nodeChunk.ObjectNodeID);
+                    tmpMeshChunk.WriteChunk();
+                    Console.WriteLine("tmpmeshsubset ID is {0:X}", tmpMeshChunk.MeshSubsets);
                     CryEngine_Core.ChunkMeshSubsets tmpMeshSubsets = (CryEngine_Core.ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
 
                     // Get pointers to the vertices data
@@ -658,18 +661,23 @@ namespace CgfConverter
             Grendgine_Collada_Visual_Scene visualScene = new Grendgine_Collada_Visual_Scene();
             List<Grendgine_Collada_Node> nodes = new List<Grendgine_Collada_Node>();
 
-            foreach (CryEngine_Core.ChunkNode nodeChunk in this.CryData.Chunks.Where(a => a.ChunkType == ChunkTypeEnum.Node))
+            Grendgine_Collada_Node rootNode = new Grendgine_Collada_Node();
+            rootNode = CreateNode(CryData.RootNode, rootNode);
+            nodes.Add(rootNode);
+
+            /*foreach (CryEngine_Core.ChunkNode nodeChunk in this.CryData.Chunks.Where(a => a.ChunkType == ChunkTypeEnum.Node))
             {
                 // Chunks we will need for this node chunk
                 // For each nodechunk with a non helper or controller object ID, create a node and add it to nodes list
                 // now make a list of Nodes that correspond with each node chunk.
                 Grendgine_Collada_Node tmpNode = new Grendgine_Collada_Node();
-                tmpNode = CreateNode(nodeChunk);
+                tmpNode = CreateNode(nodeChunk, null);
                 // Get the mesh chunk
                 CryEngine_Core.ChunkMesh tmpMesh = nodeChunk.ObjectChunk as CryEngine_Core.ChunkMesh;
 
                 nodes.Add(tmpNode);
-            }
+            }*/
+
             visualScene.Node = nodes.ToArray();
             //visualScene.Name = "world";
             visualScene.ID = "Scene";
@@ -678,9 +686,10 @@ namespace CgfConverter
             daeObject.Library_Visual_Scene = libraryVisualScenes;
         }
 
-        public Grendgine_Collada_Node CreateNode(CryEngine_Core.ChunkNode nodeChunk)
+        public Grendgine_Collada_Node CreateNode(CryEngine_Core.ChunkNode nodeChunk, Grendgine_Collada_Node parentNode)
         {
             // This will be used recursively to create a node object and return it to WriteLibrary_VisualScenes
+            #region Create the node element for this nodeChunk
             Grendgine_Collada_Node tmpNode = new Grendgine_Collada_Node();
             if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Mesh)
             {
@@ -699,11 +708,14 @@ namespace CgfConverter
 
                 Grendgine_Collada_Matrix matrix = new Grendgine_Collada_Matrix();
                 StringBuilder matrixString = new StringBuilder();
-                matrixString.AppendFormat("{0:F7} {1:F7} {2:F7} {3:F7} {4:F7} {5:F7} {6:F7} {7:F7} {8:F7} {9:F7} {10:F7} {11:F7} {12:F7} {13:F7} {14:F7} {15:F7}",
+
+                // matrixString might have to be an identity matrix, since GetTransform is applying the transform to all the vertices.
+                /*matrixString.AppendFormat("{0:F7} {1:F7} {2:F7} {3:F7} {4:F7} {5:F7} {6:F7} {7:F7} {8:F7} {9:F7} {10:F7} {11:F7} {12:F7} {13:F7} {14:F7} {15:F7}",
                     nodeChunk.Transform.m11, nodeChunk.Transform.m12, nodeChunk.Transform.m13, nodeChunk.Transform.m14,
                     nodeChunk.Transform.m21, nodeChunk.Transform.m22, nodeChunk.Transform.m23, nodeChunk.Transform.m24,
                     nodeChunk.Transform.m31, nodeChunk.Transform.m32, nodeChunk.Transform.m33, nodeChunk.Transform.m34,
-                    nodeChunk.Transform.m41 / 100, nodeChunk.Transform.m42 / 100, nodeChunk.Transform.m43 / 100, nodeChunk.Transform.m44);
+                    nodeChunk.Transform.m41 / 100, nodeChunk.Transform.m42 / 100, nodeChunk.Transform.m43 / 100, nodeChunk.Transform.m44);*/
+                matrixString.AppendFormat("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0");
                 matrix.Value_As_String = matrixString.ToString();
                 matrix.sID = "transform";
                 matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
@@ -751,23 +763,40 @@ namespace CgfConverter
 
                 Grendgine_Collada_Matrix matrix = new Grendgine_Collada_Matrix();
                 StringBuilder matrixString = new StringBuilder();
-                matrixString.AppendFormat("{0:F7} {1:F7} {2:F7} {3:F7} {4:F7} {5:F7} {6:F7} {7:F7} {8:F7} {9:F7} {10:F7} {11:F7} {12:F7} {13:F7} {14:F7} {15:F7}",
+                // matrixString might have to be an identity matrix, since GetTransform is applying the transform to all the vertices.
+                /*matrixString.AppendFormat("{0:F7} {1:F7} {2:F7} {3:F7} {4:F7} {5:F7} {6:F7} {7:F7} {8:F7} {9:F7} {10:F7} {11:F7} {12:F7} {13:F7} {14:F7} {15:F7}",
                     nodeChunk.Transform.m11, nodeChunk.Transform.m12, nodeChunk.Transform.m13, nodeChunk.Transform.m14,
                     nodeChunk.Transform.m21, nodeChunk.Transform.m22, nodeChunk.Transform.m23, nodeChunk.Transform.m24,
                     nodeChunk.Transform.m31, nodeChunk.Transform.m32, nodeChunk.Transform.m33, nodeChunk.Transform.m34,
-                    nodeChunk.Transform.m41 / 100, nodeChunk.Transform.m42 / 100, nodeChunk.Transform.m43 / 100, nodeChunk.Transform.m44);
+                    nodeChunk.Transform.m41 / 100, nodeChunk.Transform.m42 / 100, nodeChunk.Transform.m43 / 100, nodeChunk.Transform.m44);*/
+                matrixString.AppendFormat("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0");
                 matrix.Value_As_String = matrixString.ToString();
                 matrix.sID = "transform";
                 matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
                 tmpNode.Matrix = matrices.ToArray();
                 // there is no geometry and no instance_material for these.
             }
-            // Recursively call this for each of the children.  Or not.  We're doing a foreach on the nodechunks already..
-            for (int i=0; i < nodeChunk.__NumChildren; i++ )
+            #endregion
+
+            // Recursively call this for each of the children. 
+            // We need to make an array of node elements of length numChildren to hold each of child nodes
+            Console.WriteLine("Processing Node Chunk {0}.  Number of children: {1}", nodeChunk.Name, nodeChunk.__NumChildren);
+            Grendgine_Collada_Node[] childNodes = new Grendgine_Collada_Node[nodeChunk.__NumChildren];
+            int counter = 0;
+            foreach (CryEngine_Core.ChunkNode childNodeChunk in this.CryData.Chunks.Where(a => a.ChunkType == ChunkTypeEnum.Node))
             {
-                Grendgine_Collada_Node childNode = new Grendgine_Collada_Node();
-                //childNode = CreateNode();
+                Console.WriteLine("Found a node chunk ID {0:X}.  Parent ID is {1:X}", childNodeChunk.ID, childNodeChunk.ParentNodeID);
+                if (childNodeChunk.ParentNodeID == nodeChunk.ID )
+                {
+                    Console.WriteLine("Found the parent node chuck of node chunk {0}", childNodeChunk.Name);
+                    Grendgine_Collada_Node childNode = new Grendgine_Collada_Node();
+                    
+                    childNode = CreateNode(childNodeChunk, tmpNode);
+                    childNodes[counter] = childNode;
+                    counter++;
+                }
             }
+            tmpNode.node = childNodes;
             return tmpNode;
         }
         public void WriteScene()
@@ -873,7 +902,7 @@ namespace CgfConverter
                 string[] periodSep = new string[] { @"." }; 
                 result = cleanMe.Split(periodSep,StringSplitOptions.None);
                 cleanMe = result[0];
-                Console.WriteLine("Cleanme is {0}", cleanMe);
+                //Console.WriteLine("Cleanme is {0}", cleanMe);
             }
             return cleanMe;
         }

@@ -147,6 +147,12 @@ namespace CgfConverter.CryEngine_Core
             {
                 Utils.Log(LogLevelEnum.Debug, "{0,-24:X}{1,-10:X}{2,-10:X}{3,-10:X}{4,-10:X}", chkHdr.ChunkType.ToString(), chkHdr.Version, chkHdr.ID, chkHdr.Size, chkHdr.Offset);
             }
+            Console.WriteLine("*** Chunk Header Table***");
+            Console.WriteLine("Chunk Type              Version   ID        Size      Offset    ");
+            foreach (ChunkHeader chkHdr in this._chunks)
+            {
+                Console.WriteLine("{0,-24:X}{1,-10:X}{2,-10:X}{3,-10:X}{4,-10:X}", chkHdr.ChunkType.ToString(), chkHdr.Version, chkHdr.ID, chkHdr.Size, chkHdr.Offset);
+            }
         }
 
         #endregion
@@ -217,6 +223,7 @@ namespace CgfConverter.CryEngine_Core
 
                 this._chunks.Add(header);
             }
+            this.WriteChunkTable();
         }
 
         /// <summary>

@@ -133,7 +133,8 @@ namespace CgfConverter
                 {
                     // Utils.Log(LogLevelEnum.Debug, "Located material file {0}", materialFile.Name);
 
-                    this.Materials = CryEngine.FlattenMaterials(material).Skip(1).ToArray();
+                    //this.Materials = CryEngine.FlattenMaterials(material).Skip(1).ToArray();
+                    this.Materials = CryEngine.FlattenMaterials(material).Where(m => m.Textures != null).ToArray();
                     Console.WriteLine("Flattened material {0}", material.Name);
 
                     // Early return - we have the material map
