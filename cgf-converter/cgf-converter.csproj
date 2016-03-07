@@ -111,6 +111,8 @@
     <Compile Include="Collada\Grendgine_Collada_Technique.cs" />
     <Compile Include="CryEngine\CryEngine.cs" />
     <Compile Include="CryEngine\CryRender.cs" />
+    <Compile Include="CryEngine_Core\ChunkMeshPhysicsData.cs" />
+    <Compile Include="CryEngine_Core\ChunkMeshPhysicsData_800.cs" />
     <Compile Include="CryEngine_Core\IBinaryChunk.cs" />
     <Compile Include="CryEngine_Core\ChunkCompiledBones.cs" />
     <Compile Include="CryEngine_Core\ChunkCompiledPhysicalProxies_800.cs" />

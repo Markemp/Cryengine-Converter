@@ -45,6 +45,8 @@ namespace CgfConverter.CryEngine_Core
                     return Chunk.New<ChunkSceneProp>(version);
                 case ChunkTypeEnum.CompiledPhysicalProxies:
                     return Chunk.New<ChunkCompiledPhysicalProxies>(version);
+                case ChunkTypeEnum.MeshPhysicsData:
+                    return Chunk.New<ChunkMeshPhysicsData>(version);
                 default:
                     return new ChunkUnknown();
             }

@@ -36,6 +36,8 @@ namespace CgfConverter.CryEngine_Core
             for (Int32 i = 0; i < 4; i++)
             {
                 this.PhysicsData[i] = b.ReadUInt32();
+                if (this.PhysicsData[i] != 0)
+                    this.MeshPhysicsData = this.PhysicsData[i];
             }
             this.MinBound.x = b.ReadSingle();
             this.MinBound.y = b.ReadSingle();

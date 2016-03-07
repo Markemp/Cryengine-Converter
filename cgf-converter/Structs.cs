@@ -616,5 +616,112 @@ namespace CgfConverter
         UInt32 Num_Bones;               //" type="uint" />
         BoneEntity[] Bones;             //" type="BoneEntity" arr1="Num Bones" />
     }
+    public struct PhysicsData
+    {
+        // Collision or hitbox info.  Part of the MeshPhysicsData chunk
+        public int Unknown4;
+        public int Unknown5;
+        public float[] Unknown6;  // array length 3, Inertia?
+        public Quat Rot;  // Most definitely a quaternion. Probably describes rotation of the physics object.
+        public Vector3 Center;  // Center, or position. Probably describes translation of the physics object. Often corresponds to the center of the mesh data as described in the submesh chunk.
+        public float Unknown10; // Mass?
+        public int Unknown11;
+        public int Unknown12;
+        public float Unknown13;
+        public float Unknown14;
+        public PhysicsPrimitiveType PrimitiveType;
+        public PhysicsCube Cube;  // Primitive Type 0
+        public PhysicsPolyhedron PolyHedron;  // Primitive Type 1
+        public PhysicsCylinder Cylinder; // Primitive Type 5
+        public PhysicsShape6 UnknownShape6;  // Primitive Type 6
+    }
 
+    public struct PhysicsCube
+    {
+        public PhysicsStruct1 Unknown14;
+        public PhysicsStruct1 Unknown15;
+        public int Unknown16;
+    }
+    public struct PhysicsPolyhedron
+    {
+        public uint NumVertices;
+        public uint NumTriangles;
+        public int Unknown17;
+        public int Unknown18;
+        public byte HasVertexMap;
+        public ushort[] VertexMap; // Array length NumVertices.  If the (non-physics) mesh has say 200 vertices, then the first 200
+                                   //entries of this map give a mapping identifying the unique vertices.
+                                   //The meaning of the extra entries is unknown.
+        public byte UseDatasStream;
+        public Vector3[] Vertices; // Array Length NumVertices
+        public ushort[] Triangles; // Array length NumTriangles
+        public byte Unknown210;
+        public byte[] TriangleFlags; // Array length NumTriangles
+        public ushort[] TriangleMap; // Array length NumTriangles
+        public byte[] Unknown45; // Array length 16
+        public int Unknown461;  //0
+        public int Unknown462;  //0
+        public float Unknown463; // 0.02
+        public float Unknown464; 
+        // There is more.  See cgf.xml for the rest, but probably not really needed
+    }
+    public struct PhysicsCylinder
+    {
+        public float[] Unknown1;  // array length 8
+        public int Unknown2;
+        public PhysicsDataType2 Unknown3;
+    }
+    public struct PhysicsShape6
+    {
+        public float[] Unknown1; // array length 8
+        public int Unknown2;
+        public PhysicsDataType2 Unknown3;
+    }
+    public struct PhysicsDataType0
+    {
+        public int NumData;
+        public PhysicsStruct2[] Data; // Array length NumData
+        public int[] Unknown33; // array length 3
+        public float Unknown80;
+    }
+    public struct PhysicsDataType1
+    {
+        public uint NumData1;  // usually 4294967295
+        public PhysicsStruct50[] Data1; // Array length NumData1
+        public int NumData2;
+        public PhysicsStruct50[] Data2; // Array length NumData2
+        public float[] Unknown60; // array length 6
+        public Matrix33 Unknown61; // Rotation matrix?
+        public int [] Unknown70; //Array length 3
+        public float Unknown80;
+    }
+    public struct PhysicsDataType2
+    {
+        public Matrix33 Unknown1;
+        public int Unknown;
+        public float[] Unknown3; // array length 6
+        public int Unknown4;
+    }
+
+    public struct PhysicsStruct1
+    {
+        public Matrix33 Unknown1;
+        public int Unknown2;
+        public float[] Unknown3; // array length 6
+    }
+    public struct PhysicsStruct2
+    {
+        public Matrix33 Unknown1;
+        public float[] Unknown2;  // array length 6
+        public int[] Unknown3; // array length 3
+    }
+    public struct PhysicsStruct50
+    {
+        public short Unknown11;
+        public short Unknown12;
+        public short Unknown21;
+        public short Unknown22;
+        public short Unknown23;
+        public short Unknown24;
+    }
 }
