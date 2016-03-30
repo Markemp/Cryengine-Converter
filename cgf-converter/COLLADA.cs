@@ -368,6 +368,7 @@ namespace CgfConverter
                 CryEngine_Core.ChunkDataStream tmpVertices = null;
                 CryEngine_Core.ChunkDataStream tmpVertsUVs = null;
                 CryEngine_Core.ChunkDataStream tmpIndices = null;
+                CryEngine_Core.ChunkMeshSubsets tmpMeshSubsets = null;
                 Console.WriteLine("Writing node chunk ID {0:X}", nodeChunk.ID);
                 //nodeChunk.WriteChunk();
 
@@ -384,8 +385,11 @@ namespace CgfConverter
                         Console.WriteLine("tmpMeshChunk ID is {0:X}", nodeChunk.ObjectNodeID);
                         // tmpMeshChunk.WriteChunk();
                         Console.WriteLine("tmpmeshsubset ID is {0:X}", tmpMeshChunk.MeshSubsets);
-                        CryEngine_Core.ChunkMeshSubsets tmpMeshSubsets = (CryEngine_Core.ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
 
+                        if (tmpMeshChunk.MeshSubsets != 0)
+                        {
+                            tmpMeshSubsets = (CryEngine_Core.ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
+                        }
                         // Get pointers to the vertices data
                         if (tmpMeshChunk.VerticesData != 0)
                         {

@@ -26,7 +26,7 @@ namespace CgfConverter.CryEngine_Core
             if (this._model.FileVersion == FileVersionEnum.CryTek_3_6)
             {
                 this.BytesPerElement = (UInt32)b.ReadInt16();        // Star Citizen 2.0 is using an int16 here now.
-                b.ReadInt16();                                  // unknown value.   Doesn't look like padding though.
+                b.ReadInt16();                                       // unknown value.   Doesn't look like padding though.
             }
 
             this.SkipBytes(b, 8);
@@ -141,16 +141,35 @@ namespace CgfConverter.CryEngine_Core
                     this.Tangents = new Tangent[this.NumElements, 2];
                     for (Int32 i = 0; i < this.NumElements; i++)
                     {
-                        // These have to be divided by 32767 to be used properly (value between 0 and 1)
-                        this.Tangents[i, 0].x = b.ReadInt16();
-                        this.Tangents[i, 0].y = b.ReadInt16();
-                        this.Tangents[i, 0].z = b.ReadInt16();
-                        this.Tangents[i, 0].w = b.ReadInt16();
+                        switch (this.BytesPerElement)
+                        {
+                            case 0x10:
+                                // These have to be divided by 32767 to be used properly (value between 0 and 1)
+                                this.Tangents[i, 0].x = b.ReadInt16();
+                                this.Tangents[i, 0].y = b.ReadInt16();
+                                this.Tangents[i, 0].z = b.ReadInt16();
+                                this.Tangents[i, 0].w = b.ReadInt16();
 
-                        this.Tangents[i, 1].x = b.ReadInt16();
-                        this.Tangents[i, 1].y = b.ReadInt16();
-                        this.Tangents[i, 1].z = b.ReadInt16();
-                        this.Tangents[i, 1].w = b.ReadInt16();
+                                this.Tangents[i, 1].x = b.ReadInt16();
+                                this.Tangents[i, 1].y = b.ReadInt16();
+                                this.Tangents[i, 1].z = b.ReadInt16();
+                                this.Tangents[i, 1].w = b.ReadInt16();
+                                break;
+                            case 0x08:
+                                // These have to be divided by 32767 to be used properly (value between 0 and 1)
+                                this.Tangents[i, 0].x = b.ReadSByte();
+                                this.Tangents[i, 0].y = b.ReadSByte();
+                                this.Tangents[i, 0].z = b.ReadSByte();
+                                this.Tangents[i, 0].w = b.ReadSByte();
+
+                                this.Tangents[i, 1].x = b.ReadSByte();
+                                this.Tangents[i, 1].y = b.ReadSByte();
+                                this.Tangents[i, 1].z = b.ReadSByte();
+                                this.Tangents[i, 1].w = b.ReadSByte();
+                                break;
+                            default:
+                                throw new Exception("Need to add new Tangent Size");
+                        }
                     }
                     // Utils.Log(LogLevelEnum.Debug, "Offset is {0:X}", b.BaseStream.Position);
                     break;

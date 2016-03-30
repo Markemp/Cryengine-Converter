@@ -327,10 +327,10 @@ namespace CgfConverter.CryEngine_Core
 
             try
             {
-                XmlSerializer xs = new XmlSerializer(typeof(CryEngine_Core.Material));
-
                 using (Stream fileStream = materialfile.OpenRead())
-                    return xs.Deserialize(fileStream) as CryEngine_Core.Material;
+                {
+                    return HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<CryEngine_Core.Material>(fileStream);
+                }
             }
             catch (Exception ex)
             {

@@ -152,6 +152,10 @@
     <Compile Include="CryEngine_Core\ChunkHeader.cs" />
     <Compile Include="CryEngine_Core\Material.cs" />
     <Compile Include="CryEngine_Core\Model.cs" />
+    <Compile Include="CryXmlB\CryXmlNode.cs" />
+    <Compile Include="CryXmlB\CryXmlReference.cs" />
+    <Compile Include="CryXmlB\CryXmlSerializer.cs" />
+    <Compile Include="CryXmlB\CryXmlValue.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="External\Collada_B_Rep\Curves\Grendgine_Collada_Circle.cs" />
     <Compile Include="External\Collada_B_Rep\Curves\Grendgine_Collada_Curve.cs" />
