@@ -14,9 +14,13 @@
     }  // complete
     public enum MtlNameTypeEnum : uint
     {
+        // It looks like there is a 0x04 type now as well, for mech parts.  Not sure what that is.
+        // Also a 0x0B type now as well.
         Library = 0x01,
         Single = 0x10,
         Child = 0x12,
+        Unknown1 = 0x0B,        // Collision materials?  In MWO, these are the torsos, arms, legs from body/<mech>.mtl
+        Unknown2 = 0x04
     }
     public enum ChunkTypeEnum : uint    // complete
     {
@@ -177,7 +181,7 @@
         NOCOLLIDE = 0x00000001,
         OBSTRUCT = 0x00000002,
         DEFAULTPROXY = 0x000000FF,  // this needs to be checked.  cgf.xml says 256; not sure if hex or dec
-        UNKNOWN = 0x00001100,
+        UNKNOWN = 0x00001100,       // collision mesh?
     }
     public enum LightType : uint         //complete
     {

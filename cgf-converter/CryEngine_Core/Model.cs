@@ -223,7 +223,7 @@ namespace CgfConverter.CryEngine_Core
 
                 this._chunks.Add(header);
             }
-            this.WriteChunkTable();
+            //this.WriteChunkTable();
         }
 
         /// <summary>

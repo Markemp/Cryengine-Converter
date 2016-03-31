@@ -17,7 +17,7 @@ namespace CgfConverter
     {
         public XmlSchema schema = new XmlSchema();
         public FileInfo daeOutputFile;
-        //public XmlDocument daeDoc = new XmlDocument();                      // the COLLADA XML doc.  Going to try serialized instead.
+
         public Grendgine_Collada daeObject = new Grendgine_Collada();       // This is the serializable class.
         XmlSerializer mySerializer = new XmlSerializer(typeof(Grendgine_Collada));
 
@@ -33,7 +33,6 @@ namespace CgfConverter
 
             // File name will be "object name.dae"
             daeOutputFile = new FileInfo(this.GetOutputFile("dae", outputDir, preservePath));
-            Console.WriteLine("output file: {0}", outputDir);
             GetSchema();                                                    // Loads the schema.  Needs error checking in case it's offline.
             WriteRootNode();
             WriteAsset();
@@ -51,7 +50,7 @@ namespace CgfConverter
             // Validate that the Collada document is ok
             writer.Close();
             //ValidateXml();                                                  // validates against the schema
-            ValidateDoc();                                                // validates IDs and URLs
+            //ValidateDoc();                                                // validates IDs and URLs
             Utils.Log(LogLevelEnum.Debug, "End of Write Collada");
         }
 
@@ -101,7 +100,7 @@ namespace CgfConverter
             Grendgine_Collada_Library_Images libraryImages = new Grendgine_Collada_Library_Images();
             daeObject.Library_Images = libraryImages;
             List<Grendgine_Collada_Image> imageList = new List<Grendgine_Collada_Image>();
-            Console.WriteLine("Number of images {0}", CryData.Materials.Length);
+            //Console.WriteLine("Number of images {0}", CryData.Materials.Length);
             // We now have the image library set up.  start to populate.
             //foreach (CryEngine_Core.Material material in CryData.Materials)
             for (int k=0; k < CryData.Materials.Length; k++)
@@ -114,6 +113,7 @@ namespace CgfConverter
                     // For each texture in the material, we make a new <image> object and add it to the list. 
                     Grendgine_Collada_Image tmpImage = new Grendgine_Collada_Image();
                     tmpImage.ID = CryData.Materials[k].Name + "_" + CryData.Materials[k].Textures[i].Map;
+                    tmpImage.Name = CryData.Materials[k].Name + "_" + CryData.Materials[k].Textures[i].Map;
                     tmpImage.Init_From = new Grendgine_Collada_Init_From();
                     // Build the URI path to the file as a .dds, clean up the slashes.
                     StringBuilder builder;
@@ -122,8 +122,10 @@ namespace CgfConverter
                         // if Datadir is empty, need a clean name and can only search in the current directory.  If Datadir is provided, then look there.
                         if (this.Args.DataDir == null)
                         {
-                            //string tmpTexture = CleanName(CryData.Materials[k].Textures[i].File);
-                            builder = new StringBuilder(CleanName(CryData.Materials[k].Textures[i].File));
+                            builder = new StringBuilder(CleanName(CryData.Materials[k].Textures[i].File) + ".dds");
+                            if (Args.TiffTextures)
+                                builder.Replace(".dds", ".tif");
+                            
                         } else
                         {
                             builder = new StringBuilder(@"/" + this.Args.DataDir.Replace(@"\", @"/").Replace(" ", @"%20") + @"/" + CryData.Materials[k].Textures[i].File);
@@ -168,13 +170,22 @@ namespace CgfConverter
             for (int i = 0; i < numMaterials; i++)
             {
                 Grendgine_Collada_Material tmpMaterial = new Grendgine_Collada_Material();
-                tmpMaterial.Name = CryData.Materials[i].Name;
-                // Create the instance_effect for each material
                 tmpMaterial.Instance_Effect = new Grendgine_Collada_Instance_Effect();
-                // The # in front of tmpMaterial.name is needed to reference the effect in Library_effects.
-                tmpMaterial.Instance_Effect.URL = "#" + CryData.Materials[i].Name + "-effect";
+                // Name is blank if it's a material file with no submats.  Set to file name.
                 // Need material ID here, so the meshes can reference it.  Use the chunk ID.
-                tmpMaterial.ID = CryData.Materials[i].Name + "-material";          // this is the order the materials appear in the .mtl file.  Needed for geometries.
+                if (CryData.Materials[i].Name == null)
+                {
+                    tmpMaterial.Name = CryData.RootNode.Name;       
+                    tmpMaterial.ID = CryData.RootNode.Name;
+                    tmpMaterial.Instance_Effect.URL = "#" + CryData.RootNode.Name + "-effect";
+                } else
+                {
+                    tmpMaterial.Name = CryData.Materials[i].Name;
+                    tmpMaterial.ID = CryData.Materials[i].Name + "-material";          // this is the order the materials appear in the .mtl file.  Needed for geometries.
+                    tmpMaterial.Instance_Effect.URL = "#" + CryData.Materials[i].Name + "-effect";
+                }
+                // The # in front of tmpMaterial.name is needed to reference the effect in Library_effects.
+                
                 materials[i] = tmpMaterial;
             }
             libraryMaterials.Material = materials;
@@ -251,7 +262,7 @@ namespace CgfConverter
                 foreach (var texture in CryData.Materials[i].Textures)
                 //for (int j=0; j < CryData.Materials[i].Textures.Length; j++)
                 {
-                    Console.WriteLine("Processing material texture {0}", CleanName(texture.File));
+                    //Console.WriteLine("Processing material texture {0}", CleanName(texture.File));
                     if (texture.Map == CryEngine_Core.Material.Texture.MapTypeEnum.Diffuse)
                     {
                         //Console.WriteLine("Found Diffuse Map");
@@ -368,7 +379,7 @@ namespace CgfConverter
                 CryEngine_Core.ChunkDataStream tmpVertices = null;
                 CryEngine_Core.ChunkDataStream tmpVertsUVs = null;
                 CryEngine_Core.ChunkDataStream tmpIndices = null;
-                Console.WriteLine("Writing node chunk ID {0:X}", nodeChunk.ID);
+                //Console.WriteLine("Writing node chunk ID {0:X}", nodeChunk.ID);
                 //nodeChunk.WriteChunk();
 
                 if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Mesh)
@@ -381,9 +392,9 @@ namespace CgfConverter
                         // TODO:  Implement this chunk
                     } else
                     {
-                        Console.WriteLine("tmpMeshChunk ID is {0:X}", nodeChunk.ObjectNodeID);
+                        //Console.WriteLine("tmpMeshChunk ID is {0:X}", nodeChunk.ObjectNodeID);
                         // tmpMeshChunk.WriteChunk();
-                        Console.WriteLine("tmpmeshsubset ID is {0:X}", tmpMeshChunk.MeshSubsets);
+                        //Console.WriteLine("tmpmeshsubset ID is {0:X}", tmpMeshChunk.MeshSubsets);
                         CryEngine_Core.ChunkMeshSubsets tmpMeshSubsets = (CryEngine_Core.ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
 
                         // Get pointers to the vertices data
@@ -534,13 +545,13 @@ namespace CgfConverter
                         Grendgine_Collada_Polylist[] polylists = new Grendgine_Collada_Polylist[tmpMeshSubsets.NumMeshSubset];
                         tmpGeo.Mesh.Polylist = polylists;
                         //tmpMeshSubsets.WriteChunk();
-                        Console.WriteLine("{0} materials in Crydata.Materials", CryData.Materials.Length);
+                        //Console.WriteLine("{0} materials in Crydata.Materials", CryData.Materials.Length);
 
                         for (uint j = 0; j < tmpMeshSubsets.NumMeshSubset; j++) // Need to make a new Polylist entry for each submesh.
                         {
                             polylists[j] = new Grendgine_Collada_Polylist();
                             polylists[j].Count = (int)tmpMeshSubsets.MeshSubsets[j].NumIndices / 3;
-                            Console.WriteLine("Mat Index is {0}", tmpMeshSubsets.MeshSubsets[j].MatID);
+                            //Console.WriteLine("Mat Index is {0}", tmpMeshSubsets.MeshSubsets[j].MatID);
                             polylists[j].Material = CryData.Materials[tmpMeshSubsets.MeshSubsets[j].MatID].Name + "-material";
                             // Create the 3 inputs.  vertex, normal, texcoord
                             polylists[j].Input = new Grendgine_Collada_Input_Shared[3];
@@ -709,7 +720,6 @@ namespace CgfConverter
             if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Mesh)
             {
                 CryEngine_Core.ChunkMesh tmpMeshChunk = (CryEngine_Core.ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID];
-                Console.WriteLine("MeshPhysics node is {0:X}", tmpMeshChunk.MeshPhysicsData);
                 if (tmpMeshChunk.MeshPhysicsData != 0)
                 {
                     // The mesh points to a meshphysics chunk.  While there is geometry (hitbox, collision?) we don't want to process
@@ -778,14 +788,14 @@ namespace CgfConverter
             }
             else if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Helper) // Simple node here
             {
-                Console.WriteLine("Node chunk {0} belongs to a helpers chunk.  Writing simple node.", nodeChunk.Name);
+                //Console.WriteLine("Node chunk {0} belongs to a helpers chunk.  Writing simple node.", nodeChunk.Name);
                 tmpNode = CreateSimpleNode(nodeChunk);
             }
             #endregion
 
             // Recursively call this for each of the children. 
             // We need to make an array of node elements of length numChildren to hold each of child nodes
-            Console.WriteLine("Processing Node Chunk {0}.  Number of children: {1}", nodeChunk.Name, nodeChunk.__NumChildren);
+            //Console.WriteLine("Processing Node Chunk {0}.  Number of children: {1}", nodeChunk.Name, nodeChunk.__NumChildren);
             Grendgine_Collada_Node[] childNodes = new Grendgine_Collada_Node[nodeChunk.__NumChildren];
             int counter = 0;
             foreach (CryEngine_Core.ChunkNode childNodeChunk in this.CryData.Chunks.Where(a => a.ChunkType == ChunkTypeEnum.Node))
@@ -843,7 +853,7 @@ namespace CgfConverter
             // there is no geometry and no instance_material for these.
             return tmpNode;
         }
-        public void ValidateXml()
+        public void ValidateXml()  // For testing
         {
             try
             {
@@ -886,7 +896,7 @@ namespace CgfConverter
         {
 
         }
-        public void ValidateDoc()
+        public void ValidateDoc()  // NYI
         {
             /// <summary> This method will check all the URLs used in the Collada object and see if any reference IDs that don't exist.  It will
             /// also check for duplicate IDs</summary>

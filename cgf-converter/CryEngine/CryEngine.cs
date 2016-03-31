@@ -65,17 +65,26 @@ namespace CgfConverter
                 this.Models.Add(model);
             }
 
+            #region Get material file name
+            // Get the material file name
             foreach (CryEngine_Core.ChunkMtlName mtlChunk in this.Models.SelectMany(a => a.ChunkMap.Values).Where(c => c.ChunkType == ChunkTypeEnum.MtlName))
             {
-                // Don't process child materials for now
-                if (mtlChunk.MatType == MtlNameTypeEnum.Child)
+                // Don't process child or collision materials for now
+                if (mtlChunk.MatType == MtlNameTypeEnum.Child || mtlChunk.MatType == MtlNameTypeEnum.Unknown1)
                     continue;
 
                 String cleanName = mtlChunk.Name;
 
                 FileInfo materialFile;
 
-                if (mtlChunk.Name.Contains(@"/") || mtlChunk.Name.Contains(@"\"))
+                if (mtlChunk.Name.Contains("default_body"))
+                {
+                    // New MWO models for some crazy reason don't put the actual mtl file name in the mtlchunk.  They just have /objects/mechs/default_body
+                    // have to assume that it's /objects/mechs/<mechname>/body/<mechname>_body.mtl.  There is also a <mechname>.mtl that contains mtl 
+                    // info for hitboxes, but not needed.
+
+                }
+                else if (mtlChunk.Name.Contains(@"/") || mtlChunk.Name.Contains(@"\"))
                 {
                     // The mtlname has a path.  Most likely starts at the Objects directory.
                     // 
@@ -126,29 +135,38 @@ namespace CgfConverter
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
 
                 // TODO: Try more paths
+                #endregion
 
+                // Populate CryEngine_Core.Material
                 CryEngine_Core.Material material = CryEngine_Core.Material.FromFile(materialFile);
 
                 if (material != null)
                 {
-                    // Utils.Log(LogLevelEnum.Debug, "Located material file {0}", materialFile.Name);
+                     Utils.Log(LogLevelEnum.Debug, "Located material file {0}", materialFile.Name);
 
-                    //this.Materials = CryEngine.FlattenMaterials(material).Skip(1).ToArray();
                     this.Materials = CryEngine.FlattenMaterials(material).Where(m => m.Textures != null).ToArray();
-                    Console.WriteLine("Flattened material {0}", material.Name);
+
+                    if (this.Materials.Length == 1)
+                    {
+                        // only one material, so it's a material file with no submaterials.  Check and set the name
+                        //Console.WriteLine("Single material found.  setting name...");
+                        this.Materials[0].Name = this.RootNode.Name;
+                    }
 
                     // Early return - we have the material map
                     return;
                 }
                 else
                 {
-                    // Utils.Log(LogLevelEnum.Debug, "Unable to locate material file {0}.mtl", mtlChunk.Name);
+                    Utils.Log(LogLevelEnum.Debug, "Unable to locate material file {0}.mtl", mtlChunk.Name);
                 }
             }
+
 
             // Utils.Log(LogLevelEnum.Debug, "Unable to locate any material file");
 
             this.Materials = new CryEngine_Core.Material[] { };
+
         }
 
         #endregion

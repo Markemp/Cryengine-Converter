@@ -75,7 +75,7 @@ namespace CgfConverter
 
                     foreach (CryEngine_Core.Material.Texture texture in material.Textures)
                     {
-                        String textureFile = texture.File;
+                        string textureFile = texture.File;
 
                         if (this.Args.DataDir != null)
                             textureFile = Path.Combine(this.Args.DataDir, textureFile);

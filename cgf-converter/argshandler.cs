@@ -23,13 +23,19 @@ namespace CgfConverter
         /// Directory to render to
         /// </summary>
         public String OutputDir { get; internal set; }
-        /// <summary>
-        /// Name to group all meshes under
-        /// </summary>
         /// 
-        public Boolean AllowConflicts { get; internal set; }
         /// <summary>
         /// Allows naming conflicts for mtl file
+        /// </summary>
+        public Boolean AllowConflicts { get; internal set; }
+
+        /// <summary>
+        /// For LODs files.  Adds _out onto the output
+        /// </summary>
+        public Boolean NoConflicts { get; internal set; }
+
+        /// <summary>
+        /// Name to group all meshes under
         /// </summary>
         public Boolean GroupMeshes { get; internal set; }
         /// <summary>
@@ -273,11 +279,20 @@ namespace CgfConverter
 
                     #endregion
                     #region case "-allowconflict"...
+                    case "-allowconflicts":
                     case "-allowconflict":
                         AllowConflicts = true;
                         Console.WriteLine("Allow conflicts for mtl files enabled");
                         break;
                     #endregion
+                    #region case "-noconflict"...
+                    case "-noconflict":
+                    case "-noconflicts":
+                        NoConflicts = true;
+                        Console.WriteLine("Prevent conflicts for mtl files enabled");
+                        break;
+                    #endregion
+
 
                     #region default...
 
