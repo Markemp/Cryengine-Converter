@@ -13,7 +13,6 @@ using System.Diagnostics;
 
 namespace CgfConverter.CryEngine_Core
 {
-
     /// <summary>
     /// Representation of a CryEngine .mtl file
     /// </summary>

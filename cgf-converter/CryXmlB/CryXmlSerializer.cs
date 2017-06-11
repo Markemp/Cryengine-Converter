@@ -224,7 +224,8 @@ namespace HoloXPLOR.DataForge
             {
                 var xmlDoc = CryXmlSerializer.ReadStream(inStream);
 
-                xmlDoc.Save(ms);
+                if (ms != null)
+                    xmlDoc.Save(ms);
 
                 ms.Seek(0, SeekOrigin.Begin);
 

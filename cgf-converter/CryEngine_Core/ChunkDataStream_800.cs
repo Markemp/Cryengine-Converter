@@ -10,6 +10,53 @@ namespace CgfConverter.CryEngine_Core
 {
     public class ChunkDataStream_800 : ChunkDataStream
     {
+        // This includes changes for 2.6 created by Dymek (byte4/1/2hex, and 20 byte per element vertices).  Thank you!
+        public static float byte4hexToFloat(string hexString)
+        {
+            uint num = uint.Parse(hexString, System.Globalization.NumberStyles.AllowHexSpecifier);
+            var bytes = BitConverter.GetBytes(num);
+            return BitConverter.ToSingle(bytes, 0);
+        }
+
+        public static int byte1hexToIntType2(string hexString)
+        {
+            int value = Convert.ToSByte(hexString, 16);
+            return value;
+        }
+
+        public static float byte2hexIntFracToFloat2(string hexString)
+        {
+            string sintPart = hexString.Substring(0, 2);
+            string sfracPart = hexString.Substring(2, 2);
+
+            int intPart = byte1hexToIntType2(sintPart);
+
+            short intnum = short.Parse(sfracPart, System.Globalization.NumberStyles.AllowHexSpecifier);
+            var intbytes = BitConverter.GetBytes(intnum);
+            string intbinary = Convert.ToString(intbytes[0], 2).PadLeft(8, '0');
+            string binaryIntPart = intbinary;
+
+            short num = short.Parse(sfracPart, System.Globalization.NumberStyles.AllowHexSpecifier);
+            var bytes = BitConverter.GetBytes(num);
+            string binary = Convert.ToString(bytes[0], 2).PadLeft(8, '0');
+            string binaryFracPart = binary;
+
+
+            //convert Fractional Part
+            float dec = 0;
+            for (int i = 0; i < binaryFracPart.Length; i++)
+            {
+                if (binaryFracPart[i] == '0') continue;
+                dec += (float)Math.Pow(2, (i + 1) * (-1));
+            }
+            float number = 0;
+            number = (float)intPart + dec;
+            /*if (intPart > 0) { number = (float)intPart + dec; }
+            if (intPart < 0) { number = (float)intPart - dec; }
+            if (intPart == 0) { number =  dec; }*/
+            return number;
+        }
+
         public override void Read(BinaryReader b)
         {
             base.Read(b);
@@ -71,7 +118,8 @@ namespace CgfConverter.CryEngine_Core
                                 this.Vertices[i].w = wshort.ToSingle();
                             }
                             break;
-                        case 16:  // new Star Citizen files
+                        case 16:
+                            //Console.WriteLine("method: (3)");
                             for (Int32 i = 0; i < this.NumElements; i++)
                             {
                                 this.Vertices[i].x = b.ReadSingle();
@@ -220,20 +268,59 @@ namespace CgfConverter.CryEngine_Core
                     this.UVs = new UV[this.NumElements];
                     switch (this.BytesPerElement)  // new Star Citizen files
                     {
-                        case 16:
+                        case 20:  // Dymek wrote this
                             for (Int32 i = 0; i < this.NumElements; i++)
                             {
-                                Half xshort = new Half();
-                                xshort.bits = b.ReadUInt16();
-                                this.Vertices[i].x = xshort.ToSingle();
+                                uint bver = 0;
+                                float ver = 0;
 
-                                Half yshort = new Half();
-                                yshort.bits = b.ReadUInt16();
-                                this.Vertices[i].y = yshort.ToSingle();
+                                bver = b.ReadUInt32();
+                                ver = byte4hexToFloat(bver.ToString("X8"));
+                                this.Vertices[i].x = ver;
 
-                                Half zshort = new Half();
-                                zshort.bits = b.ReadUInt16();
-                                this.Vertices[i].z = zshort.ToSingle();
+                                bver = b.ReadUInt32();
+                                ver = byte4hexToFloat(bver.ToString("X8"));
+                                this.Vertices[i].y = ver;
+
+                                bver = b.ReadUInt32();
+                                ver = byte4hexToFloat(bver.ToString("X8"));
+                                this.Vertices[i].z = ver;
+
+                                Half xnorm = new Half();
+                                xnorm.bits = b.ReadUInt16();
+                                this.Normals[i].x = xnorm.ToSingle();
+
+                                Half ynorm = new Half();
+                                ynorm.bits = b.ReadUInt16();
+                                this.Normals[i].y = ynorm.ToSingle();
+
+                                Half uvu = new Half();
+                                uvu.bits = b.ReadUInt16();
+                                this.UVs[i].U = uvu.ToSingle();
+
+                                Half uvv = new Half();
+                                uvv.bits = b.ReadUInt16();
+                                this.UVs[i].V = uvv.ToSingle();
+                            }
+                            break;
+                        case 16:   // Dymek updated this.
+                            //Console.WriteLine("method: (5), 3 half floats for verts, 6 unknown, 2 half floats for UVs");
+                            for (Int32 i = 0; i < this.NumElements; i++)
+                            {
+                                ushort bver = 0;
+                                float ver = 0;
+
+                                bver = b.ReadUInt16();
+                                ver = byte2hexIntFracToFloat2(bver.ToString("X4")) / 160;
+                                this.Vertices[i].x = ver;
+
+                                bver = b.ReadUInt16();
+                                ver = byte2hexIntFracToFloat2(bver.ToString("X4")) / 160;
+                                this.Vertices[i].y = ver;
+
+                                bver = b.ReadUInt16();
+                                ver = byte2hexIntFracToFloat2(bver.ToString("X4")) / 160;
+                                this.Vertices[i].z = ver;
 
                                 Half xnorm = new Half();
                                 xnorm.bits = b.ReadUInt16();
@@ -254,14 +341,6 @@ namespace CgfConverter.CryEngine_Core
                                 Half uvv = new Half();
                                 uvv.bits = b.ReadUInt16();
                                 this.UVs[i].V = uvv.ToSingle();
-
-                                //short w = b.ReadInt16();  // dump this as not needed.  Last 2 bytes are surplus...sort of.
-                                //if (i < 20)
-                                //{
-                                //    Utils.Log(LogLevelEnum.Debug, "{0:F7} {1:F7} {2:F7} {3:F7} {4:F7}",
-                                //        Vertices[i].x, Vertices[i].y, Vertices[i].z,
-                                //        UVs[i].U, UVs[i].V);
-                                //}
                             }
                             break;
                         default:

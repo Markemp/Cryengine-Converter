@@ -82,7 +82,16 @@ namespace CgfConverter
                     // New MWO models for some crazy reason don't put the actual mtl file name in the mtlchunk.  They just have /objects/mechs/default_body
                     // have to assume that it's /objects/mechs/<mechname>/body/<mechname>_body.mtl.  There is also a <mechname>.mtl that contains mtl 
                     // info for hitboxes, but not needed.
-
+                    // TODO:  This isn't right.  Fix it.
+                    var charsToClean = cleanName.ToCharArray().Intersect(Path.GetInvalidFileNameChars()).ToArray();
+                    if (charsToClean.Length > 0)
+                    {
+                        foreach (Char character in charsToClean)
+                        {
+                            cleanName = cleanName.Replace(character.ToString(), "");
+                        }
+                    }
+                    materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(fileName), cleanName));
                 }
                 else if (mtlChunk.Name.Contains(@"/") || mtlChunk.Name.Contains(@"\"))
                 {
@@ -94,18 +103,20 @@ namespace CgfConverter
                     if (dataDir != null)
                     {
                         materialFile = new FileInfo(Path.Combine(dataDir, mtlChunk.Name));
-                    } else
+                    }
+                    else
                     {
                         // object dir not provided, but we have a path.  Just grab the last part of the name and check the dir of the cga file
                         result = mtlChunk.Name.Split(stringSeparators, StringSplitOptions.None);
                         materialFile = new FileInfo(result[result.Length - 1]);
                     }
-                } else
+                }
+                else
                 {
                     var charsToClean = cleanName.ToCharArray().Intersect(Path.GetInvalidFileNameChars()).ToArray();
                     if (charsToClean.Length > 0)
                     {
-                        foreach(Char character in charsToClean)
+                        foreach (Char character in charsToClean)
                         {
                             cleanName = cleanName.Replace(character.ToString(), "");
                         }
@@ -113,25 +124,25 @@ namespace CgfConverter
                     materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(fileName), cleanName));
                 }
                 // First try relative to file being processed
-                if (materialFile.Extension != "mtl")
+                if (materialFile.Extension != ".mtl")
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
 
                 // Then try just the last part of the chunk, relative to the file being processed
                 if (!materialFile.Exists)
                     materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileName(cleanName)));
-                if (materialFile.Extension != "mtl")
+                if (materialFile.Extension != ".mtl")
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
 
                 // Then try relative to the ObjectDir
                 if (!materialFile.Exists && dataDir != null)
                     materialFile = new FileInfo(Path.Combine(dataDir, cleanName));
-                if (materialFile.Extension != "mtl")
+                if (materialFile.Extension != ".mtl")
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
 
                 // Then try just the fileName.mtl
                 if (!materialFile.Exists)
                     materialFile = new FileInfo(fileName);
-                if (materialFile.Extension != "mtl")
+                if (materialFile.Extension != ".mtl")
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
 
                 // TODO: Try more paths

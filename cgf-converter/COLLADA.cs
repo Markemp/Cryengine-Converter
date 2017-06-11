@@ -394,9 +394,13 @@ namespace CgfConverter
                     {
                         //Console.WriteLine("tmpMeshChunk ID is {0:X}", nodeChunk.ObjectNodeID);
                         // tmpMeshChunk.WriteChunk();
-                        //Console.WriteLine("tmpmeshsubset ID is {0:X}", tmpMeshChunk.MeshSubsets);
+                        Console.WriteLine("tmpmeshsubset ID is {0:X}", tmpMeshChunk.MeshSubsets);
                         CryEngine_Core.ChunkMeshSubsets tmpMeshSubsets = (CryEngine_Core.ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
 
+                        if (tmpMeshChunk.MeshSubsets != 0)
+                        {
+                            tmpMeshSubsets = (CryEngine_Core.ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
+                        }
                         // Get pointers to the vertices data
                         if (tmpMeshChunk.VerticesData != 0)
                         {
@@ -551,7 +555,7 @@ namespace CgfConverter
                         {
                             polylists[j] = new Grendgine_Collada_Polylist();
                             polylists[j].Count = (int)tmpMeshSubsets.MeshSubsets[j].NumIndices / 3;
-                            //Console.WriteLine("Mat Index is {0}", tmpMeshSubsets.MeshSubsets[j].MatID);
+                            Console.WriteLine("Mat Index is {0}", tmpMeshSubsets.MeshSubsets[j].MatID);
                             polylists[j].Material = CryData.Materials[tmpMeshSubsets.MeshSubsets[j].MatID].Name + "-material";
                             // Create the 3 inputs.  vertex, normal, texcoord
                             polylists[j].Input = new Grendgine_Collada_Input_Shared[3];
