@@ -4,7 +4,7 @@
 
 How do you use it?  Well, here is the output from the current Usage:
 
-```
+```powershell
 cgf-converter [-usage] | <.cgf file> [-outputfile <output file>] [-objectdir <ObjectDir>] [-obj] [-blend] [-dae] [-smooth] [-throw]
 
 -usage:           Prints out the usage statement
