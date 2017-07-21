@@ -23,3 +23,5 @@ cgf-converter [-usage] | <.cgf file> [-outputfile <output file>] [-objectdir <Ob
 
 -throw:           Throw Exceptions to installed debugger
 ```
+
+Ok, so how do you actually **USE** it?
