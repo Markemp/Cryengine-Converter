@@ -1,4 +1,4 @@
-![image](/images/logos/logo-50px-prod.png "Heffay Presents")
+<img src="https://www.heffaypresents.com/images/logos/logo-50px-prod.png" align=right alt="Heffay Presents" width="64px" height="64px">
 
 # Cryengine Converter
 
