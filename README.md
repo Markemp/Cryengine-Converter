@@ -5,6 +5,8 @@
 How do you use it?  Well, here is the output from the current Usage:
 
 ```powershell
+PS D:\scripts> cgf-converter
+
 cgf-converter [-usage] | <.cgf file> [-outputfile <output file>] [-objectdir <ObjectDir>] [-obj] [-blend] [-dae] [-smooth] [-throw]
 
 -usage:           Prints out the usage statement
