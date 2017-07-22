@@ -1,3 +1,5 @@
+![image](/images/logos/logo-50px-prod.png "Heffay Presents")
+
 # Cryengine Converter
 
 [Cryengine Converter](https://www.heffaypresents.com/GitHub) is a C# program to help convert Cryengine assets into a more portable format. Currently it supports .obj and .dae (Collada) to some extent, although work is in progress to allow exporting Cryengine assets into FBX format.
