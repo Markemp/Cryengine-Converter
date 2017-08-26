@@ -55,6 +55,10 @@ namespace CgfConverter
         /// </summary>
         public Boolean Output_Collada { get; internal set; }
         /// <summary>
+        /// Render FBX
+        /// </summary>
+        public Boolean Output_FBX { get; internal set; }
+        /// <summary>
         /// Smooth Faces
         /// </summary>
         public Boolean Smooth { get; internal set; }
@@ -193,6 +197,12 @@ namespace CgfConverter
                         break;
 
                     #endregion
+                    #region case "-fbx"
+                    case "-fbx":
+                        Console.WriteLine("Output format set to FBX (.fbx)");
+                        this.Output_FBX = true;
+                        break;
+                    #endregion
                     #region case "-dae" / "-collada"...
                     case "-dae":
                     case "-collada":
@@ -317,7 +327,7 @@ namespace CgfConverter
             }
 
             // Default to Wavefront (.obj) format
-            if (!this.Output_Blender && !this.Output_Collada && !this.Output_Wavefront)
+            if (!this.Output_Blender && !this.Output_Collada && !this.Output_Wavefront && !this.Output_FBX)
                 this.Output_Wavefront = true;
 
             return 0;
@@ -341,7 +351,8 @@ namespace CgfConverter
             Console.WriteLine("                  Defaults to current directory.");
             Console.WriteLine("-obj:             Export Wavefront format files (Default: true)");
             Console.WriteLine("-blend:           Export Blender format files (Not Implemented)");
-            Console.WriteLine("-dae:             Export Collada format files (Not Implemented)");
+            Console.WriteLine("-dae:             Export Collada format files (Partially Implemented)");
+            Console.WriteLine("-fbx:             Export FBX format files (Not Implemented)");
             Console.WriteLine("-smooth:          Smooth Faces");
             Console.WriteLine("-group:           Group meshes into single model");
             Console.WriteLine();
@@ -369,6 +380,7 @@ namespace CgfConverter
             Console.WriteLine("    Output to .obj:         {0}", this.Output_Wavefront);
             Console.WriteLine("    Output to .blend:       {0}", this.Output_Blender);
             Console.WriteLine("    Output to .dae:         {0}", this.Output_Collada);
+            Console.WriteLine("    Output to .fbx:         {0}", this.Output_FBX);
             Console.WriteLine();
         }
 
