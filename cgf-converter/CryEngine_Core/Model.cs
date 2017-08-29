@@ -28,10 +28,17 @@ namespace CgfConverter.CryEngine_Core
         /// The Root of the loaded object
         /// </summary>
         public ChunkNode RootNode { get; internal set; }
+        
+        /// <summary>
+        /// The Root Bone
+        /// </summary>
+        public ChunkCompiledBones Bones { get; internal set; }
+        
         /// <summary>
         /// Collection of all loaded Chunks
         /// </summary>
         public List<ChunkHeader> ChunkHeaders { get; internal set; }
+        
         /// <summary>
         /// Lookup Table for Chunks, indexed by ChunkID
         /// </summary>
@@ -41,22 +48,27 @@ namespace CgfConverter.CryEngine_Core
         /// The name of the currently processed file
         /// </summary>
         public String FileName { get; internal set; }
+        
         /// <summary>
         /// The File Signature - CryTek for 3.5 and lower. CrCh for 3.6 and higher
         /// </summary>
         public String FileSignature { get; internal set; }
+        
         /// <summary>
         /// The type of file (geometry or animation)
         /// </summary>
         public FileTypeEnum FileType { get; internal set; }
+        
         /// <summary>
         /// The version of the file
         /// </summary>
         public FileVersionEnum FileVersion { get; internal set; }
+        
         /// <summary>
         /// Position of the Chunk Header table
         /// </summary>
         public Int32 ChunkTableOffset { get; internal set; }
+
         public UInt32 NumChunks { get; internal set; }
 
         #endregion
@@ -70,6 +82,8 @@ namespace CgfConverter.CryEngine_Core
         #region Calculated Properties
 
         public Int32 NodeCount { get { return this.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Count(); } }
+
+        public Int32 BoneCount { get { return this.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.CompiledBones).Count(); } }
 
         #endregion
 

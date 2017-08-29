@@ -1,13 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.26730.10
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cgf-converter", "cgf-converter\cgf-converter.csproj", "{CF5688EE-1E51-4371-B16A-DF4CBE4FC393}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{249882F2-714B-4382-9502-64EF6038E3BE}"
 	ProjectSection(SolutionItems) = preProject
-		collada_schema_1_5 = collada_schema_1_5
 		cgf-converter\OpenTK.Math.cs = cgf-converter\OpenTK.Math.cs
 		Tree.cs = Tree.cs
 	EndProjectSection
@@ -31,5 +30,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BA9C2289-7FBD-4B44-95D5-026B965368BB}
 	EndGlobalSection
 EndGlobal

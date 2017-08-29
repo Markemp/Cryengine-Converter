@@ -329,6 +329,7 @@ namespace CgfConverter.CryEngine_Core
                 using (Stream fileStream = materialfile.OpenRead())
                 {
                     return HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<CryEngine_Core.Material>(fileStream);
+                    //return HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<CryEngine_Core.Material>(materialfile.FullName);
                 }
             }
             catch (Exception ex)

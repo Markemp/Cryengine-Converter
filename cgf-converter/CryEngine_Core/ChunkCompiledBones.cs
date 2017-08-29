@@ -13,8 +13,8 @@ namespace CgfConverter.CryEngine_Core
         public CompiledBone RootBone;       // First bone in the data structure.  Usually Bip01
         public UInt32 NumBones;               // Number of bones in the chunk
         // Bone info
-        //public Dictionary<UInt32, CompiledBone> BoneDictionary = new Dictionary<UInt32, CompiledBone>();
-        public Dictionary<String, CompiledBone> BoneDictionary = new Dictionary<String, CompiledBone>();  // Name and CompiledBone object
+        // Bones are a bit different than Node Chunks, since there is only one CompiledBones Chunk, and it contains all the bones in the model.
+        public Dictionary<String, CompiledBone> BoneDictionary = new Dictionary<String, CompiledBone>();  // Dictionary of all the CompiledBone objects based on bone name.
 
         public override void WriteChunk()
         {

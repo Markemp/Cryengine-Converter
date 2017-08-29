@@ -28,7 +28,10 @@ namespace HoloXPLOR.DataForge
 
                 if (peek == '<')
                 {
-                    return null; // File is already XML
+                    // File is already XML, so return the XML.
+                    XmlDocument xml = new XmlDocument();
+                    xml.Load(inStream);
+                    return xml; // File is already XML
                 }
                 else if (peek != 'C')
                 {
@@ -218,19 +221,16 @@ namespace HoloXPLOR.DataForge
             }
         }
 
+
         public static TObject Deserialize<TObject>(Stream inStream) where TObject : class
         {
             using (MemoryStream ms = new MemoryStream())
             {
+                XmlSerializer xs = new XmlSerializer(typeof(TObject));
                 var xmlDoc = CryXmlSerializer.ReadStream(inStream);
 
-                if (ms != null)
-                    xmlDoc.Save(ms);
-
+                xmlDoc.Save(ms);
                 ms.Seek(0, SeekOrigin.Begin);
-
-                XmlSerializer xs = new XmlSerializer(typeof(TObject));
-
                 return xs.Deserialize(ms) as TObject;
             }
         }

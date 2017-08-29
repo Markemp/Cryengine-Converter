@@ -497,38 +497,39 @@ namespace CgfConverter
     public struct CompiledBone
     {
         public UInt32 controllerID;
-        public PhysicsGeometry[] physicsGeometry; // 2 of these.
-        public Double mass;                  // 0xD8 ?
-        public WORLDTOBONE worldToBone;     // 4x3 matrix
-        public BONETOWORLD boneToWorld;     // 4x3 matrix
-        public String boneName;             // String256 in old terms; convert to a real null terminated string.
-        public UInt32 limbID;               // ID of this limb... usually just 0xFFFFFFFF
-        public Int32  offsetParent;         // offset to the parent in number of CompiledBone structs (584 bytes)
-        public Int32 offsetChild;           // Offset to the first child to this bone in number of CompiledBone structs
-        public UInt32 numChildren;          // Number of children to this bone
-        public String parentID;             // Not part of the read structure, but the name of the parent bone put into the Bone Dictionary (the key)
-        public Int64 offset;                 // Not part of the structure, but where this one started.
-        public String[] childNames;         // Not part of read struct.  Contains the keys of the children to this bone
+        public PhysicsGeometry[] physicsGeometry;   // 2 of these.
+        public Double mass;                         // 0xD8 ?
+        public WORLDTOBONE worldToBone;             // 4x3 matrix
+        public BONETOWORLD boneToWorld;             // 4x3 matrix
+        public String boneName;                     // String256 in old terms; convert to a real null terminated string.
+        public UInt32 limbID;                       // ID of this limb... usually just 0xFFFFFFFF
+        public Int32  offsetParent;                 // offset to the parent in number of CompiledBone structs (584 bytes)
+        public Int32 offsetChild;                   // Offset to the first child to this bone in number of CompiledBone structs
+        public UInt32 numChildren;                  // Number of children to this bone
+        public UInt32 parentID;                     // Not part of the read structure, but the name of the parent bone put into the Bone Dictionary (the key)
+        public Int64 offset;                        // Not part of the structure, but where this one started.
+        public UInt32[] childIDs;                   // Not part of read struct.  Contains the keys of the children to this bone
 
         public void ReadCompiledBone(BinaryReader b)
         {
             // Reads just a single 584 byte entry of a bone. At the end the seek position will be advanced, so keep that in mind.
-            controllerID = b.ReadUInt32();
+            this.controllerID = b.ReadUInt32();                      // unique id of bone (generated from bone name)
             physicsGeometry = new PhysicsGeometry[2];
-            physicsGeometry[0].ReadPhysicsGeometry(b);
-            physicsGeometry[1].ReadPhysicsGeometry(b);
-            mass = b.ReadSingle();
+            this.physicsGeometry[0].ReadPhysicsGeometry(b);          // lod 0 is the physics of alive body, 
+            this.physicsGeometry[1].ReadPhysicsGeometry(b);          // lod 1 is the physics of a dead body
+            this.mass = b.ReadSingle();
             worldToBone = new WORLDTOBONE();
-            worldToBone.GetWorldToBone(b);
+            this.worldToBone.GetWorldToBone(b);
             boneToWorld = new BONETOWORLD();
-            boneToWorld.GetBoneToWorld(b);
-            boneName = b.ReadFString(256);
-            limbID = b.ReadUInt32();
-            offsetParent = b.ReadInt32();
-            numChildren = b.ReadUInt32();
-            offsetChild = b.ReadInt32();
-            childNames = new String[numChildren];
+            this.boneToWorld.GetBoneToWorld(b);
+            this.boneName = b.ReadFString(256);
+            this.limbID = b.ReadUInt32();
+            this.offsetParent = b.ReadInt32();
+            this.numChildren = b.ReadUInt32();
+            this.offsetChild = b.ReadInt32();
+            this.childIDs = new UInt32[numChildren];                 // Calculated
         }
+
         public void WriteCompiledBone()
         {
             // Output the bone to the console

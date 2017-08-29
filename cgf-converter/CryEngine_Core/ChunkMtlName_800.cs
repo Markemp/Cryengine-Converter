@@ -15,7 +15,7 @@ namespace CgfConverter.CryEngine_Core
 
             this.MatType = (MtlNameTypeEnum)b.ReadUInt32();
             // if 0x01, then material lib.  If 0x12, mat name.  This is actually a bitstruct.
-            this.SkipBytes(b, 4);
+            this.SkipBytes(b, 4);               // NFlags2
             this.Name = b.ReadFString(128);
             this.PhysicsType = new MtlNamePhysicsType[] { (MtlNamePhysicsType)b.ReadUInt32() };
             this.NumChildren = b.ReadUInt32();
@@ -25,7 +25,7 @@ namespace CgfConverter.CryEngine_Core
             {
                 this.ChildIDs[i] = b.ReadUInt32();
             }
-            this.SkipBytes(b);
+            this.SkipBytes(b, 32);
         }
     }
 }
