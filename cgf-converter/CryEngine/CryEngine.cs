@@ -26,6 +26,8 @@ namespace CgfConverter
 
         public CryEngine_Core.ChunkNode RootNode { get; internal set; }
 
+        public CryEngine_Core.ChunkCompiledBones Bones { get; internal set; }
+
         public String InputFile { get; internal set; }
 
         public CryEngine(String fileName, String dataDir)
@@ -62,6 +64,7 @@ namespace CgfConverter
             {
                 CryEngine_Core.Model model = CryEngine_Core.Model.FromFile(file.FullName);
                 this.RootNode = this.RootNode ?? model.RootNode;
+                this.Bones = this.Bones ?? model.Bones;
                 this.Models.Add(model);
             }
 

@@ -497,7 +497,7 @@
     <Compile Include="External\Types\Grendgine_Collada_SID_Name_Float.cs" />
     <Compile Include="External\Types\Grendgine_Collada_SID_Name_String.cs" />
     <Compile Include="External\Types\Grendgine_Collada_String_Array_String.cs" />
-    <Compile Include="FBX.cs" />
+    <Compile Include="FBX\FBX.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="Wavefront\Wavefront.Material.cs" />
     <Compile Include="Wavefront\Wavefront.cs" />

@@ -163,7 +163,6 @@ namespace CgfConverter.CryEngine_Core
             vec3 = this.RotSoFar.Mult3x1(vec3);
             // Do translations.  I think this is right.  Objects in right place, not rotated right.
             vec3 = vec3.Add(this.TransformSoFar);
-
             //}
 
             return vec3;

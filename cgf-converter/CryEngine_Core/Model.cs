@@ -33,7 +33,7 @@ namespace CgfConverter.CryEngine_Core
         /// The Root Bone
         /// </summary>
         public ChunkCompiledBones Bones { get; internal set; }
-        
+
         /// <summary>
         /// Collection of all loaded Chunks
         /// </summary>
@@ -42,7 +42,7 @@ namespace CgfConverter.CryEngine_Core
         /// <summary>
         /// Lookup Table for Chunks, indexed by ChunkID
         /// </summary>
-        public Dictionary<UInt32, CryEngine_Core.Chunk> ChunkMap { get; internal set; }
+        public Dictionary<UInt32, Chunk> ChunkMap { get; internal set; }
 
         /// <summary>
         /// The name of the currently processed file
@@ -222,8 +222,7 @@ namespace CgfConverter.CryEngine_Core
         /// Read HeaderTable from stream
         /// </summary>
         /// <typeparam name="TChunkHeader"></typeparam>
-        /// <param name="b"></param>
-        /// <param name="f"></param>
+        /// <param name="b">BinaryReader of file being read</param>
         private void Read_ChunkHeaders(BinaryReader b)
         {
             // need to seek to the start of the table here.  foffset points to the start of the table
@@ -232,18 +231,16 @@ namespace CgfConverter.CryEngine_Core
             for (Int32 i = 0; i < this.NumChunks; i++)
             {
                 ChunkHeader header = Chunk.New<ChunkHeader>((UInt32)this.FileVersion);
-
                 header.Read(b);
-
                 this._chunks.Add(header);
             }
             //this.WriteChunkTable();
         }
 
         /// <summary>
-        /// 
+        /// Reads all the chunks in the Cryengine file.
         /// </summary>
-        /// <param name="reader"></param>
+        /// <param name="reader">BinaryReader for the Cryengine file.</param>
         private void Read_Chunks(BinaryReader reader)
         {
             foreach (ChunkHeader chkHdr in this._chunks)
@@ -260,6 +257,12 @@ namespace CgfConverter.CryEngine_Core
                 if (chkHdr.ChunkType == ChunkTypeEnum.Node && this.RootNode == null)
                 {
                     this.RootNode = this.ChunkMap[chkHdr.ID] as ChunkNode;
+                }
+
+                // Add Bones to the model.  We are assuming there is only one CompiledBones chunk per file.
+                if (chkHdr.ChunkType == ChunkTypeEnum.CompiledBones)
+                {
+                    this.Bones = this.ChunkMap[chkHdr.ID] as ChunkCompiledBones;
                 }
             }
         }

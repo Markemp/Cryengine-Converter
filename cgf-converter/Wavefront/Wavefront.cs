@@ -157,6 +157,7 @@ namespace CgfConverter
 
             return value;
         }
+
         public void WriteObjNode(StreamWriter f, CryEngine_Core.ChunkNode chunkNode)  // Pass a node to this to have it write to the Stream
         {
             // Get the Transform here. It's the node chunk Transform.m(41/42/42) divided by 100, added to the parent transform.

@@ -38,7 +38,7 @@ namespace CgfConverter
             Utils.DebugLevel = LogLevelEnum.Debug;  // Send all to the IDE Output window
 
             //args = new String[] { @"c:\users\geoff\source\repos\cgf-converter\cgf-converter\bin\Debug\AEGS_Gladius.cga", "-objectdir", @"d:\blender projects\star citizen", "-dds", "-obj" };
-            args = new String[] { @"c:\users\geoff\source\repos\cgf-converter\cgf-converter\bin\Debug\AEGS_Gladius.cga", "-objectdir", @"d:\blender projects\star citizen", "-dds", "-dae" };
+            //args = new String[] { @"c:\users\geoff\source\repos\cgf-converter\cgf-converter\bin\Debug\AEGS_Gladius.cga", "-objectdir", @"d:\blender projects\star citizen", "-dds", "-dae" };
             //args = new String[] { @"d:\Blender Projects\Star Citizen\Objects\Spaceships\Ships\ORIG\300I\ORIG_300I.cga", "-objectdir", @"d:\blender projects\star citizen", "-dds", "-obj" };
             //args = new String[] { @"d:\Blender Projects\Star Citizen\Objects\Spaceships\Ships\AEGS\Gladius\AEGS_Gladius.cga", "-objectdir", @"d:\blender projects\star citizen", "-dds", "-obj" , "-merge"};
             //args = new String[] { @"c:\users\geoff\source\repos\cgf-converter\cgf-converter\bin\Debug\RSI_Aurora.cga", "-objectdir", @"d:\blender projects\star citizen", "-dds", "-obj" };
@@ -52,7 +52,7 @@ namespace CgfConverter
             //args = new String[] { @"c:\users\geoff\source\repos\cgf-converter\cgf-converter\bin\Debug\raptor.chr", "-dds", "-dae" };
             //args = new String[] { @"c:\users\geoff\source\repos\cgf-converter\cgf-converter\bin\Debug\ar03.chr", "-dds", "-obj" };
             //args = new String[] { @"D:\Blender Projects\Mechs\Objects\Mechs\adder\body\adder.chr", "-dds", "-dae", "-objectdir", @"d:\blender projects\mechs" }; 
-            //args = new String[] { @"D:\Blender Projects\Mechs\Objects\purchasable\cockpit_hanging\candycane\candycane_a.chr", "-dds", "-dae", "-objectdir", @"d:\blender projects\mechs" }; 
+            args = new String[] { @"D:\Blender Projects\Mechs\Objects\purchasable\cockpit_hanging\candycane\candycane_a.chr", "-dds", "-dae", "-objectdir", @"d:\blender projects\mechs" }; 
 #endif
 
             ArgsHandler argsHandler = new ArgsHandler();

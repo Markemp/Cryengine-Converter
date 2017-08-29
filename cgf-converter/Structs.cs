@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace CgfConverter
@@ -9,6 +10,7 @@ namespace CgfConverter
         public Int32 Start;
         public Int32 End;
     } // String32 Name, int Start, int End - complete
+
     public struct Vector3
     {
         public Double x;
@@ -47,6 +49,7 @@ namespace CgfConverter
         }
 
     }  // Vector in 3D space {x,y,z}
+
     public struct Vector4
     {
         public Double x;
@@ -76,6 +79,7 @@ namespace CgfConverter
             Utils.Log(LogLevelEnum.Debug, "x:{0:F7}  y:{1:F7}  z:{2:F7} w:{3:F7}", x, y, z, w);
         }
     }
+
     public struct Matrix33    // a 3x3 transformation matrix
     {
         public Double m11;
@@ -235,9 +239,12 @@ namespace CgfConverter
             Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}", m21, m22, m23);
             Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}", m31, m32, m33);
         }
-            
     }
-    public struct Matrix44    // a 4x4 transformation matrix.  first value is row, second is column
+
+    /// <summary>
+    /// A 4x4 Transformation matrix.  These are row major matrices (m13 is first row, 3rd column).
+    /// </summary>
+    public struct Matrix44    // a 4x4 transformation matrix.  first value is row, second is column.
     {
         public Double m11;
         public Double m12;
@@ -271,6 +278,43 @@ namespace CgfConverter
 
             return result;
         }
+
+        public static Vector4 operator *(Matrix44 lhs, Vector4 vector)
+        {
+            Vector4 result = new Vector4();
+            result.x = (lhs.m11 * vector.x) + (lhs.m21 * vector.y) + (lhs.m31 * vector.z) + lhs.m41 / 100;
+            result.y = (lhs.m12 * vector.x) + (lhs.m22 * vector.y) + (lhs.m32 * vector.z) + lhs.m42 / 100;
+            result.z = (lhs.m13 * vector.x) + (lhs.m23 * vector.y) + (lhs.m33 * vector.z) + lhs.m43 / 100;
+            result.w = (lhs.m14 * vector.x) + (lhs.m24 * vector.y) + (lhs.m34 * vector.z) + lhs.m44 / 100;
+            return result;
+        }
+
+        public static Matrix44 operator *(Matrix44 lhs, Matrix44 rhs)
+        {
+            Matrix44 result = new Matrix44();
+            result.m11 = (lhs.m11 * rhs.m11) + (lhs.m12 * rhs.m21) + (lhs.m13 * rhs.m31) + (lhs.m14 * rhs.m41);  // First row
+            result.m12 = (lhs.m11 * rhs.m12) + (lhs.m12 * rhs.m22) + (lhs.m13 * rhs.m32) + (lhs.m14 * rhs.m42);
+            result.m13 = (lhs.m11 * rhs.m13) + (lhs.m12 * rhs.m23) + (lhs.m13 * rhs.m33) + (lhs.m14 * rhs.m43);
+            result.m14 = (lhs.m11 * rhs.m14) + (lhs.m12 * rhs.m24) + (lhs.m13 * rhs.m34) + (lhs.m14 * rhs.m44);
+
+            result.m21 = (lhs.m21 * rhs.m11) + (lhs.m22 * rhs.m21) + (lhs.m23 * rhs.m31) + (lhs.m24 * rhs.m41);  // second row
+            result.m22 = (lhs.m21 * rhs.m12) + (lhs.m22 * rhs.m22) + (lhs.m23 * rhs.m32) + (lhs.m24 * rhs.m42);
+            result.m23 = (lhs.m21 * rhs.m13) + (lhs.m22 * rhs.m23) + (lhs.m23 * rhs.m33) + (lhs.m24 * rhs.m43);
+            result.m24 = (lhs.m21 * rhs.m14) + (lhs.m22 * rhs.m24) + (lhs.m23 * rhs.m34) + (lhs.m24 * rhs.m44);
+
+            result.m31 = (lhs.m31 * rhs.m11) + (lhs.m32 * rhs.m21) + (lhs.m33 * rhs.m31) + (lhs.m34 * rhs.m41);  // third row
+            result.m32 = (lhs.m31 * rhs.m12) + (lhs.m32 * rhs.m22) + (lhs.m33 * rhs.m32) + (lhs.m34 * rhs.m42);
+            result.m33 = (lhs.m31 * rhs.m13) + (lhs.m32 * rhs.m23) + (lhs.m33 * rhs.m33) + (lhs.m34 * rhs.m43);
+            result.m34 = (lhs.m31 * rhs.m14) + (lhs.m32 * rhs.m24) + (lhs.m33 * rhs.m34) + (lhs.m34 * rhs.m44);
+
+            result.m41 = (lhs.m41 * rhs.m11) + (lhs.m42 * rhs.m21) + (lhs.m43 * rhs.m31) + (lhs.m44 * rhs.m41);  // fourth row
+            result.m42 = (lhs.m41 * rhs.m12) + (lhs.m42 * rhs.m22) + (lhs.m43 * rhs.m32) + (lhs.m44 * rhs.m42);
+            result.m43 = (lhs.m41 * rhs.m13) + (lhs.m42 * rhs.m23) + (lhs.m43 * rhs.m33) + (lhs.m44 * rhs.m43);
+            result.m44 = (lhs.m41 * rhs.m14) + (lhs.m42 * rhs.m24) + (lhs.m43 * rhs.m34) + (lhs.m44 * rhs.m44);
+
+            return result;
+        }
+
         public Matrix33 To3x3()
         {
             Matrix33 result = new Matrix33();
@@ -285,6 +329,7 @@ namespace CgfConverter
             result.m33 = m33;
             return result;
         }
+
         public Vector3 GetTranslation()
         {
             Vector3 result = new Vector3();
@@ -293,6 +338,7 @@ namespace CgfConverter
             result.z = m43 / 100;
             return result;
         }
+
         public void WriteMatrix44()
         {
             Utils.Log(LogLevelEnum.Verbose, "=============================================");
@@ -302,21 +348,28 @@ namespace CgfConverter
             Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}  {3:F7}", m41, m42, m43, m44);
             Utils.Log(LogLevelEnum.Verbose);
         }
-
     }
 
-    public struct Quat        // A quaternion (x,y,z,w)
+    /// <summary>
+    /// A quaternion (x,y,z,w)
+    /// </summary>
+    public struct Quat 
     {
         public Double x;
         public Double y;
         public Double z;
         public Double w;
     }
-    public struct Vertex      // position p(Vector3) and normal n(Vector3)
+
+    /// <summary>
+    /// Vertex with position p(Vector3) and normal n(Vector3)
+    /// </summary>
+    public struct Vertex      // 
     {
         public Vector3 p;  // position
         public Vector3 n;  // normal
     }
+
     public struct Face        // mesh face (3 vertex, Material index, smoothing group.  All ints)
     {
         public int v0; // first vertex
@@ -325,6 +378,7 @@ namespace CgfConverter
         public int Material; // Material Index
         public int SmGroup; //smoothing group
     }
+
     public struct MeshSubset
     {
         public uint FirstIndex;
@@ -348,6 +402,7 @@ namespace CgfConverter
             Center.WriteVector3();
         }
     }  // Contains data about the parts of a mesh, such as vertices, radius and center.
+
     public struct Key
     {
         public int Time; // Time in ticks
@@ -357,28 +412,33 @@ namespace CgfConverter
         public Vector3 Unknown1; // If ARG==6 or 10?
         public Double[] Unknown2; // If ARG==9?  array length = 2
     }
+
     public struct UV
     {
         public Double U;
         public Double V;
     }
+
     public struct UVFace
     {
         public int t0; // first vertex index
         public int t1; // second vertex index
         public int t2; // third vertex index
     }
+
     /*public struct TextureMap
     {
 
     }*/
     // Fill this in later.  line 369 in cgf.xml.
+
     public struct IRGB
     {
         public byte r; // red
         public byte g; // green
         public byte b; // blue
     }
+
     public struct IRGBA
     {
         public byte r; // red
@@ -387,12 +447,14 @@ namespace CgfConverter
         public byte a; // alpha
 
     }
+
     public struct FRGB
     {
         public Double r; // Double Red
         public Double g; // Double green
         public Double b; // Double blue
     }
+
     public struct Tangent
     {
         // Tangents.  Divide each component by 32767 to get the actual value
@@ -401,48 +463,47 @@ namespace CgfConverter
         public short z;
         public short w;  // Handness?  Either 32767 (+1.0) or -32767 (-1.0)
     }
+
     public struct WORLDTOBONE
     {
         public Double[,] worldToBone;   //  4x3 structure
         
         public void GetWorldToBone(BinaryReader b)
         {
-            worldToBone = new Double[4,3];
-            //Utils.Log(LogLevelEnum.Debug, "GetWorldToBone {0:X}", b.BaseStream.Position);
-            for (int i = 0; i<4; i++) 
+            worldToBone = new Double[3,4];
+            for (int i = 0; i < 3; i++) 
             {
-                for (int j = 0; j < 3; j++)
+                for (int j = 0; j < 4; j++)
                 {
                     worldToBone[i, j] = b.ReadSingle();  // this might have to be switched to [j,i].  Who knows???
-                    //tempW2B.worldToBone[i, j] = b.ReadSingle();  // this might have to be switched to [j,i].  Who knows???
                     //Utils.Log(LogLevelEnum.Debug, "worldToBone: {0:F7}", worldToBone[i, j]);
                 }
             }
             return;
         }
+
         public void WriteWorldToBone()
         {
             //Utils.Log(LogLevelEnum.Verbose);
             //Utils.Log(LogLevelEnum.Verbose, "     *** World to Bone ***");
-            Utils.Log(LogLevelEnum.Verbose, "     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[0, 0], this.worldToBone[0, 1], this.worldToBone[0, 2]);
-            Utils.Log(LogLevelEnum.Verbose, "     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[1, 0], this.worldToBone[1, 1], this.worldToBone[1, 2]);
-            Utils.Log(LogLevelEnum.Verbose, "     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[2, 0], this.worldToBone[2, 1], this.worldToBone[2, 2]);
-            Utils.Log(LogLevelEnum.Verbose, "     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[3, 0], this.worldToBone[3, 1], this.worldToBone[3, 2]);
+            Utils.Log(LogLevelEnum.Verbose, "     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[0, 0], this.worldToBone[0, 1], this.worldToBone[0, 2], this.worldToBone[0, 3]);
+            Utils.Log(LogLevelEnum.Verbose, "     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[1, 0], this.worldToBone[1, 1], this.worldToBone[1, 2], this.worldToBone[1, 3]);
+            Utils.Log(LogLevelEnum.Verbose, "     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[2, 0], this.worldToBone[2, 1], this.worldToBone[2, 2], this.worldToBone[2, 3]);
             //Utils.Log(LogLevelEnum.Verbose);
         }
     }
+
     public struct BONETOWORLD
     {
         public Double[,] boneToWorld;   //  4x3 structure
 
         public void GetBoneToWorld(BinaryReader b)
         {
-            //BONETOWORLD tempB2W = new BONETOWORLD();
-            boneToWorld = new Double[4, 3];
+            boneToWorld = new Double[3, 4];
             //Utils.Log(LogLevelEnum.Debug, "GetBoneToWorld");
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 3; i++)
             {
-                for (int j = 0; j < 3; j++)
+                for (int j = 0; j < 4; j++)
                 {
                     boneToWorld[i, j] = b.ReadSingle();  // this might have to be switched to [j,i].  Who knows???
                     //Utils.Log(LogLevelEnum.Debug, "boneToWorld: {0:F7}", boneToWorld[i, j]);
@@ -450,14 +511,14 @@ namespace CgfConverter
             }
             return;
         }
+
         public void WriteBoneToWorld()
         {
             Utils.Log(LogLevelEnum.Verbose);
             Utils.Log(LogLevelEnum.Verbose, "*** Bone to World ***");
-            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}", this.boneToWorld[0, 0], this.boneToWorld[0, 1], this.boneToWorld[0, 2]);
-            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}", this.boneToWorld[1, 0], this.boneToWorld[1, 1], this.boneToWorld[1, 2]);
-            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}", this.boneToWorld[2, 0], this.boneToWorld[2, 1], this.boneToWorld[2, 2]);
-            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}", this.boneToWorld[3, 0], this.boneToWorld[3, 1], this.boneToWorld[3, 2]);
+            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}", this.boneToWorld[0, 0], this.boneToWorld[0, 1], this.boneToWorld[0, 2], this.boneToWorld[0, 3]);
+            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}", this.boneToWorld[1, 0], this.boneToWorld[1, 1], this.boneToWorld[1, 2], this.boneToWorld[1, 3]);
+            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}", this.boneToWorld[2, 0], this.boneToWorld[2, 1], this.boneToWorld[2, 2], this.boneToWorld[2, 3]);
             Utils.Log(LogLevelEnum.Verbose);
         }
 
@@ -497,7 +558,7 @@ namespace CgfConverter
     public struct CompiledBone
     {
         public UInt32 controllerID;
-        public PhysicsGeometry[] physicsGeometry;   // 2 of these.
+        public PhysicsGeometry[] physicsGeometry;   // 2 of these.  One for live objects, other for dead (ragdoll?)
         public Double mass;                         // 0xD8 ?
         public WORLDTOBONE worldToBone;             // 4x3 matrix
         public BONETOWORLD boneToWorld;             // 4x3 matrix
@@ -506,17 +567,21 @@ namespace CgfConverter
         public Int32  offsetParent;                 // offset to the parent in number of CompiledBone structs (584 bytes)
         public Int32 offsetChild;                   // Offset to the first child to this bone in number of CompiledBone structs
         public UInt32 numChildren;                  // Number of children to this bone
-        public UInt32 parentID;                     // Not part of the read structure, but the name of the parent bone put into the Bone Dictionary (the key)
-        public Int64 offset;                        // Not part of the structure, but where this one started.
-        public UInt32[] childIDs;                   // Not part of read struct.  Contains the keys of the children to this bone
+
+        public UInt32 parentID;                     // Not part of the read structure, but the controllerID of the parent bone put into the Bone Dictionary (the key)
+        public Int64 offset;                        // Not part of the structure, but the position in the file where this bone started.
+        public List<uint> childIDs;                 // Not part of read struct.  Contains the controllerIDs of the children to this bone.
+        public Matrix44 BoneTransform;              // The BONETOWORLD boneToWorld double array converted to Matrix44 format.  Calculated, row major.
+        public Matrix44 TransformSoFar;             // Because Cryengine tends to store transform relative to world, we have to add all the transforms from the node to the root.  Calculated, row major.
+
 
         public void ReadCompiledBone(BinaryReader b)
         {
             // Reads just a single 584 byte entry of a bone. At the end the seek position will be advanced, so keep that in mind.
-            this.controllerID = b.ReadUInt32();                      // unique id of bone (generated from bone name)
+            this.controllerID = b.ReadUInt32();                 // unique id of bone (generated from bone name)
             physicsGeometry = new PhysicsGeometry[2];
-            this.physicsGeometry[0].ReadPhysicsGeometry(b);          // lod 0 is the physics of alive body, 
-            this.physicsGeometry[1].ReadPhysicsGeometry(b);          // lod 1 is the physics of a dead body
+            this.physicsGeometry[0].ReadPhysicsGeometry(b);     // lod 0 is the physics of alive body, 
+            this.physicsGeometry[1].ReadPhysicsGeometry(b);     // lod 1 is the physics of a dead body
             this.mass = b.ReadSingle();
             worldToBone = new WORLDTOBONE();
             this.worldToBone.GetWorldToBone(b);
@@ -527,7 +592,9 @@ namespace CgfConverter
             this.offsetParent = b.ReadInt32();
             this.numChildren = b.ReadUInt32();
             this.offsetChild = b.ReadInt32();
-            this.childIDs = new UInt32[numChildren];                 // Calculated
+            this.childIDs = new List<uint>();                    // Calculated
+            // Convert the boneToWorld object to BoneTransform
+            this.BoneTransform = Calculate4x4Matrix(this.boneToWorld.boneToWorld);
         }
 
         public void WriteCompiledBone()
@@ -547,6 +614,29 @@ namespace CgfConverter
             Utils.Log(LogLevelEnum.Verbose, "    Child Offset:  {0}", offsetChild);
             Utils.Log(LogLevelEnum.Verbose, "    Number of Children:  {0}", numChildren);
             Utils.Log(LogLevelEnum.Verbose, "*** End Bone {0}", boneName);
+        }
+
+        public Matrix44 Calculate4x4Matrix(double[,] boneToWorld)
+        {
+            Matrix44 matrix = new Matrix44();
+            matrix.m11 = boneToWorld[0, 0];
+            matrix.m12 = boneToWorld[0, 1];
+            matrix.m13 = boneToWorld[0, 2];
+            matrix.m14 = boneToWorld[0, 3];
+            matrix.m21 = boneToWorld[1, 0];
+            matrix.m22 = boneToWorld[1, 1];
+            matrix.m23 = boneToWorld[1, 2];
+            matrix.m24 = boneToWorld[1, 3];
+            matrix.m31 = boneToWorld[2, 0];
+            matrix.m32 = boneToWorld[2, 1];
+            matrix.m33 = boneToWorld[2, 2];
+            matrix.m34 = boneToWorld[2, 3];
+            matrix.m41 = 0;
+            matrix.m42 = 0;
+            matrix.m43 = 0;
+            matrix.m44 = 1;
+
+            return matrix;
         }
     }
 
@@ -572,24 +662,28 @@ namespace CgfConverter
         }
     }
     // Bone Structures courtesy of revelation
+
     public struct InitialPosMatrix
     {
         // A bone initial position matrix.
         Matrix33 Rot;              // type="Matrix33">
         Vector3 Pos;                // type="Vector3">
     }
+
     public struct BoneNameListChunk
     {
         //<version num="745">Far Cry, Crysis, Aion</version>
         UInt32 Num_Names;           //" type="uint" />
         UInt16[]  boneNames;        // uint 8?
     }
+
     public struct BoneInitialPosChunk
     {
         UInt32 Mesh;      // type="Ptr" template="MeshChunk">The mesh with bone info for which these bone initial positions are applicable. There might be some unused bones here as well. There must be the same number of bones as in the other chunks - they are placed in BoneId order.</add>
         UInt32 Num_Bones; // Number of bone initial positions.
         InitialPosMatrix[] Initial_Pos_Matrices; // type="InitialPosMatrix" arr1="Num Bones"
     }
+
     public struct BonePhysics           // 26 total words = 104 total bytes
     {
         UInt32 Geometry;                //" type="Ref" template="BoneMeshChunk">Geometry of a separate mesh for this bone.</add>
@@ -602,6 +696,7 @@ namespace CgfConverter
         Vector3 Damping;               //" type="Vector3" />
         Matrix33  Frame_Matrix;        //" type="Matrix33" />
     }       // 
+
     public struct BoneEntity
     {
         UInt32 Bone_Id;                 //" type="int">Bone identifier.</add>
@@ -611,12 +706,14 @@ namespace CgfConverter
         char[]   Properties;            //" type="String32" />
         BonePhysics Physics;            //" type="BonePhysics" />
     }
+
     public struct BoneAnimChunk
     {
         //<version num="290">Far Cry, Crysis, Aion</version>
         UInt32 Num_Bones;               //" type="uint" />
         BoneEntity[] Bones;             //" type="BoneEntity" arr1="Num Bones" />
     }
+
     public struct PhysicsData
     {
         // Collision or hitbox info.  Part of the MeshPhysicsData chunk
@@ -643,6 +740,7 @@ namespace CgfConverter
         public PhysicsStruct1 Unknown15;
         public int Unknown16;
     }
+
     public struct PhysicsPolyhedron
     {
         public uint NumVertices;
@@ -666,18 +764,21 @@ namespace CgfConverter
         public float Unknown464; 
         // There is more.  See cgf.xml for the rest, but probably not really needed
     }
+
     public struct PhysicsCylinder
     {
         public float[] Unknown1;  // array length 8
         public int Unknown2;
         public PhysicsDataType2 Unknown3;
     }
+
     public struct PhysicsShape6
     {
         public float[] Unknown1; // array length 8
         public int Unknown2;
         public PhysicsDataType2 Unknown3;
     }
+
     public struct PhysicsDataType0
     {
         public int NumData;
@@ -685,6 +786,7 @@ namespace CgfConverter
         public int[] Unknown33; // array length 3
         public float Unknown80;
     }
+
     public struct PhysicsDataType1
     {
         public uint NumData1;  // usually 4294967295
@@ -696,6 +798,7 @@ namespace CgfConverter
         public int [] Unknown70; //Array length 3
         public float Unknown80;
     }
+
     public struct PhysicsDataType2
     {
         public Matrix33 Unknown1;
@@ -710,12 +813,14 @@ namespace CgfConverter
         public int Unknown2;
         public float[] Unknown3; // array length 6
     }
+
     public struct PhysicsStruct2
     {
         public Matrix33 Unknown1;
         public float[] Unknown2;  // array length 6
         public int[] Unknown3; // array length 3
     }
+
     public struct PhysicsStruct50
     {
         public short Unknown11;

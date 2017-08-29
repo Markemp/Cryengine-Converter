@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace CgfConverter.CryEngine_Core
 {
-    public class ChunkMtlName_800 : CryEngine_Core.ChunkMtlName
+    public class ChunkMtlName_800 : ChunkMtlName
     {
         public override void Read(BinaryReader b)
         {
