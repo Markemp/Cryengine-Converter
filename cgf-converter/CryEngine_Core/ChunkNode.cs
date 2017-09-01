@@ -22,7 +22,7 @@ namespace CgfConverter.CryEngine_Core
         /// <summary>
         /// Node parent.  if 0xFFFFFFFF, it's the top node.  Maybe...
         /// </summary>
-        public UInt32 ParentNodeID { get; internal set; }
+        public UInt32 ParentNodeID { get; internal set; }  // Parent nodeID
         public UInt32 __NumChildren;
         /// <summary>
         /// Material ID for this chunk
@@ -68,6 +68,7 @@ namespace CgfConverter.CryEngine_Core
         #region Calculated Properties
 
         private ChunkNode _parentNode;
+
         public ChunkNode ParentNode
         {
             get

@@ -245,4 +245,25 @@
         CYLINDER = 0X5,
         UNKNOWN6 = 0X6   // nothing between 2-4, no idea what unknown is.
     }
+
+    public enum ECgfStreamType : uint
+    {
+        CGF_STREAM_POSITIONS,
+        CGF_STREAM_NORMALS,
+        CGF_STREAM_TEXCOORDS,
+        CGF_STREAM_COLORS,
+        CGF_STREAM_COLORS2,
+        CGF_STREAM_INDICES,
+        CGF_STREAM_TANGENTS,
+        CGF_STREAM_DUMMY0_,  // used to be CGF_STREAM_SHCOEFFS, dummy is needed to keep existing assets loadable
+        CGF_STREAM_DUMMY1_,  // used to be CGF_STREAM_SHAPEDEFORMATION, dummy is needed to keep existing assets loadable
+        CGF_STREAM_BONEMAPPING,
+        CGF_STREAM_FACEMAP,
+        CGF_STREAM_VERT_MATS,
+        CGF_STREAM_QTANGENTS,
+        CGF_STREAM_SKINDATA,
+        CGF_STREAM_DUMMY2_,  // used to be CGF_STREAM_PS3EDGEDATA, dummy is needed to keep existing assets loadable
+        CGF_STREAM_P3S_C4B_T2S,
+        CGF_STREAM_NUM_TYPES
+    };
 }

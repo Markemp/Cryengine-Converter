@@ -573,6 +573,8 @@ namespace CgfConverter
         public List<uint> childIDs;                 // Not part of read struct.  Contains the controllerIDs of the children to this bone.
         public Matrix44 BoneTransform;              // The BONETOWORLD boneToWorld double array converted to Matrix44 format.  Calculated, row major.
         public Matrix44 TransformSoFar;             // Because Cryengine tends to store transform relative to world, we have to add all the transforms from the node to the root.  Calculated, row major.
+        public Vector4 TranslationSoFar;            // This is the last column in the transform matrix, with m44 being 1.
+        public Vector4 Translation;                 // The 4th column of the BONETOWORLD transform matrix.
 
 
         public void ReadCompiledBone(BinaryReader b)
@@ -595,6 +597,10 @@ namespace CgfConverter
             this.childIDs = new List<uint>();                    // Calculated
             // Convert the boneToWorld object to BoneTransform
             this.BoneTransform = Calculate4x4Matrix(this.boneToWorld.boneToWorld);
+            this.Translation.w = boneToWorld.boneToWorld[0, 3];
+            this.Translation.x = boneToWorld.boneToWorld[1, 3];
+            this.Translation.y = boneToWorld.boneToWorld[2, 3];
+            this.Translation.z = 1;
         }
 
         public void WriteCompiledBone()

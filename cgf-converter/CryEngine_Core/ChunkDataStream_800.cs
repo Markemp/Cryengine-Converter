@@ -352,6 +352,14 @@ namespace CgfConverter.CryEngine_Core
                             break;
                     }
                     break;
+                #endregion
+                #region case DataStreamTypeEnum.BONEMAP:
+                case DataStreamTypeEnum.BONEMAP:
+
+
+                    break;
+
+
 
                 #endregion
                 #region default:

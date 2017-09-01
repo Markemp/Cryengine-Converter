@@ -384,6 +384,7 @@ namespace CgfConverter
                 ChunkDataStream tmpVertices = null;
                 ChunkDataStream tmpVertsUVs = null;
                 ChunkDataStream tmpIndices = null;
+                ChunkDataStream tmpColors = null;
 
                 if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Mesh)
                 {
@@ -417,7 +418,7 @@ namespace CgfConverter
                         {
                             tmpUVs = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.UVsData];
                         }
-                        if (tmpMeshChunk.VertsUVsData != 0)
+                        if (tmpMeshChunk.VertsUVsData != 0)     // Star Citizen file.  That means VerticesData and UVsData will probably be empty.  Need to handle both cases.
                         {
                             tmpVertsUVs = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.VertsUVsData];
                         }
@@ -425,6 +426,10 @@ namespace CgfConverter
                         {
                             tmpIndices = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.IndicesData];
                             //tmpIndices.WriteChunk();
+                        }
+                        if (tmpMeshChunk.ColorsData != 0)
+                        {
+                            tmpColors = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.ColorsData];
                         }
 
                         // tmpGeo is a Geometry object for each meshsubset.  Name will be "Nodechunk name_matID".  Hopefully there is only one matID used per submesh
@@ -463,7 +468,7 @@ namespace CgfConverter
                         vertices.ID = nodeChunk.Name + "-vertices";
                         posInput.Semantic = Grendgine_Collada_Input_Semantic.POSITION;
                         normInput.Semantic = Grendgine_Collada_Input_Semantic.NORMAL;
-                        uvInput.Semantic = Grendgine_Collada_Input_Semantic.TEXCOORD;   // might need to replace UV with UV
+                        uvInput.Semantic = Grendgine_Collada_Input_Semantic.TEXCOORD;   // might need to replace TEXCOORD with UV
                         colorInput.Semantic = Grendgine_Collada_Input_Semantic.COLOR;
 
                         posInput.source = "#" + posSource.ID;
@@ -485,6 +490,7 @@ namespace CgfConverter
                         Grendgine_Collada_Float_Array floatArrayVerts = new Grendgine_Collada_Float_Array();
                         Grendgine_Collada_Float_Array floatArrayNormals = new Grendgine_Collada_Float_Array();
                         Grendgine_Collada_Float_Array floatArrayUVs = new Grendgine_Collada_Float_Array();
+                        Grendgine_Collada_Float_Array floatArrayColors = new Grendgine_Collada_Float_Array();
 
                         floatArrayVerts.ID = posSource.ID + "-array";
                         floatArrayVerts.Digits = 6;
@@ -498,11 +504,17 @@ namespace CgfConverter
                         floatArrayUVs.Digits = 6;
                         floatArrayUVs.Magnitude = 38;
                         floatArrayUVs.Count = (int)tmpUVs.NumElements * 2;
+                        floatArrayColors.ID = colorSource.ID + "-array";
+                        floatArrayColors.Digits = 6;
+                        floatArrayColors.Magnitude = 38;
+                        //floatArrayColors.Count = (int)tmpColors.NumElements * 3;
+
 
                         // Build the string of vertices with a stringbuilder
                         StringBuilder vertString = new StringBuilder();
                         StringBuilder normString = new StringBuilder();
                         StringBuilder uvString = new StringBuilder();
+                        StringBuilder colorString = new StringBuilder();
                         // Vertices
                         for (uint j = 0; j < tmpMeshChunk.NumVertices; j++)
                         //uint j = meshSubset.FirstVertex; j < meshSubset.NumVertices + meshSubset.FirstVertex; j++
@@ -613,10 +625,12 @@ namespace CgfConverter
                         floatArrayVerts.Value_As_String = vertString.ToString();
                         floatArrayNormals.Value_As_String = normString.ToString();
                         floatArrayUVs.Value_As_String = uvString.ToString();
+                        floatArrayColors.Value_As_String = colorString.ToString();
 
                         source[0].Float_Array = floatArrayVerts;
                         source[1].Float_Array = floatArrayNormals;
                         source[2].Float_Array = floatArrayUVs;
+                        source[3].Float_Array = floatArrayColors;
                         tmpGeo.Mesh.Source = source;
 
                         // create the technique_common for each of these
@@ -636,6 +650,7 @@ namespace CgfConverter
                         paramPos[2].Name = "Z";
                         paramPos[2].Type = "float";
                         posSource.Technique_Common.Accessor.Param = paramPos;
+
                         normSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source();
                         normSource.Technique_Common.Accessor = new Grendgine_Collada_Accessor();
                         normSource.Technique_Common.Accessor.Source = "#" + floatArrayNormals.ID;
@@ -652,6 +667,7 @@ namespace CgfConverter
                         paramNorm[2].Name = "Z";
                         paramNorm[2].Type = "float";
                         normSource.Technique_Common.Accessor.Param = paramNorm;
+
                         uvSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source();
                         uvSource.Technique_Common.Accessor = new Grendgine_Collada_Accessor();
                         uvSource.Technique_Common.Accessor.Source = "#" + floatArrayUVs.ID;
@@ -665,7 +681,29 @@ namespace CgfConverter
                         paramUV[1].Name = "T";
                         paramUV[1].Type = "float";
                         uvSource.Technique_Common.Accessor.Param = paramUV;
+
+                        if (tmpColors != null)
+                        {
+                            colorSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source();
+                            colorSource.Technique_Common.Accessor = new Grendgine_Collada_Accessor();
+                            colorSource.Technique_Common.Accessor.Source = "#" + floatArrayColors.ID;
+                            colorSource.Technique_Common.Accessor.Stride = 3;
+                            colorSource.Technique_Common.Accessor.Count = tmpColors.NumElements;
+                            Grendgine_Collada_Param[] paramColor = new Grendgine_Collada_Param[3];
+                            paramColor[0] = new Grendgine_Collada_Param();
+                            paramColor[1] = new Grendgine_Collada_Param();
+                            paramColor[2] = new Grendgine_Collada_Param();
+                            paramColor[0].Name = "R";
+                            paramColor[0].Type = "float";
+                            paramColor[1].Name = "G";
+                            paramColor[1].Type = "float";
+                            paramColor[2].Name = "B";
+                            paramColor[2].Type = "float";
+                            colorSource.Technique_Common.Accessor.Param = paramColor;
+                        }
+
                         geometryList.Add(tmpGeo);
+
                         #endregion
                     }
                 }
@@ -848,6 +886,15 @@ namespace CgfConverter
                 Type = Grendgine_Collada_Node_Type.JOINT
             };
 
+            // Add the translation vector to the node
+            List<Grendgine_Collada_Translate> translations = new List<Grendgine_Collada_Translate>();
+            Grendgine_Collada_Translate translate = new Grendgine_Collada_Translate();
+            StringBuilder translateString = new StringBuilder();
+            translateString.AppendFormat("{0:F7} {1:F7} {2:F7}", bone.boneToWorld.boneToWorld[0, 3], bone.boneToWorld.boneToWorld[1, 3], bone.boneToWorld.boneToWorld[2, 3]);
+            translate.Value_As_String = translateString.ToString();
+            translations.Add(translate);
+            tmpNode.Translate = translations.ToArray();
+
             Grendgine_Collada_Matrix matrix = new Grendgine_Collada_Matrix();
             List<Grendgine_Collada_Matrix> matrices = new List<Grendgine_Collada_Matrix>();
             // Populate the matrix.  This is based on the BONETOWORLD data in this bone.
@@ -856,8 +903,8 @@ namespace CgfConverter
             {
                 for (int j = 0; j < 4; j++)
                 {
-                    //matrixValues.AppendFormat("{0:F6} ", bone.boneToWorld.boneToWorld[i, j]);
-                    matrixValues.AppendFormat("{0:F7} ", bone.worldToBone.worldToBone[i, j]);
+                    matrixValues.AppendFormat("{0:F7} ", bone.boneToWorld.boneToWorld[i, j]);
+                    //matrixValues.AppendFormat("{0:F7} ", bone.worldToBone.worldToBone[i, j]);  // pretty sure it's boneToWorld, since the initial bone matches up with the Noesis version.
                 }
             }
             matrixValues.Append("0 0 0 1");
