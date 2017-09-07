@@ -803,11 +803,6 @@ namespace CgfConverter
                     StringBuilder matrixString = new StringBuilder();
 
                     // matrixString might have to be an identity matrix, since GetTransform is applying the transform to all the vertices.
-                    /*matrixString.AppendFormat("{0:F7} {1:F7} {2:F7} {3:F7} {4:F7} {5:F7} {6:F7} {7:F7} {8:F7} {9:F7} {10:F7} {11:F7} {12:F7} {13:F7} {14:F7} {15:F7}",
-                        nodeChunk.Transform.m11, nodeChunk.Transform.m12, nodeChunk.Transform.m13, nodeChunk.Transform.m14,
-                        nodeChunk.Transform.m21, nodeChunk.Transform.m22, nodeChunk.Transform.m23, nodeChunk.Transform.m24,
-                        nodeChunk.Transform.m31, nodeChunk.Transform.m32, nodeChunk.Transform.m33, nodeChunk.Transform.m34,
-                        nodeChunk.Transform.m41 / 100, nodeChunk.Transform.m42 / 100, nodeChunk.Transform.m43 / 100, nodeChunk.Transform.m44);*/
                     matrixString.AppendFormat("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0");
                     matrix.Value_As_String = matrixString.ToString();
                     matrix.sID = "transform";
@@ -830,8 +825,6 @@ namespace CgfConverter
 
                     // This gets complicated.  We need to make one instance_material for each material used in this node chunk.  The mat IDs used in this
                     // node chunk are stored in meshsubsets, so for each subset we need to grab the mat, get the target (id), and make an instance_material for it.
-                    //Grendgine_Collada_Instance_Material_Geometry instanceMats = new Grendgine_Collada_Instance_Material_Geometry();
-
                     for (int i = 0; i < tmpMeshSubsets.NumMeshSubset; i++)
                     {
                         // For each mesh subset, we want to create an instance material and add it to instanceMaterials list.
@@ -887,27 +880,52 @@ namespace CgfConverter
             };
 
             // Add the translation vector to the node
-            List<Grendgine_Collada_Translate> translations = new List<Grendgine_Collada_Translate>();
-            Grendgine_Collada_Translate translate = new Grendgine_Collada_Translate();
-            StringBuilder translateString = new StringBuilder();
-            translateString.AppendFormat("{0:F7} {1:F7} {2:F7}", bone.boneToWorld.boneToWorld[0, 3], bone.boneToWorld.boneToWorld[1, 3], bone.boneToWorld.boneToWorld[2, 3]);
-            translate.Value_As_String = translateString.ToString();
-            translations.Add(translate);
-            tmpNode.Translate = translations.ToArray();
+            //List<Grendgine_Collada_Translate> translations = new List<Grendgine_Collada_Translate>();
+            //Grendgine_Collada_Translate translate = new Grendgine_Collada_Translate();
+            //StringBuilder translateString = new StringBuilder();
+            //translateString.AppendFormat("{0:F7} {1:F7} {2:F7}", bone.boneToWorld.boneToWorld[0, 3], bone.boneToWorld.boneToWorld[1, 3], bone.boneToWorld.boneToWorld[2, 3]);
+            //translateString.AppendFormat("{0:F7} {1:F7} {2:F7}", bone.worldToBone.worldToBone[0, 3], bone.worldToBone.worldToBone[1, 3], bone.worldToBone.worldToBone[2, 3]);
+            //translate.Value_As_String = translateString.ToString();
+            //translations.Add(translate);
+            //tmpNode.Translate = translations.ToArray();
 
             Grendgine_Collada_Matrix matrix = new Grendgine_Collada_Matrix();
             List<Grendgine_Collada_Matrix> matrices = new List<Grendgine_Collada_Matrix>();
             // Populate the matrix.  This is based on the BONETOWORLD data in this bone.
             StringBuilder matrixValues = new StringBuilder();
-            for (int i = 0; i < 3; i++)
-            {
-                for (int j = 0; j < 4; j++)
-                {
-                    matrixValues.AppendFormat("{0:F7} ", bone.boneToWorld.boneToWorld[i, j]);
-                    //matrixValues.AppendFormat("{0:F7} ", bone.worldToBone.worldToBone[i, j]);  // pretty sure it's boneToWorld, since the initial bone matches up with the Noesis version.
-                }
-            }
-            matrixValues.Append("0 0 0 1");
+            matrixValues.AppendFormat("{0:F7} {1:F7} {2:F7} {3:f7} {4:f7} {5:f7} {6:f7} {7:f7} {8:f7} {9:f7} {10:f7} {11:f7} 0 0 0 1", 
+                bone.LocalTransform.m11,
+                bone.LocalTransform.m12,
+                bone.LocalTransform.m13,
+                bone.LocalTransform.m14,
+                bone.LocalTransform.m21,
+                bone.LocalTransform.m22,
+                bone.LocalTransform.m23,
+                bone.LocalTransform.m24,
+                bone.LocalTransform.m31,
+                bone.LocalTransform.m32,
+                bone.LocalTransform.m33,
+                bone.LocalTransform.m34
+                );
+            //for (int i = 0; i < 3; i++)
+            //{
+            //    for (int j = 0; j < 4; j++)
+            //    {
+            //        // Need to get the object space transform matrix for this.
+            //        if (bone.parentID == 0)
+            //        {
+            //            // Root bone. 
+            //            matrixValues.AppendFormat("{0:F7} ", bone.boneToWorld.boneToWorld[i, j]);  // pboneToWorld matches up with the Noesis version.
+            //        }
+            //        else
+            //        {
+            //            // Calculate transform to get object space for this bone.
+            //            matrixValues.AppendFormat("{0:F7} ", bone.boneToWorld.boneToWorld[i, j]);
+            //        }
+            //        //matrixValues.AppendFormat("{0:F7} ", bone.worldToBone.worldToBone[i, j]);  // pboneToWorld matches up with the Noesis version.
+            //    }
+            //}
+            //matrixValues.Append("0 0 0 1");
             CleanNumbers(matrixValues);
             matrix.Value_As_String = matrixValues.ToString();
             matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway

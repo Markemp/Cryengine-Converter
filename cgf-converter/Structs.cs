@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using MathNet.Numerics;
+using MathNet.Numerics.LinearAlgebra;
 
 namespace CgfConverter
 {
@@ -330,12 +332,36 @@ namespace CgfConverter
             return result;
         }
 
+
         public Vector3 GetTranslation()
         {
             Vector3 result = new Vector3();
             result.x = m41 / 100;
             result.y = m42 / 100;
             result.z = m43 / 100;
+            return result;
+        }
+
+        public double[,] ConvertTo4x4Array()
+        {
+            double[,] result = new double[4, 4];
+            result[0, 0] = this.m11;
+            result[0, 1] = this.m12;
+            result[0, 2] = this.m13;
+            result[0, 3] = this.m14;
+            result[1, 0] = this.m21;
+            result[1, 1] = this.m22;
+            result[1, 2] = this.m23;
+            result[1, 3] = this.m24;
+            result[2, 0] = this.m31;
+            result[2, 1] = this.m32;
+            result[2, 2] = this.m33;
+            result[2, 3] = this.m34;
+            result[3, 0] = this.m41;
+            result[3, 1] = this.m42;
+            result[3, 2] = this.m43;
+            result[3, 3] = this.m44;
+
             return result;
         }
 
@@ -555,9 +581,9 @@ namespace CgfConverter
         }
         
     }
-    public struct CompiledBone
+    public class CompiledBone
     {
-        public UInt32 controllerID;
+        public UInt32 ControllerID { get; set; }
         public PhysicsGeometry[] physicsGeometry;   // 2 of these.  One for live objects, other for dead (ragdoll?)
         public Double mass;                         // 0xD8 ?
         public WORLDTOBONE worldToBone;             // 4x3 matrix
@@ -571,16 +597,12 @@ namespace CgfConverter
         public UInt32 parentID;                     // Not part of the read structure, but the controllerID of the parent bone put into the Bone Dictionary (the key)
         public Int64 offset;                        // Not part of the structure, but the position in the file where this bone started.
         public List<uint> childIDs;                 // Not part of read struct.  Contains the controllerIDs of the children to this bone.
-        public Matrix44 BoneTransform;              // The BONETOWORLD boneToWorld double array converted to Matrix44 format.  Calculated, row major.
-        public Matrix44 TransformSoFar;             // Because Cryengine tends to store transform relative to world, we have to add all the transforms from the node to the root.  Calculated, row major.
-        public Vector4 TranslationSoFar;            // This is the last column in the transform matrix, with m44 being 1.
-        public Vector4 Translation;                 // The 4th column of the BONETOWORLD transform matrix.
-
-
+        public Matrix44 LocalTransform;             // Because Cryengine tends to store transform relative to world, we have to add all the transforms from the node to the root.  Calculated, row major.
+        
         public void ReadCompiledBone(BinaryReader b)
         {
             // Reads just a single 584 byte entry of a bone. At the end the seek position will be advanced, so keep that in mind.
-            this.controllerID = b.ReadUInt32();                 // unique id of bone (generated from bone name)
+            this.ControllerID = b.ReadUInt32();                 // unique id of bone (generated from bone name)
             physicsGeometry = new PhysicsGeometry[2];
             this.physicsGeometry[0].ReadPhysicsGeometry(b);     // lod 0 is the physics of alive body, 
             this.physicsGeometry[1].ReadPhysicsGeometry(b);     // lod 1 is the physics of a dead body
@@ -595,12 +617,6 @@ namespace CgfConverter
             this.numChildren = b.ReadUInt32();
             this.offsetChild = b.ReadInt32();
             this.childIDs = new List<uint>();                    // Calculated
-            // Convert the boneToWorld object to BoneTransform
-            this.BoneTransform = Calculate4x4Matrix(this.boneToWorld.boneToWorld);
-            this.Translation.w = boneToWorld.boneToWorld[0, 3];
-            this.Translation.x = boneToWorld.boneToWorld[1, 3];
-            this.Translation.y = boneToWorld.boneToWorld[2, 3];
-            this.Translation.z = 1;
         }
 
         public void WriteCompiledBone()
@@ -610,7 +626,7 @@ namespace CgfConverter
             Utils.Log(LogLevelEnum.Verbose, "*** Compiled bone {0}", boneName);
             Utils.Log(LogLevelEnum.Verbose, "    Parent Name: {0}", parentID);
             Utils.Log(LogLevelEnum.Verbose, "    Offset in file: {0:X}", offset);
-            Utils.Log(LogLevelEnum.Verbose, "    Controller ID: {0}", controllerID);
+            Utils.Log(LogLevelEnum.Verbose, "    Controller ID: {0}", ControllerID);
             Utils.Log(LogLevelEnum.Verbose, "    World To Bone:");
             worldToBone.WriteWorldToBone();
             //Utils.Log(LogLevelEnum.Verbose, "    Bone To World:");
@@ -641,7 +657,6 @@ namespace CgfConverter
             matrix.m42 = 0;
             matrix.m43 = 0;
             matrix.m44 = 1;
-
             return matrix;
         }
     }

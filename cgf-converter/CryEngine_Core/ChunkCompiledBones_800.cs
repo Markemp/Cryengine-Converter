@@ -25,14 +25,11 @@ namespace CgfConverter.CryEngine_Core
             foreach (CompiledBone bone in BoneList)
             {
                 AddChildIDToParent(bone);
-                // Calculate the TransformSoFar for each bone.
-                if (bone.parentID != 0)
-                {
-                    Matrix44 testmatrix =  GetParentBone(bone).BoneTransform * bone.BoneTransform ;
-                    //bone.TransformSoFar = bone.BoneTransform * GetParentBone(bone).BoneTransform;
-                }
-
             }
+            // Grab each of the children of the Root bone and calculate the LocalTransform matrix.  https://gamedev.stackexchange.com/questions/34076/global-transform-to-local-transform
+            SetRootBoneLocalTransformMatrix();
+
+            CalculateLocalTransformMatrix(RootBone);
         }
 
         private void GetCompiledBones(BinaryReader b, uint parentControllerID)        // Recursive call to read the bone at the current seek, and all children.
@@ -54,7 +51,7 @@ namespace CgfConverter.CryEngine_Core
                 // Move to the offset of child.  If there are no children, we shouldn't move at all.
                 long nextBone = tempBone.offset + 584 * tempBone.offsetChild + (i * 584);
                 b.BaseStream.Seek(nextBone, 0);
-                this.GetCompiledBones(b, tempBone.controllerID);
+                this.GetCompiledBones(b, tempBone.ControllerID);
             }
             // set root bone
             if (parentControllerID == 0)
