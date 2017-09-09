@@ -521,9 +521,9 @@ namespace CgfConverter
                         {
                             // Rotate/translate the vertex
                             Vector3 vertex = nodeChunk.GetTransform(tmpVertices.Vertices[j]);
-                            vertString.AppendFormat("{0:F7} {1:F7} {2:F7} ", vertex.x, vertex.y, vertex.z);
+                            vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", vertex.x, vertex.y, vertex.z);
                             Vector3 normal = tmpNormals.Normals[j];
-                            normString.AppendFormat("{0:F7} {1:F7} {2:F7} ", normal.x, normal.y, normal.z);
+                            normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", normal.x, normal.y, normal.z);
                         }
                         CleanNumbers(vertString);
                         CleanNumbers(normString);
@@ -726,7 +726,7 @@ namespace CgfConverter
             Grendgine_Collada_Library_Controllers libraryController = new Grendgine_Collada_Library_Controllers();
 
             // There can be multiple controllers in the controller library.
-            // For each Geometry in the model, create a Controller element.  (this may not be right.  Check with mech bone files.
+            // For each Root Node and Root Bone, create a controller.
             foreach (ChunkNode nodeChunk in this.CryData.Chunks.Where(a => a.ChunkType == ChunkTypeEnum.Node))
             {
 
@@ -746,20 +746,25 @@ namespace CgfConverter
             
             // There can be multiple visual scenes.  Will just have one (World) for now.  All node chunks go under Nodes for that visual scene
             List<Grendgine_Collada_Visual_Scene> visualScenes = new List<Grendgine_Collada_Visual_Scene>();
-            // Geometry visual Scene.
-            Grendgine_Collada_Visual_Scene visualScene = new Grendgine_Collada_Visual_Scene();
             List<Grendgine_Collada_Node> nodes = new List<Grendgine_Collada_Node>();
-
-            Grendgine_Collada_Node rootNode = new Grendgine_Collada_Node();
-            rootNode = CreateNode(CryData.RootNode, rootNode);
-            nodes.Add(rootNode);
+            
             // Check to see if there is a CompiledBones chunk.  If so, add a Node.
             if (CryData.Chunks.Any(a => a.ChunkType == ChunkTypeEnum.CompiledBones))
             {
                 Grendgine_Collada_Node boneNode = new Grendgine_Collada_Node();
                 boneNode = CreateJointNode(CryData.Bones.RootBone);
                 nodes.Add(boneNode);
+
+                // Add a controller for the Joints.
             }
+            
+            // Geometry visual Scene.
+            Grendgine_Collada_Visual_Scene visualScene = new Grendgine_Collada_Visual_Scene();
+            
+            Grendgine_Collada_Node rootNode = new Grendgine_Collada_Node();
+            rootNode = CreateNode(CryData.RootNode, rootNode);
+            nodes.Add(rootNode);
+
 
             visualScene.Node = nodes.ToArray();
             //visualScene.Name = "world";
@@ -871,61 +876,39 @@ namespace CgfConverter
         private Grendgine_Collada_Node CreateJointNode(CompiledBone bone)
         {
             // This will be used recursively to create a node object and return it to WriteLibrary_VisualScenes
+            // If this is the root bone, set the node id to Armature.  Otherwise set to armature_<bonename>
+            string id = "Armature";
+            if (bone.parentID != 0)
+            {
+                id += "_" + bone.boneName.Replace(' ', '_');
+            }
             Grendgine_Collada_Node tmpNode = new Grendgine_Collada_Node()
             {
-                ID = "Armature",
-                Name = bone.boneName,
-                sID = bone.boneName,
+                ID = id,
+                Name = bone.boneName.Replace(' ', '_'),
+                sID = bone.boneName.Replace(' ', '_'),
                 Type = Grendgine_Collada_Node_Type.JOINT
             };
-
-            // Add the translation vector to the node
-            //List<Grendgine_Collada_Translate> translations = new List<Grendgine_Collada_Translate>();
-            //Grendgine_Collada_Translate translate = new Grendgine_Collada_Translate();
-            //StringBuilder translateString = new StringBuilder();
-            //translateString.AppendFormat("{0:F7} {1:F7} {2:F7}", bone.boneToWorld.boneToWorld[0, 3], bone.boneToWorld.boneToWorld[1, 3], bone.boneToWorld.boneToWorld[2, 3]);
-            //translateString.AppendFormat("{0:F7} {1:F7} {2:F7}", bone.worldToBone.worldToBone[0, 3], bone.worldToBone.worldToBone[1, 3], bone.worldToBone.worldToBone[2, 3]);
-            //translate.Value_As_String = translateString.ToString();
-            //translations.Add(translate);
-            //tmpNode.Translate = translations.ToArray();
 
             Grendgine_Collada_Matrix matrix = new Grendgine_Collada_Matrix();
             List<Grendgine_Collada_Matrix> matrices = new List<Grendgine_Collada_Matrix>();
             // Populate the matrix.  This is based on the BONETOWORLD data in this bone.
             StringBuilder matrixValues = new StringBuilder();
-            matrixValues.AppendFormat("{0:F7} {1:F7} {2:F7} {3:f7} {4:f7} {5:f7} {6:f7} {7:f7} {8:f7} {9:f7} {10:f7} {11:f7} 0 0 0 1", 
-                bone.LocalTransform.m11,
-                bone.LocalTransform.m12,
-                bone.LocalTransform.m13,
-                bone.LocalTransform.m14,
-                bone.LocalTransform.m21,
-                bone.LocalTransform.m22,
-                bone.LocalTransform.m23,
-                bone.LocalTransform.m24,
-                bone.LocalTransform.m31,
-                bone.LocalTransform.m32,
-                bone.LocalTransform.m33,
-                bone.LocalTransform.m34
+            matrixValues.AppendFormat("\n\t\t\t{0,11:F6} {1,11:F6} {2,11:F6} {3,11:F6}\n\t\t\t{4,11:F6} {5,11:F6} {6,11:F6} {7,11:F6}\n\t\t\t{8,11:F6} {9,11:F6} {10,11:F6} {11,11:F6}\n\t\t\t0 0 0 1",
+                bone.LocalTransform.m11,           
+                bone.LocalTransform.m12,           
+                bone.LocalTransform.m13,           
+                bone.LocalTransform.m14,           
+                bone.LocalTransform.m21,           
+                bone.LocalTransform.m22,           
+                bone.LocalTransform.m23,           
+                bone.LocalTransform.m24,           
+                bone.LocalTransform.m31,           
+                bone.LocalTransform.m32,           
+                bone.LocalTransform.m33,           
+                bone.LocalTransform.m34                                
                 );
-            //for (int i = 0; i < 3; i++)
-            //{
-            //    for (int j = 0; j < 4; j++)
-            //    {
-            //        // Need to get the object space transform matrix for this.
-            //        if (bone.parentID == 0)
-            //        {
-            //            // Root bone. 
-            //            matrixValues.AppendFormat("{0:F7} ", bone.boneToWorld.boneToWorld[i, j]);  // pboneToWorld matches up with the Noesis version.
-            //        }
-            //        else
-            //        {
-            //            // Calculate transform to get object space for this bone.
-            //            matrixValues.AppendFormat("{0:F7} ", bone.boneToWorld.boneToWorld[i, j]);
-            //        }
-            //        //matrixValues.AppendFormat("{0:F7} ", bone.worldToBone.worldToBone[i, j]);  // pboneToWorld matches up with the Noesis version.
-            //    }
-            //}
-            //matrixValues.Append("0 0 0 1");
+
             CleanNumbers(matrixValues);
             matrix.Value_As_String = matrixValues.ToString();
             matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
@@ -1104,10 +1087,10 @@ namespace CgfConverter
 
         private void CleanNumbers(StringBuilder sb)
         {
-            sb.Replace("0.0000000", "0");
-            sb.Replace("-0.0000000", "0");
-            sb.Replace("1.0000000", "1");
-            sb.Replace("-1.0000000", "-1");
+            sb.Replace("0.000000", "0");
+            sb.Replace("-0.000000", "0");
+            sb.Replace("1.000000", "1");
+            sb.Replace("-1.000000", "-1");
             //sb.Replace("0.000000", "0");
             //sb.Replace("-0.000000", "0");
             //sb.Replace("1.000000", "1");

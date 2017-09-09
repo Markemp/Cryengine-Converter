@@ -34,6 +34,27 @@ namespace CgfConverter
             result.z = vector.z + z;
             return result;
         }
+
+        public static Vector3 operator +(Vector3 lhs, Vector3 rhs)
+        {
+            return new Vector3()
+            {
+                x = lhs.x + rhs.x,
+                y = lhs.y + rhs.y,
+                z = lhs.z + rhs.z 
+            };
+        }
+
+        public static Vector3 operator -(Vector3 lhs, Vector3 rhs)
+        {
+            return new Vector3()
+            {
+                x = lhs.x - rhs.x,
+                y = lhs.y - rhs.y,
+                z = lhs.z - rhs.z
+            };
+        }
+
         public Vector4 ToVector4()
         {
             Vector4 result = new Vector4();
@@ -43,13 +64,33 @@ namespace CgfConverter
             result.w = 1;
             return result;
         }
-        public void WriteVector3()
+
+        internal Vector<double> ToMathVector3()
         {
-            Utils.Log(LogLevelEnum.Debug, "*** WriteVector3");
+            Vector<double> result = Vector<double>.Build.Dense(3);
+            result[0] = this.x;
+            result[1] = this.y;
+            result[2] = this.z;
+            return result;
+        }
+
+        public Vector3 GetVector3(Vector<double> vector)
+        {
+            Vector3 result = new Vector3
+            {
+                x = vector[0],
+                y = vector[1],
+                z = vector[2]
+            };
+            return result;
+        }
+
+        public void WriteVector3(string label = null)
+        {
+            Utils.Log(LogLevelEnum.Debug, "*** WriteVector3 *** - {0}", label );
             Utils.Log(LogLevelEnum.Debug, "{0:F7}  {1:F7}  {2:F7}", x, y, z);
             Utils.Log(LogLevelEnum.Debug);
         }
-
     }  // Vector in 3D space {x,y,z}
 
     public struct Vector4
@@ -107,6 +148,7 @@ namespace CgfConverter
             m32 = b.ReadSingle();
             m33 = b.ReadSingle();
         }
+
         public bool Is_Identity()
         {
             if (System.Math.Abs(m11 - 1.0) > 0.00001) { return false; }
@@ -120,6 +162,7 @@ namespace CgfConverter
             if (System.Math.Abs(m33 - 1.0) > 0.00001) { return false; }
             return true;
         }  // returns true if this is an identy matrix
+
         public Matrix33 Get_Copy()    // returns a copy of the matrix33
         {
             Matrix33 mat = new Matrix33();
@@ -134,6 +177,7 @@ namespace CgfConverter
             mat.m33 = m33;
             return mat;
         }
+
         public Double Get_Determinant()
         {
             return (m11 * m22 * m33
@@ -143,6 +187,7 @@ namespace CgfConverter
                   - m21 * m12 * m33
                   - m11 * m32 * m23);
         }
+
         public Matrix33 Get_Transpose()    // returns a copy of the matrix33
         {
             Matrix33 mat = new Matrix33();
@@ -157,6 +202,7 @@ namespace CgfConverter
             mat.m33 = m33;
             return mat;
         }
+
         public Matrix33 Mult(Matrix33 mat)
         {
             Matrix33 mat2 = new Matrix33();
@@ -171,6 +217,12 @@ namespace CgfConverter
             mat2.m33 = (m31 * mat.m13) + (m32 * mat.m23) + (m33 * mat.m33);
             return mat2;
         }
+
+        public static Matrix33 operator *(Matrix33 lhs, Matrix33 rhs)
+        {
+            return lhs.Mult(rhs);
+        }
+
         public Vector3 Mult3x1(Vector3 vector)
         {
             // Multiply the 3x3 matrix by a Vector 3 to get the rotation
@@ -183,6 +235,12 @@ namespace CgfConverter
             result.z = (vector.x * m13) + (vector.y * m23) + (vector.z * m33);
             return result;
         }
+
+        public static Vector3 operator *(Matrix33 rhs, Vector3 lhs)
+        {
+            return rhs.Mult3x1(lhs);
+        }
+
         public bool Is_Scale_Rotation() // Returns true if the matrix decomposes nicely into scale * rotation\
         {
             Matrix33 self_transpose,mat = new Matrix33();
@@ -197,6 +255,7 @@ namespace CgfConverter
             Utils.Log(LogLevelEnum.Debug, " is not a Scale_Rot matrix"); 
             return true;
         }
+        
         public Vector3 Get_Scale()
         {
             // Get the scale, assuming is_scale_rotation is true
@@ -218,11 +277,13 @@ namespace CgfConverter
             }
 
         }
+
         public Vector3 Get_Scale_Rotation()   // Gets the scale.  this should also return the rotation matrix, but..eh...
         {
             Vector3 scale = this.Get_Scale();
             return scale;
         }
+
         public bool Is_Rotation()
         {
             // NOTE: 0.01 instead of CgfFormat.EPSILON to work around bad files
@@ -234,9 +295,92 @@ namespace CgfConverter
             }
             return true;
         }
-        public void WriteMatrix33()
+
+        /// <summary>
+        /// Returns a Math.Net matrix from a Cryengine Matrix33 object)
+        /// </summary>
+        /// <returns>New Math.Net matrix.</returns>
+        public Matrix<double> ToMathMatrix()
         {
-            Utils.Log(LogLevelEnum.Verbose, "=============================================");
+            Matrix<double> result = Matrix<double>.Build.Dense(3,3);
+            result[0, 0] = this.m11;
+            result[0, 1] = this.m12;
+            result[0, 2] = this.m13;
+            result[1, 0] = this.m21;
+            result[1, 1] = this.m22;
+            result[1, 2] = this.m23;
+            result[2, 0] = this.m31;
+            result[2, 1] = this.m32;
+            result[2, 2] = this.m33;
+            return result;
+        }
+
+        public double Determinant()
+        {
+            Matrix<double> matrix = Matrix<double>.Build.Dense(3, 3);
+            matrix = this.ToMathMatrix();
+            return matrix.Determinant();
+        }
+
+        public Matrix33 Inverse()
+        {
+            Matrix<double> matrix = Matrix<double>.Build.Dense(3, 3);
+            matrix = this.ToMathMatrix().Inverse();
+            return GetMatrix33(matrix);
+        }
+
+        public Matrix33 Conjugate()
+        {
+            Matrix<double> matrix = Matrix<double>.Build.Dense(3, 3);
+            matrix = this.ToMathMatrix().Conjugate();
+            return GetMatrix33(matrix);
+        }
+
+        public Matrix33 ConjugateTranspose()
+        {
+            Matrix<double> matrix = Matrix<double>.Build.Dense(3, 3);
+            matrix = this.ToMathMatrix().ConjugateTranspose();
+            return GetMatrix33(matrix);
+        }
+
+        public Matrix33 ConjugateTransposeThisAndMultiply(Matrix33 inputMatrix)
+        {
+            Matrix<double> matrix = Matrix<double>.Build.Dense(3, 3);
+            Matrix<double> matrix2 = Matrix<double>.Build.Dense(3, 3);
+            matrix2 = inputMatrix.ToMathMatrix();
+            matrix = this.ToMathMatrix().ConjugateTransposeThisAndMultiply(matrix2);
+            return GetMatrix33(matrix);
+        }
+
+        public Vector3 Diagonal()
+        {
+            Vector3 result = new Vector3();
+            Vector<double> vector = Vector<double>.Build.Dense(3);
+            vector = this.ToMathMatrix().Diagonal();
+            result = result.GetVector3(vector);
+            return result;
+        }
+
+        public Matrix33 GetMatrix33(Matrix<double> matrix)
+        {
+            Matrix33 result = new Matrix33
+            {
+                m11 = matrix[0, 0],
+                m12 = matrix[0, 1],
+                m13 = matrix[0, 2],
+                m21 = matrix[1, 0],
+                m22 = matrix[1, 1],
+                m23 = matrix[1, 2],
+                m31 = matrix[2, 0],
+                m32 = matrix[2, 1],
+                m33 = matrix[2, 2]
+            };
+            return result;
+        }
+
+        public void WriteMatrix33(string label = null)
+        {
+            Utils.Log(LogLevelEnum.Verbose, "====== {0} ===========", label);
             Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}", m11, m12, m13);
             Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}", m21, m22, m23);
             Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}", m31, m32, m33);
@@ -317,6 +461,10 @@ namespace CgfConverter
             return result;
         }
 
+        /// <summary>
+        /// Gets the Rotation portion of a Transform Matrix44 (upper left).
+        /// </summary>
+        /// <returns>New Matrix33 with the rotation component.</returns>
         public Matrix33 To3x3()
         {
             Matrix33 result = new Matrix33();
@@ -332,13 +480,21 @@ namespace CgfConverter
             return result;
         }
 
-
         public Vector3 GetTranslation()
         {
             Vector3 result = new Vector3();
             result.x = m41 / 100;
             result.y = m42 / 100;
             result.z = m43 / 100;
+            return result;
+        }
+
+        public Vector3 GetBoneTranslation()
+        {
+            Vector3 result = new Vector3();
+            result.x = m14;
+            result.y = m24;
+            result.z = m34;
             return result;
         }
 
@@ -361,6 +517,14 @@ namespace CgfConverter
             result[3, 1] = this.m42;
             result[3, 2] = this.m43;
             result[3, 3] = this.m44;
+
+            return result;
+        }
+
+        public Matrix33 Inverse()
+        {
+            Matrix33 result = new Matrix33();
+
 
             return result;
         }
@@ -517,13 +681,44 @@ namespace CgfConverter
             Utils.Log(LogLevelEnum.Verbose, "     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[2, 0], this.worldToBone[2, 1], this.worldToBone[2, 2], this.worldToBone[2, 3]);
             //Utils.Log(LogLevelEnum.Verbose);
         }
+
+        internal Matrix33 GetWorldToBoneRotationMatrix()
+        {
+            Matrix33 result = new Matrix33
+            {
+                m11 = this.worldToBone[0, 0],
+                m12 = this.worldToBone[0, 1],
+                m13 = this.worldToBone[0, 2],
+                m21 = this.worldToBone[1, 0],
+                m22 = this.worldToBone[1, 1],
+                m23 = this.worldToBone[1, 2],
+                m31 = this.worldToBone[2, 0],
+                m32 = this.worldToBone[2, 1],
+                m33 = this.worldToBone[2, 2]
+            };
+            return result;
+        }
+
+        internal Vector3 GetWorldToBoneTranslationVector()
+        {
+            Vector3 result = new Vector3
+            {
+                x = this.worldToBone[0, 3],
+                y = this.worldToBone[1, 3],
+                z = this.worldToBone[2, 3]
+            };
+            return result;
+        }
     }
 
+    /// <summary>
+    /// BONETOWORLD contains the world space location/rotation of a bone.
+    /// </summary>
     public struct BONETOWORLD
     {
         public Double[,] boneToWorld;   //  4x3 structure
 
-        public void GetBoneToWorld(BinaryReader b)
+        public void ReadBoneToWorld(BinaryReader b)
         {
             boneToWorld = new Double[3, 4];
             //Utils.Log(LogLevelEnum.Debug, "GetBoneToWorld");
@@ -538,13 +733,45 @@ namespace CgfConverter
             return;
         }
 
+        /// <summary>
+        /// Returns the world space rotational matrix in a Math.net 3x3 matrix.
+        /// </summary>
+        /// <returns>Matrix33</returns>
+        public Matrix33 GetBoneToWorldRotationMatrix()
+        {
+            Matrix33 result = new Matrix33
+            {
+                m11 = this.boneToWorld[0, 0],
+                m12 = this.boneToWorld[0, 1],
+                m13 = this.boneToWorld[0, 2],
+                m21 = this.boneToWorld[1, 0],
+                m22 = this.boneToWorld[1, 1],
+                m23 = this.boneToWorld[1, 2],
+                m31 = this.boneToWorld[2, 0],
+                m32 = this.boneToWorld[2, 1],
+                m33 = this.boneToWorld[2, 2]
+            };
+            return result;
+        }
+
+        public Vector3 GetBoneToWorldTranslationVector()
+        {
+            Vector3 result = new Vector3
+            {
+                x = this.boneToWorld[0, 3],
+                y = this.boneToWorld[1, 3],
+                z = this.boneToWorld[2, 3]
+            };
+            return result;
+        }
+
         public void WriteBoneToWorld()
         {
             Utils.Log(LogLevelEnum.Verbose);
             Utils.Log(LogLevelEnum.Verbose, "*** Bone to World ***");
-            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}", this.boneToWorld[0, 0], this.boneToWorld[0, 1], this.boneToWorld[0, 2], this.boneToWorld[0, 3]);
-            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}", this.boneToWorld[1, 0], this.boneToWorld[1, 1], this.boneToWorld[1, 2], this.boneToWorld[1, 3]);
-            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}", this.boneToWorld[2, 0], this.boneToWorld[2, 1], this.boneToWorld[2, 2], this.boneToWorld[2, 3]);
+            Utils.Log(LogLevelEnum.Verbose, "{0:F6}  {1:F6}  {2:F6} {3:F6}", this.boneToWorld[0, 0], this.boneToWorld[0, 1], this.boneToWorld[0, 2], this.boneToWorld[0, 3]);
+            Utils.Log(LogLevelEnum.Verbose, "{0:F6}  {1:F6}  {2:F6} {3:F6}", this.boneToWorld[1, 0], this.boneToWorld[1, 1], this.boneToWorld[1, 2], this.boneToWorld[1, 3]);
+            Utils.Log(LogLevelEnum.Verbose, "{0:F6}  {1:F6}  {2:F6} {3:F6}", this.boneToWorld[2, 0], this.boneToWorld[2, 1], this.boneToWorld[2, 2], this.boneToWorld[2, 3]);
             Utils.Log(LogLevelEnum.Verbose);
         }
 
@@ -581,13 +808,14 @@ namespace CgfConverter
         }
         
     }
+
     public class CompiledBone
     {
         public UInt32 ControllerID { get; set; }
         public PhysicsGeometry[] physicsGeometry;   // 2 of these.  One for live objects, other for dead (ragdoll?)
         public Double mass;                         // 0xD8 ?
         public WORLDTOBONE worldToBone;             // 4x3 matrix
-        public BONETOWORLD boneToWorld;             // 4x3 matrix
+        public BONETOWORLD boneToWorld;             // 4x3 matrix of world translations/rotations of the bones.
         public String boneName;                     // String256 in old terms; convert to a real null terminated string.
         public UInt32 limbID;                       // ID of this limb... usually just 0xFFFFFFFF
         public Int32  offsetParent;                 // offset to the parent in number of CompiledBone structs (584 bytes)
@@ -597,8 +825,12 @@ namespace CgfConverter
         public UInt32 parentID;                     // Not part of the read structure, but the controllerID of the parent bone put into the Bone Dictionary (the key)
         public Int64 offset;                        // Not part of the structure, but the position in the file where this bone started.
         public List<uint> childIDs;                 // Not part of read struct.  Contains the controllerIDs of the children to this bone.
-        public Matrix44 LocalTransform;             // Because Cryengine tends to store transform relative to world, we have to add all the transforms from the node to the root.  Calculated, row major.
-        
+        public Matrix44 LocalTransform = new Matrix44();            // Because Cryengine tends to store transform relative to world, we have to add all the transforms from the node to the root.  Calculated, row major.
+        public Vector3 LocalTranslation = new Vector3();            // To hold the local rotation vector
+        public Matrix33 LocalRotation = new Matrix33();             // to hold the local rotation matrix
+
+        public CompiledBone ParentBone { get; set; }
+
         public void ReadCompiledBone(BinaryReader b)
         {
             // Reads just a single 584 byte entry of a bone. At the end the seek position will be advanced, so keep that in mind.
@@ -610,13 +842,39 @@ namespace CgfConverter
             worldToBone = new WORLDTOBONE();
             this.worldToBone.GetWorldToBone(b);
             boneToWorld = new BONETOWORLD();
-            this.boneToWorld.GetBoneToWorld(b);
+            this.boneToWorld.ReadBoneToWorld(b);
             this.boneName = b.ReadFString(256);
             this.limbID = b.ReadUInt32();
             this.offsetParent = b.ReadInt32();
             this.numChildren = b.ReadUInt32();
             this.offsetChild = b.ReadInt32();
             this.childIDs = new List<uint>();                    // Calculated
+            //this.LocalRotation = Matrix<double>.Build.Dense(3, 3);
+            //this.LocalTranslation = Vector<double>.Build.Dense(3);
+        }
+
+        public Matrix44 ToMatrix44(double[,] boneToWorld)
+        {
+            Matrix44 matrix = new Matrix44
+            {
+                m11 = boneToWorld[0, 0],
+                m12 = boneToWorld[0, 1],
+                m13 = boneToWorld[0, 2],
+                m14 = boneToWorld[0, 3],
+                m21 = boneToWorld[1, 0],
+                m22 = boneToWorld[1, 1],
+                m23 = boneToWorld[1, 2],
+                m24 = boneToWorld[1, 3],
+                m31 = boneToWorld[2, 0],
+                m32 = boneToWorld[2, 1],
+                m33 = boneToWorld[2, 2],
+                m34 = boneToWorld[2, 3],
+                m41 = 0,
+                m42 = 0,
+                m43 = 0,
+                m44 = 1
+            };
+            return matrix;
         }
 
         public void WriteCompiledBone()
@@ -628,36 +886,12 @@ namespace CgfConverter
             Utils.Log(LogLevelEnum.Verbose, "    Offset in file: {0:X}", offset);
             Utils.Log(LogLevelEnum.Verbose, "    Controller ID: {0}", ControllerID);
             Utils.Log(LogLevelEnum.Verbose, "    World To Bone:");
-            worldToBone.WriteWorldToBone();
-            //Utils.Log(LogLevelEnum.Verbose, "    Bone To World:");
-            //boneToWorld.WriteBoneToWorld();
+            boneToWorld.WriteBoneToWorld();
             Utils.Log(LogLevelEnum.Verbose, "    Limb ID: {0}", limbID);
             Utils.Log(LogLevelEnum.Verbose, "    Parent Offset: {0}", offsetParent);
             Utils.Log(LogLevelEnum.Verbose, "    Child Offset:  {0}", offsetChild);
             Utils.Log(LogLevelEnum.Verbose, "    Number of Children:  {0}", numChildren);
             Utils.Log(LogLevelEnum.Verbose, "*** End Bone {0}", boneName);
-        }
-
-        public Matrix44 Calculate4x4Matrix(double[,] boneToWorld)
-        {
-            Matrix44 matrix = new Matrix44();
-            matrix.m11 = boneToWorld[0, 0];
-            matrix.m12 = boneToWorld[0, 1];
-            matrix.m13 = boneToWorld[0, 2];
-            matrix.m14 = boneToWorld[0, 3];
-            matrix.m21 = boneToWorld[1, 0];
-            matrix.m22 = boneToWorld[1, 1];
-            matrix.m23 = boneToWorld[1, 2];
-            matrix.m24 = boneToWorld[1, 3];
-            matrix.m31 = boneToWorld[2, 0];
-            matrix.m32 = boneToWorld[2, 1];
-            matrix.m33 = boneToWorld[2, 2];
-            matrix.m34 = boneToWorld[2, 3];
-            matrix.m41 = 0;
-            matrix.m42 = 0;
-            matrix.m43 = 0;
-            matrix.m44 = 1;
-            return matrix;
         }
     }
 

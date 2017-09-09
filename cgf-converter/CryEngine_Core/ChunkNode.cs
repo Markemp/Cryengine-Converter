@@ -124,6 +124,7 @@ namespace CgfConverter.CryEngine_Core
                 }
             }
         }
+
         public Matrix33 RotSoFar
         {
             get
