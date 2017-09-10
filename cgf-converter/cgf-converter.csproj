@@ -112,9 +112,9 @@
     <Compile Include="BaseRenderer.cs" />
     <Compile Include="Blender.cs" />
     <Compile Include="cgf-converter.cs" />
-    <Compile Include="COLLADA.cs" />
-    <Compile Include="Collada\Grendgine_Collada_BumpMap.cs" />
-    <Compile Include="Collada\Grendgine_Collada_Technique.cs" />
+    <Compile Include="Renderers\Collada\COLLADA.cs" />
+    <Compile Include="Renderers\Collada\Grendgine_Collada_BumpMap.cs" />
+    <Compile Include="Renderers\Collada\Grendgine_Collada_Technique.cs" />
     <Compile Include="CryEngine\CryEngine.cs" />
     <Compile Include="CryEngine\CryRender.cs" />
     <Compile Include="CryEngine_Core\ChunkMeshPhysicsData.cs" />
@@ -500,12 +500,12 @@
     <Compile Include="External\Types\Grendgine_Collada_SID_Name_Float.cs" />
     <Compile Include="External\Types\Grendgine_Collada_SID_Name_String.cs" />
     <Compile Include="External\Types\Grendgine_Collada_String_Array_String.cs" />
-    <Compile Include="FBX\FBX.cs" />
+    <Compile Include="Renderers\FBX\FBX.cs" />
     <Compile Include="Utils.cs" />
-    <Compile Include="Wavefront\Wavefront.Material.cs" />
-    <Compile Include="Wavefront\Wavefront.cs" />
+    <Compile Include="Renderers\Wavefront\Wavefront.Material.cs" />
+    <Compile Include="Renderers\Wavefront\Wavefront.cs" />
     <Compile Include="Structs.cs" />
-    <Compile Include="Enums.cs" />
+    <Compile Include="Enums\Enums.cs" />
     <Compile Include="OpenTK.Math.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -544,7 +544,9 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Models\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

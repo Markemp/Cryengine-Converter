@@ -9,11 +9,11 @@ namespace grendgine_collada
 	public partial class Grendgine_Collada_Asset_Unit
 	{
 		[XmlAttribute("meter")]
-	    [System.ComponentModel.DefaultValueAttribute(1.0)]
+	    //[System.ComponentModel.DefaultValueAttribute(1.0)]        // Commented out to force it to write these values.
 		public double Meter;
 
 		[XmlAttribute("name")]
-	    [System.ComponentModel.DefaultValueAttribute("meter")]
+	    //[System.ComponentModel.DefaultValueAttribute("meter")]
 		public string Name;
 
 		
