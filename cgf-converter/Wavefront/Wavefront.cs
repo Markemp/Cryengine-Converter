@@ -161,7 +161,7 @@ namespace CgfConverter
         public void WriteObjNode(StreamWriter f, CryEngine_Core.ChunkNode chunkNode)  // Pass a node to this to have it write to the Stream
         {
             // Get the Transform here. It's the node chunk Transform.m(41/42/42) divided by 100, added to the parent transform.
-            // The transform of a child has to add the transforms of ALL the parents.  Need to use regression?  Maybe a while loop...
+            // The transform of a child has to add the transforms of ALL the parents.
 
             CryEngine_Core.ChunkMesh tmpMesh = chunkNode.ObjectChunk as CryEngine_Core.ChunkMesh;
 
@@ -197,7 +197,7 @@ namespace CgfConverter
 
             // We only use 3 things in obj files:  vertices, normals and UVs.  No need to process the Tangents.
 
-            uint numChildren = chunkNode.__NumChildren;           // use in a for loop to print the mesh for each child
+            int numChildren = chunkNode.__NumChildren;           // use in a for loop to print the mesh for each child
 
             var tempVertexPosition = this.CurrentVertexPosition;
             var tempIndicesPosition = this.CurrentIndicesPosition;

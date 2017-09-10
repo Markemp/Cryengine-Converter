@@ -18,16 +18,16 @@ namespace CgfConverter.CryEngine_Core
         /// <summary>
         /// Mesh or Helper Object ID
         /// </summary>
-        public UInt32 ObjectNodeID { get; internal set; }
+        public int ObjectNodeID { get; internal set; }
         /// <summary>
         /// Node parent.  if 0xFFFFFFFF, it's the top node.  Maybe...
         /// </summary>
-        public UInt32 ParentNodeID { get; internal set; }  // Parent nodeID
-        public UInt32 __NumChildren;
+        public int ParentNodeID { get; internal set; }  // Parent nodeID
+        public int __NumChildren;
         /// <summary>
         /// Material ID for this chunk
         /// </summary>
-        public UInt32 MatID { get; internal set; }
+        public int MatID { get; internal set; }
         public Boolean IsGroupHead { get; internal set; }
         public Boolean IsGroupMember { get; internal set; }
         /// <summary>
@@ -49,15 +49,15 @@ namespace CgfConverter.CryEngine_Core
         /// <summary>
         /// Position Controller ID
         /// </summary>
-        public UInt32 PosCtrl { get; internal set; }
+        public int PosCtrlID { get; internal set; }
         /// <summary>
         /// Rotation Controller ID
         /// </summary>
-        public UInt32 RotCtrl { get; internal set; }
+        public int RotCtrlID { get; internal set; }
         /// <summary>
         /// Scalar Controller ID
         /// </summary>
-        public UInt32 SclCtrl { get; internal set; }
+        public int SclCtrlID { get; internal set; }
         /// <summary>
         /// Appears to be a Blob of properties, separated by new lines
         /// </summary>
@@ -73,7 +73,9 @@ namespace CgfConverter.CryEngine_Core
         {
             get
             {
-                if (this.ParentNodeID == 0xFFFFFFFF)
+                // Turns out chunk IDs are ints, not uints.  ~0 is shorthand for -1, or 0xFFFFFFFF in the uint world.
+                //if (this.ParentNodeID == 0xFFFFFFFF)
+                if (this.ParentNodeID == ~0)
                     return null;
 
                 if (this._parentNode == null)
@@ -88,7 +90,8 @@ namespace CgfConverter.CryEngine_Core
             }
             set
             {
-                this.ParentNodeID = value == null ? 0xFFFFFFFF : value.ID;
+                //this.ParentNodeID = value == null ? 0xFFFFFFFF : value.ID;
+                this.ParentNodeID = value == null ? ~0 : value.ID;
                 this._parentNode = value;
             }
         }
@@ -176,10 +179,10 @@ namespace CgfConverter.CryEngine_Core
 
             // Read the Name string
             this.Name = b.ReadFString(64);
-            this.ObjectNodeID = b.ReadUInt32(); // Object reference ID
-            this.ParentNodeID = b.ReadUInt32();
-            this.__NumChildren = b.ReadUInt32();
-            this.MatID = b.ReadUInt32();  // Material ID?
+            this.ObjectNodeID = b.ReadInt32(); // Object reference ID
+            this.ParentNodeID = b.ReadInt32();
+            this.__NumChildren = b.ReadInt32();
+            this.MatID = b.ReadInt32();  // Material ID?
             this.SkipBytes(b, 4);
 
             // Read the 4x4 transform matrix.  Should do a couple of for loops, but data structures...
@@ -229,9 +232,9 @@ namespace CgfConverter.CryEngine_Core
             };
 
             // read the controller pos/rot/scale
-            this.PosCtrl = b.ReadUInt32();
-            this.RotCtrl = b.ReadUInt32();
-            this.SclCtrl = b.ReadUInt32();
+            this.PosCtrlID = b.ReadInt32();
+            this.RotCtrlID = b.ReadInt32();
+            this.SclCtrlID = b.ReadInt32();
 
             this.Properties = b.ReadPString();
             // Good enough for now.

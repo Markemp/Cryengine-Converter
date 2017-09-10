@@ -62,6 +62,7 @@ namespace CgfConverter
 
             foreach (var file in inputFiles)
             {
+                // Each file (.cga and .cgam if applicable) will have its own RootNode.  This can cause problems.  .cga files with a .cgam files won't have geometry for the one root node.
                 CryEngine_Core.Model model = CryEngine_Core.Model.FromFile(file.FullName);
                 this.RootNode = this.RootNode ?? model.RootNode;
                 this.Bones = this.Bones ?? model.Bones;

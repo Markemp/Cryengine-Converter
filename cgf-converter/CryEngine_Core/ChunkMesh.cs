@@ -15,16 +15,16 @@ namespace CgfConverter.CryEngine_Core
         //public bool InWorldSpace; // 623
         //public byte Reserved1;  // padding byte, 744
         //public byte Reserved2;  // padding byte, 744
-        public UInt32 Flags1;  // 800  Offset of this chunk. 
+        public int Flags1;  // 800  Offset of this chunk. 
         // public UInt32 ID;  // 800  Chunk ID
-        public UInt32 NumVertices; // 
-        public UInt32 NumIndices;  // Number of indices (each triangle has 3 indices, so this is the number of triangles times 3).
+        public int NumVertices; // 
+        public int NumIndices;  // Number of indices (each triangle has 3 indices, so this is the number of triangles times 3).
         //public UInt32 NumUVs; // 744
         //public UInt32 NumFaces; // 744
         // Pointers to various Chunk types
         //public ChunkMtlName Material; // 623, Material Chunk, never encountered?
-        public UInt32 NumVertSubsets; // 801, Number of vert subsets
-        public UInt32 MeshSubsets; // 800  Reference of the mesh subsets
+        public int NumVertSubsets; // 801, Number of vert subsets
+        public int MeshSubsets; // 800  Reference of the mesh subsets
         // public ChunkVertAnim VertAnims; // 744.  not implemented
         //public Vertex[] Vertices; // 744.  not implemented
         //public Face[,] Faces; // 744.  Not implemented
@@ -32,22 +32,22 @@ namespace CgfConverter.CryEngine_Core
         //public UVFace[] UVFaces; // 744 not implemented
         // public VertexWeight[] VertexWeights; // 744 not implemented
         //public IRGB[] VertexColors; // 744 not implemented
-        public UInt32 VerticesData; // 800, 801.  Need an array because some 801 files have NumVertSubsets
-        public UInt32 NumBuffs;
-        public UInt32 NormalsData; // 800
-        public UInt32 UVsData; // 800
-        public UInt32 ColorsData; // 800
-        public UInt32 Colors2Data; // 800 
-        public UInt32 IndicesData; // 800
-        public UInt32 TangentsData; // 800
-        public UInt32 ShCoeffsData; // 800
-        public UInt32 ShapeDeformationData; //800
-        public UInt32 BoneMapData; //800
-        public UInt32 FaceMapData; // 800
-        public UInt32 VertMatsData; // 800
-        public UInt32 MeshPhysicsData; // 801
-        public UInt32 VertsUVsData;    // 801
-        public UInt32[] PhysicsData = new uint[4]; // 800
+        public int VerticesData; // 800, 801.  Need an array because some 801 files have NumVertSubsets
+        public int NumBuffs;
+        public int NormalsData; // 800
+        public int UVsData; // 800
+        public int ColorsData; // 800
+        public int Colors2Data; // 800 
+        public int IndicesData; // 800
+        public int TangentsData; // 800
+        public int ShCoeffsData; // 800
+        public int ShapeDeformationData; //800
+        public int BoneMapData; //800
+        public int FaceMapData; // 800
+        public int VertMatsData; // 800
+        public int MeshPhysicsData; // 801
+        public int VertsUVsData;    // 801
+        public int[] PhysicsData = new int[4]; // 800
         public Vector3 MinBound; // 800 minimum coordinate values
         public Vector3 MaxBound; // 800 Max coord values
 

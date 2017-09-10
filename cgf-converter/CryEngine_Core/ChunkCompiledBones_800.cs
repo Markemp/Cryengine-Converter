@@ -53,19 +53,13 @@ namespace CgfConverter.CryEngine_Core
             if (tempBone.parentID != 0)
             {
                 localRotation = GetParentBone(tempBone).boneToWorld.GetBoneToWorldRotationMatrix().ConjugateTransposeThisAndMultiply(tempBone.boneToWorld.GetBoneToWorldRotationMatrix());
-                //localTranslation = (tempBone.LocalTranslation - GetParentBone(tempBone).boneToWorld.GetBoneToWorldTranslationVector());
-                //localTranslation = (localRotation.Inverse() * (tempBone.LocalTranslation - GetParentBone(tempBone).boneToWorld.GetBoneToWorldTranslationVector()));
                 localTranslation = GetParentBone(tempBone).LocalRotation * (tempBone.LocalTranslation - GetParentBone(tempBone).boneToWorld.GetBoneToWorldTranslationVector());
-
             }
             else
             {
                 localTranslation = tempBone.boneToWorld.GetBoneToWorldTranslationVector();
                 localRotation = tempBone.boneToWorld.GetBoneToWorldRotationMatrix();
             }
-            Console.WriteLine("Conversions for {0}", tempBone.boneName);
-            WriteMatrices(localRotation);
-
             tempBone.LocalTransform = GetTransformFromParts(localTranslation, localRotation);
             this.BoneDictionary[tempBone.boneName] = tempBone;          // Add this bone to the dictionary.
             this.BoneList.Add(tempBone);                                // Add bone to list
@@ -87,6 +81,10 @@ namespace CgfConverter.CryEngine_Core
             }
         }
 
+        /// <summary>
+        /// Writes the results of common matrix math.  For testing purposes.
+        /// </summary>
+        /// <param name="localRotation">The matrix that the math functions will be applied to.</param>
         private void WriteMatrices(Matrix33 localRotation)
         {
             localRotation.WriteMatrix33("Regular");

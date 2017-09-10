@@ -149,6 +149,12 @@
         FootPlantInfo = 0xAAFC0003, // Footplant info
         BonesBoxes = 0xAAFC0004, // unknown chunk
         UnknownAAFC0005 = 0xAAFC0005 //unknown chunk*/
+        CompiledBonesSC = 0x2000,           //  
+        Unknown = 0x2001,                   //  
+        Unknown2 = 0x2005,                  //  
+        Unknown3 = 0x2004,
+        Unknown4 = 0x2006,
+        Unknown5 = 0x3004                   //  Animations?
     }
 
     public enum ChunkVersion : uint

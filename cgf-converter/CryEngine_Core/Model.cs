@@ -30,7 +30,7 @@ namespace CgfConverter.CryEngine_Core
         public ChunkNode RootNode { get; internal set; }
         
         /// <summary>
-        /// The Root Bone
+        /// The Bones in the model.  The CompiledBones chunk will have a unique RootBone.
         /// </summary>
         public ChunkCompiledBones Bones { get; internal set; }
 
@@ -42,7 +42,7 @@ namespace CgfConverter.CryEngine_Core
         /// <summary>
         /// Lookup Table for Chunks, indexed by ChunkID
         /// </summary>
-        public Dictionary<UInt32, Chunk> ChunkMap { get; internal set; }
+        public Dictionary<int, Chunk> ChunkMap { get; internal set; }
 
         /// <summary>
         /// The name of the currently processed file
@@ -91,7 +91,7 @@ namespace CgfConverter.CryEngine_Core
 
         public Model()
         {
-            this.ChunkMap = new Dictionary<UInt32, CryEngine_Core.Chunk> { };
+            this.ChunkMap = new Dictionary<int, CryEngine_Core.Chunk> { };
             this.ChunkHeaders = new List<ChunkHeader> { };
         }
 
@@ -253,7 +253,7 @@ namespace CgfConverter.CryEngine_Core
                 this.ChunkMap[chkHdr.ID].SkipBytes(reader);
 
                 // TODO: Change this to detect node with NULL or 0xFFFFFFFF parent ID
-                // Assume first node read is root node
+                // Assume first node read is root node <--- Bad assumption!  The actual root node will be the one where the Mesh Chunk doesn't have a 0 ObjectID
                 if (chkHdr.ChunkType == ChunkTypeEnum.Node && this.RootNode == null)
                 {
                     this.RootNode = this.ChunkMap[chkHdr.ID] as ChunkNode;

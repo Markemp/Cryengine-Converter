@@ -394,10 +394,11 @@ namespace CgfConverter
                     if (tmpMeshChunk.MeshPhysicsData != 0)
                     {
                         // TODO:  Implement this chunk
-                    } else
+                    }
+                    else if (tmpMeshChunk.MeshSubsets != 0)             // For the SC files, you can have Mesh chunks with no Mesh Subset.  Need to skip these.  They are in the .cga file and contain no geometry.  Just stub info.
                     {
                         //Console.WriteLine("tmpMeshChunk ID is {0:X}", nodeChunk.ObjectNodeID);
-                        // tmpMeshChunk.WriteChunk();
+                         tmpMeshChunk.WriteChunk();
                         //Console.WriteLine("tmpmeshsubset ID is {0:X}", tmpMeshChunk.MeshSubsets);
                         ChunkMeshSubsets tmpMeshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
 
@@ -638,7 +639,7 @@ namespace CgfConverter
                         posSource.Technique_Common.Accessor = new Grendgine_Collada_Accessor();
                         posSource.Technique_Common.Accessor.Source = "#" + floatArrayVerts.ID;
                         posSource.Technique_Common.Accessor.Stride = 3;
-                        posSource.Technique_Common.Accessor.Count = tmpMeshChunk.NumVertices;
+                        posSource.Technique_Common.Accessor.Count = (uint)tmpMeshChunk.NumVertices;
                         Grendgine_Collada_Param[] paramPos = new Grendgine_Collada_Param[3];
                         paramPos[0] = new Grendgine_Collada_Param();
                         paramPos[1] = new Grendgine_Collada_Param();
@@ -655,7 +656,7 @@ namespace CgfConverter
                         normSource.Technique_Common.Accessor = new Grendgine_Collada_Accessor();
                         normSource.Technique_Common.Accessor.Source = "#" + floatArrayNormals.ID;
                         normSource.Technique_Common.Accessor.Stride = 3;
-                        normSource.Technique_Common.Accessor.Count = tmpMeshChunk.NumVertices;
+                        normSource.Technique_Common.Accessor.Count = (uint)tmpMeshChunk.NumVertices;
                         Grendgine_Collada_Param[] paramNorm = new Grendgine_Collada_Param[3];
                         paramNorm[0] = new Grendgine_Collada_Param();
                         paramNorm[1] = new Grendgine_Collada_Param();
@@ -747,6 +748,8 @@ namespace CgfConverter
             // There can be multiple visual scenes.  Will just have one (World) for now.  All node chunks go under Nodes for that visual scene
             List<Grendgine_Collada_Visual_Scene> visualScenes = new List<Grendgine_Collada_Visual_Scene>();
             List<Grendgine_Collada_Node> nodes = new List<Grendgine_Collada_Node>();
+
+            var nullParents = this.CryData.NodeMap.Values.Where(p => p.ParentNode == null).ToArray();
             
             // Check to see if there is a CompiledBones chunk.  If so, add a Node.
             if (CryData.Chunks.Any(a => a.ChunkType == ChunkTypeEnum.CompiledBones))
@@ -762,9 +765,10 @@ namespace CgfConverter
             Grendgine_Collada_Visual_Scene visualScene = new Grendgine_Collada_Visual_Scene();
             
             Grendgine_Collada_Node rootNode = new Grendgine_Collada_Node();
-            rootNode = CreateNode(CryData.RootNode, rootNode);
-            nodes.Add(rootNode);
+            //rootNode = CreateNode(CryData.RootNode, rootNode);
+            rootNode = CreateNode(this.CryData.NodeMap.Values.Where(p => p.ParentNode == null).FirstOrDefault(), rootNode);
 
+            nodes.Add(rootNode);
 
             visualScene.Node = nodes.ToArray();
             //visualScene.Name = "world";
@@ -790,7 +794,7 @@ namespace CgfConverter
                     Console.WriteLine("Node chunk {0} belongs to a mesh physics chunk.  Writing simple node.", nodeChunk.Name);
                     tmpNode = CreateSimpleNode(nodeChunk);
                 }
-                else
+                else 
                 {
                     ChunkMeshSubsets tmpMeshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
                     Grendgine_Collada_Node_Type nodeType = new Grendgine_Collada_Node_Type();
@@ -842,7 +846,6 @@ namespace CgfConverter
                     }
                     tmpNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material = instanceMaterials.ToArray();
                 }
-
             }
             else if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Helper) // Simple node here
             {
@@ -894,7 +897,8 @@ namespace CgfConverter
             List<Grendgine_Collada_Matrix> matrices = new List<Grendgine_Collada_Matrix>();
             // Populate the matrix.  This is based on the BONETOWORLD data in this bone.
             StringBuilder matrixValues = new StringBuilder();
-            matrixValues.AppendFormat("\n\t\t\t{0,11:F6} {1,11:F6} {2,11:F6} {3,11:F6}\n\t\t\t{4,11:F6} {5,11:F6} {6,11:F6} {7,11:F6}\n\t\t\t{8,11:F6} {9,11:F6} {10,11:F6} {11,11:F6}\n\t\t\t0 0 0 1",
+            //matrixValues.AppendFormat("\n\t\t\t{0,11:F6} {1,11:F6} {2,11:F6} {3,11:F6}\n\t\t\t{4,11:F6} {5,11:F6} {6,11:F6} {7,11:F6}\n\t\t\t{8,11:F6} {9,11:F6} {10,11:F6} {11,11:F6}\n\t\t\t0 0 0 1",
+            matrixValues.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} 0 0 0 1",
                 bone.LocalTransform.m11,           
                 bone.LocalTransform.m12,           
                 bone.LocalTransform.m13,           

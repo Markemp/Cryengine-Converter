@@ -14,7 +14,7 @@ namespace CgfConverter.CryEngine_Core
             UInt32 headerType = reader.ReadUInt16() + 0xCCCBF000;
             this.ChunkType = (ChunkTypeEnum)headerType;
             this.Version = (UInt32)reader.ReadUInt16();
-            this.ID = reader.ReadUInt32();  
+            this.ID = reader.ReadInt32();  
             this.Size = reader.ReadUInt32();
             this.Offset = reader.ReadUInt32();
 

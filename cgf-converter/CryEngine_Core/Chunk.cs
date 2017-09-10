@@ -113,7 +113,7 @@ namespace CgfConverter.CryEngine_Core
         /// <summary>
         /// The ID of this Chunk
         /// </summary>
-        public UInt32 ID;
+        public int ID;
         /// <summary>
         /// The Size of this Chunk (in Bytes)
         /// </summary>
@@ -154,12 +154,13 @@ namespace CgfConverter.CryEngine_Core
 
             reader.BaseStream.Seek(this._header.Offset, 0);
 
+            // Star Citizen files don't have the type, version, offset and ID at the start of a chunk, so don't read them.
             if (this._model.FileVersion == FileVersionEnum.CryTek_3_4 || this._model.FileVersion == FileVersionEnum.CryTek_3_5)
             {
                 this.ChunkType = (ChunkTypeEnum)Enum.ToObject(typeof(ChunkTypeEnum), reader.ReadUInt32());
                 this.Version = reader.ReadUInt32();
                 this.Offset = reader.ReadUInt32();
-                this.ID = reader.ReadUInt32();
+                this.ID = reader.ReadInt32();
             }
 
             if (this.Offset != this._header.Offset || this.Size != this._header.Size)
