@@ -11,25 +11,25 @@ namespace CgfConverter.CryEngine_Core
     public class ChunkDataStream_800 : ChunkDataStream
     {
         // This includes changes for 2.6 created by Dymek (byte4/1/2hex, and 20 byte per element vertices).  Thank you!
-        public static float byte4hexToFloat(string hexString)
+        public static float Byte4HexToFloat(string hexString)
         {
             uint num = uint.Parse(hexString, System.Globalization.NumberStyles.AllowHexSpecifier);
             var bytes = BitConverter.GetBytes(num);
             return BitConverter.ToSingle(bytes, 0);
         }
 
-        public static int byte1hexToIntType2(string hexString)
+        public static int Byte1HexToIntType2(string hexString)
         {
             int value = Convert.ToSByte(hexString, 16);
             return value;
         }
 
-        public static float byte2hexIntFracToFloat2(string hexString)
+        public static float Byte2HexIntFracToFloat2(string hexString)
         {
             string sintPart = hexString.Substring(0, 2);
             string sfracPart = hexString.Substring(2, 2);
 
-            int intPart = byte1hexToIntType2(sintPart);
+            int intPart = Byte1HexToIntType2(sintPart);
 
             short intnum = short.Parse(sfracPart, System.Globalization.NumberStyles.AllowHexSpecifier);
             var intbytes = BitConverter.GetBytes(intnum);
@@ -261,7 +261,7 @@ namespace CgfConverter.CryEngine_Core
                 #endregion
                 #region case DataStreamTypeEnum.VERTSUVS:
 
-                case DataStreamTypeEnum.VERTSUVS:  // 3 half floats for verts, 6 unknown, 2 half floats for UVs
+                case DataStreamTypeEnum.VERTSUVS:  // 3 half floats for verts, 3 half floats for normals, 2 half floats for UVs
                     // Utils.Log(LogLevelEnum.Debug, "In VertsUVs...");
                     this.Vertices = new Vector3[this.NumElements];
                     this.Normals = new Vector3[this.NumElements];
@@ -275,15 +275,15 @@ namespace CgfConverter.CryEngine_Core
                                 float ver = 0;
 
                                 bver = b.ReadUInt32();
-                                ver = byte4hexToFloat(bver.ToString("X8"));
+                                ver = Byte4HexToFloat(bver.ToString("X8"));
                                 this.Vertices[i].x = ver;
 
                                 bver = b.ReadUInt32();
-                                ver = byte4hexToFloat(bver.ToString("X8"));
+                                ver = Byte4HexToFloat(bver.ToString("X8"));
                                 this.Vertices[i].y = ver;
 
                                 bver = b.ReadUInt32();
-                                ver = byte4hexToFloat(bver.ToString("X8"));
+                                ver = Byte4HexToFloat(bver.ToString("X8"));
                                 this.Vertices[i].z = ver;
 
                                 Half xnorm = new Half();
@@ -304,35 +304,47 @@ namespace CgfConverter.CryEngine_Core
                             }
                             break;
                         case 16:   // Dymek updated this.
-                            //Console.WriteLine("method: (5), 3 half floats for verts, 6 unknown, 2 half floats for UVs");
+                            //Console.WriteLine("method: (5), 3 half floats for verts, 3 half floats for normals, 2 half floats for UVs");
                             for (Int32 i = 0; i < this.NumElements; i++)
                             {
                                 ushort bver = 0;
                                 float ver = 0;
 
                                 bver = b.ReadUInt16();
-                                ver = byte2hexIntFracToFloat2(bver.ToString("X4")) / 160;
+                                ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 160;
                                 this.Vertices[i].x = ver;
 
                                 bver = b.ReadUInt16();
-                                ver = byte2hexIntFracToFloat2(bver.ToString("X4")) / 160;
+                                ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 160;
                                 this.Vertices[i].y = ver;
 
                                 bver = b.ReadUInt16();
-                                ver = byte2hexIntFracToFloat2(bver.ToString("X4")) / 160;
+                                ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 160;
                                 this.Vertices[i].z = ver;
 
-                                Half xnorm = new Half();
-                                xnorm.bits = b.ReadUInt16();
-                                this.Normals[i].x = xnorm.ToSingle();
+                                //Half xnorm = new Half();
+                                //xnorm.bits = b.ReadUInt16();
+                                //this.Normals[i].x = xnorm.ToSingle();
 
-                                Half ynorm = new Half();
-                                ynorm.bits = b.ReadUInt16();
-                                this.Normals[i].y = ynorm.ToSingle();
+                                //Half ynorm = new Half();
+                                //ynorm.bits = b.ReadUInt16();
+                                //this.Normals[i].y = ynorm.ToSingle();
 
-                                Half znorm = new Half();
-                                znorm.bits = b.ReadUInt16();
-                                this.Normals[i].z = znorm.ToSingle();
+                                //Half znorm = new Half();
+                                //znorm.bits = b.ReadUInt16();
+                                //this.Normals[i].z = znorm.ToSingle();
+
+                                bver = b.ReadUInt16();
+                                ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 160;
+                                this.Normals[i].x = ver;
+
+                                bver = b.ReadUInt16();
+                                ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 160;
+                                this.Normals[i].y = ver;
+
+                                bver = b.ReadUInt16();
+                                ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 160;
+                                this.Normals[i].z = ver;
 
                                 Half uvu = new Half();
                                 uvu.bits = b.ReadUInt16();

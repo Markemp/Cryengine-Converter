@@ -130,7 +130,7 @@ namespace CgfConverter
                         // if Datadir is empty, need a clean name and can only search in the current directory.  If Datadir is provided, then look there.
                         if (this.Args.DataDir == null)
                         {
-                            builder = new StringBuilder(CleanName(CryData.Materials[k].Textures[i].File) + ".dds");
+                            builder = new StringBuilder(CleanMtlFileName(CryData.Materials[k].Textures[i].File) + ".dds");
                             if (Args.TiffTextures)
                                 builder.Replace(".dds", ".tif");
                             
@@ -229,7 +229,7 @@ namespace CgfConverter
                 {
                     // Add the Surface node
                     Grendgine_Collada_New_Param texSurface = new Grendgine_Collada_New_Param();
-                    texSurface.sID = CleanName(CryData.Materials[i].Textures[j].File) + "-surface";
+                    texSurface.sID = CleanMtlFileName(CryData.Materials[i].Textures[j].File) + "-surface";
                     Grendgine_Collada_Surface surface = new Grendgine_Collada_Surface();
                     texSurface.Surface = surface;
                     surface.Init_From = new Grendgine_Collada_Init_From();
@@ -242,7 +242,7 @@ namespace CgfConverter
 
                     // Add the Sampler node
                     Grendgine_Collada_New_Param texSampler = new Grendgine_Collada_New_Param();
-                    texSampler.sID = CleanName(CryData.Materials[i].Textures[j].File) + "-sampler";
+                    texSampler.sID = CleanMtlFileName(CryData.Materials[i].Textures[j].File) + "-sampler";
                     Grendgine_Collada_Sampler2D sampler2D = new Grendgine_Collada_Sampler2D();
                     texSampler.Sampler2D = sampler2D;
                     Grendgine_Collada_Source samplerSource = new Grendgine_Collada_Source();
@@ -279,14 +279,14 @@ namespace CgfConverter
                         diffound = true;
                         phong.Diffuse.Texture = new Grendgine_Collada_Texture();
                         // Texcoord is the ID of the UV source in geometries.  Not needed.
-                        phong.Diffuse.Texture.Texture = CleanName(texture.File) + "-sampler";
+                        phong.Diffuse.Texture.Texture = CleanMtlFileName(texture.File) + "-sampler";
                     }
                     if (texture.Map == CryEngine_Core.Material.Texture.MapTypeEnum.Specular)
                     {
                         //Console.WriteLine("Found spec map");
                         specfound = true;
                         phong.Specular.Texture = new Grendgine_Collada_Texture();
-                        phong.Specular.Texture.Texture = CleanName(texture.File) + "-sampler";
+                        phong.Specular.Texture.Texture = CleanMtlFileName(texture.File) + "-sampler";
                     }
                     if (texture.Map == CryEngine_Core.Material.Texture.MapTypeEnum.Bumpmap)
                     {
@@ -311,7 +311,7 @@ namespace CgfConverter
                         Grendgine_Collada_BumpMap bumpMap = new Grendgine_Collada_BumpMap();
                         bumpMap.Textures = new Grendgine_Collada_Texture[1];
                         bumpMap.Textures[0] = new Grendgine_Collada_Texture();
-                        bumpMap.Textures[0].Texture = CleanName(texture.File) + "-sampler";
+                        bumpMap.Textures[0].Texture = CleanMtlFileName(texture.File) + "-sampler";
                         extraTechnique.Data = new XmlElement[1];
                         extraTechnique.Data[0] = bumpMap;
                     }
@@ -556,7 +556,7 @@ namespace CgfConverter
                                 Vector3 vertex = nodeChunk.GetTransform(tmpVertices.Vertices[j]);
                                 vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", vertex.x, vertex.y, vertex.z);
                                 Vector3 normal = tmpNormals.Normals[j];
-                                normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Utils.Safe(normal.x), Utils.Safe(normal.y), Utils.Safe(normal.z));
+                                normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", normal.x, normal.y, normal.z);
                             }
                             // Create UV string
                             for (uint j = 0; j < tmpUVs.NumElements; j++)
@@ -585,7 +585,7 @@ namespace CgfConverter
                                 Vector3 vertex = nodeChunk.GetTransform(tmpVertsUVs.Vertices[j]);
                                 vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", vertex.x, vertex.y, vertex.z);
                                 Vector3 normal = tmpVertsUVs.Normals[j];
-                                normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Utils.Safe(normal.x), Utils.Safe(normal.y), Utils.Safe(normal.z));
+                                normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", normal.x, normal.y, normal.z);
                             }
                             // Create UV string
                             for (uint j = 0; j < tmpVertsUVs.NumElements; j++)
@@ -1102,7 +1102,6 @@ namespace CgfConverter
             {
                 Console.WriteLine(ex.Message);
             }
-
         }
 
         static void ValidationEventHandler(object sender, ValidationEventArgs e)
@@ -1148,15 +1147,13 @@ namespace CgfConverter
                         Console.WriteLine("attrib: {0} == {1}", attrib.Name, attrib.Value);
                     }
                 }
-
             }
 
             // Create a list of URLs and see if any reference an ID that doesn't exist.
         }
 
-
         /// <summary>Takes the Material file name and returns just the file name with no extension</summary>
-        private string CleanName(string cleanMe) 
+        private string CleanMtlFileName(string cleanMe) 
         {
             string[] stringSeparators = new string[] { @"\", @"/" };
             string[] result;
@@ -1184,11 +1181,6 @@ namespace CgfConverter
             sb.Replace("-0.000000", "0");
             sb.Replace("1.000000", "1");
             sb.Replace("-1.000000", "-1");
-            //sb.Replace("0.000000", "0");
-            //sb.Replace("-0.000000", "0");
-            //sb.Replace("1.000000", "1");
-            //sb.Replace("-1.000000", "-1");
-
         }
         #endregion
     }
