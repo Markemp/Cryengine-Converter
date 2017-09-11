@@ -55,6 +55,21 @@ namespace CgfConverter
             @"yyyy-MM-dd\THHmm", // 2010-12-31T2359
         };
 
+        public static Double Safe(Double value)
+        {
+            if (value == Double.NegativeInfinity)
+                return Double.MinValue;
+
+            if (value == Double.PositiveInfinity)
+                return Double.MaxValue;
+
+            if (value == Double.NaN)
+                return 0;
+
+            return value;
+        }
+
+
         /// <summary>
         /// Custom DateTime formats supported by the parser.
         /// </summary>
