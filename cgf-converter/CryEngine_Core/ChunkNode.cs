@@ -66,6 +66,10 @@ namespace CgfConverter.CryEngine_Core
         #endregion
 
         #region Calculated Properties
+        public Matrix44 LocalTransform = new Matrix44();            // Because Cryengine tends to store transform relative to world, we have to add all the transforms from the node to the root.  Calculated, row major.
+        public Vector3 LocalTranslation = new Vector3();            // To hold the local rotation vector
+        public Matrix33 LocalRotation = new Matrix33();             // to hold the local rotation matrix
+        public Vector3 LocalScale = new Vector3();                  // to hold the local scale matrix
 
         private ChunkNode _parentNode;
 
@@ -238,6 +242,7 @@ namespace CgfConverter.CryEngine_Core
 
             this.Properties = b.ReadPString();
             // Good enough for now.
+            // Calculate the local transform.
         }
 
         public override void WriteChunk()

@@ -20,6 +20,7 @@ namespace CgfConverter
             ".cga",
             ".chr",
             ".skin",
+            ".anim"
         };
 
         #region Constructors
@@ -150,7 +151,6 @@ namespace CgfConverter
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
 
                 // TODO: Try more paths
-                #endregion
 
                 // Populate CryEngine_Core.Material
                 CryEngine_Core.Material material = CryEngine_Core.Material.FromFile(materialFile);
@@ -176,12 +176,10 @@ namespace CgfConverter
                     Utils.Log(LogLevelEnum.Debug, "Unable to locate material file {0}.mtl", mtlChunk.Name);
                 }
             }
-
+            #endregion
 
             // Utils.Log(LogLevelEnum.Debug, "Unable to locate any material file");
-
             this.Materials = new CryEngine_Core.Material[] { };
-
         }
 
         #endregion
@@ -210,6 +208,7 @@ namespace CgfConverter
         }
 
         public Dictionary<String, CryEngine_Core.ChunkNode> _nodeMap;
+
         public Dictionary<String, CryEngine_Core.ChunkNode> NodeMap
         {
             get
@@ -224,7 +223,7 @@ namespace CgfConverter
 
                     foreach (CryEngine_Core.Model model in this.Models)
                     {
-                        model.RootNode = rootNode = (rootNode ?? model.RootNode);
+                        model.RootNode = rootNode = (rootNode ?? model.RootNode);  // This assumes the last model read will have the Root Node?
 
                         foreach (CryEngine_Core.ChunkNode node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as CryEngine_Core.ChunkNode))
                         {

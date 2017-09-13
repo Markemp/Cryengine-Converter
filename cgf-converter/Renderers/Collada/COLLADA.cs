@@ -892,6 +892,7 @@ namespace CgfConverter
                         StringBuilder matrixString = new StringBuilder();
 
                         // matrixString might have to be an identity matrix, since GetTransform is applying the transform to all the vertices.
+                        // Use same principle as CreateJointNode.  The Transform matrix (Matrix44) is the world transform matrix.
                         matrixString.AppendFormat("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0");
                         matrix.Value_As_String = matrixString.ToString();
                         matrix.sID = "transform";
@@ -1060,6 +1061,8 @@ namespace CgfConverter
                 nodeChunk.Transform.m31, nodeChunk.Transform.m32, nodeChunk.Transform.m33, nodeChunk.Transform.m34,
                 nodeChunk.Transform.m41 / 100, nodeChunk.Transform.m42 / 100, nodeChunk.Transform.m43 / 100, nodeChunk.Transform.m44);*/
             matrixString.AppendFormat("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0");
+
+
             matrix.Value_As_String = matrixString.ToString();
             matrix.sID = "transform";
             matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway

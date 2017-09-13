@@ -149,7 +149,7 @@
         FootPlantInfo = 0xAAFC0003, // Footplant info
         BonesBoxes = 0xAAFC0004, // unknown chunk
         UnknownAAFC0005 = 0xAAFC0005 //unknown chunk*/
-        CompiledBonesSC = 0x2000,           //  
+        CompiledBone = 0x2000,           //  
         Unknown = 0x2001,                   //  
         Unknown2 = 0x2005,                  //  
         Unknown3 = 0x2004,
