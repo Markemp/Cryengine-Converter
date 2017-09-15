@@ -326,9 +326,9 @@ namespace CgfConverter
                 return 1;
             }
 
-            // Default to Wavefront (.obj) format
+            // Default to Collada (.dae) format
             if (!this.Output_Blender && !this.Output_Collada && !this.Output_Wavefront && !this.Output_FBX)
-                this.Output_Wavefront = true;
+                this.Output_Collada = true;
 
             return 0;
         }

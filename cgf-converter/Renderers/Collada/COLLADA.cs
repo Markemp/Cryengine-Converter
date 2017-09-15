@@ -424,7 +424,7 @@ namespace CgfConverter
                     else if (tmpMeshChunk.MeshSubsets != 0)             // For the SC files, you can have Mesh chunks with no Mesh Subset.  Need to skip these.  They are in the .cga file and contain no geometry.  Just stub info.
                     {
                         //Console.WriteLine("tmpMeshChunk ID is {0:X}", nodeChunk.ObjectNodeID);
-                         tmpMeshChunk.WriteChunk();
+                         //tmpMeshChunk.WriteChunk();
                         //Console.WriteLine("tmpmeshsubset ID is {0:X}", tmpMeshChunk.MeshSubsets);
                         ChunkMeshSubsets tmpMeshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
 
@@ -553,7 +553,8 @@ namespace CgfConverter
                             for (uint j = 0; j < tmpMeshChunk.NumVertices; j++)
                             {
                                 // Rotate/translate the vertex
-                                Vector3 vertex = nodeChunk.GetTransform(tmpVertices.Vertices[j]);
+                                //Vector3 vertex = nodeChunk.GetTransform(tmpVertices.Vertices[j]);
+                                Vector3 vertex = (tmpVertices.Vertices[j]);
                                 vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", vertex.x, vertex.y, vertex.z);
                                 Vector3 normal = tmpNormals.Normals[j];
                                 normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", normal.x, normal.y, normal.z);
@@ -582,7 +583,8 @@ namespace CgfConverter
                             for (uint j = 0; j < tmpMeshChunk.NumVertices; j++)
                             {
                                 // Rotate/translate the vertex
-                                Vector3 vertex = nodeChunk.GetTransform(tmpVertsUVs.Vertices[j]);
+                                //Vector3 vertex = nodeChunk.GetTransform(tmpVertsUVs.Vertices[j]);
+                                Vector3 vertex = tmpVertsUVs.Vertices[j];
                                 vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", vertex.x, vertex.y, vertex.z);
                                 Vector3 normal = tmpVertsUVs.Normals[j];
                                 normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", normal.x, normal.y, normal.z);
@@ -619,7 +621,7 @@ namespace CgfConverter
                         {
                             polylists[j] = new Grendgine_Collada_Polylist();
                             polylists[j].Count = (int)tmpMeshSubsets.MeshSubsets[j].NumIndices / 3;
-                            Console.WriteLine("Mat Index is {0}", tmpMeshSubsets.MeshSubsets[j].MatID);
+                            //Console.WriteLine("Mat Index is {0}", tmpMeshSubsets.MeshSubsets[j].MatID);
                             polylists[j].Material = CryData.Materials[tmpMeshSubsets.MeshSubsets[j].MatID].Name + "-material";
                             // Create the 4 inputs.  vertex, normal, texcoord, tangent
                             polylists[j].Input = new Grendgine_Collada_Input_Shared[3];
@@ -828,8 +830,6 @@ namespace CgfConverter
             List<Grendgine_Collada_Visual_Scene> visualScenes = new List<Grendgine_Collada_Visual_Scene>();
             List<Grendgine_Collada_Node> nodes = new List<Grendgine_Collada_Node>();
 
-            var nullParents = this.CryData.NodeMap.Values.Where(p => p.ParentNode == null).ToArray();
-            
             // Check to see if there is a CompiledBones chunk.  If so, add a Node.
             if (CryData.Chunks.Any(a => a.ChunkType == ChunkTypeEnum.CompiledBones))
             {
@@ -837,15 +837,30 @@ namespace CgfConverter
                 boneNode = CreateJointNode(CryData.Bones.RootBone);
                 nodes.Add(boneNode);
 
-                // Add a controller for the Joints.
+                // TODO: Add a controller for the Joints.
             }
             
             // Geometry visual Scene.
             Grendgine_Collada_Visual_Scene visualScene = new Grendgine_Collada_Visual_Scene();
             
             Grendgine_Collada_Node rootNode = new Grendgine_Collada_Node();
-            //rootNode = CreateNode(CryData.RootNode, rootNode);
-            rootNode = CreateNode(this.CryData.NodeMap.Values.Where(p => p.ParentNode == null).FirstOrDefault());
+            if (CryData.Models.Count > 1) // Star Citizen model with .cga/.cgam pair.
+            {
+                // First model file (.cga or .cgf) will contain the main Root Node, along with all non geometry Node chunks (placeholders).
+                // Second one will have all the datastreams, but needs to be tied to the RootNode of the first model.
+                rootNode = CreateNode(CryData.Models[0].RootNode);
+                List<Grendgine_Collada_Node> geometryNodes = new List<Grendgine_Collada_Node>();
+                Grendgine_Collada_Node geometryNode = new Grendgine_Collada_Node();
+                geometryNode = CreateNode(CryData.Models[1].RootNode);
+                geometryNodes.Add(geometryNode);
+                rootNode.node = geometryNodes.ToArray();
+            }
+            else
+            {
+                rootNode = CreateNode(this.CryData.RootNode);
+            }
+
+            //rootNode = CreateNode(this.CryData.NodeMap.Values.Where(p => p.ID == 9).ToList().FirstOrDefault());
             nodes.Add(rootNode);
 
             visualScene.Node = nodes.ToArray();
@@ -864,11 +879,12 @@ namespace CgfConverter
             Grendgine_Collada_Node tmpNode = new Grendgine_Collada_Node();
             if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Mesh)
             {
+                //ChunkMesh tmpMeshChunk = (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID];
                 ChunkMesh tmpMeshChunk = (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID];
-                if (tmpMeshChunk.MeshPhysicsData != 0)
+                if (tmpMeshChunk.MeshSubsets == 0)
                 {
-                    // The mesh points to a meshphysics chunk.  While there is geometry (hitbox, collision?) we don't want to process
-                    Console.WriteLine("Node chunk {0} belongs to a mesh physics chunk.  Writing simple node.", nodeChunk.Name);
+                    // The mesh points to a meshphysics chunk, or is part of a SC file with no mesh data.  Process as a simple node.
+                    Console.WriteLine("Node chunk {0} belongs to a node with no geometry.  Writing simple node.", nodeChunk.Name);
                     tmpNode = CreateSimpleNode(nodeChunk);
                     return tmpNode;
                 }
@@ -893,7 +909,12 @@ namespace CgfConverter
 
                         // matrixString might have to be an identity matrix, since GetTransform is applying the transform to all the vertices.
                         // Use same principle as CreateJointNode.  The Transform matrix (Matrix44) is the world transform matrix.
-                        matrixString.AppendFormat("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0");
+                        CalculateTransform(nodeChunk);
+                        matrixString.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} {12:F6} {13:F6} {14:F6} {15:F6}",
+                            nodeChunk.LocalTransform.m11, nodeChunk.LocalTransform.m12, nodeChunk.LocalTransform.m13, nodeChunk.LocalTransform.m14,
+                            nodeChunk.LocalTransform.m21, nodeChunk.LocalTransform.m22, nodeChunk.LocalTransform.m23, nodeChunk.LocalTransform.m24,
+                            nodeChunk.LocalTransform.m31, nodeChunk.LocalTransform.m32, nodeChunk.LocalTransform.m33, nodeChunk.LocalTransform.m34,
+                            nodeChunk.LocalTransform.m41, nodeChunk.LocalTransform.m42, nodeChunk.LocalTransform.m43, nodeChunk.LocalTransform.m44);
                         matrix.Value_As_String = matrixString.ToString();
                         matrix.sID = "transform";
                         matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
@@ -1055,14 +1076,14 @@ namespace CgfConverter
             Grendgine_Collada_Matrix matrix = new Grendgine_Collada_Matrix();
             StringBuilder matrixString = new StringBuilder();
             // matrixString might have to be an identity matrix, since GetTransform is applying the transform to all the vertices.
-            /*matrixString.AppendFormat("{0:F7} {1:F7} {2:F7} {3:F7} {4:F7} {5:F7} {6:F7} {7:F7} {8:F7} {9:F7} {10:F7} {11:F7} {12:F7} {13:F7} {14:F7} {15:F7}",
+            CalculateTransform(nodeChunk);
+            matrixString.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} {12:F6} {13:F6} {14:F6} {15:F6}",
                 nodeChunk.Transform.m11, nodeChunk.Transform.m12, nodeChunk.Transform.m13, nodeChunk.Transform.m14,
                 nodeChunk.Transform.m21, nodeChunk.Transform.m22, nodeChunk.Transform.m23, nodeChunk.Transform.m24,
                 nodeChunk.Transform.m31, nodeChunk.Transform.m32, nodeChunk.Transform.m33, nodeChunk.Transform.m34,
-                nodeChunk.Transform.m41 / 100, nodeChunk.Transform.m42 / 100, nodeChunk.Transform.m43 / 100, nodeChunk.Transform.m44);*/
-            matrixString.AppendFormat("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0");
-
-
+                nodeChunk.Transform.m41, nodeChunk.Transform.m42, nodeChunk.Transform.m43, nodeChunk.Transform.m44);
+            //matrixString.AppendFormat("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0");
+            
             matrix.Value_As_String = matrixString.ToString();
             matrix.sID = "transform";
             matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
@@ -1080,6 +1101,35 @@ namespace CgfConverter
             }
             tmpNode.node = childNodes.ToArray();
             return tmpNode;
+        }
+
+        private void CalculateTransform(ChunkNode node)
+        {
+            // Calculate the LocalTransform matrix.
+            node.LocalTranslation = node.Transform.GetTranslation();       // Gets the world Translation vector of the node chunk
+            node.LocalRotation = node.Transform.GetRotation();
+            node.LocalScale = node.Transform.GetScale();
+    
+            Vector3 localTranslation;
+            Matrix33 localRotation;
+            Vector3 localScale;
+
+            if (node.ParentNodeID != -1)
+            {
+                localRotation = node.ParentNode.Transform.GetRotation().ConjugateTransposeThisAndMultiply(node.Transform.GetRotation());
+                localTranslation = node.LocalRotation * (node.LocalTranslation - node.ParentNode.Transform.GetTranslation());
+                localScale = node.LocalScale - node.ParentNode.LocalScale;
+            }
+            else
+            {
+                localTranslation = node.Transform.GetTranslation();
+                localRotation = node.Transform.GetRotation();
+                localScale = node.Transform.GetScale();
+            }
+            node.LocalTranslation = localTranslation;
+            node.LocalScale = localScale;
+            node.LocalRotation = localRotation;
+            node.LocalTransform = node.LocalTransform.GetTransformFromParts(localTranslation, localRotation, localScale);
         }
 
         private void ValidateXml()  // For testing

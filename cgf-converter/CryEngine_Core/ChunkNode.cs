@@ -100,6 +100,8 @@ namespace CgfConverter.CryEngine_Core
             }
         }
 
+        public List<ChunkNode> ChildNodes { get; set; }
+
         private Chunk _objectChunk;
         public Chunk ObjectChunk
         {
@@ -138,11 +140,11 @@ namespace CgfConverter.CryEngine_Core
             {
                 if (this.ParentNode != null)
                 {
-                    return this.Transform.To3x3().Mult(this.ParentNode.RotSoFar);
+                    return this.Transform.GetRotation().Mult(this.ParentNode.RotSoFar);
                 }
                 else
                 {
-                    return this._model.RootNode.Transform.To3x3();
+                    return this._model.RootNode.Transform.GetRotation();
                     // TODO: What should this be?
                     // return this.Transform.To3x3();
                 }
@@ -242,9 +244,8 @@ namespace CgfConverter.CryEngine_Core
 
             this.Properties = b.ReadPString();
             // Good enough for now.
-            // Calculate the local transform.
         }
-
+        
         public override void WriteChunk()
         {
             Utils.Log(LogLevelEnum.Verbose, "*** START Node Chunk ***");

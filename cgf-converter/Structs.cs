@@ -19,6 +19,17 @@ namespace CgfConverter
         public Double y;
         public Double z;
         public Double w; // Currently Unused
+        private object p1;
+        private object p2;
+        private object p3;
+
+        public Vector3(object p1, object p2, object p3) : this()
+        {
+            this.p1 = p1;
+            this.p2 = p2;
+            this.p3 = p3;
+        }
+
         public void ReadVector3(BinaryReader b)
         {
             this.x = b.ReadSingle();
@@ -461,41 +472,56 @@ namespace CgfConverter
             return result;
         }
 
+
+
+        public Vector3 GetTranslation()
+        {
+            return new Vector3
+            {
+                x = m14,
+                y = m24,
+                z = m34
+            };
+        }
+
         /// <summary>
         /// Gets the Rotation portion of a Transform Matrix44 (upper left).
         /// </summary>
         /// <returns>New Matrix33 with the rotation component.</returns>
-        public Matrix33 To3x3()
+        public Matrix33 GetRotation()
         {
-            Matrix33 result = new Matrix33();
-            result.m11 = m11;
-            result.m12 = m12;
-            result.m13 = m13;
-            result.m21 = m21;
-            result.m22 = m22;
-            result.m23 = m23;
-            result.m31 = m31;
-            result.m32 = m32;
-            result.m33 = m33;
-            return result;
+            return new Matrix33()
+            {
+                m11 = this.m11,
+                m12 = this.m12,
+                m13 = this.m13,
+                m21 = this.m21,
+                m22 = this.m22,
+                m23 = this.m23,
+                m31 = this.m31,
+                m32 = this.m32,
+                m33 = this.m33,
+            };
         }
 
-        public Vector3 GetTranslation()
+        public Vector3 GetScale()
         {
-            Vector3 result = new Vector3();
-            result.x = m41 / 100;
-            result.y = m42 / 100;
-            result.z = m43 / 100;
-            return result;
+            return new Vector3
+            {
+                x = m41 / 100,
+                y = m42 / 100,
+                z = m43 / 100
+            };
         }
 
         public Vector3 GetBoneTranslation()
         {
-            Vector3 result = new Vector3();
-            result.x = m14;
-            result.y = m24;
-            result.z = m34;
-            return result;
+            return new Vector3
+            {
+                x = m14,
+                y = m24,
+                z = m34
+            };
         }
 
         public double[,] ConvertTo4x4Array()
@@ -523,10 +549,38 @@ namespace CgfConverter
 
         public Matrix33 Inverse()
         {
+            throw new NotImplementedException();
             Matrix33 result = new Matrix33();
-
-
             return result;
+        }
+
+        public  Matrix44 GetTransformFromParts(Vector3 localTranslation, Matrix33 localRotation, Vector3 localScale)
+        {
+            Matrix44 transform = new Matrix44
+            {
+                // For Node Chunks, the translation appears to be along the bottom of the matrix, and scale on right side.
+                // Translation part
+                m41 = localTranslation.x,
+                m42 = localTranslation.y,
+                m43 = localTranslation.z,
+                // Rotation part
+                m11 = localRotation.m11,
+                m12 = localRotation.m12,
+                m13 = localRotation.m13,
+                m21 = localRotation.m21,
+                m22 = localRotation.m22,
+                m23 = localRotation.m23,
+                m31 = localRotation.m31,
+                m32 = localRotation.m32,
+                m33 = localRotation.m33,
+                // Scale part
+                m14 = localScale.x,
+                m24 = localScale.y,
+                m34 = localScale.z,
+                // Set final row
+                m44 = 1
+            };
+            return transform;
         }
 
         public void WriteMatrix44()
@@ -538,6 +592,8 @@ namespace CgfConverter
             Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}  {3:F7}", m41, m42, m43, m44);
             Utils.Log(LogLevelEnum.Verbose);
         }
+
+
     }
 
     /// <summary>

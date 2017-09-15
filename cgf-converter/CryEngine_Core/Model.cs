@@ -38,6 +38,11 @@ namespace CgfConverter.CryEngine_Core
         /// Collection of all loaded Chunks
         /// </summary>
         public List<ChunkHeader> ChunkHeaders { get; internal set; }
+
+        /// <summary>
+        /// All the node chunks in this Model
+        /// </summary>
+        public List<ChunkNode> ChunkNodes { get; set; }
         
         /// <summary>
         /// Lookup Table for Chunks, indexed by ChunkID
@@ -70,6 +75,40 @@ namespace CgfConverter.CryEngine_Core
         public Int32 ChunkTableOffset { get; internal set; }
 
         public UInt32 NumChunks { get; internal set; }
+
+        private Dictionary<String, CryEngine_Core.ChunkNode> _nodeMap { get; set; }
+        /// <summary>
+        /// Node map for this model only.
+        /// </summary>
+        public Dictionary<string, ChunkNode> NodeMap
+        {
+            get
+            {
+                if (this._nodeMap == null)
+                {
+                    this._nodeMap = new Dictionary<String, ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
+                    ChunkNode rootNode = null;
+                    Utils.Log(LogLevelEnum.Info, "Mapping Model Nodes");
+                    this.RootNode = rootNode = (rootNode ?? this.RootNode);  // Each model will have it's own rootnode.
+                    foreach (CryEngine_Core.ChunkNode node in this.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as CryEngine_Core.ChunkNode))
+                    {
+                        // Preserve existing parents
+                        if (this._nodeMap.ContainsKey(node.Name))
+                        {
+                            ChunkNode parentNode = this._nodeMap[node.Name].ParentNode;
+
+                            if (parentNode != null)
+                                parentNode = this._nodeMap[parentNode.Name];
+
+                            node.ParentNode = parentNode;
+                        }
+
+                        this._nodeMap[node.Name] = node;
+                    }
+                }
+                return this._nodeMap;
+            }
+        }
 
         #endregion
 
@@ -253,7 +292,7 @@ namespace CgfConverter.CryEngine_Core
                 this.ChunkMap[chkHdr.ID].SkipBytes(reader);
 
                 // TODO: Change this to detect node with NULL or 0xFFFFFFFF parent ID
-                // Assume first node read is root node <--- Bad assumption!  The actual root node will be the one where the Mesh Chunk doesn't have a 0 ObjectID
+                // Assume first node read is root node.  This may be bad if they aren't in order!
                 if (chkHdr.ChunkType == ChunkTypeEnum.Node && this.RootNode == null)
                 {
                     this.RootNode = this.ChunkMap[chkHdr.ID] as ChunkNode;

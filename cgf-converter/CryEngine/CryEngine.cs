@@ -65,7 +65,9 @@ namespace CgfConverter
             {
                 // Each file (.cga and .cgam if applicable) will have its own RootNode.  This can cause problems.  .cga files with a .cgam files won't have geometry for the one root node.
                 CryEngine_Core.Model model = CryEngine_Core.Model.FromFile(file.FullName);
-                this.RootNode = this.RootNode ?? model.RootNode;
+                if (this.RootNode == null)
+                    RootNode = model.RootNode;  // This makes the assumption that we read the .cga file before the .cgam file.
+                //this.RootNode = this.RootNode ?? model.RootNode;
                 this.Bones = this.Bones ?? model.Bones;
                 this.Models.Add(model);
             }
@@ -186,7 +188,11 @@ namespace CgfConverter
 
         #region Properties
 
+        /// <summary>
+        /// There will be one Model for each model in this object.  
+        /// </summary>
         public List<CryEngine_Core.Model> Models { get; internal set; }
+
         public CryEngine_Core.Material[] Materials { get; internal set; }
 
         #endregion
@@ -209,7 +215,7 @@ namespace CgfConverter
 
         public Dictionary<String, CryEngine_Core.ChunkNode> _nodeMap;
 
-        public Dictionary<String, CryEngine_Core.ChunkNode> NodeMap
+        public Dictionary<String, CryEngine_Core.ChunkNode> NodeMap  // Cannot use the Node name for the key.  Across a couple files, you may have multiple nodes with same name.
         {
             get
             {
@@ -223,7 +229,7 @@ namespace CgfConverter
 
                     foreach (CryEngine_Core.Model model in this.Models)
                     {
-                        model.RootNode = rootNode = (rootNode ?? model.RootNode);  // This assumes the last model read will have the Root Node?
+                        model.RootNode = rootNode = (rootNode ?? model.RootNode);  // Each model will have it's own rootnode.
 
                         foreach (CryEngine_Core.ChunkNode node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as CryEngine_Core.ChunkNode))
                         {
@@ -238,7 +244,7 @@ namespace CgfConverter
                                 node.ParentNode = parentNode;
                             }
 
-                            this._nodeMap[node.Name] = node;
+                            this._nodeMap[node.Name] = node;    // TODO:  fix this.  The node name can conflict.
                         }
                     }
                 }
