@@ -32,6 +32,34 @@ namespace CgfConverter
             Utils.Log(LogLevelEnum.Debug, "*** Starting WriteCOLLADA() ***");
             Utils.Log(LogLevelEnum.Debug);
 
+            Utils.Log(LogLevelEnum.Info, "Number of models: {0}", CryData.Models.Count);
+            for (int i =0; i < CryData.Models.Count; i++)
+            {
+                Utils.Log(LogLevelEnum.Info, "\tNumber of nodes in model: {0}", CryData.Models[i].NodeMap.Count);
+            }
+
+            //foreach (ChunkNode node in CryData.Models[0].NodeMap.Values)
+            //{
+            //    Console.WriteLine("Node Chunk {0}", node.Name);
+            //    node.WriteChunk();
+            //    Console.ReadKey();
+            //}
+
+            //foreach (ChunkNode node in CryData.Models[1].NodeMap.Values)
+            //{
+            //    Console.WriteLine("Node Chunk {0} in model {1}", node.Name, node._model.FileName);
+            //    node.WriteChunk();
+            //    Console.ReadKey();
+            //}
+            foreach (ChunkNode node in CryData.Models[1].NodeMap.Values.Where(a => a.Name.Equals("Rudder_Left_Guts_001")))
+            {
+                node.WriteChunk();
+                node.ParentNode.WriteChunk();
+                node.ParentNode.ParentNode.WriteChunk();
+                node.ParentNode.ParentNode.ParentNode.WriteChunk();
+                Console.ReadKey();
+            }
+            
             // File name will be "object name.dae"
             daeOutputFile = new FileInfo(this.GetOutputFile("dae", outputDir, preservePath));
             GetSchema();                                                    // Loads the schema.  Needs error checking in case it's offline.
@@ -44,7 +72,7 @@ namespace CgfConverter
             WriteLibrary_Geometries();
             WriteLibrary_Controllers();
             WriteLibrary_VisualScenes();
-            WriteIDs();
+            //WriteIDs();
             if (!daeOutputFile.Directory.Exists)
                 daeOutputFile.Directory.Create();
             TextWriter writer = new StreamWriter(daeOutputFile.FullName);   // Makes the Textwriter object for the output
@@ -174,7 +202,7 @@ namespace CgfConverter
             daeObject.Library_Materials = libraryMaterials;
             int numMaterials = CryData.Materials.Length;
             // Now create a material for each material in the object
-            Utils.Log(LogLevelEnum.Debug, "Number of materials: {0}", numMaterials);
+            Utils.Log(LogLevelEnum.Info, "Number of materials: {0}", numMaterials);
             Grendgine_Collada_Material[] materials = new Grendgine_Collada_Material[numMaterials];
             for (int i = 0; i < numMaterials; i++)
             {
@@ -364,7 +392,6 @@ namespace CgfConverter
 
         public void WriteLibrary_Geometries()
         {
-            // Geometry library.
             Grendgine_Collada_Library_Geometries libraryGeometries = new Grendgine_Collada_Library_Geometries();
 
             // Make a list for all the geometries objects we will need. Will convert to array at end.  Define the array here as well
@@ -584,6 +611,16 @@ namespace CgfConverter
                             {
                                 // Rotate/translate the vertex
                                 //Vector3 vertex = nodeChunk.GetTransform(tmpVertsUVs.Vertices[j]);
+                                double multiplerX = Math.Abs(tmpMeshChunk.MinBound.x - tmpMeshChunk.MaxBound.x) / 2f;
+                                double multiplerY = Math.Abs(tmpMeshChunk.MinBound.y - tmpMeshChunk.MaxBound.y) / 2f;
+                                double multiplerZ = Math.Abs(tmpMeshChunk.MinBound.z - tmpMeshChunk.MaxBound.z) / 2f;
+                                if (multiplerX < 1) { multiplerX = 1; }
+                                if (multiplerY < 1) { multiplerY = 1; }
+                                if (multiplerZ < 1) { multiplerZ = 1; }
+                                tmpVertsUVs.Vertices[j].x = tmpVertsUVs.Vertices[j].x * multiplerX + (tmpMeshChunk.MaxBound.x + tmpMeshChunk.MinBound.x) / 2;
+                                tmpVertsUVs.Vertices[j].y = tmpVertsUVs.Vertices[j].y * multiplerY + (tmpMeshChunk.MaxBound.y + tmpMeshChunk.MinBound.y) / 2;
+                                tmpVertsUVs.Vertices[j].z = tmpVertsUVs.Vertices[j].z * multiplerZ + (tmpMeshChunk.MaxBound.z + tmpMeshChunk.MinBound.z) / 2;
+
                                 Vector3 vertex = tmpVertsUVs.Vertices[j];
                                 vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", vertex.x, vertex.y, vertex.z);
                                 Vector3 normal = tmpVertsUVs.Normals[j];
@@ -786,22 +823,6 @@ namespace CgfConverter
             daeObject.Library_Geometries = libraryGeometries;
         }
 
-        /// <summary>
-        /// Creates the Collada Source element for a given datastream).
-        /// </summary>
-        /// <param name="vertices">The vertices of the source datastream.  This can be position, normals, colors, tangents, etc.</param>
-        /// <param name="nodeChunk">The Node chunk of the datastream.  Need this for names, mesh, and submesh info.</param>
-        /// <returns>Grendgine_Collada_Source object with the source data.</returns>
-        private Grendgine_Collada_Source GetMeshSource(ChunkDataStream vertices, ChunkNode nodeChunk)
-        {
-            Grendgine_Collada_Source source = new Grendgine_Collada_Source();
-            source.ID = nodeChunk.Name + "-mesh-pos";
-            source.Name = nodeChunk.Name + "-pos";
-
-            // TODO:  Implement this.
-
-            return source;
-        }
 
         public void WriteLibrary_Controllers()
         {
@@ -844,24 +865,53 @@ namespace CgfConverter
             Grendgine_Collada_Visual_Scene visualScene = new Grendgine_Collada_Visual_Scene();
             
             Grendgine_Collada_Node rootNode = new Grendgine_Collada_Node();
+
             if (CryData.Models.Count > 1) // Star Citizen model with .cga/.cgam pair.
             {
                 // First model file (.cga or .cgf) will contain the main Root Node, along with all non geometry Node chunks (placeholders).
                 // Second one will have all the datastreams, but needs to be tied to the RootNode of the first model.
-                rootNode = CreateNode(CryData.Models[0].RootNode);
-                List<Grendgine_Collada_Node> geometryNodes = new List<Grendgine_Collada_Node>();
+                // THERE CAN BE MULTIPLE ROOT NODES IN EACH FILE!  Check to see if the parentnodeid ~0 and be sure to add a node for it.
                 Grendgine_Collada_Node geometryNode = new Grendgine_Collada_Node();
-                geometryNode = CreateNode(CryData.Models[1].RootNode);
-                geometryNodes.Add(geometryNode);
-                rootNode.node = geometryNodes.ToArray();
+                List<Grendgine_Collada_Node> geometryNodes = new List<Grendgine_Collada_Node>();        // For SC files, these are the nodes in the .cgam/.cgfm files.
+                List<Grendgine_Collada_Node> positionNodes = new List<Grendgine_Collada_Node>();        // For SC files, these are the nodes in the .cga/.cgf files.
+
+                // At some point we want to handle lots of Models, so this will need to be refactored.
+                // TODO: But for now, let's just create a root node with the model name so there aren't a ton of root level objects.
+                //List<Grendgine_Collada_Node> rootContainers = new List<Grendgine_Collada_Node>();
+                //Grendgine_Collada_Node rootContainer = new Grendgine_Collada_Node()
+                //{
+                //    Type = Grendgine_Collada_Node_Type.NODE,
+                //    Name = CryData.InputFile,
+                //    ID = CryData.InputFile + "-name",
+                //};
+                
+                //Grendgine_Collada_Matrix[] matrices = new Grendgine_Collada_Matrix[1];
+                //Grendgine_Collada_Matrix matrix = new Grendgine_Collada_Matrix()
+                //{
+                //    Value_As_String = "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1",
+                //    sID = "transform"
+                //};
+                //rootContainer.Matrix = matrices;
+
+                List<ChunkNode> positionRoots = CryData.Models[0].NodeMap.Values.Where(a => a.ParentNodeID == ~0).ToList();
+                List<ChunkNode> geometryRoots = CryData.Models[1].NodeMap.Values.Where(a => a.ParentNodeID == ~0).ToList();
+                foreach (ChunkNode root in positionRoots)
+                {
+                    positionNodes.Add(CreateNode(root));
+                }
+                foreach (ChunkNode root in geometryRoots)
+                {
+                    geometryNodes.Add(CreateNode(root));
+                }
+                // Add the positionRoots to geometryRoots
+                geometryNodes.AddRange(positionNodes);
+                //rootContainer.node = geometryNodes.ToArray();
+                nodes = geometryNodes;
             }
             else
             {
-                rootNode = CreateNode(this.CryData.RootNode);
+                nodes.Add(CreateNode(this.CryData.RootNode));
             }
-
-            //rootNode = CreateNode(this.CryData.NodeMap.Values.Where(p => p.ID == 9).ToList().FirstOrDefault());
-            nodes.Add(rootNode);
 
             visualScene.Node = nodes.ToArray();
             visualScene.ID = "Scene";
@@ -875,16 +925,17 @@ namespace CgfConverter
         private Grendgine_Collada_Node CreateNode(ChunkNode nodeChunk)
         {
             // This will be used recursively to create a node object and return it to WriteLibrary_VisualScenes
+            List<Grendgine_Collada_Node> childNodes = new List<Grendgine_Collada_Node>();
+
             #region Create the node element for this nodeChunk
             Grendgine_Collada_Node tmpNode = new Grendgine_Collada_Node();
             if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Mesh)
             {
-                //ChunkMesh tmpMeshChunk = (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID];
                 ChunkMesh tmpMeshChunk = (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID];
-                if (tmpMeshChunk.MeshSubsets == 0)
+                if (tmpMeshChunk.MeshSubsets == 0 || tmpMeshChunk.NumVertices == 0)  // Can have a node with a mesh and meshsubset, but no vertices.  Write as simple node.
                 {
                     // The mesh points to a meshphysics chunk, or is part of a SC file with no mesh data.  Process as a simple node.
-                    Console.WriteLine("Node chunk {0} belongs to a node with no geometry.  Writing simple node.", nodeChunk.Name);
+                    // Console.WriteLine("Node chunk {0} belongs to a node with no geometry.  Writing simple node.", nodeChunk.Name);
                     tmpNode = CreateSimpleNode(nodeChunk);
                     return tmpNode;
                 }
@@ -953,27 +1004,75 @@ namespace CgfConverter
                     }
                 }
             }
-            else if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Helper) // Simple node here
+            else  // Simple node here
             {
                 //Console.WriteLine("Node chunk {0} belongs to a helpers chunk.  Writing simple node.", nodeChunk.Name);
                 tmpNode = CreateSimpleNode(nodeChunk);
             }
             #endregion
+            // Add childnodes
+            tmpNode.node = CreateChildNodes(nodeChunk);
+            return tmpNode;
+        }
 
-            // Create a list of Nodes for all the children of this node.
-            List<Grendgine_Collada_Node> childNodes = new List<Grendgine_Collada_Node>();
-            foreach (ChunkNode childNodeChunk in CryData.Chunks.Where(a => a.ChunkType == ChunkTypeEnum.Node))
+        /// <summary>
+        /// This will be used to make the Collada node element for Node chunks that point to Helper Chunks and MeshPhysics
+        /// </summary>
+        /// <param name="nodeChunk">The node chunk for this Collada Node.</param>
+        /// <returns>Grendgine_Collada_Node for the node chunk</returns>
+        private Grendgine_Collada_Node CreateSimpleNode(ChunkNode nodeChunk)
+        {
+            // This will be used to make the Collada node element for Node chunks that point to Helper Chunks and MeshPhysics
+            Grendgine_Collada_Node_Type nodeType = new Grendgine_Collada_Node_Type();
+            Grendgine_Collada_Node tmpNode = new Grendgine_Collada_Node();
+            nodeType = Grendgine_Collada_Node_Type.NODE;
+            tmpNode.Type = nodeType;
+            tmpNode.Name = nodeChunk.Name;
+            tmpNode.ID = nodeChunk.Name;
+            // Make the lists necessary for this Node.
+            List<Grendgine_Collada_Matrix> matrices = new List<Grendgine_Collada_Matrix>();
+
+            Grendgine_Collada_Matrix matrix = new Grendgine_Collada_Matrix();
+            StringBuilder matrixString = new StringBuilder();
+            CalculateTransform(nodeChunk);
+            matrixString.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} {12:F6} {13:F6} {14:F6} {15:F6}",
+                nodeChunk.LocalTransform.m11, nodeChunk.LocalTransform.m12, nodeChunk.LocalTransform.m13, nodeChunk.LocalTransform.m14,
+                nodeChunk.LocalTransform.m21, nodeChunk.LocalTransform.m22, nodeChunk.LocalTransform.m23, nodeChunk.LocalTransform.m24,
+                nodeChunk.LocalTransform.m31, nodeChunk.LocalTransform.m32, nodeChunk.LocalTransform.m33, nodeChunk.LocalTransform.m34,
+                nodeChunk.LocalTransform.m41, nodeChunk.LocalTransform.m42, nodeChunk.LocalTransform.m43, nodeChunk.LocalTransform.m44);
+
+            matrix.Value_As_String = matrixString.ToString();
+            matrix.sID = "transform";
+            matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
+            tmpNode.Matrix = matrices.ToArray();
+
+            // Add childnodes
+            tmpNode.node = CreateChildNodes(nodeChunk);
+            return tmpNode;
+        }
+
+        /// <summary>
+        /// Used by CreateNode and CreateSimpleNodes to create all the child nodes for the given node.
+        /// </summary>
+        /// <param name="nodeChunk">Node with children to add.</param>
+        /// <returns>A node with all the children added.</returns>
+        private Grendgine_Collada_Node[] CreateChildNodes(ChunkNode nodeChunk)
+        {
+            if (nodeChunk.__NumChildren != 0)
             {
-                if (childNodeChunk.ParentNodeID == nodeChunk.ID)
+                List<Grendgine_Collada_Node> childNodes = new List<Grendgine_Collada_Node>();
+                foreach (ChunkNode childNodeChunk in nodeChunk.AllChildNodes.ToList())
                 {
                     Grendgine_Collada_Node childNode = new Grendgine_Collada_Node();
                     childNode = CreateNode(childNodeChunk);
                     childNodes.Add(childNode);
                 }
+                return childNodes.ToArray();
             }
-
-            tmpNode.node = childNodes.ToArray();
-            return tmpNode;
+            else
+            {
+                return null;
+            }
         }
 
         private Grendgine_Collada_Node CreateJointNode(CompiledBone bone)
@@ -1033,8 +1132,24 @@ namespace CgfConverter
                 }
                 tmpNode.node = childNodes;
             }
-
             return tmpNode;
+        }
+
+        /// <summary>
+        /// Creates the Collada Source element for a given datastream).
+        /// </summary>
+        /// <param name="vertices">The vertices of the source datastream.  This can be position, normals, colors, tangents, etc.</param>
+        /// <param name="nodeChunk">The Node chunk of the datastream.  Need this for names, mesh, and submesh info.</param>
+        /// <returns>Grendgine_Collada_Source object with the source data.</returns>
+        private Grendgine_Collada_Source GetMeshSource(ChunkDataStream vertices, ChunkNode nodeChunk)
+        {
+            Grendgine_Collada_Source source = new Grendgine_Collada_Source();
+            source.ID = nodeChunk.Name + "-mesh-pos";
+            source.Name = nodeChunk.Name + "-pos";
+
+            // TODO:  Implement this.
+
+            return source;
         }
 
         private string GetRootBoneName(ChunkCompiledBones bones)
@@ -1056,80 +1171,40 @@ namespace CgfConverter
 
         }
 
-        /// <summary>
-        /// This will be used to make the Collada node element for Node chunks that point to Helper Chunks and MeshPhysics
-        /// </summary>
-        /// <param name="nodeChunk">The node chunk for this Collada Node.</param>
-        /// <returns>Grendgine_Collada_Node for the node chunk</returns>
-        private Grendgine_Collada_Node CreateSimpleNode(ChunkNode nodeChunk)
-        {
-            // This will be used to make the Collada node element for Node chunks that point to Helper Chunks and MeshPhysics
-            Grendgine_Collada_Node_Type nodeType = new Grendgine_Collada_Node_Type();
-            Grendgine_Collada_Node tmpNode = new Grendgine_Collada_Node();
-            nodeType = Grendgine_Collada_Node_Type.NODE;
-            tmpNode.Type = nodeType;
-            tmpNode.Name = nodeChunk.Name;
-            tmpNode.ID = nodeChunk.Name;
-            // Make the lists necessary for this Node.
-            List<Grendgine_Collada_Matrix> matrices = new List<Grendgine_Collada_Matrix>();
-
-            Grendgine_Collada_Matrix matrix = new Grendgine_Collada_Matrix();
-            StringBuilder matrixString = new StringBuilder();
-            // matrixString might have to be an identity matrix, since GetTransform is applying the transform to all the vertices.
-            CalculateTransform(nodeChunk);
-            matrixString.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} {12:F6} {13:F6} {14:F6} {15:F6}",
-                nodeChunk.Transform.m11, nodeChunk.Transform.m12, nodeChunk.Transform.m13, nodeChunk.Transform.m14,
-                nodeChunk.Transform.m21, nodeChunk.Transform.m22, nodeChunk.Transform.m23, nodeChunk.Transform.m24,
-                nodeChunk.Transform.m31, nodeChunk.Transform.m32, nodeChunk.Transform.m33, nodeChunk.Transform.m34,
-                nodeChunk.Transform.m41, nodeChunk.Transform.m42, nodeChunk.Transform.m43, nodeChunk.Transform.m44);
-            //matrixString.AppendFormat("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0");
-            
-            matrix.Value_As_String = matrixString.ToString();
-            matrix.sID = "transform";
-            matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
-            tmpNode.Matrix = matrices.ToArray();
-
-            List<Grendgine_Collada_Node> childNodes = new List<Grendgine_Collada_Node>();
-            foreach (ChunkNode childNodeChunk in CryData.Chunks.Where(a => a.ChunkType == ChunkTypeEnum.Node))
-            {
-                if (childNodeChunk.ParentNodeID == nodeChunk.ID)
-                {
-                    Grendgine_Collada_Node childNode = new Grendgine_Collada_Node();
-                    childNode = CreateNode(childNodeChunk);
-                    childNodes.Add(childNode);
-                }
-            }
-            tmpNode.node = childNodes.ToArray();
-            return tmpNode;
-        }
-
         private void CalculateTransform(ChunkNode node)
         {
             // Calculate the LocalTransform matrix.
-            node.LocalTranslation = node.Transform.GetTranslation();       // Gets the world Translation vector of the node chunk
-            node.LocalRotation = node.Transform.GetRotation();
-            node.LocalScale = node.Transform.GetScale();
+            // Node transform matrices are different than joint.  Translation and scale are reversed.
     
             Vector3 localTranslation;
             Matrix33 localRotation;
             Vector3 localScale;
 
-            if (node.ParentNodeID != -1)
+            if (node.ParentNodeID != ~0)
             {
-                localRotation = node.ParentNode.Transform.GetRotation().ConjugateTransposeThisAndMultiply(node.Transform.GetRotation());
-                localTranslation = node.LocalRotation * (node.LocalTranslation - node.ParentNode.Transform.GetTranslation());
-                localScale = node.LocalScale - node.ParentNode.LocalScale;
+                //localRotation = node.ParentNode.Transform.GetRotation().ConjugateTransposeThisAndMultiply(node.Transform.GetRotation());  // Might need to multiply by inverse instead.
+                //localTranslation = node.LocalRotation * (node.LocalTranslation - node.ParentNode.Transform.GetScale());
+                //localScale = node.LocalTranslation - node.ParentNode.LocalTranslation;
+                localRotation = node.ParentNode.Transform.GetRotation().ConjugateTransposeThisAndMultiply(node.Transform.GetRotation());  // Might need to multiply by inverse instead.
+                localTranslation = node.ParentNode.Transform.GetRotation() * (node.Transform.GetScale() - node.ParentNode.Transform.GetScale());
+                localScale = node.Transform.GetTranslation() - node.ParentNode.Transform.GetTranslation();
+
             }
             else
             {
-                localTranslation = node.Transform.GetTranslation();
+                localTranslation = node.Transform.GetScale();
                 localRotation = node.Transform.GetRotation();
-                localScale = node.Transform.GetScale();
+                localScale = node.Transform.GetTranslation();
             }
+
+            //localTranslation = node.Transform.GetScale();
+            //localRotation = node.RotSoFar;
+            //localScale = node.TransformSoFar;
+
             node.LocalTranslation = localTranslation;
             node.LocalScale = localScale;
             node.LocalRotation = localRotation;
-            node.LocalTransform = node.LocalTransform.GetTransformFromParts(localTranslation, localRotation, localScale);
+            node.LocalTransform = node.LocalTransform.GetTransformFromParts(localScale, localRotation, localTranslation);
         }
 
         private void ValidateXml()  // For testing
@@ -1168,11 +1243,6 @@ namespace CgfConverter
                     Console.WriteLine("Warning {0}", e.Message);
                     break;
             }
-
-        }
-
-        private void WriteIDs()
-        {
 
         }
 

@@ -151,6 +151,21 @@ namespace CgfConverter.CryEngine_Core
             }
         }
 
+        public IEnumerable<ChunkNode> AllChildNodes
+        {
+            get
+            {
+                if (this.__NumChildren == 0)
+                {
+                    return null;
+                }
+                else
+                {
+                    return this._model.NodeMap.Values.Where(a => a.ParentNodeID == this.ID);
+                }
+            }
+        }
+
         #endregion
 
         #region Methods

@@ -1,5 +1,4 @@
-﻿using OpenTK.Math;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -88,9 +87,9 @@ namespace CgfConverter.CryEngine_Core
                 {
                     this._nodeMap = new Dictionary<String, ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
                     ChunkNode rootNode = null;
-                    Utils.Log(LogLevelEnum.Info, "Mapping Model Nodes");
+                    //Utils.Log(LogLevelEnum.Info, "Mapping Model Nodes");
                     this.RootNode = rootNode = (rootNode ?? this.RootNode);  // Each model will have it's own rootnode.
-                    foreach (CryEngine_Core.ChunkNode node in this.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as CryEngine_Core.ChunkNode))
+                    foreach (CryEngine_Core.ChunkNode node in this.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as ChunkNode))
                     {
                         // Preserve existing parents
                         if (this._nodeMap.ContainsKey(node.Name))
