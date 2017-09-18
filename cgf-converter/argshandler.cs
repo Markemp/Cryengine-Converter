@@ -329,6 +329,8 @@ namespace CgfConverter
             // Default to Collada (.dae) format
             if (!this.Output_Blender && !this.Output_Collada && !this.Output_Wavefront && !this.Output_FBX)
                 this.Output_Collada = true;
+            // Default to TIF files (only for Bulkheads crew)
+            this.TiffTextures = true;
 
             return 0;
         }

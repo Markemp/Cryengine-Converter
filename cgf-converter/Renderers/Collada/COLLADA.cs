@@ -37,7 +37,25 @@ namespace CgfConverter
             {
                 Utils.Log(LogLevelEnum.Info, "\tNumber of nodes in model: {0}", CryData.Models[i].NodeMap.Count);
             }
+            // Fix parent nodes in the geometry file for nodes with parent = ~0.
+            // We may end up copying all the transforms/parents from the position to the geometry.  Needs testing.
+            // Try just using the .cga file for all the node positions.  If it has an equivalent geometry in Models[1], create an instance_geometry for it?
+                    //foreach (ChunkNode node in CryData.Models[1].NodeMap.Values.Where(a => a.ParentNodeID == ~0))
+                    //{
+                    //    // Try to find the Node with the same name in the positions file
+                    //    ChunkNode positionNode = CryData.Models[0].NodeMap.Values.Where(a => a.Name == node.Name).First();
+                    //    if (positionNode.ParentNodeID != ~0 && node != CryData.Models[1].RootNode)
+                    //    {
+                    //        // There is a chance that the parent node
+                    //        if (CryData.Models[1].NodeMap[positionNode.ParentNode.Name] == null)
+                    //        {
 
+                    //        }
+                    //        node.ParentNodeID = CryData.Models[1].NodeMap[positionNode.ParentNode.Name].ParentNodeID;
+                    //        node.ParentNode = CryData.Models[1].NodeMap[positionNode.ParentNode.Name];
+                    //    }
+                    //}
+            #region Output testing
             //foreach (ChunkNode node in CryData.Models[0].NodeMap.Values)
             //{
             //    Console.WriteLine("Node Chunk {0}", node.Name);
@@ -51,15 +69,16 @@ namespace CgfConverter
             //    node.WriteChunk();
             //    Console.ReadKey();
             //}
-            foreach (ChunkNode node in CryData.Models[1].NodeMap.Values.Where(a => a.Name.Equals("Rudder_Left_Guts_001")))
-            {
-                node.WriteChunk();
-                node.ParentNode.WriteChunk();
-                node.ParentNode.ParentNode.WriteChunk();
-                node.ParentNode.ParentNode.ParentNode.WriteChunk();
-                Console.ReadKey();
-            }
-            
+            //foreach (ChunkNode node in CryData.Models[1].NodeMap.Values.Where(a => a.Name.Contains("Belly_Wing_Right_Decal")))
+            //{
+            //    node.WriteChunk();
+            //    node.ParentNode.WriteChunk();
+            //    node.ParentNode.ParentNode.WriteChunk();
+            //    node.ParentNode.ParentNode.ParentNode.WriteChunk();
+            //    Console.ReadKey();
+            //}
+            #endregion
+
             // File name will be "object name.dae"
             daeOutputFile = new FileInfo(this.GetOutputFile("dae", outputDir, preservePath));
             GetSchema();                                                    // Loads the schema.  Needs error checking in case it's offline.
@@ -610,7 +629,7 @@ namespace CgfConverter
                             for (uint j = 0; j < tmpMeshChunk.NumVertices; j++)
                             {
                                 // Rotate/translate the vertex
-                                //Vector3 vertex = nodeChunk.GetTransform(tmpVertsUVs.Vertices[j]);
+                                // Dymek's code to rescale by bounding box.
                                 double multiplerX = Math.Abs(tmpMeshChunk.MinBound.x - tmpMeshChunk.MaxBound.x) / 2f;
                                 double multiplerY = Math.Abs(tmpMeshChunk.MinBound.y - tmpMeshChunk.MaxBound.y) / 2f;
                                 double multiplerZ = Math.Abs(tmpMeshChunk.MinBound.z - tmpMeshChunk.MaxBound.z) / 2f;
@@ -823,7 +842,6 @@ namespace CgfConverter
             daeObject.Library_Geometries = libraryGeometries;
         }
 
-
         public void WriteLibrary_Controllers()
         {
             // Set up the controller library.
@@ -884,7 +902,7 @@ namespace CgfConverter
                 //    Name = CryData.InputFile,
                 //    ID = CryData.InputFile + "-name",
                 //};
-                
+
                 //Grendgine_Collada_Matrix[] matrices = new Grendgine_Collada_Matrix[1];
                 //Grendgine_Collada_Matrix matrix = new Grendgine_Collada_Matrix()
                 //{
@@ -910,7 +928,7 @@ namespace CgfConverter
             }
             else
             {
-                nodes.Add(CreateNode(this.CryData.RootNode));
+                nodes.Add(CreateNode(CryData.RootNode));
             }
 
             visualScene.Node = nodes.ToArray();
@@ -1180,22 +1198,24 @@ namespace CgfConverter
             Matrix33 localRotation;
             Vector3 localScale;
 
-            if (node.ParentNodeID != ~0)
-            {
+            //if (node.ParentNodeID != ~0)
+            //{
                 //localRotation = node.ParentNode.Transform.GetRotation().ConjugateTransposeThisAndMultiply(node.Transform.GetRotation());  // Might need to multiply by inverse instead.
                 //localTranslation = node.LocalRotation * (node.LocalTranslation - node.ParentNode.Transform.GetScale());
                 //localScale = node.LocalTranslation - node.ParentNode.LocalTranslation;
-                localRotation = node.ParentNode.Transform.GetRotation().ConjugateTransposeThisAndMultiply(node.Transform.GetRotation());  // Might need to multiply by inverse instead.
-                localTranslation = node.ParentNode.Transform.GetRotation() * (node.Transform.GetScale() - node.ParentNode.Transform.GetScale());
-                localScale = node.Transform.GetTranslation() - node.ParentNode.Transform.GetTranslation();
-
-            }
-            else
-            {
+                /*localRotation = node.ParentNode.Transform.GetRotation().ConjugateTransposeThisAndMultiply(node.Transform.GetRotation());*/  // Might need to multiply by inverse instead.
+                //localRotation = node.ParentNode.Transform.GetRotation().Inverse() * node.Transform.GetRotation();
+                //localRotation = node.Transform.GetRotation();
+                //localRotation = node.ParentNode.Transform.GetRotation() * node.Transform.GetRotation();
+                //localTranslation = node.ParentNode.Transform.GetRotation() * node.Transform.GetScale();
+                //localScale = node.Transform.GetTranslation() - node.ParentNode.Transform.GetTranslation();
+            //}
+            //else
+            //{
                 localTranslation = node.Transform.GetScale();
                 localRotation = node.Transform.GetRotation();
                 localScale = node.Transform.GetTranslation();
-            }
+            //}
 
             //localTranslation = node.Transform.GetScale();
             //localRotation = node.RotSoFar;
