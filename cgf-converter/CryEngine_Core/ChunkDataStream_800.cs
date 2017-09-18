@@ -1,5 +1,4 @@
-﻿using OpenTK;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -98,24 +97,25 @@ namespace CgfConverter.CryEngine_Core
                         case 8:  // Old Star Citizen files
                             for (Int32 i = 0; i < NumElements; i++)
                             {
+                                uint bver = 0;
+                                float ver = 0;
+
                                 // 2 byte floats.  Use the Half structure from TK.Math
+                                bver = b.ReadUInt16();
+                                ver = Byte4HexToFloat(bver.ToString("X8"));
+                                this.Vertices[i].x = ver;
 
-                                Half xshort = new Half(b.ReadUInt16());
-                                //uint xshortbits = b.ReadUInt16();
-                                //xshort.bits = b.ReadUInt16();
-                                this.Vertices[i].x = xshort.ToSingle();
+                                bver = b.ReadUInt16();
+                                ver = Byte4HexToFloat(bver.ToString("X8"));
+                                this.Vertices[i].y = ver; bver = b.ReadUInt16();
 
-                                Half yshort = new Half(b.ReadUInt16());
-                                //yshort.bits = b.ReadUInt16();
-                                this.Vertices[i].y = yshort.ToSingle();
+                                bver = b.ReadUInt16();
+                                ver = Byte4HexToFloat(bver.ToString("X8"));
+                                this.Vertices[i].z = ver;
 
-                                Half zshort = new Half(b.ReadUInt16());
-                                //zshort.bits = b.ReadUInt16();
-                                this.Vertices[i].z = zshort.ToSingle();
-
-                                Half wshort = new Half(b.ReadUInt16());
-                                //wshort.bits = b.ReadUInt16();
-                                this.Vertices[i].w = wshort.ToSingle();
+                                bver = b.ReadUInt16();
+                                ver = Byte4HexToFloat(bver.ToString("X8"));
+                                this.Vertices[i].w = ver;
                             }
                             break;
                         case 16:
@@ -125,7 +125,7 @@ namespace CgfConverter.CryEngine_Core
                                 this.Vertices[i].x = b.ReadSingle();
                                 this.Vertices[i].y = b.ReadSingle();
                                 this.Vertices[i].z = b.ReadSingle();
-                                this.Vertices[i].w = b.ReadSingle(); // Sometimes there's a W to these structures.  Will investigate.
+                                this.Vertices[i].w = b.ReadSingle(); // TODO:  Sometimes there's a W to these structures.  Will investigate.
                             }
                             break;
                     }
@@ -286,21 +286,25 @@ namespace CgfConverter.CryEngine_Core
                                 ver = Byte4HexToFloat(bver.ToString("X8"));
                                 this.Vertices[i].z = ver;
 
-                                Half xnorm = new Half(b.ReadUInt16());
-                                //xnorm.bits = b.ReadUInt16();
-                                this.Normals[i].x = xnorm.ToSingle();
+                                bver = b.ReadUInt16();
+                                ver = Byte4HexToFloat(bver.ToString("X8"));
+                                this.Normals[i].x = ver;
 
-                                Half ynorm = new Half(b.ReadUInt16());
-                                //ynorm.bits = b.ReadUInt16();
-                                this.Normals[i].y = ynorm.ToSingle();
+                                bver = b.ReadUInt16();
+                                ver = Byte4HexToFloat(bver.ToString("X8"));
+                                this.Normals[i].y = ver;
 
-                                Half uvu = new Half(b.ReadUInt16());
-                                //uvu.bits = b.ReadUInt16();
-                                this.UVs[i].U = uvu.ToSingle();
+                                bver = b.ReadUInt16();
+                                ver = Byte4HexToFloat(bver.ToString("X8"));
+                                this.Normals[i].z = ver;
 
-                                Half uvv = new Half(b.ReadUInt16());
-                                //uvv.bits = b.ReadUInt16();
-                                this.UVs[i].V = uvv.ToSingle();
+                                bver = b.ReadUInt16();
+                                ver = Byte4HexToFloat(bver.ToString("X8"));
+                                this.UVs[i].U = ver;
+
+                                bver = b.ReadUInt16();
+                                ver = Byte4HexToFloat(bver.ToString("X8"));
+                                this.UVs[i].V = ver;
                             }
                             break;
                         case 16:   // Dymek updated this.

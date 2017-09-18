@@ -56,6 +56,7 @@ namespace CgfConverter
             //args = new String[] { @"D:\Blender Projects\Star Citizen\Objects\animals\crab\props\crab_thorshu_prop_01.chr", "-objectdir", @"d:\blender projects\star citizen", "-dds", "-dae", "-tif" };
             //args = new String[] { @"D:\Blender Projects\Star Citizen\Objects\animals\fish\CleanerFish_clean_prop_animal_01.chr", "-objectdir", @"d:\blender projects\star citizen", "-dds", "-dae", "-tif" };
             args = new String[] { @"d:\Blender Projects\Star Citizen\Objects\Spaceships\Ships\AEGS\Gladius\AEGS_Gladius.cga", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
+            //args = new String[] { @"d:\Blender Projects\Star Citizen\Objects\Spaceships\Ships\AEGS\Retaliator\AEGS_retaliator.cga", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
             //args = new String[] { @"d:\Blender Projects\Star Citizen\Objects\buildingsets\human\lowtech\bravo\grimhex\anchor\anchor_gun_a.cgf", "-objectdir", @"d:\blender projects\star citizen", "-dds", "-dae", "-tif" };
             //args = new String[] { @"d:\Blender Projects\Star Citizen\Objects\buildingsets\human\hightech\alpha\ext\landingpad\ext_landingpad_floor_center_stair_16x08x10_b.cgf", "-objectdir", @"d:\blender projects\star citizen", "-dds", "-dae", "-tif" };
 #endif

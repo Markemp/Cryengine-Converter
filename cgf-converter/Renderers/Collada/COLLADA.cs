@@ -37,24 +37,7 @@ namespace CgfConverter
             {
                 Utils.Log(LogLevelEnum.Info, "\tNumber of nodes in model: {0}", CryData.Models[i].NodeMap.Count);
             }
-            // Fix parent nodes in the geometry file for nodes with parent = ~0.
-            // We may end up copying all the transforms/parents from the position to the geometry.  Needs testing.
-            // Try just using the .cga file for all the node positions.  If it has an equivalent geometry in Models[1], create an instance_geometry for it?
-                    //foreach (ChunkNode node in CryData.Models[1].NodeMap.Values.Where(a => a.ParentNodeID == ~0))
-                    //{
-                    //    // Try to find the Node with the same name in the positions file
-                    //    ChunkNode positionNode = CryData.Models[0].NodeMap.Values.Where(a => a.Name == node.Name).First();
-                    //    if (positionNode.ParentNodeID != ~0 && node != CryData.Models[1].RootNode)
-                    //    {
-                    //        // There is a chance that the parent node
-                    //        if (CryData.Models[1].NodeMap[positionNode.ParentNode.Name] == null)
-                    //        {
 
-                    //        }
-                    //        node.ParentNodeID = CryData.Models[1].NodeMap[positionNode.ParentNode.Name].ParentNodeID;
-                    //        node.ParentNode = CryData.Models[1].NodeMap[positionNode.ParentNode.Name];
-                    //    }
-                    //}
             #region Output testing
             //foreach (ChunkNode node in CryData.Models[0].NodeMap.Values)
             //{
@@ -77,6 +60,10 @@ namespace CgfConverter
             //    node.ParentNode.ParentNode.ParentNode.WriteChunk();
             //    Console.ReadKey();
             //}
+            //CryData.Models[0].NodeMap["FrontWing_Right_Flap"].WriteChunk();
+            //CryData.Models[1].NodeMap["FrontWing_Right_Flap"].WriteChunk();
+            //Console.ReadKey();
+
             #endregion
 
             // File name will be "object name.dae"
@@ -100,7 +87,7 @@ namespace CgfConverter
             writer.Close();
             //ValidateXml();                                                  // validates against the schema
             //ValidateDoc();                                                // validates IDs and URLs
-            Utils.Log(LogLevelEnum.Debug, "End of Write Collada");
+            Utils.Log(LogLevelEnum.Debug, "End of Write Collada.  Export complete.");
         }
 
         private void WriteRootNode()
@@ -881,7 +868,6 @@ namespace CgfConverter
             
             // Geometry visual Scene.
             Grendgine_Collada_Visual_Scene visualScene = new Grendgine_Collada_Visual_Scene();
-            
             Grendgine_Collada_Node rootNode = new Grendgine_Collada_Node();
 
             if (CryData.Models.Count > 1) // Star Citizen model with .cga/.cgam pair.
@@ -889,42 +875,13 @@ namespace CgfConverter
                 // First model file (.cga or .cgf) will contain the main Root Node, along with all non geometry Node chunks (placeholders).
                 // Second one will have all the datastreams, but needs to be tied to the RootNode of the first model.
                 // THERE CAN BE MULTIPLE ROOT NODES IN EACH FILE!  Check to see if the parentnodeid ~0 and be sure to add a node for it.
-                Grendgine_Collada_Node geometryNode = new Grendgine_Collada_Node();
-                List<Grendgine_Collada_Node> geometryNodes = new List<Grendgine_Collada_Node>();        // For SC files, these are the nodes in the .cgam/.cgfm files.
                 List<Grendgine_Collada_Node> positionNodes = new List<Grendgine_Collada_Node>();        // For SC files, these are the nodes in the .cga/.cgf files.
-
-                // At some point we want to handle lots of Models, so this will need to be refactored.
-                // TODO: But for now, let's just create a root node with the model name so there aren't a ton of root level objects.
-                //List<Grendgine_Collada_Node> rootContainers = new List<Grendgine_Collada_Node>();
-                //Grendgine_Collada_Node rootContainer = new Grendgine_Collada_Node()
-                //{
-                //    Type = Grendgine_Collada_Node_Type.NODE,
-                //    Name = CryData.InputFile,
-                //    ID = CryData.InputFile + "-name",
-                //};
-
-                //Grendgine_Collada_Matrix[] matrices = new Grendgine_Collada_Matrix[1];
-                //Grendgine_Collada_Matrix matrix = new Grendgine_Collada_Matrix()
-                //{
-                //    Value_As_String = "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1",
-                //    sID = "transform"
-                //};
-                //rootContainer.Matrix = matrices;
-
                 List<ChunkNode> positionRoots = CryData.Models[0].NodeMap.Values.Where(a => a.ParentNodeID == ~0).ToList();
-                List<ChunkNode> geometryRoots = CryData.Models[1].NodeMap.Values.Where(a => a.ParentNodeID == ~0).ToList();
                 foreach (ChunkNode root in positionRoots)
                 {
                     positionNodes.Add(CreateNode(root));
                 }
-                foreach (ChunkNode root in geometryRoots)
-                {
-                    geometryNodes.Add(CreateNode(root));
-                }
-                // Add the positionRoots to geometryRoots
-                geometryNodes.AddRange(positionNodes);
-                //rootContainer.node = geometryNodes.ToArray();
-                nodes = geometryNodes;
+                nodes = positionNodes;
             }
             else
             {
@@ -949,82 +906,38 @@ namespace CgfConverter
             Grendgine_Collada_Node tmpNode = new Grendgine_Collada_Node();
             if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Mesh)
             {
-                ChunkMesh tmpMeshChunk = (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID];
-                if (tmpMeshChunk.MeshSubsets == 0 || tmpMeshChunk.NumVertices == 0)  // Can have a node with a mesh and meshsubset, but no vertices.  Write as simple node.
+                // Check to see if there is a second model file, and if the mesh chunk is actually there.
+                if (CryData.Models.Count > 1)
                 {
-                    // The mesh points to a meshphysics chunk, or is part of a SC file with no mesh data.  Process as a simple node.
-                    // Console.WriteLine("Node chunk {0} belongs to a node with no geometry.  Writing simple node.", nodeChunk.Name);
-                    tmpNode = CreateSimpleNode(nodeChunk);
-                    return tmpNode;
+                    // Star Citizen pair.  Get the Node and Mesh chunks from the geometry file.
+                    ChunkNode geometryNode = CryData.Models[1].NodeMap.Values.Where(a => a.Name == nodeChunk.Name).First();
+                    ChunkMesh geometryMesh = (ChunkMesh)CryData.Models[1].ChunkMap[geometryNode.ObjectNodeID];
+                    tmpNode = CreateGeometryNode(geometryNode, geometryMesh);
                 }
-                else 
+                else
                 {
-                    if (nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsets].ID != 0)
+                    ChunkMesh tmpMeshChunk = (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID];
+                    if (tmpMeshChunk.MeshSubsets == 0 || tmpMeshChunk.NumVertices == 0)  // Can have a node with a mesh and meshsubset, but no vertices.  Write as simple node.
                     {
-                        ChunkMeshSubsets tmpMeshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
-                        Grendgine_Collada_Node_Type nodeType = new Grendgine_Collada_Node_Type();
-                        nodeType = Grendgine_Collada_Node_Type.NODE;
-                        tmpNode.Type = nodeType;
-                        tmpNode.Name = nodeChunk.Name;
-                        tmpNode.ID = nodeChunk.Name;
-                        // Make the lists necessary for this Node.
-                        List<Grendgine_Collada_Matrix> matrices = new List<Grendgine_Collada_Matrix>();
-                        List<Grendgine_Collada_Instance_Geometry> instanceGeometries = new List<Grendgine_Collada_Instance_Geometry>();
-                        List<Grendgine_Collada_Bind_Material> bindMaterials = new List<Grendgine_Collada_Bind_Material>();
-                        List<Grendgine_Collada_Instance_Material_Geometry> instanceMaterials = new List<Grendgine_Collada_Instance_Material_Geometry>();
-
-                        Grendgine_Collada_Matrix matrix = new Grendgine_Collada_Matrix();
-                        StringBuilder matrixString = new StringBuilder();
-
-                        // matrixString might have to be an identity matrix, since GetTransform is applying the transform to all the vertices.
-                        // Use same principle as CreateJointNode.  The Transform matrix (Matrix44) is the world transform matrix.
-                        CalculateTransform(nodeChunk);
-                        matrixString.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} {12:F6} {13:F6} {14:F6} {15:F6}",
-                            nodeChunk.LocalTransform.m11, nodeChunk.LocalTransform.m12, nodeChunk.LocalTransform.m13, nodeChunk.LocalTransform.m14,
-                            nodeChunk.LocalTransform.m21, nodeChunk.LocalTransform.m22, nodeChunk.LocalTransform.m23, nodeChunk.LocalTransform.m24,
-                            nodeChunk.LocalTransform.m31, nodeChunk.LocalTransform.m32, nodeChunk.LocalTransform.m33, nodeChunk.LocalTransform.m34,
-                            nodeChunk.LocalTransform.m41, nodeChunk.LocalTransform.m42, nodeChunk.LocalTransform.m43, nodeChunk.LocalTransform.m44);
-                        matrix.Value_As_String = matrixString.ToString();
-                        matrix.sID = "transform";
-                        matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
-                        tmpNode.Matrix = matrices.ToArray();
-
-                        // Each node will have one instance geometry, although it could be a list.
-                        Grendgine_Collada_Instance_Geometry instanceGeometry = new Grendgine_Collada_Instance_Geometry();
-                        instanceGeometry.Name = nodeChunk.Name;
-                        instanceGeometry.URL = "#" + nodeChunk.Name + "-mesh";  // this is the ID of the geometry.
-
-                        Grendgine_Collada_Bind_Material bindMaterial = new Grendgine_Collada_Bind_Material();
-                        bindMaterial.Technique_Common = new Grendgine_Collada_Technique_Common_Bind_Material();
-                        bindMaterial.Technique_Common.Instance_Material = new Grendgine_Collada_Instance_Material_Geometry[tmpMeshSubsets.NumMeshSubset];
-                        bindMaterials.Add(bindMaterial);
-                        instanceGeometry.Bind_Material = bindMaterials.ToArray();
-                        instanceGeometries.Add(instanceGeometry);
-
-                        tmpNode.Instance_Geometry = instanceGeometries.ToArray();
-
-                        // This gets complicated.  We need to make one instance_material for each material used in this node chunk.  The mat IDs used in this
-                        // node chunk are stored in meshsubsets, so for each subset we need to grab the mat, get the target (id), and make an instance_material for it.
-                        for (int i = 0; i < tmpMeshSubsets.NumMeshSubset; i++)
-                        {
-                            // For each mesh subset, we want to create an instance material and add it to instanceMaterials list.
-                            Grendgine_Collada_Instance_Material_Geometry tmpInstanceMat = new Grendgine_Collada_Instance_Material_Geometry();
-                            //tmpInstanceMat.Target = "#" + tmpMeshSubsets.MeshSubsets[i].MatID;
-                            tmpInstanceMat.Target = "#" + CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name + "-material";
-                            //tmpInstanceMat.Symbol = CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name;
-                            tmpInstanceMat.Symbol = CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name + "-material";
-                            instanceMaterials.Add(tmpInstanceMat);
-                        }
-                        tmpNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material = instanceMaterials.ToArray();
-                    } else
-                    {
+                        // The mesh points to a meshphysics chunk, or is part of a SC file with no mesh data.  Process as a simple node.
                         tmpNode = CreateSimpleNode(nodeChunk);
+                        return tmpNode;
+                    }
+                    else
+                    {
+                        if (nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsets].ID != 0)
+                        {
+                            tmpNode = CreateGeometryNode(nodeChunk, (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID]);
+                        }
+                        else
+                        {
+                            tmpNode = CreateSimpleNode(nodeChunk);
+                        }
                     }
                 }
             }
             else  // Simple node here
             {
-                //Console.WriteLine("Node chunk {0} belongs to a helpers chunk.  Writing simple node.", nodeChunk.Name);
                 tmpNode = CreateSimpleNode(nodeChunk);
             }
             #endregion
@@ -1150,6 +1063,67 @@ namespace CgfConverter
                 }
                 tmpNode.node = childNodes;
             }
+            return tmpNode;
+        }
+
+        private Grendgine_Collada_Node CreateGeometryNode(ChunkNode nodeChunk, ChunkMesh tmpMeshChunk)
+        {
+            Grendgine_Collada_Node tmpNode = new Grendgine_Collada_Node();
+            ChunkMeshSubsets tmpMeshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
+            Grendgine_Collada_Node_Type nodeType = new Grendgine_Collada_Node_Type();
+            nodeType = Grendgine_Collada_Node_Type.NODE;
+            tmpNode.Type = nodeType;
+            tmpNode.Name = nodeChunk.Name;
+            tmpNode.ID = nodeChunk.Name;
+            // Make the lists necessary for this Node.
+            List<Grendgine_Collada_Matrix> matrices = new List<Grendgine_Collada_Matrix>();
+            List<Grendgine_Collada_Instance_Geometry> instanceGeometries = new List<Grendgine_Collada_Instance_Geometry>();
+            List<Grendgine_Collada_Bind_Material> bindMaterials = new List<Grendgine_Collada_Bind_Material>();
+            List<Grendgine_Collada_Instance_Material_Geometry> instanceMaterials = new List<Grendgine_Collada_Instance_Material_Geometry>();
+
+            Grendgine_Collada_Matrix matrix = new Grendgine_Collada_Matrix();
+            StringBuilder matrixString = new StringBuilder();
+
+            // matrixString might have to be an identity matrix, since GetTransform is applying the transform to all the vertices.
+            // Use same principle as CreateJointNode.  The Transform matrix (Matrix44) is the world transform matrix.
+            CalculateTransform(nodeChunk);
+            matrixString.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} {12:F6} {13:F6} {14:F6} {15:F6}",
+                nodeChunk.LocalTransform.m11, nodeChunk.LocalTransform.m12, nodeChunk.LocalTransform.m13, nodeChunk.LocalTransform.m14,
+                nodeChunk.LocalTransform.m21, nodeChunk.LocalTransform.m22, nodeChunk.LocalTransform.m23, nodeChunk.LocalTransform.m24,
+                nodeChunk.LocalTransform.m31, nodeChunk.LocalTransform.m32, nodeChunk.LocalTransform.m33, nodeChunk.LocalTransform.m34,
+                nodeChunk.LocalTransform.m41, nodeChunk.LocalTransform.m42, nodeChunk.LocalTransform.m43, nodeChunk.LocalTransform.m44);
+            matrix.Value_As_String = matrixString.ToString();
+            matrix.sID = "transform";
+            matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
+            tmpNode.Matrix = matrices.ToArray();
+
+            // Each node will have one instance geometry, although it could be a list.
+            Grendgine_Collada_Instance_Geometry instanceGeometry = new Grendgine_Collada_Instance_Geometry();
+            instanceGeometry.Name = nodeChunk.Name;
+            instanceGeometry.URL = "#" + nodeChunk.Name + "-mesh";  // this is the ID of the geometry.
+
+            Grendgine_Collada_Bind_Material bindMaterial = new Grendgine_Collada_Bind_Material();
+            bindMaterial.Technique_Common = new Grendgine_Collada_Technique_Common_Bind_Material();
+            bindMaterial.Technique_Common.Instance_Material = new Grendgine_Collada_Instance_Material_Geometry[tmpMeshSubsets.NumMeshSubset];
+            bindMaterials.Add(bindMaterial);
+            instanceGeometry.Bind_Material = bindMaterials.ToArray();
+            instanceGeometries.Add(instanceGeometry);
+
+            tmpNode.Instance_Geometry = instanceGeometries.ToArray();
+
+            // This gets complicated.  We need to make one instance_material for each material used in this node chunk.  The mat IDs used in this
+            // node chunk are stored in meshsubsets, so for each subset we need to grab the mat, get the target (id), and make an instance_material for it.
+            for (int i = 0; i < tmpMeshSubsets.NumMeshSubset; i++)
+            {
+                // For each mesh subset, we want to create an instance material and add it to instanceMaterials list.
+                Grendgine_Collada_Instance_Material_Geometry tmpInstanceMat = new Grendgine_Collada_Instance_Material_Geometry();
+                //tmpInstanceMat.Target = "#" + tmpMeshSubsets.MeshSubsets[i].MatID;
+                tmpInstanceMat.Target = "#" + CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name + "-material";
+                //tmpInstanceMat.Symbol = CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name;
+                tmpInstanceMat.Symbol = CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name + "-material";
+                instanceMaterials.Add(tmpInstanceMat);
+            }
+            tmpNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material = instanceMaterials.ToArray();
             return tmpNode;
         }
 

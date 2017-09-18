@@ -547,13 +547,6 @@ namespace CgfConverter
             return result;
         }
 
-        public Matrix33 Inverse()
-        {
-            throw new NotImplementedException();
-            Matrix33 result = new Matrix33();
-            return result;
-        }
-
         public  Matrix44 GetTransformFromParts(Vector3 localTranslation, Matrix33 localRotation, Vector3 localScale)
         {
             Matrix44 transform = new Matrix44
