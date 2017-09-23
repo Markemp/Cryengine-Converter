@@ -853,7 +853,7 @@ namespace CgfConverter
             List<Grendgine_Collada_Node> nodes = new List<Grendgine_Collada_Node>();
 
             // Check to see if there is a CompiledBones chunk.  If so, add a Node.
-            if (CryData.Chunks.Any(a => a.ChunkType == ChunkTypeEnum.CompiledBones || a.ChunkType == ChunkTypeEnum.CompiledBonesSC)/* || CryData.Chunks.Any(a => a.ChunkType == ChunkType36.CompiledBone)*/)
+            if (CryData.Chunks.Any(a => a.ChunkType == ChunkTypeEnum.CompiledBones || a.ChunkType == ChunkTypeEnum.CompiledBonesSC))
             {
                 Grendgine_Collada_Node boneNode = new Grendgine_Collada_Node();
                 boneNode = CreateJointNode(CryData.Bones.RootBone);

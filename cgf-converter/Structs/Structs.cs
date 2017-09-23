@@ -879,18 +879,18 @@ namespace CgfConverter
 
     public class CompiledBone       // This is the same as BoneDescData
     {
-        public UInt32 ControllerID { get; set; }
+        public uint ControllerID { get; set; }
         public PhysicsGeometry[] physicsGeometry;   // 2 of these.  One for live objects, other for dead (ragdoll?)
         public Double mass;                         // 0xD8 ?
         public WORLDTOBONE worldToBone;             // 4x3 matrix
         public BONETOWORLD boneToWorld;             // 4x3 matrix of world translations/rotations of the bones.
-        public String boneName;                     // String256 in old terms; convert to a real null terminated string.
-        public UInt32 limbID;                       // ID of this limb... usually just 0xFFFFFFFF
-        public Int32 offsetParent;                 // offset to the parent in number of CompiledBone structs (584 bytes)
-        public Int32 offsetChild;                   // Offset to the first child to this bone in number of CompiledBone structs
-        public UInt32 numChildren;                  // Number of children to this bone
+        public string boneName;                     // String256 in old terms; convert to a real null terminated string.
+        public uint limbID;                         // ID of this limb... usually just 0xFFFFFFFF
+        public int offsetParent;                    // offset to the parent in number of CompiledBone structs (584 bytes)
+        public int offsetChild;                     // Offset to the first child to this bone in number of CompiledBone structs
+        public uint numChildren;                    // Number of children to this bone
 
-        public UInt32 parentID;                     // Not part of the read structure, but the controllerID of the parent bone put into the Bone Dictionary (the key)
+        public uint parentID;                       // Not part of the read structure, but the controllerID of the parent bone put into the Bone Dictionary (the key)
         public Int64 offset;                        // Not part of the structure, but the position in the file where this bone started.
         public List<uint> childIDs;                 // Not part of read struct.  Contains the controllerIDs of the children to this bone.
         public Matrix44 LocalTransform = new Matrix44();            // Because Cryengine tends to store transform relative to world, we have to add all the transforms from the node to the root.  Calculated, row major.

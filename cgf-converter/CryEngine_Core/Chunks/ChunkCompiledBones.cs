@@ -14,9 +14,8 @@ namespace CgfConverter.CryEngine_Core
         public CompiledBone RootBone;       // First bone in the data structure.  Usually Bip01
         public int NumBones;                // Number of bones in the chunk
         
-        // Bone info
         // Bones are a bit different than Node Chunks, since there is only one CompiledBones Chunk, and it contains all the bones in the model.
-        public Dictionary<int, CompiledBone> BoneDictionary = new Dictionary<int, CompiledBone>();  // Dictionary of all the CompiledBone objects based on bone name.
+        public Dictionary<int, CompiledBone> BoneDictionary = new Dictionary<int, CompiledBone>();  // Dictionary of all the CompiledBone objects based on parent offset(?).
         public List<CompiledBone> BoneList = new List<CompiledBone>();
 
         public CompiledBone GetRootBone(CompiledBone bone)
@@ -29,15 +28,16 @@ namespace CgfConverter.CryEngine_Core
                 return bone;                // No parent bone found, so just returning itself.  CompiledBone is non-nullable.
         }
 
-        public CompiledBone GetParentBone(CompiledBone bone)
+        public CompiledBone GetParentBone(CompiledBone bone, int boneIndex)
         {
             // Should only be one parent.
-            if (bone.parentID != 0)
+            if (bone.offsetParent != 0)
             {
-                return BoneList.Where(a => a.ControllerID == bone.parentID).First();
+                return BoneDictionary[boneIndex + bone.offsetParent];
+                //return BoneList.Where(a => a.ControllerID == bone.parentID).First();
             }
             else
-                return bone;
+                return null;
         }
 
         public List<CompiledBone> GetAllChildBones(CompiledBone bone)

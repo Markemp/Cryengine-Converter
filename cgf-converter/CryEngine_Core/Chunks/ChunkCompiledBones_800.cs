@@ -23,17 +23,26 @@ namespace CgfConverter.CryEngine_Core
             {
                 CompiledBone tempBone = new CompiledBone();
                 tempBone.ReadCompiledBone(b);
-                if (RootBone == null)
-                {
+                if (RootBone == null)  // First bone read is root bone
                     this.RootBone = tempBone;
-                }
+
                 tempBone.LocalTranslation = tempBone.boneToWorld.GetBoneToWorldTranslationVector();       // World positions of the bone
                 tempBone.LocalRotation = tempBone.boneToWorld.GetBoneToWorldRotationMatrix();            // World rotation of the bone.
-                tempBone.ParentBone = GetParentBone(tempBone);
+                //tempBone.ParentBone = BoneMap[i + tempBone.offsetParent];
+                tempBone.ParentBone = GetParentBone(tempBone, i);
+                if (tempBone.ParentBone != null)
+                {
+                    tempBone.parentID = tempBone.ParentBone.ControllerID;
+                }
+                else
+                {
+                    tempBone.parentID = 0;
+                }
+                
                 if (tempBone.parentID != 0)
                 {
-                    localRotation = GetParentBone(tempBone).boneToWorld.GetBoneToWorldRotationMatrix().ConjugateTransposeThisAndMultiply(tempBone.boneToWorld.GetBoneToWorldRotationMatrix());
-                    localTranslation = GetParentBone(tempBone).LocalRotation * (tempBone.LocalTranslation - GetParentBone(tempBone).boneToWorld.GetBoneToWorldTranslationVector());
+                    localRotation = GetParentBone(tempBone, i).boneToWorld.GetBoneToWorldRotationMatrix().ConjugateTransposeThisAndMultiply(tempBone.boneToWorld.GetBoneToWorldRotationMatrix());
+                    localTranslation = GetParentBone(tempBone, i).LocalRotation * (tempBone.LocalTranslation - GetParentBone(tempBone, i).boneToWorld.GetBoneToWorldTranslationVector());
                 }
                 else
                 {
