@@ -27,11 +27,6 @@ namespace CgfConverter.CryEngine_Core
         /// The Root of the loaded object
         /// </summary>
         public ChunkNode RootNode { get; internal set; }
-        
-        /// <summary>
-        /// The Bones in the model.  The CompiledBones chunk will have a unique RootBone.
-        /// </summary>
-        public ChunkCompiledBones Bones { get; internal set; }
 
         /// <summary>
         /// Collection of all loaded Chunks
@@ -72,6 +67,16 @@ namespace CgfConverter.CryEngine_Core
         /// Position of the Chunk Header table
         /// </summary>
         public Int32 ChunkTableOffset { get; internal set; }
+
+        /// <summary>
+        /// Contains all the information about bones and skinning them.
+        /// </summary>
+        public SkinningInfo SkinningInfo { get; internal set; }
+
+        /// <summary>
+        /// The Bones in the model.  The CompiledBones chunk will have a unique RootBone.
+        /// </summary>
+        public ChunkCompiledBones Bones { get; internal set; }
 
         public UInt32 NumChunks { get; internal set; }
 
@@ -290,15 +295,15 @@ namespace CgfConverter.CryEngine_Core
                 // Ensure we read to end of structure
                 this.ChunkMap[chkHdr.ID].SkipBytes(reader);
 
-                // TODO: Change this to detect node with NULL or 0xFFFFFFFF parent ID
-                // Assume first node read is root node.  This may be bad if they aren't in order!
+                // TODO: Change this to detect node with ~0 (0xFFFFFFFF) parent ID
+                // Assume first node read in Model[0] is root node.  This may be bad if they aren't in order!
                 if (chkHdr.ChunkType == ChunkTypeEnum.Node && this.RootNode == null)
                 {
                     this.RootNode = this.ChunkMap[chkHdr.ID] as ChunkNode;
                 }
 
                 // Add Bones to the model.  We are assuming there is only one CompiledBones chunk per file.
-                if (chkHdr.ChunkType == ChunkTypeEnum.CompiledBones)
+                if (chkHdr.ChunkType == ChunkTypeEnum.CompiledBones || chkHdr.ChunkType == ChunkTypeEnum.CompiledBonesSC)
                 {
                     this.Bones = this.ChunkMap[chkHdr.ID] as ChunkCompiledBones;
                 }

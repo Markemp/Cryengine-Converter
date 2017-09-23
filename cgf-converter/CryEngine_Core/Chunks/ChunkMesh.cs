@@ -16,6 +16,7 @@ namespace CgfConverter.CryEngine_Core
         //public byte Reserved1;  // padding byte, 744
         //public byte Reserved2;  // padding byte, 744
         public int Flags1;  // 800  Offset of this chunk. 
+        public int Flags2;  // 801 and 802
         // public UInt32 ID;  // 800  Chunk ID
         public int NumVertices; // 
         public int NumIndices;  // Number of indices (each triangle has 3 indices, so this is the number of triangles times 3).
@@ -24,6 +25,7 @@ namespace CgfConverter.CryEngine_Core
         // Pointers to various Chunk types
         //public ChunkMtlName Material; // 623, Material Chunk, never encountered?
         public int NumVertSubsets; // 801, Number of vert subsets
+        public int VertsAnimID;
         public int MeshSubsets; // 800  Reference of the mesh subsets
         // public ChunkVertAnim VertAnims; // 744.  not implemented
         //public Vertex[] Vertices; // 744.  not implemented

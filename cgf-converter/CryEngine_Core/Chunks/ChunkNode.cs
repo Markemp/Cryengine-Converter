@@ -47,15 +47,15 @@ namespace CgfConverter.CryEngine_Core
         /// </summary>
         public Vector3 Scale { get; internal set; }
         /// <summary>
-        /// Position Controller ID
+        /// Position Controller ID - Obsolete
         /// </summary>
         public int PosCtrlID { get; internal set; }
         /// <summary>
-        /// Rotation Controller ID
+        /// Rotation Controller ID - Obsolete
         /// </summary>
         public int RotCtrlID { get; internal set; }
         /// <summary>
-        /// Scalar Controller ID
+        /// Scalar Controller ID - Obsolete
         /// </summary>
         public int SclCtrlID { get; internal set; }
         /// <summary>

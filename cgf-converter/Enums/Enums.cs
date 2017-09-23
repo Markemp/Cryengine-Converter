@@ -50,19 +50,21 @@
         DataStream = 0xCCCC0016, //A data Stream
         MeshSubsets = 0xCCCC0017, //Describes an array of mesh subsets
         MeshPhysicsData = 0xCCCC0018, //Physicalized mesh data
-        CompiledBones = 0xACDC0000, //unknown chunk
-        CompiledPhysicalBones = 0xACDC0001, // unknown chunk
-        CompiledMorphtargets = 0xACDC0002,  // unknown chunk
-        CompiledPhysicalProxies = 0xACDC0003, //unknown chunk
-        CompiledIntFaces = 0xACDC0004, //unknown chunk
-        CompiledIntSkinVertices = 0xACDC0004, //unknown chunk
-        CompiledExt2IntMap = 0xACDC0005, //unknown chunk
-        BreakablePhysics = 0xACDC0006, //unknown chunk
+        CompiledBones = 0xACDC0000, 
+        CompiledPhysicalBones = 0xACDC0001, 
+        CompiledMorphTargets = 0xACDC0002,  
+        CompiledPhysicalProxies = 0xACDC0003, 
+        CompiledIntFaces = 0xACDC0004, 
+        CompiledIntSkinVertices = 0xACDC0005, 
+        CompiledExt2IntMap = 0xACDC0006, 
+        BreakablePhysics = 0xACDC0007, 
         FaceMap = 0xAAFC0000, //unknown chunk
         SpeedInfo = 0xAAFC0002, //Speed and distnace info
         FootPlantInfo = 0xAAFC0003, // Footplant info
         BonesBoxes = 0xAAFC0004, // unknown chunk
-        UnknownAAFC0005 = 0xAAFC0005 //unknown chunk
+        FoliageInfo = 0xAAFC0005, //unknown chunk
+        // Star Citizen versions
+        CompiledBonesSC = 0xCCCC1000        // SC Compiled bone file.
     }
 
     public enum ChunkTypetmp
@@ -134,7 +136,7 @@
         ExportFlags = 0x1015, //Describes export information.
         DataStream = 0x1016, //A data Stream
         MeshSubsets = 0x1017, //Describes an array of mesh subsets
-        MeshPhysicalData = 0x1018, //Physicalized mesh data
+        MeshPhysicsData = 0x1018, //Physicalized mesh data
         // not sure what the following enums will be, since not experienced yet.
         /*CompiledBones = 0xACDC0000, //unknown chunk
         CompiledPhysicalBones = 0xACDC0001, // unknown chunk

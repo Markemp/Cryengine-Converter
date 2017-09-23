@@ -16,7 +16,7 @@ namespace CgfConverter.CryEngine_Core
         
         // Bone info
         // Bones are a bit different than Node Chunks, since there is only one CompiledBones Chunk, and it contains all the bones in the model.
-        public Dictionary<String, CompiledBone> BoneDictionary = new Dictionary<String, CompiledBone>();  // Dictionary of all the CompiledBone objects based on bone name.
+        public Dictionary<int, CompiledBone> BoneDictionary = new Dictionary<int, CompiledBone>();  // Dictionary of all the CompiledBone objects based on bone name.
         public List<CompiledBone> BoneList = new List<CompiledBone>();
 
         public CompiledBone GetRootBone(CompiledBone bone)
@@ -48,6 +48,11 @@ namespace CgfConverter.CryEngine_Core
             }
             else
                 return null;
+        }
+
+        public List<string> GetBoneNames()
+        {
+            return BoneList.Select(a => a.boneName).ToList();  // May need to replace space in bone names with _.
         }
 
         protected void AddChildIDToParent(CompiledBone bone)

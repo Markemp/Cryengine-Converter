@@ -13,6 +13,10 @@ namespace CgfConverter.CryEngine_Core
         public UInt32 NumMeshSubset; // number of mesh subsets
         public MeshSubset[] MeshSubsets;
 
+        // For bone ID meshes? Not sure where this is used yet.
+        public uint NumberOfBoneIDs;
+        public UInt16[] BoneIDs;
+
         public override void WriteChunk()
         {
             Utils.Log(LogLevelEnum.Verbose, "*** START MESH SUBSET CHUNK ***");

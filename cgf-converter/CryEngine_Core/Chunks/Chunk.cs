@@ -23,8 +23,6 @@ namespace CgfConverter.CryEngine_Core
                     return Chunk.New<ChunkTimingFormat>(version);
                 case ChunkTypeEnum.ExportFlags:
                     return Chunk.New<ChunkExportFlags>(version);
-                case ChunkTypeEnum.Mtl:
-                    //Utils.Log(LogLevelEnum.Debug, "Mtl Chunk here");  // Obsolete.  Not used?
                 case ChunkTypeEnum.MtlName:
                     return Chunk.New<ChunkMtlName>(version);
                 case ChunkTypeEnum.DataStream:
@@ -35,18 +33,42 @@ namespace CgfConverter.CryEngine_Core
                     return Chunk.New<ChunkMeshSubsets>(version);
                 case ChunkTypeEnum.Node:
                     return Chunk.New<ChunkNode>(version);
-                case ChunkTypeEnum.CompiledBones:
-                    return Chunk.New<ChunkCompiledBones>(version);
                 case ChunkTypeEnum.Helper:
                     return Chunk.New<ChunkHelper>(version);
                 case ChunkTypeEnum.Controller:
                     return Chunk.New<ChunkController>(version);
                 case ChunkTypeEnum.SceneProps:
                     return Chunk.New<ChunkSceneProp>(version);
-                case ChunkTypeEnum.CompiledPhysicalProxies:
-                    return Chunk.New<ChunkCompiledPhysicalProxies>(version);
                 case ChunkTypeEnum.MeshPhysicsData:
                     return Chunk.New<ChunkMeshPhysicsData>(version);
+                case ChunkTypeEnum.BoneAnim:
+                    return Chunk.New<ChunkBoneAnim>(version);
+                // Compiled chunks
+                case ChunkTypeEnum.CompiledBones:
+                    return Chunk.New<ChunkCompiledBones>(version);
+                case ChunkTypeEnum.CompiledPhysicalProxies:
+                    return Chunk.New<ChunkCompiledPhysicalProxies>(version);
+                case ChunkTypeEnum.CompiledPhysicalBones:
+                    return Chunk.New<ChunkCompiledPhysicalBones>(version);
+                case ChunkTypeEnum.CompiledIntSkinVertices:
+                    return Chunk.New<ChunkCompiledIntSkinVertices>(version);
+                case ChunkTypeEnum.CompiledMorphTargets:
+                    return Chunk.New<ChunkCompiledMorphTargets>(version);
+                case ChunkTypeEnum.CompiledExt2IntMap:
+                    return Chunk.New<ChunkCompiledExtToIntMap>(version);
+                case ChunkTypeEnum.CompiledIntFaces:
+                    return Chunk.New<ChunkCompiledIntFaces>(version);
+                // Star Citizen equivalents
+                case ChunkTypeEnum.CompiledBonesSC:
+                    return Chunk.New<ChunkCompiledBones>(version);
+
+                // Old chunks
+                case ChunkTypeEnum.BoneNameList:
+                    return Chunk.New<ChunkBoneNameList>(version);
+                case ChunkTypeEnum.MeshMorphTarget:
+                    return Chunk.New<ChunkMeshMorphTargets>(version);
+                case ChunkTypeEnum.Mtl:
+                    //Utils.Log(LogLevelEnum.Debug, "Mtl Chunk here");  // Obsolete.  Not used
                 default:
                     return new ChunkUnknown();
             }

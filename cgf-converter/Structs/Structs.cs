@@ -52,7 +52,7 @@ namespace CgfConverter
             {
                 x = lhs.x + rhs.x,
                 y = lhs.y + rhs.y,
-                z = lhs.z + rhs.z 
+                z = lhs.z + rhs.z
             };
         }
 
@@ -98,7 +98,7 @@ namespace CgfConverter
 
         public void WriteVector3(string label = null)
         {
-            Utils.Log(LogLevelEnum.Debug, "*** WriteVector3 *** - {0}", label );
+            Utils.Log(LogLevelEnum.Debug, "*** WriteVector3 *** - {0}", label);
             Utils.Log(LogLevelEnum.Debug, "{0:F7}  {1:F7}  {2:F7}", x, y, z);
             Utils.Log(LogLevelEnum.Debug);
         }
@@ -254,19 +254,19 @@ namespace CgfConverter
 
         public bool Is_Scale_Rotation() // Returns true if the matrix decomposes nicely into scale * rotation\
         {
-            Matrix33 self_transpose,mat = new Matrix33();
+            Matrix33 self_transpose, mat = new Matrix33();
             self_transpose = this.Get_Transpose();
             mat = this.Mult(self_transpose);
             if (System.Math.Abs(mat.m12) + System.Math.Abs(mat.m13)
                 + System.Math.Abs(mat.m21) + System.Math.Abs(mat.m23)
                 + System.Math.Abs(mat.m31) + System.Math.Abs(mat.m32) > 0.01) {
-                    Utils.Log(LogLevelEnum.Debug, " is a Scale_Rot matrix");
-                    return false;
-                }
-            Utils.Log(LogLevelEnum.Debug, " is not a Scale_Rot matrix"); 
+                Utils.Log(LogLevelEnum.Debug, " is a Scale_Rot matrix");
+                return false;
+            }
+            Utils.Log(LogLevelEnum.Debug, " is not a Scale_Rot matrix");
             return true;
         }
-        
+
         public Vector3 Get_Scale()
         {
             // Get the scale, assuming is_scale_rotation is true
@@ -313,7 +313,7 @@ namespace CgfConverter
         /// <returns>New Math.Net matrix.</returns>
         public Matrix<double> ToMathMatrix()
         {
-            Matrix<double> result = Matrix<double>.Build.Dense(3,3);
+            Matrix<double> result = Matrix<double>.Build.Dense(3, 3);
             result[0, 0] = this.m11;
             result[0, 1] = this.m12;
             result[0, 2] = this.m13;
@@ -547,7 +547,7 @@ namespace CgfConverter
             return result;
         }
 
-        public  Matrix44 GetTransformFromParts(Vector3 localTranslation, Matrix33 localRotation, Vector3 localScale)
+        public Matrix44 GetTransformFromParts(Vector3 localTranslation, Matrix33 localRotation, Vector3 localScale)
         {
             Matrix44 transform = new Matrix44
             {
@@ -592,7 +592,7 @@ namespace CgfConverter
     /// <summary>
     /// A quaternion (x,y,z,w)
     /// </summary>
-    public struct Quat 
+    public struct Quat
     {
         public Double x;
         public Double y;
@@ -665,6 +665,15 @@ namespace CgfConverter
         public int t2; // third vertex index
     }
 
+    public struct ControllerInfo
+    {
+        public uint ControllerID;
+        public uint PosKeyTimeTrack;
+        public uint PosTrack;
+        public uint RotKeyTimeTrack;
+        public uint RotTrack;
+    }
+
     /*public struct TextureMap
     {
 
@@ -703,14 +712,24 @@ namespace CgfConverter
         public short w;  // Handness?  Either 32767 (+1.0) or -32767 (-1.0)
     }
 
+    public struct SkinVertex
+    {
+        public int Volumetric;
+        public int[] Index;     // Array of 4 ints
+        public float[] w;       // Array of 4 floats
+        public Matrix33 M;
+
+    }
+
+
     public struct WORLDTOBONE
     {
         public Double[,] worldToBone;   //  4x3 structure
-        
+
         public void GetWorldToBone(BinaryReader b)
         {
-            worldToBone = new Double[3,4];
-            for (int i = 0; i < 3; i++) 
+            worldToBone = new Double[3, 4];
+            for (int i = 0; i < 3; i++)
             {
                 for (int j = 0; j < 4; j++)
                 {
@@ -836,7 +855,7 @@ namespace CgfConverter
         public Vector3 spring_tension;
         public Vector3 damping;
         public Matrix33 framemtx;
-        
+
         public void ReadPhysicsGeometry(BinaryReader b)      // Read a PhysicsGeometry structure
         {
             physicsGeom = b.ReadUInt32();
@@ -855,10 +874,10 @@ namespace CgfConverter
         {
             Utils.Log(LogLevelEnum.Verbose, "WritePhysicsGeometry");
         }
-        
+
     }
 
-    public class CompiledBone
+    public class CompiledBone       // This is the same as BoneDescData
     {
         public UInt32 ControllerID { get; set; }
         public PhysicsGeometry[] physicsGeometry;   // 2 of these.  One for live objects, other for dead (ragdoll?)
@@ -867,7 +886,7 @@ namespace CgfConverter
         public BONETOWORLD boneToWorld;             // 4x3 matrix of world translations/rotations of the bones.
         public String boneName;                     // String256 in old terms; convert to a real null terminated string.
         public UInt32 limbID;                       // ID of this limb... usually just 0xFFFFFFFF
-        public Int32  offsetParent;                 // offset to the parent in number of CompiledBone structs (584 bytes)
+        public Int32 offsetParent;                 // offset to the parent in number of CompiledBone structs (584 bytes)
         public Int32 offsetChild;                   // Offset to the first child to this bone in number of CompiledBone structs
         public UInt32 numChildren;                  // Number of children to this bone
 
@@ -898,8 +917,6 @@ namespace CgfConverter
             this.numChildren = b.ReadUInt32();
             this.offsetChild = b.ReadInt32();
             this.childIDs = new List<uint>();                    // Calculated
-            //this.LocalRotation = Matrix<double>.Build.Dense(3, 3);
-            //this.LocalTranslation = Vector<double>.Build.Dense(3);
         }
 
         public Matrix44 ToMatrix44(double[,] boneToWorld)
@@ -944,6 +961,193 @@ namespace CgfConverter
         }
     }
 
+    public class CompiledPhysicalBone
+    {
+        public uint BoneIndex;
+        public uint ParentOffset;
+        public uint NumChildren;
+        public uint ControllerID;
+        public char[] prop;
+        public PhysicsGeometry PhysicsGeometry;
+
+        // Calculated values
+        public long offset;
+        public uint parentID;                       // ControllerID of parent
+        public List<uint> childIDs;                 // Not part of read struct.  Contains the controllerIDs of the children to this bone.
+
+        public CompiledBone GetBonePartner()
+        {
+            return null;
+        }
+
+        public void ReadCompiledPhysicalBone(BinaryReader b)
+        {
+            // Reads just a single 584 byte entry of a bone. At the end the seek position will be advanced, so keep that in mind.
+            this.BoneIndex = b.ReadUInt32();                 // unique id of bone (generated from bone name)
+            this.ParentOffset = b.ReadUInt32();
+            this.NumChildren = b.ReadUInt32();
+            this.ControllerID = b.ReadUInt32();
+            this.prop = b.ReadChars(32);                    // Not sure what this is used for.
+            this.PhysicsGeometry.ReadPhysicsGeometry(b);
+
+            this.childIDs = new List<uint>();                    // Calculated
+        }
+
+        public void WriteCompiledPhysicalBone()
+        {
+            // Output the bone to the console
+            Utils.Log(LogLevelEnum.Verbose);
+            Utils.Log(LogLevelEnum.Verbose, "*** Compiled bone ID {0}", BoneIndex);
+            Utils.Log(LogLevelEnum.Verbose, "    Parent Offset: {0}", ParentOffset);
+            Utils.Log(LogLevelEnum.Verbose, "    Controller ID: {0}", ControllerID);
+            Utils.Log(LogLevelEnum.Verbose, "*** End Bone {0}", BoneIndex);
+        }
+    }
+
+    public struct InitialPosMatrix
+    {
+        // A bone initial position matrix.
+        Matrix33 Rot;              // type="Matrix33">
+        Vector3 Pos;                // type="Vector3">
+    }
+
+    public struct BoneLink
+    {
+        public int BoneID;
+        public Vector3 offset;
+        public float Blending;
+    }
+
+    public struct BonePhysics           // 26 total words = 104 total bytes
+    {
+        UInt32 Geometry;                //" type="Ref" template="BoneMeshChunk">Geometry of a separate mesh for this bone.</add>
+        //<!-- joint parameters -->
+        UInt32 Flags;                   //" type="uint" />
+        Vector3 Min;                   //" type="Vector3" />
+        Vector3 Max;                   //" type="Vector3" />
+        Vector3 Spring_Angle;          //" type="Vector3" />
+        Vector3 Spring_Tension;        //" type="Vector3" />
+        Vector3 Damping;               //" type="Vector3" />
+        Matrix33 Frame_Matrix;        //" type="Matrix33" />
+    }
+
+    public struct BoneEntity
+    {
+        int Bone_Id;                 //" type="int">Bone identifier.</add>
+        int Parent_Id;               //" type="int">Parent identifier.</add>
+        int Num_Children;            //" type="uint" />
+        uint Bone_Name_CRC32;         //" type="uint">CRC32 of bone name as listed in the BoneNameListChunk.  In Python this can be calculated using zlib.crc32(name)</add>
+        string Properties;            //" type="String32" />
+        BonePhysics Physics;            //" type="BonePhysics" />
+    }
+
+    public class DirectionalBlends
+    {
+        public string AnimToken;
+        public uint AnimTokenCRC32;
+        public string ParaJointName;
+        public short ParaJointIndex;
+        public short RotParaJointIndex;
+        public string StartJointName;
+        public short StartJointIndex;
+        public short RotStartJointIndex;
+        public string ReferenceJointName;
+        public short ReferenceJointIndex;
+
+        public DirectionalBlends()
+        {
+            AnimToken = string.Empty;
+            AnimTokenCRC32 = 0;
+            ParaJointName = string.Empty;
+            ParaJointIndex = -1;
+            RotParaJointIndex = -1;
+            StartJointName = string.Empty;
+            StartJointIndex = -1;
+            RotStartJointIndex = -1;
+            ReferenceJointName = string.Empty;
+            ReferenceJointIndex = 1;  //by default we use the Pelvis
+        }
+    };
+
+    public struct MeshMorphTargetVertex
+    {
+        public uint VertexID;
+        public Vector3 Vertex;
+    }
+
+    public struct MeshMorphTargetHeader
+    {
+        public uint MeshID;
+        public uint NameLength;
+        public uint NumIntVertices;
+        public uint NumExtVertices;
+    }
+
+    public struct MeshPhysicalProxyHeader
+    {
+        public uint ChunkID;
+        public uint NumPoints;
+        public uint NumIndices;
+        public uint NumMaterials;
+    }
+
+    public struct MorphTargets
+    {
+        uint MeshID;
+        string Name;
+        List<MeshMorphTargetVertex> IntMorph;
+        List<MeshMorphTargetVertex> ExtMorph;
+    }
+
+    public struct TFace
+    {
+        public short i0, i1, i2;
+
+        //public static bool operator =(TFace face)
+        //{
+        //    if (face.i0 == i0 && face.i1 == i1 && face.i2 == i2)
+        //    {
+        //        return true;
+        //    }
+        //    else
+        //    {
+        //        return false;
+        //    }
+        //}
+    }
+
+    public class MeshCollisionInfo
+    {
+        // AABB AABB;       // Bounding box structures?
+        // OBB OBB;         // Has an m33, h and c value.
+        public Vector3 Position;
+        public List<short> Indices;
+        public int BoneID;
+
+        public MeshCollisionInfo()
+        {
+
+        }
+    }
+
+    public struct IntSkinVertex
+    {
+        public Vector3 Position;
+        public short BoneIDs;
+        public float[] Weights;    // Should be 4 of these
+        public IRGB color;         // may be IRGBA?
+    }
+
+    public struct SpeedChunk
+    {
+        public float Speed;
+        public float Distance;
+        public float Slope;
+        public int AnimFlags;
+        public float[] MoveDir;
+        public Quat StartPosition;
+    }
+
     public struct HitBox
     {
         public uint ID;             // Chunk ID (although not technically a chunk
@@ -965,57 +1169,13 @@ namespace CgfConverter
             Utils.Log(LogLevelEnum.Verbose, "        Unknown2: {0:X}", Unknown2);
         }
     }
-    // Bone Structures courtesy of revelation
 
-    public struct InitialPosMatrix
+    public struct PhysicalProxy
     {
-        // A bone initial position matrix.
-        Matrix33 Rot;              // type="Matrix33">
-        Vector3 Pos;                // type="Vector3">
-    }
-
-    public struct BoneNameListChunk
-    {
-        //<version num="745">Far Cry, Crysis, Aion</version>
-        UInt32 Num_Names;           //" type="uint" />
-        UInt16[]  boneNames;        // uint 8?
-    }
-
-    public struct BoneInitialPosChunk
-    {
-        UInt32 Mesh;      // type="Ptr" template="MeshChunk">The mesh with bone info for which these bone initial positions are applicable. There might be some unused bones here as well. There must be the same number of bones as in the other chunks - they are placed in BoneId order.</add>
-        UInt32 Num_Bones; // Number of bone initial positions.
-        InitialPosMatrix[] Initial_Pos_Matrices; // type="InitialPosMatrix" arr1="Num Bones"
-    }
-
-    public struct BonePhysics           // 26 total words = 104 total bytes
-    {
-        UInt32 Geometry;                //" type="Ref" template="BoneMeshChunk">Geometry of a separate mesh for this bone.</add>
-        //<!-- joint parameters -->
-        UInt32 Flags;                   //" type="uint" />
-        Vector3  Min;                   //" type="Vector3" />
-        Vector3 Max;                   //" type="Vector3" />
-        Vector3 Spring_Angle;          //" type="Vector3" />
-        Vector3 Spring_Tension;        //" type="Vector3" />
-        Vector3 Damping;               //" type="Vector3" />
-        Matrix33  Frame_Matrix;        //" type="Matrix33" />
-    }       // 
-
-    public struct BoneEntity
-    {
-        UInt32 Bone_Id;                 //" type="int">Bone identifier.</add>
-        UInt32 Parent_Id;               //" type="int">Parent identifier.</add>
-        UInt32 Num_Children;            //" type="uint" />
-        UInt32 Bone_Name_CRC32;         //" type="uint">CRC32 of bone name as listed in the BoneNameListChunk.  In Python this can be calculated using zlib.crc32(name)</add>
-        char[]   Properties;            //" type="String32" />
-        BonePhysics Physics;            //" type="BonePhysics" />
-    }
-
-    public struct BoneAnimChunk
-    {
-        //<version num="290">Far Cry, Crysis, Aion</version>
-        UInt32 Num_Bones;               //" type="uint" />
-        BoneEntity[] Bones;             //" type="BoneEntity" arr1="Num Bones" />
+        uint ChunkID;
+        List<Vector3> Points;
+        List<short> Indices;
+        List<string> Materials;
     }
 
     public struct PhysicsData

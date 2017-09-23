@@ -25,12 +25,6 @@ namespace CgfConverter
 
         #region Constructors
 
-        public CryEngine_Core.ChunkNode RootNode { get; internal set; }
-
-        public CryEngine_Core.ChunkCompiledBones Bones { get; internal set; }
-
-        public String InputFile { get; internal set; }
-
         public CryEngine(String fileName, String dataDir)
         {
             this.InputFile = fileName;
@@ -60,6 +54,8 @@ namespace CgfConverter
             #endregion
 
             this.Models = new List<CryEngine_Core.Model> { };
+
+            SkinningInfo = new CryEngine_Core.SkinningInfo();
 
             foreach (var file in inputFiles)
             {
@@ -195,11 +191,21 @@ namespace CgfConverter
 
         public CryEngine_Core.Material[] Materials { get; internal set; }
 
+        public CryEngine_Core.ChunkNode RootNode { get; internal set; }
+
+        public CryEngine_Core.ChunkCompiledBones Bones { get; internal set; }
+
+        public CryEngine_Core.SkinningInfo SkinningInfo { get; set; }
+
+        public String InputFile { get; internal set; }
+
+
         #endregion
 
         #region Calculater Properties
 
         private CryEngine_Core.Chunk[] _chunks;
+
         public CryEngine_Core.Chunk[] Chunks
         {
             get

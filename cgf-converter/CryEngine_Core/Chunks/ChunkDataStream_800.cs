@@ -268,7 +268,7 @@ namespace CgfConverter.CryEngine_Core
                     this.UVs = new UV[this.NumElements];
                     switch (this.BytesPerElement)  // new Star Citizen files
                     {
-                        case 20:  // Dymek wrote this
+                        case 20:  // Dymek wrote this.  Probably won't see these cases again.
                             for (Int32 i = 0; i < this.NumElements; i++)
                             {
                                 uint bver = 0;
@@ -326,6 +326,18 @@ namespace CgfConverter.CryEngine_Core
                                 ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
                                 this.Vertices[i].z = ver;
 
+                                //Half xnorm = new Half();
+                                //xnorm.bits = b.ReadUInt16();
+                                //this.Normals[i].x = xnorm.ToSingle();
+
+                                //Half ynorm = new Half();
+                                //ynorm.bits = b.ReadUInt16();
+                                //this.Normals[i].y = ynorm.ToSingle();
+
+                                //Half znorm = new Half();
+                                //znorm.bits = b.ReadUInt16();
+                                //this.Normals[i].z = znorm.ToSingle();
+
                                 bver = b.ReadUInt16();
                                 ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
                                 this.Normals[i].x = ver;
@@ -338,13 +350,14 @@ namespace CgfConverter.CryEngine_Core
                                 ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
                                 this.Normals[i].z = ver;
 
-                                bver = b.ReadUInt16();
-                                ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
-                                this.UVs[i].U = ver;
+                                // UVs ABSOLUTELY should use the Half structures.
+                                Half uvu = new Half();
+                                uvu.bits = b.ReadUInt16();
+                                this.UVs[i].U = uvu.ToSingle();
 
-                                bver = b.ReadUInt16();
-                                ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
-                                this.UVs[i].V = ver;
+                                Half uvv = new Half();
+                                uvv.bits = b.ReadUInt16();
+                                this.UVs[i].V = uvv.ToSingle();
 
                                 #region Test version using new Halfs
 

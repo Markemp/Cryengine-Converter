@@ -13,10 +13,10 @@ namespace CgfConverter.CryEngine_Core
         {
             base.Read(b);
 
-            this.NumBones = b.ReadUInt32(); // number of Bones in this chunk.
+            this.NumPhysicalProxies = b.ReadUInt32(); // number of Bones in this chunk.
             // Utils.Log(LogLevelEnum.Debug, "Number of bones (hitboxes): {0}", NumBones);
-            this.HitBoxes = new HitBox[NumBones];    // now have an array of hitboxes
-            for (Int32 i = 0; i < NumBones; i++)
+            this.HitBoxes = new HitBox[NumPhysicalProxies];    // now have an array of hitboxes
+            for (Int32 i = 0; i < NumPhysicalProxies; i++)
             {
                 // Start populating the hitbox array
                 this.HitBoxes[i].ID = b.ReadUInt32();
@@ -48,7 +48,11 @@ namespace CgfConverter.CryEngine_Core
                 }
                 // HitBoxes[i].WriteHitBox();
             }
+        }
 
+        public override void WriteChunk()
+        {
+            base.WriteChunk();
         }
     }
 }

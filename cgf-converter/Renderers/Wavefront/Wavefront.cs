@@ -356,7 +356,7 @@ namespace CgfConverter
 
             //
             // Utils.Log(LogLevelEnum.Debug, "There are {0} Bones", chunkProx.NumBones);
-            for (int i = 0; i < chunkProx.NumBones; i++)        // Write out all the bones
+            for (int i = 0; i < chunkProx.NumPhysicalProxies; i++)        // Write out all the bones
             {
                 // write out this bones vertex info.
                 // Need to find a way to get the material name associated with the bone, so we can link the hitbox to the body part.

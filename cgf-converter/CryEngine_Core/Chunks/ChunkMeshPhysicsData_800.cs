@@ -13,7 +13,11 @@ namespace CgfConverter.CryEngine_Core
         public override void Read(BinaryReader b)
         {
             base.Read(b);
+        }
 
+        public override void WriteChunk()
+        {
+            base.WriteChunk();
         }
     }
 }

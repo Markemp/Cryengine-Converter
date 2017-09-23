@@ -13,12 +13,13 @@ namespace CgfConverter.CryEngine_Core
         {
             base.Read(b);
 
-            this.SkipBytes(b, 8);
+            this.Flags1 = b.ReadInt32();
+            this.Flags2 = b.ReadInt32();
             this.NumVertices = b.ReadInt32();
             this.NumIndices = b.ReadInt32();
-            this.SkipBytes(b, 4);
+            this.NumVertSubsets = b.ReadInt32();
             this.MeshSubsets = b.ReadInt32();  // refers to ID in mesh subsets 
-            this.SkipBytes(b, 4);
+            this.VertsAnimID = b.ReadInt32();
             this.VerticesData = b.ReadInt32();
             this.NormalsData = b.ReadInt32();           // ID of the datastream for the normals for this mesh
             this.UVsData = b.ReadInt32();               // refers to the ID in the Normals datastream
