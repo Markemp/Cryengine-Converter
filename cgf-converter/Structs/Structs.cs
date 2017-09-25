@@ -1122,7 +1122,7 @@ namespace CgfConverter
 
     public struct TFace
     {
-        public short i0, i1, i2;
+        public UInt16 i0, i1, i2;
 
         //public static bool operator =(TFace face)
         //{

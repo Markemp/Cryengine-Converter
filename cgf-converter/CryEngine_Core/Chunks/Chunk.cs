@@ -140,6 +140,10 @@ namespace CgfConverter.CryEngine_Core
         /// The Size of this Chunk (in Bytes)
         /// </summary>
         public UInt32 Size;
+        /// <summary>
+        /// Size of the data in the chunk.  This is the chunk size, minus the header (if there is one)
+        /// </summary>
+        public UInt32 DataSize { get; set; }
 
         public Dictionary<Int64, Byte> SkippedBytes = new Dictionary<Int64, Byte> { };
 
@@ -183,6 +187,7 @@ namespace CgfConverter.CryEngine_Core
                 this.Version = reader.ReadUInt32();
                 this.Offset = reader.ReadUInt32();
                 this.ID = reader.ReadInt32();
+                this.DataSize = this.Size - 16;
             }
 
             if (this.Offset != this._header.Offset || this.Size != this._header.Size)

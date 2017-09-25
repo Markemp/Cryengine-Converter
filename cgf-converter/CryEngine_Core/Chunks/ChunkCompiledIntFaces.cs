@@ -9,6 +9,8 @@ namespace CgfConverter.CryEngine_Core
     public abstract class ChunkCompiledIntFaces : Chunk
     {
         public int Reserved;
+        public uint NumIntFaces;
+        public TFace[] Faces;
 
         public override void WriteChunk()
         {
