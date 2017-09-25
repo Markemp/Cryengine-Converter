@@ -15,7 +15,7 @@ namespace CgfConverter.CryEngine_Core
         public UInt32 BytesPerElement; // Bytes per data entry
         //public UInt32 Reserved1;
         //public UInt32 Reserved2;
-        public HitBox[] HitBoxes;
+        public PhysicalProxy[] PhysicalProxies;
 
         public override void WriteChunk()
         {

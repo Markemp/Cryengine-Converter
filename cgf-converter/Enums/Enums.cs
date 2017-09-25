@@ -64,7 +64,14 @@
         BonesBoxes = 0xAAFC0004, // unknown chunk
         FoliageInfo = 0xAAFC0005, //unknown chunk
         // Star Citizen versions
-        CompiledBonesSC = 0xCCCC1000        // SC Compiled bone file.
+        CompiledBonesSC = 0xCCCC1000,
+        CompiledPhysicalBonesSC = 0xCCCC1001,
+        CompiledMorphTargetsSC = 0xCCCC1002,
+        CompiledPhysicalProxiesSC = 0xCCCC1003,
+        CompiledIntFacesSC = 0xCCCC1004,
+        CompiledIntSkinVerticesSC = 0xCCCC1005,
+        CompiledExt2IntMapSC = 0xCCCC1006,
+        BoneBoxesSC = 0x08013004
     }
 
     public enum ChunkTypetmp
@@ -109,64 +116,12 @@
         BonesBoxes,
         UnknownAAFC0005
     }
-    public enum ChunkType36    // complete, but never used.
-    {
-        Any = 0x0,
-        Mesh = 0x1000,
-        Helper = 0x1001,
-        VertAnim = 0x1002,
-        BoneAnim = 0x1003,
-        GeomNameList = 0x1004,
-        BoneNameList = 0x1005,
-        MtlList = 0x1006,
-        MRM = 0x1007, //obsolete
-        SceneProps = 0x1008,
-        Light = 0x1009,
-        PatchMesh = 0x100A,
-        Node = 0x100B,
-        Mtl = 0x100C,
-        Controller = 0x100D,
-        Timing = 0x100E,
-        BoneMesh = 0x100F,
-        BoneLightBinding = 0x1010,
-        MeshMorphTarget = 0x1011,
-        BoneInitialPos = 0x1012,
-        SourceInfo = 0x1013, //Describes the source from which the cgf was exported: source max file, machine and user.
-        MtlName = 0x1014, //provides material name as used in the material.xml file
-        ExportFlags = 0x1015, //Describes export information.
-        DataStream = 0x1016, //A data Stream
-        MeshSubsets = 0x1017, //Describes an array of mesh subsets
-        MeshPhysicsData = 0x1018, //Physicalized mesh data
-        // not sure what the following enums will be, since not experienced yet.
-        /*CompiledBones = 0xACDC0000, //unknown chunk
-        CompiledPhysicalBones = 0xACDC0001, // unknown chunk
-        CompiledMorphtargets = 0xACDC0002,  // unknown chunk
-        CompiledPhysicalProxies = 0xACDC0003, //unknown chunk
-        CompiledIntFaces = 0xACDC0004, //unknown chunk
-        CompiledIntSkinVertices = 0xACDC0004, //unknown chunk
-        CompiledExt2IntMap = 0xACDC0005, //unknown chunk
-        BreakablePhysics = 0xACDC0006, //unknown chunk
-        FaceMap = 0xAAFC0000, //unknown chunk
-        SpeedInfo = 0xAAFC0002, //Speed and distnace info
-        FootPlantInfo = 0xAAFC0003, // Footplant info
-        BonesBoxes = 0xAAFC0004, // unknown chunk
-        UnknownAAFC0005 = 0xAAFC0005 //unknown chunk*/
-        CompiledBone = 0x2000,           //  
-        Unknown = 0x2001,                   //  
-        Unknown2 = 0x2005,                  //  
-        Unknown3 = 0x2004,
-        Unknown4 = 0x2006,
-        Unknown5 = 0x3004                   //  Animations?
-    }
 
     public enum ChunkVersion : uint
     {
         ChkVersion
     }    //complete
-    public enum ChunkVersion36 : short
-    {
-        ChkVersion36
-    }
+
     public enum HelperTypeEnum : uint
     {
         POINT,
@@ -175,6 +130,7 @@
         CAMERA,
         GEOMETRY
     }      //complete
+
     public enum MtlType : uint            //complete
     {
         UNKNOWN,
@@ -182,6 +138,7 @@
         MULTI,
         TWOSIDED
     }
+
     public enum MtlNamePhysicsType : uint //complete
     {
         NONE = 0xFFFFFFFF,
@@ -191,6 +148,7 @@
         DEFAULTPROXY = 0x000000FF,  // this needs to be checked.  cgf.xml says 256; not sure if hex or dec
         UNKNOWN = 0x00001100,       // collision mesh?
     }
+
     public enum LightType : uint         //complete
     {
         OMNI,
@@ -198,6 +156,7 @@
         DIRECT,
         AMBIENT
     }
+
     public enum CtrlType : uint
     {
         NONE,
@@ -217,6 +176,7 @@
         BSPLINE1C,
         CONST          // this was given a value of 11, which is the same as BSPLINE2o.
     }        //complete
+
     public enum TextureMapping : uint
     {
         NORMAL,
@@ -225,6 +185,7 @@
         CUBIC,
         AUTOCUBIC
     }  //complete
+
     public enum DataStreamTypeEnum : uint
     {
         VERTICES,

@@ -362,16 +362,16 @@ namespace CgfConverter
                 // Need to find a way to get the material name associated with the bone, so we can link the hitbox to the body part.
                 f.WriteLine("g");
                 // Utils.Log(LogLevelEnum.Debug, "Num Vertices: {0} ", chunkProx.HitBoxes[i].NumVertices);
-                for (int j = 0; j < chunkProx.HitBoxes[i].NumVertices; j++)
+                for (int j = 0; j < chunkProx.PhysicalProxies[i].NumVertices; j++)
                 {
                     //Utils.Log(LogLevelEnum.Debug, "{0} {1} {2}", chunkProx.HitBoxes[i].Vertices[j].x, chunkProx.HitBoxes[i].Vertices[j].y, chunkProx.HitBoxes[i].Vertices[j].z);
                     // Transform the vertex
                     //Vector3 vertex = chunkNode.GetTransform(tmpVertsUVs.Vertices[j]);
 
                     string s1 = String.Format("v {0:F7} {1:F7} {2:F7}",
-                        chunkProx.HitBoxes[i].Vertices[j].x,
-                        chunkProx.HitBoxes[i].Vertices[j].y,
-                        chunkProx.HitBoxes[i].Vertices[j].z);
+                        chunkProx.PhysicalProxies[i].Vertices[j].x,
+                        chunkProx.PhysicalProxies[i].Vertices[j].y,
+                        chunkProx.PhysicalProxies[i].Vertices[j].z);
                     f.WriteLine(s1);
                 }
                 f.WriteLine();
@@ -382,18 +382,18 @@ namespace CgfConverter
                 string s_material = String.Format("usemtl {0}", i);
                 f.WriteLine(s_material);
 
-                for (int j = 0; j < chunkProx.HitBoxes[i].NumIndices; j++)
+                for (int j = 0; j < chunkProx.PhysicalProxies[i].NumIndices; j++)
                 {
                     //string s2 = String.Format("f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}",
                     string s2 = String.Format("f {0} {1} {2}",
-                        chunkProx.HitBoxes[i].Indices[j] + 1 + this.CurrentVertexPosition,
-                        chunkProx.HitBoxes[i].Indices[j + 1] + 1 + this.CurrentVertexPosition,
-                        chunkProx.HitBoxes[i].Indices[j + 2] + 1 + this.CurrentVertexPosition);
+                        chunkProx.PhysicalProxies[i].Indices[j] + 1 + this.CurrentVertexPosition,
+                        chunkProx.PhysicalProxies[i].Indices[j + 1] + 1 + this.CurrentVertexPosition,
+                        chunkProx.PhysicalProxies[i].Indices[j + 2] + 1 + this.CurrentVertexPosition);
                     f.WriteLine(s2);
                     j = j + 2;
                 }
-                this.CurrentVertexPosition += chunkProx.HitBoxes[i].NumVertices;
-                this.CurrentIndicesPosition += chunkProx.HitBoxes[i].NumIndices;
+                this.CurrentVertexPosition += chunkProx.PhysicalProxies[i].NumVertices;
+                this.CurrentIndicesPosition += chunkProx.PhysicalProxies[i].NumIndices;
                 f.WriteLine();
             }
             f.WriteLine();

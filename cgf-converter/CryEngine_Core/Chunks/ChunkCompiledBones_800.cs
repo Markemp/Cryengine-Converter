@@ -12,7 +12,7 @@ namespace CgfConverter.CryEngine_Core
         public override void Read(BinaryReader b)
         {
             base.Read(b);
-            this.SkipBytes(b, 32);  // No idea what these are for, but it's padding between the chunk header and the first bone.
+            this.SkipBytes(b, 32);  // Padding between the chunk header and the first bone.
             Vector3 localTranslation;
             Matrix33 localRotation;
 

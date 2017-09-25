@@ -37,6 +37,7 @@ namespace CgfConverter
             this.z = b.ReadSingle();
             return;
         }
+
         public Vector3 Add(Vector3 vector)
         {
             Vector3 result = new Vector3();
@@ -685,6 +686,16 @@ namespace CgfConverter
         public byte r; // red
         public byte g; // green
         public byte b; // blue
+
+        public IRGB Read(BinaryReader b)
+        {
+            return new IRGB
+            {
+                r = b.ReadByte(),
+                g = b.ReadByte(),
+                b = b.ReadByte()
+            };
+        }
     }
 
     public struct IRGBA
@@ -693,6 +704,16 @@ namespace CgfConverter
         public byte g; // green
         public byte b; // blue
         public byte a; // alpha
+        public IRGBA Read(BinaryReader b)
+        {
+            return new IRGBA
+            {
+                r = b.ReadByte(),
+                g = b.ReadByte(),
+                b = b.ReadByte(),
+                a = b.ReadByte()
+            };
+        }
 
     }
 
@@ -1132,10 +1153,12 @@ namespace CgfConverter
 
     public struct IntSkinVertex
     {
+        public Vector3 Obsolete0;
         public Vector3 Position;
-        public short BoneIDs;
-        public float[] Weights;    // Should be 4 of these
-        public IRGB color;         // may be IRGBA?
+        public Vector3 Obsolete2;
+        public ushort[] BoneIDs;     // 4 bone IDs
+        public float[] Weights;     // Should be 4 of these
+        public IRGBA Color;        
     }
 
     public struct SpeedChunk
@@ -1148,15 +1171,14 @@ namespace CgfConverter
         public Quat StartPosition;
     }
 
-    public struct HitBox
+    public struct PhysicalProxy
     {
         public uint ID;             // Chunk ID (although not technically a chunk
         public uint FirstIndex;
         public uint NumIndices;
         public uint FirstVertex;
         public uint NumVertices;
-        public UInt32 Unknown1;     // unknown
-        public UInt32 Unknown2;     // Size of the weird data at the end of the hitbox structure.
+        public UInt32 Material;     // Size of the weird data at the end of the hitbox structure.
         public Vector3[] Vertices;    // Array of vertices (x,y,z) length NumVertices
         public UInt16[] Indices;      // Array of indices
 
@@ -1166,11 +1188,11 @@ namespace CgfConverter
             Utils.Log(LogLevelEnum.Verbose, "        ID: {0:X}", ID);
             Utils.Log(LogLevelEnum.Verbose, "        Num Vertices: {0:X}", NumVertices);
             Utils.Log(LogLevelEnum.Verbose, "        Num Indices:  {0:X}", NumIndices);
-            Utils.Log(LogLevelEnum.Verbose, "        Unknown2: {0:X}", Unknown2);
+            Utils.Log(LogLevelEnum.Verbose, "        Material Index: {0:X}", Material);
         }
     }
 
-    public struct PhysicalProxy
+    public struct PhysicalProxyStub
     {
         uint ChunkID;
         List<Vector3> Points;
