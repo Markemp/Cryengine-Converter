@@ -9,6 +9,8 @@ namespace CgfConverter.CryEngine_Core
     public abstract class ChunkCompiledExtToIntMap : Chunk
     {
         public int Reserved;
+        public uint NumExtVertices;
+        public UInt16[] Source;
 
         public override void WriteChunk()
         {
