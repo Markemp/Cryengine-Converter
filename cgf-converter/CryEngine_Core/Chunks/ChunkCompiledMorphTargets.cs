@@ -9,6 +9,7 @@ namespace CgfConverter.CryEngine_Core
     public abstract class ChunkCompiledMorphTargets : Chunk
     {
         public uint NumberOfMorphTargets;
+        public MeshMorphTargetVertex[] MorphTargetVertices;
 
         public override void WriteChunk()
         {

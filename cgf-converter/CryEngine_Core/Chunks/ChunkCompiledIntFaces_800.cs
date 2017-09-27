@@ -20,6 +20,8 @@ namespace CgfConverter.CryEngine_Core
                 Faces[i].i1 = b.ReadUInt16();
                 Faces[i].i2 = b.ReadUInt16();
             }
+            SkinningInfo skin = GetSkinningInfo();
+            skin.IntFaces = Faces.ToList();
         }
 
         public override void WriteChunk()

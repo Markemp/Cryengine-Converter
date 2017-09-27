@@ -136,6 +136,7 @@ namespace CgfConverter.CryEngine_Core
         {
             this.ChunkMap = new Dictionary<int, CryEngine_Core.Chunk> { };
             this.ChunkHeaders = new List<ChunkHeader> { };
+            this.SkinningInfo = new SkinningInfo();
         }
 
         #endregion
@@ -176,6 +177,7 @@ namespace CgfConverter.CryEngine_Core
             this.Read_ChunkHeaders(reader);
             this.Read_Chunks(reader);
         }
+
 
         /// <summary>
         /// Output File Header to console for testing
@@ -306,6 +308,7 @@ namespace CgfConverter.CryEngine_Core
                 if (chkHdr.ChunkType == ChunkTypeEnum.CompiledBones || chkHdr.ChunkType == ChunkTypeEnum.CompiledBonesSC)
                 {
                     this.Bones = this.ChunkMap[chkHdr.ID] as ChunkCompiledBones;
+                    SkinningInfo.HasSkinningInfo = true;
                 }
             }
         }

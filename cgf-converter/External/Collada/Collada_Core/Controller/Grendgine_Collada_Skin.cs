@@ -11,6 +11,9 @@ namespace grendgine_collada
 		[XmlAttribute("sid")]
 		public string sID;
 
+        [XmlAttribute("source")]
+        public string source;
+
 	    [XmlElement(ElementName = "bind_shape_matrix")]
 		public Grendgine_Collada_Float_Array_String Bind_Shape_Matrix;		
 				

@@ -55,7 +55,7 @@ namespace CgfConverter
 
             this.Models = new List<CryEngine_Core.Model> { };
 
-            SkinningInfo = new CryEngine_Core.SkinningInfo();
+            //SkinningInfo = new CryEngine_Core.SkinningInfo();
 
             foreach (var file in inputFiles)
             {

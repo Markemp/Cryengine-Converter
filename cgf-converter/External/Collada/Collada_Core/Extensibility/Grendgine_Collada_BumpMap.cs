@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
 
-namespace CgfConverter
+namespace grendgine_collada
 {
     [Serializable]
     [XmlRoot(ElementName = "bump")]

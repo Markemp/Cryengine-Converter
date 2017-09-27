@@ -11,14 +11,14 @@ namespace grendgine_collada
 		[XmlAttribute("count")]
 		public int Count;
 
-	    [XmlElement(ElementName = "vcount")]
+        [XmlElement(ElementName = "input")]
+        public Grendgine_Collada_Input_Shared[] Input;
+
+        [XmlElement(ElementName = "vcount")]
 		public Grendgine_Collada_Int_Array_String VCount;		
 
 		[XmlElement(ElementName = "v")]
 		public Grendgine_Collada_Int_Array_String V;		
-
-		[XmlElement(ElementName = "input")]
-		public Grendgine_Collada_Input_Shared[] Input;		
 		
 	    [XmlElement(ElementName = "extra")]
 		public Grendgine_Collada_Extra[] Extra;	

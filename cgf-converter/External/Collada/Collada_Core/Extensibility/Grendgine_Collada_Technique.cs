@@ -2,6 +2,7 @@ using System;
 using System.Xml;
 using System.Xml.Serialization;
 using System.IO;
+
 namespace grendgine_collada
 {
 	
@@ -19,6 +20,13 @@ namespace grendgine_collada
 
 		[XmlAnyElement]
 		public XmlElement[] Data;
-	}
+
+        [XmlElement(ElementName = "bump")]
+        public Grendgine_Collada_BumpMap[] Bump { get; set; }
+
+        [XmlElement(ElementName = "user_properties")]
+        public string UserProperties { get; set; }
+
+    }
 }
 

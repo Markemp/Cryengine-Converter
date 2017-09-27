@@ -8,7 +8,7 @@ using System.Xml.Xsl;
 using System.Xml.Linq;
 using System.Xml.Schema;
 using System.Xml.Serialization;
-using grendgine_collada; 
+using grendgine_collada;
 using System.Reflection;
 using CgfConverter.CryEngine_Core;
 
@@ -76,8 +76,18 @@ namespace CgfConverter
             WriteLibrary_Effects();
             WriteLibrary_Materials();
             WriteLibrary_Geometries();
-            WriteLibrary_Controllers();
-            WriteLibrary_VisualScenes();
+            // If there is Skinning info, create the controller library and set up visual scene to refer to it.  Otherwise just write the Visual Scene
+            if (CryData.Models[0].SkinningInfo.HasSkinningInfo)
+            {
+                WriteLibrary_Controllers();
+                WriteLibrary_VisualScenes();
+            }
+            else
+            {
+                WriteLibrary_VisualScenes();
+            }
+            //WriteLibrary_Controllers();
+            //WriteLibrary_VisualScenes();
             //WriteIDs();
             if (!daeOutputFile.Directory.Exists)
                 daeOutputFile.Directory.Create();
@@ -168,7 +178,8 @@ namespace CgfConverter
                             if (Args.TiffTextures)
                                 builder.Replace(".dds", ".tif");
 
-                        } else
+                        }
+                        else
                         {
                             builder = new StringBuilder(@"/" + this.Args.DataDir.Replace(@"\", @"/").Replace(" ", @"%20") + @"/" + CryData.Materials[k].Textures[i].File);
                         }
@@ -187,7 +198,8 @@ namespace CgfConverter
                     if (daeObject.Collada_Version == "1.4.1")
                     {
                         tmpImage.Init_From.Uri = builder.ToString();
-                    } else
+                    }
+                    else
                     {
                         tmpImage.Init_From.Ref = builder.ToString();
                     }
@@ -221,7 +233,8 @@ namespace CgfConverter
                     tmpMaterial.Name = CryData.RootNode.Name;
                     tmpMaterial.ID = CryData.RootNode.Name;
                     tmpMaterial.Instance_Effect.URL = "#" + CryData.RootNode.Name + "-effect";
-                } else
+                }
+                else
                 {
                     tmpMaterial.Name = CryData.Materials[i].Name;
                     tmpMaterial.ID = CryData.Materials[i].Name + "-material";          // this is the order the materials appear in the .mtl file.  Needed for geometries.
@@ -314,6 +327,7 @@ namespace CgfConverter
                         phong.Diffuse.Texture = new Grendgine_Collada_Texture();
                         // Texcoord is the ID of the UV source in geometries.  Not needed.
                         phong.Diffuse.Texture.Texture = CleanMtlFileName(texture.File) + "-sampler";
+                        phong.Diffuse.Texture.TexCoord = "";
                     }
                     if (texture.Map == CryEngine_Core.Material.Texture.MapTypeEnum.Specular)
                     {
@@ -321,6 +335,8 @@ namespace CgfConverter
                         specfound = true;
                         phong.Specular.Texture = new Grendgine_Collada_Texture();
                         phong.Specular.Texture.Texture = CleanMtlFileName(texture.File) + "-sampler";
+                        phong.Diffuse.Texture.TexCoord = "";
+
                     }
                     if (texture.Map == CryEngine_Core.Material.Texture.MapTypeEnum.Bumpmap)
                     {
@@ -772,7 +788,8 @@ namespace CgfConverter
                         if (tmpVertices != null)
                         {
                             uvSource.Technique_Common.Accessor.Count = tmpUVs.NumElements;
-                        } else
+                        }
+                        else
                         {
                             uvSource.Technique_Common.Accessor.Count = tmpVertsUVs.NumElements;
                         }
@@ -830,15 +847,168 @@ namespace CgfConverter
             // Set up the controller library.
             Grendgine_Collada_Library_Controllers libraryController = new Grendgine_Collada_Library_Controllers();
 
-            // There can be multiple controllers in the controller library.
-            // For each Root Node and Root Bone, create a controller.
-            foreach (ChunkNode nodeChunk in this.CryData.Chunks.Where(a => a.ChunkType == ChunkTypeEnum.Node))
+            // There can be multiple controllers in the controller library.  But for Cryengine files, there is only one rig.
+            // So if a rig exists, make that the controller.  This applies mostly to .chr files, which will have a rig and geometry.
+            Grendgine_Collada_Controller controller = new Grendgine_Collada_Controller();          // just need the one.
+            controller.ID = "Controller";
+            // Create the skin object and assign to the controller
+            Grendgine_Collada_Skin skin = new Grendgine_Collada_Skin();
+            skin.source = "#" + daeObject.Library_Geometries.Geometry[0].ID;
+            skin.Bind_Shape_Matrix = new Grendgine_Collada_Float_Array_String();
+            skin.Bind_Shape_Matrix.Value_As_String = CreateStringFromMatrix44(Matrix44.Identity());         // We will assume the BSM is the identity matrix for now
+            // Create the 3 sources for this controller:  joints, bind poses, and weights
+            skin.Source = new Grendgine_Collada_Source[3];
+
+            #region Joints Source
+            Grendgine_Collada_Source jointsSource = new Grendgine_Collada_Source()
             {
-
+                ID = "Controller-joints"
+            };
+            jointsSource.Name_Array = new Grendgine_Collada_Name_Array()
+            {
+                ID = "Controller-joints-array",
+                Count = CryData.Models[0].SkinningInfo.CompiledBones.Count,
+            };
+            StringBuilder boneNames = new StringBuilder();
+            for (int i = 0; i < CryData.Models[0].SkinningInfo.CompiledBones.Count; i++)
+            {
+                boneNames.Append(CryData.Models[0].SkinningInfo.CompiledBones[i].boneName.Replace(' ', '_') + " ");
             }
+            jointsSource.Name_Array.Value_Pre_Parse = boneNames.ToString().TrimEnd();
+            jointsSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source();
+            jointsSource.Technique_Common.Accessor = new Grendgine_Collada_Accessor();
+            jointsSource.Technique_Common.Accessor.Source = "#Controller-joints-array";
+            jointsSource.Technique_Common.Accessor.Count = (uint)CryData.Models[0].SkinningInfo.CompiledBones.Count;
+            jointsSource.Technique_Common.Accessor.Stride = 1;
+            skin.Source[0] = jointsSource;
+            #endregion
 
+            #region Bind Pose Array Source
+            Grendgine_Collada_Source bindPoseArraySource = new Grendgine_Collada_Source()
+            {
+                ID = "Controller-bind_poses"
+            };
+            bindPoseArraySource.Float_Array = new Grendgine_Collada_Float_Array()
+            {
+                ID = "Controller-bind_poses-array",
+                Count = CryData.Models[0].SkinningInfo.CompiledBones.Count * 16,
+            };
+            bindPoseArraySource.Float_Array.Value_As_String = GetBindPoseArray(CryData.Models[0].SkinningInfo.CompiledBones);
+            bindPoseArraySource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
+            {
+                Accessor = new Grendgine_Collada_Accessor
+                {
+                    Source = "#Controller-bind_poses-array",
+                    Count = (uint)CryData.Models[0].SkinningInfo.CompiledBones.Count,
+                    Stride = 16,
+                }
+            };
+            bindPoseArraySource.Technique_Common.Accessor.Param = new Grendgine_Collada_Param[1];
+            bindPoseArraySource.Technique_Common.Accessor.Param[0] = new Grendgine_Collada_Param
+            {
+                Name = "TRANSFORM",
+                Type = "float4x4"
+            };
+            skin.Source[1] = bindPoseArraySource;
+            #endregion
+
+            #region Weights Source
+            Grendgine_Collada_Source weightArraySource = new Grendgine_Collada_Source()
+            {
+                ID = "Controller-weights"
+            };
+            weightArraySource.Float_Array = new Grendgine_Collada_Float_Array()
+            {
+                ID = "Controller-weights-array",
+                Count = CryData.Models[0].SkinningInfo.IntVertices.Count * 4
+            };
+            StringBuilder weights = new StringBuilder();
+            for (int i = 0; i < CryData.Models[0].SkinningInfo.IntVertices.Count; i++)
+            {
+                for (int j = 0; j < 4; j++)
+                {
+                    weights.Append(CryData.Models[0].SkinningInfo.IntVertices[i].Weights[j] + " ");
+                }
+            };
+            CleanNumbers(weights);
+            weightArraySource.Float_Array.Value_As_String = weights.ToString();
+            // Add technique_commong part.
+            weightArraySource.Technique_Common = new Grendgine_Collada_Technique_Common_Source();
+            Grendgine_Collada_Accessor accessor = weightArraySource.Technique_Common.Accessor = new Grendgine_Collada_Accessor();
+            accessor.Source = "#Controller-weights-array";
+            accessor.Count = (uint)CryData.Models[0].SkinningInfo.IntVertices.Count * 4;
+            accessor.Stride = 1;
+            accessor.Param = new Grendgine_Collada_Param[1];
+            accessor.Param[0] = new Grendgine_Collada_Param();
+            accessor.Param[0].Name = "WEIGHT";
+            accessor.Param[0].Type = "float";
+            skin.Source[2] = weightArraySource;
+            #endregion
+
+            #region Joints
+            skin.Joints = new Grendgine_Collada_Joints
+            {
+                Input = new Grendgine_Collada_Input_Unshared[2]
+            };
+            skin.Joints.Input[0] = new Grendgine_Collada_Input_Unshared
+            {
+                Semantic = new Grendgine_Collada_Input_Semantic()
+            };
+            skin.Joints.Input[0].Semantic = Grendgine_Collada_Input_Semantic.JOINT;
+            skin.Joints.Input[0].source = "#Controller-joints";
+            skin.Joints.Input[1] = new Grendgine_Collada_Input_Unshared
+            {
+                Semantic = new Grendgine_Collada_Input_Semantic()
+            };
+            skin.Joints.Input[1].Semantic = Grendgine_Collada_Input_Semantic.INV_BIND_MATRIX;
+            skin.Joints.Input[1].source = "#Controller-bind_poses";
+            #endregion
+
+            #region Vertex Weights
+            Grendgine_Collada_Vertex_Weights vertexWeights = skin.Vertex_Weights = new Grendgine_Collada_Vertex_Weights();
+            vertexWeights.Count = CryData.Models[0].SkinningInfo.IntFaces.Count;
+            skin.Vertex_Weights.Input = new Grendgine_Collada_Input_Shared[2];
+            Grendgine_Collada_Input_Shared jointSemantic = skin.Vertex_Weights.Input[0] = new Grendgine_Collada_Input_Shared();
+            jointSemantic.Semantic = Grendgine_Collada_Input_Semantic.JOINT;
+            jointSemantic.source = "#Controller-joints";
+            jointSemantic.Offset = 0;
+            Grendgine_Collada_Input_Shared weightSemantic = skin.Vertex_Weights.Input[1] = new Grendgine_Collada_Input_Shared();
+            weightSemantic.Semantic = Grendgine_Collada_Input_Semantic.WEIGHT;
+            weightSemantic.source = "#Controller-weights";
+            weightSemantic.Offset = 1;
+            StringBuilder vCount = new StringBuilder();
+            for (int i = 0; i < CryData.Models[0].SkinningInfo.IntFaces.Count; i++)
+            {
+                vCount.Append("4 ");
+            };
+            vertexWeights.VCount = new Grendgine_Collada_Int_Array_String();
+            vertexWeights.VCount.Value_As_String = vCount.ToString().TrimEnd();
+            StringBuilder vertices = new StringBuilder();
+            for (int i = 0; i < CryData.Models[0].SkinningInfo.IntVertices.Count * 4; i++)
+            {
+                int wholePart = (int)i/4;
+                vertices.Append(CryData.Models[0].SkinningInfo.IntVertices[wholePart].BoneIDs[i % 4] + " " + i + " ");
+            }
+            vertexWeights.V = new Grendgine_Collada_Int_Array_String();
+            vertexWeights.V.Value_As_String = vertices.ToString().TrimEnd();
+            #endregion
+
+            // create the extra element for the FCOLLADA profile
+            controller.Extra = new Grendgine_Collada_Extra[1];
+            controller.Extra[0] = new Grendgine_Collada_Extra();
+            controller.Extra[0].Technique = new Grendgine_Collada_Technique[1];
+            controller.Extra[0].Technique[0] = new Grendgine_Collada_Technique();
+            controller.Extra[0].Technique[0].profile = "FCOLLADA";
+            controller.Extra[0].Technique[0].UserProperties = "SkinController";
+            
+
+            // Add the parts to their parents
+            controller.Skin = skin;
+            libraryController.Controller = new Grendgine_Collada_Controller[1];
+            libraryController.Controller[0] = controller;
             daeObject.Library_Controllers = libraryController;
         }
+
 
         /// <summary>
         /// Provides a library in which to place visual_scene elements. 
@@ -861,7 +1031,7 @@ namespace CgfConverter
 
                 // TODO: Add a controller for the Joints.
             }
-            
+
             // Geometry visual Scene.
             Grendgine_Collada_Visual_Scene visualScene = new Grendgine_Collada_Visual_Scene();
             Grendgine_Collada_Node rootNode = new Grendgine_Collada_Node();
@@ -1032,18 +1202,18 @@ namespace CgfConverter
             StringBuilder matrixValues = new StringBuilder();
             //matrixValues.AppendFormat("\n\t\t\t{0,11:F6} {1,11:F6} {2,11:F6} {3,11:F6}\n\t\t\t{4,11:F6} {5,11:F6} {6,11:F6} {7,11:F6}\n\t\t\t{8,11:F6} {9,11:F6} {10,11:F6} {11,11:F6}\n\t\t\t0 0 0 1",
             matrixValues.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} 0 0 0 1",
-                bone.LocalTransform.m11,           
-                bone.LocalTransform.m12,           
-                bone.LocalTransform.m13,           
-                bone.LocalTransform.m14,           
-                bone.LocalTransform.m21,           
-                bone.LocalTransform.m22,           
-                bone.LocalTransform.m23,           
-                bone.LocalTransform.m24,           
-                bone.LocalTransform.m31,           
-                bone.LocalTransform.m32,           
-                bone.LocalTransform.m33,           
-                bone.LocalTransform.m34                                
+                bone.LocalTransform.m11,
+                bone.LocalTransform.m12,
+                bone.LocalTransform.m13,
+                bone.LocalTransform.m14,
+                bone.LocalTransform.m21,
+                bone.LocalTransform.m22,
+                bone.LocalTransform.m23,
+                bone.LocalTransform.m24,
+                bone.LocalTransform.m31,
+                bone.LocalTransform.m32,
+                bone.LocalTransform.m33,
+                bone.LocalTransform.m34
                 );
 
             CleanNumbers(matrixValues);
@@ -1147,6 +1317,21 @@ namespace CgfConverter
             return source;
         }
 
+        /// <summary>
+        /// Retrieves the worldtobone (bind pose matrix) for the bone.
+        /// </summary>
+        /// <param name="compiledBones">List of bones to get the BPM from.</param>
+        /// <returns>The float_array that represents the BPM of all the bones, in order.</returns>
+        private string GetBindPoseArray(List<CompiledBone> compiledBones)
+        {
+            StringBuilder value = new StringBuilder();
+            for (int i = 0; i < compiledBones.Count; i++)
+            {
+                value.Append(CreateStringFromMatrix44(compiledBones[i].worldToBone.GetMatrix44()) + " ");
+            }
+            return value.ToString().TrimEnd();
+        }
+
         private string GetRootBoneName(ChunkCompiledBones bones)
         {
             return bones.RootBone.boneName;
@@ -1170,28 +1355,28 @@ namespace CgfConverter
         {
             // Calculate the LocalTransform matrix.
             // Node transform matrices are different than joint.  Translation and scale are reversed.
-    
+
             Vector3 localTranslation;
             Matrix33 localRotation;
             Vector3 localScale;
 
             //if (node.ParentNodeID != ~0)
             //{
-                //localRotation = node.ParentNode.Transform.GetRotation().ConjugateTransposeThisAndMultiply(node.Transform.GetRotation());  // Might need to multiply by inverse instead.
-                //localTranslation = node.LocalRotation * (node.LocalTranslation - node.ParentNode.Transform.GetScale());
-                //localScale = node.LocalTranslation - node.ParentNode.LocalTranslation;
-                /*localRotation = node.ParentNode.Transform.GetRotation().ConjugateTransposeThisAndMultiply(node.Transform.GetRotation());*/  // Might need to multiply by inverse instead.
-                //localRotation = node.ParentNode.Transform.GetRotation().Inverse() * node.Transform.GetRotation();
-                //localRotation = node.Transform.GetRotation();
-                //localRotation = node.ParentNode.Transform.GetRotation() * node.Transform.GetRotation();
-                //localTranslation = node.ParentNode.Transform.GetRotation() * node.Transform.GetScale();
-                //localScale = node.Transform.GetTranslation() - node.ParentNode.Transform.GetTranslation();
-            //}
-            //else
-            //{
-                localTranslation = node.Transform.GetScale();
-                localRotation = node.Transform.GetRotation();
-                localScale = node.Transform.GetTranslation();
+            //localRotation = node.ParentNode.Transform.GetRotation().ConjugateTransposeThisAndMultiply(node.Transform.GetRotation());  // Might need to multiply by inverse instead.
+            //localTranslation = node.LocalRotation * (node.LocalTranslation - node.ParentNode.Transform.GetScale());
+            //localScale = node.LocalTranslation - node.ParentNode.LocalTranslation;
+            /*localRotation = node.ParentNode.Transform.GetRotation().ConjugateTransposeThisAndMultiply(node.Transform.GetRotation());*/  // Might need to multiply by inverse instead.
+                                                                                                                                          //localRotation = node.ParentNode.Transform.GetRotation().Inverse() * node.Transform.GetRotation();
+                                                                                                                                          //localRotation = node.Transform.GetRotation();
+                                                                                                                                          //localRotation = node.ParentNode.Transform.GetRotation() * node.Transform.GetRotation();
+                                                                                                                                          //localTranslation = node.ParentNode.Transform.GetRotation() * node.Transform.GetScale();
+                                                                                                                                          //localScale = node.Transform.GetTranslation() - node.ParentNode.Transform.GetTranslation();
+                                                                                                                                          //}
+                                                                                                                                          //else
+                                                                                                                                          //{
+            localTranslation = node.Transform.GetScale();
+            localRotation = node.Transform.GetRotation();
+            localScale = node.Transform.GetTranslation();
             //}
 
             //localTranslation = node.Transform.GetScale();
@@ -1272,8 +1457,34 @@ namespace CgfConverter
             // Create a list of URLs and see if any reference an ID that doesn't exist.
         }
 
+        private string CreateStringFromMatrix44(Matrix44 matrix)
+        {
+            StringBuilder matrixValues = new StringBuilder();
+            //matrixValues.AppendFormat("\n\t\t\t{0,11:F6} {1,11:F6} {2,11:F6} {3,11:F6}\n\t\t\t{4,11:F6} {5,11:F6} {6,11:F6} {7,11:F6}\n\t\t\t{8,11:F6} {9,11:F6} {10,11:F6} {11,11:F6}\n\t\t\t0 0 0 1",
+            matrixValues.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} {12:F6} {13:F6} {14:F6} {15:F6}",
+                matrix.m11,
+                matrix.m12,
+                matrix.m13,
+                matrix.m14,
+                matrix.m21,
+                matrix.m22,
+                matrix.m23,
+                matrix.m24,
+                matrix.m31,
+                matrix.m32,
+                matrix.m33,
+                matrix.m34,
+                matrix.m41,
+                matrix.m42,
+                matrix.m43,
+                matrix.m44
+                );
+            CleanNumbers(matrixValues);
+            return matrixValues.ToString();
+        }
+
         /// <summary>Takes the Material file name and returns just the file name with no extension</summary>
-        private string CleanMtlFileName(string cleanMe) 
+        private string CleanMtlFileName(string cleanMe)
         {
             string[] stringSeparators = new string[] { @"\", @"/" };
             string[] result;
@@ -1287,8 +1498,8 @@ namespace CgfConverter
             // Check to see if extension is added, and if so strip it out. Look for "."
             if (cleanMe.Contains(@"."))
             {
-                string[] periodSep = new string[] { @"." }; 
-                result = cleanMe.Split(periodSep,StringSplitOptions.None);
+                string[] periodSep = new string[] { @"." };
+                result = cleanMe.Split(periodSep, StringSplitOptions.None);
                 cleanMe = result[0];
                 //Console.WriteLine("Cleanme is {0}", cleanMe);
             }

@@ -18,6 +18,9 @@ namespace CgfConverter.CryEngine_Core
             {
                 Source[i] = b.ReadUInt16();
             }
+            // Add to SkinningInfo
+            SkinningInfo skin = GetSkinningInfo();
+            skin.Ext2IntMap = Source.ToList();
         }
 
         public override void WriteChunk()

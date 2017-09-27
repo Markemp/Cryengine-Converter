@@ -9,8 +9,8 @@ namespace grendgine_collada
 {
 
     [Serializable]
-    [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Diagnostics.DebuggerStepThrough()]
+    [System.ComponentModel.DesignerCategory("code")]
     [XmlType(AnonymousType = true)]
     //[System.Xml.Serialization.XmlRootAttribute(ElementName = "COLLADA", Namespace = "https://www.khronos.org/files/collada_schema_1_5", IsNullable = false)]
     //[System.Xml.Serialization.XmlRootAttribute(ElementName = "COLLADA", Namespace = "http://www.khronos.org/files/collada_schema_1_4", IsNullable = false)]
@@ -34,14 +34,15 @@ namespace grendgine_collada
         public Grendgine_Collada_Library_Materials Library_Materials;
 
         #endregion
-        
+
         #region Core Elements
 
-        [XmlElement(ElementName = "library_animation_clips")]
-        public Grendgine_Collada_Library_Animation_Clips Library_Animation_Clips;
 
         [XmlElement(ElementName = "library_animations")]
         public Grendgine_Collada_Library_Animations Library_Animations;
+
+        [XmlElement(ElementName = "library_animation_clips")]
+        public Grendgine_Collada_Library_Animation_Clips Library_Animation_Clips;
 
         [XmlElement(ElementName = "library_cameras")]
         public Grendgine_Collada_Library_Cameras Library_Cameras;

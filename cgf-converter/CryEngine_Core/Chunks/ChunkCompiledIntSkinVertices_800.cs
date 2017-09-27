@@ -36,6 +36,8 @@ namespace CgfConverter.CryEngine_Core
                 // Read the color
                 IntSkinVertices[i].Color.Read(b);
             }
+            SkinningInfo skin = GetSkinningInfo();
+            skin.IntVertices = IntSkinVertices.ToList();
         }
 
         public override void WriteChunk()

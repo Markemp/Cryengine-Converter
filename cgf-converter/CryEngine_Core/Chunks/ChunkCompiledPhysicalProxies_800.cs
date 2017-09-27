@@ -44,7 +44,9 @@ namespace CgfConverter.CryEngine_Core
                 {
                     b.ReadUInt16();
                 }
-                // HitBoxes[i].WriteHitBox();
+                SkinningInfo skin = GetSkinningInfo();
+                skin.PhysicalBoneMeshes = PhysicalProxies.ToList();
+
             }
         }
 

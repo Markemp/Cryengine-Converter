@@ -10,6 +10,10 @@ namespace CgfConverter.CryEngine_Core
     public class SkinningInfo
     {
         /// <summary>
+        /// If there is skinning info in the model, set to true.
+        /// </summary>
+        public bool HasSkinningInfo { get; set; }
+        /// <summary>
         /// BoneEntities are the list of the bones in the object.  Contains the info to find each of the necessary skinning components.
         /// </summary>
         public List<BoneEntity> BoneEntities { get; set; }
@@ -17,10 +21,12 @@ namespace CgfConverter.CryEngine_Core
         public List<DirectionalBlends> LookDirectionBlends { get; set; }
         public List<PhysicalProxy> PhysicalBoneMeshes { get; set; }           // Collision proxies
         public List<MorphTargets> MorphTargets { get; set; }
-        public List<Face> IntFaces { get; set; }
+        public List<TFace> IntFaces { get; set; }
         public List<IntSkinVertex> IntVertices { get; set; }
         public List<UInt16> Ext2IntMap { get; set; }
         public List<MeshCollisionInfo> Collisions { get; set; }
+
+
 
         /// <summary>
         /// Given a bone name, get the Controller ID.

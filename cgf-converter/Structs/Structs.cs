@@ -217,16 +217,18 @@ namespace CgfConverter
 
         public Matrix33 Mult(Matrix33 mat)
         {
-            Matrix33 mat2 = new Matrix33();
-            mat2.m11 = (m11 * mat.m11) + (m12 * mat.m21) + (m13 * mat.m31);
-            mat2.m12 = (m11 * mat.m12) + (m12 * mat.m22) + (m13 * mat.m32);
-            mat2.m13 = (m11 * mat.m13) + (m12 * mat.m23) + (m13 * mat.m33);
-            mat2.m21 = (m21 * mat.m11) + (m22 * mat.m21) + (m23 * mat.m31);
-            mat2.m22 = (m21 * mat.m12) + (m22 * mat.m22) + (m23 * mat.m32);
-            mat2.m23 = (m21 * mat.m13) + (m22 * mat.m23) + (m23 * mat.m33);
-            mat2.m31 = (m31 * mat.m11) + (m32 * mat.m21) + (m33 * mat.m31);
-            mat2.m32 = (m31 * mat.m12) + (m32 * mat.m22) + (m33 * mat.m32);
-            mat2.m33 = (m31 * mat.m13) + (m32 * mat.m23) + (m33 * mat.m33);
+            Matrix33 mat2 = new Matrix33
+            {
+                m11 = (m11 * mat.m11) + (m12 * mat.m21) + (m13 * mat.m31),
+                m12 = (m11 * mat.m12) + (m12 * mat.m22) + (m13 * mat.m32),
+                m13 = (m11 * mat.m13) + (m12 * mat.m23) + (m13 * mat.m33),
+                m21 = (m21 * mat.m11) + (m22 * mat.m21) + (m23 * mat.m31),
+                m22 = (m21 * mat.m12) + (m22 * mat.m22) + (m23 * mat.m32),
+                m23 = (m21 * mat.m13) + (m22 * mat.m23) + (m23 * mat.m33),
+                m31 = (m31 * mat.m11) + (m32 * mat.m21) + (m33 * mat.m31),
+                m32 = (m31 * mat.m12) + (m32 * mat.m22) + (m33 * mat.m32),
+                m33 = (m31 * mat.m13) + (m32 * mat.m23) + (m33 * mat.m33)
+            };
             return mat2;
         }
 
@@ -473,8 +475,6 @@ namespace CgfConverter
             return result;
         }
 
-
-
         public Vector3 GetTranslation()
         {
             return new Vector3
@@ -548,6 +548,13 @@ namespace CgfConverter
             return result;
         }
 
+        public Matrix44 Inverse()
+        {
+            Matrix<double> matrix = Matrix<double>.Build.Dense(4, 4);
+            matrix = this.ToMathMatrix().Inverse();
+            return GetMatrix44(matrix);
+        }
+
         public Matrix44 GetTransformFromParts(Vector3 localTranslation, Matrix33 localRotation, Vector3 localScale)
         {
             Matrix44 transform = new Matrix44
@@ -575,6 +582,75 @@ namespace CgfConverter
                 m44 = 1
             };
             return transform;
+        }
+
+        public static Matrix44 Identity()
+        {
+            return new Matrix44()
+            {
+                m11 = 1,
+                m12 = 0,
+                m13 = 0,
+                m14 = 0,
+                m21 = 0,
+                m22 = 1,
+                m23 = 0,
+                m24 = 0,
+                m31 = 0,
+                m32 = 0,
+                m33 = 1,
+                m34 = 0,
+                m41 = 0,
+                m42 = 0,
+                m43 = 0,
+                m44 = 1
+            };
+        }
+
+        public Matrix<double> ToMathMatrix()
+        {
+            Matrix<double> result = Matrix<double>.Build.Dense(4, 4);
+            result[0, 0] = this.m11;
+            result[0, 1] = this.m12;
+            result[0, 2] = this.m13;
+            result[0, 3] = this.m14;
+            result[1, 0] = this.m21;
+            result[1, 1] = this.m22;
+            result[1, 2] = this.m23;
+            result[1, 3] = this.m24;
+            result[2, 0] = this.m31;
+            result[2, 1] = this.m32;
+            result[2, 2] = this.m33;
+            result[2, 3] = this.m34;
+            result[3, 0] = this.m41;
+            result[3, 1] = this.m42;
+            result[3, 2] = this.m43;
+            result[3, 3] = this.m44;
+            return result;
+        }
+
+        public Matrix44 GetMatrix44(Matrix<double> matrix)
+        {
+            Matrix44 result = new Matrix44
+            {
+                m11 = matrix[0, 0],
+                m12 = matrix[0, 1],
+                m13 = matrix[0, 2],
+                m14 = matrix[0, 3],
+                m21 = matrix[1, 0],
+                m22 = matrix[1, 1],
+                m23 = matrix[1, 2],
+                m24 = matrix[1, 3],
+                m31 = matrix[2, 0],
+                m32 = matrix[2, 1],
+                m33 = matrix[2, 2],
+                m34 = matrix[2, 3],
+                m41 = matrix[3, 0],
+                m42 = matrix[3, 1],
+                m43 = matrix[3, 2],
+                m44 = matrix[3, 3],
+            };
+            return result;
         }
 
         public void WriteMatrix44()
@@ -742,7 +818,9 @@ namespace CgfConverter
 
     }
 
-
+    /// <summary>
+    /// WORLDTOBONE is also the Bind Pose Matrix (BPM)
+    /// </summary>
     public struct WORLDTOBONE
     {
         public Double[,] worldToBone;   //  4x3 structure
@@ -759,6 +837,31 @@ namespace CgfConverter
                 }
             }
             return;
+        }
+
+        public Matrix44 GetMatrix44()
+        {
+            Matrix44 matrix = new Matrix44
+            {
+                m11 = worldToBone[0, 0],
+                m12 = worldToBone[0, 1],
+                m13 = worldToBone[0, 2],
+                m14 = worldToBone[0, 3],
+                m21 = worldToBone[1, 0],
+                m22 = worldToBone[1, 1],
+                m23 = worldToBone[1, 2],
+                m24 = worldToBone[1, 3],
+                m31 = worldToBone[2, 0],
+                m32 = worldToBone[2, 1],
+                m33 = worldToBone[2, 2],
+                m34 = worldToBone[2, 3],
+                m41 = 0,
+                m42 = 0,
+                m43 = 0,
+                m44 = 1
+            };
+            return matrix;
+
         }
 
         public void WriteWorldToBone()
@@ -1090,10 +1193,13 @@ namespace CgfConverter
         }
     };
 
-    public struct MeshMorphTargetVertex
+
+    public struct MeshPhysicalProxyHeader
     {
-        public uint VertexID;
-        public Vector3 Vertex;
+        public uint ChunkID;
+        public uint NumPoints;
+        public uint NumIndices;
+        public uint NumMaterials;
     }
 
     public struct MeshMorphTargetHeader
@@ -1104,14 +1210,20 @@ namespace CgfConverter
         public uint NumExtVertices;
     }
 
-    public struct MeshPhysicalProxyHeader
+    public struct MeshMorphTargetVertex
     {
-        public uint ChunkID;
-        public uint NumPoints;
-        public uint NumIndices;
-        public uint NumMaterials;
-    }
+        public uint VertexID;
+        public Vector3 Vertex;
 
+        public static MeshMorphTargetVertex Read(BinaryReader b)
+        {
+            MeshMorphTargetVertex vertex = new MeshMorphTargetVertex();
+            vertex.VertexID = b.ReadUInt32();
+            vertex.Vertex.ReadVector3(b);
+            return vertex;
+        }
+    }
+    
     public struct MorphTargets
     {
         uint MeshID;

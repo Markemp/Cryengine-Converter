@@ -198,6 +198,19 @@ namespace CgfConverter.CryEngine_Core
             }
         }
 
+        /// <summary>
+        /// Gets a link to the SkinningInfo model.
+        /// </summary>
+        /// <returns>Link to the SkinningInfo model.</returns>
+        public SkinningInfo GetSkinningInfo()
+        {
+            if (this._model.SkinningInfo == null)
+            {
+                this._model.SkinningInfo = new SkinningInfo();
+            }
+            return this._model.SkinningInfo;
+        }
+
         public virtual void Write(BinaryWriter writer) { throw new NotImplementedException(); }
 
         public virtual void WriteChunk()

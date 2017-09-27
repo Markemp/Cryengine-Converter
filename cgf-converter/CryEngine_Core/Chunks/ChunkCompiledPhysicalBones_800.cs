@@ -35,6 +35,8 @@ namespace CgfConverter.CryEngine_Core
             {
                 AddChildIDToParent(bone);
             }
+            SkinningInfo skin = GetSkinningInfo();
+            //skin.PhysicalBoneMeshes
         }
 
         public override void WriteChunk()
