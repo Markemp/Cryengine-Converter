@@ -80,7 +80,7 @@ namespace CgfConverter
             if (CryData.Models[0].SkinningInfo.HasSkinningInfo)
             {
                 WriteLibrary_Controllers();
-                WriteLibrary_VisualScenes();
+                WriteLibrary_VisualScenesWithSkeleton();
             }
             else
             {
@@ -966,7 +966,7 @@ namespace CgfConverter
 
             #region Vertex Weights
             Grendgine_Collada_Vertex_Weights vertexWeights = skin.Vertex_Weights = new Grendgine_Collada_Vertex_Weights();
-            vertexWeights.Count = CryData.Models[0].SkinningInfo.IntFaces.Count;
+            vertexWeights.Count = CryData.Models[0].SkinningInfo.IntVertices.Count;
             skin.Vertex_Weights.Input = new Grendgine_Collada_Input_Shared[2];
             Grendgine_Collada_Input_Shared jointSemantic = skin.Vertex_Weights.Input[0] = new Grendgine_Collada_Input_Shared();
             jointSemantic.Semantic = Grendgine_Collada_Input_Semantic.JOINT;
@@ -977,7 +977,7 @@ namespace CgfConverter
             weightSemantic.source = "#Controller-weights";
             weightSemantic.Offset = 1;
             StringBuilder vCount = new StringBuilder();
-            for (int i = 0; i < CryData.Models[0].SkinningInfo.IntFaces.Count; i++)
+            for (int i = 0; i < CryData.Models[0].SkinningInfo.IntVertices.Count; i++)
             {
                 vCount.Append("4 ");
             };
@@ -1009,7 +1009,6 @@ namespace CgfConverter
             daeObject.Library_Controllers = libraryController;
         }
 
-
         /// <summary>
         /// Provides a library in which to place visual_scene elements. 
         /// </summary>
@@ -1028,8 +1027,6 @@ namespace CgfConverter
                 Grendgine_Collada_Node boneNode = new Grendgine_Collada_Node();
                 boneNode = CreateJointNode(CryData.Bones.RootBone);
                 nodes.Add(boneNode);
-
-                // TODO: Add a controller for the Joints.
             }
 
             // Geometry visual Scene.
@@ -1054,6 +1051,60 @@ namespace CgfConverter
                 nodes.Add(CreateNode(CryData.RootNode));
             }
 
+            visualScene.Node = nodes.ToArray();
+            visualScene.ID = "Scene";
+            visualScenes.Add(visualScene);
+
+            libraryVisualScenes.Visual_Scene = visualScenes.ToArray();
+            daeObject.Library_Visual_Scene = libraryVisualScenes;
+        }
+
+        /// <summary>
+        /// Provides a library in which to place visual_scene elements for chr files (rigs + geometry). 
+        /// </summary>
+        public void WriteLibrary_VisualScenesWithSkeleton()
+        {
+            // Set up the library
+            Grendgine_Collada_Library_Visual_Scenes libraryVisualScenes = new Grendgine_Collada_Library_Visual_Scenes();
+
+            // There can be multiple visual scenes.  Will just have one (World) for now.  All node chunks go under Nodes for that visual scene
+            List<Grendgine_Collada_Visual_Scene> visualScenes = new List<Grendgine_Collada_Visual_Scene>();
+            List<Grendgine_Collada_Node> nodes = new List<Grendgine_Collada_Node>();
+
+            // Check to see if there is a CompiledBones chunk.  If so, add a Node.
+            if (CryData.Chunks.Any(a => a.ChunkType == ChunkTypeEnum.CompiledBones || a.ChunkType == ChunkTypeEnum.CompiledBonesSC))
+            {
+                Grendgine_Collada_Node boneNode = new Grendgine_Collada_Node();
+                boneNode = CreateJointNode(CryData.Bones.RootBone);
+                nodes.Add(boneNode);
+            }
+
+            // Geometry visual Scene.
+            Grendgine_Collada_Visual_Scene visualScene = new Grendgine_Collada_Visual_Scene();
+            Grendgine_Collada_Node rootNode = new Grendgine_Collada_Node
+            {
+                ID = CryData.Models[0].FileName,
+                Name = CryData.Models[0].FileName,
+                Type = Grendgine_Collada_Node_Type.NODE,
+                Matrix = new Grendgine_Collada_Matrix[1]
+            };
+            rootNode.Matrix[0] = new Grendgine_Collada_Matrix
+            {
+                Value_As_String = CreateStringFromMatrix44(Matrix44.Identity())
+            };
+            rootNode.Instance_Controller = new Grendgine_Collada_Instance_Controller[1];
+            rootNode.Instance_Controller[0] = new Grendgine_Collada_Instance_Controller();
+            rootNode.Instance_Controller[0].URL = "#Controller";
+            rootNode.Instance_Controller[0].Skeleton = new Grendgine_Collada_Skeleton[1];
+            Grendgine_Collada_Skeleton skeleton = rootNode.Instance_Controller[0].Skeleton[0] = new Grendgine_Collada_Skeleton();
+            skeleton.Value = "#Armature";
+            rootNode.Instance_Controller[0].Bind_Material = new Grendgine_Collada_Bind_Material[1];
+            Grendgine_Collada_Bind_Material bindMaterial = rootNode.Instance_Controller[0].Bind_Material[0] = new Grendgine_Collada_Bind_Material();
+
+            bindMaterial.Technique_Common = new Grendgine_Collada_Technique_Common_Bind_Material();
+            //bindMaterial.Technique_Common.Instance_Material = new Grendgine_Collada_Instance_Material_Geometry[CryData.Models[0].ChunkNodes.All(a => a.NumMeshSubset];
+
+            nodes.Add(rootNode);
             visualScene.Node = nodes.ToArray();
             visualScene.ID = "Scene";
             visualScenes.Add(visualScene);
