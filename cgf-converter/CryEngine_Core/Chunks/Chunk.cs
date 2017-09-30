@@ -61,7 +61,18 @@ namespace CgfConverter.CryEngine_Core
                 // Star Citizen equivalents
                 case ChunkTypeEnum.CompiledBonesSC:
                     return Chunk.New<ChunkCompiledBones>(version);
-
+                case ChunkTypeEnum.CompiledPhysicalBonesSC:
+                    return Chunk.New<ChunkCompiledPhysicalBones>(version);
+                case ChunkTypeEnum.CompiledExt2IntMapSC:
+                    return Chunk.New<ChunkCompiledExtToIntMap>(version);
+                case ChunkTypeEnum.CompiledIntFacesSC:
+                    return Chunk.New<ChunkCompiledIntFaces>(version);
+                case ChunkTypeEnum.CompiledIntSkinVerticesSC:
+                    return Chunk.New<ChunkCompiledIntSkinVertices>(version);
+                case ChunkTypeEnum.CompiledMorphTargetsSC:
+                    return Chunk.New<ChunkCompiledMorphTargets>(version);
+                case ChunkTypeEnum.CompiledPhysicalProxiesSC:
+                    return Chunk.New<ChunkCompiledPhysicalProxies>(version);
                 // Old chunks
                 case ChunkTypeEnum.BoneNameList:
                     return Chunk.New<ChunkBoneNameList>(version);
@@ -177,6 +188,7 @@ namespace CgfConverter.CryEngine_Core
             this.Offset = this._header.Offset;
             this.ID = this._header.ID;
             this.Size = this._header.Size;
+            this.DataSize = this.Size;          // For SC files, there is no header in chunks.  But need Datasize to calculate things.
 
             reader.BaseStream.Seek(this._header.Offset, 0);
 
