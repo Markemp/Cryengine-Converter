@@ -32,10 +32,10 @@ namespace CgfConverter
             Utils.Log(LogLevelEnum.Debug, "*** Starting WriteCOLLADA() ***");
             Utils.Log(LogLevelEnum.Debug);
 
-            Utils.Log(LogLevelEnum.Info, "Number of models: {0}", CryData.Models.Count);
+            Utils.Log(LogLevelEnum.Debug, "Number of models: {0}", CryData.Models.Count);
             for (int i = 0; i < CryData.Models.Count; i++)
             {
-                Utils.Log(LogLevelEnum.Info, "\tNumber of nodes in model: {0}", CryData.Models[i].NodeMap.Count);
+                Utils.Log(LogLevelEnum.Debug, "\tNumber of nodes in model: {0}", CryData.Models[i].NodeMap.Count);
             }
 
             #region Output testing
@@ -922,26 +922,22 @@ namespace CgfConverter
             weightArraySource.Float_Array = new Grendgine_Collada_Float_Array()
             {
                 ID = "Controller-weights-array",
-                //Count = CryData.Models[0].SkinningInfo.IntVertices.Count * 4
                 Count = CryData.Models[0].SkinningInfo.Ext2IntMap.Count
             };
             StringBuilder weights = new StringBuilder();
-            //for (int i = 0; i < CryData.Models[0].SkinningInfo.IntVertices.Count; i++)
             for (int i = 0; i < CryData.Models[0].SkinningInfo.Ext2IntMap.Count; i++)
             {
                 for (int j = 0; j < 4; j++)
                 {
-                    //weights.Append(CryData.Models[0].SkinningInfo.IntVertices[i].Weights[j] + " ");
                     weights.Append(CryData.Models[0].SkinningInfo.IntVertices[CryData.Models[0].SkinningInfo.Ext2IntMap[i]].Weights[j] + " ");
                 }
             };
             CleanNumbers(weights);
             weightArraySource.Float_Array.Value_As_String = weights.ToString().TrimEnd();
-            // Add technique_commong part.
+            // Add technique_common part.
             weightArraySource.Technique_Common = new Grendgine_Collada_Technique_Common_Source();
             Grendgine_Collada_Accessor accessor = weightArraySource.Technique_Common.Accessor = new Grendgine_Collada_Accessor();
             accessor.Source = "#Controller-weights-array";
-            //accessor.Count = (uint)CryData.Models[0].SkinningInfo.IntVertices.Count * 4;
             accessor.Count = (uint)CryData.Models[0].SkinningInfo.Ext2IntMap.Count * 4;
             accessor.Stride = 1;
             accessor.Param = new Grendgine_Collada_Param[1];
@@ -1089,7 +1085,7 @@ namespace CgfConverter
             List<Grendgine_Collada_Visual_Scene> visualScenes = new List<Grendgine_Collada_Visual_Scene>();
             List<Grendgine_Collada_Node> nodes = new List<Grendgine_Collada_Node>();
 
-            // Check to see if there is a CompiledBones chunk.  If so, add a Node.
+            // Check to see if there is a CompiledBones chunk.  If so, add a Node.  
             if (CryData.Chunks.Any(a => a.ChunkType == ChunkTypeEnum.CompiledBones || a.ChunkType == ChunkTypeEnum.CompiledBonesSC))
             {
                 Grendgine_Collada_Node boneNode = new Grendgine_Collada_Node();
@@ -1119,8 +1115,23 @@ namespace CgfConverter
             rootNode.Instance_Controller[0].Bind_Material = new Grendgine_Collada_Bind_Material[1];
             Grendgine_Collada_Bind_Material bindMaterial = rootNode.Instance_Controller[0].Bind_Material[0] = new Grendgine_Collada_Bind_Material();
 
+            // Create an Instance_Material for each material
             bindMaterial.Technique_Common = new Grendgine_Collada_Technique_Common_Bind_Material();
-            //bindMaterial.Technique_Common.Instance_Material = new Grendgine_Collada_Instance_Material_Geometry[CryData.Models[0].ChunkNodes.All(a => a.NumMeshSubset];
+            List<Grendgine_Collada_Instance_Material_Geometry> instanceMaterials = new List<Grendgine_Collada_Instance_Material_Geometry>();
+            bindMaterial.Technique_Common.Instance_Material = new Grendgine_Collada_Instance_Material_Geometry[CryData.Materials.Length];
+            // This gets complicated.  We need to make one instance_material for each material used in this node chunk.  The mat IDs used in this
+            // node chunk are stored in meshsubsets, so for each subset we need to grab the mat, get the target (id), and make an instance_material for it.
+            for (int i = 0; i < CryData.Materials.Length; i++)
+            {
+                // For each mesh subset, we want to create an instance material and add it to instanceMaterials list.
+                Grendgine_Collada_Instance_Material_Geometry tmpInstanceMat = new Grendgine_Collada_Instance_Material_Geometry();
+                //tmpInstanceMat.Target = "#" + tmpMeshSubsets.MeshSubsets[i].MatID;
+                tmpInstanceMat.Target = "#" + CryData.Materials[i].Name + "-material";
+                //tmpInstanceMat.Symbol = CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name;
+                tmpInstanceMat.Symbol = CryData.Materials[i].Name + "-material";
+                instanceMaterials.Add(tmpInstanceMat);
+            }
+            rootNode.Instance_Controller[0].Bind_Material[0].Technique_Common.Instance_Material = instanceMaterials.ToArray();
 
             nodes.Add(rootNode);
             visualScene.Node = nodes.ToArray();

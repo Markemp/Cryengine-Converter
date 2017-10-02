@@ -14,7 +14,6 @@ namespace CgfConverter.CryEngine_Core
         public char[] Reserved;             // 32 byte array
         public CompiledPhysicalBone RootPhysicalBone;       // First bone in the data structure.  Usually Bip01
         public int NumBones;                // Number of bones in the chunk
-        public int DataSize;                // Size of the data structure.  Each chunk is 152 bytes. Can get the number of bones this way.
 
         public Dictionary<uint, CompiledPhysicalBone> PhysicalBoneDictionary = new Dictionary<uint, CompiledPhysicalBone>();  // Dictionary of all the CompiledBone objects based on bone name.
         public List<CompiledPhysicalBone> PhysicalBoneList = new List<CompiledPhysicalBone>();

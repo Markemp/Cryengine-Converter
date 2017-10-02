@@ -45,7 +45,7 @@ namespace CgfConverter
 
             if (mFile.Exists)
             {
-                Utils.Log(LogLevelEnum.Debug, "Found mFile file {0}", mFile.Name);
+                Utils.Log(LogLevelEnum.Debug, "Found geometry file {0}", mFile.Name);
 
                 // Add to list of files to process
                 inputFiles.Add(mFile);
