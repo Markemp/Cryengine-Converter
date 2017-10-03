@@ -774,7 +774,7 @@ namespace CgfConverter
         }
     }
 
-    public struct IRGBA
+    public struct IRGBA 
     {
         public byte r; // red
         public byte g; // green
@@ -790,14 +790,19 @@ namespace CgfConverter
                 a = b.ReadByte()
             };
         }
-
-    }
+    }   // May also be known as ColorB.
 
     public struct FRGB
     {
         public Double r; // Double Red
         public Double g; // Double green
         public Double b; // Double blue
+    }
+
+    public struct AABB
+    {
+        Vector3 min;
+        Vector3 max;
     }
 
     public struct Tangent
@@ -1141,29 +1146,7 @@ namespace CgfConverter
         public Vector3 offset;
         public float Blending;
     }
-
-    public struct BonePhysics           // 26 total words = 104 total bytes
-    {
-        UInt32 Geometry;                //" type="Ref" template="BoneMeshChunk">Geometry of a separate mesh for this bone.</add>
-        //<!-- joint parameters -->
-        UInt32 Flags;                   //" type="uint" />
-        Vector3 Min;                   //" type="Vector3" />
-        Vector3 Max;                   //" type="Vector3" />
-        Vector3 Spring_Angle;          //" type="Vector3" />
-        Vector3 Spring_Tension;        //" type="Vector3" />
-        Vector3 Damping;               //" type="Vector3" />
-        Matrix33 Frame_Matrix;        //" type="Matrix33" />
-    }
-
-    public struct BoneEntity
-    {
-        int Bone_Id;                 //" type="int">Bone identifier.</add>
-        int Parent_Id;               //" type="int">Parent identifier.</add>
-        int Num_Children;            //" type="uint" />
-        uint Bone_Name_CRC32;         //" type="uint">CRC32 of bone name as listed in the BoneNameListChunk.  In Python this can be calculated using zlib.crc32(name)</add>
-        string Properties;            //" type="String32" />
-        BonePhysics Physics;            //" type="BonePhysics" />
-    }
+    
 
     public class DirectionalBlends
     {
@@ -1193,6 +1176,37 @@ namespace CgfConverter
         }
     };
 
+    #region Skinning Structures
+
+    public struct BoneEntity
+    {
+        int Bone_Id;                 //" type="int">Bone identifier.</add>
+        int Parent_Id;               //" type="int">Parent identifier.</add>
+        int Num_Children;            //" type="uint" />
+        uint Bone_Name_CRC32;         //" type="uint">CRC32 of bone name as listed in the BoneNameListChunk.  In Python this can be calculated using zlib.crc32(name)</add>
+        string Properties;            //" type="String32" />
+        BonePhysics Physics;            //" type="BonePhysics" />
+    }
+
+    public struct BonePhysics           // 26 total words = 104 total bytes
+    {
+        UInt32 Geometry;                //" type="Ref" template="BoneMeshChunk">Geometry of a separate mesh for this bone.</add>
+        //<!-- joint parameters -->
+        UInt32 Flags;                   //" type="uint" />
+        Vector3 Min;                   //" type="Vector3" />
+        Vector3 Max;                   //" type="Vector3" />
+        Vector3 Spring_Angle;          //" type="Vector3" />
+        Vector3 Spring_Tension;        //" type="Vector3" />
+        Vector3 Damping;               //" type="Vector3" />
+        Matrix33 Frame_Matrix;        //" type="Matrix33" />
+    }
+
+    public struct MeshBoneMapping
+    {
+        // 4 bones, 4 weights for each vertex mapping.
+        public int[] BoneIndex;
+        public int[] Weight;                    // Byte / 256?
+    }
 
     public struct MeshPhysicalProxyHeader
     {
@@ -1311,6 +1325,8 @@ namespace CgfConverter
         List<short> Indices;
         List<string> Materials;
     }
+
+    #endregion
 
     public struct PhysicsData
     {

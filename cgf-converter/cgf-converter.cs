@@ -47,8 +47,9 @@ namespace CgfConverter
             //args = new String[] { @"d:\Blender Projects\Star Citizen\Objects\Spaceships\Ships\AEGS\Retaliator\AEGS_retaliator.cga", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
             //args = new String[] { @"d:\Blender Projects\Star Citizen\Objects\buildingsets\human\lowtech\bravo\grimhex\anchor\anchor_gun_a.cgf", "-objectdir", @"d:\blender projects\star citizen", "-dds", "-dae", "-tif" };
             //args = new String[] { @"d:\Blender Projects\Star Citizen\Objects\buildingsets\human\hightech\alpha\ext\landingpad\ext_landingpad_floor_center_stair_16x08x10_b.cgf", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
-            args = new String[] { @"D:\Blender Projects\Star Citizen\Objects\Characters\Human\male_v7\export\bhm_skeleton_v7.chr", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
+            //args = new String[] { @"D:\Blender Projects\Star Citizen\Objects\Characters\Human\male_v7\export\bhm_skeleton_v7.chr", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
             //args = new String[] { @"D:\Blender Projects\Star Citizen\Objects\buildingsets\human\universal\org\trees\tree_ash_a.cgf", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
+            args = new String[] { @"D:\Blender Projects\Star Citizen\Objects\Characters\Human\male_v7\armor\rsi\m_rsi_pilot_flightsuit_01.skin", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
 #endif
 
             ArgsHandler argsHandler = new ArgsHandler();

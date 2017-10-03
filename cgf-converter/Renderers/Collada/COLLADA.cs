@@ -63,6 +63,15 @@ namespace CgfConverter
             //CryData.Models[0].NodeMap["FrontWing_Right_Flap"].WriteChunk();
             //CryData.Models[1].NodeMap["FrontWing_Right_Flap"].WriteChunk();
             //Console.ReadKey();
+            //foreach (var result in CryData.Models[0].SkinningInfo.BoneMapping)        // To see if the bone index > than the number of bones and bone weights
+            //{
+            //    for (int i = 0; i < 4; i++)
+            //    {
+            //        if (result.Weight[i] > 0)
+            //            Console.WriteLine("Bone Weight: {0}", result.Weight[i]);
+            //    }
+            //}
+            //Console.WriteLine("{0} bone weights found", CryData.Models[0].SkinningInfo.BoneMapping.Count);
 
             #endregion
 
@@ -860,7 +869,7 @@ namespace CgfConverter
             skin.Source = new Grendgine_Collada_Source[3];
 
             // Populate the data.
-            // Need to map the exterior vertices (geometry) to the int vertices. 
+            // Need to map the exterior vertices (geometry) to the int vertices.  Or use the Bone Map datastream if it exists (check HasBoneMapDatastream).
             #region Joints Source
             Grendgine_Collada_Source jointsSource = new Grendgine_Collada_Source()
             {
@@ -919,32 +928,51 @@ namespace CgfConverter
             {
                 ID = "Controller-weights"
             };
+            weightArraySource.Technique_Common = new Grendgine_Collada_Technique_Common_Source();
+            Grendgine_Collada_Accessor accessor = weightArraySource.Technique_Common.Accessor = new Grendgine_Collada_Accessor();
+
             weightArraySource.Float_Array = new Grendgine_Collada_Float_Array()
             {
                 ID = "Controller-weights-array",
-                Count = CryData.Models[0].SkinningInfo.Ext2IntMap.Count
             };
             StringBuilder weights = new StringBuilder();
-            for (int i = 0; i < CryData.Models[0].SkinningInfo.Ext2IntMap.Count; i++)
+
+            if (CryData.Models[0].SkinningInfo.HasBoneMapDatastream)
+            //if (true)
             {
-                for (int j = 0; j < 4; j++)
+                weightArraySource.Float_Array.Count = CryData.Models[0].SkinningInfo.BoneMapping.Count;
+                for (int i = 0; i < CryData.Models[1].SkinningInfo.BoneMapping.Count; i++)
                 {
-                    weights.Append(CryData.Models[0].SkinningInfo.IntVertices[CryData.Models[0].SkinningInfo.Ext2IntMap[i]].Weights[j] + " ");
-                }
-            };
+                    for (int j = 0; j < 4; j++)
+                    {
+                        weights.Append(((float)CryData.Models[0].SkinningInfo.BoneMapping[i].Weight[j] / 255).ToString() + " ");
+                    }
+                };
+                accessor.Count = (uint)CryData.Models[0].SkinningInfo.BoneMapping.Count * 4;
+            }
+            else
+            {
+                weightArraySource.Float_Array.Count = CryData.Models[0].SkinningInfo.Ext2IntMap.Count;
+                for (int i = 0; i < CryData.Models[0].SkinningInfo.Ext2IntMap.Count; i++)
+                {
+                    for (int j = 0; j < 4; j++)
+                    {
+                        weights.Append(CryData.Models[0].SkinningInfo.IntVertices[CryData.Models[0].SkinningInfo.Ext2IntMap[i]].Weights[j] + " ");
+                    }
+                    accessor.Count = (uint)CryData.Models[0].SkinningInfo.Ext2IntMap.Count * 4;
+                };
+            }
             CleanNumbers(weights);
             weightArraySource.Float_Array.Value_As_String = weights.ToString().TrimEnd();
             // Add technique_common part.
-            weightArraySource.Technique_Common = new Grendgine_Collada_Technique_Common_Source();
-            Grendgine_Collada_Accessor accessor = weightArraySource.Technique_Common.Accessor = new Grendgine_Collada_Accessor();
             accessor.Source = "#Controller-weights-array";
-            accessor.Count = (uint)CryData.Models[0].SkinningInfo.Ext2IntMap.Count * 4;
             accessor.Stride = 1;
             accessor.Param = new Grendgine_Collada_Param[1];
             accessor.Param[0] = new Grendgine_Collada_Param();
             accessor.Param[0].Name = "WEIGHT";
             accessor.Param[0].Type = "float";
             skin.Source[2] = weightArraySource;
+
             #endregion
 
             #region Joints
@@ -968,7 +996,6 @@ namespace CgfConverter
 
             #region Vertex Weights
             Grendgine_Collada_Vertex_Weights vertexWeights = skin.Vertex_Weights = new Grendgine_Collada_Vertex_Weights();
-            //vertexWeights.Count = CryData.Models[0].SkinningInfo.IntVertices.Count;
             vertexWeights.Count = CryData.Models[0].SkinningInfo.Ext2IntMap.Count;
             skin.Vertex_Weights.Input = new Grendgine_Collada_Input_Shared[2];
             Grendgine_Collada_Input_Shared jointSemantic = skin.Vertex_Weights.Input[0] = new Grendgine_Collada_Input_Shared();
@@ -990,18 +1017,32 @@ namespace CgfConverter
             StringBuilder vertices = new StringBuilder();
             //for (int i = 0; i < CryData.Models[0].SkinningInfo.IntVertices.Count * 4; i++)
             int index = 0;
-            for (int i = 0; i < CryData.Models[0].SkinningInfo.Ext2IntMap.Count; i++)
+            if (CryData.Models[0].SkinningInfo.HasBoneMapDatastream)
             {
-                //Console.WriteLine(i);
-                int wholePart = (int)i/4;
-                //vertices.Append(CryData.Models[0].SkinningInfo.IntVertices[wholePart].BoneIDs[i % 4] + " " + i + " ");
-                vertices.Append(CryData.Models[0].SkinningInfo.IntVertices[CryData.Models[0].SkinningInfo.Ext2IntMap[i]].BoneIDs[0] + " " + index + " ");
-                vertices.Append(CryData.Models[0].SkinningInfo.IntVertices[CryData.Models[0].SkinningInfo.Ext2IntMap[i]].BoneIDs[1] + " " + (index+1) + " ");
-                vertices.Append(CryData.Models[0].SkinningInfo.IntVertices[CryData.Models[0].SkinningInfo.Ext2IntMap[i]].BoneIDs[2] + " " + (index+2) + " ");
-                vertices.Append(CryData.Models[0].SkinningInfo.IntVertices[CryData.Models[0].SkinningInfo.Ext2IntMap[i]].BoneIDs[3] + " " + (index+3) + " ");
+                for (int i=0; i < CryData.Models[0].SkinningInfo.BoneMapping.Count; i++)
+                {
+                    int wholePart = (int)i / 4;
+                    vertices.Append(CryData.Models[0].SkinningInfo.BoneMapping[i].BoneIndex[0] + " " + index + " ");
+                    vertices.Append(CryData.Models[0].SkinningInfo.BoneMapping[i].BoneIndex[1] + " " + (index+1) + " ");
+                    vertices.Append(CryData.Models[0].SkinningInfo.BoneMapping[i].BoneIndex[2] + " " + (index+2) + " ");
+                    vertices.Append(CryData.Models[0].SkinningInfo.BoneMapping[i].BoneIndex[3] + " " + (index+3) + " ");
+                    index = index + 4;
+                }
+            }
+            else
+            {
+                for (int i = 0; i < CryData.Models[0].SkinningInfo.Ext2IntMap.Count; i++)
+                {
+                    //Console.WriteLine(i);
+                    int wholePart = (int)i / 4;
+                    //vertices.Append(CryData.Models[0].SkinningInfo.IntVertices[wholePart].BoneIDs[i % 4] + " " + i + " ");
+                    vertices.Append(CryData.Models[0].SkinningInfo.IntVertices[CryData.Models[0].SkinningInfo.Ext2IntMap[i]].BoneIDs[0] + " " + index + " ");
+                    vertices.Append(CryData.Models[0].SkinningInfo.IntVertices[CryData.Models[0].SkinningInfo.Ext2IntMap[i]].BoneIDs[1] + " " + (index + 1) + " ");
+                    vertices.Append(CryData.Models[0].SkinningInfo.IntVertices[CryData.Models[0].SkinningInfo.Ext2IntMap[i]].BoneIDs[2] + " " + (index + 2) + " ");
+                    vertices.Append(CryData.Models[0].SkinningInfo.IntVertices[CryData.Models[0].SkinningInfo.Ext2IntMap[i]].BoneIDs[3] + " " + (index + 3) + " ");
 
-                index = index + 4;
-
+                    index = index + 4;
+                }
             }
             vertexWeights.V = new Grendgine_Collada_Int_Array_String();
             vertexWeights.V.Value_As_String = vertices.ToString().TrimEnd();

@@ -26,10 +26,11 @@ namespace CgfConverter.CryEngine_Core
         public IRGBA[] RGBAColors;  // for dataStreamType of 4, length is NumElements.  Bytes per element of 4
         public UInt32[] Indices;    // for dataStreamType of 5, length is NumElements.
         // For Tangents on down, this may be a 2 element array.  See line 846+ in cgf.xml
-        public Tangent[,] Tangents;  // for dataStreamType of 6, length is NumElements,2.  
+        public Tangent[,] Tangents;  // for dataStreamType of 6, length is NumElements, 2.  
         public Byte[,] ShCoeffs;     // for dataStreamType of 7, length is NumElement,BytesPerElements.
         public Byte[,] ShapeDeformation; // for dataStreamType of 8, length is NumElements,BytesPerElement.
-        public Byte[,] BoneMap;      // for dataStreamType of 9, length is NumElements,BytesPerElement.
+        public Byte[,] BoneMap;      // for dataStreamType of 9, length is NumElements,BytesPerElement, 2.
+        //public MeshBoneMapping[] BoneMap;      // for dataStreamType of 9, length is NumElements,BytesPerElement.
         public Byte[,] FaceMap;      // for dataStreamType of 10, length is NumElements,BytesPerElement.
         public Byte[,] VertMats;     // for dataStreamType of 11, length is NumElements,BytesPerElement.
 

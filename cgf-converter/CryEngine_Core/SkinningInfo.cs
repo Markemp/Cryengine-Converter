@@ -25,6 +25,8 @@ namespace CgfConverter.CryEngine_Core
         public List<IntSkinVertex> IntVertices { get; set; }
         public List<UInt16> Ext2IntMap { get; set; }
         public List<MeshCollisionInfo> Collisions { get; set; }
+        public List<MeshBoneMapping> BoneMapping { get; set; }                  // Bone Mappings are read from a Datastream chunk
+        public bool HasBoneMapDatastream { get; internal set; }
 
 
 

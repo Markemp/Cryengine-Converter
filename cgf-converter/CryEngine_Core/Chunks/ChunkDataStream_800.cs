@@ -440,10 +440,55 @@ namespace CgfConverter.CryEngine_Core
                 #endregion
                 #region case DataStreamTypeEnum.BONEMAP:
                 case DataStreamTypeEnum.BONEMAP:
+                    SkinningInfo skin = GetSkinningInfo();
+                    skin.HasBoneMapDatastream = true;
+                    skin.BoneMapping = new List<MeshBoneMapping>();
 
+                    // Bones should have 4 bone IDs (index) and 4 weights.
+                    for (int i = 0; i < NumElements; i++)
+                    {
+                        MeshBoneMapping tmpMap = new MeshBoneMapping();
+                        switch (this.BytesPerElement)
+                        {
+                            case 8:
+                                tmpMap.BoneIndex = new int[4];
+                                tmpMap.Weight = new int[4];
+
+                                for (int j = 0; j < 4; j++)         // read the 4 bone indexes first
+                                {
+                                    tmpMap.BoneIndex[j] = b.ReadByte();
+                                    
+                                }
+                                for (int j=0; j < 4; j++)           // read the weights.
+                                {
+                                    tmpMap.Weight[j] = b.ReadByte();
+                                }
+                                skin.BoneMapping.Add(tmpMap);
+                                break;
+                            case 12:
+                                tmpMap.BoneIndex = new int[4];
+                                tmpMap.Weight = new int[4];
+
+                                for (int j = 0; j < 4; j++)         // read the 4 bone indexes first
+                                {
+                                    tmpMap.BoneIndex[j] = b.ReadUInt16();
+
+                                }
+                                for (int j = 0; j < 4; j++)           // read the weights.
+                                {
+                                    tmpMap.Weight[j] = b.ReadByte();
+                                }
+                                skin.BoneMapping.Add(tmpMap);
+
+                                break;
+                            default:
+                                Utils.Log("Unknown BoneMapping structure");
+                                break;
+
+                        }
+                    }
 
                     break;
-
 
 
                 #endregion
