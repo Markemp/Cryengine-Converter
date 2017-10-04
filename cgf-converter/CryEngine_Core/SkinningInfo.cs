@@ -14,6 +14,10 @@ namespace CgfConverter.CryEngine_Core
         /// </summary>
         public bool HasSkinningInfo { get; set; }
         /// <summary>
+        /// If there is a BoneMap datastream, set to true
+        /// </summary>
+        public bool HasBoneMapDatastream { get; internal set; }
+        /// <summary>
         /// BoneEntities are the list of the bones in the object.  Contains the info to find each of the necessary skinning components.
         /// </summary>
         public List<BoneEntity> BoneEntities { get; set; }
@@ -26,7 +30,6 @@ namespace CgfConverter.CryEngine_Core
         public List<UInt16> Ext2IntMap { get; set; }
         public List<MeshCollisionInfo> Collisions { get; set; }
         public List<MeshBoneMapping> BoneMapping { get; set; }                  // Bone Mappings are read from a Datastream chunk
-        public bool HasBoneMapDatastream { get; internal set; }
 
 
 

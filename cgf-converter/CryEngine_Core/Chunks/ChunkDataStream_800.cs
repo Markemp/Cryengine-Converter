@@ -268,43 +268,34 @@ namespace CgfConverter.CryEngine_Core
                     this.UVs = new UV[this.NumElements];
                     switch (this.BytesPerElement)  // new Star Citizen files
                     {
-                        case 20:  // Dymek wrote this.  Probably won't see these cases again.
+                        case 20:  // Dymek wrote this.  Used in 2.6 skin files.  3 floats for vertex position, 1 unknown, 2 halfs for UVs.
                             for (Int32 i = 0; i < this.NumElements; i++)
                             {
-                                uint bver = 0;
-                                float ver = 0;
+                                this.Vertices[i].x = b.ReadSingle();
+                                this.Vertices[i].y = b.ReadSingle();
+                                this.Vertices[i].z = b.ReadSingle();                  // For some reason, skins are an extra 1 meter in the z direction.
 
-                                bver = b.ReadUInt32();
-                                ver = Byte4HexToFloat(bver.ToString("X8"));
-                                this.Vertices[i].x = ver;
+                                // Normals are stored in a signed byte, prob div by 127.
+                                this.Normals[i].x = (float)b.ReadSByte() / 127;
+                                this.Normals[i].y = (float)b.ReadSByte() / 127;
+                                this.Normals[i].z = (float)b.ReadSByte() / 127;
+                                b.ReadSByte(); // Should be FF.
 
-                                bver = b.ReadUInt32();
-                                ver = Byte4HexToFloat(bver.ToString("X8"));
-                                this.Vertices[i].y = ver;
+                                Half uvu = new Half();
+                                uvu.bits = b.ReadUInt16();
+                                this.UVs[i].U = uvu.ToSingle();
 
-                                bver = b.ReadUInt32();
-                                ver = Byte4HexToFloat(bver.ToString("X8"));
-                                this.Vertices[i].z = ver;
+                                Half uvv = new Half();
+                                uvv.bits = b.ReadUInt16();
+                                this.UVs[i].V = uvv.ToSingle();
+                                
+                                //bver = b.ReadUInt16();
+                                //ver = Byte4HexToFloat(bver.ToString("X8"));
+                                //this.UVs[i].U = ver;
 
-                                bver = b.ReadUInt16();
-                                ver = Byte4HexToFloat(bver.ToString("X8"));
-                                this.Normals[i].x = ver;
-
-                                bver = b.ReadUInt16();
-                                ver = Byte4HexToFloat(bver.ToString("X8"));
-                                this.Normals[i].y = ver;
-
-                                bver = b.ReadUInt16();
-                                ver = Byte4HexToFloat(bver.ToString("X8"));
-                                this.Normals[i].z = ver;
-
-                                bver = b.ReadUInt16();
-                                ver = Byte4HexToFloat(bver.ToString("X8"));
-                                this.UVs[i].U = ver;
-
-                                bver = b.ReadUInt16();
-                                ver = Byte4HexToFloat(bver.ToString("X8"));
-                                this.UVs[i].V = ver;
+                                //bver = b.ReadUInt16();
+                                //ver = Byte4HexToFloat(bver.ToString("X8"));
+                                //this.UVs[i].V = ver;
                             }
                             break;
                         case 16:   // Dymek updated this.
@@ -324,7 +315,7 @@ namespace CgfConverter.CryEngine_Core
 
                                 bver = b.ReadUInt16();
                                 ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
-                                this.Vertices[i].z = ver;
+                                this.Vertices[i].z = ver;                                        
 
                                 //Half xnorm = new Half();
                                 //xnorm.bits = b.ReadUInt16();

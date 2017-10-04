@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CgfConverter.CryEngine_Core;
 
 namespace CgfConverter
 {
@@ -55,18 +56,19 @@ namespace CgfConverter
 
             this.Models = new List<CryEngine_Core.Model> { };
 
-            //SkinningInfo = new CryEngine_Core.SkinningInfo();
-
             foreach (var file in inputFiles)
             {
                 // Each file (.cga and .cgam if applicable) will have its own RootNode.  This can cause problems.  .cga files with a .cgam files won't have geometry for the one root node.
+                //CryEngine_Core.Model model = CryEngine_Core.Model.FromFile(file.FullName);
                 CryEngine_Core.Model model = CryEngine_Core.Model.FromFile(file.FullName);
+                //model.SkinningInfo = SkinningInfo;                  // All skinning data should reference this level.
                 if (this.RootNode == null)
                     RootNode = model.RootNode;  // This makes the assumption that we read the .cga file before the .cgam file.
                 //this.RootNode = this.RootNode ?? model.RootNode;
                 this.Bones = this.Bones ?? model.Bones;
                 this.Models.Add(model);
             }
+            SkinningInfo = ConsolidateSkinningInfo();
 
             #region Get material file name
             // Get the material file name
@@ -178,6 +180,57 @@ namespace CgfConverter
 
             // Utils.Log(LogLevelEnum.Debug, "Unable to locate any material file");
             this.Materials = new CryEngine_Core.Material[] { };
+        }
+
+        private SkinningInfo ConsolidateSkinningInfo()
+        {
+            SkinningInfo skin = new SkinningInfo();
+            foreach (Model model in Models)
+            {
+                skin.HasSkinningInfo = Models.Any(a => a.SkinningInfo.HasSkinningInfo == true);
+                skin.HasBoneMapDatastream = Models.Any(a => a.SkinningInfo.HasBoneMapDatastream == true);
+                if (model.SkinningInfo.IntFaces != null)
+                {
+                    skin.IntFaces = model.SkinningInfo.IntFaces;
+                }
+                if (model.SkinningInfo.IntVertices != null)
+                {
+                    skin.IntVertices = model.SkinningInfo.IntVertices;
+                }
+                if (model.SkinningInfo.LookDirectionBlends != null)
+                {
+                    skin.LookDirectionBlends = model.SkinningInfo.LookDirectionBlends;
+                }
+                if (model.SkinningInfo.MorphTargets != null)
+                {
+                    skin.MorphTargets = model.SkinningInfo.MorphTargets;
+                }
+                if (model.SkinningInfo.PhysicalBoneMeshes != null)
+                {
+                    skin.PhysicalBoneMeshes = model.SkinningInfo.PhysicalBoneMeshes;
+                }
+                if (model.SkinningInfo.BoneEntities != null)
+                {
+                    skin.BoneEntities = model.SkinningInfo.BoneEntities;
+                }
+                if (model.SkinningInfo.BoneMapping != null)
+                {
+                    skin.BoneMapping = model.SkinningInfo.BoneMapping;
+                }
+                if (model.SkinningInfo.Collisions != null)
+                {
+                    skin.Collisions = model.SkinningInfo.Collisions;
+                }
+                if (model.SkinningInfo.CompiledBones != null)
+                {
+                    skin.CompiledBones = model.SkinningInfo.CompiledBones;
+                }
+                if (model.SkinningInfo.Ext2IntMap != null)
+                {
+                    skin.Ext2IntMap = model.SkinningInfo.Ext2IntMap;
+                }
+            }
+            return skin;
         }
 
         #endregion

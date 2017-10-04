@@ -86,7 +86,7 @@ namespace CgfConverter
             WriteLibrary_Materials();
             WriteLibrary_Geometries();
             // If there is Skinning info, create the controller library and set up visual scene to refer to it.  Otherwise just write the Visual Scene
-            if (CryData.Models[0].SkinningInfo.HasSkinningInfo)
+            if (CryData.SkinningInfo.HasSkinningInfo)
             {
                 WriteLibrary_Controllers();
                 WriteLibrary_VisualScenesWithSkeleton();
@@ -331,7 +331,6 @@ namespace CgfConverter
                     //Console.WriteLine("Processing material texture {0}", CleanName(texture.File));
                     if (texture.Map == CryEngine_Core.Material.Texture.MapTypeEnum.Diffuse)
                     {
-                        //Console.WriteLine("Found Diffuse Map");
                         diffound = true;
                         phong.Diffuse.Texture = new Grendgine_Collada_Texture();
                         // Texcoord is the ID of the UV source in geometries.  Not needed.
@@ -344,7 +343,7 @@ namespace CgfConverter
                         specfound = true;
                         phong.Specular.Texture = new Grendgine_Collada_Texture();
                         phong.Specular.Texture.Texture = CleanMtlFileName(texture.File) + "-sampler";
-                        phong.Diffuse.Texture.TexCoord = "";
+                        phong.Specular.Texture.TexCoord = "";
 
                     }
                     if (texture.Map == CryEngine_Core.Material.Texture.MapTypeEnum.Bumpmap)
@@ -644,16 +643,19 @@ namespace CgfConverter
                             for (uint j = 0; j < tmpMeshChunk.NumVertices; j++)
                             {
                                 // Rotate/translate the vertex
-                                // Dymek's code to rescale by bounding box.
-                                double multiplerX = Math.Abs(tmpMeshChunk.MinBound.x - tmpMeshChunk.MaxBound.x) / 2f;
-                                double multiplerY = Math.Abs(tmpMeshChunk.MinBound.y - tmpMeshChunk.MaxBound.y) / 2f;
-                                double multiplerZ = Math.Abs(tmpMeshChunk.MinBound.z - tmpMeshChunk.MaxBound.z) / 2f;
-                                if (multiplerX < 1) { multiplerX = 1; }
-                                if (multiplerY < 1) { multiplerY = 1; }
-                                if (multiplerZ < 1) { multiplerZ = 1; }
-                                tmpVertsUVs.Vertices[j].x = tmpVertsUVs.Vertices[j].x * multiplerX + (tmpMeshChunk.MaxBound.x + tmpMeshChunk.MinBound.x) / 2;
-                                tmpVertsUVs.Vertices[j].y = tmpVertsUVs.Vertices[j].y * multiplerY + (tmpMeshChunk.MaxBound.y + tmpMeshChunk.MinBound.y) / 2;
-                                tmpVertsUVs.Vertices[j].z = tmpVertsUVs.Vertices[j].z * multiplerZ + (tmpMeshChunk.MaxBound.z + tmpMeshChunk.MinBound.z) / 2;
+                                // Dymek's code to rescale by bounding box.  Only apply to geometry (cga or cgf), and not skin or chr objects.
+                                if (!CryData.InputFile.EndsWith("skin") && !CryData.InputFile.EndsWith("chr"))
+                                {
+                                    double multiplerX = Math.Abs(tmpMeshChunk.MinBound.x - tmpMeshChunk.MaxBound.x) / 2f;
+                                    double multiplerY = Math.Abs(tmpMeshChunk.MinBound.y - tmpMeshChunk.MaxBound.y) / 2f;
+                                    double multiplerZ = Math.Abs(tmpMeshChunk.MinBound.z - tmpMeshChunk.MaxBound.z) / 2f;
+                                    if (multiplerX < 1) { multiplerX = 1; }
+                                    if (multiplerY < 1) { multiplerY = 1; }
+                                    if (multiplerZ < 1) { multiplerZ = 1; }
+                                    tmpVertsUVs.Vertices[j].x = tmpVertsUVs.Vertices[j].x * multiplerX + (tmpMeshChunk.MaxBound.x + tmpMeshChunk.MinBound.x) / 2;
+                                    tmpVertsUVs.Vertices[j].y = tmpVertsUVs.Vertices[j].y * multiplerY + (tmpMeshChunk.MaxBound.y + tmpMeshChunk.MinBound.y) / 2;
+                                    tmpVertsUVs.Vertices[j].z = tmpVertsUVs.Vertices[j].z * multiplerZ + (tmpMeshChunk.MaxBound.z + tmpMeshChunk.MinBound.z) / 2;
+                                }
 
                                 Vector3 vertex = tmpVertsUVs.Vertices[j];
                                 vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", vertex.x, vertex.y, vertex.z);
@@ -878,19 +880,21 @@ namespace CgfConverter
             jointsSource.Name_Array = new Grendgine_Collada_Name_Array()
             {
                 ID = "Controller-joints-array",
-                Count = CryData.Models[0].SkinningInfo.CompiledBones.Count,
+                Count = CryData.SkinningInfo.CompiledBones.Count,
             };
             StringBuilder boneNames = new StringBuilder();
-            for (int i = 0; i < CryData.Models[0].SkinningInfo.CompiledBones.Count; i++)
+            for (int i = 0; i < CryData.SkinningInfo.CompiledBones.Count; i++)
             {
-                boneNames.Append(CryData.Models[0].SkinningInfo.CompiledBones[i].boneName.Replace(' ', '_') + " ");
+                boneNames.Append(CryData.SkinningInfo.CompiledBones[i].boneName.Replace(' ', '_') + " ");
             }
             jointsSource.Name_Array.Value_Pre_Parse = boneNames.ToString().TrimEnd();
             jointsSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source();
-            jointsSource.Technique_Common.Accessor = new Grendgine_Collada_Accessor();
-            jointsSource.Technique_Common.Accessor.Source = "#Controller-joints-array";
-            jointsSource.Technique_Common.Accessor.Count = (uint)CryData.Models[0].SkinningInfo.CompiledBones.Count;
-            jointsSource.Technique_Common.Accessor.Stride = 1;
+            jointsSource.Technique_Common.Accessor = new Grendgine_Collada_Accessor
+            {
+                Source = "#Controller-joints-array",
+                Count = (uint)CryData.SkinningInfo.CompiledBones.Count,
+                Stride = 1
+            };
             skin.Source[0] = jointsSource;
             #endregion
 
@@ -902,15 +906,15 @@ namespace CgfConverter
             bindPoseArraySource.Float_Array = new Grendgine_Collada_Float_Array()
             {
                 ID = "Controller-bind_poses-array",
-                Count = CryData.Models[0].SkinningInfo.CompiledBones.Count * 16,
+                Count = CryData.SkinningInfo.CompiledBones.Count * 16,
             };
-            bindPoseArraySource.Float_Array.Value_As_String = GetBindPoseArray(CryData.Models[0].SkinningInfo.CompiledBones);
+            bindPoseArraySource.Float_Array.Value_As_String = GetBindPoseArray(CryData.SkinningInfo.CompiledBones);
             bindPoseArraySource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
             {
                 Accessor = new Grendgine_Collada_Accessor
                 {
                     Source = "#Controller-bind_poses-array",
-                    Count = (uint)CryData.Models[0].SkinningInfo.CompiledBones.Count,
+                    Count = (uint)CryData.SkinningInfo.CompiledBones.Count,
                     Stride = 16,
                 }
             };
@@ -937,29 +941,28 @@ namespace CgfConverter
             };
             StringBuilder weights = new StringBuilder();
 
-            if (CryData.Models[0].SkinningInfo.HasBoneMapDatastream)
-            //if (true)
+            if (CryData.SkinningInfo.IntVertices == null)       // This is a case where there are bones, and only Bone Mapping data from a datastream chunk.  Skin files.
             {
-                weightArraySource.Float_Array.Count = CryData.Models[0].SkinningInfo.BoneMapping.Count;
-                for (int i = 0; i < CryData.Models[1].SkinningInfo.BoneMapping.Count; i++)
+                weightArraySource.Float_Array.Count = CryData.SkinningInfo.BoneMapping.Count;
+                for (int i = 0; i < CryData.SkinningInfo.BoneMapping.Count; i++)
                 {
                     for (int j = 0; j < 4; j++)
                     {
-                        weights.Append(((float)CryData.Models[0].SkinningInfo.BoneMapping[i].Weight[j] / 255).ToString() + " ");
+                        weights.Append(((float)CryData.SkinningInfo.BoneMapping[i].Weight[j] / 255).ToString() + " ");
                     }
                 };
-                accessor.Count = (uint)CryData.Models[0].SkinningInfo.BoneMapping.Count * 4;
+                accessor.Count = (uint)CryData.SkinningInfo.BoneMapping.Count * 4;
             }
-            else
+            else                                                // Bones and int verts.  Will use int verts for weights, but this doesn't seem perfect either.
             {
-                weightArraySource.Float_Array.Count = CryData.Models[0].SkinningInfo.Ext2IntMap.Count;
-                for (int i = 0; i < CryData.Models[0].SkinningInfo.Ext2IntMap.Count; i++)
+                weightArraySource.Float_Array.Count = CryData.SkinningInfo.Ext2IntMap.Count;
+                for (int i = 0; i < CryData.SkinningInfo.Ext2IntMap.Count; i++)
                 {
                     for (int j = 0; j < 4; j++)
                     {
-                        weights.Append(CryData.Models[0].SkinningInfo.IntVertices[CryData.Models[0].SkinningInfo.Ext2IntMap[i]].Weights[j] + " ");
+                        weights.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].Weights[j] + " ");
                     }
-                    accessor.Count = (uint)CryData.Models[0].SkinningInfo.Ext2IntMap.Count * 4;
+                    accessor.Count = (uint)CryData.SkinningInfo.Ext2IntMap.Count * 4;
                 };
             }
             CleanNumbers(weights);
@@ -996,7 +999,7 @@ namespace CgfConverter
 
             #region Vertex Weights
             Grendgine_Collada_Vertex_Weights vertexWeights = skin.Vertex_Weights = new Grendgine_Collada_Vertex_Weights();
-            vertexWeights.Count = CryData.Models[0].SkinningInfo.Ext2IntMap.Count;
+            vertexWeights.Count = CryData.SkinningInfo.BoneMapping.Count;
             skin.Vertex_Weights.Input = new Grendgine_Collada_Input_Shared[2];
             Grendgine_Collada_Input_Shared jointSemantic = skin.Vertex_Weights.Input[0] = new Grendgine_Collada_Input_Shared();
             jointSemantic.Semantic = Grendgine_Collada_Input_Semantic.JOINT;
@@ -1008,7 +1011,7 @@ namespace CgfConverter
             weightSemantic.Offset = 1;
             StringBuilder vCount = new StringBuilder();
             //for (int i = 0; i < CryData.Models[0].SkinningInfo.IntVertices.Count; i++)
-            for (int i = 0; i < CryData.Models[0].SkinningInfo.Ext2IntMap.Count; i++)
+            for (int i = 0; i < CryData.SkinningInfo.BoneMapping.Count; i++)
             {
                 vCount.Append("4 ");
             };
@@ -1017,29 +1020,27 @@ namespace CgfConverter
             StringBuilder vertices = new StringBuilder();
             //for (int i = 0; i < CryData.Models[0].SkinningInfo.IntVertices.Count * 4; i++)
             int index = 0;
-            if (CryData.Models[0].SkinningInfo.HasBoneMapDatastream)
+            if (CryData.SkinningInfo.HasBoneMapDatastream)
             {
-                for (int i=0; i < CryData.Models[0].SkinningInfo.BoneMapping.Count; i++)
+                for (int i=0; i < CryData.SkinningInfo.BoneMapping.Count; i++)
                 {
                     int wholePart = (int)i / 4;
-                    vertices.Append(CryData.Models[0].SkinningInfo.BoneMapping[i].BoneIndex[0] + " " + index + " ");
-                    vertices.Append(CryData.Models[0].SkinningInfo.BoneMapping[i].BoneIndex[1] + " " + (index+1) + " ");
-                    vertices.Append(CryData.Models[0].SkinningInfo.BoneMapping[i].BoneIndex[2] + " " + (index+2) + " ");
-                    vertices.Append(CryData.Models[0].SkinningInfo.BoneMapping[i].BoneIndex[3] + " " + (index+3) + " ");
+                    vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[0] + " " + index + " ");
+                    vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[1] + " " + (index+1) + " ");
+                    vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[2] + " " + (index+2) + " ");
+                    vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[3] + " " + (index+3) + " ");
                     index = index + 4;
                 }
             }
             else
             {
-                for (int i = 0; i < CryData.Models[0].SkinningInfo.Ext2IntMap.Count; i++)
+                for (int i = 0; i < CryData.SkinningInfo.Ext2IntMap.Count; i++)
                 {
-                    //Console.WriteLine(i);
                     int wholePart = (int)i / 4;
-                    //vertices.Append(CryData.Models[0].SkinningInfo.IntVertices[wholePart].BoneIDs[i % 4] + " " + i + " ");
-                    vertices.Append(CryData.Models[0].SkinningInfo.IntVertices[CryData.Models[0].SkinningInfo.Ext2IntMap[i]].BoneIDs[0] + " " + index + " ");
-                    vertices.Append(CryData.Models[0].SkinningInfo.IntVertices[CryData.Models[0].SkinningInfo.Ext2IntMap[i]].BoneIDs[1] + " " + (index + 1) + " ");
-                    vertices.Append(CryData.Models[0].SkinningInfo.IntVertices[CryData.Models[0].SkinningInfo.Ext2IntMap[i]].BoneIDs[2] + " " + (index + 2) + " ");
-                    vertices.Append(CryData.Models[0].SkinningInfo.IntVertices[CryData.Models[0].SkinningInfo.Ext2IntMap[i]].BoneIDs[3] + " " + (index + 3) + " ");
+                    vertices.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[0] + " " + index + " ");
+                    vertices.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[1] + " " + (index + 1) + " ");
+                    vertices.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[2] + " " + (index + 2) + " ");
+                    vertices.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[3] + " " + (index + 3) + " ");
 
                     index = index + 4;
                 }

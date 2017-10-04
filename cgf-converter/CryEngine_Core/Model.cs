@@ -69,9 +69,9 @@ namespace CgfConverter.CryEngine_Core
         public Int32 ChunkTableOffset { get; internal set; }
 
         /// <summary>
-        /// Contains all the information about bones and skinning them.
+        /// Contains all the information about bones and skinning them.  This a reference to the Cryengine object, since multiple Models can exist for a single object).
         /// </summary>
-        public SkinningInfo SkinningInfo { get; internal set; }
+        public SkinningInfo SkinningInfo { get; set; }
 
         /// <summary>
         /// The Bones in the model.  The CompiledBones chunk will have a unique RootBone.
