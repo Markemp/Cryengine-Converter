@@ -78,7 +78,8 @@ namespace CgfConverter
                 if (mtlChunk.MatType == MtlNameTypeEnum.Child || mtlChunk.MatType == MtlNameTypeEnum.Unknown1)
                     continue;
 
-                String cleanName = mtlChunk.Name;
+                // The Replace part is for SC files that point to a _core material file that doesn't exist.
+                String cleanName = mtlChunk.Name.Replace("_core", "");
 
                 FileInfo materialFile;
 
@@ -128,6 +129,7 @@ namespace CgfConverter
                     }
                     materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(fileName), cleanName));
                 }
+                    
                 // First try relative to file being processed
                 if (materialFile.Extension != ".mtl")
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));

@@ -16,7 +16,7 @@ namespace CgfConverter.CryEngine_Core
         /// <summary>
         /// Name of the Material
         /// </summary>
-        public String Name { get; internal set; }
+        public String Name { get; set; }
         public MtlNamePhysicsType[] PhysicsType { get; internal set; }
         /// <summary>
         /// Number of Materials in this name (Max: 66)
