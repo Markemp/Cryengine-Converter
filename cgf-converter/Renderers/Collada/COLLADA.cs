@@ -39,13 +39,19 @@ namespace CgfConverter
             }
 
             #region Output testing
-            //foreach (ChunkNode node in CryData.Models[0].NodeMap.Values)
+            //foreach (ChunkDataStream stream in CryData.Models[1].ChunkMap.Values.Where(a => a.ChunkType == ChunkTypeEnum.DataStream))
             //{
-            //    Console.WriteLine("Node Chunk {0}", node.Name);
-            //    node.WriteChunk();
-            //    Console.ReadKey();
+            //    if (stream.DataStreamType == DataStreamTypeEnum.TANGENTS)
+            //    {
+            //        foreach (var vec in stream.Tangents)
+            //        {
+            //            Console.WriteLine("Tangent: {0:F6} {1:F6} {2:F6}", vec.x/127.0, vec.y/127.0, vec.z/127.0);
+            //        }
+            //        Console.WriteLine("Max x: {0}", stream.Normals.Max(a => a.x));
+            //        Console.WriteLine("Max y: {0}", stream.Normals.Max(a => a.y));
+            //        Console.WriteLine("Max z: {0}", stream.Normals.Max(a => a.z));
+            //    }
             //}
-
             //foreach (ChunkNode node in CryData.Models[1].NodeMap.Values)
             //{
             //    Console.WriteLine("Node Chunk {0} in model {1}", node.Name, node._model.FileName);
@@ -60,9 +66,6 @@ namespace CgfConverter
             //    node.ParentNode.ParentNode.ParentNode.WriteChunk();
             //    Console.ReadKey();
             //}
-            //CryData.Models[0].NodeMap["FrontWing_Right_Flap"].WriteChunk();
-            //CryData.Models[1].NodeMap["FrontWing_Right_Flap"].WriteChunk();
-            //Console.ReadKey();
             //foreach (var result in CryData.Models[0].SkinningInfo.BoneMapping)        // To see if the bone index > than the number of bones and bone weights
             //{
             //    for (int i = 0; i < 4; i++)
@@ -451,6 +454,7 @@ namespace CgfConverter
                 ChunkDataStream tmpIndices = null;
                 ChunkDataStream tmpColors = null;
                 ChunkDataStream tmpTangents = null;
+                //GeometryInfo geometryInfo = nodeChunk.ObjectChunk.
 
                 // Don't render shields
                 if (this.Args.SkipShieldNodes && nodeChunk.Name.StartsWith("$shield"))
@@ -459,7 +463,7 @@ namespace CgfConverter
                     continue;
                 }
 
-                // Don't render shields
+                // Don't render proxies
                 if (this.Args.SkipProxyNodes && nodeChunk.Name.StartsWith("proxy"))
                 {
                     Utils.Log(LogLevelEnum.Debug, "Skipped proxy node {0}", nodeChunk.Name);
@@ -512,7 +516,6 @@ namespace CgfConverter
                         if (tmpMeshChunk.IndicesData != 0)
                         {
                             tmpIndices = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.IndicesData];
-                            //tmpIndices.WriteChunk();
                         }
                         // Ignore Tangent and Color data for now.
                         if (tmpMeshChunk.ColorsData != 0)
@@ -612,8 +615,6 @@ namespace CgfConverter
                             // Create Vertices and normals string
                             for (uint j = 0; j < tmpMeshChunk.NumVertices; j++)
                             {
-                                // Rotate/translate the vertex
-                                //Vector3 vertex = nodeChunk.GetTransform(tmpVertices.Vertices[j]);
                                 Vector3 vertex = (tmpVertices.Vertices[j]);
                                 vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", vertex.x, vertex.y, vertex.z);
                                 Vector3 normal = tmpNormals.Normals[j];
@@ -659,7 +660,19 @@ namespace CgfConverter
 
                                 Vector3 vertex = tmpVertsUVs.Vertices[j];
                                 vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", vertex.x, vertex.y, vertex.z);
-                                Vector3 normal = tmpVertsUVs.Normals[j];
+                                Vector3 normal = new Vector3();
+                                // Normals depend on the data size.  16 byte structures have the normals in the Tangents.  20 byte structures are in the VertsUV.
+                                if (tmpVertsUVs.BytesPerElement == 20)
+                                {
+                                    normal = tmpVertsUVs.Normals[j];
+                                } 
+                                else
+                                {
+                                    normal = tmpTangents.Normals[j];
+                                    //normal.x = normal.x / 32767.0;
+                                    //normal.y = normal.y / 32767.0;
+                                    //normal.z = normal.z / 32767.0;
+                                }
                                 normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", safe(normal.x), safe(normal.y), safe(normal.z));
                             }
                             // Create UV string

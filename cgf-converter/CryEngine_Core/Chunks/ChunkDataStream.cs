@@ -12,7 +12,7 @@ namespace CgfConverter.CryEngine_Core
         public UInt32 Flags; // not used, but looks like the start of the Data Stream chunk
         public UInt32 Flags1; // not used.  UInt32 after Flags that looks like offsets
         public UInt32 Flags2; // not used, looks almost like a filler.
-        public DataStreamTypeEnum DataStreamType; // type of data (vertices, normals, uv, etc)
+        public DataStreamTypeEnum DataStreamType { get; set; } // type of data (vertices, normals, uv, etc)
         public UInt32 NumElements; // Number of data entries
         public UInt32 BytesPerElement; // Bytes per data entry
         public UInt32 Reserved1;

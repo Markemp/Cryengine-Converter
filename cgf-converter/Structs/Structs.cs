@@ -112,6 +112,14 @@ namespace CgfConverter
         public Double z;
         public Double w;
 
+        public Vector4(double x, double y, double z, double w)
+        {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.w = w;
+        }
+
         public Vector3 ToVector3()
         {
             Vector3 result = new Vector3();
@@ -808,10 +816,10 @@ namespace CgfConverter
     public struct Tangent
     {
         // Tangents.  Divide each component by 32767 to get the actual value
-        public short x;
-        public short y;
-        public short z;
-        public short w;  // Handness?  Either 32767 (+1.0) or -32767 (-1.0)
+        public double x;
+        public double y;
+        public double z;
+        public double w;  // Handness?  Either 32767 (+1.0) or -32767 (-1.0)
     }
 
     public struct SkinVertex

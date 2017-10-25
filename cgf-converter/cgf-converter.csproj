@@ -133,6 +133,11 @@
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledPhysicalBones.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledMorphTargets_800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledMorphTargets.cs" />
+    <Compile Include="CryEngine_Core\Chunks\GeometryInfo.cs" />
+    <Compile Include="CryEngine_Core\Components\ByteArray.cs" />
+    <Compile Include="CryEngine_Core\Components\Vector2.cs" />
+    <Compile Include="CryEngine_Core\Components\Vector3.cs" />
+    <Compile Include="CryEngine_Core\Components\Vector4.cs" />
     <Compile Include="CryEngine_Core\SkinningInfo.cs" />
     <Compile Include="External\OpenTK\Half.cs" />
     <Compile Include="Services\ArgsHandler.cs" />
@@ -527,6 +532,7 @@
     <Compile Include="External\Collada\Types\Grendgine_Collada_SID_Name_String.cs" />
     <Compile Include="External\Collada\Types\Grendgine_Collada_String_Array_String.cs" />
     <Compile Include="Renderers\FBX\FBX.cs" />
+    <Compile Include="Services\TSpace.cs" />
     <Compile Include="Services\Utils.cs" />
     <Compile Include="Renderers\Wavefront\Wavefront.Material.cs" />
     <Compile Include="Renderers\Wavefront\Wavefront.cs" />

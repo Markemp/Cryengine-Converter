@@ -187,6 +187,7 @@ namespace CgfConverter.CryEngine_Core
 
                 case DataStreamTypeEnum.TANGENTS:
                     this.Tangents = new Tangent[this.NumElements, 2];
+                    this.Normals = new Vector3[this.NumElements];
                     for (Int32 i = 0; i < this.NumElements; i++)
                     {
                         switch (this.BytesPerElement)
@@ -202,18 +203,29 @@ namespace CgfConverter.CryEngine_Core
                                 this.Tangents[i, 1].y = b.ReadInt16();
                                 this.Tangents[i, 1].z = b.ReadInt16();
                                 this.Tangents[i, 1].w = b.ReadInt16();
+                                
                                 break;
                             case 0x08:
-                                // These have to be divided by 32767 to be used properly (value between 0 and 1)
-                                this.Tangents[i, 0].x = b.ReadSByte();
-                                this.Tangents[i, 0].y = b.ReadSByte();
-                                this.Tangents[i, 0].z = b.ReadSByte();
-                                this.Tangents[i, 0].w = b.ReadSByte();
+                                // These have to be divided by 127 to be used properly (value between 0 and 1)
+                                // Tangent
+                                this.Tangents[i, 0].w = b.ReadSByte() / 127.0;
+                                this.Tangents[i, 0].x = b.ReadSByte() / 127.0;
+                                this.Tangents[i, 0].y = b.ReadSByte() / 127.0;
+                                this.Tangents[i, 0].z = b.ReadSByte() / 127.0;
 
-                                this.Tangents[i, 1].x = b.ReadSByte();
-                                this.Tangents[i, 1].y = b.ReadSByte();
-                                this.Tangents[i, 1].z = b.ReadSByte();
-                                this.Tangents[i, 1].w = b.ReadSByte();
+                                // Binormal
+                                this.Tangents[i, 1].w = b.ReadSByte() / 127.0;
+                                this.Tangents[i, 1].x = b.ReadSByte() / 127.0;
+                                this.Tangents[i, 1].y = b.ReadSByte() / 127.0;
+                                this.Tangents[i, 1].z = b.ReadSByte() / 127.0;
+
+                                // Calculate the normal based on the cross product of the tangents.
+                                this.Normals[i].x = (Tangents[i,0].y * Tangents[i,1].z - Tangents[i,0].z * Tangents[i,1].y);
+                                this.Normals[i].y = 0 - (Tangents[i,0].x * Tangents[i,1].z - Tangents[i,0].z * Tangents[i,1].x); 
+                                this.Normals[i].z = (Tangents[i,0].x * Tangents[i,1].y - Tangents[i,0].y * Tangents[i,1].x);
+                                //Console.WriteLine("Tangent: {0:F6} {1:F6} {2:F6}", Tangents[i,0].x, Tangents[i, 0].y, Tangents[i, 0].z);
+                                //Console.WriteLine("Binormal: {0:F6} {1:F6} {2:F6}", Tangents[i, 1].x, Tangents[i, 1].y, Tangents[i, 1].z);
+                                //Console.WriteLine("Normal: {0:F6} {1:F6} {2:F6}", Normals[i].x, Normals[i].y, Normals[i].z);
                                 break;
                             default:
                                 throw new Exception("Need to add new Tangent Size");
@@ -265,10 +277,11 @@ namespace CgfConverter.CryEngine_Core
                     // Utils.Log(LogLevelEnum.Debug, "In VertsUVs...");
                     this.Vertices = new Vector3[this.NumElements];
                     this.Normals = new Vector3[this.NumElements];
+                    this.RGBColors = new IRGB[this.NumElements];
                     this.UVs = new UV[this.NumElements];
                     switch (this.BytesPerElement)  // new Star Citizen files
                     {
-                        case 20:  // Dymek wrote this.  Used in 2.6 skin files.  3 floats for vertex position, 1 unknown, 2 halfs for UVs.
+                        case 20:  // Dymek wrote this.  Used in 2.6 skin files.  3 floats for vertex position, 4 bytes for normals, 2 halfs for UVs.  Normals are calculated from Tangents
                             for (Int32 i = 0; i < this.NumElements; i++)
                             {
                                 this.Vertices[i].x = b.ReadSingle();
@@ -299,7 +312,7 @@ namespace CgfConverter.CryEngine_Core
                             }
                             break;
                         case 16:   // Dymek updated this.
-                            //Console.WriteLine("method: (5), 3 half floats for verts, 3 half floats for normals, 2 half floats for UVs");
+                            //Console.WriteLine("method: (5), 3 half floats for verts, 3 colors, 2 half floats for UVs");
                             for (Int32 i = 0; i < this.NumElements; i++)
                             {
                                 ushort bver = 0;
@@ -315,31 +328,17 @@ namespace CgfConverter.CryEngine_Core
 
                                 bver = b.ReadUInt16();
                                 ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
-                                this.Vertices[i].z = ver;                                        
-
-                                //Half xnorm = new Half();
-                                //xnorm.bits = b.ReadUInt16();
-                                //this.Normals[i].x = xnorm.ToSingle();
-
-                                //Half ynorm = new Half();
-                                //ynorm.bits = b.ReadUInt16();
-                                //this.Normals[i].y = ynorm.ToSingle();
-
-                                //Half znorm = new Half();
-                                //znorm.bits = b.ReadUInt16();
-                                //this.Normals[i].z = znorm.ToSingle();
+                                this.Vertices[i].z = ver;
 
                                 bver = b.ReadUInt16();
                                 ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
-                                this.Normals[i].x = ver;
+                                this.Vertices[i].w = ver;       // Almost always 1
 
-                                bver = b.ReadUInt16();
-                                ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
-                                this.Normals[i].y = ver;
-
-                                bver = b.ReadUInt16();
-                                ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
-                                this.Normals[i].z = ver;
+                                // Next structure is Colors, not normals.  For 16 byte elements, normals are calculated from Tangent data.
+                                this.RGBColors[i].r = b.ReadByte();
+                                this.RGBColors[i].g = b.ReadByte();
+                                this.RGBColors[i].b = b.ReadByte();
+                                b.ReadByte();           // additional byte.
 
                                 // UVs ABSOLUTELY should use the Half structures.
                                 Half uvu = new Half();
@@ -349,40 +348,6 @@ namespace CgfConverter.CryEngine_Core
                                 Half uvv = new Half();
                                 uvv.bits = b.ReadUInt16();
                                 this.UVs[i].V = uvv.ToSingle();
-
-                                #region Test version using new Halfs
-
-                                //Half xpos = new Half(b.ReadUInt16());
-                                //this.Vertices[i].x = xpos.ToSingle();
-                                ////byte[] xbytes = b.ReadBytes(2); //new byte[4];
-                                ////this.Vertices[i].x = Half.FromBytes(xbytes, 0);
-                                //Half ypos = new Half(b.ReadUInt16());
-                                //this.Vertices[i].y = ypos.ToSingle();
-
-                                ////byte[] ybytes = b.ReadBytes(2); //new byte[4];
-                                ////this.Vertices[i].y = Half.FromBytes(ybytes, 0);
-                                //Half zpos = new Half(b.ReadUInt16());
-                                //this.Vertices[i].z = zpos.ToSingle();
-
-                                ////byte[] zbytes = b.ReadBytes(2); //new byte[4];
-                                ////this.Vertices[i].z = Half.FromBytes(zbytes, 0); 
-
-                                //Half xnorm = new Half(b.ReadUInt16());
-                                //this.Normals[i].x = xnorm.ToSingle();
-
-                                //Half ynorm = new Half(b.ReadUInt16());
-                                //this.Normals[i].y = ynorm.ToSingle();
-
-                                //Half znorm = new Half(b.ReadUInt16());
-                                //this.Normals[i].z = znorm.ToSingle();
-
-                                //Half uvu = new Half(b.ReadUInt16());
-                                //this.UVs[i].U = uvu.ToSingle();
-
-                                //Half uvv = new Half(b.ReadUInt16());
-                                //this.UVs[i].V = uvv.ToSingle();
-
-                                #endregion
 
                                 #region Legacy version using Halfs
                                 //Half xshort = new Half();

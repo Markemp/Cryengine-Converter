@@ -59,9 +59,7 @@ namespace CgfConverter
             foreach (var file in inputFiles)
             {
                 // Each file (.cga and .cgam if applicable) will have its own RootNode.  This can cause problems.  .cga files with a .cgam files won't have geometry for the one root node.
-                //CryEngine_Core.Model model = CryEngine_Core.Model.FromFile(file.FullName);
                 CryEngine_Core.Model model = CryEngine_Core.Model.FromFile(file.FullName);
-                //model.SkinningInfo = SkinningInfo;                  // All skinning data should reference this level.
                 if (this.RootNode == null)
                     RootNode = model.RootNode;  // This makes the assumption that we read the .cga file before the .cgam file.
                 //this.RootNode = this.RootNode ?? model.RootNode;
@@ -69,6 +67,8 @@ namespace CgfConverter
                 this.Models.Add(model);
             }
             SkinningInfo = ConsolidateSkinningInfo();
+            // For eanch node with geometry info, populate that node's Mesh Chunk GeometryInfo with the geometry data.
+            ConsolidateGeometryInfo();
 
             #region Get material file name
             // Get the material file name
@@ -182,6 +182,15 @@ namespace CgfConverter
 
             // Utils.Log(LogLevelEnum.Debug, "Unable to locate any material file");
             this.Materials = new CryEngine_Core.Material[] { };
+        }
+
+        private void ConsolidateGeometryInfo()
+        {
+            foreach (Model model in Models)
+            {
+                List<ChunkNode> nodes = model.ChunkNodes;
+
+            }
         }
 
         private SkinningInfo ConsolidateSkinningInfo()
