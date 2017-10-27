@@ -18,6 +18,10 @@ namespace CgfConverter.CryEngine_Core
         /// </summary>
         public bool HasBoneMapDatastream { get; internal set; }
         /// <summary>
+        /// If there is an internal vertex to external vertex mapping, set to true.
+        /// </summary>
+        public bool HasIntToExtMapping { get; internal set; }
+        /// <summary>
         /// BoneEntities are the list of the bones in the object.  Contains the info to find each of the necessary skinning components.
         /// </summary>
         public List<BoneEntity> BoneEntities { get; set; }

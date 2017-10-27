@@ -187,3 +187,7 @@ FakesAssemblies/
 GeneratedArtifacts/
 _Pvt_Extensions/
 ModelManifest.xml
+/.vs/cgf-converter/v15/Server/sqlite3
+/.vs/cgf-converter/v15/sqlite3/db.lock
+/.vs/cgf-converter/v15/sqlite3/storage.ide-shm
+/.vs/cgf-converter/v15/sqlite3/storage.ide-wal

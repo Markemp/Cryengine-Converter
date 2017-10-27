@@ -180,7 +180,7 @@ namespace CgfConverter
             }
             #endregion
 
-            // Utils.Log(LogLevelEnum.Debug, "Unable to locate any material file");
+            Utils.Log(LogLevelEnum.Debug, "Unable to locate any material file");
             this.Materials = new CryEngine_Core.Material[] { };
         }
 

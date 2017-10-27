@@ -193,7 +193,8 @@ namespace CgfConverter
                         }
                         else
                         {
-                            builder = new StringBuilder(@"/" + this.Args.DataDir.Replace(@"\", @"/").Replace(" ", @"%20") + @"/" + CryData.Materials[k].Textures[i].File);
+                            //builder = new StringBuilder(@"/" + this.Args.DataDir.Replace(@"\", @"/").Replace(" ", @"%20") + @"/" + CryData.Materials[k].Textures[i].File);
+                            builder = new StringBuilder(@"/" + this.Args.DataDir.FullName.Replace(" ", @"%20") + @"/" + CryData.Materials[k].Textures[i].File);
                         }
                     }
                     else
@@ -707,8 +708,10 @@ namespace CgfConverter
                         {
                             polylists[j] = new Grendgine_Collada_Polylist();
                             polylists[j].Count = (int)tmpMeshSubsets.MeshSubsets[j].NumIndices / 3;
-                            //Console.WriteLine("Mat Index is {0}", tmpMeshSubsets.MeshSubsets[j].MatID);
-                            polylists[j].Material = CryData.Materials[tmpMeshSubsets.MeshSubsets[j].MatID].Name + "-material";
+                            if (CryData.Materials.Count() != 0)
+                            {
+                                polylists[j].Material = CryData.Materials[tmpMeshSubsets.MeshSubsets[j].MatID].Name + "-material";
+                            }
                             // Create the 4 inputs.  vertex, normal, texcoord, tangent
                             polylists[j].Input = new Grendgine_Collada_Input_Shared[3];
                             polylists[j].Input[0] = new Grendgine_Collada_Input_Shared();
@@ -876,9 +879,11 @@ namespace CgfConverter
             Grendgine_Collada_Controller controller = new Grendgine_Collada_Controller();          // just need the one.
             controller.ID = "Controller";
             // Create the skin object and assign to the controller
-            Grendgine_Collada_Skin skin = new Grendgine_Collada_Skin();
-            skin.source = "#" + daeObject.Library_Geometries.Geometry[0].ID;
-            skin.Bind_Shape_Matrix = new Grendgine_Collada_Float_Array_String();
+            Grendgine_Collada_Skin skin = new Grendgine_Collada_Skin
+            {
+                source = "#" + daeObject.Library_Geometries.Geometry[0].ID,
+                Bind_Shape_Matrix = new Grendgine_Collada_Float_Array_String()
+            };
             skin.Bind_Shape_Matrix.Value_As_String = CreateStringFromMatrix44(Matrix44.Identity());         // We will assume the BSM is the identity matrix for now
             // Create the 3 sources for this controller:  joints, bind poses, and weights
             skin.Source = new Grendgine_Collada_Source[3];
@@ -1033,7 +1038,7 @@ namespace CgfConverter
             StringBuilder vertices = new StringBuilder();
             //for (int i = 0; i < CryData.Models[0].SkinningInfo.IntVertices.Count * 4; i++)
             int index = 0;
-            if (CryData.SkinningInfo.HasBoneMapDatastream)
+            if (!CryData.Models[0].SkinningInfo.HasIntToExtMapping)
             {
                 for (int i=0; i < CryData.SkinningInfo.BoneMapping.Count; i++)
                 {
@@ -1426,9 +1431,13 @@ namespace CgfConverter
                 // For each mesh subset, we want to create an instance material and add it to instanceMaterials list.
                 Grendgine_Collada_Instance_Material_Geometry tmpInstanceMat = new Grendgine_Collada_Instance_Material_Geometry();
                 //tmpInstanceMat.Target = "#" + tmpMeshSubsets.MeshSubsets[i].MatID;
-                tmpInstanceMat.Target = "#" + CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name + "-material";
-                //tmpInstanceMat.Symbol = CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name;
-                tmpInstanceMat.Symbol = CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name + "-material";
+                if (CryData.Materials.Count() > 0)
+                {
+                    tmpInstanceMat.Target = "#" + CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name + "-material";
+                    //tmpInstanceMat.Symbol = CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name;
+                    tmpInstanceMat.Symbol = CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name + "-material";
+                }
+                
                 instanceMaterials.Add(tmpInstanceMat);
             }
             tmpNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material = instanceMaterials.ToArray();

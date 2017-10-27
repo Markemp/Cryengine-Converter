@@ -398,6 +398,7 @@ namespace CgfConverter.CryEngine_Core
                 case DataStreamTypeEnum.BONEMAP:
                     SkinningInfo skin = GetSkinningInfo();
                     skin.HasBoneMapDatastream = true;
+
                     skin.BoneMapping = new List<MeshBoneMapping>();
 
                     // Bones should have 4 bone IDs (index) and 4 weights.

@@ -27,8 +27,8 @@
     <SupportUrl>https://github.com/Markemp/Cryengine-Converter/</SupportUrl>
     <ProductName>Cryengine Converter</ProductName>
     <PublisherName>Heffay Presents</PublisherName>
-    <ApplicationRevision>1</ApplicationRevision>
-    <ApplicationVersion>0.9.9.%2a</ApplicationVersion>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.1.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>

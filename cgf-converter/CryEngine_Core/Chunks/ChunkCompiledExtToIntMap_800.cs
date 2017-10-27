@@ -21,6 +21,7 @@ namespace CgfConverter.CryEngine_Core
             // Add to SkinningInfo
             SkinningInfo skin = GetSkinningInfo();
             skin.Ext2IntMap = Source.ToList();
+            skin.HasIntToExtMapping = true;
         }
 
         public override void WriteChunk()

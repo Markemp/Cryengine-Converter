@@ -14,7 +14,7 @@ namespace CgfConverter
         /// <summary>
         /// Location of the Object Files
         /// </summary>
-        public String DataDir { get; internal set; }
+        public DirectoryInfo DataDir { get; internal set; }
         /// <summary>
         /// File to render to
         /// </summary>
@@ -134,7 +134,7 @@ namespace CgfConverter
                             return 1;
                         }
 
-                        this.DataDir = new DirectoryInfo(inputArgs[i]).FullName;
+                        this.DataDir = new DirectoryInfo(inputArgs[i].Replace("\"", string.Empty ));
 
                         Console.WriteLine("Data directory set to {0}", inputArgs[i]);
 
@@ -370,7 +370,7 @@ namespace CgfConverter
             Console.WriteLine();
             Console.WriteLine("*** Submitted args ***");
             // Console.WriteLine("    Input files:            {0}", this.InputFile);
-            if (!String.IsNullOrWhiteSpace(this.DataDir))
+            if (!String.IsNullOrWhiteSpace(this.DataDir.FullName))
             {
                 Console.WriteLine("    Object dir:             {0}", this.DataDir);
             }
