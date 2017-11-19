@@ -42,7 +42,16 @@ namespace CgfConverter.CryEngine_Core
             this.ChunkType = ChunkTypeEnum.SourceInfo; // this chunk doesn't actually have the chunktype header.
             this.SourceFile = reader.ReadCString();
             this.Date = reader.ReadCString().TrimEnd(); // Strip off last 2 Characters, because it contains a return
-            this.Author = reader.ReadCString();
+            // It is possible that Date has a newline in it instead of a null.  If so, split it based on newline.  Otherwise read Author.
+            if (this.Date.Contains('\n'))
+            {
+                this.Author = this.Date.Split('\n')[1];
+                this.Date = this.Date.Split('\n')[0];
+            }
+            else
+            {
+                this.Author = reader.ReadCString();
+            }
         }
     }
 }

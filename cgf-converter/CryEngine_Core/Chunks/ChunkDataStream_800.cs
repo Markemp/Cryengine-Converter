@@ -220,9 +220,9 @@ namespace CgfConverter.CryEngine_Core
                                 this.Tangents[i, 1].z = b.ReadSByte() / 127.0;
 
                                 // Calculate the normal based on the cross product of the tangents.
-                                this.Normals[i].x = (Tangents[i,0].y * Tangents[i,1].z - Tangents[i,0].z * Tangents[i,1].y);
-                                this.Normals[i].y = 0 - (Tangents[i,0].x * Tangents[i,1].z - Tangents[i,0].z * Tangents[i,1].x); 
-                                this.Normals[i].z = (Tangents[i,0].x * Tangents[i,1].y - Tangents[i,0].y * Tangents[i,1].x);
+                                //this.Normals[i].x = (Tangents[i,0].y * Tangents[i,1].z - Tangents[i,0].z * Tangents[i,1].y);
+                                //this.Normals[i].y = 0 - (Tangents[i,0].x * Tangents[i,1].z - Tangents[i,0].z * Tangents[i,1].x); 
+                                //this.Normals[i].z = (Tangents[i,0].x * Tangents[i,1].y - Tangents[i,0].y * Tangents[i,1].x);
                                 //Console.WriteLine("Tangent: {0:F6} {1:F6} {2:F6}", Tangents[i,0].x, Tangents[i, 0].y, Tangents[i, 0].z);
                                 //Console.WriteLine("Binormal: {0:F6} {1:F6} {2:F6}", Tangents[i, 1].x, Tangents[i, 1].y, Tangents[i, 1].z);
                                 //Console.WriteLine("Normal: {0:F6} {1:F6} {2:F6}", Normals[i].x, Normals[i].y, Normals[i].z);
@@ -335,10 +335,26 @@ namespace CgfConverter.CryEngine_Core
                                 this.Vertices[i].w = ver;       // Almost always 1
 
                                 // Next structure is Colors, not normals.  For 16 byte elements, normals are calculated from Tangent data.
-                                this.RGBColors[i].r = b.ReadByte();
-                                this.RGBColors[i].g = b.ReadByte();
-                                this.RGBColors[i].b = b.ReadByte();
-                                b.ReadByte();           // additional byte.
+                                //this.RGBColors[i].r = b.ReadByte();
+                                //this.RGBColors[i].g = b.ReadByte();
+                                //this.RGBColors[i].b = b.ReadByte();
+                                //b.ReadByte();           // additional byte.
+
+                                //this.Normals[i].x = (b.ReadByte() - 128.0f) / 127.5f;
+                                //this.Normals[i].y = (b.ReadByte() - 128.0f) / 127.5f;
+                                //this.Normals[i].z = (b.ReadByte() - 128.0f) / 127.5f;
+                                //b.ReadByte();           // additional byte.
+
+                                // Read a Quat, convert it to vector3
+                                Vector4 quat = new Vector4();
+                                quat.x = (b.ReadByte() - 128.0f) / 127.5f;
+                                quat.y = (b.ReadByte() - 128.0f) / 127.5f;
+                                quat.z = (b.ReadByte() - 128.0f) / 127.5f;
+                                quat.w = (b.ReadByte() - 128.0f) / 127.5f;
+                                this.Normals[i].x = (2 * (quat.x * quat.z + quat.y * quat.w));
+                                this.Normals[i].y = (2 * (quat.y * quat.z - quat.x * quat.w));
+                                this.Normals[i].z = (2 * (quat.z * quat.z + quat.w * quat.w)) - 1;
+                                
 
                                 // UVs ABSOLUTELY should use the Half structures.
                                 Half uvu = new Half();

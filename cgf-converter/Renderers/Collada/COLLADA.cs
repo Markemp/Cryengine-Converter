@@ -11,6 +11,7 @@ using System.Xml.Serialization;
 using grendgine_collada;
 using System.Reflection;
 using CgfConverter.CryEngine_Core;
+using System.Text.RegularExpressions;
 
 namespace CgfConverter
 {
@@ -203,7 +204,10 @@ namespace CgfConverter
                     }
 
                     if (!this.Args.TiffTextures)
+                    {
                         builder.Replace(".tif", ".dds");
+                        builder.Replace(".TIF", ".dds");
+                    }
                     else
                         builder.Replace(".dds", ".tif");
 
@@ -486,7 +490,7 @@ namespace CgfConverter
                     {
                         // TODO:  Implement this chunk
                     }
-                    else if (tmpMeshChunk.MeshSubsets != 0)             // For the SC files, you can have Mesh chunks with no Mesh Subset.  Need to skip these.  They are in the .cga file and contain no geometry.  Just stub info.
+                    if (tmpMeshChunk.MeshSubsets != 0)             // For the SC files, you can have Mesh chunks with no Mesh Subset.  Need to skip these.  They are in the .cga file and contain no geometry.  Just stub info.
                     {
                         //Console.WriteLine("tmpMeshChunk ID is {0:X}", nodeChunk.ObjectNodeID);
                         //tmpMeshChunk.WriteChunk();
@@ -669,10 +673,11 @@ namespace CgfConverter
                                 } 
                                 else
                                 {
-                                    normal = tmpTangents.Normals[j];
+                                    //normal = tmpTangents.Normals[j];
                                     //normal.x = normal.x / 32767.0;
                                     //normal.y = normal.y / 32767.0;
-                                    //normal.z = normal.z / 32767.0;
+                                    //normal.z = normal.z / 32767.0;                                    
+                                    normal = tmpVertsUVs.Normals[j];
                                 }
                                 normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", safe(normal.x), safe(normal.y), safe(normal.z));
                             }
