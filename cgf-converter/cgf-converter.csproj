@@ -121,6 +121,7 @@
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledExtToIntMap_800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledIntFaces_800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledExtToIntMap.cs" />
+    <Compile Include="CryEngine_Core\Chunks\ChunkCompiledMorphTargets_801.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMeshMorphTargets.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMeshMorphTargets_800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledIntSkinVertices_800.cs" />

@@ -38,7 +38,7 @@ namespace CgfConverter
             //args = new String[] { @"c:\users\geoff\source\repos\cgf-converter\cgf-converter\bin\Debug\raptor.chr", "-dds", "-dae" };
             //args = new String[] { @"c:\users\geoff\source\repos\cgf-converter\cgf-converter\bin\Debug\ar03.chr", "-dds", "-dae" };
             //args = new String[] { @"D:\Blender Projects\Mechs\Objects\Mechs\adder\body\adder.chr", "-dds", "-dae", "-objectdir", @"d:\blender projects\mechs" };
-            args = new String[] { @"D:\Blender Projects\Mechs\Objects\purchasable\cockpit_hanging\candycane\candycane_a.chr", "-dds", "-dae", "-objectdir", @"d:\blender projects\mechs" };
+            //args = new String[] { @"D:\Blender Projects\Mechs\Objects\purchasable\cockpit_hanging\candycane\candycane_a.chr", "-dds", "-dae", "-objectdir", @"d:\blender projects\mechs" };
             //args = new String[] { @"D:\Blender Projects\Mechs\Objects\purchasable\cockpit_standing\hulagirl\hulagirl_a.cga", "-dds", "-dae", "-objectdir", @"d:\blender projects\mechs" };
             //args = new String[] { @"D:\Blender Projects\Mechs\Objects\environments\city\im_barrierwalls\im_bw_a_cap_left.cgf", "-dds", "-dae", "-objectdir", @"d:\blender projects\mechs" };
             //args = new String[] { @"D:\depot\mwo\Objects\environments\frontend\mechlab_a\lights\industrial_wetlamp_a.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
@@ -52,6 +52,7 @@ namespace CgfConverter
             //args = new String[] { @"d:\Blender Projects\Star Citizen\Objects\buildingsets\human\lowtech\bravo\grimhex\anchor\anchor_gun_a.cgf", "-objectdir", @"d:\blender projects\star citizen", "-dds", "-dae", "-tif" };
             //args = new String[] { @"d:\Blender Projects\Star Citizen\Objects\buildingsets\human\hightech\alpha\ext\landingpad\ext_landingpad_floor_center_stair_16x08x10_b.cgf", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
             //args = new String[] { @"d:\Blender Projects\Star Citizen\Objects\buildingsets\human\hightech\alpha\ext\landingpad\landingpad_decal_landingzone_a.cgf", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
+            args = new String[] { @"D:\depot\SC\Objects\Characters\Human\heads\male\npc\male09\male09_t1_head.skin", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
             //args = new String[] { @"D:\Blender Projects\Star Citizen\Objects\Characters\Human\male_v7\export\bhm_skeleton_v7.chr", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
             //args = new String[] { @"D:\Blender Projects\Star Citizen\Objects\buildingsets\human\universal\org\trees\tree_ash_a.cgf", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
             //args = new String[] { @"D:\Blender Projects\Star Citizen\Objects\Characters\Human\male_v7\armor\rsi\m_rsi_pilot_flightsuit_01.skin", "-objectdir", @"d:\blender projects\star citizen\", "-dae", "-tif" };
