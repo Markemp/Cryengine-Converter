@@ -538,9 +538,11 @@ namespace CgfConverter
                         }
 
                         // tmpGeo is a Geometry object for each meshsubset.  Name will be "Nodechunk name_matID".  Hopefully there is only one matID used per submesh
-                        Grendgine_Collada_Geometry tmpGeo = new Grendgine_Collada_Geometry();
-                        tmpGeo.Name = nodeChunk.Name;
-                        tmpGeo.ID = nodeChunk.Name + "-mesh";
+                        Grendgine_Collada_Geometry tmpGeo = new Grendgine_Collada_Geometry
+                        {
+                            Name = nodeChunk.Name,
+                            ID = nodeChunk.Name + "-mesh"
+                        };
                         Grendgine_Collada_Mesh tmpMesh = new Grendgine_Collada_Mesh();
                         tmpGeo.Mesh = tmpMesh;
 
@@ -616,13 +618,16 @@ namespace CgfConverter
                             floatArrayNormals.ID = normSource.ID + "-array";
                             floatArrayNormals.Digits = 6;
                             floatArrayNormals.Magnitude = 38;
-                            floatArrayNormals.Count = (int)tmpNormals.NumElements * 3;
+                            if (tmpNormals != null)
+                            {
+                                floatArrayNormals.Count = (int)tmpNormals.NumElements * 3;
+                            }
                             // Create Vertices and normals string
                             for (uint j = 0; j < tmpMeshChunk.NumVertices; j++)
                             {
                                 Vector3 vertex = (tmpVertices.Vertices[j]);
                                 vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", vertex.x, vertex.y, vertex.z);
-                                Vector3 normal = tmpNormals.Normals[j];
+                                Vector3 normal = tmpNormals?.Normals[j] ?? new Vector3(0.0f, 0.0f, 0.0f);
                                 normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", safe(normal.x), safe(normal.y), safe(normal.z));
                             }
                             // Create UV string

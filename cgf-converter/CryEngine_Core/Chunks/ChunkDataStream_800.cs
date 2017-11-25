@@ -94,28 +94,40 @@ namespace CgfConverter.CryEngine_Core
                                 this.Vertices[i].z = b.ReadSingle();
                             }
                             break;
-                        case 8:  // Old Star Citizen files
+                        case 8:  // Prey files, and old Star Citizen files
                             for (Int32 i = 0; i < NumElements; i++)
                             {
                                 uint bver = 0;
                                 float ver = 0;
 
                                 // 2 byte floats.  Use the Half structure from TK.Math
-                                bver = b.ReadUInt16();
-                                ver = Byte4HexToFloat(bver.ToString("X8"));
-                                this.Vertices[i].x = ver;
+                                //bver = b.ReadUInt16();
+                                //ver = Byte4HexToFloat(bver.ToString("X8"));
+                                //this.Vertices[i].x = ver;
 
-                                bver = b.ReadUInt16();
-                                ver = Byte4HexToFloat(bver.ToString("X8"));
-                                this.Vertices[i].y = ver; bver = b.ReadUInt16();
+                                //bver = b.ReadUInt16();
+                                //ver = Byte4HexToFloat(bver.ToString("X8"));
+                                //this.Vertices[i].y = ver; bver = b.ReadUInt16();
 
-                                bver = b.ReadUInt16();
-                                ver = Byte4HexToFloat(bver.ToString("X8"));
-                                this.Vertices[i].z = ver;
+                                //bver = b.ReadUInt16();
+                                //ver = Byte4HexToFloat(bver.ToString("X8"));
+                                //this.Vertices[i].z = ver;
 
-                                bver = b.ReadUInt16();
-                                ver = Byte4HexToFloat(bver.ToString("X8"));
-                                this.Vertices[i].w = ver;
+                                //bver = b.ReadUInt16();
+                                //ver = Byte4HexToFloat(bver.ToString("X8"));
+                                //this.Vertices[i].w = ver;
+                                Half xshort = new Half();
+                                xshort.bits = b.ReadUInt16();
+                                this.Vertices[i].x = xshort.ToSingle();
+
+                                Half yshort = new Half();
+                                yshort.bits = b.ReadUInt16();
+                                this.Vertices[i].y = yshort.ToSingle();
+
+                                Half zshort = new Half();
+                                zshort.bits = b.ReadUInt16();
+                                this.Vertices[i].z = zshort.ToSingle();
+                                b.ReadUInt16();
                             }
                             break;
                         case 16:
@@ -465,6 +477,30 @@ namespace CgfConverter.CryEngine_Core
 
 
                 #endregion
+                #region DataStreamTypeEnum.Unknown1
+                case DataStreamTypeEnum.UNKNOWN1:
+                    this.Tangents = new Tangent[this.NumElements, 2];
+                    this.Normals = new Vector3[this.NumElements];
+                    for (Int32 i = 0; i < NumElements; i++)
+                    {
+                        this.Tangents[i, 0].w = b.ReadSByte() / 127.0;
+                        this.Tangents[i, 0].x = b.ReadSByte() / 127.0;
+                        this.Tangents[i, 0].y = b.ReadSByte() / 127.0;
+                        this.Tangents[i, 0].z = b.ReadSByte() / 127.0;
+
+                        // Binormal
+                        this.Tangents[i, 1].w = b.ReadSByte() / 127.0;
+                        this.Tangents[i, 1].x = b.ReadSByte() / 127.0;
+                        this.Tangents[i, 1].y = b.ReadSByte() / 127.0;
+                        this.Tangents[i, 1].z = b.ReadSByte() / 127.0;
+
+                        // Calculate the normal based on the cross product of the tangents.
+                        this.Normals[i].x = (Tangents[i, 0].y * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].y);
+                        this.Normals[i].y = 0 - (Tangents[i, 0].x * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].x);
+                        this.Normals[i].z = (Tangents[i, 0].x * Tangents[i, 1].y - Tangents[i, 0].y * Tangents[i, 1].x);
+                    }
+                    break;
+                #endregion // Prey normals?
                 #region default:
 
                 default:

@@ -200,7 +200,7 @@
         BONEMAP,
         FACEMAP,
         VERTMATS,
-        UNKNOWN1,
+        UNKNOWN1,   // Prey Normals?
         UNKNOWN2,
         UNKNOWN3,
         VERTSUVS,

@@ -12,18 +12,18 @@ namespace CgfConverter.CryEngine_Core
         // TODO:  Implement this.
         public override void Read(BinaryReader b)
         {
-            base.Read(b);
-            NumberOfMorphTargets = b.ReadUInt32();
-            if (NumberOfMorphTargets > 0)
-            {
-                MorphTargetVertices = new MeshMorphTargetVertex[NumberOfMorphTargets];
-                for (int i = 0; i < NumberOfMorphTargets; i++)
-                {
-                    MorphTargetVertices[i] = MeshMorphTargetVertex.Read(b);
-                }
+            //base.Read(b);
+            //NumberOfMorphTargets = b.ReadUInt32();
+            //if (NumberOfMorphTargets > 0)
+            //{
+            //    MorphTargetVertices = new MeshMorphTargetVertex[NumberOfMorphTargets];
+            //    for (int i = 0; i < NumberOfMorphTargets; i++)
+            //    {
+            //        MorphTargetVertices[i] = MeshMorphTargetVertex.Read(b);
+            //    }
 
-            }
-            SkinningInfo skin = GetSkinningInfo();
+            //}
+            //SkinningInfo skin = GetSkinningInfo();
             //skin.MorphTargets = MorphTargetVertices.ToList();
         }
 
