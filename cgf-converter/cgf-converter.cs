@@ -42,6 +42,7 @@ namespace CgfConverter
             //args = new String[] { @"D:\Blender Projects\Mechs\Objects\purchasable\cockpit_standing\hulagirl\hulagirl_a.cga", "-dds", "-dae", "-objectdir", @"d:\blender projects\mechs" };
             //args = new String[] { @"D:\Blender Projects\Mechs\Objects\environments\city\im_barrierwalls\im_bw_a_cap_left.cgf", "-dds", "-dae", "-objectdir", @"d:\blender projects\mechs" };
             //args = new String[] { @"D:\depot\mwo\Objects\environments\frontend\mechlab_a\lights\industrial_wetlamp_a.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+            args = new String[] { @"D:\depot\mwo\Objects\mechs\timberwolf\body\timberwolf.chr", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
             //args = new String[] { @"D:\Blender Projects\Mechs\Objects\characters\pilot\pilot_body.chr", "-dds", "-dae", "-objectdir", @"d:\blender projects\mechs\" };
             //args = new String[] { @"D:\Blender Projects\Star Citizen\Objects\animals\crab\props\crab_thorshu_prop_01.chr", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
             //args = new String[] { @"D:\Blender Projects\Star Citizen\Objects\animals\fish\CleanerFish_clean_prop_animal_01.chr", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
@@ -63,7 +64,7 @@ namespace CgfConverter
             //args = new String[] { @"d:\temp\sc\fish\cleanerfish_clean_prop_animal_01.chr", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
             //args = new String[] { @"d:\temp\sc\export\bhm_skeleton_v7.chr", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
             //args = new String[] { @"d:\temp\sc\Gladius\aegs_gladius.cga", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
-            args = new String[] { @"d:\temp\prey\dahl_genmalebody01.skin", "-objectdir", @"d:\temp\prey", "-dae", "-dds" };
+            //args = new String[] { @"d:\temp\prey\dahl_genmalebody01.skin", "-objectdir", @"d:\temp\prey", "-dae", "-dds" };
 #endif
 
             ArgsHandler argsHandler = new ArgsHandler();

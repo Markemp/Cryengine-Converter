@@ -12,6 +12,7 @@ namespace CgfConverter.CryEngine_Core
         public override void Read(BinaryReader b)
         {
             base.Read(b);
+            SkinningInfo skin = GetSkinningInfo();
 
             this.NumPhysicalProxies = b.ReadUInt32(); // number of Bones in this chunk.
             //Utils.Log(LogLevelEnum.Debug, "Number of bones (physical proxies): {0}", NumPhysicalProxies);
@@ -40,14 +41,12 @@ namespace CgfConverter.CryEngine_Core
                 }
                 // Utils.Log(LogLevelEnum.Debug, "Index 0 is {0}, Index 9 is {1}", HitBoxes[i].Indices[0],HitBoxes[i].Indices[9]);
                 // read the crap at the end so we can move on.
-                for (Int32 j = 0; j < PhysicalProxies[i].Material / 2; j++)
+                for (Int32 j = 0; j < PhysicalProxies[i].Material; j++)
                 {
-                    b.ReadUInt16();
+                    b.ReadByte();
                 }
-                SkinningInfo skin = GetSkinningInfo();
-                skin.PhysicalBoneMeshes = PhysicalProxies.ToList();
-
             }
+            skin.PhysicalBoneMeshes = PhysicalProxies.ToList();
         }
 
         public override void WriteChunk()
