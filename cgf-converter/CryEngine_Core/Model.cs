@@ -80,34 +80,35 @@ namespace CgfConverter.CryEngine_Core
 
         public UInt32 NumChunks { get; internal set; }
 
-        private Dictionary<String, CryEngine_Core.ChunkNode> _nodeMap { get; set; }
+        private Dictionary<int, CryEngine_Core.ChunkNode> _nodeMap { get; set; }
         /// <summary>
         /// Node map for this model only.
         /// </summary>
-        public Dictionary<string, ChunkNode> NodeMap
+
+        public Dictionary<int, ChunkNode> NodeMap      // This isn't right.  Nodes can have duplicate names.
         {
             get
             {
                 if (this._nodeMap == null)
                 {
-                    this._nodeMap = new Dictionary<String, ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
+                    this._nodeMap = new Dictionary<int, ChunkNode>() { };
                     ChunkNode rootNode = null;
                     //Utils.Log(LogLevelEnum.Info, "Mapping Model Nodes");
                     this.RootNode = rootNode = (rootNode ?? this.RootNode);  // Each model will have it's own rootnode.
                     foreach (CryEngine_Core.ChunkNode node in this.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as ChunkNode))
                     {
                         // Preserve existing parents
-                        if (this._nodeMap.ContainsKey(node.Name))
+                        if (this._nodeMap.ContainsKey(node.ID))
                         {
-                            ChunkNode parentNode = this._nodeMap[node.Name].ParentNode;
+                            ChunkNode parentNode = this._nodeMap[node.ID].ParentNode;
 
                             if (parentNode != null)
-                                parentNode = this._nodeMap[parentNode.Name];
+                                parentNode = this._nodeMap[parentNode.ID];
 
                             node.ParentNode = parentNode;
                         }
 
-                        this._nodeMap[node.Name] = node;
+                        this._nodeMap[node.ID] = node;
                     }
                 }
                 return this._nodeMap;

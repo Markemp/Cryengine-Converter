@@ -42,7 +42,9 @@ namespace CgfConverter
             //args = new String[] { @"D:\Blender Projects\Mechs\Objects\purchasable\cockpit_standing\hulagirl\hulagirl_a.cga", "-dds", "-dae", "-objectdir", @"d:\blender projects\mechs" };
             //args = new String[] { @"D:\Blender Projects\Mechs\Objects\environments\city\im_barrierwalls\im_bw_a_cap_left.cgf", "-dds", "-dae", "-objectdir", @"d:\blender projects\mechs" };
             //args = new String[] { @"D:\depot\mwo\Objects\environments\frontend\mechlab_a\lights\industrial_wetlamp_a.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
-            args = new String[] { @"D:\depot\mwo\Objects\mechs\timberwolf\body\timberwolf.chr", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+            //args = new String[] { @"D:\depot\mwo\Objects\mechs\timberwolf\body\timberwolf.chr", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+            //args = new String[] { @"D:\depot\mwo\Objects\mechs\hellbringer\body\hbr_right_torso_uac5_bh1.cga", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+            args = new String[] { @"D:\depot\mwo\Objects\environments\frontend\mechlab_a\mechbay_ceilings\mechbay_ceilinga.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
             //args = new String[] { @"D:\Blender Projects\Mechs\Objects\characters\pilot\pilot_body.chr", "-dds", "-dae", "-objectdir", @"d:\blender projects\mechs\" };
             //args = new String[] { @"D:\Blender Projects\Star Citizen\Objects\animals\crab\props\crab_thorshu_prop_01.chr", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
             //args = new String[] { @"D:\Blender Projects\Star Citizen\Objects\animals\fish\CleanerFish_clean_prop_animal_01.chr", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };

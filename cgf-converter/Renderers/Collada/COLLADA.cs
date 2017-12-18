@@ -1225,7 +1225,8 @@ namespace CgfConverter
             {
                 // Star Citizen pair.  Get the Node and Mesh chunks from the geometry file, unless it's a Proxy node.
                 string nodeName = nodeChunk.Name;
-                if (CryData.Models[1].NodeMap.ContainsKey(nodeName))        // make sure there is a geometry node in the geometry file
+                int nodeID = nodeChunk.ID;
+                if (CryData.Models[1].NodeMap.ContainsKey(nodeID))        // make sure there is a geometry node in the geometry file
                 {
                     ChunkNode geometryNode = CryData.Models[1].NodeMap.Values.Where(a => a.Name == nodeChunk.Name).First();
                     ChunkMesh geometryMesh = (ChunkMesh)CryData.Models[1].ChunkMap[geometryNode.ObjectNodeID];

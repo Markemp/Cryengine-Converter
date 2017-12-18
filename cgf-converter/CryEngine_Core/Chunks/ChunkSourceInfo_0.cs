@@ -33,7 +33,7 @@ namespace CgfConverter.CryEngine_Core
 
             if (this.Offset != this._header.Offset || this.Size != this._header.Size)
             {
-                Utils.Log(LogLevelEnum.Warning, "Conflict in chunk definition");
+                Utils.Log(LogLevelEnum.Warning, "Conflict in chunk definition:  SourceInfo chunk");
                 Utils.Log(LogLevelEnum.Warning, "{0:X}+{1:X}", this._header.Offset, this._header.Size);
                 Utils.Log(LogLevelEnum.Warning, "{0:X}+{1:X}", this.Offset, this.Size);
                 this.WriteChunk();

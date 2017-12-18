@@ -151,7 +151,7 @@ namespace CgfConverter.CryEngine_Core
             }
         }
 
-        public IEnumerable<ChunkNode> AllChildNodes
+        public List<ChunkNode> AllChildNodes
         {
             get
             {
@@ -161,7 +161,8 @@ namespace CgfConverter.CryEngine_Core
                 }
                 else
                 {
-                    return this._model.NodeMap.Values.Where(a => a.ParentNodeID == this.ID);
+                    var node = this._model.NodeMap.Values.Where(a => a.ParentNodeID == this.ID).ToList();
+                    return node;
                 }
             }
         }
