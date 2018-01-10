@@ -37,14 +37,11 @@ namespace CgfConverter
             Utils.DebugLevel = LogLevelEnum.Debug;  // Send all to the IDE Output window
             //args = new String[] { @"c:\users\geoff\source\repos\cgf-converter\cgf-converter\bin\Debug\raptor.chr", "-dds", "-dae" };
             //args = new String[] { @"c:\users\geoff\source\repos\cgf-converter\cgf-converter\bin\Debug\ar03.chr", "-dds", "-dae" };
-            //args = new String[] { @"D:\Blender Projects\Mechs\Objects\Mechs\adder\body\adder.chr", "-dds", "-dae", "-objectdir", @"d:\blender projects\mechs" };
-            //args = new String[] { @"D:\Blender Projects\Mechs\Objects\purchasable\cockpit_hanging\candycane\candycane_a.chr", "-dds", "-dae", "-objectdir", @"d:\blender projects\mechs" };
-            //args = new String[] { @"D:\Blender Projects\Mechs\Objects\purchasable\cockpit_standing\hulagirl\hulagirl_a.cga", "-dds", "-dae", "-objectdir", @"d:\blender projects\mechs" };
-            //args = new String[] { @"D:\Blender Projects\Mechs\Objects\environments\city\im_barrierwalls\im_bw_a_cap_left.cgf", "-dds", "-dae", "-objectdir", @"d:\blender projects\mechs" };
             //args = new String[] { @"D:\depot\mwo\Objects\environments\frontend\mechlab_a\lights\industrial_wetlamp_a.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
             //args = new String[] { @"D:\depot\mwo\Objects\mechs\timberwolf\body\timberwolf.chr", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
             //args = new String[] { @"D:\depot\mwo\Objects\mechs\hellbringer\body\hbr_right_torso_uac5_bh1.cga", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
-            args = new String[] { @"D:\depot\mwo\Objects\environments\frontend\mechlab_a\mechbay_ceilings\mechbay_ceilinga.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+            //args = new String[] { @"D:\depot\mwo\Objects\environments\frontend\mechlab_a\mechbay_ceilings\mechbay_ceilinga.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+            args = new String[] { @"D:\depot\mwo\Objects\environments\industrial\mf_maglev_loader_a.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
             //args = new String[] { @"D:\Blender Projects\Mechs\Objects\characters\pilot\pilot_body.chr", "-dds", "-dae", "-objectdir", @"d:\blender projects\mechs\" };
             //args = new String[] { @"D:\Blender Projects\Star Citizen\Objects\animals\crab\props\crab_thorshu_prop_01.chr", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
             //args = new String[] { @"D:\Blender Projects\Star Citizen\Objects\animals\fish\CleanerFish_clean_prop_animal_01.chr", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
@@ -61,11 +58,6 @@ namespace CgfConverter
             //args = new String[] { @"D:\Blender Projects\Star Citizen\Objects\Characters\Human\male_v7\armor\rsi\m_rsi_pilot_flightsuit_01.skin", "-objectdir", @"d:\blender projects\star citizen\", "-dae", "-tif" };
             //args = new String[] { @"D:\Blender Projects\Star Citizen\Objects\Characters\Human\male_v7\armor\slaver\m_slaver_medium_armor_01_core.skin", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
             //args = new String[] { @"D:\Blender Projects\Mechs\Objects\environments\city\im_roads_zone_05\im_zone05_block16.cgf", "-objectdir", @"d:\blender projects\mechs", "-dae" };
-            //args = new String[] { @"d:\temp\sc\platform_landingpad_floor_4x4_a.cgf", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
-            //args = new String[] { @"d:\temp\sc\crab\props\crab_thorshu_prop_01.chr", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
-            //args = new String[] { @"d:\temp\sc\fish\cleanerfish_clean_prop_animal_01.chr", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
-            //args = new String[] { @"d:\temp\sc\export\bhm_skeleton_v7.chr", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
-            //args = new String[] { @"d:\temp\sc\Gladius\aegs_gladius.cga", "-objectdir", @"d:\blender projects\star citizen", "-dae", "-tif" };
             //args = new String[] { @"d:\temp\prey\dahl_genmalebody01.skin", "-objectdir", @"d:\temp\prey", "-dae", "-dds" };
 #endif
 

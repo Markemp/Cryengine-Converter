@@ -108,6 +108,9 @@
     <Reference Include="MathNet.Numerics, Version=3.20.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MathNet.Numerics.3.20.0\lib\net40\MathNet.Numerics.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -139,8 +142,13 @@
     <Compile Include="CryEngine_Core\Components\Vector2.cs" />
     <Compile Include="CryEngine_Core\Components\Vector3.cs" />
     <Compile Include="CryEngine_Core\Components\Vector4.cs" />
+    <Compile Include="Models\ChrParams.cs" />
+    <Compile Include="Models\MaterialLibrary.cs" />
+    <Compile Include="Models\MaterialLibraryItem.cs" />
+    <Compile Include="Models\Prefab.cs" />
     <Compile Include="CryEngine_Core\SkinningInfo.cs" />
     <Compile Include="External\OpenTK\Half.cs" />
+    <Compile Include="Models\Material.cs" />
     <Compile Include="Services\ArgsHandler.cs" />
     <Compile Include="Renderers\BaseRenderer.cs" />
     <Compile Include="Renderers\Blender\Blender.cs" />
@@ -533,6 +541,7 @@
     <Compile Include="External\Collada\Types\Grendgine_Collada_SID_Name_String.cs" />
     <Compile Include="External\Collada\Types\Grendgine_Collada_String_Array_String.cs" />
     <Compile Include="Renderers\FBX\FBX.cs" />
+    <Compile Include="Services\MaterialLibraryCreator.cs" />
     <Compile Include="Services\TSpace.cs" />
     <Compile Include="Services\Utils.cs" />
     <Compile Include="Renderers\Wavefront\Wavefront.Material.cs" />
@@ -577,7 +586,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Models\" />
+    <Folder Include="CryEngine_Core\Prefab\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="FodyWeavers.xml" />
@@ -589,10 +598,10 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\Costura.Fody.1.6.2\build\dotnet\Costura.Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Costura.Fody.1.6.2\build\dotnet\Costura.Fody.targets'))" />
-    <Error Condition="!Exists('..\packages\Fody.2.1.2\build\netstandard1.0\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.2.1.2\build\netstandard1.0\Fody.targets'))" />
+    <Error Condition="!Exists('..\packages\Fody.2.3.18\build\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.2.3.18\build\Fody.targets'))" />
   </Target>
   <Import Project="..\packages\Costura.Fody.1.6.2\build\dotnet\Costura.Fody.targets" Condition="Exists('..\packages\Costura.Fody.1.6.2\build\dotnet\Costura.Fody.targets')" />
-  <Import Project="..\packages\Fody.2.1.2\build\netstandard1.0\Fody.targets" Condition="Exists('..\packages\Fody.2.1.2\build\netstandard1.0\Fody.targets')" />
+  <Import Project="..\packages\Fody.2.3.18\build\Fody.targets" Condition="Exists('..\packages\Fody.2.3.18\build\Fody.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

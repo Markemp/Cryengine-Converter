@@ -188,18 +188,48 @@ namespace CgfConverter.CryEngine_Core
         [XmlRoot(ElementName = "PublicParams")]
         public class PublicParameters
         {
-            // Nodraw
-            // [None]
-            // Illum - metal_dense
-            // <PublicParams POMBumpUVBlend="1" PomDisplacement="0" SSSIndex="0" SelfShadowStrength="3" HeightBias="0.64200002" IndirectColor="0.25,0.25,0.25"/>
-            // Illum - metal_damageable
-            // <PublicParams BlendFalloff="1.29533" BlendLayer2SpecularColor="1,1,1" BlendLayer2Tiling="1" SSSIndex="0" BlendMaskTiling="1" BlendLayer2DiffuseColor="1,1,1" BlendLayer2Glossiness="200" BlendFactor="2.0186901" IndirectColor="0.25,0.25,0.25"/>
-            // Glass - glass_thin
-            // <PublicParams BumpMapTile="1" TintColor="0.6795426,0.68668544,0.59720188" CloudinessReducesGloss="0.491" TintCloudiness="0.027000001" BackLightScale="0.227" BumpScale="0.90769202" IndirectColor="0.25,0.25,0.25"/>
-            // Glass - glass_dense
-            // <PublicParams SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
-            // Illum - [None]
-            // <PublicParams BlendFalloff="2.3051701" BlendDetailGlossScale="0.30000001" BlendLayer2SpecularColor="1,1,1" BlendLayer2Tiling="1" BlendDetailDiffuseScale="0.1" DetailDiffuseScale="0" SSSIndex="0" DetailBumpScale="0.1" BlendMaskTiling="2" BlendLayer2DiffuseColor="0.67244327,0.67244327,0.67244327" BlendLayer2Glossiness="229.8" BlendDetailBumpScale="0.050000001" BlendFactor="3.8620701" DetailGlossScale="0.212" IndirectColor="0.25,0.25,0.25"/>
+            [XmlAttribute(AttributeName = "FresnelPower")]
+            public string FresnelPower { get; set; }
+            [XmlAttribute(AttributeName = "GlossFromDiffuseContrast")]
+            public string GlossFromDiffuseContrast { get; set; }
+            [XmlAttribute(AttributeName = "FresnelScale")]
+            public string FresnelScale { get; set; }
+            [XmlAttribute(AttributeName = "GlossFromDiffuseOffset")]
+            public string GlossFromDiffuseOffset { get; set; }
+            [XmlAttribute(AttributeName = "FresnelBias")]
+            public string FresnelBias { get; set; }
+            [XmlAttribute(AttributeName = "GlossFromDiffuseAmount")]
+            public string GlossFromDiffuseAmount { get; set; }
+            [XmlAttribute(AttributeName = "GlossFromDiffuseBrightness")]
+            public string GlossFromDiffuseBrightness { get; set; }
+            [XmlAttribute(AttributeName = "IndirectColor")]
+            public string IndirectColor { get; set; }
+            [XmlAttribute(AttributeName = "SpecMapChannelB")]
+            public string SpecMapChannelB { get; set; }
+            [XmlAttribute(AttributeName = "SpecMapChannelR")]
+            public string SpecMapChannelR { get; set; }
+            [XmlAttribute(AttributeName = "GlossMapChannelB")]
+            public string GlossMapChannelB { get; set; }
+            [XmlAttribute(AttributeName = "SpecMapChannelG")]
+            public string SpecMapChannelG { get; set; }
+            [XmlAttribute(AttributeName = "DirtTint")]
+            public string DirtTint { get; set; }
+            [XmlAttribute(AttributeName = "DirtGlossFactor")]
+            public string DirtGlossFactor { get; set; }
+            [XmlAttribute(AttributeName = "DirtTiling")]
+            public string DirtTiling { get; set; }
+            [XmlAttribute(AttributeName = "DirtStrength")]
+            public string DirtStrength { get; set; }
+            [XmlAttribute(AttributeName = "DirtMapAlphaInfluence")]
+            public string DirtMapAlphaInfluence { get; set; }
+            [XmlAttribute(AttributeName = "DetailBumpTillingU")]
+            public string DetailBumpTillingU { get; set; }
+            [XmlAttribute(AttributeName = "DetailDiffuseScale")]
+            public string DetailDiffuseScale { get; set; }
+            [XmlAttribute(AttributeName = "DetailBumpScale")]
+            public string DetailBumpScale { get; set; }
+            [XmlAttribute(AttributeName = "DetailGlossScale")]
+            public string DetailGlossScale { get; set; }
         }
 
         #endregion

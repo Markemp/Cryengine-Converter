@@ -235,4 +235,11 @@
         CGF_STREAM_P3S_C4B_T2S,
         CGF_STREAM_NUM_TYPES
     };
+
+    public enum XmlFileType
+    {
+        MATERIAL,
+        PREFAB,
+        CHRPARAMS
+    }
 }
