@@ -393,7 +393,10 @@ namespace CgfConverter
                     //Console.WriteLine("No spec found, using color");
                     phong.Specular.Color = new Grendgine_Collada_Color();
                     phong.Specular.Color.sID = "specular";
-                    phong.Specular.Color.Value_As_String = CryData.Materials[i].__Specular.Replace(",", " ");
+                    if (CryData.Materials[i].__Specular != null)
+                        phong.Specular.Color.Value_As_String = CryData.Materials[i].__Specular.Replace(",", " ");
+                    else
+                        phong.Specular.Color.Value_As_String = "1 1 1";
                 }
 
                 phong.Emission = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type();
