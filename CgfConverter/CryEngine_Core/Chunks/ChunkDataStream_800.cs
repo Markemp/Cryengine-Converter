@@ -97,8 +97,8 @@ namespace CgfConverter.CryEngine_Core
                         case 8:  // Prey files, and old Star Citizen files
                             for (Int32 i = 0; i < NumElements; i++)
                             {
-                                uint bver = 0;
-                                float ver = 0;
+                                //uint bver = 0;
+                                //float ver = 0;
 
                                 // 2 byte floats.  Use the Half structure from TK.Math
                                 //bver = b.ReadUInt16();

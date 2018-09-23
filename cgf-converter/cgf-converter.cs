@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Schema;
 using System.Diagnostics;
+using CgfConverter;
 
-namespace CgfConverter
+namespace CgfConverterConsole
 {
     public class Program
     {

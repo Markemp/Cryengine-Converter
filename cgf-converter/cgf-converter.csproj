@@ -55,6 +55,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <ManifestCertificateThumbprint>9278A6B709680CC0CFE4AF00CF82C2F6C26C8971</ManifestCertificateThumbprint>
@@ -99,21 +100,22 @@
     <ApplicationIcon>logo-50px-prod.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Costura, Version=1.6.2.0, Culture=neutral, PublicKeyToken=9919ef960d84173d, processorArchitecture=MSIL">
-      <HintPath>..\packages\Costura.Fody.1.6.2\lib\dotnet\Costura.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Costura, Version=3.1.2.0, Culture=neutral, PublicKeyToken=9919ef960d84173d, processorArchitecture=MSIL">
+      <HintPath>..\packages\Costura.Fody.3.1.2\lib\net46\Costura.dll</HintPath>
     </Reference>
     <Reference Include="FbxSharp, Version=0.9.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\FbxSharp.0.9\lib\net40\FbxSharp.dll</HintPath>
     </Reference>
-    <Reference Include="MathNet.Numerics, Version=3.20.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\MathNet.Numerics.3.20.0\lib\net40\MathNet.Numerics.dll</HintPath>
+    <Reference Include="MathNet.Numerics, Version=4.5.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MathNet.Numerics.4.5.1\lib\net461\MathNet.Numerics.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -121,435 +123,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CryEngine_Core\Chunks\ChunkTimingFormat_919.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkCompiledIntFaces.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkCompiledExtToIntMap_800.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkCompiledIntFaces_800.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkCompiledExtToIntMap.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkCompiledMorphTargets_801.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkMeshMorphTargets.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkMeshMorphTargets_800.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkCompiledIntSkinVertices_800.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkCompiledIntSkinVertices.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkBoneNameList_745.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkBoneNameList.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkBoneAnim_290.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkBoneAnim.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkCompiledPhysicalBones_800.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkCompiledPhysicalBones.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkCompiledMorphTargets_800.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkCompiledMorphTargets.cs" />
-    <Compile Include="CryEngine_Core\Chunks\GeometryInfo.cs" />
-    <Compile Include="CryEngine_Core\Components\ByteArray.cs" />
-    <Compile Include="CryEngine_Core\Components\Vector2.cs" />
-    <Compile Include="CryEngine_Core\Components\Vector3.cs" />
-    <Compile Include="CryEngine_Core\Components\Vector4.cs" />
-    <Compile Include="Models\ChrParams.cs" />
-    <Compile Include="Models\MaterialLibrary.cs" />
-    <Compile Include="Models\MaterialLibraryItem.cs" />
-    <Compile Include="Models\Prefab.cs" />
-    <Compile Include="CryEngine_Core\SkinningInfo.cs" />
-    <Compile Include="External\OpenTK\Half.cs" />
-    <Compile Include="Models\Material.cs" />
-    <Compile Include="Services\ArgsHandler.cs" />
-    <Compile Include="Renderers\BaseRenderer.cs" />
-    <Compile Include="Renderers\Blender\Blender.cs" />
     <Compile Include="cgf-converter.cs" />
-    <Compile Include="Renderers\Collada\COLLADA.cs" />
-    <Compile Include="External\Collada\Collada_Core\Extensibility\Grendgine_Collada_BumpMap.cs" />
-    <Compile Include="CryEngine\CryEngine.cs" />
-    <Compile Include="CryEngine\CryRender.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkMeshPhysicsData.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkMeshPhysicsData_800.cs" />
-    <Compile Include="CryEngine_Core\IBinaryChunk.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkCompiledBones.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkCompiledPhysicalProxies_800.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkCompiledBones_800.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkCompiledPhysicalProxies.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkController_826.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkController.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkDataStream.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkDataStream_800.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkExportFlags_1.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkMesh_801.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkSceneProp_744.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkNode_824.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkNode_823.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkMesh_800.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkMeshSubsets_800.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkExportFlags.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkHeader_744.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkHelper_744.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkMtlName_744.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkHeader_745.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkHeader_746.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkMtlName_800.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkMtlName_802.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkHelper.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkMtlName.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkMesh.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkMeshSubsets.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkNode.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkSceneProp.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkSourceInfo.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkSourceInfo_0.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkTimingFormat.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkTimingFormat_918.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkUnknown.cs" />
-    <Compile Include="CryEngine_Core\Chunks\Chunk.cs" />
-    <Compile Include="CryEngine_Core\Chunks\ChunkHeader.cs" />
-    <Compile Include="CryEngine_Core\Material.cs" />
-    <Compile Include="CryEngine_Core\Model.cs" />
-    <Compile Include="CryXmlB\CryXmlNode.cs" />
-    <Compile Include="CryXmlB\CryXmlReference.cs" />
-    <Compile Include="CryXmlB\CryXmlSerializer.cs" />
-    <Compile Include="CryXmlB\CryXmlValue.cs" />
-    <Compile Include="External\Dolkens\Extensions.cs" />
-    <Compile Include="External\Collada\Collada_B_Rep\Curves\Grendgine_Collada_Circle.cs" />
-    <Compile Include="External\Collada\Collada_B_Rep\Curves\Grendgine_Collada_Curve.cs" />
-    <Compile Include="External\Collada\Collada_B_Rep\Curves\Grendgine_Collada_Curves.cs" />
-    <Compile Include="External\Collada\Collada_B_Rep\Curves\Grendgine_Collada_Ellipse.cs" />
-    <Compile Include="External\Collada\Collada_B_Rep\Curves\Grendgine_Collada_Hyperbola.cs" />
-    <Compile Include="External\Collada\Collada_B_Rep\Curves\Grendgine_Collada_Line.cs" />
-    <Compile Include="External\Collada\Collada_B_Rep\Curves\Grendgine_Collada_Nurbs.cs" />
-    <Compile Include="External\Collada\Collada_B_Rep\Curves\Grendgine_Collada_Parabola.cs" />
-    <Compile Include="External\Collada\Collada_B_Rep\Curves\Grendgine_Collada_Surface_Curves.cs" />
-    <Compile Include="External\Collada\Collada_B_Rep\Geometry\Grendgine_Collada_B_Rep.cs" />
-    <Compile Include="External\Collada\Collada_B_Rep\Surfaces\Grendgine_Collada_Cone.cs" />
-    <Compile Include="External\Collada\Collada_B_Rep\Surfaces\Grendgine_Collada_Cylinder_B_Rep.cs" />
-    <Compile Include="External\Collada\Collada_B_Rep\Surfaces\Grendgine_Collada_Nurbs_Surface.cs" />
-    <Compile Include="External\Collada\Collada_B_Rep\Surfaces\Grendgine_Collada_Surface.cs" />
-    <Compile Include="External\Collada\Collada_B_Rep\Surfaces\Grendgine_Collada_Surfaces.cs" />
-    <Compile Include="External\Collada\Collada_B_Rep\Surfaces\Grendgine_Collada_Swept_Surface.cs" />
-    <Compile Include="External\Collada\Collada_B_Rep\Surfaces\Grendgine_Collada_Torus.cs" />
-    <Compile Include="External\Collada\Collada_B_Rep\Topology\Grendgine_Collada_Edges.cs" />
-    <Compile Include="External\Collada\Collada_B_Rep\Topology\Grendgine_Collada_Faces.cs" />
-    <Compile Include="External\Collada\Collada_B_Rep\Topology\Grendgine_Collada_PCurves.cs" />
-    <Compile Include="External\Collada\Collada_B_Rep\Topology\Grendgine_Collada_Shells.cs" />
-    <Compile Include="External\Collada\Collada_B_Rep\Topology\Grendgine_Collada_Solids.cs" />
-    <Compile Include="External\Collada\Collada_B_Rep\Topology\Grendgine_Collada_Wires.cs" />
-    <Compile Include="External\Collada\Collada_B_Rep\Transformation\Grendgine_Collada_Orient.cs" />
-    <Compile Include="External\Collada\Collada_B_Rep\Transformation\Grendgine_Collada_Origin.cs" />
-    <Compile Include="External\Collada\Collada_Core\Animation\Grendgine_Collada_Animation.cs" />
-    <Compile Include="External\Collada\Collada_Core\Animation\Grendgine_Collada_Animation_Clip.cs" />
-    <Compile Include="External\Collada\Collada_Core\Animation\Grendgine_Collada_Channel.cs" />
-    <Compile Include="External\Collada\Collada_Core\Animation\Grendgine_Collada_Instance_Animation.cs" />
-    <Compile Include="External\Collada\Collada_Core\Animation\Grendgine_Collada_Library_Animations.cs" />
-    <Compile Include="External\Collada\Collada_Core\Animation\Grendgine_Collada_Library_Animation_Clips.cs" />
-    <Compile Include="External\Collada\Collada_Core\Animation\Grendgine_Collada_Sampler.cs" />
-    <Compile Include="External\Collada\Collada_Core\Camera\Grendgine_Collada_Camera.cs" />
-    <Compile Include="External\Collada\Collada_Core\Camera\Grendgine_Collada_Imager.cs" />
-    <Compile Include="External\Collada\Collada_Core\Camera\Grendgine_Collada_Instance_Camera.cs" />
-    <Compile Include="External\Collada\Collada_Core\Camera\Grendgine_Collada_Library_Cameras.cs" />
-    <Compile Include="External\Collada\Collada_Core\Camera\Grendgine_Collada_Optics.cs" />
-    <Compile Include="External\Collada\Collada_Core\Camera\Grendgine_Collada_Orthographic.cs" />
-    <Compile Include="External\Collada\Collada_Core\Camera\Grendgine_Collada_Perspective.cs" />
-    <Compile Include="External\Collada\Collada_Core\Controller\Grendgine_Collada_Controller.cs" />
-    <Compile Include="External\Collada\Collada_Core\Controller\Grendgine_Collada_Instance_Controller.cs" />
-    <Compile Include="External\Collada\Collada_Core\Controller\Grendgine_Collada_Joints.cs" />
-    <Compile Include="External\Collada\Collada_Core\Controller\Grendgine_Collada_Library_Controllers.cs" />
-    <Compile Include="External\Collada\Collada_Core\Controller\Grendgine_Collada_Morph.cs" />
-    <Compile Include="External\Collada\Collada_Core\Controller\Grendgine_Collada_Skeleton.cs" />
-    <Compile Include="External\Collada\Collada_Core\Controller\Grendgine_Collada_Skin.cs" />
-    <Compile Include="External\Collada\Collada_Core\Controller\Grendgine_Collada_Targets.cs" />
-    <Compile Include="External\Collada\Collada_Core\Controller\Grendgine_Collada_Vertex_Weights.cs" />
-    <Compile Include="External\Collada\Collada_Core\Custom_Types\Grendgine_Collada_Geographic_Location_Altitude.cs" />
-    <Compile Include="External\Collada\Collada_Core\Custom_Types\Grendgine_Collada_Poly_PH.cs" />
-    <Compile Include="External\Collada\Collada_Core\Data_Flow\Grendgine_Collada_Accessor.cs" />
-    <Compile Include="External\Collada\Collada_Core\Data_Flow\Grendgine_Collada_Bool_Array.cs" />
-    <Compile Include="External\Collada\Collada_Core\Data_Flow\Grendgine_Collada_Float_Array.cs" />
-    <Compile Include="External\Collada\Collada_Core\Data_Flow\Grendgine_Collada_IDREF_Array.cs" />
-    <Compile Include="External\Collada\Collada_Core\Data_Flow\Grendgine_Collada_Input_Shared.cs" />
-    <Compile Include="External\Collada\Collada_Core\Data_Flow\Grendgine_Collada_Input_Unshared.cs" />
-    <Compile Include="External\Collada\Collada_Core\Data_Flow\Grendgine_Collada_Int_Array.cs" />
-    <Compile Include="External\Collada\Collada_Core\Data_Flow\Grendgine_Collada_Name_Array.cs" />
-    <Compile Include="External\Collada\Collada_Core\Data_Flow\Grendgine_Collada_SIDREF_Array.cs" />
-    <Compile Include="External\Collada\Collada_Core\Data_Flow\Grendgine_Collada_Source.cs" />
-    <Compile Include="External\Collada\Collada_Core\Data_Flow\Grendgine_Collada_Token_Array.cs" />
-    <Compile Include="External\Collada\Collada_Core\Extensibility\Grendgine_Collada_Extra.cs" />
-    <Compile Include="External\Collada\Collada_Core\Extensibility\Grendgine_Collada_Technique.cs" />
-    <Compile Include="External\Collada\Collada_Core\Extensibility\Grendgine_Collada_Technique_Common.cs" />
-    <Compile Include="External\Collada\Collada_Core\Geometry\Grendgine_Collada_Control_Vertices.cs" />
-    <Compile Include="External\Collada\Collada_Core\Geometry\Grendgine_Collada_Geometry.cs" />
-    <Compile Include="External\Collada\Collada_Core\Geometry\Grendgine_Collada_Geometry_Common_Fields.cs" />
-    <Compile Include="External\Collada\Collada_Core\Geometry\Grendgine_Collada_Instance_Geometry.cs" />
-    <Compile Include="External\Collada\Collada_Core\Geometry\Grendgine_Collada_Library_Geometries.cs" />
-    <Compile Include="External\Collada\Collada_Core\Geometry\Grendgine_Collada_Lines.cs" />
-    <Compile Include="External\Collada\Collada_Core\Geometry\Grendgine_Collada_Linestrips.cs" />
-    <Compile Include="External\Collada\Collada_Core\Geometry\Grendgine_Collada_Mesh.cs" />
-    <Compile Include="External\Collada\Collada_Core\Geometry\Grendgine_Collada_Polygons.cs" />
-    <Compile Include="External\Collada\Collada_Core\Geometry\Grendgine_Collada_Polylist.cs" />
-    <Compile Include="External\Collada\Collada_Core\Geometry\Grendgine_Collada_Spline.cs" />
-    <Compile Include="External\Collada\Collada_Core\Geometry\Grendgine_Collada_Triangles.cs" />
-    <Compile Include="External\Collada\Collada_Core\Geometry\Grendgine_Collada_Trifans.cs" />
-    <Compile Include="External\Collada\Collada_Core\Geometry\Grendgine_Collada_Tristrips.cs" />
-    <Compile Include="External\Collada\Collada_Core\Geometry\Grendgine_Collada_Vertices.cs" />
-    <Compile Include="External\Collada\Collada_Core\Lighting\Grendgine_Collada_Ambient.cs" />
-    <Compile Include="External\Collada\Collada_Core\Lighting\Grendgine_Collada_Color.cs" />
-    <Compile Include="External\Collada\Collada_Core\Lighting\Grendgine_Collada_Directional.cs" />
-    <Compile Include="External\Collada\Collada_Core\Lighting\Grendgine_Collada_Instance_Light.cs" />
-    <Compile Include="External\Collada\Collada_Core\Lighting\Grendgine_Collada_Library_Lights.cs" />
-    <Compile Include="External\Collada\Collada_Core\Lighting\Grendgine_Collada_Light.cs" />
-    <Compile Include="External\Collada\Collada_Core\Lighting\Grendgine_Collada_Point.cs" />
-    <Compile Include="External\Collada\Collada_Core\Lighting\Grendgine_Collada_Spot.cs" />
-    <Compile Include="External\Collada\Collada_Core\Mathematics\Grendgine_Collada_Formula.cs" />
-    <Compile Include="External\Collada\Collada_Core\Mathematics\Grendgine_Collada_Instance_Formula.cs" />
-    <Compile Include="External\Collada\Collada_Core\Mathematics\Grendgine_Collada_Library_Formulas.cs" />
-    <Compile Include="External\Collada\Collada_Core\Metadata\Grendgine_Collada_Asset.cs" />
-    <Compile Include="External\Collada\Collada_Core\Metadata\Grendgine_Collada_Asset_Contributor.cs" />
-    <Compile Include="External\Collada\Collada_Core\Metadata\Grendgine_Collada_Asset_Coverage.cs" />
-    <Compile Include="External\Collada\Collada_Core\Metadata\Grendgine_Collada_Asset_Unit.cs" />
-    <Compile Include="External\Collada\Collada_Core\Metadata\Grendgine_Collada_Geographic_Location.cs" />
-    <Compile Include="External\Collada\Collada_Core\Parameters\Grendgine_Collada_New_Param.cs" />
-    <Compile Include="External\Collada\Collada_Core\Parameters\Grendgine_Collada_Param.cs" />
-    <Compile Include="External\Collada\Collada_Core\Parameters\Grendgine_Collada_Set_Param.cs" />
-    <Compile Include="External\Collada\Collada_Core\Scene\Grendgine_Collada_Evaluate_Scene.cs" />
-    <Compile Include="External\Collada\Collada_Core\Scene\Grendgine_Collada_Instance_Node.cs" />
-    <Compile Include="External\Collada\Collada_Core\Scene\Grendgine_Collada_Instance_Visual_Scene.cs" />
-    <Compile Include="External\Collada\Collada_Core\Scene\Grendgine_Collada_Library_Nodes.cs" />
-    <Compile Include="External\Collada\Collada_Core\Scene\Grendgine_Collada_Library_Visual_Scenes.cs" />
-    <Compile Include="External\Collada\Collada_Core\Scene\Grendgine_Collada_Node.cs" />
-    <Compile Include="External\Collada\Collada_Core\Scene\Grendgine_Collada_Scene.cs" />
-    <Compile Include="External\Collada\Collada_Core\Scene\Grendgine_Collada_Visual_Scene.cs" />
-    <Compile Include="External\Collada\Collada_Core\Technique_Common\Grendgine_Collada_Technique_Common_Formula.cs" />
-    <Compile Include="External\Collada\Collada_Core\Technique_Common\Grendgine_Collada_Technique_Common_Light.cs" />
-    <Compile Include="External\Collada\Collada_Core\Technique_Common\Grendgine_Collada_Technique_Common_Optics.cs" />
-    <Compile Include="External\Collada\Collada_Core\Technique_Common\Grendgine_Collada_Technique_Common_Source.cs" />
-    <Compile Include="External\Collada\Collada_Core\Transform\Grendgine_Collada_Lookat.cs" />
-    <Compile Include="External\Collada\Collada_Core\Transform\Grendgine_Collada_Matrix.cs" />
-    <Compile Include="External\Collada\Collada_Core\Transform\Grendgine_Collada_Rotate.cs" />
-    <Compile Include="External\Collada\Collada_Core\Transform\Grendgine_Collada_Scale.cs" />
-    <Compile Include="External\Collada\Collada_Core\Transform\Grendgine_Collada_Skew.cs" />
-    <Compile Include="External\Collada\Collada_Core\Transform\Grendgine_Collada_Translate.cs" />
-    <Compile Include="External\Collada\Collada_FX\Custom_Types\Grendgine_Collada_Array_Length.cs" />
-    <Compile Include="External\Collada\Collada_FX\Custom_Types\Grendgine_Collada_Constant_Attribute.cs" />
-    <Compile Include="External\Collada\Collada_FX\Custom_Types\Grendgine_Collada_Format_Hint.cs" />
-    <Compile Include="External\Collada\Collada_FX\Custom_Types\Grendgine_Collada_Hex.cs" />
-    <Compile Include="External\Collada\Collada_FX\Custom_Types\Grendgine_Collada_Mips_Attribute.cs" />
-    <Compile Include="External\Collada\Collada_FX\Custom_Types\Grendgine_Collada_Ref_String.cs" />
-    <Compile Include="External\Collada\Collada_FX\Custom_Types\Grendgine_Collada_Renderable_Share.cs" />
-    <Compile Include="External\Collada\Collada_FX\Custom_Types\Grendgine_Collada_Size_2D.cs" />
-    <Compile Include="External\Collada\Collada_FX\Custom_Types\Grendgine_Collada_Size_3D.cs" />
-    <Compile Include="External\Collada\Collada_FX\Custom_Types\Grendgine_Collada_Size_Ratio.cs" />
-    <Compile Include="External\Collada\Collada_FX\Custom_Types\Grendgine_Collada_Size_Width_Only.cs" />
-    <Compile Include="External\Collada\Collada_FX\Custom_Types\Grendgine_Collada_Technique_Override.cs" />
-    <Compile Include="External\Collada\Collada_FX\Custom_Types\Grendgine_Collada_TexCoord_Semantic.cs" />
-    <Compile Include="External\Collada\Collada_FX\Custom_Types\Grendgine_Collada_Texture.cs" />
-    <Compile Include="External\Collada\Collada_FX\Effects\Grendgine_Collada_Annotate.cs" />
-    <Compile Include="External\Collada\Collada_FX\Effects\Grendgine_Collada_Bind_Vertex_Input.cs" />
-    <Compile Include="External\Collada\Collada_FX\Effects\Grendgine_Collada_Effect.cs" />
-    <Compile Include="External\Collada\Collada_FX\Effects\Grendgine_Collada_Effect_Technique.cs" />
-    <Compile Include="External\Collada\Collada_FX\Effects\Grendgine_Collada_Instance_Effect.cs" />
-    <Compile Include="External\Collada\Collada_FX\Effects\Grendgine_Collada_Library_Effects.cs" />
-    <Compile Include="External\Collada\Collada_FX\Effects\Grendgine_Collada_Technique_Hint.cs" />
-    <Compile Include="External\Collada\Collada_FX\Materials\Grendgine_Collada_Bind_FX.cs" />
-    <Compile Include="External\Collada\Collada_FX\Materials\Grendgine_Collada_Bind_Material.cs" />
-    <Compile Include="External\Collada\Collada_FX\Materials\Grendgine_Collada_Instance_Material_Geometry.cs" />
-    <Compile Include="External\Collada\Collada_FX\Materials\Grendgine_Collada_Library_Materials.cs" />
-    <Compile Include="External\Collada\Collada_FX\Materials\Grendgine_Collada_Material.cs" />
-    <Compile Include="External\Collada\Collada_FX\Parameters\Grendgine_Collada_Array.cs" />
-    <Compile Include="External\Collada\Collada_FX\Parameters\Grendgine_Collada_Modifier.cs" />
-    <Compile Include="External\Collada\Collada_FX\Parameters\Grendgine_Collada_Sampler_Image.cs" />
-    <Compile Include="External\Collada\Collada_FX\Parameters\Grendgine_Collada_Sampler_States.cs" />
-    <Compile Include="External\Collada\Collada_FX\Parameters\Grendgine_Collada_Semantic.cs" />
-    <Compile Include="External\Collada\Collada_FX\Parameters\Grendgine_Collada_UserType.cs" />
-    <Compile Include="External\Collada\Collada_FX\Profiles\BRIDGE\Grendgine_Collada_Profile_BRIDGE.cs" />
-    <Compile Include="External\Collada\Collada_FX\Profiles\CG\Grendgine_Collada_Pass_CG.cs" />
-    <Compile Include="External\Collada\Collada_FX\Profiles\CG\Grendgine_Collada_Profile_CG.cs" />
-    <Compile Include="External\Collada\Collada_FX\Profiles\CG\Grendgine_Collada_Program_CG.cs" />
-    <Compile Include="External\Collada\Collada_FX\Profiles\CG\Grendgine_Collada_Shader_CG.cs" />
-    <Compile Include="External\Collada\Collada_FX\Profiles\CG\Grendgine_Collada_Technique_CG.cs" />
-    <Compile Include="External\Collada\Collada_FX\Profiles\COMMON\Grendgine_Collada_Effect_Technique_COMMON.cs" />
-    <Compile Include="External\Collada\Collada_FX\Profiles\COMMON\Grendgine_Collada_Profile_COMMON.cs" />
-    <Compile Include="External\Collada\Collada_FX\Profiles\GLES2\Grendgine_Collada_Pass_GLES2.cs" />
-    <Compile Include="External\Collada\Collada_FX\Profiles\GLES2\Grendgine_Collada_Profile_GLES2.cs" />
-    <Compile Include="External\Collada\Collada_FX\Profiles\GLES2\Grendgine_Collada_Program_GLES2.cs" />
-    <Compile Include="External\Collada\Collada_FX\Profiles\GLES2\Grendgine_Collada_Shader_GLES2.cs" />
-    <Compile Include="External\Collada\Collada_FX\Profiles\GLES2\Grendgine_Collada_Technique_GLES2.cs" />
-    <Compile Include="External\Collada\Collada_FX\Profiles\GLES\Grendgine_Collada_Pass_GLES.cs" />
-    <Compile Include="External\Collada\Collada_FX\Profiles\GLES\Grendgine_Collada_Profile_GLES.cs" />
-    <Compile Include="External\Collada\Collada_FX\Profiles\GLES\Grendgine_Collada_Technique_GLES.cs" />
-    <Compile Include="External\Collada\Collada_FX\Profiles\GLSL\Grendgine_Collada_Pass_GLSL.cs" />
-    <Compile Include="External\Collada\Collada_FX\Profiles\GLSL\Grendgine_Collada_Profile_GLSL.cs" />
-    <Compile Include="External\Collada\Collada_FX\Profiles\GLSL\Grendgine_Collada_Program_GLSL.cs" />
-    <Compile Include="External\Collada\Collada_FX\Profiles\GLSL\Grendgine_Collada_Shader_GLSL.cs" />
-    <Compile Include="External\Collada\Collada_FX\Profiles\GLSL\Grendgine_Collada_Technique_GLSL.cs" />
-    <Compile Include="External\Collada\Collada_FX\Profiles\Grendgine_Collada_Profile.cs" />
-    <Compile Include="External\Collada\Collada_FX\Rendering\Grendgine_Collada_Blinn.cs" />
-    <Compile Include="External\Collada\Collada_FX\Rendering\Grendgine_Collada_Color_Clear.cs" />
-    <Compile Include="External\Collada\Collada_FX\Rendering\Grendgine_Collada_Color_Target.cs" />
-    <Compile Include="External\Collada\Collada_FX\Rendering\Grendgine_Collada_Constant.cs" />
-    <Compile Include="External\Collada\Collada_FX\Rendering\Grendgine_Collada_Depth_Clear.cs" />
-    <Compile Include="External\Collada\Collada_FX\Rendering\Grendgine_Collada_Depth_Target.cs" />
-    <Compile Include="External\Collada\Collada_FX\Rendering\Grendgine_Collada_Draw.cs" />
-    <Compile Include="External\Collada\Collada_FX\Rendering\Grendgine_Collada_Evaluate.cs" />
-    <Compile Include="External\Collada\Collada_FX\Rendering\Grendgine_Collada_FX_Common_Color_Or_Texture_Type.cs" />
-    <Compile Include="External\Collada\Collada_FX\Rendering\Grendgine_Collada_FX_Common_Float_Or_Param_Type.cs" />
-    <Compile Include="External\Collada\Collada_FX\Rendering\Grendgine_Collada_Instance_Material_Rendering.cs" />
-    <Compile Include="External\Collada\Collada_FX\Rendering\Grendgine_Collada_Lambert.cs" />
-    <Compile Include="External\Collada\Collada_FX\Rendering\Grendgine_Collada_Pass.cs" />
-    <Compile Include="External\Collada\Collada_FX\Rendering\Grendgine_Collada_Phong.cs" />
-    <Compile Include="External\Collada\Collada_FX\Rendering\Grendgine_Collada_Render.cs" />
-    <Compile Include="External\Collada\Collada_FX\Rendering\Grendgine_Collada_States.cs" />
-    <Compile Include="External\Collada\Collada_FX\Rendering\Grendgine_Collada_Stencil_Clear.cs" />
-    <Compile Include="External\Collada\Collada_FX\Rendering\Grendgine_Collada_Stencil_Target.cs" />
-    <Compile Include="External\Collada\Collada_FX\Shaders\Grendgine_Collada_Binary.cs" />
-    <Compile Include="External\Collada\Collada_FX\Shaders\Grendgine_Collada_Bind_Attribute.cs" />
-    <Compile Include="External\Collada\Collada_FX\Shaders\Grendgine_Collada_Bind_Uniform.cs" />
-    <Compile Include="External\Collada\Collada_FX\Shaders\Grendgine_Collada_Code.cs" />
-    <Compile Include="External\Collada\Collada_FX\Shaders\Grendgine_Collada_Compiler.cs" />
-    <Compile Include="External\Collada\Collada_FX\Shaders\Grendgine_Collada_Include.cs" />
-    <Compile Include="External\Collada\Collada_FX\Shaders\Grendgine_Collada_Linker.cs" />
-    <Compile Include="External\Collada\Collada_FX\Shaders\Grendgine_Collada_Shader.cs" />
-    <Compile Include="External\Collada\Collada_FX\Shaders\Grendgine_Collada_Shader_Sources.cs" />
-    <Compile Include="External\Collada\Collada_FX\Technique_Common\Grendgine_Collada_Technique_Common_Bind_Material.cs" />
-    <Compile Include="External\Collada\Collada_FX\Texturing\Grendgine_Collada_Alpha.cs" />
-    <Compile Include="External\Collada\Collada_FX\Texturing\Grendgine_Collada_Argument_Alpha.cs" />
-    <Compile Include="External\Collada\Collada_FX\Texturing\Grendgine_Collada_Argument_RGB.cs" />
-    <Compile Include="External\Collada\Collada_FX\Texturing\Grendgine_Collada_Create_2D.cs" />
-    <Compile Include="External\Collada\Collada_FX\Texturing\Grendgine_Collada_Create_3D.cs" />
-    <Compile Include="External\Collada\Collada_FX\Texturing\Grendgine_Collada_Create_Cube.cs" />
-    <Compile Include="External\Collada\Collada_FX\Texturing\Grendgine_Collada_Format.cs" />
-    <Compile Include="External\Collada\Collada_FX\Texturing\Grendgine_Collada_FX_Sampler_Common.cs" />
-    <Compile Include="External\Collada\Collada_FX\Texturing\Grendgine_Collada_Image.cs" />
-    <Compile Include="External\Collada\Collada_FX\Texturing\Grendgine_Collada_Init_From.cs" />
-    <Compile Include="External\Collada\Collada_FX\Texturing\Grendgine_Collada_Instance_Image.cs" />
-    <Compile Include="External\Collada\Collada_FX\Texturing\Grendgine_Collada_Library_Images.cs" />
-    <Compile Include="External\Collada\Collada_FX\Texturing\Grendgine_Collada_RGB.cs" />
-    <Compile Include="External\Collada\Collada_FX\Texturing\Grendgine_Collada_Sampler1D.cs" />
-    <Compile Include="External\Collada\Collada_FX\Texturing\Grendgine_Collada_Sampler2D.cs" />
-    <Compile Include="External\Collada\Collada_FX\Texturing\Grendgine_Collada_Sampler3D.cs" />
-    <Compile Include="External\Collada\Collada_FX\Texturing\Grendgine_Collada_SamplerCUBE.cs" />
-    <Compile Include="External\Collada\Collada_FX\Texturing\Grendgine_Collada_SamplerDEPTH.cs" />
-    <Compile Include="External\Collada\Collada_FX\Texturing\Grendgine_Collada_SamplerRECT.cs" />
-    <Compile Include="External\Collada\Collada_FX\Texturing\Grendgine_Collada_TexCombiner.cs" />
-    <Compile Include="External\Collada\Collada_FX\Texturing\Grendgine_Collada_TexEnv.cs" />
-    <Compile Include="External\Collada\Collada_FX\Texturing\Grendgine_Collada_Texture_Pipeline.cs" />
-    <Compile Include="External\Collada\Collada_Helpers\Grendgine_Collada_Bool_Array_String.cs" />
-    <Compile Include="External\Collada\Collada_Helpers\Grendgine_Collada_Common_Float2_Or_Param_Type.cs" />
-    <Compile Include="External\Collada\Collada_Helpers\Grendgine_Collada_Float_Array_String.cs" />
-    <Compile Include="External\Collada\Collada_Helpers\Grendgine_Collada_Int_Array_String.cs" />
-    <Compile Include="External\Collada\Collada_Helpers\Grendgine_Collada_Parse_Utils.cs" />
-    <Compile Include="External\Collada\Collada_Helpers\Grendgine_Collada_SID_Float_Array_String.cs" />
-    <Compile Include="External\Collada\Collada_Helpers\Grendgine_Collada_SID_Int_Array_String.cs" />
-    <Compile Include="External\Collada\Collada_Helpers\Grendgine_Collada_String_Array_String.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Articulated_Systems\Grendgine_Collada_Articulated_System.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Articulated_Systems\Grendgine_Collada_Axis_Info.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Articulated_Systems\Grendgine_Collada_Bind.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Articulated_Systems\Grendgine_Collada_Connect_Param.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Articulated_Systems\Grendgine_Collada_Effector_Info.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Articulated_Systems\Grendgine_Collada_Frame_Object.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Articulated_Systems\Grendgine_Collada_Frame_Origin.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Articulated_Systems\Grendgine_Collada_Frame_TCP.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Articulated_Systems\Grendgine_Collada_Frame_Tip.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Articulated_Systems\Grendgine_Collada_Instance_Articulated_System.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Articulated_Systems\Grendgine_Collada_Kinematics.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Articulated_Systems\Grendgine_Collada_Library_Articulated_Systems.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Articulated_Systems\Grendgine_Collada_Motion.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Custom_Types\Grendgine_Collada_Axis_Info_Kinematics.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Custom_Types\Grendgine_Collada_Axis_Info_Motion.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Custom_Types\Grendgine_Collada_Kinematics_Axis_Info_Index.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Custom_Types\Grendgine_Collada_Kinematics_Axis_Info_Limits.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Custom_Types\Grendgine_Collada_Kinematics_Limits.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Joints\Grendgine_Collada_Joint.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Joints\Grendgine_Collada_Library_Joints.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Joints\Grendgine_Collada_Prismatic.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Joints\Grendgine_Collada_Revolute.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Kinematics_Models\Grendgine_Collada_Attachment_End.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Kinematics_Models\Grendgine_Collada_Attachment_Full.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Kinematics_Models\Grendgine_Collada_Attachment_Start.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Kinematics_Models\Grendgine_Collada_Instance_Joint.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Kinematics_Models\Grendgine_Collada_Instance_Kinematics_Model.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Kinematics_Models\Grendgine_Collada_Kinematics_Model.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Kinematics_Models\Grendgine_Collada_Library_Kinematics_Models.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Kinematics_Models\Grendgine_Collada_Link.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Kinematics_Scenes\Grendgine_Collada_Bind_Joint_Axis.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Kinematics_Scenes\Grendgine_Collada_Bind_Kinematics_Model.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Kinematics_Scenes\Grendgine_Collada_Instance_Kinematics_Scene.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Kinematics_Scenes\Grendgine_Collada_Kinematics_Scene.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Kinematics_Scenes\Grendgine_Collada_Library_Kinematics_Scene.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Technique_Common\Grendgine_Collada_Technique_Common_Kinematics.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Technique_Common\Grendgine_Collada_Technique_Common_Kinematics_Model.cs" />
-    <Compile Include="External\Collada\Collada_Kinematics\Technique_Common\Grendgine_Collada_Technique_Common_Motion.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Analytical_Shape\Grendgine_Collada_Box.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Analytical_Shape\Grendgine_Collada_Capsule.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Analytical_Shape\Grendgine_Collada_Convex_Mesh.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Analytical_Shape\Grendgine_Collada_Cylinder.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Analytical_Shape\Grendgine_Collada_Plane.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Analytical_Shape\Grendgine_Collada_Shape.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Analytical_Shape\Grendgine_Collada_Sphere.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Custom_Types\Grendgine_Collada_Constraint_Limits.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Custom_Types\Grendgine_Collada_Constraint_Limit_Detail.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Custom_Types\Grendgine_Collada_Constraint_Spring.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Custom_Types\Grendgine_Collada_Constraint_Spring_Type.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Custom_Types\Grendgine_Collada_Mass_Frame.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Physics_Material\Grendgine_Collada_Instance_Physics_Material.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Physics_Material\Grendgine_Collada_Library_Physics_Materials.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Physics_Material\Grendgine_Collada_Physics_Material.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Physics_Model\Grendgine_Collada_Attachment.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Physics_Model\Grendgine_Collada_Instance_Physics_Model.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Physics_Model\Grendgine_Collada_Instance_Rigid_Body.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Physics_Model\Grendgine_Collada_Instance_Rigid_Constraint.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Physics_Model\Grendgine_Collada_Library_Physics_Models.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Physics_Model\Grendgine_Collada_Physics_Model.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Physics_Model\Grendgine_Collada_Ref_Attachment.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Physics_Model\Grendgine_Collada_Rigid_Body.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Physics_Model\Grendgine_Collada_Rigid_Constraint.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Physics_Scene\Grendgine_Collada_Force_Field.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Physics_Scene\Grendgine_Collada_Instance_Force_Field.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Physics_Scene\Grendgine_Collada_Instance_Physics_Scene.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Physics_Scene\Grendgine_Collada_Library_Force_Fields.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Physics_Scene\Grendgine_Collada_Library_Physics_Scenes.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Physics_Scene\Grendgine_Collada_Physics_Scene.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Technique_Common\Grendgine_Collada_Technique_Common_Instance_Rigid_Body.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Technique_Common\Grendgine_Collada_Technique_Common_Physics_Material.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Technique_Common\Grendgine_Collada_Technique_Common_Physics_Scene.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Technique_Common\Grendgine_Collada_Technique_Common_Rigid_Body.cs" />
-    <Compile Include="External\Collada\Collada_Physics\Technique_Common\Grendgine_Collada_Technique_Common_Rigid_Constraint.cs" />
-    <Compile Include="External\Collada\Enums\Grendgine_Collada_Alpha_Operator.cs" />
-    <Compile Include="External\Collada\Enums\Grendgine_Collada_Argument_Alpha_Operand.cs" />
-    <Compile Include="External\Collada\Enums\Grendgine_Collada_Argument_RGB_Operand.cs" />
-    <Compile Include="External\Collada\Enums\Grendgine_Collada_Argument_Source.cs" />
-    <Compile Include="External\Collada\Enums\Grendgine_Collada_Face.cs" />
-    <Compile Include="External\Collada\Enums\Grendgine_Collada_Format_Hint_Channels.cs" />
-    <Compile Include="External\Collada\Enums\Grendgine_Collada_Format_Hint_Precision.cs" />
-    <Compile Include="External\Collada\Enums\Grendgine_Collada_Format_Hint_Range.cs" />
-    <Compile Include="External\Collada\Enums\Grendgine_Collada_FX_Opaque_Channel.cs" />
-    <Compile Include="External\Collada\Enums\Grendgine_Collada_FX_Sampler_Common_Filter_Type.cs" />
-    <Compile Include="External\Collada\Enums\Grendgine_Collada_FX_Sampler_Common_Wrap_Mode.cs" />
-    <Compile Include="External\Collada\Enums\Grendgine_Collada_Geographic_Location_Altitude_Mode.cs" />
-    <Compile Include="External\Collada\Enums\Grendgine_Collada_Input_Semantic.cs" />
-    <Compile Include="External\Collada\Enums\Grendgine_Collada_Modifier_Value.cs" />
-    <Compile Include="External\Collada\Enums\Grendgine_Collada_Node_Type.cs" />
-    <Compile Include="External\Collada\Enums\Grendgine_Collada_RGB_Operator.cs" />
-    <Compile Include="External\Collada\Enums\Grendgine_Collada_Sampler_Behavior.cs" />
-    <Compile Include="External\Collada\Enums\Grendgine_Collada_Shader_Stage.cs" />
-    <Compile Include="External\Collada\Enums\Grendgine_Collada_TexEnv_Operator.cs" />
-    <Compile Include="External\Collada\Grendgine_Collada.cs" />
-    <Compile Include="External\Collada\Types\Grendgine_Collada_Bool_Array_String.cs" />
-    <Compile Include="External\Collada\Types\Grendgine_Collada_Common_Bool_Or_Param_Type.cs" />
-    <Compile Include="External\Collada\Types\Grendgine_Collada_Common_Float2_Or_Param_Type.cs" />
-    <Compile Include="External\Collada\Types\Grendgine_Collada_Common_Float_Or_Param_Type.cs" />
-    <Compile Include="External\Collada\Types\Grendgine_Collada_Common_Int_Or_Param_Type.cs" />
-    <Compile Include="External\Collada\Types\Grendgine_Collada_Common_Param_Type.cs" />
-    <Compile Include="External\Collada\Types\Grendgine_Collada_Common_SIDREF_Or_Param_Type.cs" />
-    <Compile Include="External\Collada\Types\Grendgine_Collada_Float_Array_String.cs" />
-    <Compile Include="External\Collada\Types\Grendgine_Collada_Int_Array_String.cs" />
-    <Compile Include="External\Collada\Types\Grendgine_Collada_SID_Bool.cs" />
-    <Compile Include="External\Collada\Types\Grendgine_Collada_SID_Float.cs" />
-    <Compile Include="External\Collada\Types\Grendgine_Collada_SID_Float_Array_String.cs" />
-    <Compile Include="External\Collada\Types\Grendgine_Collada_SID_Int_Array_String.cs" />
-    <Compile Include="External\Collada\Types\Grendgine_Collada_SID_Name_Float.cs" />
-    <Compile Include="External\Collada\Types\Grendgine_Collada_SID_Name_String.cs" />
-    <Compile Include="External\Collada\Types\Grendgine_Collada_String_Array_String.cs" />
-    <Compile Include="Renderers\FBX\FBX.cs" />
-    <Compile Include="Services\MaterialLibraryCreator.cs" />
-    <Compile Include="Services\TSpace.cs" />
-    <Compile Include="Services\Utils.cs" />
-    <Compile Include="Renderers\Wavefront\Wavefront.Material.cs" />
-    <Compile Include="Renderers\Wavefront\Wavefront.cs" />
-    <Compile Include="Structs\Structs.cs" />
-    <Compile Include="Enums\Enums.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -561,8 +135,6 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
-    <None Include="cgf-converter_1_TemporaryKey.pfx" />
-    <None Include="cgf-converter_TemporaryKey.pfx" />
     <None Include="packages.config" />
     <None Include="Properties\app.manifest" />
   </ItemGroup>
@@ -589,23 +161,27 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="CryEngine_Core\Prefab\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="FodyWeavers.xml" />
     <Content Include="logo-50px-prod.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CgfConverter\CgfConverter.csproj">
+      <Project>{7e42b72a-c90c-4aaf-a344-8bd124866bdb}</Project>
+      <Name>CgfConverter</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\packages\Fody.3.2.4\build\Fody.targets" Condition="Exists('..\packages\Fody.3.2.4\build\Fody.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Costura.Fody.1.6.2\build\dotnet\Costura.Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Costura.Fody.1.6.2\build\dotnet\Costura.Fody.targets'))" />
-    <Error Condition="!Exists('..\packages\Fody.2.3.18\build\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.2.3.18\build\Fody.targets'))" />
+    <Error Condition="!Exists('..\packages\Fody.3.2.4\build\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.3.2.4\build\Fody.targets'))" />
+    <Error Condition="!Exists('..\packages\Costura.Fody.3.1.2\build\Costura.Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Costura.Fody.3.1.2\build\Costura.Fody.targets'))" />
   </Target>
-  <Import Project="..\packages\Costura.Fody.1.6.2\build\dotnet\Costura.Fody.targets" Condition="Exists('..\packages\Costura.Fody.1.6.2\build\dotnet\Costura.Fody.targets')" />
-  <Import Project="..\packages\Fody.2.3.18\build\Fody.targets" Condition="Exists('..\packages\Fody.2.3.18\build\Fody.targets')" />
+  <Import Project="..\packages\Costura.Fody.3.1.2\build\Costura.Fody.targets" Condition="Exists('..\packages\Costura.Fody.3.1.2\build\Costura.Fody.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
