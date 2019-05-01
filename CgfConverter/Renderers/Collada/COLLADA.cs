@@ -99,8 +99,6 @@ namespace CgfConverter
             {
                 WriteLibrary_VisualScenes();
             }
-            //WriteLibrary_Controllers();
-            //WriteLibrary_VisualScenes();
             //WriteIDs();
             if (!daeOutputFile.Directory.Exists)
                 daeOutputFile.Directory.Create();
@@ -122,7 +120,8 @@ namespace CgfConverter
         public void GetSchema()                                             // Get the schema from kronos.org.  Needs error checking in case it's offline
         {
             schema.ElementFormDefault = XmlSchemaForm.Qualified;
-            schema.TargetNamespace = "https://www.khronos.org/files/collada_schema_1_5";
+            //schema.TargetNamespace = "https://www.khronos.org/files/collada_schema_1_5";
+            schema.TargetNamespace = "https://www.khronos.org/files/collada_schema_1_4";
         }
 
         public void WriteAsset()
