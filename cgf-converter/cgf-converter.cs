@@ -8,11 +8,13 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Diagnostics;
 using CgfConverter;
+using System.Windows.Forms;
 
 namespace CgfConverterConsole
 {
     public class Program
     {
+        [STAThreadAttribute]
         public static Int32 Main(String[] args)
         {
             Utils.LogLevel = LogLevelEnum.Warning;
@@ -128,6 +130,12 @@ namespace CgfConverterConsole
                         Utils.Log(LogLevelEnum.Critical);
                     }
                 }
+            }
+            else
+            {
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.Run(new Form1());
             }
 
 #if !DEBUG
