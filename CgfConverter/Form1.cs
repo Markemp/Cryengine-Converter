@@ -1,5 +1,4 @@
 ﻿using System.Windows.Forms;
-using System.IO;
 using System;
 
 namespace CgfConverter
@@ -11,89 +10,69 @@ namespace CgfConverter
             InitializeComponent();
         }
 
-        private bool path_cheker = false;
-        private string input_file;
+        private string input_dir;
         private string output_dir;
-        private void InputButton_Click(object sender, System.EventArgs e)
+
+        private void InputButton_Click(object sender, EventArgs e)
         {
-            const int min_path_length = 2; //I don't think that path to file can be shorter than 2 chars
-            if (input_file_path.Text.Length > min_path_length)
+            var result = folderBrowserDialog1.ShowDialog();
+            if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(folderBrowserDialog1.SelectedPath))
             {
-                var input_path = input_file_path.Text;
-                System.Text.StringBuilder file_type_detector = new System.Text.StringBuilder(input_path);  //use a string builder for work with file path
-                file_type_detector.Remove(0, input_path.Length - 3);   //for txt type need only 3 last symbols !!! THIS IS NOT RIGHT CODE FOR TYPE DETECTING
-                if (file_type_detector.ToString() != "cgf" && file_type_detector.ToString() != "cga")
-                {
-                    MessageBox.Show(input_file_path + "not a Cryengine file.\n Please, choose correct file (for example .cgf)");
-                }
-                else
-                {
-                    try //is file exist and can be open
-                    {
-                        FileStream FS = File.Open(input_path, FileMode.Open);
-                        FS.Close();
-                        MessageBox.Show(input_path + " was uploaded");
-                        if (output_path.Text.Length < min_path_length)
-                        {
-                            path_cheker = true;
-                            input_file = input_file_path.Text;
-                            output_dir = output_path.Text;
-                        }
-                        else
-                        {
-                            MessageBox.Show("Choose output path!");
-                        }
-                    }
-                    catch (IOException)
-                    {
-                        MessageBox.Show(input_path + " doesn't exist or not a file!");
-                    }
+                MessageBox.Show("Input path: " + folderBrowserDialog1.SelectedPath);
+                input_file_path.Text = folderBrowserDialog1.SelectedPath;
+                input_dir = folderBrowserDialog1.SelectedPath;
+                Console.WriteLine(input_dir);
+            }
 
-                }
-
+        }
+        private void ConvertButton_Click(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrWhiteSpace(output_dir) && !string.IsNullOrWhiteSpace(input_dir))
+            {
+                startConvert(input_dir, output_dir);
             }
             else
             {
-                openFileDialog1.Filter = "Cryengine files (*.cgf)|*.cgf (*.cga)|*.cga"; //user can choose only txt file
-                if (openFileDialog1.ShowDialog() == DialogResult.Cancel) //if openFileDialog can't be open
-                {
-                    System.Console.WriteLine("openFileMesage open error");
-                }
-                else
-                {
-                    var filename = openFileDialog1.FileName;
-                    
-                    try //is file exist and can be open
-                    {
-                        FileStream FS = File.Open(filename, FileMode.Open);
-                        input_file_path.Text = filename;
-                        FS.Close();
-                        MessageBox.Show(filename + " was uploaded");
-                        if (output_path.Text.Length < min_path_length)
-                        {
-                            path_cheker = true;
-                            input_file = filename;
-                            output_dir = output_path.Text;
-                        }
-                        else
-                        {
-                            MessageBox.Show("Choose output path!");
-                        }
-                    }
-                    catch (IOException)
-                    {
-                        MessageBox.Show(filename + " doesn't exist!");
-                    }
-                }
+                MessageBox.Show("Set input and output paths first!");
+            }
+        }
+
+        private void outputButton_Click(object sender, EventArgs e)
+        {
+            var result = folderBrowserDialog1.ShowDialog();
+            if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(folderBrowserDialog1.SelectedPath))
+            {
+                MessageBox.Show("Output path: " + folderBrowserDialog1.SelectedPath);
+                output_path.Text = folderBrowserDialog1.SelectedPath;
+                output_dir = folderBrowserDialog1.SelectedPath;
+                Console.WriteLine(output_dir);
             }
         }
 
         private void startConvert(string input, string output)
         {
-            String[] args = new String[3];
-            args[0] = input;
+            String[] args = new String[5];
+            if (cgf.Checked)
+            {
+                args[0] = input + @"\*.cgf";    //always convert all files from input dir
+            }
+            else if (cga.Checked)
+            {
+                args[0] = input + @"\*.cga";    //always convert all files from input dir
+            }
+            else if (chr.Checked)
+            {
+                args[0] = input + @"\*.chr";    //always convert all files from input dir
+            }
+            else if (skin.Checked)
+            {
+                args[0] = input + @"\*.skin";    //always convert all files from input dir
+            }
+            Console.WriteLine(args[0]);
             args[1] = "-objectdir";
-            args[2] = input;
+            args[2] = input;    //in most cases .mtl files are near .cgf files
+            args[3] = "-out";
+            args[4] = output;
 
             ArgsHandler argsHandler = new ArgsHandler();
             Int32 result = argsHandler.ProcessArgs(args);
@@ -135,16 +114,5 @@ namespace CgfConverter
             }
         }
 
-        private void ConvertButton_Click(object sender, EventArgs e)
-        {
-            if (path_cheker)
-            {
-                startConvert(input_file, output_dir);
-            }
-            else
-            {
-                MessageBox.Show("Set input and output paths first!");
-            }
-        }
     }
 }

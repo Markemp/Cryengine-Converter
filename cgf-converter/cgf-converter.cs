@@ -1,14 +1,6 @@
 ﻿using System;
-using System.IO;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml;
-using System.Xml.Schema;
-using System.Diagnostics;
-using CgfConverter;
 using System.Windows.Forms;
+using CgfConverter;
 
 namespace CgfConverterConsole
 {
@@ -64,79 +56,79 @@ namespace CgfConverterConsole
 			//args = new String[] { @"d:\temp\prey\dahl_genmalebody01.skin", "-objectdir", @"d:\temp\prey", "-dae", "-dds" };
 #endif
 
-			ArgsHandler argsHandler = new ArgsHandler();
+            ArgsHandler argsHandler = new ArgsHandler();
             Int32 result = argsHandler.ProcessArgs(args);
 
 #if !DEBUG
             try
             {
 #endif
-            System.Globalization.CultureInfo customCulture = (System.Globalization.CultureInfo)System.Threading.Thread.CurrentThread.CurrentCulture.Clone();
-            customCulture.NumberFormat.NumberDecimalSeparator = ".";
+                System.Globalization.CultureInfo customCulture = (System.Globalization.CultureInfo)System.Threading.Thread.CurrentThread.CurrentCulture.Clone();
+                customCulture.NumberFormat.NumberDecimalSeparator = ".";
 
-            System.Threading.Thread.CurrentThread.CurrentCulture = customCulture;
+                System.Threading.Thread.CurrentThread.CurrentCulture = customCulture;
 
-            if (result == 0)
-            {
-                foreach (String inputFile in argsHandler.InputFiles)
+                if (result == 0)
                 {
-                    try
+                    foreach (String inputFile in argsHandler.InputFiles)
                     {
-                        // Read CryEngine Files
-                        CryEngine cryData = new CryEngine(inputFile, argsHandler.DataDir.FullName);
-
-                        #region Render Output Files
-
-                        if (argsHandler.Output_Blender == true)
+                        try
                         {
-                            Blender blendFile = new Blender(argsHandler, cryData);
+                            // Read CryEngine Files
+                            CryEngine cryData = new CryEngine(inputFile, argsHandler.DataDir.FullName);
 
-                            blendFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+                            #region Render Output Files
+
+                            if (argsHandler.Output_Blender == true)
+                            {
+                                Blender blendFile = new Blender(argsHandler, cryData);
+
+                                blendFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+                            }
+
+                            if (argsHandler.Output_Wavefront == true)
+                            {
+                                Wavefront objFile = new Wavefront(argsHandler, cryData);
+
+                                objFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+                            }
+
+                            if (argsHandler.Output_CryTek == true)
+                            {
+                                CryRender cryFile = new CryRender(argsHandler, cryData);
+
+                                cryFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+                            }
+
+                            if (argsHandler.Output_Collada == true)
+                            {
+                                COLLADA daeFile = new COLLADA(argsHandler, cryData);
+
+                                daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+                            }
+
+                            #endregion
                         }
-
-                        if (argsHandler.Output_Wavefront == true)
+                        catch (Exception ex)
                         {
-                            Wavefront objFile = new Wavefront(argsHandler, cryData);
-
-                            objFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+                            Utils.Log(LogLevelEnum.Critical);
+                            Utils.Log(LogLevelEnum.Critical, "********************************************************************************");
+                            Utils.Log(LogLevelEnum.Critical, "There was an error rendering {0}", inputFile);
+                            Utils.Log(LogLevelEnum.Critical);
+                            Utils.Log(LogLevelEnum.Critical, ex.Message);
+                            Utils.Log(LogLevelEnum.Critical);
+                            Utils.Log(LogLevelEnum.Critical, ex.StackTrace);
+                            Utils.Log(LogLevelEnum.Critical, "********************************************************************************");
+                            Utils.Log(LogLevelEnum.Critical);
                         }
-
-                        if (argsHandler.Output_CryTek == true)
-                        {
-                            CryRender cryFile = new CryRender(argsHandler, cryData);
-
-                            cryFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
-                        }
-
-                        if (argsHandler.Output_Collada == true)
-                        {
-                            COLLADA daeFile = new COLLADA(argsHandler, cryData);
-
-                            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
-                        }
-
-                        #endregion
-                    }
-                    catch (Exception ex)
-                    {
-                        Utils.Log(LogLevelEnum.Critical);
-                        Utils.Log(LogLevelEnum.Critical, "********************************************************************************");
-                        Utils.Log(LogLevelEnum.Critical, "There was an error rendering {0}", inputFile);
-                        Utils.Log(LogLevelEnum.Critical);
-                        Utils.Log(LogLevelEnum.Critical, ex.Message);
-                        Utils.Log(LogLevelEnum.Critical);
-                        Utils.Log(LogLevelEnum.Critical, ex.StackTrace);
-                        Utils.Log(LogLevelEnum.Critical, "********************************************************************************");
-                        Utils.Log(LogLevelEnum.Critical);
                     }
                 }
-            }
-            else
-            {
-                Application.EnableVisualStyles();
-                Application.SetCompatibleTextRenderingDefault(false);
-                Application.Run(new Form1());
-            }
+                else
+                {
+                    Application.EnableVisualStyles();
+                    Application.SetCompatibleTextRenderingDefault(false);
+                    Application.Run(new Form1());
+                }
 
 #if !DEBUG
             }
