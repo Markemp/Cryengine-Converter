@@ -2,7 +2,7 @@
 
 # Cryengine Converter
 
-[Cryengine Converter](https://www.heffaypresents.com/GitHub) is a C# program to help convert Cryengine assets into a more portable format. Currently it supports `.obj` and `.dae` (Collada) to some extent, although work is in progress to allow exporting Cryengine assets into FBX format.  The default output is Collada, as this supports the most features, including Armature/rigs with vertex weights and better material handling.
+[Cryengine Converter](https://www.heffaypresents.com/GitHub) is a C# program to help convert Cryengine assets into a more portable format. Currently it supports `.obj` (No longer supported) and `.dae` (Collada) to some extent, although work is in progress to allow exporting Cryengine assets into FBX format.  The default output is Collada, as this supports the most features, including Armature/rigs with vertex weights and better material handling.
 
 How do you use it?  Well, here is the output from the current Usage:
 
@@ -58,7 +58,7 @@ This is pretty close to what a game like Star Citizen will look like after you e
 
 > **Aside:**  When compiled (or you just download the .exe), this program is easiest to use when you put it into a dedicated directory that is in the path.  I won't go into [how to modify the path on your computer](http://lmgtfy.com/?q=changing+path+on+a+windows+computer), but I have my own `d:\scripts` directory with cgf-converter.exe in it, along with a few other commonly used scripts and programs.  I recommend you do the same (or something similar), as from now on the Powershell commands I type out will assume that the programs are in the path.  If they aren't, **the commands I list will not work.**
 
-> **Aside 2.0:**  Be careful exporting stuff to **`.obj`** files, which is currently the default method.  A Cryengine file (in incredibly simplified terms) consists of a geometry file (ends in `.cga/.cgaf/.cgam`) and the related material file (ends in `.mtl`).  The Cryengine material file is an XML file that contains material info.  This program will take that file and convert it by default to an .obj material file with the *same name*, which is not ideal.  Use the `-noconflict` argument to make it write to a similar name that won't conflict.
+> **Aside 2.0:**  Be careful exporting stuff to **`.obj`** files, as it is no longer supported.  A Cryengine file (in incredibly simplified terms) consists of a geometry file (ends in `.cga/.cgaf/.cgam`) and the related material file (ends in `.mtl`).  The Cryengine material file is an XML file that contains material info.  This program will take that file and convert it by default to an .obj material file with the *same name*, which is not ideal.  Use the `-noconflict` argument to make it write to a similar name that won't conflict.
 
 ** Important:**  Always use the `-objectdir` argument!  The location of the material files is dependent on a number of factors, and the program does its best to find them.  However, if it can't find the proper material file for the object you're trying to convert, it will fail to run.  `-objectdir` helps reduce that risk significantly.
 
@@ -76,7 +76,7 @@ PS D:\Blender Projects\Star Citizen\Objects\Spaceships.ships\AEGS\gladius\>cgf-c
 ```
 You can replace the `-dae` with `-collada` as well.
 
-#### Waveform (-obj.  Avoid using this unless you absolutely have to.)
+#### Waveform (-obj.  Avoid using this unless you absolutely have to.  Not supported!)
 To convert a single `.cga/.cgf/.skin` file to an `.obj` file, using Powershell:
 
 ```powershell
