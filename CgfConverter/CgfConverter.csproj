@@ -9,11 +9,12 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>CgfConverter</RootNamespace>
     <AssemblyName>CgfConverter</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -38,11 +39,11 @@
     <Reference Include="FbxSharp, Version=0.9.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\FbxSharp.0.9\lib\net40\FbxSharp.dll</HintPath>
     </Reference>
-    <Reference Include="MathNet.Numerics, Version=4.7.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\MathNet.Numerics.4.7.0\lib\net461\MathNet.Numerics.dll</HintPath>
+    <Reference Include="MathNet.Numerics, Version=4.9.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MathNet.Numerics.4.9.0\lib\net461\MathNet.Numerics.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.12.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

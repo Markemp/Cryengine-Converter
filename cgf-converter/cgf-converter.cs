@@ -1,12 +1,6 @@
 ﻿using System;
-using System.IO;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml;
-using System.Xml.Schema;
-using System.Diagnostics;
+using System.Threading;
+using System.Globalization;
 using CgfConverter;
 
 namespace CgfConverterConsole
@@ -30,22 +24,21 @@ namespace CgfConverterConsole
             // args = new String[] { @"O:\Mods\Assets\*.cg?", "-objectdir", @"O:\Mods\SC\Latest", "-tif", "-merge", "-dae", "-outdir", @"O:\Mods\Assets_Out" };
             args = new String[] { @"Objects\*.cg?", @"Objects\*.skin", @"Objects\*.chr", "-objectdir", @"O:\Mods\SC\Latest", "-tif", "-merge", "-obj", "-cry", "-dae", "-outdir", @"Export", "-skipshield", "-skipproxy" };
             args = new String[] { @"Starfarer\*.cg?", "-objectdir", @"D:\Workspaces\github\Cryengine-Converter\cgf-converter\bin\dev_dolkensp", "-tif", "-merge", "-obj", "-cry", "-outdir", @"Export", "-skipshield", "-skipproxy" };
-
 #endif
 
 #if DEV_MARKEMP
             Utils.LogLevel = LogLevelEnum.Verbose; // Display ALL error logs in the console
             Utils.DebugLevel = LogLevelEnum.Debug;  // Send all to the IDE Output window
-            //args = new String[] { @"c:\users\geoff\source\repos\cgf-converter\cgf-converter\bin\Debug\raptor.chr", "-dds", "-dae" };
-            //args = new String[] { @"c:\users\geoff\source\repos\cgf-converter\cgf-converter\bin\Debug\ar03.chr", "-dds", "-dae" };
-            //args = new String[] { @"D:\depot\mwo\Objects\environments\frontend\mechlab_a\lights\industrial_wetlamp_a.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
-            //args = new String[] { @"D:\depot\mwo\Objects\mechs\timberwolf\body\timberwolf.chr", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
-            //args = new String[] { @"D:\depot\mwo\Objects\mechs\hellbringer\body\hbr_right_torso_uac5_bh1.cga", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
-            //args = new String[] { @"D:\depot\mwo\Objects\environments\frontend\mechlab_a\mechbay_ceilings\mechbay_ceilinga.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
-            //args = new String[] { @"D:\depot\mwo\Objects\environments\industrial\mf_maglev_loader_a.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+
+			args = new String[] { @"D:\depot\mwo\Objects\environments\frontend\mechlab_a\lights\industrial_wetlamp_a.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+			//args = new String[] { @"D:\depot\mwo\Objects\mechs\timberwolf\body\timberwolf.chr", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+			//args = new String[] { @"D:\depot\mwo\Objects\mechs\hellbringer\body\hbr_right_torso_uac5_bh1.cga", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+			//args = new String[] { @"D:\depot\mwo\Objects\mechs\catapult\body\catapult.chr", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+			//args = new String[] { @"D:\depot\mwo\Objects\environments\frontend\mechlab_a\mechbay_ceilings\mechbay_ceilinga.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+			//args = new String[] { @"D:\depot\mwo\Objects\environments\industrial\mf_maglev_loader_a.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
 			//args = new String[] { @"D:\depot\MWO\Objects\characters\pilot\pilot_body.chr", "-dds", "-dae", "-objectdir", @"d:\blender projects\mechs\" };
 			//args = new String[] { @"D:\depot\MWO\Objects\environments\city\im_roads_zone_05\im_zone05_block16.cgf", "-objectdir", @"d:\blender projects\mechs", "-dae" };
-			args = new String[] { @"D:\depot\SC\Data\Objects\animals\fish\Fish_JellyFish_prop_animal_01.cga", "-objectdir", @"d:\depot\sc\data", "-dae" };
+			//args = new String[] { @"D:\depot\SC\Data\Objects\animals\fish\Fish_JellyFish_prop_animal_01.cga", "-objectdir", @"d:\depot\sc\data", "-dae" };
 			//args = new String[] { @"D:\depot\SC\Data\Objects\animals\fish\CleanerFish_clean_prop_animal_01.chr", "-objectdir", @"d:\depot\sc\data", "-dae", "-tif" };
 			//args = new String[] { @"d:\depot\SC\Data\Objects\Spaceships\Ships\AEGS\Gladius\AEGS_Gladius.cga", "-objectdir", @"d:\depot\sc\data", "-dae", "-tif" };
 			//args = new String[] { @"d:\depot\SC\Data\Objects\Spaceships\Ships\AEGS\Retaliator\AEGS_retaliator.cga", "-objectdir", @"d:\depot\sc\data", "-dae", "-tif" };
@@ -69,10 +62,10 @@ namespace CgfConverterConsole
             try
             {
 #endif
-            System.Globalization.CultureInfo customCulture = (System.Globalization.CultureInfo)System.Threading.Thread.CurrentThread.CurrentCulture.Clone();
+            CultureInfo customCulture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
             customCulture.NumberFormat.NumberDecimalSeparator = ".";
 
-            System.Threading.Thread.CurrentThread.CurrentCulture = customCulture;
+            Thread.CurrentThread.CurrentCulture = customCulture;
 
             if (result == 0)
             {

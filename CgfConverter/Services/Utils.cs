@@ -48,6 +48,9 @@ namespace CgfConverter
 
     public static class Utils
     {
+        public static LogLevelEnum LogLevel { get; set; }
+        public static LogLevelEnum DebugLevel { get; set; }
+
         /// <summary>
         /// Private DataStore for the DateTimeFormats property.
         /// </summary>
@@ -68,7 +71,6 @@ namespace CgfConverter
 
             return value;
         }
-
 
         /// <summary>
         /// Custom DateTime formats supported by the parser.
@@ -134,8 +136,6 @@ namespace CgfConverter
             return Comparer<T>.Default.Compare(first, second) > 0 ? first : second;
         }
 
-        public static LogLevelEnum LogLevel { get; set; }
-        public static LogLevelEnum DebugLevel { get; set; }
         public static void Log(String format = null, params Object[] args) { Utils.Log(LogLevelEnum.Debug, format, args); }
         public static void Log(LogLevelEnum logLevel, String format = null, params Object[] args)
         {

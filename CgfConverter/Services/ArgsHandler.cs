@@ -7,6 +7,7 @@ namespace CgfConverter
 {
     public class ArgsHandler
     {
+        public bool Verbose { get; set; }
         /// <summary>
         /// Files to process
         /// </summary>
@@ -23,17 +24,14 @@ namespace CgfConverter
         /// Directory to render to
         /// </summary>
         public String OutputDir { get; internal set; }
-        /// 
         /// <summary>
         /// Allows naming conflicts for mtl file
         /// </summary>
         public Boolean AllowConflicts { get; internal set; }
-
         /// <summary>
         /// For LODs files.  Adds _out onto the output
         /// </summary>
         public Boolean NoConflicts { get; internal set; }
-
         /// <summary>
         /// Name to group all meshes under
         /// </summary>
@@ -119,8 +117,6 @@ namespace CgfConverter
         {
             for (int i = 0; i < inputArgs.Length; i++)
             {
-                #region Parse Arguments
-
                 switch (inputArgs[i].ToLowerInvariant())
                 {
                     #region case "-objectdir" / "-datadir"...
@@ -315,8 +311,6 @@ namespace CgfConverter
 
                     #endregion
                 }
-
-                #endregion
             }
 
             // Ensure we have a file to process
@@ -351,9 +345,8 @@ namespace CgfConverter
             Console.WriteLine("-allowconflict:   Allows conflicts in .mtl file name");
             Console.WriteLine("-objectdir:       The name where the base Objects directory is located.  Used to read mtl file");
             Console.WriteLine("                  Defaults to current directory.");
-            Console.WriteLine("-obj:             Export Wavefront format files (Default: true)");
+            Console.WriteLine("-dae:             Export Collada format files (Default)"); 
             Console.WriteLine("-blend:           Export Blender format files (Not Implemented)");
-            Console.WriteLine("-dae:             Export Collada format files (Partially Implemented)");
             Console.WriteLine("-fbx:             Export FBX format files (Not Implemented)");
             Console.WriteLine("-smooth:          Smooth Faces");
             Console.WriteLine("-group:           Group meshes into single model");
@@ -386,6 +379,6 @@ namespace CgfConverter
             Console.WriteLine();
         }
 
-        public bool Verbose { get; set; }
+        
     }
 }

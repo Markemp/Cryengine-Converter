@@ -10,9 +10,38 @@ namespace CgfConverter.CryEngine_Core
 {
     public abstract class Chunk : IBinaryChunk
     {
-
         private static Dictionary<Type, Dictionary<UInt32, Func<dynamic>>> _chunkFactoryCache = new Dictionary<Type, Dictionary<UInt32, Func<dynamic>>> { };
-        
+
+        internal ChunkHeader _header;
+        internal CryEngine_Core.Model _model;
+
+        /// <summary>
+        /// Position of the start of the chunk
+        /// </summary>
+        public UInt32 Offset { get; internal set; }
+        /// <summary>
+        /// The Type of the Chunk
+        /// </summary>
+        public ChunkTypeEnum ChunkType { get; internal set; }
+        /// <summary>
+        /// The Version of this Chunk
+        /// </summary>
+        public UInt32 Version;
+        /// <summary>
+        /// The ID of this Chunk
+        /// </summary>
+        public int ID;
+        /// <summary>
+        /// The Size of this Chunk (in Bytes)
+        /// </summary>
+        public UInt32 Size;
+        /// <summary>
+        /// Size of the data in the chunk.  This is the chunk size, minus the header (if there is one)
+        /// </summary>
+        public UInt32 DataSize { get; set; }
+
+        public Dictionary<Int64, Byte> SkippedBytes = new Dictionary<Int64, Byte> { };
+
         public static Chunk New(ChunkTypeEnum chunkType, UInt32 version)
         {
             switch (chunkType)
@@ -127,36 +156,6 @@ namespace CgfConverter.CryEngine_Core
             this._model = model;
             this._header = header;
         }
-
-        internal ChunkHeader _header;
-        internal CryEngine_Core.Model _model;
-
-        /// <summary>
-        /// Position of the start of the chunk
-        /// </summary>
-        public UInt32 Offset { get; internal set; }
-        /// <summary>
-        /// The Type of the Chunk
-        /// </summary>
-        public ChunkTypeEnum ChunkType { get; internal set; }
-        /// <summary>
-        /// The Version of this Chunk
-        /// </summary>
-        public UInt32 Version;
-        /// <summary>
-        /// The ID of this Chunk
-        /// </summary>
-        public int ID;
-        /// <summary>
-        /// The Size of this Chunk (in Bytes)
-        /// </summary>
-        public UInt32 Size;
-        /// <summary>
-        /// Size of the data in the chunk.  This is the chunk size, minus the header (if there is one)
-        /// </summary>
-        public UInt32 DataSize { get; set; }
-
-        public Dictionary<Int64, Byte> SkippedBytes = new Dictionary<Int64, Byte> { };
 
         public void SkipBytes(BinaryReader reader, Int64? bytesToSkip = null)
         {

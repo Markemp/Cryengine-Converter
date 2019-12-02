@@ -4,20 +4,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml;
-using System.Xml.Xsl;
-using System.Xml.Linq;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using grendgine_collada;
 using System.Reflection;
 using CgfConverter.CryEngine_Core;
-using System.Text.RegularExpressions;
 
 namespace CgfConverter
 {
     public class COLLADA : BaseRenderer // class to export to .dae format (COLLADA)
     {
-        public XmlSchema schema = new XmlSchema();
+        
         public FileInfo daeOutputFile;
 
         public Grendgine_Collada daeObject = new Grendgine_Collada();       // This is the serializable class.
@@ -81,7 +78,6 @@ namespace CgfConverter
 
             // File name will be "object name.dae"
             daeOutputFile = new FileInfo(this.GetOutputFile("dae", outputDir, preservePath));
-            GetSchema();                                                    // Loads the schema.  Needs error checking in case it's offline.
             WriteRootNode();
             WriteAsset();
             WriteLibrary_Images();
@@ -96,18 +92,15 @@ namespace CgfConverter
                 WriteLibrary_VisualScenesWithSkeleton();
             }
             else
-            {
                 WriteLibrary_VisualScenes();
-            }
+            
             //WriteIDs();
             if (!daeOutputFile.Directory.Exists)
                 daeOutputFile.Directory.Create();
             TextWriter writer = new StreamWriter(daeOutputFile.FullName);   // Makes the Textwriter object for the output
             mySerializer.Serialize(writer, daeObject);                      // Serializes the daeObject and writes to the writer
-            // Validate that the Collada document is ok
+
             writer.Close();
-            //ValidateXml();                                                  // validates against the schema
-            //ValidateDoc();                                                // validates IDs and URLs
             Utils.Log(LogLevelEnum.Debug, "End of Write Collada.  Export complete.");
         }
 
@@ -115,13 +108,6 @@ namespace CgfConverter
         {
             //daeObject.Collada_Version = "1.5.0";  // Blender doesn't like 1.5. :(
             daeObject.Collada_Version = "1.4.1";
-        }
-
-        public void GetSchema()                                             // Get the schema from kronos.org.  Needs error checking in case it's offline
-        {
-            schema.ElementFormDefault = XmlSchemaForm.Qualified;
-            //schema.TargetNamespace = "https://www.khronos.org/files/collada_schema_1_5";
-            schema.TargetNamespace = "https://www.khronos.org/files/collada_schema_1_4";
         }
 
         public void WriteAsset()
@@ -1545,76 +1531,6 @@ namespace CgfConverter
             node.LocalRotation = localRotation;
             node.LocalTransform = node.LocalTransform.GetTransformFromParts(localScale, localRotation, localTranslation);
         }
-
-        #region XML Validation
-        private void ValidateXml()  // For testing
-        {
-            try
-            {
-                XmlReaderSettings settings = new XmlReaderSettings();
-                settings.Schemas.Add(null, @"C:\Users\Geoff\Documents\Visual Studio 2013\Projects\cgf-converter\cgf-converter\COLLADA_1_5.xsd");
-                settings.ValidationType = ValidationType.Schema;
-
-                XmlReader reader = XmlReader.Create(daeOutputFile.FullName, settings);
-                XmlDocument document = new XmlDocument();
-                document.Load(reader);
-
-                ValidationEventHandler eventHandler = new ValidationEventHandler(ValidationEventHandler);
-
-                Console.WriteLine("Validating Schema...");
-                // the following call to Validate succeeds.
-                document.Validate(eventHandler);
-
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-        }
-
-        static void ValidationEventHandler(object sender, ValidationEventArgs e)
-        {
-            switch (e.Severity)
-            {
-                case XmlSeverityType.Error:
-                    Console.WriteLine("Error: {0}", e.Message);
-                    break;
-                case XmlSeverityType.Warning:
-                    Console.WriteLine("Warning {0}", e.Message);
-                    break;
-            }
-
-        }
-
-        /// <summary>
-        /// This method will check all the URLs used in the Collada object and see if any reference IDs that don't exist.  It will
-        /// also check for duplicate IDs
-        /// </summary>
-        private void ValidateDoc()  // NYI
-        {
-            // Check for duplicate IDs.  Populate the idList with all the IDs.
-            //Console.WriteLine("In ValidateDoc");
-            XElement root = XElement.Load(daeOutputFile.FullName);
-            //Console.WriteLine("{0}", root.Value) ;
-            //var nodes = root.Descendants("asset");//.Where(x => x.Attribute("id").Value == "adder_a_cockpit_standard");
-            var nodes = root.Descendants();
-            foreach (var node in nodes)
-            {
-                // Write out the node for now.
-                // Console.WriteLine("ID: {0}", node);
-                if (node.HasAttributes)
-                {
-                    //Console.WriteLine(" {0}={1}", node.Name, node.Value);
-                    foreach (var attrib in nodes.Where(a => a.Name.Equals("adder_a_cockpit_standard-mesh-pos")))
-                    {
-                        Console.WriteLine("attrib: {0} == {1}", attrib.Name, attrib.Value);
-                    }
-                }
-            }
-
-            // Create a list of URLs and see if any reference an ID that doesn't exist.
-        }
-        #endregion
 
         private string CreateStringFromMatrix44(Matrix44 matrix)
         {
