@@ -341,11 +341,5 @@ namespace CgfConverter
                         yield return subMaterial;
             }
         }
-
-        #region Private Methods
-
-
-
-        #endregion
     }
 }

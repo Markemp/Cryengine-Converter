@@ -14,10 +14,9 @@ namespace CgfConverter
 {
     public class COLLADA : BaseRenderer // class to export to .dae format (COLLADA)
     {
-        
-        public FileInfo daeOutputFile;
+        FileInfo daeOutputFile;
 
-        public Grendgine_Collada daeObject = new Grendgine_Collada();       // This is the serializable class.
+        public Grendgine_Collada daeObject { get; private set; } = new Grendgine_Collada();       // This is the serializable class.
         XmlSerializer mySerializer = new XmlSerializer(typeof(Grendgine_Collada));
 
         public COLLADA(ArgsHandler argsHandler, CryEngine cryEngine) : base(argsHandler, cryEngine) { }
@@ -99,7 +98,7 @@ namespace CgfConverter
                 daeOutputFile.Directory.Create();
             TextWriter writer = new StreamWriter(daeOutputFile.FullName);   // Makes the Textwriter object for the output
             mySerializer.Serialize(writer, daeObject);                      // Serializes the daeObject and writes to the writer
-
+            
             writer.Close();
             Utils.Log(LogLevelEnum.Debug, "End of Write Collada.  Export complete.");
         }
