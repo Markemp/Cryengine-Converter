@@ -33,24 +33,21 @@ namespace CgfConverterTests
         [TestMethod]
         public void SimpleCubeSchemaValidation()
         {
-            
-            XmlReader reader = XmlReader.Create(@"..\..\ResourceFiles\simple_cube.dae", settings);
-            while (reader.Read()) ;
+            ValidateXml(@"..\..\ResourceFiles\simple_cube.dae");
             Assert.AreEqual(0, errors.Count);
         }
 
         [TestMethod]
-        public void SimpleCubeSchemaValidation_BadCollada()
+        public void SimpleCubeSchemaValidation_BadColladaWithOneError()
         {
-            XmlReader reader = XmlReader.Create(@"..\..\ResourceFiles\simple_cube_bad.dae", settings);
-            while (reader.Read()) ;
+            ValidateXml(@"..\..\ResourceFiles\simple_cube_bad.dae");
             Assert.AreEqual(1, errors.Count);
         }
 
         [TestMethod]
         public void MWO_industrial_wetlamp_a()
         {
-            var args = new String[] { @"D:\depot\mwo\Objects\environments\frontend\mechlab_a\lights\industrial_wetlamp_a.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+            var args = new String[] { @"..\..\ResourceFiles\industrial_wetlamp_a.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
             Int32 result = argsHandler.ProcessArgs(args);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
             
@@ -73,6 +70,20 @@ namespace CgfConverterTests
             ValidateXml(daeFile);
         }
 
+        [TestMethod]
+        public void MWO_candycane_a()
+        {
+            var args = new String[] { @"..\..\ResourceFiles\candycane_a.chr", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+            Int32 result = argsHandler.ProcessArgs(args);
+            CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
+
+            COLLADA daeFile = new COLLADA(argsHandler, cryData);
+            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+            int actualMaterialsCount = daeFile.daeObject.Library_Materials.Material.Count();
+            Assert.AreEqual(0, actualMaterialsCount);
+            ValidateXml(daeFile);
+        }
+
         private void ValidateXml(COLLADA daeFile)
         {
             using (var stringWriter = new System.IO.StringWriter())
@@ -81,18 +92,17 @@ namespace CgfConverterTests
                 serializer.Serialize(stringWriter, daeFile.daeObject);
                 string dae = stringWriter.ToString();
 
-                XmlReader reader = XmlReader.Create(dae, settings);
-                while (reader.Read()) ;
+                XmlDocument doc = new XmlDocument();
+                doc.LoadXml(dae);
+                doc.Schemas = settings.Schemas;
+                doc.Validate(ValidationEventHandler);
             }
+        }
 
-
-            //    XmlDocument document = new XmlDocument();
-            //document.Load(daeFile.daeObject.ToString());
-
-            //ValidationEventHandler eventHandler = new ValidationEventHandler(ValidationEventHandler);
-
-            //// the following call to Validate succeeds.
-            //document.Validate(eventHandler);
+        private void ValidateXml(string xmlFile)
+        {
+            XmlReader reader = XmlReader.Create(xmlFile, settings);
+            while (reader.Read()) ;
         }
 
         private void ValidationEventHandler(object sender, ValidationEventArgs e)
