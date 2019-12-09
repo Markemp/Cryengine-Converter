@@ -24,7 +24,7 @@ namespace CgfConverter.CryEngine_Core
         /// <summary>
         /// Color used in XML serialization/deserialization
         /// </summary>
-        public class Color
+        internal class Color
         {
             public Double Red;
             public Double Green;
@@ -186,7 +186,7 @@ namespace CgfConverter.CryEngine_Core
         /// Not really needed
         /// </summary>
         [XmlRoot(ElementName = "PublicParams")]
-        public class PublicParameters
+        internal class PublicParameters
         {
             [XmlAttribute(AttributeName = "FresnelPower")]
             public string FresnelPower { get; set; }
@@ -277,7 +277,7 @@ namespace CgfConverter.CryEngine_Core
         }
 
         [XmlIgnore]
-        public Color Diffuse { get; set; }
+        internal Color Diffuse { get; set; }
 
         [XmlAttribute(AttributeName = "Specular")]
         [DefaultValue("")]
@@ -288,7 +288,7 @@ namespace CgfConverter.CryEngine_Core
         }
 
         [XmlIgnore]
-        public Color Specular { get; set; }
+        internal Color Specular { get; set; }
 
         [XmlAttribute(AttributeName = "Emissive")]
         [DefaultValue("")]
@@ -299,7 +299,7 @@ namespace CgfConverter.CryEngine_Core
         }
 
         [XmlIgnore]
-        public Color Emissive { get; set; }
+        internal Color Emissive { get; set; }
 
         /// <summary>
         /// Value between 0 and 1 that controls opacity
@@ -337,7 +337,7 @@ namespace CgfConverter.CryEngine_Core
         public Material[] SubMaterials { get; set; }
 
         [XmlElement(ElementName = "PublicParams")]
-        public PublicParameters PublicParams { get; set; }
+        internal PublicParameters PublicParams { get; set; }
 
         // TODO: TimeOfDay Support
 
@@ -349,7 +349,7 @@ namespace CgfConverter.CryEngine_Core
 
         #region Methods
 
-        public static CryEngine_Core.Material FromFile(FileInfo materialfile)
+        public static Material FromFile(FileInfo materialfile)
         {
             if (!materialfile.Exists)
                 return null;
@@ -358,7 +358,7 @@ namespace CgfConverter.CryEngine_Core
             {
                 using (Stream fileStream = materialfile.OpenRead())
                 {
-                    return HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<CryEngine_Core.Material>(fileStream);
+                    return HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<Material>(fileStream);
                     //return HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<CryEngine_Core.Material>(materialfile.FullName);
                 }
             }

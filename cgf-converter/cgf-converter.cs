@@ -45,8 +45,6 @@ namespace CgfConverterConsole
 			//args = new String[] { @"D:\depot\SC\Data\Objects\Spaceships\Ships\AEGS\Redeemer\AEGS_Redeemer.cga", "-objectdir", @"d:\depot\sc\data", "-dae", "-tif" };
 			//args = new String[] { @"D:\depot\SC\Data\Objects\Spaceships\Ships\DRAK\Cutlass\DRAK_Cutlass.cga", "-objectdir", @"d:\depot\sc\data", "-dae", "-tif" };
 			//args = new String[] { @"d:\depot\SC\Data\Objects\buildingsets\human\lowtech\bravo\grimhex\anchor\anchor_gun_a.cgf", "-objectdir", @"d:\depot\sc\data", "-dds", "-dae", "-tif" };
-			//args = new String[] { @"d:\depot\SC\Data\Objects\buildingsets\human\hightech\alpha\ext\landingpad\ext_landingpad_floor_center_stair_16x08x10_b.cgf", "-objectdir", @"d:\depot\sc\data", "-dae", "-tif" };
-			//args = new String[] { @"d:\depot\SC\Data\Objects\buildingsets\human\hightech\alpha\ext\landingpad\landingpad_decal_landingzone_a.cgf", "-objectdir", @"d:\depot\sc\data", "-dae", "-tif" };
 			//args = new String[] { @"D:\depot\SC\Data\Objects\Characters\Human\heads\male\npc\male09\male09_t1_head.skin", "-objectdir", @"d:\depot\sc\data", "-dae", "-tif" };
 			//args = new String[] { @"D:\depot\SC\Data\Objects\Characters\Human\male_v7\export\bhm_skeleton_v7.chr", "-objectdir", @"d:\depot\sc\data", "-dae", "-tif" };
 			//args = new String[] { @"D:\depot\SC\Data\Objects\buildingsets\human\universal\org\trees\tree_ash_a.cgf", "-objectdir", @"d:\depot\sc\data", "-dae", "-tif" };
@@ -56,7 +54,7 @@ namespace CgfConverterConsole
 #endif
 
 			ArgsHandler argsHandler = new ArgsHandler();
-            Int32 result = argsHandler.ProcessArgs(args);
+            int result = argsHandler.ProcessArgs(args);
 
 #if !DEBUG
             try

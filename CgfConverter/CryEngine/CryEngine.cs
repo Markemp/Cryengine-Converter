@@ -12,10 +12,7 @@ namespace CgfConverter
     // TODO: Move this to CryEngine_Core
     public partial class CryEngine
     {
-        /// <summary>
-        /// File extensions processed by CryEngine
-        /// </summary>
-        private static HashSet<String> _validExtensions = new HashSet<String>
+        private static HashSet<string> _validExtensions = new HashSet<string>
         {
             ".cgf",
             ".cga",
@@ -26,7 +23,7 @@ namespace CgfConverter
 
         #region Constructors
 
-        public CryEngine(String fileName, String dataDir)
+        public CryEngine(string fileName, string dataDir)
         {
             this.InputFile = fileName;
 
@@ -54,25 +51,30 @@ namespace CgfConverter
 
             #endregion
 
-            this.Models = new List<CryEngine_Core.Model> { };
+            this.Models = new List<Model> { };
 
             foreach (var file in inputFiles)
             {
                 // Each file (.cga and .cgam if applicable) will have its own RootNode.  This can cause problems.  .cga files with a .cgam files won't have geometry for the one root node.
-                CryEngine_Core.Model model = CryEngine_Core.Model.FromFile(file.FullName);
+                Model model = Model.FromFile(file.FullName);
                 if (this.RootNode == null)
                     RootNode = model.RootNode;  // This makes the assumption that we read the .cga file before the .cgam file.
-                //this.RootNode = this.RootNode ?? model.RootNode;
+                
                 this.Bones = this.Bones ?? model.Bones;
                 this.Models.Add(model);
             }
+
             SkinningInfo = ConsolidateSkinningInfo();
-            // For eanch node with geometry info, populate that node's Mesh Chunk GeometryInfo with the geometry data.
+            // For each node with geometry info, populate that node's Mesh Chunk GeometryInfo with the geometry data.
             ConsolidateGeometryInfo();
+
+            // No longer looking for the material file.  Instead, default materials with the material chunk name will be created.  Creation
+            // of materials will be handled by Cryengine Importer.
 
             #region Get material file name
             // Get the material file name
-            foreach (CryEngine_Core.ChunkMtlName mtlChunk in this.Models.SelectMany(a => a.ChunkMap.Values).Where(c => c.ChunkType == ChunkTypeEnum.MtlName))
+            var allMaterialChunks = this.Models.SelectMany(a => a.ChunkMap.Values).Where(c => c.ChunkType == ChunkTypeEnum.MtlName);
+            foreach (ChunkMtlName mtlChunk in allMaterialChunks)
             {
                 // Don't process child or collision materials for now
                 if (mtlChunk.MatType == MtlNameTypeEnum.Child || mtlChunk.MatType == MtlNameTypeEnum.Unknown1)
@@ -152,10 +154,10 @@ namespace CgfConverter
                 if (materialFile.Extension != ".mtl")
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
 
-                // TODO: Try more paths
+                // 
 
                 // Populate CryEngine_Core.Material
-                CryEngine_Core.Material material = CryEngine_Core.Material.FromFile(materialFile);
+                Material material = Material.FromFile(materialFile);
 
                 if (material != null)
                 {
@@ -166,7 +168,6 @@ namespace CgfConverter
                     if (this.Materials.Length == 1)
                     {
                         // only one material, so it's a material file with no submaterials.  Check and set the name
-                        //Console.WriteLine("Single material found.  setting name...");
                         this.Materials[0].Name = this.RootNode.Name;
                     }
 

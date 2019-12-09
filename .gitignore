@@ -304,3 +304,7 @@ __pycache__/
 # OpenCover UI analysis results
 OpenCover/
 
+# Test files (may contain copyrighted info)
+CgfConverterTests/ResourceFiles/*.cg*
+CgfConverterTests/ResourceFiles/*.skin
+CgfConverterTests/ResourceFiles/*.chr

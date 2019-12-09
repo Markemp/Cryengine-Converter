@@ -16,7 +16,7 @@ namespace CgfConverter
     {
         FileInfo daeOutputFile;
 
-        public Grendgine_Collada daeObject { get; private set; } = new Grendgine_Collada();       // This is the serializable class.
+        public Grendgine_Collada DaeObject { get; private set; } = new Grendgine_Collada();       // This is the serializable class.
         XmlSerializer mySerializer = new XmlSerializer(typeof(Grendgine_Collada));
 
         public COLLADA(ArgsHandler argsHandler, CryEngine cryEngine) : base(argsHandler, cryEngine) { }
@@ -97,7 +97,7 @@ namespace CgfConverter
             if (!daeOutputFile.Directory.Exists)
                 daeOutputFile.Directory.Create();
             TextWriter writer = new StreamWriter(daeOutputFile.FullName);   // Makes the Textwriter object for the output
-            mySerializer.Serialize(writer, daeObject);                      // Serializes the daeObject and writes to the writer
+            mySerializer.Serialize(writer, DaeObject);                      // Serializes the daeObject and writes to the writer
             
             writer.Close();
             Utils.Log(LogLevelEnum.Debug, "End of Write Collada.  Export complete.");
@@ -106,7 +106,7 @@ namespace CgfConverter
         private void WriteRootNode()
         {
             //daeObject.Collada_Version = "1.5.0";  // Blender doesn't like 1.5. :(
-            daeObject.Collada_Version = "1.4.1";
+            DaeObject.Collada_Version = "1.4.1";
         }
 
         public void WriteAsset()
@@ -138,8 +138,8 @@ namespace CgfConverter
                 Name = "meter"
             };
             asset.Title = this.CryData.RootNode.Name;
-            daeObject.Asset = asset;
-            daeObject.Asset.Contributor = contributors;
+            DaeObject.Asset = asset;
+            DaeObject.Asset.Contributor = contributors;
 
         }
 
@@ -147,7 +147,7 @@ namespace CgfConverter
         {
             // I think this is a  list of all the images used by the asset.
             Grendgine_Collada_Library_Images libraryImages = new Grendgine_Collada_Library_Images();
-            daeObject.Library_Images = libraryImages;
+            DaeObject.Library_Images = libraryImages;
             List<Grendgine_Collada_Image> imageList = new List<Grendgine_Collada_Image>();
             //Console.WriteLine("Number of images {0}", CryData.Materials.Length);
             // We now have the image library set up.  start to populate.
@@ -196,7 +196,7 @@ namespace CgfConverter
                         builder.Replace(".dds", ".tif");
 
                     // if 1.4.1, use URI.  If 1.5.0, use Ref.
-                    if (daeObject.Collada_Version == "1.4.1")
+                    if (DaeObject.Collada_Version == "1.4.1")
                     {
                         tmpImage.Init_From.Uri = builder.ToString();
                     }
@@ -209,7 +209,7 @@ namespace CgfConverter
             }
             // images is the array of image (Gredgine_Collada_Image) objects
             Grendgine_Collada_Image[] images = imageList.ToArray();
-            daeObject.Library_Images.Image = images;
+            DaeObject.Library_Images.Image = images;
         }
 
         public void WriteLibrary_Materials()
@@ -218,7 +218,7 @@ namespace CgfConverter
             // There is just one .mtl file we need to worry about.
             Grendgine_Collada_Library_Materials libraryMaterials = new Grendgine_Collada_Library_Materials();
             // We have our top level.
-            daeObject.Library_Materials = libraryMaterials;
+            DaeObject.Library_Materials = libraryMaterials;
             int numMaterials = CryData.Materials.Length;
             // Now create a material for each material in the object
             Utils.Log(LogLevelEnum.Info, "Number of materials: {0}", numMaterials);
@@ -410,7 +410,7 @@ namespace CgfConverter
 
             }
             libraryEffects.Effect = effects;
-            daeObject.Library_Effects = libraryEffects;
+            DaeObject.Library_Effects = libraryEffects;
             // libraryEffects contains a number of effects objects.  One effects object for each material.
 
         }
@@ -863,7 +863,7 @@ namespace CgfConverter
                 // There is no geometry for a helper or controller node.  Can skip the rest.
             }
             libraryGeometries.Geometry = geometryList.ToArray();
-            daeObject.Library_Geometries = libraryGeometries;
+            DaeObject.Library_Geometries = libraryGeometries;
         }
 
         public void WriteLibrary_Controllers()
@@ -878,7 +878,7 @@ namespace CgfConverter
             // Create the skin object and assign to the controller
             Grendgine_Collada_Skin skin = new Grendgine_Collada_Skin
             {
-                source = "#" + daeObject.Library_Geometries.Geometry[0].ID,
+                source = "#" + DaeObject.Library_Geometries.Geometry[0].ID,
                 Bind_Shape_Matrix = new Grendgine_Collada_Float_Array_String()
             };
             skin.Bind_Shape_Matrix.Value_As_String = CreateStringFromMatrix44(Matrix44.Identity());         // We will assume the BSM is the identity matrix for now
@@ -1077,7 +1077,7 @@ namespace CgfConverter
             controller.Skin = skin;
             libraryController.Controller = new Grendgine_Collada_Controller[1];
             libraryController.Controller[0] = controller;
-            daeObject.Library_Controllers = libraryController;
+            DaeObject.Library_Controllers = libraryController;
         }
 
         /// <summary>
@@ -1127,7 +1127,7 @@ namespace CgfConverter
             visualScenes.Add(visualScene);
 
             libraryVisualScenes.Visual_Scene = visualScenes.ToArray();
-            daeObject.Library_Visual_Scene = libraryVisualScenes;
+            DaeObject.Library_Visual_Scene = libraryVisualScenes;
         }
 
         /// <summary>
@@ -1196,7 +1196,7 @@ namespace CgfConverter
             visualScenes.Add(visualScene);
 
             libraryVisualScenes.Visual_Scene = visualScenes.ToArray();
-            daeObject.Library_Visual_Scene = libraryVisualScenes;
+            DaeObject.Library_Visual_Scene = libraryVisualScenes;
         }
 
         #region Private Methods
@@ -1489,7 +1489,7 @@ namespace CgfConverter
             visualScene.URL = "#Scene";
             visualScene.Name = "Scene";
             scene.Visual_Scene = visualScene;
-            daeObject.Scene = scene;
+            DaeObject.Scene = scene;
 
         }
 

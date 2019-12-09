@@ -26,7 +26,7 @@ namespace CgfConverterTests
             CultureInfo customCulture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
             customCulture.NumberFormat.NumberDecimalSeparator = ".";
             Thread.CurrentThread.CurrentCulture = customCulture;
-            
+
             GetSchemaSet();
         }
 
@@ -49,25 +49,29 @@ namespace CgfConverterTests
         {
             var args = new String[] { @"..\..\ResourceFiles\industrial_wetlamp_a.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
             Int32 result = argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
-            
+
             COLLADA daeFile = new COLLADA(argsHandler, cryData);
             daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
-            int actualMaterialsCount = daeFile.daeObject.Library_Materials.Material.Count();
+            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
             Assert.AreEqual(3, actualMaterialsCount);
-            ValidateXml(daeFile);
+            ValidateColladaXml(daeFile);
         }
 
         [TestMethod]
-        public void SC_uee_asteroid_ACTutorial_rail_01()
+        public void MWO_timberwolf_chr()
         {
-            var args = new String[] { @"..\..\ResourceFiles\uee_asteroid_ACTutorial_rail_01.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+            var args = new String[] { @"..\..\ResourceFiles\timberwolf.chr", "-dds", "-dae", "-objectdir", @"d:\depot\lol\" };
             Int32 result = argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
             COLLADA daeFile = new COLLADA(argsHandler, cryData);
             daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
-            ValidateXml(daeFile);
+            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            Assert.AreEqual(0, actualMaterialsCount);
+            ValidateColladaXml(daeFile);
         }
 
         [TestMethod]
@@ -75,21 +79,67 @@ namespace CgfConverterTests
         {
             var args = new String[] { @"..\..\ResourceFiles\candycane_a.chr", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
             Int32 result = argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result); 
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
             COLLADA daeFile = new COLLADA(argsHandler, cryData);
             daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
-            int actualMaterialsCount = daeFile.daeObject.Library_Materials.Material.Count();
+            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
             Assert.AreEqual(0, actualMaterialsCount);
-            ValidateXml(daeFile);
+            ValidateColladaXml(daeFile);
         }
 
-        private void ValidateXml(COLLADA daeFile)
+
+        [TestMethod]
+        public void MWO_hbr_right_torso_uac5_bh1_cga()
+        {
+            var args = new String[] { @"..\..\ResourceFiles\hbr_right_torso_uac5_bh1.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+            Int32 result = argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result); 
+            CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
+
+            COLLADA daeFile = new COLLADA(argsHandler, cryData);
+            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            Assert.AreEqual(24, actualMaterialsCount);
+            ValidateColladaXml(daeFile);
+        }
+
+        [TestMethod]
+        public void MWO_hbr_right_torso_cga()
+        {
+            var args = new String[] { @"..\..\ResourceFiles\hbr_right_torso.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+            Int32 result = argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result); 
+            CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
+
+            COLLADA daeFile = new COLLADA(argsHandler, cryData);
+            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            Assert.AreEqual(24, actualMaterialsCount);
+            ValidateColladaXml(daeFile);
+        }
+
+
+        [TestMethod]
+        public void SC_uee_asteroid_ACTutorial_rail_01()
+        {
+            var args = new String[] { @"..\..\ResourceFiles\uee_asteroid_ACTutorial_rail_01.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+            Int32 result = argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result); 
+            CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
+
+            COLLADA daeFile = new COLLADA(argsHandler, cryData);
+            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+            ValidateColladaXml(daeFile);
+        }
+
+        private void ValidateColladaXml(COLLADA daeFile)
         {
             using (var stringWriter = new System.IO.StringWriter())
             {
-                var serializer = new XmlSerializer(daeFile.daeObject.GetType());
-                serializer.Serialize(stringWriter, daeFile.daeObject);
+                var serializer = new XmlSerializer(daeFile.DaeObject.GetType());
+                serializer.Serialize(stringWriter, daeFile.DaeObject);
                 string dae = stringWriter.ToString();
 
                 XmlDocument doc = new XmlDocument();
@@ -122,8 +172,8 @@ namespace CgfConverterTests
         {
             schemaSet.Add(@"http://www.collada.org/2005/11/COLLADASchema", @"..\..\Schemas\collada_schema_1_4_1_ms.xsd");
             schemaSet.Add(@"http://www.w3.org/XML/1998/namespace", @"..\..\Schemas\xml.xsd");
-            
-            settings.Schemas = schemaSet; 
+
+            settings.Schemas = schemaSet;
             settings.ValidationType = ValidationType.Schema;
             settings.ValidationEventHandler += ValidationEventHandler;
         }
