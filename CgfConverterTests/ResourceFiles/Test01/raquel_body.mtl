@@ -1,0 +1,39 @@
+<Material MtlFlags="524544" vertModifType="0">
+ <SubMaterials>
+  <Material Name="cloth" MtlFlags="524416" Shader="Illum" GenMask="1000104000000" StringGenMask="%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING" SurfaceType="" MatTemplate="" Diffuse="1,1,1" Specular="1,1,1" Opacity="1" Shininess="255" CloakAmount="0" HeatAmountScaled="191" vertModifType="0" LayerAct="1">
+   <Textures>
+    <Texture Map="Diffuse" File="Objects/characters/raquel/textures/raquel_body_diff.tif"/>
+    <Texture Map="Bumpmap" File="Objects/characters/raquel/textures/raquel_body_ddna.tif"/>
+    <Texture Map="Specular" File="objects/characters/raquel/textures/raquel_body_spec.tif"/>
+   </Textures>
+   <PublicParams EmittanceMapGamma="1" SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="legs" MtlFlags="524416" Shader="Illum" GenMask="1000104000000" StringGenMask="%NORMAL_MAP%SPECULAR_MAP%SUBSURFACE_SCATTERING" SurfaceType="" MatTemplate="" Diffuse="1,1,1" Specular="1,1,1" Opacity="1" Shininess="255" CloakAmount="0" HeatAmountScaled="159" vertModifType="0" LayerAct="1">
+   <Textures>
+    <Texture Map="Diffuse" File="Objects/characters/raquel/textures/raquel_legs_diff.tif"/>
+    <Texture Map="Bumpmap" File="Objects/characters/raquel/textures/raquel_legs_ddna.tif"/>
+    <Texture Map="Specular" File="objects/characters/raquel/textures/raquel_legs_spec.tif"/>
+   </Textures>
+   <PublicParams EmittanceMapGamma="1" SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="body" MtlFlags="524416" Shader="HumanSkin" GenMask="200004000100" StringGenMask="%DETAIL_MAPPING%NORMAL_MAP%TEMP_SKIN" SurfaceType="" MatTemplate="" Diffuse="1,1,1" Specular="0.064803272,0.064803272,0.064803272" Opacity="1" Shininess="255" HeatAmountScaled="255" vertModifType="0" LayerAct="1">
+   <Textures>
+    <Texture Map="Diffuse" File="objects/characters/raquel/textures/raquel_torso_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/characters/raquel/textures/raquel_torso_ddna.tif"/>
+    <Texture Map="Detail" File="Textures/detail_bumpmaps/metal/grainy_metal_01_detail.tif">
+     <TexMod TexMod_RotateType="0" TexMod_TexGenType="0" TexMod_bTexGenProjected="0" TileU="7" TileV="7"/>
+    </Texture>
+   </Textures>
+   <PublicParams Melanin="0.33000001" SSSIndex="1.4" DetailBumpScale="2" TranslucencyMultiplier="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="hands" MtlFlags="524416" Shader="HumanSkin" GenMask="200104000000" StringGenMask="%NORMAL_MAP%SPECULAR_MAP%TEMP_SKIN" SurfaceType="" MatTemplate="" Diffuse="0.81484669,0.62396049,0.42326769" Specular="1,1,1" Opacity="1" Shininess="255" CloakAmount="0" HeatAmountScaled="255" vertModifType="0" LayerAct="1">
+   <Textures>
+    <Texture Map="Diffuse" File="Objects/characters/raquel/textures/raquel_body_diff.tif"/>
+    <Texture Map="Bumpmap" File="Objects/characters/raquel/textures/raquel_body_ddna.tif"/>
+    <Texture Map="Specular" File="objects/characters/raquel/textures/raquel_body_spec.tif"/>
+   </Textures>
+   <PublicParams Melanin="0" SSSIndex="1.2" TranslucencyMultiplier="0" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+ </SubMaterials>
+ <PublicParams EmittanceMapGamma="1" SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+</Material>

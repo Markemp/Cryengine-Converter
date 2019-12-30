@@ -1,0 +1,59 @@
+<Material MtlFlags="524544" vertModifType="0">
+ <SubMaterials>
+  <Material Name="face" MtlFlags="524416" Shader="HumanSkin" GenMask="2008020000100" StringGenMask="%DETAIL_MAPPING%NORMAL_MAP%TEMP_SKIN%WRINKLE_BLENDING" SurfaceType="" MatTemplate="" Diffuse="1,1,1" Specular="0.064803272,0.064803272,0.064803272" Opacity="1" Shininess="246" HeatAmountScaled="255" vertModifType="0" LayerAct="1">
+   <Textures>
+    <Texture Map="Diffuse" File="objects/characters/raquel/textures/raquel_head_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/characters/raquel/textures/raquel_head_ddna.tif"/>
+    <Texture Map="Detail" File="Textures/detail_bumpmaps/metal/grainy_metal_01_detail.tif">
+     <TexMod TexMod_RotateType="0" TexMod_TexGenType="0" TexMod_bTexGenProjected="0" TileU="7" TileV="7"/>
+    </Texture>
+    <Texture Map="Custom" File="objects/characters/generic/wrincles/textures/raquel_wrincles_ddn.tif"/>
+    <Texture Map="[1] Custom" File="objects/characters/generic/wrincles/textures/wrincle_mask.tif"/>
+    <Texture Map="Opacity" File="objects/characters/lydia/textures/lydia_head_sss.tif"/>
+   </Textures>
+   <PublicParams Melanin="0.33000001" SSSIndex="1.4" DetailBumpScale="2" TranslucencyMultiplier="1.2" WrinklesBlend="1" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="eyes" MtlFlags="2621600" Shader="Eye" GenMask="402020010000" StringGenMask="%ENVIRONMENT_MAP%NORMAL_MAP%TEMP_EYES%VERTCOLORS" SurfaceType="mat_flesh" MatTemplate="" Diffuse="0.80695242,0.83077002,0.8962695" Specular="0.06124606,0.06124606,0.06124606" Opacity="1" Shininess="235" CloakAmount="0" vertModifType="0" LayerAct="1">
+   <Textures>
+    <Texture Map="Diffuse" File="Objects/characters/generic/eye_generic/textures/cine_eyeball_diff.tif"/>
+    <Texture Map="Bumpmap" File="Objects/characters/generic/eye_generic/textures/cine_eyeball_ddna.tif"/>
+    <Texture Map="Environment" File="nearest_cubemap" TexType="7"/>
+    <Texture Map="Heightmap" File="Objects/characters/generic/eye_generic/textures/cine_eyeball_disp.tif"/>
+    <Texture Map="Custom" File="Objects/characters/generic/eye_generic/textures/generic_eye_cornea_ddna.tif"/>
+   </Textures>
+   <PublicParams CorneaRefraction="0" IrisDepth="0.016000001" IrisColor="0.56471163,0.79129809,0.42326769" IrisShadowing="2.5999999" CorneaSmoothness="1" ScleraSSS="0.40000001" IrisSSS="0.375" IndirectColor="0,0,0"/>
+  </Material>
+  <Material Name="eyeOverlay" MtlFlags="524448" Shader="Eye" GenMask="402000190000" StringGenMask="%ENVIRONMENT_MAP%EYE_AO_OVERLAY%EYE_SPECULAR_OVERLAY%TEMP_EYES%VERTCOLORS" SurfaceType="" MatTemplate="" Diffuse="1,1,1" Specular="1,1,1" Opacity="1" Shininess="255" CloakAmount="0" vertModifType="0" LayerAct="1">
+   <Textures>
+    <Texture Map="Diffuse" File="Objects/characters/generic/eye_generic/textures/cine_eyeOverlay_diff.tif"/>
+    <Texture Map="Specular" File="Objects/characters/generic/eye_generic/textures/cine_eyeOverlay_spec.tif"/>
+    <Texture Map="Environment" File="nearest_cubemap"/>
+   </Textures>
+   <PublicParams DepthBiasScale="1" DiffOccStrength="0.66000003" SpecOccStrength="1" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="eyeWet" MtlFlags="524448" Shader="Eye" GenMask="402000100000" StringGenMask="%EYE_SPECULAR_OVERLAY%TEMP_EYES%VERTCOLORS" SurfaceType="" MatTemplate="" Diffuse="0,0,0" Specular="0.03189604,0.03189604,0.03189604" Opacity="1" Shininess="223" CloakAmount="0" vertModifType="0" LayerAct="1">
+   <Textures>
+    <Texture Map="Diffuse" File="Objects/characters/generic/eye_generic/textures/cine_eyewetness_diff.tif"/>
+   </Textures>
+   <PublicParams DepthBiasScale="1" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="eyeLashes" MtlFlags="526496" Shader="Hair" GenMask="2035020008" StringGenMask="%ANISO_SPECULAR%ENFORCE_TILED_SHADING%HAIR_AMBIENT%HAIR_PASS%NORMAL_MAP%THIN_HAIR%VERTCOLORS" SurfaceType="" MatTemplate="" Diffuse="0,0,0" Specular="0.001214108,0.001214108,0.001214108" Opacity="0.99000001" Shininess="255" CloakAmount="0" vertModifType="0" LayerAct="1">
+   <Textures>
+    <Texture Map="Diffuse" File="Objects/characters/generic/eye_generic/textures/cine_eyelashes_diff.tif"/>
+    <Texture Map="Bumpmap" File="Textures/defaults/flat_ddn.tif"/>
+    <Texture Map="Environment" File="nearest_cubemap"/>
+   </Textures>
+   <PublicParams SecondaryHighlightShiftAmount="-0.11" SoftIntersection="0" ShiftVariation="0.245" DiffuseWrap="0.24699999" SecondaryHighlightColor="0.029556841,0.029556841,0.029556841" SecondaryHighlightWidth="1.76" ThinHairThreshold="0.046" AlphaBlendMultiplier="1.6" IndirectColor="0.30498734,0.30498734,0.30498734"/>
+  </Material>
+  <Material Name="hair" MtlFlags="2623650" Shader="Hair" GenMask="2025020008" StringGenMask="%ANISO_SPECULAR%ENFORCE_TILED_SHADING%HAIR_AMBIENT%HAIR_PASS%NORMAL_MAP%VERTCOLORS" SurfaceType="" MatTemplate="" Diffuse="0.40724024,0.25818288,0.25818288" Specular="0.018500222,0.024157634,0.024157634" Opacity="0.99000001" Shininess="5" AlphaTest="0.98000002" vertModifType="0" LayerAct="1">
+   <Textures>
+    <Texture Map="Diffuse" File="objects/characters/raquel/textures/raquel_hair_diff.tif"/>
+    <Texture Map="Bumpmap" File="objects/characters/raquel/textures/raquel_hair_ddna.tif"/>
+    <Texture Map="Specular" File="objects/characters/raquel/textures/raquel_hair_spec.tif"/>
+    <Texture Map="Environment" File="nearest_cubemap" TexType="7"/>
+   </Textures>
+   <PublicParams SecondaryHighlightShiftAmount="6.4899998" SoftIntersection="1" ShiftVariation="0" DiffuseWrap="0.5" SecondaryHighlightColor="1,1,1" SecondaryHighlightWidth="73.989998" AlphaBlendMultiplier="1.1" IndirectColor="0.35153264,0.02842604,0.0074990322"/>
+  </Material>
+ </SubMaterials>
+ <PublicParams EmittanceMapGamma="1" SSSIndex="0" IndirectColor="0.25,0.25,0.25"/>
+</Material>
