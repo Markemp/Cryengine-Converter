@@ -7,12 +7,12 @@ namespace CgfConverterConsole
 {
     public class Program
     {
-        public static Int32 Main(String[] args)
+        public static int Main(string[] args)
         {
             Utils.LogLevel = LogLevelEnum.Warning;
             Utils.DebugLevel = LogLevelEnum.Debug;
 
-            String oldTitle = Console.Title;
+            string oldTitle = Console.Title;
 
 #if DEV_DOLKENSP
             Utils.LogLevel = LogLevelEnum.None;      // Display NO error logs

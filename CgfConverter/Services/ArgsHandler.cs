@@ -268,7 +268,6 @@ namespace CgfConverter
                     #endregion
                     #region case "-infile" / "-inputfile"...
 
-                    // Next item in list will be the output filename
                     case "-infile":
                     case "-inputfile":
                         if (++i > inputArgs.Length)
@@ -334,10 +333,10 @@ namespace CgfConverter
             Console.WriteLine();
             Console.WriteLine("-usage:           Prints out the usage statement");
             Console.WriteLine();
-            Console.WriteLine("<.cgf file>:      Mandatory.  The name of the .cgf, .cga or .skin file to process");
-            Console.WriteLine("-outputfile:      The name of the file to write the output.  Default is [root].obj");
+            Console.WriteLine("<.cgf file>:      The name of the .cgf, .cga or .skin file to process.");
+            Console.WriteLine("-outputfile:      The name of the file to write the output.  Default is [root].dae");
             Console.WriteLine("-noconflict:      Use non-conflicting naming scheme (<cgf File>_out.obj)");
-            Console.WriteLine("-allowconflict:   Allows conflicts in .mtl file name");
+            Console.WriteLine("-allowconflict:   Allows conflicts in .mtl file name. (obj exports only, as not an issue in dae.)");
             Console.WriteLine("-objectdir:       The name where the base Objects directory is located.  Used to read mtl file");
             Console.WriteLine("                  Defaults to current directory.");
             Console.WriteLine("-dae:             Export Collada format files (Default)"); 

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <COLLADA xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" version="1.4.1" xmlns="http://www.collada.org/2005/11/COLLADASchema">
   <asset>
-    <created>2019-12-30T11:15:19.401198-07:00</created>
-    <modified>2019-12-30T11:15:19.401198-07:00</modified>
+    <created>2019-12-30T15:01:02.0966721-07:00</created>
+    <modified>2019-12-30T15:01:02.0966721-07:00</modified>
     <unit meter="1" name="meter" />
     <up_axis>Z_UP</up_axis>
     <contributor>
@@ -17,13 +17,13 @@
   </asset>
   <library_images>
     <image id="Dahl_GenMaleBody01_Diffuse" name="Dahl_GenMaleBody01_Diffuse">
-      <init_from>/C:\Users\Geoff\Source\Repos\cgf-converter\CgfConverterTests\bin\Debug/./textures/dahl_body_diff.dds</init_from>
+      <init_from>/C:\Users\Geoff\Source\Repos\cgf-converter\CgfConverterTests\bin\Release/./textures/dahl_body_diff.dds</init_from>
     </image>
     <image id="Dahl_GenMaleBody01_Bumpmap" name="Dahl_GenMaleBody01_Bumpmap">
-      <init_from>/C:\Users\Geoff\Source\Repos\cgf-converter\CgfConverterTests\bin\Debug/./textures/dahl_body_ddna.dds</init_from>
+      <init_from>/C:\Users\Geoff\Source\Repos\cgf-converter\CgfConverterTests\bin\Release/./textures/dahl_body_ddna.dds</init_from>
     </image>
     <image id="Dahl_GenMaleBody01_Specular" name="Dahl_GenMaleBody01_Specular">
-      <init_from>/C:\Users\Geoff\Source\Repos\cgf-converter\CgfConverterTests\bin\Debug/./textures/dahl_body_spec.dds</init_from>
+      <init_from>/C:\Users\Geoff\Source\Repos\cgf-converter\CgfConverterTests\bin\Release/./textures/dahl_body_spec.dds</init_from>
     </image>
     <image id="Dahl_GenMaleBody01_Environment" name="Dahl_GenMaleBody01_Environment">
       <init_from>nearest_cubemap</init_from>
