@@ -17,6 +17,7 @@
         // It looks like there is a 0x04 type now as well, for mech parts.  Not sure what that is.
         // Also a 0x0B type now as well.
         Library = 0x01,
+        MwoChild = 0x02,
         Single = 0x10,
         Child = 0x12,
         Unknown1 = 0x0B,        // Collision materials?  In MWO, these are the torsos, arms, legs from body/<mech>.mtl

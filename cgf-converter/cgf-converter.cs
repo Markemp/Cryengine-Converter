@@ -73,28 +73,28 @@ namespace CgfConverterConsole
 
                         #region Render Output Files
 
-                        if (argsHandler.Output_Blender == true)
+                        if (argsHandler.OutputBlender == true)
                         {
                             Blender blendFile = new Blender(argsHandler, cryData);
 
                             blendFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
                         }
 
-                        if (argsHandler.Output_Wavefront == true)
+                        if (argsHandler.OutputWavefront == true)
                         {
                             Wavefront objFile = new Wavefront(argsHandler, cryData);
 
                             objFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
                         }
 
-                        if (argsHandler.Output_CryTek == true)
+                        if (argsHandler.OutputCryTek == true)
                         {
                             CryRender cryFile = new CryRender(argsHandler, cryData);
 
                             cryFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
                         }
 
-                        if (argsHandler.Output_Collada == true)
+                        if (argsHandler.OutputCollada == true)
                         {
                             COLLADA daeFile = new COLLADA(argsHandler, cryData);
 

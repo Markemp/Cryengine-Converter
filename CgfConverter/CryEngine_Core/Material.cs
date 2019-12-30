@@ -91,6 +91,8 @@ namespace CgfConverter.CryEngine_Core
                 Interface = 5,
                 [XmlEnum("7")]
                 CubeMap = 7,
+                [XmlEnum("Nearest Cube-Map probe for alpha blended")]
+                NearestCubeMap = 8
             }
 
             public enum MapTypeEnum
@@ -125,8 +127,6 @@ namespace CgfConverter.CryEngine_Core
             /// </summary>
             [XmlIgnore]
             public MapTypeEnum Map { get; set; }
-
-
 
             /// <summary>
             /// Location of the texture

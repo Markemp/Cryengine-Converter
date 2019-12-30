@@ -306,6 +306,6 @@ OpenCover/
 
 # Test files (may contain copyrighted info)
 CgfConverterTests/ResourceFiles/*.cg*
-CgfConverterTests/ResourceFiles/*.skin
-CgfConverterTests/ResourceFiles/*.chr
+CgfConverterTests/ResourceFiles/*.skin*
+CgfConverterTests/ResourceFiles/*.chr*
 CgfConverterTests/ResourceFiles/*.dae

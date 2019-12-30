@@ -12,7 +12,7 @@ namespace CgfConverter
     // TODO: Move this to CryEngine_Core
     public partial class CryEngine
     {
-        private static HashSet<string> _validExtensions = new HashSet<string>
+        private static readonly HashSet<string> validExtensions = new HashSet<string>
         {
             ".cgf",
             ".cga",
@@ -20,8 +20,7 @@ namespace CgfConverter
             ".skin",
             ".anim"
         };
-
-        #region Constructors
+        private const string invalidExtensionErrorMessage = "Warning: Unsupported file extension - please use a cga, cgf, chr or skin file.";
 
         public CryEngine(string fileName, string dataDir)
         {
@@ -31,27 +30,23 @@ namespace CgfConverter
             List<FileInfo> inputFiles = new List<FileInfo> { inputFile };
 
             // Validate file extension - handles .cgam / skinm
-            if (!CryEngine._validExtensions.Contains(inputFile.Extension))
+            if (!CryEngine.validExtensions.Contains(inputFile.Extension))
             {
-                Utils.Log(LogLevelEnum.Debug, "Warning: Unsupported file extension - please use a cga, cgf, chr or skin file");
-                throw new FileLoadException("Warning: Unsupported file extension - please use a cga, cgf, chr or skin file", fileName);
+                Utils.Log(LogLevelEnum.Debug, invalidExtensionErrorMessage);
+                throw new FileLoadException(invalidExtensionErrorMessage, fileName);
             }
 
             #region m-File Auto-Detection
-
             FileInfo mFile = new FileInfo(Path.ChangeExtension(fileName, String.Format("{0}m", inputFile.Extension)));
 
             if (mFile.Exists)
             {
                 Utils.Log(LogLevelEnum.Debug, "Found geometry file {0}", mFile.Name);
-
-                // Add to list of files to process
                 inputFiles.Add(mFile);
             }
-
             #endregion
 
-            this.Models = new List<Model> { };
+            this.Models = new List<Model>();
 
             foreach (var file in inputFiles)
             {
@@ -75,6 +70,12 @@ namespace CgfConverter
                 // Don't process child or collision materials for now
                 if (mtlChunk.MatType == MtlNameTypeEnum.Child || mtlChunk.MatType == MtlNameTypeEnum.Unknown1)
                     continue;
+
+                if (mtlChunk.Name.Contains(":"))
+                {
+                    string[] parts = mtlChunk.Name.Split(':');
+                    mtlChunk.Name = parts[1];
+                }
 
                 // The Replace part is for SC files that point to a _core material file that doesn't exist.
                 string cleanName = mtlChunk.Name.Replace("_core", "");
@@ -151,7 +152,6 @@ namespace CgfConverter
                 if (materialFile.Extension != ".mtl")
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
 
-                // Populate CryEngine_Core.Material
                 Material material = Material.FromFile(materialFile);
 
                 if (material != null)
@@ -180,7 +180,7 @@ namespace CgfConverter
             List<Material> mats = new List<Material>();
             foreach (ChunkMtlName mtlChunk in allMaterialChunks)
             {
-                if (mtlChunk.MatType == MtlNameTypeEnum.Child || mtlChunk.MatType == MtlNameTypeEnum.Unknown1)
+                if (mtlChunk.MatType == MtlNameTypeEnum.Child || mtlChunk.MatType == MtlNameTypeEnum.Unknown1 || mtlChunk.MatType == MtlNameTypeEnum.MwoChild)
                 {
                     mats.Add(Material.CreateDefaultMaterial(mtlChunk.Name));
                 }
@@ -190,6 +190,7 @@ namespace CgfConverter
 
         private void ConsolidateGeometryInfo()
         {
+            // TODO:  Finish this.
             foreach (Model model in Models)
             {
                 List<ChunkNode> nodes = model.ChunkNodes;
@@ -248,24 +249,19 @@ namespace CgfConverter
             return skin;
         }
 
-        #endregion
-
         #region Properties
 
-        /// <summary>
-        /// There will be one Model for each model in this object.  
-        /// </summary>
-        public List<CryEngine_Core.Model> Models { get; internal set; }
+        public List<Model> Models { get; internal set; }
 
-        public CryEngine_Core.Material[] Materials { get; internal set; }
+        public Material[] Materials { get; internal set; }  // TODO:  Convert to List
 
-        public CryEngine_Core.ChunkNode RootNode { get; internal set; }
+        public ChunkNode RootNode { get; internal set; }
 
-        public CryEngine_Core.ChunkCompiledBones Bones { get; internal set; }
+        public ChunkCompiledBones Bones { get; internal set; }
 
-        public CryEngine_Core.SkinningInfo SkinningInfo { get; set; }
+        public SkinningInfo SkinningInfo { get; set; }
 
-        public String InputFile { get; internal set; }
+        public string InputFile { get; internal set; }
 
 
         #endregion

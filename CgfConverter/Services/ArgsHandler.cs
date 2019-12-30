@@ -11,75 +11,75 @@ namespace CgfConverter
         /// <summary>
         /// Files to process
         /// </summary>
-        public List<String> InputFiles { get; internal set; }
+        public List<string> InputFiles { get; internal set; }
         /// <summary>
         /// Location of the Object Files
         /// </summary>
-        public DirectoryInfo DataDir { get; internal set; }
+        public DirectoryInfo DataDir { get; internal set; } = new DirectoryInfo(".");
         /// <summary>
         /// File to render to
         /// </summary>
-        // public String OutputFile { get; internal set; }
+        public string OutputFile { get; internal set; }
         /// <summary>
         /// Directory to render to
         /// </summary>
-        public String OutputDir { get; internal set; }
+        public string OutputDir { get; internal set; }
         /// <summary>
         /// Allows naming conflicts for mtl file
         /// </summary>
-        public Boolean AllowConflicts { get; internal set; }
+        public bool AllowConflicts { get; internal set; }
         /// <summary>
         /// For LODs files.  Adds _out onto the output
         /// </summary>
-        public Boolean NoConflicts { get; internal set; }
+        public bool NoConflicts { get; internal set; }
         /// <summary>
         /// Name to group all meshes under
         /// </summary>
-        public Boolean GroupMeshes { get; internal set; }
+        public bool GroupMeshes { get; internal set; }
         /// <summary>
         /// Render CryTek format files
         /// </summary>
-        public Boolean Output_CryTek { get; internal set; }
+        public bool OutputCryTek { get; internal set; }
         /// <summary>
         /// Render Wavefront format files
         /// </summary>
-        public Boolean Output_Wavefront { get; internal set; }
+        public bool OutputWavefront { get; internal set; }
         /// <summary>
         /// Render Blender format files
         /// </summary>
-        public Boolean Output_Blender { get; internal set; }
+        public bool OutputBlender { get; internal set; }
         /// <summary>
         /// Render COLLADA format files
         /// </summary>
-        public Boolean Output_Collada { get; internal set; }
+        public bool OutputCollada { get; internal set; }
         /// <summary>
         /// Render FBX
         /// </summary>
-        public Boolean Output_FBX { get; internal set; }
+        public bool OutputFBX { get; internal set; }
         /// <summary>
         /// Smooth Faces
         /// </summary>
-        public Boolean Smooth { get; internal set; }
+        public bool Smooth { get; internal set; }
         /// <summary>
         /// Flag used to indicate we should convert texture paths to use TIFF instead of DDS
         /// </summary>
-        public Boolean TiffTextures { get; internal set; }
+        public bool TiffTextures { get; internal set; }
         /// <summary>
         /// Flag used to skip the rendering of nodes containing $shield
         /// </summary>
-        public Boolean SkipShieldNodes { get; internal set; }
+        public bool SkipShieldNodes { get; internal set; }
         /// <summary>
         /// Flag used to skip the rendering of nodes containing $proxy
         /// </summary>
-        public Boolean SkipProxyNodes { get; internal set; }
+        public bool SkipProxyNodes { get; internal set; }
         /// <summary>
         /// Flag used to pass exceptions to installed debuggers
         /// </summary>
-        public Boolean Throw { get; internal set; }
+        public bool Throw { get; internal set; }
 
         public ArgsHandler()
         {
-            this.InputFiles = new List<String> { };
+            this.InputFiles = new List<string> { };
         }
 
         /// <summary>
@@ -89,19 +89,19 @@ namespace CgfConverter
         /// </summary>
         /// <param name="filter"></param>
         /// <returns></returns>
-        private String[] GetFiles(String filter)
+        private static string[] GetFiles(string filter)
         {
             if (File.Exists(filter))
-                return new String[] { new FileInfo(filter).FullName };
+                return new string[] { new FileInfo(filter).FullName };
 
-            String directory = Path.GetDirectoryName(filter);
-            if (String.IsNullOrWhiteSpace(directory))
+            string directory = Path.GetDirectoryName(filter);
+            if (string.IsNullOrWhiteSpace(directory))
                 directory = ".";
 
-            String fileName = Path.GetFileName(filter);
-            String extension = Path.GetExtension(filter);
+            string fileName = Path.GetFileName(filter);
+            string extension = Path.GetExtension(filter);
 
-            Boolean flexibleExtension = extension.Contains('*');
+            bool flexibleExtension = extension.Contains('*');
 
             return Directory.GetFiles(directory, fileName, fileName.Contains('?') || fileName.Contains('*') ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)
                 .Where(f => flexibleExtension || Path.GetExtension(f).Length == extension.Length)
@@ -113,7 +113,7 @@ namespace CgfConverter
         /// </summary>
         /// <param name="inputArgs">list of arguments to parse</param>
         /// <returns>0 on success, 1 if anything went wrong</returns>
-        public Int32 ProcessArgs(String[] inputArgs)
+        public int ProcessArgs(string[] inputArgs)
         {
             for (int i = 0; i < inputArgs.Length; i++)
             {
@@ -126,7 +126,7 @@ namespace CgfConverter
                     case "-objectdir":
                         if (++i > inputArgs.Length)
                         {
-                            this.PrintUsage();
+                            PrintUsage();
                             return 1;
                         }
 
@@ -145,7 +145,7 @@ namespace CgfConverter
                     case "-outputdir":
                         if (++i > inputArgs.Length)
                         {
-                            this.PrintUsage();
+                            PrintUsage();
                             return 1;
                         }
 
@@ -159,7 +159,7 @@ namespace CgfConverter
                     #region case "-usage"...
 
                     case "-usage":
-                        this.PrintUsage();
+                        PrintUsage();
                         return 1;
 
                     #endregion
@@ -177,7 +177,7 @@ namespace CgfConverter
                     case "-blend":
                     case "-blender":
                         Console.WriteLine("Output format set to Blender (.blend)");
-                        this.Output_Blender = true;
+                        this.OutputBlender = true;
 
                         break;
 
@@ -188,7 +188,7 @@ namespace CgfConverter
                     case "-object":
                     case "-wavefront":
                         Console.WriteLine("Output format set to Wavefront (.obj)");
-                        this.Output_Wavefront = true;
+                        this.OutputWavefront = true;
 
                         break;
 
@@ -196,14 +196,14 @@ namespace CgfConverter
                     #region case "-fbx"
                     case "-fbx":
                         Console.WriteLine("Output format set to FBX (.fbx)");
-                        this.Output_FBX = true;
+                        this.OutputFBX = true;
                         break;
                     #endregion
                     #region case "-dae" / "-collada"...
                     case "-dae":
                     case "-collada":
                         Console.WriteLine("Output format set to COLLADA (.dae)");
-                        this.Output_Collada = true;
+                        this.OutputCollada = true;
 
                         break;
 
@@ -212,7 +212,7 @@ namespace CgfConverter
                     case "-cry":
                     case "-crytek":
                         Console.WriteLine("Output format set to CryTek (.cga/.cgf/.chr/.skin)");
-                        this.Output_CryTek = true;
+                        this.OutputCryTek = true;
 
                         break;
 
@@ -273,11 +273,11 @@ namespace CgfConverter
                     case "-inputfile":
                         if (++i > inputArgs.Length)
                         {
-                            this.PrintUsage();
+                            PrintUsage();
                             return 1;
                         }
 
-                        this.InputFiles.AddRange(this.GetFiles(inputArgs[i]));
+                        this.InputFiles.AddRange(GetFiles(inputArgs[i]));
 
                         Console.WriteLine("Input file set to {0}", inputArgs[i]);
 
@@ -303,7 +303,7 @@ namespace CgfConverter
                     #region default...
 
                     default:
-                        this.InputFiles.AddRange(this.GetFiles(inputArgs[i]));
+                        this.InputFiles.AddRange(GetFiles(inputArgs[i]));
 
                         Console.WriteLine("Input file set to {0}", inputArgs[i]);
 
@@ -316,23 +316,18 @@ namespace CgfConverter
             // Ensure we have a file to process
             if (this.InputFiles.Count == 0)
             {
-                this.PrintUsage();
+                PrintUsage();
                 return 1;
             }
 
             // Default to Collada (.dae) format
-            if (!this.Output_Blender && !this.Output_Collada && !this.Output_Wavefront && !this.Output_FBX)
-                this.Output_Collada = true;
-            // Default to TIF files (only for Bulkheads crew)
-            //this.TiffTextures = true;
+            if (!this.OutputBlender && !this.OutputCollada && !this.OutputWavefront && !this.OutputFBX)
+                this.OutputCollada = true;
 
             return 0;
         }
 
-        /// <summary>
-        /// Print the usage syntax of the executable
-        /// </summary>
-        public void PrintUsage()
+        public static void PrintUsage()
         {
             Console.WriteLine();
             Console.WriteLine("cgf-converter [-usage] | <.cgf file> [-outputfile <output file>] [-objectdir <ObjectDir>] [-obj] [-blend] [-dae] [-smooth] [-throw]");
@@ -355,30 +350,9 @@ namespace CgfConverter
             Console.WriteLine();
         }
 
-        /// <summary>
-        /// Print the current arguments of the executable
-        /// </summary>
-        public void WriteArgs()
+        public override string ToString()
         {
-            Console.WriteLine();
-            Console.WriteLine("*** Submitted args ***");
-            // Console.WriteLine("    Input files:            {0}", this.InputFile);
-            if (!String.IsNullOrWhiteSpace(this.DataDir.FullName))
-            {
-                Console.WriteLine("    Object dir:             {0}", this.DataDir);
-            }
-            if (!String.IsNullOrWhiteSpace(this.OutputDir))
-            {
-                Console.WriteLine("    Output file:            {0}", this.OutputDir);
-            }
-            Console.WriteLine("    Smooth Faces:           {0}", this.Smooth);
-            Console.WriteLine("    Output to .obj:         {0}", this.Output_Wavefront);
-            Console.WriteLine("    Output to .blend:       {0}", this.Output_Blender);
-            Console.WriteLine("    Output to .dae:         {0}", this.Output_Collada);
-            Console.WriteLine("    Output to .fbx:         {0}", this.Output_FBX);
-            Console.WriteLine();
+            return $@"Input file: {InputFiles}, Obj Dir: {DataDir}, Output file: {OutputFile}";
         }
-
-        
     }
 }

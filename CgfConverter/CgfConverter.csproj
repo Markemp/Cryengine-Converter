@@ -474,6 +474,7 @@
     <Compile Include="External\Collada\Types\Grendgine_Collada_String_Array_String.cs" />
     <Compile Include="External\Dolkens\Extensions.cs" />
     <Compile Include="External\OpenTK\Half.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Models\ChrParams.cs" />
     <Compile Include="Models\Material.cs" />
     <Compile Include="Models\MaterialLibrary.cs" />
