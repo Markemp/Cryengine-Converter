@@ -114,14 +114,18 @@ namespace CgfConverter
             // Writes the Asset element in a Collada XML doc
             DateTime fileCreated = DateTime.Now;
             DateTime fileModified = DateTime.Now;           // since this only creates, both times should be the same
-            Grendgine_Collada_Asset asset = new Grendgine_Collada_Asset();
-            asset.Revision = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            Grendgine_Collada_Asset asset = new Grendgine_Collada_Asset
+            {
+                Revision = Assembly.GetExecutingAssembly().GetName().Version.ToString()
+            };
             Grendgine_Collada_Asset_Contributor[] contributors = new Grendgine_Collada_Asset_Contributor[2];
-            contributors[0] = new Grendgine_Collada_Asset_Contributor();
-            contributors[0].Author = "Heffay";
-            contributors[0].Author_Website = "https://github.com/Markemp/Cryengine-Converter";
-            contributors[0].Author_Email = "markemp@gmail.com";
-            contributors[0].Source_Data = this.CryData.RootNode.Name;                    // The cgf/cga/skin/whatever file we read
+            contributors[0] = new Grendgine_Collada_Asset_Contributor
+            {
+                Author = "Heffay",
+                Author_Website = "https://github.com/Markemp/Cryengine-Converter",
+                Author_Email = "markemp@gmail.com",
+                Source_Data = this.CryData.RootNode.Name                    // The cgf/cga/skin/whatever file we read
+            };
             // Get the actual file creators from the Source Chunk
             contributors[1] = new Grendgine_Collada_Asset_Contributor();
             foreach (CryEngine_Core.ChunkSourceInfo tmpSource in this.CryData.Chunks.Where(a => a.ChunkType == ChunkTypeEnum.SourceInfo))
@@ -160,10 +164,12 @@ namespace CgfConverter
                 for (int i = 0; i < numTextures; i++)
                 {
                     // For each texture in the material, we make a new <image> object and add it to the list. 
-                    Grendgine_Collada_Image tmpImage = new Grendgine_Collada_Image();
-                    tmpImage.ID = CryData.Materials[k].Name + "_" + CryData.Materials[k].Textures[i].Map;
-                    tmpImage.Name = CryData.Materials[k].Name + "_" + CryData.Materials[k].Textures[i].Map;
-                    tmpImage.Init_From = new Grendgine_Collada_Init_From();
+                    Grendgine_Collada_Image tmpImage = new Grendgine_Collada_Image
+                    {
+                        ID = CryData.Materials[k].Name + "_" + CryData.Materials[k].Textures[i].Map,
+                        Name = CryData.Materials[k].Name + "_" + CryData.Materials[k].Textures[i].Map,
+                        Init_From = new Grendgine_Collada_Init_From()
+                    };
                     // Build the URI path to the file as a .dds, clean up the slashes.
                     StringBuilder builder;
                     if (CryData.Materials[k].Textures[i].File.Contains(@"/") || CryData.Materials[k].Textures[i].File.Contains(@"\"))
@@ -272,7 +278,6 @@ namespace CgfConverter
                 List<Grendgine_Collada_New_Param> newparams = new List<Grendgine_Collada_New_Param>();
                 #region set up the sampler and surface for the materials. 
                 // Check to see if the texture exists, and if so make a sampler and surface.
-                int numTextures = CryData.Materials[i].Textures.Length;
                 for (int j = 0; j < CryData.Materials[i].Textures.Length; j++)
                 {
                     // Add the Surface node
@@ -281,7 +286,7 @@ namespace CgfConverter
                     Grendgine_Collada_Surface surface = new Grendgine_Collada_Surface();
                     texSurface.Surface = surface;
                     surface.Init_From = new Grendgine_Collada_Init_From();
-                    Grendgine_Collada_Surface surface2D = new Grendgine_Collada_Surface();
+                    //Grendgine_Collada_Surface surface2D = new Grendgine_Collada_Surface();
                     //texSurface.sID = CleanName(CryData.Materials[i].Textures[j].File) + CryData.Materials[i].Textures[j].Map + "-surface";
                     texSurface.Surface.Type = "2D";
                     texSurface.Surface.Init_From = new Grendgine_Collada_Init_From();
@@ -293,7 +298,7 @@ namespace CgfConverter
                     texSampler.sID = CleanMtlFileName(CryData.Materials[i].Textures[j].File) + "-sampler";
                     Grendgine_Collada_Sampler2D sampler2D = new Grendgine_Collada_Sampler2D();
                     texSampler.Sampler2D = sampler2D;
-                    Grendgine_Collada_Source samplerSource = new Grendgine_Collada_Source();
+                    //Grendgine_Collada_Source samplerSource = new Grendgine_Collada_Source();
                     texSampler.Sampler2D.Source = texSurface.sID;
 
                     newparams.Add(texSurface);
@@ -387,12 +392,16 @@ namespace CgfConverter
                 phong.Emission.Color = new Grendgine_Collada_Color();
                 phong.Emission.Color.sID = "emission";
                 phong.Emission.Color.Value_As_String = CryData.Materials[i].__Emissive?.Replace(",", " ") ?? string.Empty;
-                phong.Shininess = new Grendgine_Collada_FX_Common_Float_Or_Param_Type();
-                phong.Shininess.Float = new Grendgine_Collada_SID_Float();
+                phong.Shininess = new Grendgine_Collada_FX_Common_Float_Or_Param_Type
+                {
+                    Float = new Grendgine_Collada_SID_Float()
+                };
                 phong.Shininess.Float.sID = "shininess";
                 phong.Shininess.Float.Value = (float)CryData.Materials[i].Shininess;
-                phong.Index_Of_Refraction = new Grendgine_Collada_FX_Common_Float_Or_Param_Type();
-                phong.Index_Of_Refraction.Float = new Grendgine_Collada_SID_Float();
+                phong.Index_Of_Refraction = new Grendgine_Collada_FX_Common_Float_Or_Param_Type
+                {
+                    Float = new Grendgine_Collada_SID_Float()
+                };
 
                 phong.Transparent = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type();
                 phong.Transparent.Color = new Grendgine_Collada_Color();

@@ -308,3 +308,4 @@ OpenCover/
 CgfConverterTests/ResourceFiles/*.cg*
 CgfConverterTests/ResourceFiles/*.skin
 CgfConverterTests/ResourceFiles/*.chr
+CgfConverterTests/ResourceFiles/*.dae

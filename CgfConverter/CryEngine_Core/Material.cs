@@ -115,8 +115,7 @@ namespace CgfConverter.CryEngine_Core
                 get { return Enum.GetName(typeof(MapTypeEnum), this.Map); }
                 set
                 {
-                    MapTypeEnum buffer = MapTypeEnum.Unknown;
-                    Enum.TryParse<MapTypeEnum>(value, out buffer);
+                    _ = Enum.TryParse(value, out MapTypeEnum buffer);
                     this.Map = buffer;
                 }
             }

@@ -30,9 +30,6 @@ namespace CgfConverterConsole
             Utils.LogLevel = LogLevelEnum.Verbose; // Display ALL error logs in the console
             Utils.DebugLevel = LogLevelEnum.Debug;  // Send all to the IDE Output window
 
-			args = new String[] { @"D:\depot\mwo\Objects\environments\frontend\mechlab_a\lights\industrial_wetlamp_a.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
-			//args = new String[] { @"D:\depot\mwo\Objects\mechs\timberwolf\body\timberwolf.chr", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
-			//args = new String[] { @"D:\depot\mwo\Objects\mechs\hellbringer\body\hbr_right_torso_uac5_bh1.cga", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
 			//args = new String[] { @"D:\depot\mwo\Objects\mechs\catapult\body\catapult.chr", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
 			//args = new String[] { @"D:\depot\mwo\Objects\environments\frontend\mechlab_a\mechbay_ceilings\mechbay_ceilinga.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
 			//args = new String[] { @"D:\depot\mwo\Objects\environments\industrial\mf_maglev_loader_a.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };

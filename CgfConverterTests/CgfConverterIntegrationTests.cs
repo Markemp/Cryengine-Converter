@@ -15,8 +15,8 @@ namespace CgfConverterTests
     public class CgfConverterIntegrationTests
     {
         ArgsHandler argsHandler = new ArgsHandler();
-        private XmlSchemaSet schemaSet = new XmlSchemaSet();
-        private XmlReaderSettings settings = new XmlReaderSettings();
+        private readonly XmlSchemaSet schemaSet = new XmlSchemaSet();
+        private readonly XmlReaderSettings settings = new XmlReaderSettings();
         List<string> errors;
 
         [TestInitialize]
@@ -126,6 +126,19 @@ namespace CgfConverterTests
             var args = new String[] { @"..\..\ResourceFiles\uee_asteroid_ACTutorial_rail_01.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
             Int32 result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result); 
+            CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
+
+            COLLADA daeFile = new COLLADA(argsHandler, cryData);
+            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+            ValidateColladaXml(daeFile);
+        }
+
+        [TestMethod]
+        public void forest_ruin()
+        {
+            var args = new String[] { @"..\..\ResourceFiles\forest_ruin.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+            Int32 result = argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
             COLLADA daeFile = new COLLADA(argsHandler, cryData);
