@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <COLLADA xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" version="1.4.1" xmlns="http://www.collada.org/2005/11/COLLADASchema">
   <asset>
-    <created>2019-12-07T07:51:10.9422413-07:00</created>
-    <modified>2019-12-07T07:51:10.9422413-07:00</modified>
+    <created>2019-12-30T07:26:24.5508196-07:00</created>
+    <modified>2019-12-30T07:26:24.5508196-07:00</modified>
     <unit meter="1" name="meter" />
     <up_axis>Z_UP</up_axis>
     <contributor>
@@ -19,8 +19,126 @@
     <title>hbr_right_torso</title>
   </asset>
   <library_images />
-  <library_effects />
-  <library_materials />
+  <library_effects>
+    <effect id="hellbringer_body-effect" name="hellbringer_body">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission" />
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.5 0.5</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">1 1 1</color>
+            </specular>
+            <transparent>
+              <color>0</color>
+            </transparent>
+            <shininess>
+              <float sid="shininess">0.2</float>
+            </shininess>
+            <index_of_refraction>
+              <float>0</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="decals-effect" name="decals">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission" />
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.5 0.5</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">1 1 1</color>
+            </specular>
+            <transparent>
+              <color>0</color>
+            </transparent>
+            <shininess>
+              <float sid="shininess">0.2</float>
+            </shininess>
+            <index_of_refraction>
+              <float>0</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="hellbringer_variant-effect" name="hellbringer_variant">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission" />
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.5 0.5</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">1 1 1</color>
+            </specular>
+            <transparent>
+              <color>0</color>
+            </transparent>
+            <shininess>
+              <float sid="shininess">0.2</float>
+            </shininess>
+            <index_of_refraction>
+              <float>0</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="hellbringer_window-effect" name="hellbringer_window">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission" />
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.5 0.5</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">1 1 1</color>
+            </specular>
+            <transparent>
+              <color>0</color>
+            </transparent>
+            <shininess>
+              <float sid="shininess">0.2</float>
+            </shininess>
+            <index_of_refraction>
+              <float>0</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_materials>
+    <material id="hellbringer_body-material" name="hellbringer_body">
+      <instance_effect url="#hellbringer_body-effect" />
+    </material>
+    <material id="decals-material" name="decals">
+      <instance_effect url="#decals-effect" />
+    </material>
+    <material id="hellbringer_variant-material" name="hellbringer_variant">
+      <instance_effect url="#hellbringer_variant-effect" />
+    </material>
+    <material id="hellbringer_window-material" name="hellbringer_window">
+      <instance_effect url="#hellbringer_window-effect" />
+    </material>
+  </library_materials>
   <library_geometries>
     <geometry id="hbr_right_torso-mesh" name="hbr_right_torso">
       <mesh>
@@ -56,7 +174,7 @@
         <vertices id="hbr_right_torso-vertices">
           <input semantic="POSITION" source="#hbr_right_torso-mesh-pos" />
         </vertices>
-        <polylist count="1908">
+        <polylist count="1908" material="hellbringer_body-material">
           <input semantic="VERTEX" source="#hbr_right_torso-vertices" offset="0" set="0" />
           <input semantic="NORMAL" source="#hbr_right_torso-mesh-norm" offset="1" set="0" />
           <input semantic="TEXCOORD" source="#hbr_right_torso-mesh-UV" offset="2" set="0" />
@@ -73,7 +191,7 @@
         <instance_geometry name="hbr_right_torso" url="#hbr_right_torso-mesh">
           <bind_material>
             <technique_common>
-              <instance_material />
+              <instance_material target="#hellbringer_body-material" symbol="hellbringer_body-material" />
             </technique_common>
           </bind_material>
         </instance_geometry>

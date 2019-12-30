@@ -66,7 +66,12 @@ namespace CgfConverter.CryEngine_Core
             /// <returns></returns>
             public static String Serialize(Color input)
             {
-                return (input == null) ? null : String.Format("{0},{1},{2}", input.Red, input.Green, input.Blue);
+                return (input == null) ? null : string.Format("{0},{1},{2}", input.Red, input.Green, input.Blue);
+            }
+
+            public override string ToString()
+            {
+                return $@"R: {Red.ToString()}, G: {Green.ToString()}, B: {Blue.ToString()}";
             }
         }
 
@@ -347,19 +352,13 @@ namespace CgfConverter.CryEngine_Core
 
         #endregion
 
-        #region Methods
-
         public static Material FromFile(FileInfo materialfile)
         {
-            if (!materialfile.Exists)
-                return null;
-
             try
             {
                 using (Stream fileStream = materialfile.OpenRead())
                 {
                     return HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<Material>(fileStream);
-                    //return HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<CryEngine_Core.Material>(materialfile.FullName);
                 }
             }
             catch (Exception ex)
@@ -370,6 +369,24 @@ namespace CgfConverter.CryEngine_Core
             return null;
         }
 
-        #endregion
+        public static Material CreateDefaultMaterial(string materialName)
+        {
+            Material mat = new Material
+            {
+                Name = materialName,
+                Diffuse = new Color() { Blue = 0.5, Green = 0.5, Red = 0.8 },
+                Specular = new Color() { Blue = 1.0, Green = 1.0, Red = 1.0 },
+                Shininess = 0.2,
+                Opacity = 1.0,
+                Textures = Array.Empty<Texture>()
+            };
+
+            return mat;
+        }
+
+        public override string ToString()
+        {
+            return $@"Name: {Name}, Diffuse: {Diffuse.ToString()}";
+        }
     }
 }

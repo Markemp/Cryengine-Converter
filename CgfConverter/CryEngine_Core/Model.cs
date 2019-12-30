@@ -156,10 +156,6 @@ namespace CgfConverter.CryEngine_Core
             return buffer;
         }
 
-        /// <summary>
-        /// Load a cgf/cga/skin file
-        /// </summary>
-        /// <param name="fileName"></param>
         public void Load(String fileName)
         {
             FileInfo inputFile = new FileInfo(fileName);
@@ -171,68 +167,26 @@ namespace CgfConverter.CryEngine_Core
             if (!inputFile.Exists)
                 throw new FileNotFoundException();
 
-            // Open the file for reading.
             BinaryReader reader = new BinaryReader(File.Open(fileName, FileMode.Open));
             // Get the header.  This isn't essential for .cgam files, but we need this info to find the version and offset to the chunk table
             this.Read_FileHeader(reader);
             this.Read_ChunkHeaders(reader);
             this.Read_Chunks(reader);
+            
+            reader.Dispose();
         }
 
 
-        /// <summary>
-        /// Output File Header to console for testing
-        /// </summary>
-        public void WriteFileHeader()
-        {
-            Utils.Log(LogLevelEnum.Debug, "*** HEADER ***");
-            Utils.Log(LogLevelEnum.Debug, "    Header Filesignature: {0}", this.FileSignature);
-            Utils.Log(LogLevelEnum.Debug, "    FileType:            {0:X}", this.FileType);
-            Utils.Log(LogLevelEnum.Debug, "    ChunkVersion:        {0:X}", this.FileVersion);
-            Utils.Log(LogLevelEnum.Debug, "    ChunkTableOffset:    {0:X}", this.ChunkTableOffset);
-            Utils.Log(LogLevelEnum.Debug, "    NumChunks:           {0:X}", this.NumChunks);
-
-            Utils.Log(LogLevelEnum.Debug, "*** END HEADER ***");
-            return;
-        }
-
-        /// <summary>
-        /// Output Chunk Table to console for testing
-        /// </summary>
-        public void WriteChunkTable()
-        {
-            Utils.Log(LogLevelEnum.Debug, "*** Chunk Header Table***");
-            Utils.Log(LogLevelEnum.Debug, "Chunk Type              Version   ID        Size      Offset    ");
-            foreach (ChunkHeader chkHdr in this._chunks)
-            {
-                Utils.Log(LogLevelEnum.Debug, "{0,-24:X}{1,-10:X}{2,-10:X}{3,-10:X}{4,-10:X}", chkHdr.ChunkType.ToString(), chkHdr.Version, chkHdr.ID, chkHdr.Size, chkHdr.Offset);
-            }
-            Console.WriteLine("*** Chunk Header Table***");
-            Console.WriteLine("Chunk Type              Version   ID        Size      Offset    ");
-            foreach (ChunkHeader chkHdr in this._chunks)
-            {
-                Console.WriteLine("{0,-24:X}{1,-10:X}{2,-10:X}{3,-10:X}{4,-10:X}", chkHdr.ChunkType.ToString(), chkHdr.Version, chkHdr.ID, chkHdr.Size, chkHdr.Offset);
-            }
-        }
 
         #endregion
 
-        #region Private Methods
-
-        /// <summary>
-        /// Read FileHeader from stream
-        /// </summary>
-        /// <param name="b"></param>
         private void Read_FileHeader(BinaryReader b)
         {
-            #region Detect FileSignature v3.6+
-
             b.BaseStream.Seek(0, 0);
             this.FileSignature = b.ReadFString(4);
 
-            if (this.FileSignature == "CrCh")
+            if (this.FileSignature == "CrCh")           // file signature v3.6+
             {
-                // Version 3.6 or later
                 this.FileVersion = (FileVersionEnum)b.ReadUInt32();    // 0x746
                 this.NumChunks = b.ReadUInt32();       // number of Chunks in the chunk table
                 this.ChunkTableOffset = b.ReadInt32(); // location of the chunk table
@@ -240,17 +194,11 @@ namespace CgfConverter.CryEngine_Core
                 return;
             }
 
-            #endregion
-
-            #region Detect FileSignature v3.5-
-
             b.BaseStream.Seek(0, 0);
             this.FileSignature = b.ReadFString(8);
 
-            if (this.FileSignature == "CryTek")
+            if (this.FileSignature == "CryTek")         // file signature v3.5-
             {
-
-                // Version 3.5 or earlier
                 this.FileType = (FileTypeEnum)b.ReadUInt32();
                 this.FileVersion = (FileVersionEnum)b.ReadUInt32();    // 0x744 0x745
                 this.ChunkTableOffset = b.ReadInt32() + 4;
@@ -259,16 +207,9 @@ namespace CgfConverter.CryEngine_Core
                 return;
             }
 
-            #endregion
-
             throw new NotSupportedException(String.Format("Unsupported FileSignature {0}", this.FileSignature));
         }
 
-        /// <summary>
-        /// Read HeaderTable from stream
-        /// </summary>
-        /// <typeparam name="TChunkHeader"></typeparam>
-        /// <param name="b">BinaryReader of file being read</param>
         private void Read_ChunkHeaders(BinaryReader b)
         {
             // need to seek to the start of the table here.  foffset points to the start of the table
@@ -280,13 +221,8 @@ namespace CgfConverter.CryEngine_Core
                 header.Read(b);
                 this._chunks.Add(header);
             }
-            //this.WriteChunkTable();
         }
 
-        /// <summary>
-        /// Reads all the chunks in the Cryengine file.
-        /// </summary>
-        /// <param name="reader">BinaryReader for the Cryengine file.</param>
         private void Read_Chunks(BinaryReader reader)
         {
             foreach (ChunkHeader chkHdr in this._chunks)
@@ -314,6 +250,33 @@ namespace CgfConverter.CryEngine_Core
             }
         }
 
-        #endregion
+        private void WriteChunkTable()
+        {
+            Utils.Log(LogLevelEnum.Debug, "*** Chunk Header Table***");
+            Utils.Log(LogLevelEnum.Debug, "Chunk Type              Version   ID        Size      Offset    ");
+            foreach (ChunkHeader chkHdr in this._chunks)
+            {
+                Utils.Log(LogLevelEnum.Debug, "{0,-24:X}{1,-10:X}{2,-10:X}{3,-10:X}{4,-10:X}", chkHdr.ChunkType.ToString(), chkHdr.Version, chkHdr.ID, chkHdr.Size, chkHdr.Offset);
+            }
+            Console.WriteLine("*** Chunk Header Table***");
+            Console.WriteLine("Chunk Type              Version   ID        Size      Offset    ");
+            foreach (ChunkHeader chkHdr in this._chunks)
+            {
+                Console.WriteLine("{0,-24:X}{1,-10:X}{2,-10:X}{3,-10:X}{4,-10:X}", chkHdr.ChunkType.ToString(), chkHdr.Version, chkHdr.ID, chkHdr.Size, chkHdr.Offset);
+            }
+        }
+
+        private void WriteFileHeader()
+        {
+            Utils.Log(LogLevelEnum.Debug, "*** HEADER ***");
+            Utils.Log(LogLevelEnum.Debug, "    Header Filesignature: {0}", this.FileSignature);
+            Utils.Log(LogLevelEnum.Debug, "    FileType:            {0:X}", this.FileType);
+            Utils.Log(LogLevelEnum.Debug, "    ChunkVersion:        {0:X}", this.FileVersion);
+            Utils.Log(LogLevelEnum.Debug, "    ChunkTableOffset:    {0:X}", this.ChunkTableOffset);
+            Utils.Log(LogLevelEnum.Debug, "    NumChunks:           {0:X}", this.NumChunks);
+
+            Utils.Log(LogLevelEnum.Debug, "*** END HEADER ***");
+            return;
+        }
     }
 }

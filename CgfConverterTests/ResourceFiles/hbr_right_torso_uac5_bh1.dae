@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <COLLADA xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" version="1.4.1" xmlns="http://www.collada.org/2005/11/COLLADASchema">
   <asset>
-    <created>2019-12-07T07:51:11.1430023-07:00</created>
-    <modified>2019-12-07T07:51:11.1430023-07:00</modified>
+    <created>2019-12-30T07:26:24.7338165-07:00</created>
+    <modified>2019-12-30T07:26:24.7338165-07:00</modified>
     <unit meter="1" name="meter" />
     <up_axis>Z_UP</up_axis>
     <contributor>
@@ -19,8 +19,561 @@
     <title>hbr_right_torso_uac5_bh1</title>
   </asset>
   <library_images />
-  <library_effects />
-  <library_materials />
+  <library_effects>
+    <effect id="hellbringer_body-effect" name="hellbringer_body">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission" />
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.5 0.5</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">1 1 1</color>
+            </specular>
+            <transparent>
+              <color>0</color>
+            </transparent>
+            <shininess>
+              <float sid="shininess">0.2</float>
+            </shininess>
+            <index_of_refraction>
+              <float>0</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="decals-effect" name="decals">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission" />
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.5 0.5</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">1 1 1</color>
+            </specular>
+            <transparent>
+              <color>0</color>
+            </transparent>
+            <shininess>
+              <float sid="shininess">0.2</float>
+            </shininess>
+            <index_of_refraction>
+              <float>0</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="hellbringer_variant-effect" name="hellbringer_variant">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission" />
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.5 0.5</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">1 1 1</color>
+            </specular>
+            <transparent>
+              <color>0</color>
+            </transparent>
+            <shininess>
+              <float sid="shininess">0.2</float>
+            </shininess>
+            <index_of_refraction>
+              <float>0</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="hellbringer_window-effect" name="hellbringer_window">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission" />
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.5 0.5</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">1 1 1</color>
+            </specular>
+            <transparent>
+              <color>0</color>
+            </transparent>
+            <shininess>
+              <float sid="shininess">0.2</float>
+            </shininess>
+            <index_of_refraction>
+              <float>0</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="centre_torso-effect" name="centre_torso">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission" />
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.5 0.5</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">1 1 1</color>
+            </specular>
+            <transparent>
+              <color>0</color>
+            </transparent>
+            <shininess>
+              <float sid="shininess">0.2</float>
+            </shininess>
+            <index_of_refraction>
+              <float>0</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="right_torso-effect" name="right_torso">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission" />
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.5 0.5</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">1 1 1</color>
+            </specular>
+            <transparent>
+              <color>0</color>
+            </transparent>
+            <shininess>
+              <float sid="shininess">0.2</float>
+            </shininess>
+            <index_of_refraction>
+              <float>0</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="left_torso-effect" name="left_torso">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission" />
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.5 0.5</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">1 1 1</color>
+            </specular>
+            <transparent>
+              <color>0</color>
+            </transparent>
+            <shininess>
+              <float sid="shininess">0.2</float>
+            </shininess>
+            <index_of_refraction>
+              <float>0</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="left_arm-effect" name="left_arm">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission" />
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.5 0.5</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">1 1 1</color>
+            </specular>
+            <transparent>
+              <color>0</color>
+            </transparent>
+            <shininess>
+              <float sid="shininess">0.2</float>
+            </shininess>
+            <index_of_refraction>
+              <float>0</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="right_arm-effect" name="right_arm">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission" />
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.5 0.5</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">1 1 1</color>
+            </specular>
+            <transparent>
+              <color>0</color>
+            </transparent>
+            <shininess>
+              <float sid="shininess">0.2</float>
+            </shininess>
+            <index_of_refraction>
+              <float>0</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="left_leg-effect" name="left_leg">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission" />
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.5 0.5</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">1 1 1</color>
+            </specular>
+            <transparent>
+              <color>0</color>
+            </transparent>
+            <shininess>
+              <float sid="shininess">0.2</float>
+            </shininess>
+            <index_of_refraction>
+              <float>0</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="right_leg-effect" name="right_leg">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission" />
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.5 0.5</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">1 1 1</color>
+            </specular>
+            <transparent>
+              <color>0</color>
+            </transparent>
+            <shininess>
+              <float sid="shininess">0.2</float>
+            </shininess>
+            <index_of_refraction>
+              <float>0</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="head-effect" name="head">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission" />
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.5 0.5</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">1 1 1</color>
+            </specular>
+            <transparent>
+              <color>0</color>
+            </transparent>
+            <shininess>
+              <float sid="shininess">0.2</float>
+            </shininess>
+            <index_of_refraction>
+              <float>0</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="centre_torso_rear-effect" name="centre_torso_rear">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission" />
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.5 0.5</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">1 1 1</color>
+            </specular>
+            <transparent>
+              <color>0</color>
+            </transparent>
+            <shininess>
+              <float sid="shininess">0.2</float>
+            </shininess>
+            <index_of_refraction>
+              <float>0</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="left_torso_rear-effect" name="left_torso_rear">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission" />
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.5 0.5</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">1 1 1</color>
+            </specular>
+            <transparent>
+              <color>0</color>
+            </transparent>
+            <shininess>
+              <float sid="shininess">0.2</float>
+            </shininess>
+            <index_of_refraction>
+              <float>0</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="right_torso_rear-effect" name="right_torso_rear">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission" />
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.5 0.5</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">1 1 1</color>
+            </specular>
+            <transparent>
+              <color>0</color>
+            </transparent>
+            <shininess>
+              <float sid="shininess">0.2</float>
+            </shininess>
+            <index_of_refraction>
+              <float>0</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="hellbringer_body-effect" name="hellbringer_body">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission" />
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.5 0.5</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">1 1 1</color>
+            </specular>
+            <transparent>
+              <color>0</color>
+            </transparent>
+            <shininess>
+              <float sid="shininess">0.2</float>
+            </shininess>
+            <index_of_refraction>
+              <float>0</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="decals-effect" name="decals">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission" />
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.5 0.5</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">1 1 1</color>
+            </specular>
+            <transparent>
+              <color>0</color>
+            </transparent>
+            <shininess>
+              <float sid="shininess">0.2</float>
+            </shininess>
+            <index_of_refraction>
+              <float>0</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="hellbringer_variant-effect" name="hellbringer_variant">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission" />
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.5 0.5</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">1 1 1</color>
+            </specular>
+            <transparent>
+              <color>0</color>
+            </transparent>
+            <shininess>
+              <float sid="shininess">0.2</float>
+            </shininess>
+            <index_of_refraction>
+              <float>0</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="hellbringer_window-effect" name="hellbringer_window">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission" />
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.5 0.5</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">1 1 1</color>
+            </specular>
+            <transparent>
+              <color>0</color>
+            </transparent>
+            <shininess>
+              <float sid="shininess">0.2</float>
+            </shininess>
+            <index_of_refraction>
+              <float>0</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_materials>
+    <material id="hellbringer_body-material" name="hellbringer_body">
+      <instance_effect url="#hellbringer_body-effect" />
+    </material>
+    <material id="decals-material" name="decals">
+      <instance_effect url="#decals-effect" />
+    </material>
+    <material id="hellbringer_variant-material" name="hellbringer_variant">
+      <instance_effect url="#hellbringer_variant-effect" />
+    </material>
+    <material id="hellbringer_window-material" name="hellbringer_window">
+      <instance_effect url="#hellbringer_window-effect" />
+    </material>
+    <material id="centre_torso-material" name="centre_torso">
+      <instance_effect url="#centre_torso-effect" />
+    </material>
+    <material id="right_torso-material" name="right_torso">
+      <instance_effect url="#right_torso-effect" />
+    </material>
+    <material id="left_torso-material" name="left_torso">
+      <instance_effect url="#left_torso-effect" />
+    </material>
+    <material id="left_arm-material" name="left_arm">
+      <instance_effect url="#left_arm-effect" />
+    </material>
+    <material id="right_arm-material" name="right_arm">
+      <instance_effect url="#right_arm-effect" />
+    </material>
+    <material id="left_leg-material" name="left_leg">
+      <instance_effect url="#left_leg-effect" />
+    </material>
+    <material id="right_leg-material" name="right_leg">
+      <instance_effect url="#right_leg-effect" />
+    </material>
+    <material id="head-material" name="head">
+      <instance_effect url="#head-effect" />
+    </material>
+    <material id="centre_torso_rear-material" name="centre_torso_rear">
+      <instance_effect url="#centre_torso_rear-effect" />
+    </material>
+    <material id="left_torso_rear-material" name="left_torso_rear">
+      <instance_effect url="#left_torso_rear-effect" />
+    </material>
+    <material id="right_torso_rear-material" name="right_torso_rear">
+      <instance_effect url="#right_torso_rear-effect" />
+    </material>
+    <material id="hellbringer_body-material" name="hellbringer_body">
+      <instance_effect url="#hellbringer_body-effect" />
+    </material>
+    <material id="decals-material" name="decals">
+      <instance_effect url="#decals-effect" />
+    </material>
+    <material id="hellbringer_variant-material" name="hellbringer_variant">
+      <instance_effect url="#hellbringer_variant-effect" />
+    </material>
+    <material id="hellbringer_window-material" name="hellbringer_window">
+      <instance_effect url="#hellbringer_window-effect" />
+    </material>
+  </library_materials>
   <library_geometries>
     <geometry id="hbr_right_torso_uac5_bh1-mesh" name="hbr_right_torso_uac5_bh1">
       <mesh>
@@ -56,7 +609,7 @@
         <vertices id="hbr_right_torso_uac5_bh1-vertices">
           <input semantic="POSITION" source="#hbr_right_torso_uac5_bh1-mesh-pos" />
         </vertices>
-        <polylist count="520">
+        <polylist count="520" material="centre_torso-material">
           <input semantic="VERTEX" source="#hbr_right_torso_uac5_bh1-vertices" offset="0" set="0" />
           <input semantic="NORMAL" source="#hbr_right_torso_uac5_bh1-mesh-norm" offset="1" set="0" />
           <input semantic="TEXCOORD" source="#hbr_right_torso_uac5_bh1-mesh-UV" offset="2" set="0" />
@@ -99,7 +652,7 @@
         <vertices id="barrel022-vertices">
           <input semantic="POSITION" source="#barrel022-mesh-pos" />
         </vertices>
-        <polylist count="1921">
+        <polylist count="1921" material="centre_torso-material">
           <input semantic="VERTEX" source="#barrel022-vertices" offset="0" set="0" />
           <input semantic="NORMAL" source="#barrel022-mesh-norm" offset="1" set="0" />
           <input semantic="TEXCOORD" source="#barrel022-mesh-UV" offset="2" set="0" />
@@ -116,7 +669,7 @@
         <instance_geometry name="hbr_right_torso_uac5_bh1" url="#hbr_right_torso_uac5_bh1-mesh">
           <bind_material>
             <technique_common>
-              <instance_material />
+              <instance_material target="#centre_torso-material" symbol="centre_torso-material" />
             </technique_common>
           </bind_material>
         </instance_geometry>
@@ -133,7 +686,7 @@
             <instance_geometry name="barrel022" url="#barrel022-mesh">
               <bind_material>
                 <technique_common>
-                  <instance_material />
+                  <instance_material target="#centre_torso-material" symbol="centre_torso-material" />
                 </technique_common>
               </bind_material>
             </instance_geometry>

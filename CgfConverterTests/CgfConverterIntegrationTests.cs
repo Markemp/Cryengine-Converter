@@ -45,7 +45,7 @@ namespace CgfConverterTests
         }
 
         [TestMethod]
-        public void MWO_industrial_wetlamp_a()
+        public void MWO_industrial_wetlamp_a_MaterialFileFound()
         {
             var args = new String[] { @"..\..\ResourceFiles\industrial_wetlamp_a.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
             Int32 result = argsHandler.ProcessArgs(args);
@@ -70,12 +70,12 @@ namespace CgfConverterTests
             COLLADA daeFile = new COLLADA(argsHandler, cryData);
             daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
             int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
-            Assert.AreEqual(0, actualMaterialsCount);
+            Assert.AreEqual(11, actualMaterialsCount);
             ValidateColladaXml(daeFile);
         }
 
         [TestMethod]
-        public void MWO_candycane_a()
+        public void MWO_candycane_a_MaterialFileNotAvailable()
         {
             var args = new String[] { @"..\..\ResourceFiles\candycane_a.chr", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
             Int32 result = argsHandler.ProcessArgs(args);
@@ -85,10 +85,9 @@ namespace CgfConverterTests
             COLLADA daeFile = new COLLADA(argsHandler, cryData);
             daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
             int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
-            Assert.AreEqual(0, actualMaterialsCount);
+            Assert.AreEqual(2, actualMaterialsCount);
             ValidateColladaXml(daeFile);
         }
-
 
         [TestMethod]
         public void MWO_hbr_right_torso_uac5_bh1_cga()
@@ -101,7 +100,7 @@ namespace CgfConverterTests
             COLLADA daeFile = new COLLADA(argsHandler, cryData);
             daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
             int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
-            Assert.AreEqual(24, actualMaterialsCount);
+            Assert.AreEqual(19, actualMaterialsCount);
             ValidateColladaXml(daeFile);
         }
 
@@ -116,7 +115,7 @@ namespace CgfConverterTests
             COLLADA daeFile = new COLLADA(argsHandler, cryData);
             daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
             int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
-            Assert.AreEqual(24, actualMaterialsCount);
+            Assert.AreEqual(4, actualMaterialsCount);
             ValidateColladaXml(daeFile);
         }
 

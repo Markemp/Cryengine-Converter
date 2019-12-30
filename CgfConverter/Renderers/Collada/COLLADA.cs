@@ -369,7 +369,7 @@ namespace CgfConverter
                 if (diffound == false)
                 {
                     phong.Diffuse.Color = new Grendgine_Collada_Color();
-                    phong.Diffuse.Color.Value_As_String = CryData.Materials[i].__Diffuse.Replace(",", " ");
+                    phong.Diffuse.Color.Value_As_String = CryData.Materials[i].__Diffuse?.Replace(",", " ") ?? string.Empty;
                     phong.Diffuse.Color.sID = "diffuse";
                 }
                 if (specfound == false)
@@ -378,7 +378,7 @@ namespace CgfConverter
                     phong.Specular.Color = new Grendgine_Collada_Color();
                     phong.Specular.Color.sID = "specular";
                     if (CryData.Materials[i].__Specular != null)
-                        phong.Specular.Color.Value_As_String = CryData.Materials[i].__Specular.Replace(",", " ");
+                        phong.Specular.Color.Value_As_String = CryData.Materials[i].__Specular?.Replace(",", " ") ?? string.Empty;
                     else
                         phong.Specular.Color.Value_As_String = "1 1 1";
                 }
@@ -386,7 +386,7 @@ namespace CgfConverter
                 phong.Emission = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type();
                 phong.Emission.Color = new Grendgine_Collada_Color();
                 phong.Emission.Color.sID = "emission";
-                phong.Emission.Color.Value_As_String = CryData.Materials[i].__Emissive.Replace(",", " ");
+                phong.Emission.Color.Value_As_String = CryData.Materials[i].__Emissive?.Replace(",", " ") ?? string.Empty;
                 phong.Shininess = new Grendgine_Collada_FX_Common_Float_Or_Param_Type();
                 phong.Shininess.Float = new Grendgine_Collada_SID_Float();
                 phong.Shininess.Float.sID = "shininess";

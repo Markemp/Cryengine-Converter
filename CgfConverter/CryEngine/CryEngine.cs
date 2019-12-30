@@ -59,7 +59,7 @@ namespace CgfConverter
                 Model model = Model.FromFile(file.FullName);
                 if (this.RootNode == null)
                     RootNode = model.RootNode;  // This makes the assumption that we read the .cga file before the .cgam file.
-                
+
                 this.Bones = this.Bones ?? model.Bones;
                 this.Models.Add(model);
             }
@@ -68,10 +68,6 @@ namespace CgfConverter
             // For each node with geometry info, populate that node's Mesh Chunk GeometryInfo with the geometry data.
             ConsolidateGeometryInfo();
 
-            // No longer looking for the material file.  Instead, default materials with the material chunk name will be created.  Creation
-            // of materials will be handled by Cryengine Importer.
-
-            #region Get material file name
             // Get the material file name
             var allMaterialChunks = this.Models.SelectMany(a => a.ChunkMap.Values).Where(c => c.ChunkType == ChunkTypeEnum.MtlName);
             foreach (ChunkMtlName mtlChunk in allMaterialChunks)
@@ -81,7 +77,7 @@ namespace CgfConverter
                     continue;
 
                 // The Replace part is for SC files that point to a _core material file that doesn't exist.
-                String cleanName = mtlChunk.Name.Replace("_core", "");
+                string cleanName = mtlChunk.Name.Replace("_core", "");
 
                 FileInfo materialFile;
 
@@ -107,6 +103,7 @@ namespace CgfConverter
                     // 
                     string[] stringSeparators = new string[] { @"\", @"/" };
                     string[] result;
+
                     // if objectdir is provided, check objectdir + mtlchunk.name
                     if (dataDir != null)
                     {
@@ -131,7 +128,7 @@ namespace CgfConverter
                     }
                     materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(fileName), cleanName));
                 }
-                    
+
                 // First try relative to file being processed
                 if (materialFile.Extension != ".mtl")
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
@@ -154,14 +151,12 @@ namespace CgfConverter
                 if (materialFile.Extension != ".mtl")
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
 
-                // 
-
                 // Populate CryEngine_Core.Material
                 Material material = Material.FromFile(materialFile);
 
                 if (material != null)
                 {
-                     Utils.Log(LogLevelEnum.Debug, "Located material file {0}", materialFile.Name);
+                    Utils.Log(LogLevelEnum.Debug, "Located material file {0}", materialFile.Name);
 
                     this.Materials = CryEngine.FlattenMaterials(material).Where(m => m.Textures != null).ToArray();
 
@@ -179,10 +174,18 @@ namespace CgfConverter
                     Utils.Log(LogLevelEnum.Debug, "Unable to locate material file {0}.mtl", mtlChunk.Name);
                 }
             }
-            #endregion
 
-            Utils.Log(LogLevelEnum.Debug, "Unable to locate any material file");
-            this.Materials = new CryEngine_Core.Material[] { };
+            Utils.Log(LogLevelEnum.Debug, "Unable to locate any material file.  Creating Default materials.");
+
+            List<Material> mats = new List<Material>();
+            foreach (ChunkMtlName mtlChunk in allMaterialChunks)
+            {
+                if (mtlChunk.MatType == MtlNameTypeEnum.Child || mtlChunk.MatType == MtlNameTypeEnum.Unknown1)
+                {
+                    mats.Add(Material.CreateDefaultMaterial(mtlChunk.Name));
+                }
+            }
+            this.Materials = mats.ToArray();
         }
 
         private void ConsolidateGeometryInfo()
@@ -331,7 +334,7 @@ namespace CgfConverter
         /// </summary>
         /// <param name="material"></param>
         /// <returns></returns>
-        public static IEnumerable<CryEngine_Core.Material> FlattenMaterials(CryEngine_Core.Material material)
+        public static IEnumerable<Material> FlattenMaterials(Material material)
         {
             if (material != null)
             {
