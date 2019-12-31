@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
     public class ChunkCompiledIntSkinVertices_800 : ChunkCompiledIntSkinVertices
     {
@@ -38,11 +38,6 @@ namespace CgfConverter.CryEngine_Core
             }
             SkinningInfo skin = GetSkinningInfo();
             skin.IntVertices = IntSkinVertices.ToList();
-        }
-
-        public override void WriteChunk()
-        {
-            base.WriteChunk();
         }
     }
 }

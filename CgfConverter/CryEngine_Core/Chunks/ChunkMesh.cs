@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
     public abstract class ChunkMesh : Chunk      //  cccc0000:  Object that points to the datastream chunk.
     {
@@ -59,8 +59,12 @@ namespace CgfConverter.CryEngine_Core
         public GeometryInfo GeometryInfo { get; set; }
 
         //public ChunkMeshSubsets chunkMeshSubset; // pointer to the mesh subset that belongs to this mesh
+        public override string ToString()
+        {
+            return $@"Chunk Type: {ChunkType}, ID: {ID:X}, Version: {Version}";
+        }
 
-        public override void WriteChunk()
+        public void WriteChunk()
         {
             Utils.Log(LogLevelEnum.Verbose, "*** START MESH CHUNK ***");
             Utils.Log(LogLevelEnum.Verbose, "    ChunkType:           {0}", ChunkType);

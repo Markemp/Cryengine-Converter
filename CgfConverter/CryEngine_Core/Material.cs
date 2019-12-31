@@ -11,7 +11,7 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Diagnostics;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
     /// <summary>
     /// Representation of a CryEngine .mtl file

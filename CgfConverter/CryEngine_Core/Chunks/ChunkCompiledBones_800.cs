@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
     public class ChunkCompiledBones_800 : ChunkCompiledBones
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
     /// <summary>
     /// Legacy class.  Not used
@@ -12,18 +12,11 @@ namespace CgfConverter.CryEngine_Core
     public abstract class ChunkBoneNameList : Chunk
     {
         public int NumEntities;
-        public List<string> BoneNames;
+        public List<string> BoneNames = new List<string>();
 
-        public override void WriteChunk()
+        public override string ToString()
         {
-            Utils.Log(LogLevelEnum.Debug, "*** START MorphTargets Chunk ***");
-            Utils.Log(LogLevelEnum.Debug, "    ChunkType:           {0}", ChunkType);
-            Utils.Log(LogLevelEnum.Debug, "    Node ID:             {0:X}", ID);
-            Utils.Log(LogLevelEnum.Debug, "    Number of Targets:   {0:X}", NumEntities);
-            foreach (string name in BoneNames)
-            {
-                Utils.Log(LogLevelEnum.Debug, "    Bone Name:       {0}", name);
-            }
+            return $@"Chunk Type: {ChunkType}, ID: {ID:X}, Number of Targets: {NumEntities}";
         }
     }
 }

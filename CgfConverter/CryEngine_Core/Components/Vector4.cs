@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core.Components
+namespace CgfConverter.CryEngineCore.Components
 {
     /// <summary>
     /// A 4 value vector (x, y, z, w).  Uses some of Dymek's code to solve Normals for SC models.

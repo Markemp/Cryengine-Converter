@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core.Chunks
+namespace CgfConverter.CryEngineCore.Chunks
 {
     public class ChunkTimingFormat_919 : ChunkTimingFormat
     {

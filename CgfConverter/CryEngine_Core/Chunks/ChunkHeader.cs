@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
     public abstract class ChunkHeader : Chunk
     {

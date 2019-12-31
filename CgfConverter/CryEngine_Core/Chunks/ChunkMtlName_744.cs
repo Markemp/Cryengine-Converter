@@ -5,10 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
     // cccc0014:  provides material name as used in the .mtl file
-    public class ChunkMtlName_744 : CryEngine_Core.ChunkMtlName
+    public class ChunkMtlName_744 : CryEngineCore.ChunkMtlName
     {
         public override void Read(BinaryReader b)
         {

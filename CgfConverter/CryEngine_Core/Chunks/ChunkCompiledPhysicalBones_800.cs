@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MathNet.Numerics.LinearAlgebra;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
     public class ChunkCompiledPhysicalBones_800 : ChunkCompiledPhysicalBones     //  0xACDC0000:  Bones info
     {
@@ -38,11 +38,5 @@ namespace CgfConverter.CryEngine_Core
             SkinningInfo skin = GetSkinningInfo();
             //skin.PhysicalBoneMeshes
         }
-
-        public override void WriteChunk()
-        {
-            base.WriteChunk();
-        }
     }
-
 }

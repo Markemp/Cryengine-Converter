@@ -6,14 +6,14 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
     public abstract class Chunk : IBinaryChunk
     {
-        private static Dictionary<Type, Dictionary<UInt32, Func<dynamic>>> _chunkFactoryCache = new Dictionary<Type, Dictionary<UInt32, Func<dynamic>>> { };
+        private readonly static Dictionary<Type, Dictionary<uint, Func<dynamic>>> _chunkFactoryCache = new Dictionary<Type, Dictionary<uint, Func<dynamic>>> { };
 
         internal ChunkHeader _header;
-        internal CryEngine_Core.Model _model;
+        internal CryEngineCore.Model _model;
 
         /// <summary>
         /// Position of the start of the chunk
@@ -151,7 +151,7 @@ namespace CgfConverter.CryEngine_Core
             throw new NotSupportedException(String.Format("Version {0:X} of {1} is not supported", version, typeof(T).Name));
         }
 
-        public void Load(CryEngine_Core.Model model, ChunkHeader header)
+        public void Load(CryEngineCore.Model model, ChunkHeader header)
         {
             this._model = model;
             this._header = header;
@@ -224,15 +224,9 @@ namespace CgfConverter.CryEngine_Core
 
         public virtual void Write(BinaryWriter writer) { throw new NotImplementedException(); }
 
-        public virtual void WriteChunk()
+        public override string ToString()
         {
-            Utils.Log(LogLevelEnum.Verbose, "*** CHUNK ***");
-            Utils.Log(LogLevelEnum.Verbose, "    ChunkType: {0}", this.ChunkType);
-            Utils.Log(LogLevelEnum.Verbose, "    ChunkVersion: {0:X}", this.Version);
-            Utils.Log(LogLevelEnum.Verbose, "    Offset: {0:X}", this.Offset);
-            Utils.Log(LogLevelEnum.Verbose, "    ID: {0:X}", this.ID);
-            Utils.Log(LogLevelEnum.Verbose, "    Size: {0:X}", this.Size);
-            Utils.Log(LogLevelEnum.Verbose, "*** END CHUNK ***");
+            return $@"Chunk Type: {ChunkType}, Ver: {Version:X}, Offset: {Offset:X}, ID: {ID:X}, Size: {Size}";
         }
     }
 }

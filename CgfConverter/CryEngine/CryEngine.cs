@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CgfConverter.CryEngine_Core;
+using CgfConverter.CryEngineCore;
 
 namespace CgfConverter
 {
@@ -21,7 +21,12 @@ namespace CgfConverter
             ".anim"
         };
         private const string invalidExtensionErrorMessage = "Warning: Unsupported file extension - please use a cga, cgf, chr or skin file.";
-
+        public List<Model> Models { get; internal set; } = new List<Model>();
+        public List<Material> Materials { get; internal set; } = new List<Material>();
+        public ChunkNode RootNode { get; internal set; }
+        public ChunkCompiledBones Bones { get; internal set; }
+        public SkinningInfo SkinningInfo { get; set; }
+        public string InputFile { get; internal set; }
         public CryEngine(string fileName, string dataDir)
         {
             this.InputFile = fileName;
@@ -158,9 +163,9 @@ namespace CgfConverter
                 {
                     Utils.Log(LogLevelEnum.Debug, "Located material file {0}", materialFile.Name);
 
-                    this.Materials = CryEngine.FlattenMaterials(material).Where(m => m.Textures != null).ToArray();
+                    this.Materials = CryEngine.FlattenMaterials(material).Where(m => m.Textures != null).ToList();
 
-                    if (this.Materials.Length == 1)
+                    if (this.Materials.Count == 1)
                     {
                         // only one material, so it's a material file with no submaterials.  Check and set the name
                         this.Materials[0].Name = this.RootNode.Name;
@@ -177,15 +182,81 @@ namespace CgfConverter
 
             Utils.Log(LogLevelEnum.Debug, "Unable to locate any material file.  Creating Default materials.");
 
-            List<Material> mats = new List<Material>();
             foreach (ChunkMtlName mtlChunk in allMaterialChunks)
             {
                 if (mtlChunk.MatType == MtlNameTypeEnum.Child || mtlChunk.MatType == MtlNameTypeEnum.Unknown1 || mtlChunk.MatType == MtlNameTypeEnum.MwoChild)
                 {
-                    mats.Add(Material.CreateDefaultMaterial(mtlChunk.Name));
+                    this.Materials.Add(Material.CreateDefaultMaterial(mtlChunk.Name));
                 }
             }
-            this.Materials = mats.ToArray();
+        }
+        private List<Chunk> _chunks;
+        public List<Chunk> Chunks
+        {
+            get
+            {
+                if (this._chunks == null)
+                {
+                    this._chunks = this.Models.SelectMany(m => m.ChunkMap.Values).ToList();
+                }
+
+                return this._chunks;
+            }
+        }
+        private Dictionary<String, ChunkNode> _nodeMap;
+        public Dictionary<String, ChunkNode> NodeMap  // Cannot use the Node name for the key.  Across a couple files, you may have multiple nodes with same name.
+        {
+            get
+            {
+                if (this._nodeMap == null)
+                {
+                    this._nodeMap = new Dictionary<String, CryEngineCore.ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
+
+                    ChunkNode rootNode = null;
+
+                    Utils.Log(LogLevelEnum.Info, "Mapping Nodes");
+
+                    foreach (Model model in this.Models)
+                    {
+                        model.RootNode = rootNode = (rootNode ?? model.RootNode);  // Each model will have it's own rootnode.
+
+                        foreach (ChunkNode node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as CryEngineCore.ChunkNode))
+                        {
+                            // Preserve existing parents
+                            if (this._nodeMap.ContainsKey(node.Name))
+                            {
+                                ChunkNode parentNode = this._nodeMap[node.Name].ParentNode;
+
+                                if (parentNode != null)
+                                    parentNode = this._nodeMap[parentNode.Name];
+
+                                node.ParentNode = parentNode;
+                            }
+
+                            this._nodeMap[node.Name] = node;    // TODO:  fix this.  The node name can conflict.
+                        }
+                    }
+                }
+
+                return this._nodeMap;
+            }
+        }
+
+        /// <summary>
+        /// Flatten all child materials into a one dimensional list
+        /// </summary>
+        /// <param name="material"></param>
+        /// <returns></returns>
+        private static IEnumerable<Material> FlattenMaterials(Material material)
+        {
+            if (material != null)
+            {
+                yield return material;
+
+                if (material.SubMaterials != null)
+                    foreach (var subMaterial in material.SubMaterials.SelectMany(m => CryEngine.FlattenMaterials(m)))
+                        yield return subMaterial;
+            }
         }
 
         private void ConsolidateGeometryInfo()
@@ -247,99 +318,6 @@ namespace CgfConverter
                 }
             }
             return skin;
-        }
-
-        #region Properties
-
-        public List<Model> Models { get; internal set; }
-
-        public Material[] Materials { get; internal set; }  // TODO:  Convert to List
-
-        public ChunkNode RootNode { get; internal set; }
-
-        public ChunkCompiledBones Bones { get; internal set; }
-
-        public SkinningInfo SkinningInfo { get; set; }
-
-        public string InputFile { get; internal set; }
-
-
-        #endregion
-
-        #region Calculater Properties
-
-        private CryEngine_Core.Chunk[] _chunks;
-
-        public CryEngine_Core.Chunk[] Chunks
-        {
-            get
-            {
-                if (this._chunks == null)
-                {
-                    this._chunks = this.Models.SelectMany(m => m.ChunkMap.Values).ToArray();
-                }
-
-                return this._chunks;
-            }
-        }
-
-        public Dictionary<String, CryEngine_Core.ChunkNode> _nodeMap;
-
-        public Dictionary<String, CryEngine_Core.ChunkNode> NodeMap  // Cannot use the Node name for the key.  Across a couple files, you may have multiple nodes with same name.
-        {
-            get
-            {
-                if (this._nodeMap == null)
-                {
-                    this._nodeMap = new Dictionary<String, CryEngine_Core.ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
-
-                    CryEngine_Core.ChunkNode rootNode = null;
-
-                    Utils.Log(LogLevelEnum.Info, "Mapping Nodes");
-
-                    foreach (CryEngine_Core.Model model in this.Models)
-                    {
-                        model.RootNode = rootNode = (rootNode ?? model.RootNode);  // Each model will have it's own rootnode.
-
-                        foreach (CryEngine_Core.ChunkNode node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as CryEngine_Core.ChunkNode))
-                        {
-                            // Preserve existing parents
-                            if (this._nodeMap.ContainsKey(node.Name))
-                            {
-                                CryEngine_Core.ChunkNode parentNode = this._nodeMap[node.Name].ParentNode;
-
-                                if (parentNode != null)
-                                    parentNode = this._nodeMap[parentNode.Name];
-
-                                node.ParentNode = parentNode;
-                            }
-
-                            this._nodeMap[node.Name] = node;    // TODO:  fix this.  The node name can conflict.
-                        }
-                    }
-                }
-
-                return this._nodeMap;
-            }
-        }
-
-        #endregion
-
-        /// <summary>
-        /// Flatten all child materials into a one dimensional list
-        /// </summary>
-        /// <param name="material"></param>
-        /// <returns></returns>
-        public static IEnumerable<Material> FlattenMaterials(Material material)
-        {
-            if (material != null)
-            {
-                yield return material;
-
-                if (material.SubMaterials != null)
-                    foreach (var subMaterial in material.SubMaterials.SelectMany(m => CryEngine.FlattenMaterials(m)))
-                        yield return subMaterial;
-            }
         }
     }
 }

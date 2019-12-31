@@ -28,7 +28,7 @@ namespace CgfConverter.Services
                 {
                     Console.WriteLine("Processing " + file);
                     //Material material = Material.FromFile(new FileInfo(file));
-                    CgfConverter.CryEngine_Core.Material materials = CgfConverter.CryEngine_Core.Material.FromFile(new FileInfo(file));
+                    CgfConverter.CryEngineCore.Material materials = CgfConverter.CryEngineCore.Material.FromFile(new FileInfo(file));
                     // All the materials in this file are in the materials variable.  For each material in here, create a materiallibraryitem.
                     if (materials.Name != null)
                     {

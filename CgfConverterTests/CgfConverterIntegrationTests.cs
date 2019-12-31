@@ -14,7 +14,7 @@ namespace CgfConverterTests
     [TestClass]
     public class CgfConverterIntegrationTests
     {
-        ArgsHandler argsHandler = new ArgsHandler();
+        readonly ArgsHandler argsHandler = new ArgsHandler();
         private readonly XmlSchemaSet schemaSet = new XmlSchemaSet();
         private readonly XmlReaderSettings settings = new XmlReaderSettings();
         List<string> errors;
@@ -200,6 +200,75 @@ namespace CgfConverterTests
 
             ValidateColladaXml(daeFile);
         }
+
+        [TestMethod]
+        public void Evolve_griffin_skin_NoMaterialFile()
+        {
+            var args = new String[] { @"..\..\ResourceFiles\Evolve\griffin.skin" };
+            Int32 result = argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
+            CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
+
+            COLLADA daeFile = new COLLADA(argsHandler, cryData);
+            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+
+            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            Assert.AreEqual(0, actualMaterialsCount);
+
+            ValidateColladaXml(daeFile);
+        }
+
+        [TestMethod]
+        public void Evolve_griffin_menu_harpoon_skin_NoMaterialFile()
+        {
+            var args = new String[] { @"..\..\ResourceFiles\Evolve\griffin_menu_harpoon.skin" };
+            Int32 result = argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
+            CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
+
+            COLLADA daeFile = new COLLADA(argsHandler, cryData);
+            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+
+            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            Assert.AreEqual(0, actualMaterialsCount);
+
+            ValidateColladaXml(daeFile);
+        }
+
+        [TestMethod]
+        public void Evolve_griffin_fp_skeleton_chr_NoMaterialFile()
+        {
+            var args = new String[] { @"..\..\ResourceFiles\Evolve\griffin_fp_skeleton.chr" };
+            Int32 result = argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
+            CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
+
+            COLLADA daeFile = new COLLADA(argsHandler, cryData);
+            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+
+            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            Assert.AreEqual(0, actualMaterialsCount);
+
+            ValidateColladaXml(daeFile);
+        }
+
+        [TestMethod]
+        public void UnknownSource_osv_96_muzzle_brake_01_fp_NoMaterialFile()
+        {
+            var args = new string[] { @"..\..\ResourceFiles\osv_96_muzzle_brake_01_fp.cgf" };
+            int result = argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
+            CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
+
+            COLLADA daeFile = new COLLADA(argsHandler, cryData);
+            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+
+            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            Assert.AreEqual(0, actualMaterialsCount);
+
+            ValidateColladaXml(daeFile);
+        }
+
 
         private void ValidateColladaXml(COLLADA daeFile)
         {

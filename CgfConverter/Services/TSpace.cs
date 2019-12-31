@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CgfConverter.CryEngine_Core.Components;
+using CgfConverter.CryEngineCore.Components;
 
 namespace CgfConverter.Services
 {
     public class TSpace
     {
-        public CryEngine_Core.Components.Vector4 Tangent { get; set; }
+        public CryEngineCore.Components.Vector4 Tangent { get; set; }
         public Vector3 Bitangent { get; set; }
         public Vector3 Normal { get; set; }
 
@@ -19,29 +19,29 @@ namespace CgfConverter.Services
             TSpace tspac = new TSpace();
 
             //REGISTERS
-            CryEngine_Core.Components.Vector4
-                v0 = new CryEngine_Core.Components.Vector4(0, 0, 0, 0),
-                v1 = new CryEngine_Core.Components.Vector4(0, 0, 0, 0),
-                v2 = new CryEngine_Core.Components.Vector4(0, 0, 0, 0),
-                v3 = new CryEngine_Core.Components.Vector4(0, 0, 0, 0),
-                v4 = new CryEngine_Core.Components.Vector4(0, 0, 0, 0),
-                v5 = new CryEngine_Core.Components.Vector4(0, 0, 0, 0);
-            CryEngine_Core.Components.Vector4
-                r0 = new CryEngine_Core.Components.Vector4(0, 0, 0, 0),
-                r1 = new CryEngine_Core.Components.Vector4(0, 0, 0, 0),
-                r2 = new CryEngine_Core.Components.Vector4(0, 0, 0, 0),
-                r3 = new CryEngine_Core.Components.Vector4(0, 0, 0, 0);
-            CryEngine_Core.Components.Vector4
-                o0 = new CryEngine_Core.Components.Vector4(0, 0, 0, 0),
-                o1 = new CryEngine_Core.Components.Vector4(0, 0, 0, 0),
-                o3 = new CryEngine_Core.Components.Vector4(0, 0, 0, 0),
-                o4 = new CryEngine_Core.Components.Vector4(0, 0, 0, 0),
-                o5 = new CryEngine_Core.Components.Vector4(0, 0, 0, 0);
+            CryEngineCore.Components.Vector4
+                v0 = new CryEngineCore.Components.Vector4(0, 0, 0, 0),
+                v1 = new CryEngineCore.Components.Vector4(0, 0, 0, 0),
+                v2 = new CryEngineCore.Components.Vector4(0, 0, 0, 0),
+                v3 = new CryEngineCore.Components.Vector4(0, 0, 0, 0),
+                v4 = new CryEngineCore.Components.Vector4(0, 0, 0, 0),
+                v5 = new CryEngineCore.Components.Vector4(0, 0, 0, 0);
+            CryEngineCore.Components.Vector4
+                r0 = new CryEngineCore.Components.Vector4(0, 0, 0, 0),
+                r1 = new CryEngineCore.Components.Vector4(0, 0, 0, 0),
+                r2 = new CryEngineCore.Components.Vector4(0, 0, 0, 0),
+                r3 = new CryEngineCore.Components.Vector4(0, 0, 0, 0);
+            CryEngineCore.Components.Vector4
+                o0 = new CryEngineCore.Components.Vector4(0, 0, 0, 0),
+                o1 = new CryEngineCore.Components.Vector4(0, 0, 0, 0),
+                o3 = new CryEngineCore.Components.Vector4(0, 0, 0, 0),
+                o4 = new CryEngineCore.Components.Vector4(0, 0, 0, 0),
+                o5 = new CryEngineCore.Components.Vector4(0, 0, 0, 0);
             Vector3 o2 = new Vector3();
 
-            CryEngine_Core.Components.Vector4 InstanceBufferRaw0 = new CryEngine_Core.Components.Vector4(1, 0, 0, 31.85579f);
-            CryEngine_Core.Components.Vector4 InstanceBufferRaw1 = new CryEngine_Core.Components.Vector4(0, 1, 0, -17.761f);
-            CryEngine_Core.Components.Vector4 InstanceBufferRaw2 = new CryEngine_Core.Components.Vector4(0, 0, 1, 12.2023f);
+            CryEngineCore.Components.Vector4 InstanceBufferRaw0 = new CryEngineCore.Components.Vector4(1, 0, 0, 31.85579f);
+            CryEngineCore.Components.Vector4 InstanceBufferRaw1 = new CryEngineCore.Components.Vector4(0, 1, 0, -17.761f);
+            CryEngineCore.Components.Vector4 InstanceBufferRaw2 = new CryEngineCore.Components.Vector4(0, 0, 1, 12.2023f);
             //Vector4 InstanceBufferRaw0 = new Vector4(1, 0, 0, 0);
             //Vector4 InstanceBufferRaw1 = new Vector4(0, 1, 0, 0);
             //Vector4 InstanceBufferRaw2 = new Vector4(0, 0, 1, 0);
@@ -122,12 +122,12 @@ namespace CgfConverter.Services
             //r3.x = dot(InstanceBuffer[r2.x]._m02_m00_m01, r0.xzw);
             if (debug) Console.WriteLine("  r0.x: {0} r0.y: {1} r0.z: {2} r0.w: {3}", r0.xint, r0.yint, r0.zint, r0.wint);
             if (debug) Console.WriteLine("  r1.x: {0} r1.y: {1} r1.z: {2} r1.w: {3}", r1.xint, r1.yint, r1.zint, r1.wint);
-            r3.x = new CryEngine_Core.Components.Vector3(InstanceBufferRaw0.z, InstanceBufferRaw0.y, InstanceBufferRaw0.x).Dot(new CryEngine_Core.Components.Vector3(r0.x, r0.z, r0.w)); if (debug) Console.WriteLine("29: r3.x: {0} | r0.x {1} r0.y {2} r0.z {3} r0.w {4}", r3.x, r0.x, r0.y, r0.z, r0.w);
+            r3.x = new CryEngineCore.Components.Vector3(InstanceBufferRaw0.z, InstanceBufferRaw0.y, InstanceBufferRaw0.x).Dot(new CryEngineCore.Components.Vector3(r0.x, r0.z, r0.w)); if (debug) Console.WriteLine("29: r3.x: {0} | r0.x {1} r0.y {2} r0.z {3} r0.w {4}", r3.x, r0.x, r0.y, r0.z, r0.w);
             //r3.y = dot(InstanceBuffer[r2.x]._m12_m10_m11, r0.xzw);
-            r3.y = new CryEngine_Core.Components.Vector3(InstanceBufferRaw1.z, InstanceBufferRaw1.y, InstanceBufferRaw1.x).Dot(new CryEngine_Core.Components.Vector3(r0.x, r0.z, r0.w)); if (debug) Console.WriteLine("30: r3.y: {0}", r3.y);
+            r3.y = new CryEngineCore.Components.Vector3(InstanceBufferRaw1.z, InstanceBufferRaw1.y, InstanceBufferRaw1.x).Dot(new CryEngineCore.Components.Vector3(r0.x, r0.z, r0.w)); if (debug) Console.WriteLine("30: r3.y: {0}", r3.y);
             //r3.z = dot(InstanceBuffer[r2.x]._m22_m20_m21, r0.xzw);
-            r3.z = new CryEngine_Core.Components.Vector3(InstanceBufferRaw2.z, InstanceBufferRaw2.y, InstanceBufferRaw2.x).Dot(new CryEngine_Core.Components.Vector3(r0.x, r0.z, r0.w)); if (debug) Console.WriteLine("31: r3.z: {0}", r3.z);
-            r1.w = new CryEngine_Core.Components.Vector3(r3.x, r3.y, r3.z).Dot(new CryEngine_Core.Components.Vector3(r3.x, r3.y, r3.z)); if (debug) Console.WriteLine("32: r1.w: {0}", r1.w);//r1.w = dot(r3.xyz, r3.xyz);
+            r3.z = new CryEngineCore.Components.Vector3(InstanceBufferRaw2.z, InstanceBufferRaw2.y, InstanceBufferRaw2.x).Dot(new CryEngineCore.Components.Vector3(r0.x, r0.z, r0.w)); if (debug) Console.WriteLine("31: r3.z: {0}", r3.z);
+            r1.w = new CryEngineCore.Components.Vector3(r3.x, r3.y, r3.z).Dot(new CryEngineCore.Components.Vector3(r3.x, r3.y, r3.z)); if (debug) Console.WriteLine("32: r1.w: {0}", r1.w);//r1.w = dot(r3.xyz, r3.xyz);
             r1.w = (1.0f / (float)Math.Sqrt(r1.w)); if (debug) Console.WriteLine("33: r1.w: {0}", r1.w);//r1.w = rsqrt(r1.w);
                                                                                                         //o1.xyz = r1.www * r3.xyz;
             o1.x = r1.w * r3.x;
@@ -138,10 +138,10 @@ namespace CgfConverter.Services
             if (r1.wuint != 0) r1.w = -1; else r1.w = 1; if (debug) Console.WriteLine("36: r1.w: {0}", r1.w);
             o1.w = r1.w; if (debug) Console.WriteLine("37: o1.w: {0}", o1.w);
             r1.z = r0.y; if (debug) Console.WriteLine("38: r1.z: {0}", r1.z);
-            r3.x = new CryEngine_Core.Components.Vector3(InstanceBufferRaw0.x, InstanceBufferRaw0.y, InstanceBufferRaw0.z).Dot(new CryEngine_Core.Components.Vector3(r1.x, r1.y, r1.z)); if (debug) Console.WriteLine("39: r3.x: {0}", r3.x);//r3.x = dot(InstanceBuffer[r2.x]._m00_m01_m02, r1.xyz);
-            r3.y = new CryEngine_Core.Components.Vector3(InstanceBufferRaw1.x, InstanceBufferRaw1.y, InstanceBufferRaw1.z).Dot(new CryEngine_Core.Components.Vector3(r1.x, r1.y, r1.z)); if (debug) Console.WriteLine("40: r3.y: {0}", r3.y);//r3.y = dot(InstanceBuffer[r2.x]._m10_m11_m12, r1.xyz);
-            r3.z = new CryEngine_Core.Components.Vector3(InstanceBufferRaw2.x, InstanceBufferRaw2.y, InstanceBufferRaw2.z).Dot(new CryEngine_Core.Components.Vector3(r1.x, r1.y, r1.z)); if (debug) Console.WriteLine("41: r3.z: {0}", r3.z);//r3.z = dot(InstanceBuffer[r2.x]._m20_m21_m22, r1.xyz);
-            r0.y = new CryEngine_Core.Components.Vector3(new CryEngine_Core.Components.Vector3(r3.x, r3.y, r3.z)).Dot(new CryEngine_Core.Components.Vector3(r3.x, r3.y, r3.z)); if (debug) Console.WriteLine("42: r0.y: {0}", r0.y);//r0.y = dot(r3.xyz, r3.xyz);
+            r3.x = new CryEngineCore.Components.Vector3(InstanceBufferRaw0.x, InstanceBufferRaw0.y, InstanceBufferRaw0.z).Dot(new CryEngineCore.Components.Vector3(r1.x, r1.y, r1.z)); if (debug) Console.WriteLine("39: r3.x: {0}", r3.x);//r3.x = dot(InstanceBuffer[r2.x]._m00_m01_m02, r1.xyz);
+            r3.y = new CryEngineCore.Components.Vector3(InstanceBufferRaw1.x, InstanceBufferRaw1.y, InstanceBufferRaw1.z).Dot(new CryEngineCore.Components.Vector3(r1.x, r1.y, r1.z)); if (debug) Console.WriteLine("40: r3.y: {0}", r3.y);//r3.y = dot(InstanceBuffer[r2.x]._m10_m11_m12, r1.xyz);
+            r3.z = new CryEngineCore.Components.Vector3(InstanceBufferRaw2.x, InstanceBufferRaw2.y, InstanceBufferRaw2.z).Dot(new CryEngineCore.Components.Vector3(r1.x, r1.y, r1.z)); if (debug) Console.WriteLine("41: r3.z: {0}", r3.z);//r3.z = dot(InstanceBuffer[r2.x]._m20_m21_m22, r1.xyz);
+            r0.y = new CryEngineCore.Components.Vector3(new CryEngineCore.Components.Vector3(r3.x, r3.y, r3.z)).Dot(new CryEngineCore.Components.Vector3(r3.x, r3.y, r3.z)); if (debug) Console.WriteLine("42: r0.y: {0}", r0.y);//r0.y = dot(r3.xyz, r3.xyz);
             r0.y = (float)(1.0 / Math.Sqrt(r0.y)); if (debug) Console.WriteLine("43: r0.y: {0}", r0.y);//r0.y = rsqrt(r0.y);
                                                                                                        //o2.xyz = r0.yyy * r3.xyz;
             o2.x = r0.y * r3.x;

@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
-    public abstract class ChunkMtlName : CryEngine_Core.Chunk  // cccc0014:  provides material name as used in the .mtl file
+    public abstract class ChunkMtlName : CryEngineCore.Chunk  // cccc0014:  provides material name as used in the .mtl file
     {
         /// <summary>
         /// Type of Material associated with this name
@@ -21,23 +21,12 @@ namespace CgfConverter.CryEngine_Core
         /// <summary>
         /// Number of Materials in this name (Max: 66)
         /// </summary>
-        public UInt32 NumChildren { get; internal set; } 
-        public UInt32[] ChildIDs { get; internal set; }
+        public uint NumChildren { get; internal set; } 
+        public uint[] ChildIDs { get; internal set; }
 
-        public override void WriteChunk()
+        public override string ToString()
         {
-            Utils.Log(LogLevelEnum.Verbose, "*** START MATERIAL NAMES ***");
-            Utils.Log(LogLevelEnum.Verbose, "    ChunkType:           {0} ({0:X})", this.ChunkType);
-            Utils.Log(LogLevelEnum.Verbose, "    Material Name:       {0}", this.Name);
-            Utils.Log(LogLevelEnum.Verbose, "    Material ID:         {0:X}", this.ID);
-            Utils.Log(LogLevelEnum.Verbose, "    Version:             {0:X}", this.Version);
-            Utils.Log(LogLevelEnum.Verbose, "    Number of Children:  {0}", this.NumChildren);
-            Utils.Log(LogLevelEnum.Verbose, "    Material Type:       {0} ({0:X})", this.MatType);
-            foreach (var physicsType in this.PhysicsType)
-            {
-                Utils.Log(LogLevelEnum.Verbose, "    Physics Type:        {0} ({0:X})", physicsType);
-            }
-            Utils.Log(LogLevelEnum.Verbose, "*** END MATERIAL NAMES ***");
+            return $@"Chunk Type: {ChunkType}, ID: {ID:X}, Material Name: {Name}, Number of Children: {NumChildren}, Material Type: {MatType}";
         }
     }
 }

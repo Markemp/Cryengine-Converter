@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using CgfConverter;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
     public class SkinningInfo
     {

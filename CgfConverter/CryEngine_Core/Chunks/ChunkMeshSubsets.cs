@@ -5,19 +5,24 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
     public abstract class ChunkMeshSubsets : Chunk // cccc0017:  The different parts of a mesh.  Needed for obj exporting
     {
-        public UInt32 Flags; // probably the offset
-        public UInt32 NumMeshSubset; // number of mesh subsets
+        public uint Flags; // probably the offset
+        public uint NumMeshSubset; // number of mesh subsets
         public MeshSubset[] MeshSubsets;
 
         // For bone ID meshes? Not sure where this is used yet.
         public uint NumberOfBoneIDs;
         public UInt16[] BoneIDs;
 
-        public override void WriteChunk()
+        public override string ToString()
+        {
+            return $@"Chunk Type: {ChunkType}, ID: {ID:X}, Version: {Version}, Number of Mesh Subsets: {NumMeshSubset}";
+        }
+
+        public void WriteChunk()
         {
             Utils.Log(LogLevelEnum.Verbose, "*** START MESH SUBSET CHUNK ***");
             Utils.Log(LogLevelEnum.Verbose, "    ChunkType:       {0}", ChunkType);

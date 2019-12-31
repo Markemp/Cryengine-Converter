@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
     class ChunkMeshPhysicsData : Chunk
     {
@@ -22,7 +22,12 @@ namespace CgfConverter.CryEngine_Core
         public PhysicsData physicsData { get; internal set; }  // if physicsdatasize != 0
         public byte[] TetrahedraData { get; internal set; } // Array length TetrahedraDataSize.  
 
-        public override void WriteChunk()
+        public override string ToString()
+        {
+            return $@"Chunk Type: {ChunkType}, ID: {ID:X}, Version: {Version}";
+        }
+
+        public void WriteChunk()
         {
             Utils.Log(LogLevelEnum.Debug, "*** START CompiledBone Chunk ***");
             Utils.Log(LogLevelEnum.Debug, "    ChunkType:           {0}", ChunkType);
@@ -33,5 +38,4 @@ namespace CgfConverter.CryEngine_Core
             Utils.Log(LogLevelEnum.Debug, "    Node ID:             {0:X}", ID);
         }
     }
-
 }

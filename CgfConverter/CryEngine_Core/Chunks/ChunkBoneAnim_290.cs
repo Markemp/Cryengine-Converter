@@ -5,18 +5,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
     public class ChunkBoneAnim_290 : ChunkBoneAnim
     {
         public override void Read(BinaryReader reader)
         {
             //TODO:  Implement this.
-        }
-
-        public override void WriteChunk()
-        {
-            base.WriteChunk();
         }
     }
 }

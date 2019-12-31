@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
     public abstract class ChunkDataStream : Chunk // cccc0016:  Contains data such as vertices, normals, etc.
     {
@@ -34,19 +34,9 @@ namespace CgfConverter.CryEngine_Core
         public Byte[,] FaceMap;      // for dataStreamType of 10, length is NumElements,BytesPerElement.
         public Byte[,] VertMats;     // for dataStreamType of 11, length is NumElements,BytesPerElement.
 
-        public override void WriteChunk()
+        public override string ToString()
         {
-            //string tmpDataStream = new string(Name);
-            Utils.Log(LogLevelEnum.Verbose, "*** START DATASTREAM ***");
-            Utils.Log(LogLevelEnum.Verbose, "    ChunkType:                       {0}", ChunkType);
-            Utils.Log(LogLevelEnum.Verbose, "    Version:                         {0:X}", Version);
-            Utils.Log(LogLevelEnum.Verbose, "    DataStream chunk starting point: {0:X}", Flags);
-            Utils.Log(LogLevelEnum.Verbose, "    Chunk ID:                        {0:X}", ID);
-            Utils.Log(LogLevelEnum.Verbose, "    DataStreamType:                  {0}", DataStreamType);
-            Utils.Log(LogLevelEnum.Verbose, "    Number of Elements:              {0}", NumElements);
-            Utils.Log(LogLevelEnum.Verbose, "    Bytes per Element:               {0}", BytesPerElement);
-            Utils.Log(LogLevelEnum.Verbose, "*** END DATASTREAM ***");
-
+            return $@"Chunk Type: {ChunkType}, ID: {ID:X}, Ver: {Version}, Datastream Type: {DataStreamType}, Number of Elements: {NumElements}, Bytes per Element: {BytesPerElement}";
         }
     }
 }

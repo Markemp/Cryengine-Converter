@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core.Components
+namespace CgfConverter.CryEngineCore.Components
 {
     public class Vector2
     {

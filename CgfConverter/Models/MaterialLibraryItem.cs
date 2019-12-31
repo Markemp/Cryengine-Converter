@@ -21,6 +21,6 @@ namespace CgfConverter.Models
         /// <summary>
         /// A material from MaterialFileSource
         /// </summary>
-        public CryEngine_Core.Material Material { get; set; }
+        public CryEngineCore.Material Material { get; set; }
     }
 }

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
     public class ChunkCompiledExtToIntMap_800 : ChunkCompiledExtToIntMap
     {
@@ -22,11 +22,6 @@ namespace CgfConverter.CryEngine_Core
             SkinningInfo skin = GetSkinningInfo();
             skin.Ext2IntMap = Source.ToList();
             skin.HasIntToExtMapping = true;
-        }
-
-        public override void WriteChunk()
-        {
-            base.WriteChunk();
         }
     }
 }

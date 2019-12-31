@@ -4,20 +4,24 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
     /// <summary>
-    /// Helper chunk.  This is the top level, then nodes, then mesh, then mesh subsets
-    /// CCCC0001  
+    /// Helper chunk.  This is the top level, then nodes, then mesh, then mesh subsets. CCCC0001  
     /// </summary>
-    public abstract class ChunkHelper : CryEngine_Core.Chunk
+    public abstract class ChunkHelper : Chunk
     {
-        public String Name;
+        public string Name;
         public HelperTypeEnum HelperType;
         public Vector3 Pos;
         public Matrix44 Transform;
+        
+        public override string ToString()
+        {
+            return $@"Chunk Type: {ChunkType}, ID: {ID:X}, Version: {Version}";
+        }
 
-        public override void WriteChunk()
+        public void WriteChunk()
         {
             Utils.Log(LogLevelEnum.Verbose, "*** START Helper Chunk ***");
             Utils.Log(LogLevelEnum.Verbose, "    ChunkType:   {0}", ChunkType);

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
     public class ChunkBoneNameList_745 : ChunkBoneNameList
     {
@@ -13,11 +13,6 @@ namespace CgfConverter.CryEngine_Core
         {
             base.Read(b);
             BoneNames = b.ReadCString().Split(' ').ToList();
-        }
-
-        public override void WriteChunk()
-        {
-            base.WriteChunk();
         }
     }
 }

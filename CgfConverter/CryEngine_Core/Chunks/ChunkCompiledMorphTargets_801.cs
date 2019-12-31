@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
     public class ChunkCompiledMorphTargets_801 : ChunkCompiledMorphTargets
     {
@@ -26,11 +26,5 @@ namespace CgfConverter.CryEngine_Core
             //SkinningInfo skin = GetSkinningInfo();
             //skin.MorphTargets = MorphTargetVertices.ToList();
         }
-
-        public override void WriteChunk()
-        {
-            base.WriteChunk();
-        }
-
     }
 }

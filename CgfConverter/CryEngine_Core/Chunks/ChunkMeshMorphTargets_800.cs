@@ -5,20 +5,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
     public abstract class ChunkMeshMorphTargets_001 : ChunkMeshMorphTargets
     {
-        // TODO:  Implement this.
+        // TODO:  Implement ChunkMeshMorphTargets ver 0x801.
         public override void Read(BinaryReader reader)
         {
             base.Read(reader);
         }
-
-        public override void WriteChunk()
-        {
-            base.WriteChunk();
-        }
-
     }
 }

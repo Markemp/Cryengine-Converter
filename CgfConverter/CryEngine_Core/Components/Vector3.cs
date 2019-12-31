@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core.Components
+namespace CgfConverter.CryEngineCore.Components
 {
     public class Vector3
     {
@@ -72,7 +72,7 @@ namespace CgfConverter.CryEngine_Core.Components
                 return false;
 
             if (obj is Vector3 /*|| obj is Vec4*/)
-                return this == (CryEngine_Core.Components.Vector3)obj;
+                return this == (CryEngineCore.Components.Vector3)obj;
 
             return false;
         }

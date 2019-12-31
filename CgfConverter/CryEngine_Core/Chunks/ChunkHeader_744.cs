@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
-    public class ChunkHeader_744 : CryEngine_Core.ChunkHeader
+    public class ChunkHeader_744 : CryEngineCore.ChunkHeader
     {
         public override void Read(BinaryReader reader)
         {

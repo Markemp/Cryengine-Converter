@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
     /// <summary>
     /// Legacy class.  No longer used.
@@ -14,13 +14,9 @@ namespace CgfConverter.CryEngine_Core
         public uint ChunkIDMesh;
         public uint NumMorphVertices;
 
-        public override void WriteChunk()
+        public override string ToString()
         {
-            Utils.Log(LogLevelEnum.Debug, "*** START MorphTargets Chunk ***");
-            Utils.Log(LogLevelEnum.Debug, "    ChunkType:           {0}", ChunkType);
-            Utils.Log(LogLevelEnum.Debug, "    Node ID:             {0:X}", ID);
-            Utils.Log(LogLevelEnum.Debug, "    Chunk ID Mesh:       {0:X}", ChunkIDMesh);
+            return $@"Chunk Type: {ChunkType}, ID: {ID:X}, Version: {Version}, Chunk ID Mesh: {ChunkIDMesh}";
         }
-
     }
 }

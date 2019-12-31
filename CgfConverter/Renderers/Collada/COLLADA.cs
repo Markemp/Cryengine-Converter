@@ -8,7 +8,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using grendgine_collada;
 using System.Reflection;
-using CgfConverter.CryEngine_Core;
+using CgfConverter.CryEngineCore;
 
 namespace CgfConverter
 {
@@ -17,7 +17,7 @@ namespace CgfConverter
         FileInfo daeOutputFile;
 
         public Grendgine_Collada DaeObject { get; private set; } = new Grendgine_Collada();       // This is the serializable class.
-        XmlSerializer mySerializer = new XmlSerializer(typeof(Grendgine_Collada));
+        readonly XmlSerializer mySerializer = new XmlSerializer(typeof(Grendgine_Collada));
 
         public COLLADA(ArgsHandler argsHandler, CryEngine cryEngine) : base(argsHandler, cryEngine) { }
 
@@ -128,7 +128,7 @@ namespace CgfConverter
             };
             // Get the actual file creators from the Source Chunk
             contributors[1] = new Grendgine_Collada_Asset_Contributor();
-            foreach (CryEngine_Core.ChunkSourceInfo tmpSource in this.CryData.Chunks.Where(a => a.ChunkType == ChunkTypeEnum.SourceInfo))
+            foreach (CryEngineCore.ChunkSourceInfo tmpSource in this.CryData.Chunks.Where(a => a.ChunkType == ChunkTypeEnum.SourceInfo))
             {
                 contributors[1].Author = tmpSource.Author;
                 contributors[1].Source_Data = tmpSource.SourceFile;
@@ -156,7 +156,7 @@ namespace CgfConverter
             //Console.WriteLine("Number of images {0}", CryData.Materials.Length);
             // We now have the image library set up.  start to populate.
             //foreach (CryEngine_Core.Material material in CryData.Materials)
-            for (int k = 0; k < CryData.Materials.Length; k++)
+            for (int k = 0; k < CryData.Materials.Count; k++)
             {
                 // each mat will have a number of texture files.  Need to create an <image> for each of them.
                 //int numTextures = material.Textures.Length;
@@ -225,7 +225,7 @@ namespace CgfConverter
             Grendgine_Collada_Library_Materials libraryMaterials = new Grendgine_Collada_Library_Materials();
             // We have our top level.
             DaeObject.Library_Materials = libraryMaterials;
-            int numMaterials = CryData.Materials.Length;
+            int numMaterials = CryData.Materials.Count;
             // Now create a material for each material in the object
             Utils.Log(LogLevelEnum.Info, "Number of materials: {0}", numMaterials);
             Grendgine_Collada_Material[] materials = new Grendgine_Collada_Material[numMaterials];
@@ -259,7 +259,7 @@ namespace CgfConverter
             // The Effects library.  This is actual material stuff, so... let's get into it!  First, let's make a library effects object
             Grendgine_Collada_Library_Effects libraryEffects = new Grendgine_Collada_Library_Effects();
             // Like materials.  We will need one effect for each material.
-            int numEffects = CryData.Materials.Length;
+            int numEffects = CryData.Materials.Count;
             Grendgine_Collada_Effect[] effects = new Grendgine_Collada_Effect[numEffects];
             for (int i = 0; i < numEffects; i++)
             {
@@ -326,7 +326,7 @@ namespace CgfConverter
                 //for (int j=0; j < CryData.Materials[i].Textures.Length; j++)
                 {
                     //Console.WriteLine("Processing material texture {0}", CleanName(texture.File));
-                    if (texture.Map == CryEngine_Core.Material.Texture.MapTypeEnum.Diffuse)
+                    if (texture.Map == CryEngineCore.Material.Texture.MapTypeEnum.Diffuse)
                     {
                         diffound = true;
                         phong.Diffuse.Texture = new Grendgine_Collada_Texture();
@@ -334,7 +334,7 @@ namespace CgfConverter
                         phong.Diffuse.Texture.Texture = CleanMtlFileName(texture.File) + "-sampler";
                         phong.Diffuse.Texture.TexCoord = "";
                     }
-                    if (texture.Map == CryEngine_Core.Material.Texture.MapTypeEnum.Specular)
+                    if (texture.Map == CryEngineCore.Material.Texture.MapTypeEnum.Specular)
                     {
                         //Console.WriteLine("Found spec map");
                         specfound = true;
@@ -343,7 +343,7 @@ namespace CgfConverter
                         phong.Specular.Texture.TexCoord = "";
 
                     }
-                    if (texture.Map == CryEngine_Core.Material.Texture.MapTypeEnum.Bumpmap)
+                    if (texture.Map == CryEngineCore.Material.Texture.MapTypeEnum.Bumpmap)
                     {
                         // Bump maps go in an extra node.
                         // bump maps are added to an extra node.
@@ -714,9 +714,9 @@ namespace CgfConverter
                         {
                             polylists[j] = new Grendgine_Collada_Polylist();
                             polylists[j].Count = (int)tmpMeshSubsets.MeshSubsets[j].NumIndices / 3;
-                            if (CryData.Materials.Count() != 0)
+                            if (CryData.Materials.Count != 0)
                             {
-                                polylists[j].Material = CryData.Materials[tmpMeshSubsets.MeshSubsets[j].MatID].Name + "-material";
+                                polylists[j].Material = CryData.Materials[(int)tmpMeshSubsets.MeshSubsets[j].MatID].Name + "-material";
                             }
                             // Create the 4 inputs.  vertex, normal, texcoord, tangent
                             polylists[j].Input = new Grendgine_Collada_Input_Shared[3];
@@ -1184,10 +1184,10 @@ namespace CgfConverter
             // Create an Instance_Material for each material
             bindMaterial.Technique_Common = new Grendgine_Collada_Technique_Common_Bind_Material();
             List<Grendgine_Collada_Instance_Material_Geometry> instanceMaterials = new List<Grendgine_Collada_Instance_Material_Geometry>();
-            bindMaterial.Technique_Common.Instance_Material = new Grendgine_Collada_Instance_Material_Geometry[CryData.Materials.Length];
+            bindMaterial.Technique_Common.Instance_Material = new Grendgine_Collada_Instance_Material_Geometry[CryData.Materials.Count];
             // This gets complicated.  We need to make one instance_material for each material used in this node chunk.  The mat IDs used in this
             // node chunk are stored in meshsubsets, so for each subset we need to grab the mat, get the target (id), and make an instance_material for it.
-            for (int i = 0; i < CryData.Materials.Length; i++)
+            for (int i = 0; i < CryData.Materials.Count; i++)
             {
                 // For each mesh subset, we want to create an instance material and add it to instanceMaterials list.
                 Grendgine_Collada_Instance_Material_Geometry tmpInstanceMat = new Grendgine_Collada_Instance_Material_Geometry();
@@ -1438,11 +1438,11 @@ namespace CgfConverter
                 // For each mesh subset, we want to create an instance material and add it to instanceMaterials list.
                 Grendgine_Collada_Instance_Material_Geometry tmpInstanceMat = new Grendgine_Collada_Instance_Material_Geometry();
                 //tmpInstanceMat.Target = "#" + tmpMeshSubsets.MeshSubsets[i].MatID;
-                if (CryData.Materials.Count() > 0)
+                if (CryData.Materials.Count > 0)
                 {
-                    tmpInstanceMat.Target = "#" + CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name + "-material";
+                    tmpInstanceMat.Target = "#" + CryData.Materials[(int)tmpMeshSubsets.MeshSubsets[i].MatID].Name + "-material";
                     //tmpInstanceMat.Symbol = CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name;
-                    tmpInstanceMat.Symbol = CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name + "-material";
+                    tmpInstanceMat.Symbol = CryData.Materials[(int)tmpMeshSubsets.MeshSubsets[i].MatID].Name + "-material";
                 }
                 
                 instanceMaterials.Add(tmpInstanceMat);

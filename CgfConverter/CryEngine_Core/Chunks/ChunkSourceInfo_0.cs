@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
     public class ChunkSourceInfo_0 : ChunkSourceInfo
     {
@@ -36,7 +36,6 @@ namespace CgfConverter.CryEngine_Core
                 Utils.Log(LogLevelEnum.Warning, "Conflict in chunk definition:  SourceInfo chunk");
                 Utils.Log(LogLevelEnum.Warning, "{0:X}+{1:X}", this._header.Offset, this._header.Size);
                 Utils.Log(LogLevelEnum.Warning, "{0:X}+{1:X}", this.Offset, this.Size);
-                this.WriteChunk();
             }
 
             this.ChunkType = ChunkTypeEnum.SourceInfo; // this chunk doesn't actually have the chunktype header.

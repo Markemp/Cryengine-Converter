@@ -5,19 +5,14 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
     class ChunkMeshPhysicsData_800 : ChunkMeshPhysicsData
     {
-        // TODO:  Implement this class.
+        // TODO:  Implement ChunkMeshPhysicsData ver 0x800.
         public override void Read(BinaryReader b)
         {
             base.Read(b);
-        }
-
-        public override void WriteChunk()
-        {
-            base.WriteChunk();
         }
     }
 }

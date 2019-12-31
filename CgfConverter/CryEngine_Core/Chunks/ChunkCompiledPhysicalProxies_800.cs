@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
     public class ChunkCompiledPhysicalProxies_800 : ChunkCompiledPhysicalProxies
     {
@@ -47,11 +47,6 @@ namespace CgfConverter.CryEngine_Core
                 }
             }
             skin.PhysicalBoneMeshes = PhysicalProxies.ToList();
-        }
-
-        public override void WriteChunk()
-        {
-            base.WriteChunk();
         }
     }
 }

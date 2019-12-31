@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
     public class ChunkCompiledIntFaces_800 : ChunkCompiledIntFaces
     {
@@ -22,11 +22,6 @@ namespace CgfConverter.CryEngine_Core
             }
             SkinningInfo skin = GetSkinningInfo();
             skin.IntFaces = Faces.ToList();
-        }
-
-        public override void WriteChunk()
-        {
-            base.WriteChunk();
         }
     }
 }

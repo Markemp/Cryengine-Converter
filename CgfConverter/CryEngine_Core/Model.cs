@@ -4,11 +4,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using CgfConverter.CryEngine_Core;
+using CgfConverter.CryEngineCore;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace CgfConverter.CryEngine_Core
+namespace CgfConverter.CryEngineCore
 {
 
     /// <summary>
@@ -46,12 +46,12 @@ namespace CgfConverter.CryEngine_Core
         /// <summary>
         /// The name of the currently processed file
         /// </summary>
-        public String FileName { get; internal set; }
+        public string FileName { get; internal set; }
         
         /// <summary>
         /// The File Signature - CryTek for 3.5 and lower. CrCh for 3.6 and higher
         /// </summary>
-        public String FileSignature { get; internal set; }
+        public string FileSignature { get; internal set; }
         
         /// <summary>
         /// The type of file (geometry or animation)
@@ -66,7 +66,7 @@ namespace CgfConverter.CryEngine_Core
         /// <summary>
         /// Position of the Chunk Header table
         /// </summary>
-        public Int32 ChunkTableOffset { get; internal set; }
+        public int ChunkTableOffset { get; internal set; }
 
         /// <summary>
         /// Contains all the information about bones and skinning them.  This a reference to the Cryengine object, since multiple Models can exist for a single object).
@@ -80,11 +80,11 @@ namespace CgfConverter.CryEngine_Core
 
         public UInt32 NumChunks { get; internal set; }
 
-        private Dictionary<int, CryEngine_Core.ChunkNode> _nodeMap { get; set; }
+        private Dictionary<int, ChunkNode> _nodeMap { get; set; }
+        
         /// <summary>
         /// Node map for this model only.
         /// </summary>
-
         public Dictionary<int, ChunkNode> NodeMap      // This isn't right.  Nodes can have duplicate names.
         {
             get
@@ -95,7 +95,7 @@ namespace CgfConverter.CryEngine_Core
                     ChunkNode rootNode = null;
                     //Utils.Log(LogLevelEnum.Info, "Mapping Model Nodes");
                     this.RootNode = rootNode = (rootNode ?? this.RootNode);  // Each model will have it's own rootnode.
-                    foreach (CryEngine_Core.ChunkNode node in this.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as ChunkNode))
+                    foreach (CryEngineCore.ChunkNode node in this.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as ChunkNode))
                     {
                         // Preserve existing parents
                         if (this._nodeMap.ContainsKey(node.ID))
@@ -135,7 +135,7 @@ namespace CgfConverter.CryEngine_Core
 
         public Model()
         {
-            this.ChunkMap = new Dictionary<int, CryEngine_Core.Chunk> { };
+            this.ChunkMap = new Dictionary<int, CryEngineCore.Chunk> { };
             this.ChunkHeaders = new List<ChunkHeader> { };
             this.SkinningInfo = new SkinningInfo();
         }
@@ -176,8 +176,6 @@ namespace CgfConverter.CryEngine_Core
             reader.Dispose();
         }
 
-
-
         #endregion
 
         private void Read_FileHeader(BinaryReader b)
@@ -217,7 +215,7 @@ namespace CgfConverter.CryEngine_Core
 
             for (Int32 i = 0; i < this.NumChunks; i++)
             {
-                ChunkHeader header = Chunk.New<ChunkHeader>((UInt32)this.FileVersion);
+                ChunkHeader header = Chunk.New<ChunkHeader>((uint)this.FileVersion);
                 header.Read(b);
                 this._chunks.Add(header);
             }
