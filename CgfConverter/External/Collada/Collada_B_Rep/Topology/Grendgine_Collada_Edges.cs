@@ -1,31 +1,30 @@
 using System;
 using System.Xml;
 using System.Xml.Serialization;
-using System.IO;
 namespace grendgine_collada
 {
-	[Serializable]
-	[XmlType(AnonymousType=true)]
-	public partial class Grendgine_Collada_Edges
-	{
-		[XmlAttribute("count")]
-		public int Count;
-		
-		[XmlAttribute("name")]
-		public string Name;
-		
-		[XmlAttribute("id")]
-		public string ID;
+    [Serializable]
+    [XmlType(AnonymousType = true)]
+    public partial class Grendgine_Collada_Edges
+    {
+        [XmlAttribute("count")]
+        public int Count;
 
-	    [XmlElement(ElementName = "p")]
-		public Grendgine_Collada_Int_Array_String P;		
-		
-	    [XmlElement(ElementName = "input")]
-		public Grendgine_Collada_Input_Shared[] Input;		
-		
-	    [XmlElement(ElementName = "extra")]
-		public Grendgine_Collada_Extra[] Extra;		
+        [XmlAttribute("name")]
+        public string Name;
 
-	}
+        [XmlAttribute("id")]
+        public string ID;
+
+        [XmlElement(ElementName = "p")]
+        public Grendgine_Collada_Int_Array_String P;
+
+        [XmlElement(ElementName = "input")]
+        public Grendgine_Collada_Input_Shared[] Input;
+
+        [XmlElement(ElementName = "extra")]
+        public Grendgine_Collada_Extra[] Extra;
+
+    }
 }
 

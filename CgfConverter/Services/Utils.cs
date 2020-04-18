@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Diagnostics;
 
 namespace CgfConverter
 {
@@ -54,7 +54,7 @@ namespace CgfConverter
         /// <summary>
         /// Private DataStore for the DateTimeFormats property.
         /// </summary>
-        private static String[] _dateTimeFormats = new String[] { 
+        private static String[] _dateTimeFormats = new String[] {
             @"yyyy-MM-dd\THHmm", // 2010-12-31T2359
         };
 
@@ -143,7 +143,7 @@ namespace CgfConverter
             {
                 Console.WriteLine(format ?? String.Empty, args);
             }
-            
+
             if (Utils.DebugLevel <= logLevel)
             {
                 Debug.WriteLine(format ?? String.Empty, args);

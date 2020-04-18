@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CgfConverter.CryEngineCore
 {
@@ -55,7 +52,7 @@ namespace CgfConverter.CryEngineCore
             return number;
         }
 
-         public override void Read(BinaryReader b)
+        public override void Read(BinaryReader b)
         {
             base.Read(b);
 
@@ -215,7 +212,7 @@ namespace CgfConverter.CryEngineCore
                                 this.Tangents[i, 1].y = b.ReadInt16();
                                 this.Tangents[i, 1].z = b.ReadInt16();
                                 this.Tangents[i, 1].w = b.ReadInt16();
-                                
+
                                 break;
                             case 0x08:
                                 // These have to be divided by 127 to be used properly (value between 0 and 1)
@@ -261,7 +258,7 @@ namespace CgfConverter.CryEngineCore
                                 this.RGBColors[i].b = b.ReadByte();
                             }
                             break;
-                     
+
                         case 4:
                             this.RGBAColors = new IRGBA[this.NumElements];
                             for (Int32 i = 0; i < this.NumElements; i++)
@@ -313,7 +310,7 @@ namespace CgfConverter.CryEngineCore
                                 Half uvv = new Half();
                                 uvv.bits = b.ReadUInt16();
                                 this.UVs[i].V = uvv.ToSingle();
-                                
+
                                 //bver = b.ReadUInt16();
                                 //ver = Byte4HexToFloat(bver.ToString("X8"));
                                 //this.UVs[i].U = ver;
@@ -366,7 +363,7 @@ namespace CgfConverter.CryEngineCore
                                 this.Normals[i].x = (2 * (quat.x * quat.z + quat.y * quat.w));
                                 this.Normals[i].y = (2 * (quat.y * quat.z - quat.x * quat.w));
                                 this.Normals[i].z = (2 * (quat.z * quat.z + quat.w * quat.w)) - 1;
-                                
+
 
                                 // UVs ABSOLUTELY should use the Half structures.
                                 Half uvu = new Half();
@@ -442,9 +439,9 @@ namespace CgfConverter.CryEngineCore
                                 for (int j = 0; j < 4; j++)         // read the 4 bone indexes first
                                 {
                                     tmpMap.BoneIndex[j] = b.ReadByte();
-                                    
+
                                 }
-                                for (int j=0; j < 4; j++)           // read the weights.
+                                for (int j = 0; j < 4; j++)           // read the weights.
                                 {
                                     tmpMap.Weight[j] = b.ReadByte();
                                 }
@@ -507,7 +504,7 @@ namespace CgfConverter.CryEngineCore
                     Utils.Log(LogLevelEnum.Debug, "***** Unknown DataStream Type *****");
                     break;
 
-                #endregion
+                    #endregion
             }
         }
     }

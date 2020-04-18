@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CgfConverter.CryEngineCore
+﻿namespace CgfConverter.CryEngineCore
 {
     public abstract class ChunkMesh : Chunk      //  cccc0000:  Object that points to the datastream chunk.
     {

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -8,12 +7,12 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Security.Cryptography;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-using DDRIT = Dolkens.Framework.Extensions.ExtensionMethods;
-using System.Security.Cryptography;
 using CgfConverter;
+using DDRIT = Dolkens.Framework.Extensions.ExtensionMethods;
 
 namespace Dolkens.Framework.Extensions
 {
@@ -44,9 +43,9 @@ namespace Dolkens.Framework.Extensions
     {
         #region Private Members
 
-        private static Dictionary<Type, MethodInfo> _parserMap = new Dictionary<Type, MethodInfo>();
-        private static Dictionary<Type, MethodInfo> _byteArrayMap = new Dictionary<Type, MethodInfo>();
-        private static Dictionary<Type, ConstructorInfo> _byteConstructorMap = new Dictionary<Type, ConstructorInfo>();
+        private static readonly Dictionary<Type, MethodInfo> _parserMap = new Dictionary<Type, MethodInfo>();
+        private static readonly Dictionary<Type, MethodInfo> _byteArrayMap = new Dictionary<Type, MethodInfo>();
+        private static readonly Dictionary<Type, ConstructorInfo> _byteConstructorMap = new Dictionary<Type, ConstructorInfo>();
 
         #endregion
 
@@ -687,7 +686,7 @@ namespace Dolkens.Framework.Extensions
 
             return new String(chars);
         }
- 
+
         public static Byte[] ReadAllBytes(this Stream stream)
         {
             using (MemoryStream ms = new MemoryStream())

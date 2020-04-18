@@ -1,10 +1,6 @@
-﻿using CgfConverter.Models;
-using System;
+﻿using System;
 using System.IO;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using CgfConverter.Models;
 using Newtonsoft.Json;
 
 namespace CgfConverter.Services

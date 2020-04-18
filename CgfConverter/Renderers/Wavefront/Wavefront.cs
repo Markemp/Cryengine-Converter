@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 //using CgfConverter;
 
@@ -130,7 +128,7 @@ namespace CgfConverter
                             Utils.Log(LogLevelEnum.Debug, "Skipped a {0} chunk", node.ObjectChunk.ChunkType);
                             break;
 
-                        #endregion
+                            #endregion
                     }
                 }
 

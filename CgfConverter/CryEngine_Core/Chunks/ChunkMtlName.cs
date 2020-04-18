@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CgfConverter.CryEngineCore
 {
@@ -21,7 +16,7 @@ namespace CgfConverter.CryEngineCore
         /// <summary>
         /// Number of Materials in this name (Max: 66)
         /// </summary>
-        public uint NumChildren { get; internal set; } 
+        public uint NumChildren { get; internal set; }
         public uint[] ChildIDs { get; internal set; }
 
         public override string ToString()

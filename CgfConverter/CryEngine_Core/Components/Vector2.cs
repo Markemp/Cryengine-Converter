@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CgfConverter.CryEngineCore.Components
 {
@@ -117,7 +113,7 @@ namespace CgfConverter.CryEngineCore.Components
                         return x;
                     case 1:
                         return y;
-                     default:
+                    default:
                         throw new ArgumentOutOfRangeException("index", "Indices must run from 0 to 1.");
                 }
             }

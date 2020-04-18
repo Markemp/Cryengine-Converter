@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CgfConverter
 {
@@ -28,7 +24,7 @@ namespace CgfConverter
             {
                 // Empty output directory means place alongside original models
                 // If you want relative path, use "."
-                if (Args.NoConflicts )
+                if (Args.NoConflicts)
                 {
                     outputFile = Path.Combine(new FileInfo(this.CryData.InputFile).DirectoryName, String.Format("{0}_out.{1}", Path.GetFileNameWithoutExtension(this.CryData.InputFile), extension));
                 }

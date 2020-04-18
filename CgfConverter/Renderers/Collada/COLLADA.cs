@@ -1,14 +1,13 @@
 ﻿using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Xml;
-using System.Xml.Schema;
 using System.Xml.Serialization;
-using grendgine_collada;
-using System.Reflection;
 using CgfConverter.CryEngineCore;
+using grendgine_collada;
 
 namespace CgfConverter
 {
@@ -92,13 +91,13 @@ namespace CgfConverter
             }
             else
                 WriteLibrary_VisualScenes();
-            
+
             //WriteIDs();
             if (!daeOutputFile.Directory.Exists)
                 daeOutputFile.Directory.Create();
             TextWriter writer = new StreamWriter(daeOutputFile.FullName);   // Makes the Textwriter object for the output
             mySerializer.Serialize(writer, DaeObject);                      // Serializes the daeObject and writes to the writer
-            
+
             writer.Close();
             Utils.Log(LogLevelEnum.Debug, "End of Write Collada.  Export complete.");
         }
@@ -671,7 +670,7 @@ namespace CgfConverter
                                 if (tmpVertsUVs.BytesPerElement == 20)
                                 {
                                     normal = tmpVertsUVs.Normals[j];
-                                } 
+                                }
                                 else
                                 {
                                     //normal = tmpTangents.Normals[j];
@@ -1046,13 +1045,13 @@ namespace CgfConverter
             int index = 0;
             if (!CryData.Models[0].SkinningInfo.HasIntToExtMapping)
             {
-                for (int i=0; i < CryData.SkinningInfo.BoneMapping.Count; i++)
+                for (int i = 0; i < CryData.SkinningInfo.BoneMapping.Count; i++)
                 {
                     int wholePart = (int)i / 4;
                     vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[0] + " " + index + " ");
-                    vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[1] + " " + (index+1) + " ");
-                    vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[2] + " " + (index+2) + " ");
-                    vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[3] + " " + (index+3) + " ");
+                    vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[1] + " " + (index + 1) + " ");
+                    vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[2] + " " + (index + 2) + " ");
+                    vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[3] + " " + (index + 3) + " ");
                     index = index + 4;
                 }
             }
@@ -1080,7 +1079,7 @@ namespace CgfConverter
             controller.Extra[0].Technique[0] = new Grendgine_Collada_Technique();
             controller.Extra[0].Technique[0].profile = "FCOLLADA";
             controller.Extra[0].Technique[0].UserProperties = "SkinController";
-            
+
 
             // Add the parts to their parents
             controller.Skin = skin;
@@ -1444,7 +1443,7 @@ namespace CgfConverter
                     //tmpInstanceMat.Symbol = CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name;
                     tmpInstanceMat.Symbol = CryData.Materials[(int)tmpMeshSubsets.MeshSubsets[i].MatID].Name + "-material";
                 }
-                
+
                 instanceMaterials.Add(tmpInstanceMat);
             }
             tmpNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material = instanceMaterials.ToArray();

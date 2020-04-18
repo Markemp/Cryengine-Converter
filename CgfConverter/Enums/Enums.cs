@@ -51,14 +51,14 @@
         DataStream = 0xCCCC0016, //A data Stream
         MeshSubsets = 0xCCCC0017, //Describes an array of mesh subsets
         MeshPhysicsData = 0xCCCC0018, //Physicalized mesh data
-        CompiledBones = 0xACDC0000, 
-        CompiledPhysicalBones = 0xACDC0001, 
-        CompiledMorphTargets = 0xACDC0002,  
-        CompiledPhysicalProxies = 0xACDC0003, 
-        CompiledIntFaces = 0xACDC0004, 
-        CompiledIntSkinVertices = 0xACDC0005, 
-        CompiledExt2IntMap = 0xACDC0006, 
-        BreakablePhysics = 0xACDC0007, 
+        CompiledBones = 0xACDC0000,
+        CompiledPhysicalBones = 0xACDC0001,
+        CompiledMorphTargets = 0xACDC0002,
+        CompiledPhysicalProxies = 0xACDC0003,
+        CompiledIntFaces = 0xACDC0004,
+        CompiledIntSkinVertices = 0xACDC0005,
+        CompiledExt2IntMap = 0xACDC0006,
+        BreakablePhysics = 0xACDC0007,
         FaceMap = 0xAAFC0000, //unknown chunk
         SpeedInfo = 0xAAFC0002, //Speed and distnace info
         FootPlantInfo = 0xAAFC0003, // Footplant info
@@ -72,7 +72,7 @@
         CompiledIntFacesSC = 0xCCCC1004,
         CompiledIntSkinVerticesSC = 0xCCCC1005,
         CompiledExt2IntMapSC = 0xCCCC1006,
-		UnknownSC1 = 0xCCCC2004,
+        UnknownSC1 = 0xCCCC2004,
         BoneBoxesSC = 0x08013004
     }
 

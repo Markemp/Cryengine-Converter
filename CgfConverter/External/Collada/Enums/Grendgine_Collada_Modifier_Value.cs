@@ -3,17 +3,17 @@ using System.Xml.Serialization;
 
 namespace grendgine_collada
 {
-	[Serializable]
-	[XmlType(Namespace="http://www.collada.org/2005/11/COLLADASchema" )]
-	public enum Grendgine_Collada_Modifier_Value
-	{
-		CONST,
-		UNIFORM,
-		VARYING,
-		STATIC,
-		VOLATILE,
-		EXTERN,
-		SHARED
-	}
+    [Serializable]
+    [XmlType(Namespace = "http://www.collada.org/2005/11/COLLADASchema")]
+    public enum Grendgine_Collada_Modifier_Value
+    {
+        CONST,
+        UNIFORM,
+        VARYING,
+        STATIC,
+        VOLATILE,
+        EXTERN,
+        SHARED
+    }
 }
 

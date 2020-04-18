@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CgfConverter.CryEngineCore
 {
@@ -18,7 +16,7 @@ namespace CgfConverter.CryEngineCore
         /// <summary>
         /// Position of the start of the chunk
         /// </summary>
-        public UInt32 Offset { get; internal set; }
+        public uint Offset { get; internal set; }
         /// <summary>
         /// The Type of the Chunk
         /// </summary>
@@ -26,23 +24,23 @@ namespace CgfConverter.CryEngineCore
         /// <summary>
         /// The Version of this Chunk
         /// </summary>
-        public UInt32 Version;
+        internal uint Version;
         /// <summary>
         /// The ID of this Chunk
         /// </summary>
-        public int ID;
+        internal int ID;
         /// <summary>
         /// The Size of this Chunk (in Bytes)
         /// </summary>
-        public UInt32 Size;
+        internal uint Size;
         /// <summary>
         /// Size of the data in the chunk.  This is the chunk size, minus the header (if there is one)
         /// </summary>
-        public UInt32 DataSize { get; set; }
+        public uint DataSize { get; set; }
 
-        public Dictionary<Int64, Byte> SkippedBytes = new Dictionary<Int64, Byte> { };
+        internal Dictionary<long, byte> SkippedBytes = new Dictionary<long, byte> { };
 
-        public static Chunk New(ChunkTypeEnum chunkType, UInt32 version)
+        public static Chunk New(ChunkTypeEnum chunkType, uint version)
         {
             switch (chunkType)
             {
@@ -108,13 +106,13 @@ namespace CgfConverter.CryEngineCore
                 case ChunkTypeEnum.MeshMorphTarget:
                     return Chunk.New<ChunkMeshMorphTargets>(version);
                 case ChunkTypeEnum.Mtl:
-                    //Utils.Log(LogLevelEnum.Debug, "Mtl Chunk here");  // Obsolete.  Not used
+                //Utils.Log(LogLevelEnum.Debug, "Mtl Chunk here");  // Obsolete.  Not used
                 default:
                     return new ChunkUnknown();
             }
         }
 
-        public static T New<T>(UInt32 version) where T : Chunk
+        public static T New<T>(uint version) where T : Chunk
         {
             Dictionary<UInt32, Func<dynamic>> versionMap = null;
             Func<dynamic> factory = null;
@@ -151,7 +149,7 @@ namespace CgfConverter.CryEngineCore
             throw new NotSupportedException(String.Format("Version {0:X} of {1} is not supported", version, typeof(T).Name));
         }
 
-        public void Load(CryEngineCore.Model model, ChunkHeader header)
+        public void Load(Model model, ChunkHeader header)
         {
             this._model = model;
             this._header = header;

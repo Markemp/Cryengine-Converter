@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 
 namespace CgfConverter
@@ -10,7 +6,7 @@ namespace CgfConverter
     public class Blender : BaseRenderer  //  Class to allow exporting to .blend files.
     {
         FileInfo blendOutputFile;
-        
+
         public Blender(ArgsHandler argsHandler, CryEngine cryEngine) : base(argsHandler, cryEngine) { }
 
         public override void Render(String outputDir = null, Boolean preservePath = true)

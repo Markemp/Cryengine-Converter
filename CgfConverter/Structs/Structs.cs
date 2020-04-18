@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using MathNet.Numerics;
 using MathNet.Numerics.LinearAlgebra;
 
 namespace CgfConverter
@@ -19,9 +18,9 @@ namespace CgfConverter
         public Double y;
         public Double z;
         public Double w; // Currently Unused
-        private object p1;
-        private object p2;
-        private object p3;
+        private readonly object p1;
+        private readonly object p2;
+        private readonly object p3;
 
         public Vector3(object p1, object p2, object p3) : this()
         {
@@ -128,7 +127,8 @@ namespace CgfConverter
                 result.x = x;
                 result.y = y;
                 result.z = z;
-            } else
+            }
+            else
             {
                 result.x = x / w;
                 result.y = y / w;
@@ -270,7 +270,8 @@ namespace CgfConverter
             mat = this.Mult(self_transpose);
             if (System.Math.Abs(mat.m12) + System.Math.Abs(mat.m13)
                 + System.Math.Abs(mat.m21) + System.Math.Abs(mat.m23)
-                + System.Math.Abs(mat.m31) + System.Math.Abs(mat.m32) > 0.01) {
+                + System.Math.Abs(mat.m31) + System.Math.Abs(mat.m32) > 0.01)
+            {
                 Utils.Log(LogLevelEnum.Debug, " is a Scale_Rot matrix");
                 return false;
             }
@@ -782,7 +783,7 @@ namespace CgfConverter
         }
     }
 
-    public struct IRGBA 
+    public struct IRGBA
     {
         public byte r; // red
         public byte g; // green
@@ -1154,7 +1155,7 @@ namespace CgfConverter
         public Vector3 offset;
         public float Blending;
     }
-    
+
 
     public class DirectionalBlends
     {
@@ -1188,19 +1189,20 @@ namespace CgfConverter
 
     public struct BoneEntity
     {
-        int Bone_Id;                 //" type="int">Bone identifier.</add>
-        int Parent_Id;               //" type="int">Parent identifier.</add>
-        int Num_Children;            //" type="uint" />
-        uint Bone_Name_CRC32;         //" type="uint">CRC32 of bone name as listed in the BoneNameListChunk.  In Python this can be calculated using zlib.crc32(name)</add>
-        string Properties;            //" type="String32" />
+        readonly int Bone_Id;                 //" type="int">Bone identifier.</add>
+        readonly int Parent_Id;               //" type="int">Parent identifier.</add>
+        readonly int Num_Children;            //" type="uint" />
+        readonly uint Bone_Name_CRC32;         //" type="uint">CRC32 of bone name as listed in the BoneNameListChunk.  In Python this can be calculated using zlib.crc32(name)</add>
+        readonly string Properties;            //" type="String32" />
         BonePhysics Physics;            //" type="BonePhysics" />
     }
 
     public struct BonePhysics           // 26 total words = 104 total bytes
     {
-        UInt32 Geometry;                //" type="Ref" template="BoneMeshChunk">Geometry of a separate mesh for this bone.</add>
-        //<!-- joint parameters -->
-        UInt32 Flags;                   //" type="uint" />
+        readonly UInt32 Geometry;                //" type="Ref" template="BoneMeshChunk">Geometry of a separate mesh for this bone.</add>
+                                                 //<!-- joint parameters -->
+
+        readonly UInt32 Flags;                   //" type="uint" />
         Vector3 Min;                   //" type="Vector3" />
         Vector3 Max;                   //" type="Vector3" />
         Vector3 Spring_Angle;          //" type="Vector3" />
@@ -1245,13 +1247,13 @@ namespace CgfConverter
             return vertex;
         }
     }
-    
+
     public struct MorphTargets
     {
-        uint MeshID;
-        string Name;
-        List<MeshMorphTargetVertex> IntMorph;
-        List<MeshMorphTargetVertex> ExtMorph;
+        readonly uint MeshID;
+        readonly string Name;
+        readonly List<MeshMorphTargetVertex> IntMorph;
+        readonly List<MeshMorphTargetVertex> ExtMorph;
     }
 
     public struct TFace
@@ -1292,7 +1294,7 @@ namespace CgfConverter
         public Vector3 Obsolete2;
         public ushort[] BoneIDs;     // 4 bone IDs
         public float[] Weights;     // Should be 4 of these
-        public IRGBA Color;        
+        public IRGBA Color;
     }
 
     public struct SpeedChunk
@@ -1328,10 +1330,10 @@ namespace CgfConverter
 
     public struct PhysicalProxyStub
     {
-        uint ChunkID;
-        List<Vector3> Points;
-        List<short> Indices;
-        List<string> Materials;
+        readonly uint ChunkID;
+        readonly List<Vector3> Points;
+        readonly List<short> Indices;
+        readonly List<string> Materials;
     }
 
     #endregion
@@ -1383,7 +1385,7 @@ namespace CgfConverter
         public int Unknown461;  //0
         public int Unknown462;  //0
         public float Unknown463; // 0.02
-        public float Unknown464; 
+        public float Unknown464;
         // There is more.  See cgf.xml for the rest, but probably not really needed
     }
 
@@ -1417,7 +1419,7 @@ namespace CgfConverter
         public PhysicsStruct50[] Data2; // Array length NumData2
         public float[] Unknown60; // array length 6
         public Matrix33 Unknown61; // Rotation matrix?
-        public int [] Unknown70; //Array length 3
+        public int[] Unknown70; //Array length 3
         public float Unknown80;
     }
 

@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
+﻿using System.IO;
 
 namespace CgfConverter
 {
     class FBX                   //  Class to allow exporting to FBX files.
     {
-        FileInfo fbxOutputFile;
+        readonly FileInfo fbxOutputFile;
 
         public void WriteFBXFile(CryEngine cryData)
         {

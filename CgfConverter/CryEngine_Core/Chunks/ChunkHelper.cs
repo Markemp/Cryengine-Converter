@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CgfConverter.CryEngineCore
+﻿namespace CgfConverter.CryEngineCore
 {
     /// <summary>
     /// Helper chunk.  This is the top level, then nodes, then mesh, then mesh subsets. CCCC0001  
@@ -15,7 +9,7 @@ namespace CgfConverter.CryEngineCore
         public HelperTypeEnum HelperType;
         public Vector3 Pos;
         public Matrix44 Transform;
-        
+
         public override string ToString()
         {
             return $@"Chunk Type: {ChunkType}, ID: {ID:X}, Version: {Version}";

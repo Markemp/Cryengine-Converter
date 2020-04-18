@@ -1,15 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml;
-using System.IO;
-using System.Xml.Serialization;
 using System.ComponentModel;
-using System.Runtime.Serialization;
 using System.Diagnostics;
+using System.IO;
+using System.Xml;
+using System.Xml.Serialization;
 
 namespace CgfConverter.CryEngineCore
 {
@@ -242,39 +236,39 @@ namespace CgfConverter.CryEngineCore
 
         [XmlAttribute(AttributeName = "Name")]
         [DefaultValue("")]
-        public String Name { get; set; }
+        public string Name { get; set; }
 
         [XmlAttribute(AttributeName = "MtlFlags")]
-        public Int32 Flags { get; set; }
+        public int Flags { get; set; }
 
         [XmlAttribute(AttributeName = "MatTemplate")]
-        public String Template { get; set; }
+        public string Template { get; set; }
 
         [XmlAttribute(AttributeName = "MatSubTemplate")]
-        public String SubTemplate { get; set; }
+        public string SubTemplate { get; set; }
 
         [XmlAttribute(AttributeName = "vertModifType")]
         public Int16 VertModifierType { get; set; }
 
         [XmlAttribute(AttributeName = "Shader")]
         [DefaultValue("")]
-        public String Shader { get; set; }
+        public string Shader { get; set; }
 
         [XmlAttribute(AttributeName = "GenMask")]
         [DefaultValue("")]
-        public String GenMask { get; set; }
+        public string GenMask { get; set; }
 
         [XmlAttribute(AttributeName = "StringGenMask")]
         [DefaultValue("")]
-        public String StringGenMask { get; set; }
+        public string StringGenMask { get; set; }
 
         [XmlAttribute(AttributeName = "SurfaceType")]
         [DefaultValue(null)]
-        public String SurfaceType { get; set; }
+        public string SurfaceType { get; set; }
 
         [XmlAttribute(AttributeName = "Diffuse")]
         [DefaultValue("")]
-        public String __Diffuse
+        public string __Diffuse
         {
             get { return Color.Serialize(this.Diffuse); }
             set { this.Diffuse = Color.Deserialize(value); }
@@ -285,7 +279,7 @@ namespace CgfConverter.CryEngineCore
 
         [XmlAttribute(AttributeName = "Specular")]
         [DefaultValue("")]
-        public String __Specular
+        public string __Specular
         {
             get { return Color.Serialize(this.Specular); }
             set { this.Specular = Color.Deserialize(value); }
@@ -296,7 +290,7 @@ namespace CgfConverter.CryEngineCore
 
         [XmlAttribute(AttributeName = "Emissive")]
         [DefaultValue("")]
-        public String __Emissive
+        public string __Emissive
         {
             get { return Color.Serialize(this.Emissive); }
             set { this.Emissive = Color.Deserialize(value); }

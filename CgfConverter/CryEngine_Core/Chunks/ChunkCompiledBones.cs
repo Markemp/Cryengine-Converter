@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using MathNet.Numerics.LinearAlgebra;
 
 namespace CgfConverter.CryEngineCore
 {
@@ -13,7 +9,7 @@ namespace CgfConverter.CryEngineCore
         public String RootBoneName;         // Controller ID?  Name?  Not sure yet.
         public CompiledBone RootBone;       // First bone in the data structure.  Usually Bip01
         public int NumBones;                // Number of bones in the chunk
-        
+
         // Bones are a bit different than Node Chunks, since there is only one CompiledBones Chunk, and it contains all the bones in the model.
         public Dictionary<int, CompiledBone> BoneDictionary = new Dictionary<int, CompiledBone>();  // Dictionary of all the CompiledBone objects based on parent offset(?).
         public List<CompiledBone> BoneList = new List<CompiledBone>();

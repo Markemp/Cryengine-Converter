@@ -130,7 +130,7 @@ namespace CgfConverter
                             return 1;
                         }
 
-                        this.DataDir = new DirectoryInfo(inputArgs[i].Replace("\"", string.Empty ));
+                        this.DataDir = new DirectoryInfo(inputArgs[i].Replace("\"", string.Empty));
 
                         Console.WriteLine("Data directory set to {0}", inputArgs[i]);
 
@@ -308,7 +308,7 @@ namespace CgfConverter
 
                         break;
 
-                    #endregion
+                        #endregion
                 }
             }
 
@@ -339,7 +339,7 @@ namespace CgfConverter
             Console.WriteLine("-allowconflict:   Allows conflicts in .mtl file name. (obj exports only, as not an issue in dae.)");
             Console.WriteLine("-objectdir:       The name where the base Objects directory is located.  Used to read mtl file");
             Console.WriteLine("                  Defaults to current directory.");
-            Console.WriteLine("-dae:             Export Collada format files (Default)"); 
+            Console.WriteLine("-dae:             Export Collada format files (Default)");
             Console.WriteLine("-blend:           Export Blender format files (Not Implemented)");
             Console.WriteLine("-fbx:             Export FBX format files (Not Implemented)");
             Console.WriteLine("-smooth:          Smooth Faces");

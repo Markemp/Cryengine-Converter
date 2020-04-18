@@ -1,9 +1,8 @@
 using System;
+using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
-using System.IO;
 using CgfConverter;
-using System.Collections.Generic;
 
 namespace grendgine_collada
 {
@@ -104,7 +103,7 @@ namespace grendgine_collada
         public Grendgine_Collada_Extra[] Extra;
 
         #endregion
-		
+
         public Grendgine_Collada()
         {
             Collada_Version = "1.5";
@@ -132,8 +131,8 @@ namespace grendgine_collada
                 Utils.Log(LogLevelEnum.Error, ex.ToString());
                 Console.ReadLine();
                 return null;
-            }			
-		}
+            }
+        }
 
         //public async static void Grendgine_Save_File(Grendgine_Collada data)
         //{

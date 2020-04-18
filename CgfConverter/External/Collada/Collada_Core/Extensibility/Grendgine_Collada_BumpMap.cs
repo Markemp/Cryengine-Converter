@@ -1,10 +1,5 @@
-﻿using grendgine_collada;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
 
@@ -47,7 +42,7 @@ namespace grendgine_collada
         /// </summary>
         /// <param name="bump"></param>
         /// <returns></returns>
-        public static implicit operator Grendgine_Collada_BumpMap (XmlElement bump)
+        public static implicit operator Grendgine_Collada_BumpMap(XmlElement bump)
         {
             return bump.OuterXml.FromXML<Grendgine_Collada_BumpMap>();
         }

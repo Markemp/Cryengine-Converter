@@ -1,19 +1,17 @@
 using System;
-using System.Xml;
 using System.Xml.Serialization;
-using System.IO;
 namespace grendgine_collada
 {
 
-	[Serializable]
-	[XmlType(AnonymousType=true)]
-	public partial class Grendgine_Collada_Float_Array_String
-	{
+    [Serializable]
+    [XmlType(AnonymousType = true)]
+    public partial class Grendgine_Collada_Float_Array_String
+    {
 
-		//TODO: cleanup to legit array
+        //TODO: cleanup to legit array
 
-		[XmlTextAttribute()]
-	    public string Value_As_String;
-	}
+        [XmlTextAttribute()]
+        public string Value_As_String;
+    }
 }
 

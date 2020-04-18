@@ -1,24 +1,23 @@
 using System;
 using System.Xml;
 using System.Xml.Serialization;
-using System.IO;
 namespace grendgine_collada
 {
-	[Serializable]
-	[XmlType(AnonymousType=true)]
-	public partial class Grendgine_Collada_Instance_Visual_Scene
-	{
-		[XmlAttribute("sid")]
-		public string sID;
+    [Serializable]
+    [XmlType(AnonymousType = true)]
+    public partial class Grendgine_Collada_Instance_Visual_Scene
+    {
+        [XmlAttribute("sid")]
+        public string sID;
 
-		[XmlAttribute("name")]
-		public string Name;
+        [XmlAttribute("name")]
+        public string Name;
 
-		[XmlAttribute("url")]
-		public string URL;		
-		
-	    [XmlElement(ElementName = "extra")]
-		public Grendgine_Collada_Extra[] Extra;		
-	}
+        [XmlAttribute("url")]
+        public string URL;
+
+        [XmlElement(ElementName = "extra")]
+        public Grendgine_Collada_Extra[] Extra;
+    }
 }
 

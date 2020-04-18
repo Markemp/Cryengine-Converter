@@ -1,12 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using CgfConverter.CryEngineCore;
-using System.Linq.Expressions;
-using System.Reflection;
 
 namespace CgfConverter.CryEngineCore
 {
@@ -36,8 +31,8 @@ namespace CgfConverter.CryEngineCore
         /// <summary>
         /// All the node chunks in this Model
         /// </summary>
-        public List<ChunkNode> ChunkNodes { get; set; }
-        
+        public List<ChunkNode> ChunkNodes { get; internal set; }
+
         /// <summary>
         /// Lookup Table for Chunks, indexed by ChunkID
         /// </summary>
@@ -47,22 +42,22 @@ namespace CgfConverter.CryEngineCore
         /// The name of the currently processed file
         /// </summary>
         public string FileName { get; internal set; }
-        
+
         /// <summary>
         /// The File Signature - CryTek for 3.5 and lower. CrCh for 3.6 and higher
         /// </summary>
         public string FileSignature { get; internal set; }
-        
+
         /// <summary>
         /// The type of file (geometry or animation)
         /// </summary>
         public FileTypeEnum FileType { get; internal set; }
-        
+
         /// <summary>
         /// The version of the file
         /// </summary>
         public FileVersionEnum FileVersion { get; internal set; }
-        
+
         /// <summary>
         /// Position of the Chunk Header table
         /// </summary>
@@ -78,10 +73,10 @@ namespace CgfConverter.CryEngineCore
         /// </summary>
         public ChunkCompiledBones Bones { get; internal set; }
 
-        public UInt32 NumChunks { get; internal set; }
+        public uint NumChunks { get; internal set; }
 
-        private Dictionary<int, ChunkNode> _nodeMap { get; set; }
-        
+        private Dictionary<int, ChunkNode> nodeMap { get; set; }
+
         /// <summary>
         /// Node map for this model only.
         /// </summary>
@@ -89,29 +84,29 @@ namespace CgfConverter.CryEngineCore
         {
             get
             {
-                if (this._nodeMap == null)
+                if (this.nodeMap == null)
                 {
-                    this._nodeMap = new Dictionary<int, ChunkNode>() { };
+                    this.nodeMap = new Dictionary<int, ChunkNode>() { };
                     ChunkNode rootNode = null;
-                    //Utils.Log(LogLevelEnum.Info, "Mapping Model Nodes");
                     this.RootNode = rootNode = (rootNode ?? this.RootNode);  // Each model will have it's own rootnode.
+
                     foreach (CryEngineCore.ChunkNode node in this.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as ChunkNode))
                     {
                         // Preserve existing parents
-                        if (this._nodeMap.ContainsKey(node.ID))
+                        if (this.nodeMap.ContainsKey(node.ID))
                         {
-                            ChunkNode parentNode = this._nodeMap[node.ID].ParentNode;
+                            ChunkNode parentNode = this.nodeMap[node.ID].ParentNode;
 
                             if (parentNode != null)
-                                parentNode = this._nodeMap[parentNode.ID];
+                                parentNode = this.nodeMap[parentNode.ID];
 
                             node.ParentNode = parentNode;
                         }
 
-                        this._nodeMap[node.ID] = node;
+                        this.nodeMap[node.ID] = node;
                     }
                 }
-                return this._nodeMap;
+                return this.nodeMap;
             }
         }
 
@@ -125,9 +120,9 @@ namespace CgfConverter.CryEngineCore
 
         #region Calculated Properties
 
-        public Int32 NodeCount { get { return this.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Count(); } }
+        public int NodeCount { get { return this.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Count(); } }
 
-        public Int32 BoneCount { get { return this.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.CompiledBones).Count(); } }
+        public int BoneCount { get { return this.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.CompiledBones).Count(); } }
 
         #endregion
 
@@ -172,7 +167,7 @@ namespace CgfConverter.CryEngineCore
             this.Read_FileHeader(reader);
             this.Read_ChunkHeaders(reader);
             this.Read_Chunks(reader);
-            
+
             reader.Dispose();
         }
 

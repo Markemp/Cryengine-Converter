@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CgfConverter.CryEngineCore
 {
@@ -14,7 +10,7 @@ namespace CgfConverter.CryEngineCore
             UInt32 headerType = reader.ReadUInt16() + 0xCCCBF000;
             this.ChunkType = (ChunkTypeEnum)headerType;
             this.Version = (UInt32)reader.ReadUInt16();
-            this.ID = reader.ReadInt32();  
+            this.ID = reader.ReadInt32();
             this.Size = reader.ReadUInt32();
             this.Offset = reader.ReadUInt32();
 

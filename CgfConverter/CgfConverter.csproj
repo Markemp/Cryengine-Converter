@@ -87,6 +87,7 @@
     <Compile Include="CryEngine_Core\Chunks\ChunkController.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkController_826.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkDataStream.cs" />
+    <Compile Include="CryEngine_Core\Chunks\ChunkDataStream_801.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkDataStream_800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkExportFlags.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkExportFlags_1.cs" />

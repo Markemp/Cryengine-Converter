@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CgfConverter.CryEngineCore
 {
@@ -38,7 +34,7 @@ namespace CgfConverter.CryEngineCore
                 {
                     tempBone.parentID = 0;
                 }
-                
+
                 if (tempBone.parentID != 0)
                 {
                     localRotation = GetParentBone(tempBone, i).boneToWorld.GetBoneToWorldRotationMatrix().ConjugateTransposeThisAndMultiply(tempBone.boneToWorld.GetBoneToWorldRotationMatrix());

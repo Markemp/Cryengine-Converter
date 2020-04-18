@@ -269,6 +269,39 @@ namespace CgfConverterTests
             ValidateColladaXml(daeFile);
         }
 
+        [TestMethod]
+        public void UnknownSource_spriggan_proto_mesh_skin_NoMaterialFile()
+        {
+            var args = new string[] { @"..\..\ResourceFiles\spriggan_proto_mesh.skin" };
+            int result = argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
+            CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
+
+            COLLADA daeFile = new COLLADA(argsHandler, cryData);
+            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+
+            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            Assert.AreEqual(0, actualMaterialsCount);
+
+            ValidateColladaXml(daeFile);
+        }
+
+        [TestMethod]
+        public void UnknownSource_spriggan_proto_skel_chr_NoMaterialFile()
+        {
+            var args = new string[] { @"..\..\ResourceFiles\spriggan_proto_skel.chr" };
+            int result = argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
+            CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
+
+            COLLADA daeFile = new COLLADA(argsHandler, cryData);
+            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+
+            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            Assert.AreEqual(0, actualMaterialsCount);
+
+            ValidateColladaXml(daeFile);
+        }
 
         private void ValidateColladaXml(COLLADA daeFile)
         {
@@ -287,8 +320,10 @@ namespace CgfConverterTests
 
         private void ValidateXml(string xmlFile)
         {
-            XmlReader reader = XmlReader.Create(xmlFile, settings);
-            while (reader.Read()) ;
+            using (XmlReader reader = XmlReader.Create(xmlFile, settings))
+            {
+                while (reader.Read()) ;
+            }
         }
 
         private void ValidationEventHandler(object sender, ValidationEventArgs e)

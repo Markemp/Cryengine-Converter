@@ -1,14 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml;
-using System.IO;
-using System.Xml.Serialization;
-using System.ComponentModel;
-using System.Runtime.Serialization;
+﻿using System.IO;
 using System.Reflection;
 
 namespace CgfConverter
@@ -35,7 +25,7 @@ namespace CgfConverter
 #if DUMP_JSON
                     File.WriteAllText(String.Format("_material-{0}.json", material.Name.Replace(@"/", "").Replace(@"\", "")), material.ToJSON());
 #endif
-       
+
                     file.WriteLine("newmtl {0}", material.Name);
                     if (material.Diffuse != null)
                     {
@@ -81,14 +71,14 @@ namespace CgfConverter
                             textureFile = Path.Combine(this.Args.DataDir.FullName, textureFile);
 
                         // TODO: More filehandling here
-                        
+
                         if (!this.Args.TiffTextures)
                             textureFile = textureFile.Replace(".tif", ".dds");
                         else
                             textureFile = textureFile.Replace(".dds", ".tif");
 
                         textureFile = textureFile.Replace(@"/", @"\");
-                        
+
                         switch (texture.Map)
                         {
                             case CryEngineCore.Material.Texture.MapTypeEnum.Diffuse:

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CgfConverter.CryEngineCore
+﻿namespace CgfConverter.CryEngineCore
 {
     class ChunkMeshPhysicsData : Chunk
     {
@@ -12,7 +6,7 @@ namespace CgfConverter.CryEngineCore
         // Collision mesh or something like that.  TODO
 
         public int PhysicsDataSize;             //Size of the physical data at the end of the chunk.
-        public int Flags; 
+        public int Flags;
         public int TetrahedraDataSize;          // Bytes per data entry
         public int TetrahedraID;                // Chunk ID of the data stream
         public ChunkDataStream Tetrahedra;
