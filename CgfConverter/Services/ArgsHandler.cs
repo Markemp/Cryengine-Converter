@@ -337,15 +337,16 @@ namespace CgfConverter
             Console.WriteLine("-outputfile:      The name of the file to write the output.  Default is [root].dae");
             Console.WriteLine("-noconflict:      Use non-conflicting naming scheme (<cgf File>_out.obj)");
             Console.WriteLine("-allowconflict:   Allows conflicts in .mtl file name. (obj exports only, as not an issue in dae.)");
-            Console.WriteLine("-objectdir:       The name where the base Objects directory is located.  Used to read mtl file");
+            Console.WriteLine("-objectdir:       The name where the base Objects directory is located.  Used to read mtl file.");
             Console.WriteLine("                  Defaults to current directory.");
-            Console.WriteLine("-dae:             Export Collada format files (Default)");
-            Console.WriteLine("-blend:           Export Blender format files (Not Implemented)");
-            Console.WriteLine("-fbx:             Export FBX format files (Not Implemented)");
-            Console.WriteLine("-smooth:          Smooth Faces");
-            Console.WriteLine("-group:           Group meshes into single model");
+            Console.WriteLine("-dae:             Export Collada format files (Default).");
+            Console.WriteLine("-blend:           Export Blender format files (Not Implemented).");
+            Console.WriteLine("-fbx:             Export FBX format files (Not Implemented).");
+            Console.WriteLine("-smooth:          Smooth Faces.");
+            Console.WriteLine("-group:           Group meshes into single model.");
+            Console.WriteLine("-tif:             Change the materials to look for .tif files instead of .dds.");
             Console.WriteLine();
-            Console.WriteLine("-throw:           Throw Exceptions to installed debugger");
+            Console.WriteLine("-throw:           Throw Exceptions to installed debugger.");
             Console.WriteLine();
         }
 

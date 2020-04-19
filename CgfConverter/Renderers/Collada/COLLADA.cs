@@ -148,17 +148,14 @@ namespace CgfConverter
 
         public void WriteLibrary_Images()
         {
-            // I think this is a  list of all the images used by the asset.
+            // List of all the images used by the asset.
             Grendgine_Collada_Library_Images libraryImages = new Grendgine_Collada_Library_Images();
             DaeObject.Library_Images = libraryImages;
             List<Grendgine_Collada_Image> imageList = new List<Grendgine_Collada_Image>();
-            //Console.WriteLine("Number of images {0}", CryData.Materials.Length);
-            // We now have the image library set up.  start to populate.
-            //foreach (CryEngine_Core.Material material in CryData.Materials)
+            // We now have the image library set up.  Start to populate.
             for (int k = 0; k < CryData.Materials.Count; k++)
             {
                 // each mat will have a number of texture files.  Need to create an <image> for each of them.
-                //int numTextures = material.Textures.Length;
                 int numTextures = CryData.Materials[k].Textures.Length;
                 for (int i = 0; i < numTextures; i++)
                 {
@@ -170,21 +167,20 @@ namespace CgfConverter
                         Init_From = new Grendgine_Collada_Init_From()
                     };
                     // Build the URI path to the file as a .dds, clean up the slashes.
-                    StringBuilder builder;
+                    StringBuilder builder = new StringBuilder();
                     if (CryData.Materials[k].Textures[i].File.Contains(@"/") || CryData.Materials[k].Textures[i].File.Contains(@"\"))
                     {
                         // if Datadir is empty, need a clean name and can only search in the current directory.  If Datadir is provided, then look there.
                         if (this.Args.DataDir == null)
                         {
-                            builder = new StringBuilder(CleanMtlFileName(CryData.Materials[k].Textures[i].File) + ".dds");
+                            builder.Append(CleanMtlFileName(CryData.Materials[k].Textures[i].File) + ".dds");
                             if (Args.TiffTextures)
                                 builder.Replace(".dds", ".tif");
 
                         }
                         else
                         {
-                            //builder = new StringBuilder(@"/" + this.Args.DataDir.Replace(@"\", @"/").Replace(" ", @"%20") + @"/" + CryData.Materials[k].Textures[i].File);
-                            builder = new StringBuilder(@"/" + this.Args.DataDir.FullName.Replace(" ", @"%20") + @"/" + CryData.Materials[k].Textures[i].File);
+                            builder.Append(@"/" + this.Args.DataDir.FullName.Replace(" ", @"%20") + @"/" + CryData.Materials[k].Textures[i].File);
                         }
                     }
                     else

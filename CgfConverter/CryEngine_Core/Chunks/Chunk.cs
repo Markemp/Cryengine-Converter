@@ -11,31 +11,19 @@ namespace CgfConverter.CryEngineCore
         private readonly static Dictionary<Type, Dictionary<uint, Func<dynamic>>> _chunkFactoryCache = new Dictionary<Type, Dictionary<uint, Func<dynamic>>> { };
 
         internal ChunkHeader _header;
-        internal CryEngineCore.Model _model;
+        internal Model _model;
 
-        /// <summary>
-        /// Position of the start of the chunk
-        /// </summary>
+        /// <summary> Position of the start of the chunk </summary>
         public uint Offset { get; internal set; }
-        /// <summary>
-        /// The Type of the Chunk
-        /// </summary>
+        /// <summary> The Type of the Chunk </summary>
         public ChunkTypeEnum ChunkType { get; internal set; }
-        /// <summary>
-        /// The Version of this Chunk
-        /// </summary>
+        /// <summary> The Version of this Chunk </summary>
         internal uint Version;
-        /// <summary>
-        /// The ID of this Chunk
-        /// </summary>
+        /// <summary> The ID of this Chunk </summary>
         internal int ID;
-        /// <summary>
-        /// The Size of this Chunk (in Bytes)
-        /// </summary>
+        /// <summary> The Size of this Chunk (in Bytes) </summary>
         internal uint Size;
-        /// <summary>
-        /// Size of the data in the chunk.  This is the chunk size, minus the header (if there is one)
-        /// </summary>
+        /// <summary> Size of the data in the chunk.  This is the chunk size, minus the header (if there is one) </summary>
         public uint DataSize { get; set; }
 
         internal Dictionary<long, byte> SkippedBytes = new Dictionary<long, byte> { };

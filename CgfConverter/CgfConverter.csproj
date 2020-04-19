@@ -105,6 +105,7 @@
     <Compile Include="CryEngine_Core\Chunks\ChunkMeshSubsets.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMeshSubsets_800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMesh_800.cs" />
+    <Compile Include="CryEngine_Core\Chunks\ChunkMesh_802.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMesh_801.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMtlName.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMtlName_744.cs" />

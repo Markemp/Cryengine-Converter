@@ -6,70 +6,22 @@ namespace CgfConverter.CryEngineCore
 {
     public class ChunkDataStream_801 : ChunkDataStream
     {
-        public static float Byte4HexToFloat(string hexString)
-        {
-            uint num = uint.Parse(hexString, System.Globalization.NumberStyles.AllowHexSpecifier);
-            var bytes = BitConverter.GetBytes(num);
-            return BitConverter.ToSingle(bytes, 0);
-        }
-
-        public static int Byte1HexToIntType2(string hexString)
-        {
-            int value = Convert.ToSByte(hexString, 16);
-            return value;
-        }
-
-        public static float Byte2HexIntFracToFloat2(string hexString)
-        {
-            string sintPart = hexString.Substring(0, 2);
-            string sfracPart = hexString.Substring(2, 2);
-
-            int intPart = Byte1HexToIntType2(sintPart);
-
-            short intnum = short.Parse(sfracPart, System.Globalization.NumberStyles.AllowHexSpecifier);
-            var intbytes = BitConverter.GetBytes(intnum);
-            string intbinary = Convert.ToString(intbytes[0], 2).PadLeft(8, '0');
-            string binaryIntPart = intbinary;
-
-            short num = short.Parse(sfracPart, System.Globalization.NumberStyles.AllowHexSpecifier);
-            var bytes = BitConverter.GetBytes(num);
-            string binary = Convert.ToString(bytes[0], 2).PadLeft(8, '0');
-            string binaryFracPart = binary;
-
-            //convert Fractional Part
-            float dec = 0;
-            for (int i = 0; i < binaryFracPart.Length; i++)
-            {
-                if (binaryFracPart[i] == '0') continue;
-                dec += (float)Math.Pow(2, (i + 1) * (-1));
-            }
-            float number = 0;
-            number = (float)intPart + dec;
-            /*if (intPart > 0) { number = (float)intPart + dec; }
-            if (intPart < 0) { number = (float)intPart - dec; }
-            if (intPart == 0) { number =  dec; }*/
-            return number;
-        }
-
+        // Spriggan models, not sure which game.  SC, MWO uses 0800
         public override void Read(BinaryReader b)
         {
             base.Read(b);
 
             this.Flags2 = b.ReadUInt32(); // another filler
-            UInt32 tmpdataStreamType = b.ReadUInt32();
+            uint tmpdataStreamType = b.ReadUInt32();
             this.DataStreamType = (DataStreamTypeEnum)Enum.ToObject(typeof(DataStreamTypeEnum), tmpdataStreamType);
+            this.SkipBytes(b, 4);
             this.NumElements = b.ReadUInt32(); // number of elements in this chunk
 
-            if (this._model.FileVersion == FileVersionEnum.CryTek_3_5 || this._model.FileVersion == FileVersionEnum.CryTek_3_4)
-            {
-                this.BytesPerElement = b.ReadUInt32(); // bytes per element
-            }
-            if (this._model.FileVersion == FileVersionEnum.CryTek_3_6)
-            {
-                this.BytesPerElement = (UInt32)b.ReadInt16();        // Star Citizen 2.0 is using an int16 here now.
-                b.ReadInt16();                                       // unknown value.   Doesn't look like padding though.
-            }
-
+            this.BytesPerElement = b.ReadUInt32(); // bytes per element
+            //if (this.NumElements == 0) // For vertices, number of elements is frequently 0.
+            //{
+                
+            //}
             this.SkipBytes(b, 8);
 
             // Now do loops to read for each of the different Data Stream Types.  If vertices, need to populate Vector3s for example.
@@ -79,63 +31,11 @@ namespace CgfConverter.CryEngineCore
 
                 case DataStreamTypeEnum.VERTICES:  // Ref is 0x00000000
                     this.Vertices = new Vector3[this.NumElements];
-
-                    switch (this.BytesPerElement)
+                    for (Int32 i = 0; i < this.NumElements; i++)
                     {
-                        case 12:
-                            for (Int32 i = 0; i < this.NumElements; i++)
-                            {
-                                this.Vertices[i].x = b.ReadSingle();
-                                this.Vertices[i].y = b.ReadSingle();
-                                this.Vertices[i].z = b.ReadSingle();
-                            }
-                            break;
-                        case 8:  // Prey files, and old Star Citizen files
-                            for (Int32 i = 0; i < NumElements; i++)
-                            {
-                                //uint bver = 0;
-                                //float ver = 0;
-
-                                // 2 byte floats.  Use the Half structure from TK.Math
-                                //bver = b.ReadUInt16();
-                                //ver = Byte4HexToFloat(bver.ToString("X8"));
-                                //this.Vertices[i].x = ver;
-
-                                //bver = b.ReadUInt16();
-                                //ver = Byte4HexToFloat(bver.ToString("X8"));
-                                //this.Vertices[i].y = ver; bver = b.ReadUInt16();
-
-                                //bver = b.ReadUInt16();
-                                //ver = Byte4HexToFloat(bver.ToString("X8"));
-                                //this.Vertices[i].z = ver;
-
-                                //bver = b.ReadUInt16();
-                                //ver = Byte4HexToFloat(bver.ToString("X8"));
-                                //this.Vertices[i].w = ver;
-                                Half xshort = new Half();
-                                xshort.bits = b.ReadUInt16();
-                                this.Vertices[i].x = xshort.ToSingle();
-
-                                Half yshort = new Half();
-                                yshort.bits = b.ReadUInt16();
-                                this.Vertices[i].y = yshort.ToSingle();
-
-                                Half zshort = new Half();
-                                zshort.bits = b.ReadUInt16();
-                                this.Vertices[i].z = zshort.ToSingle();
-                                b.ReadUInt16();
-                            }
-                            break;
-                        case 16:
-                            //Console.WriteLine("method: (3)");
-                            for (Int32 i = 0; i < this.NumElements; i++)
-                            {
-                                this.Vertices[i].x = b.ReadSingle();
-                                this.Vertices[i].y = b.ReadSingle();
-                                this.Vertices[i].z = b.ReadSingle();
-                                this.Vertices[i].w = b.ReadSingle(); // TODO:  Sometimes there's a W to these structures.  Will investigate.
-                            }
-                            break;
+                        this.Vertices[i].x = b.ReadSingle();
+                        this.Vertices[i].y = b.ReadSingle();
+                        this.Vertices[i].z = b.ReadSingle();
                     }
                     break;
 
@@ -506,5 +406,52 @@ namespace CgfConverter.CryEngineCore
                     #endregion
             }
         }
+
+        public static float Byte4HexToFloat(string hexString)
+        {
+            uint num = uint.Parse(hexString, System.Globalization.NumberStyles.AllowHexSpecifier);
+            var bytes = BitConverter.GetBytes(num);
+            return BitConverter.ToSingle(bytes, 0);
+        }
+
+        public static int Byte1HexToIntType2(string hexString)
+        {
+            int value = Convert.ToSByte(hexString, 16);
+            return value;
+        }
+
+        public static float Byte2HexIntFracToFloat2(string hexString)
+        {
+            string sintPart = hexString.Substring(0, 2);
+            string sfracPart = hexString.Substring(2, 2);
+
+            int intPart = Byte1HexToIntType2(sintPart);
+
+            short intnum = short.Parse(sfracPart, System.Globalization.NumberStyles.AllowHexSpecifier);
+            var intbytes = BitConverter.GetBytes(intnum);
+            string intbinary = Convert.ToString(intbytes[0], 2).PadLeft(8, '0');
+            string binaryIntPart = intbinary;
+
+            short num = short.Parse(sfracPart, System.Globalization.NumberStyles.AllowHexSpecifier);
+            var bytes = BitConverter.GetBytes(num);
+            string binary = Convert.ToString(bytes[0], 2).PadLeft(8, '0');
+            string binaryFracPart = binary;
+
+            //convert Fractional Part
+            float dec = 0;
+            for (int i = 0; i < binaryFracPart.Length; i++)
+            {
+                if (binaryFracPart[i] == '0') continue;
+                dec += (float)Math.Pow(2, (i + 1) * (-1));
+            }
+            float number = 0;
+            number = (float)intPart + dec;
+            /*if (intPart > 0) { number = (float)intPart + dec; }
+            if (intPart < 0) { number = (float)intPart - dec; }
+            if (intPart == 0) { number =  dec; }*/
+            return number;
+        }
+
+        
     }
 }

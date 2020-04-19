@@ -7,6 +7,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using CgfConverter;
+using grendgine_collada;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CgfConverterTests
@@ -48,7 +49,7 @@ namespace CgfConverterTests
         public void MWO_industrial_wetlamp_a_MaterialFileNotFound()
         {
             var args = new String[] { @"..\..\ResourceFiles\industrial_wetlamp_a.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
-            Int32 result = argsHandler.ProcessArgs(args);
+            int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
@@ -63,7 +64,7 @@ namespace CgfConverterTests
         public void MWO_timberwolf_chr()
         {
             var args = new String[] { @"..\..\ResourceFiles\timberwolf.chr", "-dds", "-dae", "-objectdir", @"d:\depot\lol\" };
-            Int32 result = argsHandler.ProcessArgs(args);
+            int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
@@ -78,7 +79,7 @@ namespace CgfConverterTests
         public void MWO_candycane_a_MaterialFileNotAvailable()
         {
             var args = new String[] { @"..\..\ResourceFiles\candycane_a.chr", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
-            Int32 result = argsHandler.ProcessArgs(args);
+            int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result); 
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
@@ -93,7 +94,7 @@ namespace CgfConverterTests
         public void MWO_hbr_right_torso_uac5_bh1_cga()
         {
             var args = new String[] { @"..\..\ResourceFiles\hbr_right_torso_uac5_bh1.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
-            Int32 result = argsHandler.ProcessArgs(args);
+            int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result); 
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
@@ -108,14 +109,51 @@ namespace CgfConverterTests
         public void MWO_hbr_right_torso_cga()
         {
             var args = new String[] { @"..\..\ResourceFiles\hbr_right_torso.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
-            Int32 result = argsHandler.ProcessArgs(args);
+            int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result); 
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
-            COLLADA daeFile = new COLLADA(argsHandler, cryData);
+            var daeFile = new COLLADA(argsHandler, cryData);
+            var daeObject = daeFile.DaeObject;
             daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
             int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            Assert.AreEqual("Scene", daeObject.Scene.Visual_Scene.Name);
+            Assert.AreEqual("#Scene", daeObject.Scene.Visual_Scene.URL);
+            // Visual Scene Check
+            Assert.AreEqual(1, daeObject.Library_Visual_Scene.Visual_Scene.Length);
+            Assert.AreEqual("Scene", daeObject.Library_Visual_Scene.Visual_Scene[0].ID);
+            Assert.AreEqual(1, daeObject.Library_Visual_Scene.Visual_Scene[0].Node.Length);
+            // Node check
+            var node = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0];
+            Assert.AreEqual("hbr_right_torso", node.ID);
+            Assert.AreEqual("hbr_right_torso", node.Name);
+            Assert.AreEqual(1, node.Instance_Geometry.Length);
+            Assert.AreEqual(2, node.node.Length);
+            Assert.AreEqual(1, node.Matrix.Length);
+            Assert.AreEqual(1, node.Instance_Geometry.Length);
+            Assert.AreEqual("hbr_right_torso_case", node.node[0].ID);
+            Assert.AreEqual("hbr_right_torso_case", node.node[0].Name);
+            Assert.AreEqual("hbr_right_torso_fx", node.node[1].Name);
+            Assert.AreEqual(Grendgine_Collada_Node_Type.NODE, node.node[0].Type);
+            const string caseMatrix = "-1.000000 0.000001 0.000009 1.830486 -0.000005 -0.866025 -0.500000 -2.444341 0.000008 -0.500000 0.866025 -1.542505 0.000000 0.000000 0.000000 1.000000";
+            const string fxMatrix = "1.000000 0.000000 -0.000009 1.950168 0.000000 1.000000 0.000000 0.630385 0.000009 0.000000 1.000000 -0.312732 0.000000 0.000000 0.000000 1.000000";
+            Assert.AreEqual(caseMatrix, node.node[0].Matrix[0].Value_As_String);
+            Assert.AreEqual(fxMatrix, node.node[1].Matrix[0].Value_As_String);
+            // Node Matrix check
+            const string matrix = "1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.000000 0.000000 0.000000 1.000000";
+            Assert.AreEqual(matrix, node.Matrix[0].Value_As_String);
+            Assert.AreEqual("transform", node.Matrix[0].sID);
+            // Instance Geometry check
+            Assert.AreEqual("hbr_right_torso", node.Instance_Geometry[0].Name);
+            Assert.AreEqual("#hbr_right_torso-mesh", node.Instance_Geometry[0].URL);
+            Assert.AreEqual(1, node.Instance_Geometry[0].Bind_Material.Length);
+            Assert.AreEqual(1, node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material.Length);
+            Assert.AreEqual("hellbringer_body-material", node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+            Assert.AreEqual("#hellbringer_body-material", node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
+            // Material Check
             Assert.AreEqual(5, actualMaterialsCount);
+            Assert.AreEqual("hbr_right_torso", daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].ID);
+            Assert.AreEqual(1, daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].Instance_Geometry.Length);
             ValidateColladaXml(daeFile);
         }
 
@@ -124,7 +162,7 @@ namespace CgfConverterTests
         public void SC_uee_asteroid_ACTutorial_rail_01()
         {
             var args = new String[] { @"..\..\ResourceFiles\uee_asteroid_ACTutorial_rail_01.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
-            Int32 result = argsHandler.ProcessArgs(args);
+            int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result); 
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
@@ -137,7 +175,7 @@ namespace CgfConverterTests
         public void UnknownSource_forest_ruin()
         {
             var args = new String[] { @"..\..\ResourceFiles\forest_ruin.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
-            Int32 result = argsHandler.ProcessArgs(args);
+            int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
@@ -154,7 +192,7 @@ namespace CgfConverterTests
         public void GhostSniper3_raquel_eyeoverlay_skin()
         {
             var args = new String[] { @"..\..\ResourceFiles\Test01\raquel_eyeoverlay.skin", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\Test01\" };
-            Int32 result = argsHandler.ProcessArgs(args);
+            int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
@@ -171,7 +209,7 @@ namespace CgfConverterTests
         public void Prey_Dahl_GenMaleBody01_MaterialFileFound()
         {
             var args = new String[] { @"..\..\ResourceFiles\Prey\Dahl_GenMaleBody01.skin", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\Prey\" };
-            Int32 result = argsHandler.ProcessArgs(args);
+            int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
@@ -188,7 +226,7 @@ namespace CgfConverterTests
         public void Prey_Dahl_GenMaleBody01_MaterialFileNotAvailable()
         {
             var args = new String[] { @"..\..\ResourceFiles\Prey\Dahl_GenMaleBody01.skin" };
-            Int32 result = argsHandler.ProcessArgs(args);
+            int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
@@ -205,7 +243,7 @@ namespace CgfConverterTests
         public void Evolve_griffin_skin_NoMaterialFile()
         {
             var args = new String[] { @"..\..\ResourceFiles\Evolve\griffin.skin" };
-            Int32 result = argsHandler.ProcessArgs(args);
+            int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
@@ -222,7 +260,7 @@ namespace CgfConverterTests
         public void Evolve_griffin_menu_harpoon_skin_NoMaterialFile()
         {
             var args = new String[] { @"..\..\ResourceFiles\Evolve\griffin_menu_harpoon.skin" };
-            Int32 result = argsHandler.ProcessArgs(args);
+            int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
@@ -239,7 +277,7 @@ namespace CgfConverterTests
         public void Evolve_griffin_fp_skeleton_chr_NoMaterialFile()
         {
             var args = new String[] { @"..\..\ResourceFiles\Evolve\griffin_fp_skeleton.chr" };
-            Int32 result = argsHandler.ProcessArgs(args);
+            int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
