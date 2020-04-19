@@ -116,7 +116,7 @@ namespace CgfConverterTests
             var daeFile = new COLLADA(argsHandler, cryData);
             var daeObject = daeFile.DaeObject;
             daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
-            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            
             Assert.AreEqual("Scene", daeObject.Scene.Visual_Scene.Name);
             Assert.AreEqual("#Scene", daeObject.Scene.Visual_Scene.URL);
             // Visual Scene Check
@@ -151,7 +151,21 @@ namespace CgfConverterTests
             Assert.AreEqual("hellbringer_body-material", node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
             Assert.AreEqual("#hellbringer_body-material", node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
             // Material Check
+            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            var materials = daeFile.DaeObject.Library_Materials;
             Assert.AreEqual(5, actualMaterialsCount);
+            Assert.AreEqual("hellbringer_body-material", materials.Material[0].ID);
+            Assert.AreEqual("decals-material", materials.Material[1].ID);
+            Assert.AreEqual("hellbringer_variant-material", materials.Material[2].ID);
+            Assert.AreEqual("hellbringer_window-material", materials.Material[3].ID);
+            Assert.AreEqual("Material #0-material", materials.Material[4].ID);
+            Assert.AreEqual("#hellbringer_body-effect", materials.Material[0].Instance_Effect.URL);
+            Assert.AreEqual("#decals-effect", materials.Material[1].Instance_Effect.URL);
+            Assert.AreEqual("#hellbringer_variant-effect", materials.Material[2].Instance_Effect.URL);
+            Assert.AreEqual("#hellbringer_window-effect", materials.Material[3].Instance_Effect.URL);
+            Assert.AreEqual("#Material #0-effect", materials.Material[4].Instance_Effect.URL);
+
+
             Assert.AreEqual("hbr_right_torso", daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].ID);
             Assert.AreEqual(1, daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].Instance_Geometry.Length);
             ValidateColladaXml(daeFile);
