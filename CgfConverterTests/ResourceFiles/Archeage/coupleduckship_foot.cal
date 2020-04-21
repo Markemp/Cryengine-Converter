@@ -1,9 +1,0 @@
-#filepath = Animations\env\ship\coupleduckship\foot
-
-$AnimEventDatabase = animations\env\ship\coupleduckship\foot\event_database.animevents
-$soundEventDatabase = animations\env\ship\coupleduckship\foot\sound_event_database.animevents
---$TracksDBH         = Animations\env\ship\coupleduckship\foot\coupleduckship_foot.dbh
-
-idle = foot_idle.caf
-run_f = foot_run_f.caf
-run_b = foot_run_b.caf
