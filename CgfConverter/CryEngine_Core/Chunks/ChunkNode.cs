@@ -52,8 +52,7 @@ namespace CgfConverter.CryEngineCore
             get
             {
                 // Turns out chunk IDs are ints, not uints.  ~0 is shorthand for -1, or 0xFFFFFFFF in the uint world.
-                //if (this.ParentNodeID == 0xFFFFFFFF)
-                if (this.ParentNodeID == ~0)
+                if (this.ParentNodeID == ~0)  // aka 0xFFFFFFFF
                     return null;
 
                 if (this._parentNode == null)
@@ -68,13 +67,10 @@ namespace CgfConverter.CryEngineCore
             }
             set
             {
-                //this.ParentNodeID = value == null ? 0xFFFFFFFF : value.ID;
                 this.ParentNodeID = value == null ? ~0 : value.ID;
                 this._parentNode = value;
             }
         }
-
-        public List<ChunkNode> ChildNodes { get; set; }
 
         private Chunk _objectChunk;
         public Chunk ObjectChunk
@@ -102,7 +98,6 @@ namespace CgfConverter.CryEngineCore
                 else
                 {
                     // TODO: What should this be?
-                    // return this._model.RootNode.Transform.GetTranslation();
                     return this.Transform.GetTranslation();
                 }
             }
@@ -120,7 +115,6 @@ namespace CgfConverter.CryEngineCore
                 {
                     return this._model.RootNode.Transform.GetRotation();
                     // TODO: What should this be?
-                    // return this.Transform.To3x3();
                 }
             }
         }

@@ -7,17 +7,17 @@ namespace CgfConverter
 {
     public struct RangeEntity
     {
-        public String Name; // String32!  32 byte char array.
-        public Int32 Start;
-        public Int32 End;
+        public string Name; // String32!  32 byte char array.
+        public int Start;
+        public int End;
     } // String32 Name, int Start, int End - complete
 
     public struct Vector3
     {
-        public Double x;
-        public Double y;
-        public Double z;
-        public Double w; // Currently Unused
+        public double x;
+        public double y;
+        public double z;
+        public double w; // Currently Unused
         private readonly object p1;
         private readonly object p2;
         private readonly object p3;
@@ -136,24 +136,19 @@ namespace CgfConverter
             }
             return result;
         }
-        public void WriteVector4()
-        {
-            Utils.Log(LogLevelEnum.Debug, "=============================================");
-            Utils.Log(LogLevelEnum.Debug, "x:{0:F7}  y:{1:F7}  z:{2:F7} w:{3:F7}", x, y, z, w);
-        }
     }
 
     public struct Matrix33    // a 3x3 transformation matrix
     {
-        public Double m11;
-        public Double m12;
-        public Double m13;
-        public Double m21;
-        public Double m22;
-        public Double m23;
-        public Double m31;
-        public Double m32;
-        public Double m33;
+        public double m11;
+        public double m12;
+        public double m13;
+        public double m21;
+        public double m22;
+        public double m23;
+        public double m31;
+        public double m32;
+        public double m33;
 
         public void ReadMatrix33(BinaryReader b)
         {
@@ -185,16 +180,18 @@ namespace CgfConverter
 
         public Matrix33 Get_Copy()    // returns a copy of the matrix33
         {
-            Matrix33 mat = new Matrix33();
-            mat.m11 = m11;
-            mat.m12 = m12;
-            mat.m13 = m13;
-            mat.m21 = m21;
-            mat.m22 = m22;
-            mat.m23 = m23;
-            mat.m31 = m31;
-            mat.m32 = m32;
-            mat.m33 = m33;
+            Matrix33 mat = new Matrix33
+            {
+                m11 = m11,
+                m12 = m12,
+                m13 = m13,
+                m21 = m21,
+                m22 = m22,
+                m23 = m23,
+                m31 = m31,
+                m32 = m32,
+                m33 = m33
+            };
             return mat;
         }
 
@@ -561,6 +558,15 @@ namespace CgfConverter
             return GetMatrix44(matrix);
         }
 
+        public Matrix44 GetTransformFromParts(Vector3 localTranslation, Matrix33 localRotation)
+        {
+            var defaultScale = new Vector3();
+            defaultScale.x = 0.0f;
+            defaultScale.y = 0.0f;
+            defaultScale.z = 0.0f;
+            return GetTransformFromParts(localTranslation, localRotation, defaultScale);
+        }
+
         public Matrix44 GetTransformFromParts(Vector3 localTranslation, Matrix33 localRotation, Vector3 localScale)
         {
             Matrix44 transform = new Matrix44
@@ -570,20 +576,14 @@ namespace CgfConverter
                 m41 = localTranslation.x,
                 m42 = localTranslation.y,
                 m43 = localTranslation.z,
-                // Rotation part
+                // Rotation part.  Invert this matrix, which results in proper rotation in Blender.
                 m11 = localRotation.m11,
-                //m12 = localRotation.m12,
                 m12 = localRotation.m21,
-                //m13 = localRotation.m13,
                 m13 = localRotation.m31,
-                //m21 = localRotation.m21,
                 m21 = localRotation.m12,
                 m22 = localRotation.m22,
-                //m23 = localRotation.m23,
                 m23 = localRotation.m32,
-                //m31 = localRotation.m31,
                 m31 = localRotation.m13,
-                //m32 = localRotation.m32,
                 m32 = localRotation.m23,
                 m33 = localRotation.m33,
                 // Scale part

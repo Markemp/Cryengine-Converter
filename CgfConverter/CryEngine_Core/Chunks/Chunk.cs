@@ -168,6 +168,9 @@ namespace CgfConverter.CryEngineCore
 
         public virtual void Read(BinaryReader reader)
         {
+            if (reader == null)
+                throw new ArgumentNullException(nameof(reader));
+
             this.ChunkType = this._header.ChunkType;
             this.Version = this._header.Version;
             this.Offset = this._header.Offset;

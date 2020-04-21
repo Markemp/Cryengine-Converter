@@ -885,7 +885,7 @@ namespace CgfConverter
                 source = "#" + DaeObject.Library_Geometries.Geometry[0].ID,
                 Bind_Shape_Matrix = new Grendgine_Collada_Float_Array_String()
             };
-            skin.Bind_Shape_Matrix.Value_As_String = CreateStringFromMatrix44(Matrix44.Identity());         // We will assume the BSM is the identity matrix for now
+            skin.Bind_Shape_Matrix.Value_As_String = CreateStringFromMatrix44(Matrix44.Identity());  // We will assume the BSM is the identity matrix for now
             // Create the 3 sources for this controller:  joints, bind poses, and weights
             skin.Source = new Grendgine_Collada_Source[3];
 

@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" version="1.4.1" xmlns="http://www.collada.org/2005/11/COLLADASchema">
+  <asset>
+    <created>2020-04-20T21:37:20.980342-07:00</created>
+    <modified>2020-04-20T21:37:20.980342-07:00</modified>
+    <unit meter="1" name="meter" />
+    <up_axis>Z_UP</up_axis>
+    <contributor>
+      <author>Heffay</author>
+      <author_email>markemp@gmail.com</author_email>
+      <author_website>https://github.com/Markemp/Cryengine-Converter</author_website>
+      <source_data>xform_dummyPlane</source_data>
+    </contributor>
+    <contributor />
+    <revision>1.0.0.0</revision>
+    <title>xform_dummyPlane</title>
+  </asset>
+  <library_images />
+  <library_effects />
+  <library_materials />
+  <library_controllers>
+    <controller id="Controller">
+      <skin source="#xform_dummyPlane-mesh">
+        <bind_shape_matrix>1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</bind_shape_matrix>
+        <source id="Controller-joints">
+          <Name_array id="Controller-joints-array" count="25">xform root spine1 l_hip r_hip spine2 neck l_clavicle r_clavicle head l_shoulder l_elbow l_wrist l_finger r_shoulder r_elbow r_wrist r_finger r_weapon l_knee l_ankle l_ball r_knee r_ankle r_ball</Name_array>
+          <technique_common>
+            <accessor count="25" offset="0" source="#Controller-joints-array" stride="1" />
+          </technique_common>
+        </source>
+        <source id="Controller-bind_poses">
+          <float_array id="Controller-bind_poses-array" count="400" digits="0" magnitude="0">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 -1 0 0 0 0 0 1 -2.000173 0 1 0 0.025789 0 0 0 1 0 -0.119404 0.992846 -2.115914 1 0 0 0 0 0.992846 0.119404 -0.252978 0 0 0 1 0.005554 0.320893 -0.947099 1.739723 -0.998432 -0.050971 -0.023125 -0.125358 -0.055696 0.945743 0.320107 -0.558771 0 0 0 1 0.005554 -0.320893 0.947099 -1.739725 -0.998432 0.050971 0.023125 0.125358 -0.055696 -0.945743 -0.320107 0.558772 0 0 0 1 0 -0.053462 0.998570 -2.468885 1 0 0 0 0 0.998570 0.053462 -0.089848 0 0 0 1 0 0.194907 0.980822 -3.029704 1 0 0 0 0 0.980822 -0.194907 0.679758 0 0 0 1 -0.822349 -0.561591 0.091418 -0.281964 0.075494 0.051556 0.995813 -2.903985 -0.563953 0.825807 0 -0.068251 0 0 0 1 -0.822349 0.561591 -0.091418 0.281964 0.075494 -0.051556 -0.995813 2.903983 -0.563953 -0.825807 0 0.068252 0 0 0 1 0 0.362053 0.932158 -3.014215 1 0 0 0 0 0.932158 -0.362053 1.221001 0 0 0 1 -0.766317 0.049522 -0.640551 1.691329 -0.633602 0.106757 0.766258 -2.405956 0.106330 0.993051 -0.050432 0.267666 0 0 0 1 -0.759870 0.399793 -0.512604 0.719203 -0.432986 0.276908 0.857814 -2.469778 0.484892 0.873778 -0.037309 0.521356 0 0 0 1 -0.434425 0.164790 -0.885505 1.493739 -0.883135 0.115320 0.454723 -2.045195 0.177050 0.979564 0.095434 -0.141591 0 0 0 1 -0.434425 0.164790 -0.885505 1.197606 -0.883135 0.115320 0.454723 -2.045195 0.177050 0.979564 0.095434 -0.141591 0 0 0 1 -0.766317 -0.049522 0.640551 -1.691326 -0.633602 -0.106757 -0.766258 2.405952 0.106330 -0.993051 0.050432 -0.267666 0 0 0 1 -0.759870 -0.399793 0.512605 -0.719205 -0.432986 -0.276908 -0.857814 2.469780 0.484892 -0.873778 0.037309 -0.521356 0 0 0 1 -0.434425 -0.164790 0.885505 -1.493735 -0.883135 -0.115320 -0.454723 2.045196 0.177050 -0.979564 -0.095434 0.141590 0 0 0 1 -0.434425 -0.164790 0.885505 -1.197611 -0.883135 -0.115320 -0.454723 2.045192 0.177050 -0.979564 -0.095434 0.141592 0 0 0 1 0 1 0 -0.156046 -1 0 0 1.089779 0 0 1 -1.903705 0 0 0 1 0.046883 -0.535905 -0.842976 0.975847 -0.998432 -0.050971 -0.023125 -0.125358 -0.030575 0.842738 -0.537454 0.321840 0 0 0 1 0.009188 0.258298 -0.966021 0.487770 -0.998432 -0.050971 -0.023125 -0.125358 -0.055213 0.964719 0.257425 -0.055366 0 0 0 1 -0.365213 0.930920 -0.002547 -0.061303 -0.930644 -0.365169 -0.023533 -0.111679 -0.022837 -0.006224 0.999720 -0.132207 0 0 0 1 0.046883 0.535905 0.842976 -0.975847 -0.998432 0.050971 0.023125 0.125358 -0.030575 -0.842738 0.537454 -0.321840 0 0 0 1 0.009188 -0.258298 0.966021 -0.487771 -0.998432 0.050971 0.023125 0.125358 -0.055212 -0.964719 -0.257425 0.055366 0 0 0 1 -0.365213 -0.930920 0.002547 0.061303 -0.930644 0.365169 0.023533 0.111679 -0.022837 0.006224 -0.999720 0.132206 0 0 0 1</float_array>
+          <technique_common>
+            <accessor count="25" offset="0" source="#Controller-bind_poses-array" stride="16">
+              <param name="TRANSFORM" type="float4x4" />
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Controller-weights">
+          <float_array id="Controller-weights-array" count="4" digits="0" magnitude="0">1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0</float_array>
+          <technique_common>
+            <accessor count="16" offset="0" source="#Controller-weights-array" stride="1">
+              <param name="WEIGHT" type="float" />
+            </accessor>
+          </technique_common>
+        </source>
+        <joints>
+          <input semantic="JOINT" source="#Controller-joints" />
+          <input semantic="INV_BIND_MATRIX" source="#Controller-bind_poses" />
+        </joints>
+        <vertex_weights count="4">
+          <input semantic="JOINT" source="#Controller-joints" offset="0" set="0" />
+          <input semantic="WEIGHT" source="#Controller-weights" offset="1" set="0" />
+          <vcount>4 4 4 4</vcount>
+          <v>0 0 0 1 0 2 0 3 0 4 0 5 0 6 0 7 0 8 0 9 0 10 0 11 0 12 0 13 0 14 0 15</v>
+        </vertex_weights>
+      </skin>
+      <extra>
+        <technique profile="FCOLLADA">
+          <user_properties>SkinController</user_properties>
+        </technique>
+      </extra>
+    </controller>
+  </library_controllers>
+  <library_geometries>
+    <geometry id="xform_dummyPlane-mesh" name="xform_dummyPlane">
+      <mesh>
+        <source id="xform_dummyPlane-mesh-pos" name="xform_dummyPlane-pos">
+          <float_array id="xform_dummyPlane-mesh-pos-array" count="12">0.005000 0.005000 0 -0.005000 0.005000 0 0.005000 -0.005000 0 -0.005000 -0.005000 0</float_array>
+          <technique_common>
+            <accessor count="4" offset="0" source="#xform_dummyPlane-mesh-pos-array" stride="3">
+              <param name="X" type="float" />
+              <param name="Y" type="float" />
+              <param name="Z" type="float" />
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="xform_dummyPlane-mesh-norm" name="xform_dummyPlane-norm">
+          <float_array id="xform_dummyPlane-mesh-norm-array" count="12">0 0.000001 1 0 0.000001 1 0 0.000001 1 0 0.000001 1</float_array>
+          <technique_common>
+            <accessor count="4" offset="0" source="#xform_dummyPlane-mesh-norm-array" stride="3">
+              <param name="X" type="float" />
+              <param name="Y" type="float" />
+              <param name="Z" type="float" />
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="xform_dummyPlane-mesh-UV" name="xform_dummyPlane-UV">
+          <float_array id="xform_dummyPlane-mesh-UV-array" count="8">0 0 1 0 0 1 1 1</float_array>
+          <technique_common>
+            <accessor count="4" offset="0" source="#xform_dummyPlane-mesh-UV-array" stride="2">
+              <param name="S" type="float" />
+              <param name="T" type="float" />
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="xform_dummyPlane-vertices">
+          <input semantic="POSITION" source="#xform_dummyPlane-mesh-pos" />
+        </vertices>
+        <polylist count="2">
+          <input semantic="VERTEX" source="#xform_dummyPlane-vertices" offset="0" set="0" />
+          <input semantic="NORMAL" source="#xform_dummyPlane-mesh-norm" offset="1" set="0" />
+          <input semantic="TEXCOORD" source="#xform_dummyPlane-mesh-UV" offset="2" set="0" />
+          <p>0 0 0 1 1 1 2 2 2 2 2 2 1 1 1 3 3 3</p>
+          <vcount>3 3</vcount>
+        </polylist>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="Scene">
+      <node id="Armature" sid="xform" name="xform" type="JOINT">
+        <matrix>1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <node id="Armature_root" sid="root" name="root" type="JOINT">
+          <matrix>-1 0 0 0 0 0 1 -0.025789 0 1 0 2.000173 0 0 0 1</matrix>
+          <node id="Armature_spine1" sid="spine1" name="spine1" type="JOINT">
+            <matrix>0 -1 0 0 0.992846 0 0.119404 0.130810 -0.119404 0 0.992846 0.024308 0 0 0 1</matrix>
+            <node id="Armature_spine2" sid="spine2" name="spine2" type="JOINT">
+              <matrix>0.997809 0 -0.066154 0.341619 0 1 0 0 0.066154 0 0.997809 0 0 0 0 1</matrix>
+              <node id="Armature_neck" sid="neck" name="neck" type="JOINT">
+                <matrix>0.968999 0 -0.247065 0.634839 0 1 0 0 0.247065 0 0.968999 0 0 0 0 1</matrix>
+                <node id="Armature_head" sid="head" name="head" type="JOINT">
+                  <matrix>0.984847 0 -0.173425 0.150589 0 1 0 0 0.173425 0 0.984847 0 0 0 0 1</matrix>
+                </node>
+              </node>
+              <node id="Armature_l_clavicle" sid="l_clavicle" name="l_clavicle" type="JOINT">
+                <matrix>0.121311 0.991632 -0.044149 0.441992 -0.822349 0.075494 -0.563953 -0.051131 -0.555901 0.104720 0.824626 0.113795 0 0 0 1</matrix>
+                <node id="Armature_l_shoulder" sid="l_shoulder" name="l_shoulder" type="JOINT">
+                  <matrix>0.543811 0.531138 -0.649739 0.250081 -0.693167 0.720720 0.009004 0 0.473063 0.445482 0.760104 0 0 0 0 1</matrix>
+                  <node id="Armature_l_elbow" sid="l_elbow" name="l_elbow" type="JOINT">
+                    <matrix>0.930449 -0.203955 -0.304411 0.677129 0.131348 0.961210 -0.242536 -0.000001 0.342069 0.185683 0.921146 0 0 0 0 1</matrix>
+                    <node id="Armature_l_wrist" sid="l_wrist" name="l_wrist" type="JOINT">
+                      <matrix>0.849902 0.484079 0.208168 0.469181 -0.525866 0.804387 0.276454 0.000001 -0.033622 -0.344427 0.938211 0 0 0 0 1</matrix>
+                      <node id="Armature_l_finger" sid="l_finger" name="l_finger" type="JOINT">
+                        <matrix>1 0 0 0.296132 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+                      </node>
+                    </node>
+                  </node>
+                </node>
+              </node>
+              <node id="Armature_r_clavicle" sid="r_clavicle" name="r_clavicle" type="JOINT">
+                <matrix>-0.121311 -0.991632 0.044149 0.441990 -0.822349 0.075494 -0.563953 0.051131 0.555900 -0.104720 -0.824626 0.113795 0 0 0 1</matrix>
+                <node id="Armature_r_shoulder" sid="r_shoulder" name="r_shoulder" type="JOINT">
+                  <matrix>0.543811 0.531138 -0.649739 -0.250081 -0.693168 0.720720 0.009004 0.000002 0.473063 0.445482 0.760104 0 0 0 0 1</matrix>
+                  <node id="Armature_r_elbow" sid="r_elbow" name="r_elbow" type="JOINT">
+                    <matrix>0.930449 -0.203955 -0.304411 -0.677125 0.131348 0.961210 -0.242536 -0.000005 0.342070 0.185683 0.921146 0 0 0 0 1</matrix>
+                    <node id="Armature_r_wrist" sid="r_wrist" name="r_wrist" type="JOINT">
+                      <matrix>0.849902 0.484079 0.208168 -0.469186 -0.525866 0.804387 0.276454 0.000004 -0.033622 -0.344427 0.938211 0.000001 0 0 0 1</matrix>
+                      <node id="Armature_r_finger" sid="r_finger" name="r_finger" type="JOINT">
+                        <matrix>1 0 0 -0.296124 0 1 0 0.000004 0 0 1 -0.000002 0 0 0 1</matrix>
+                      </node>
+                      <node id="Armature_r_weapon" sid="r_weapon" name="r_weapon" type="JOINT">
+                        <matrix>-0.164790 0.434425 0.885505 -0.307137 -0.115320 0.883135 -0.454723 0.199119 -0.979564 -0.177050 -0.095434 0 0 0 0 1</matrix>
+                      </node>
+                    </node>
+                  </node>
+                </node>
+              </node>
+            </node>
+          </node>
+          <node id="Armature_l_hip" sid="l_hip" name="l_hip" type="JOINT">
+            <matrix>-0.005554 0.998432 0.055696 0.165945 -0.947099 -0.023125 0.320107 -0.176516 0.320893 -0.050971 0.945743 -0.010412 0 0 0 1</matrix>
+            <node id="Armature_l_knee" sid="l_knee" name="l_knee" type="JOINT">
+              <matrix>0.626674 0 0.779282 0.877381 0 1 0 0 -0.779282 0 0.626674 0 0 0 0 1</matrix>
+              <node id="Armature_l_ankle" sid="l_ankle" name="l_ankle" type="JOINT">
+                <matrix>0.676340 0 -0.736589 0.605166 0 1 0 0 0.736589 0 0.676340 0 0 0 0 1</matrix>
+                <node id="Armature_l_ball" sid="l_ball" name="l_ball" type="JOINT">
+                  <matrix>0.239560 -0.080140 -0.967568 0.365587 0.317249 0.948342 0 0 0.917586 -0.306960 0.252609 0 0 0 0 1</matrix>
+                </node>
+              </node>
+            </node>
+          </node>
+          <node id="Armature_r_hip" sid="r_hip" name="r_hip" type="JOINT">
+            <matrix>-0.005554 0.998432 0.055695 -0.165945 0.947099 0.023125 -0.320107 -0.176513 -0.320893 0.050971 -0.945743 -0.010412 0 0 0 1</matrix>
+            <node id="Armature_r_knee" sid="r_knee" name="r_knee" type="JOINT">
+              <matrix>0.626674 0 0.779282 -0.877383 0 1 0 0 -0.779282 0 0.626674 0.000001 0 0 0 1</matrix>
+              <node id="Armature_r_ankle" sid="r_ankle" name="r_ankle" type="JOINT">
+                <matrix>0.676340 0 -0.736589 -0.605166 0 1 0 0 0.736590 0 0.676340 0 0 0 0 1</matrix>
+                <node id="Armature_r_ball" sid="r_ball" name="r_ball" type="JOINT">
+                  <matrix>0.239560 -0.080140 -0.967568 -0.365588 0.317249 0.948342 0 0 0.917586 -0.306960 0.252609 0 0 0 0 1</matrix>
+                </node>
+              </node>
+            </node>
+          </node>
+        </node>
+      </node>
+      <node id="spriggan_proto_skel.chr" name="spriggan_proto_skel.chr" type="NODE">
+        <matrix>1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <instance_controller url="#Controller">
+          <bind_material>
+            <technique_common />
+          </bind_material>
+          <skeleton>#Armature</skeleton>
+        </instance_controller>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene name="Scene" url="#Scene" />
+  </scene>
+</COLLADA>
