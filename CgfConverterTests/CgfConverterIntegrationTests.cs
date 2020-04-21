@@ -135,8 +135,8 @@ namespace CgfConverterTests
             Assert.AreEqual("hbr_right_torso_case", node.node[0].Name);
             Assert.AreEqual("hbr_right_torso_fx", node.node[1].Name);
             Assert.AreEqual(Grendgine_Collada_Node_Type.NODE, node.node[0].Type);
-            const string caseMatrix = "-1.000000 0.000001 0.000009 1.830486 -0.000005 -0.866025 -0.500000 -2.444341 0.000008 -0.500000 0.866025 -1.542505 0.000000 0.000000 0.000000 1.000000";
-            const string fxMatrix = "1.000000 0.000000 -0.000009 1.950168 0.000000 1.000000 0.000000 0.630385 0.000009 0.000000 1.000000 -0.312732 0.000000 0.000000 0.000000 1.000000";
+            const string caseMatrix = "-1.000000 -0.000005 0.000008 1.830486 0.000001 -0.866025 -0.500000 -2.444341 0.000009 -0.500000 0.866025 -1.542505 0.000000 0.000000 0.000000 1.000000";
+            const string fxMatrix = "1.000000 0.000000 0.000009 1.950168 0.000000 1.000000 0.000000 0.630385 -0.000009 0.000000 1.000000 -0.312732 0.000000 0.000000 0.000000 1.000000";
             Assert.AreEqual(caseMatrix, node.node[0].Matrix[0].Value_As_String);
             Assert.AreEqual(fxMatrix, node.node[1].Matrix[0].Value_As_String);
             // Node Matrix check
@@ -198,9 +198,9 @@ namespace CgfConverterTests
         }
 
         [TestMethod]
-        public void AEGS_Avenger_Remodel_IntegrationTest()
+        public void AEGS_Avenger_IntegrationTest()
         {
-            var args = new String[] { @"..\..\ResourceFiles\SC\AEGS_Avenger_Remodel.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\SC\" };
+            var args = new String[] { @"..\..\ResourceFiles\SC\AEGS_Avenger.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\SC\" };
             int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
@@ -208,6 +208,12 @@ namespace CgfConverterTests
             var daeFile = new COLLADA(argsHandler, cryData);
             var daeObject = daeFile.DaeObject;
             daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+            // Make sure Rotations are still right
+            const string frontLGDoorLeftMatrix = "1.000000 0.000000 0.000000 -0.300001 0.000000 -0.938131 -0.346280 0.512432 0.000000 0.346280 -0.938131 -1.835138 0.000000 0.000000 0.000000 1.000000";
+            var noseNode = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].node[0];
+            Assert.AreEqual("Nose", noseNode.ID);
+            Assert.AreEqual("Front_LG_Door_Left", noseNode.node[28].ID);
+            Assert.AreEqual(frontLGDoorLeftMatrix, noseNode.node[28].Matrix[0].Value_As_String);
 
         }
 
