@@ -309,3 +309,5 @@ OpenCover/
 *.cgf*
 *.skin*
 *.chr*
+*.dds
+*.mtl
