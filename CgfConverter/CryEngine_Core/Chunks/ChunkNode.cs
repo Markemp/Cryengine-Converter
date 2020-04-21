@@ -9,56 +9,32 @@ namespace CgfConverter.CryEngineCore
     {
         #region Chunk Properties
 
-        /// <summary>
-        /// Chunk Name (String[64])
-        /// </summary>
+        /// <summary> Chunk Name (String[64]) </summary>
         public String Name { get; internal set; }
-        /// <summary>
-        /// Mesh or Helper Object ID
-        /// </summary>
+        /// <summary> Mesh or Helper Object ID </summary>
         public int ObjectNodeID { get; internal set; }
-        /// <summary>
-        /// Node parent.  if 0xFFFFFFFF, it's the top node.  Maybe...
-        /// </summary>
+        /// <summary> Node parent.  if 0xFFFFFFFF, it's the top node. </summary>
         public int ParentNodeID { get; internal set; }  // Parent nodeID
         public int __NumChildren;
-        /// <summary>
-        /// Material ID for this chunk
-        /// </summary>
+        /// <summary> Material ID for this chunk </summary>
         public int MatID { get; internal set; }
         public Boolean IsGroupHead { get; internal set; }
         public Boolean IsGroupMember { get; internal set; }
-        /// <summary>
-        /// Transformation Matrix
-        /// </summary>
+        /// <summary> Transformation Matrix </summary>
         public Matrix44 Transform { get; internal set; }
-        /// <summary>
-        /// Position vector of Transform
-        /// </summary>
+        /// <summary> Position vector of Transform </summary>
         public Vector3 Pos { get; internal set; }
-        /// <summary>
-        /// Rotation component of Transform
-        /// </summary>
+        /// <summary> Rotation component of Transform </summary>
         public Quat Rot { get; internal set; }
-        /// <summary>
-        /// Scalar component of Transform
-        /// </summary>
+        /// <summary> Scalar component of Transform </summary>
         public Vector3 Scale { get; internal set; }
-        /// <summary>
-        /// Position Controller ID - Obsolete
-        /// </summary>
+        /// <summary> Position Controller ID - Obsolete </summary>
         public int PosCtrlID { get; internal set; }
-        /// <summary>
-        /// Rotation Controller ID - Obsolete
-        /// </summary>
+        /// <summary> Rotation Controller ID - Obsolete </summary>
         public int RotCtrlID { get; internal set; }
-        /// <summary>
-        /// Scalar Controller ID - Obsolete
-        /// </summary>
+        /// <summary> Scalar Controller ID - Obsolete </summary>
         public int SclCtrlID { get; internal set; }
-        /// <summary>
-        /// Appears to be a Blob of properties, separated by new lines
-        /// </summary>
+        /// <summary> Appears to be a Blob of properties, separated by new lines </summary>
         public String Properties { get; internal set; }
 
         #endregion
@@ -176,9 +152,6 @@ namespace CgfConverter.CryEngineCore
         public Vector3 GetTransform(Vector3 transform)
         {
             Vector3 vec3 = transform;
-
-            // if (this.id != 0xFFFFFFFF)
-            // {
 
             // Apply the local transforms (rotation and translation) to the vector
             // Do rotations.  Rotations must come first, then translate.

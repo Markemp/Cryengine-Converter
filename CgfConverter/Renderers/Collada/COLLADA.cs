@@ -1215,8 +1215,8 @@ namespace CgfConverter
                 // Star Citizen pair.  Get the Node and Mesh chunks from the geometry file, unless it's a Proxy node.
                 string nodeName = nodeChunk.Name;
                 int nodeID = nodeChunk.ID;
-                // make sure there is a geometry node in the geometry file
 
+                // make sure there is a geometry node in the geometry file
                 if (CryData.Models[0].ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Helper)
                 {
                     tmpNode = CreateSimpleNode(nodeChunk);
@@ -1505,29 +1505,9 @@ namespace CgfConverter
             Matrix33 localRotation;
             Vector3 localScale;
 
-            //if (node.ParentNodeID != ~0)
-            //{
-            //localRotation = node.ParentNode.Transform.GetRotation().ConjugateTransposeThisAndMultiply(node.Transform.GetRotation());  // Might need to multiply by inverse instead.
-            //localTranslation = node.LocalRotation * (node.LocalTranslation - node.ParentNode.Transform.GetScale());
-            //localScale = node.LocalTranslation - node.ParentNode.LocalTranslation;
-            /*localRotation = node.ParentNode.Transform.GetRotation().ConjugateTransposeThisAndMultiply(node.Transform.GetRotation());*/  
-                // Might need to multiply by inverse instead.
-                //localRotation = node.ParentNode.Transform.GetRotation().Inverse() * node.Transform.GetRotation();
-                //localRotation = node.Transform.GetRotation();
-                //localRotation = node.ParentNode.Transform.GetRotation() * node.Transform.GetRotation();
-                //localTranslation = node.ParentNode.Transform.GetRotation() * node.Transform.GetScale();
-                //localScale = node.Transform.GetTranslation() - node.ParentNode.Transform.GetTranslation();
-                //}
-                //else
-                //{
             localTranslation = node.Transform.GetScale();
             localRotation = node.Transform.GetRotation();
             localScale = node.Transform.GetTranslation();
-            //}
-
-            //localTranslation = node.Transform.GetScale();
-            //localRotation = node.RotSoFar;
-            //localScale = node.TransformSoFar;
 
             node.LocalTranslation = localTranslation;
             node.LocalScale = localScale;

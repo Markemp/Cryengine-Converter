@@ -436,10 +436,7 @@ namespace CgfConverter
         {
             // Pass the matrix a Vector4 (4x1) vector to get the transform of the vector
             Vector4 result = new Vector4();
-            // result.x = (m11 * vector.x) + (m12 * vector.y) + (m13 * vector.z) + m14 / 100;
-            // result.y = (m21 * vector.x) + (m22 * vector.y) + (m23 * vector.z) + m24 / 100;
-            // result.z = (m31 * vector.x) + (m32 * vector.y) + (m33 * vector.z) + m34 / 100;
-            // result.w = (m41 * vector.x) + (m42 * vector.y) + (m43 * vector.z) + m44 / 100;
+
             result.x = (m11 * vector.x) + (m21 * vector.y) + (m31 * vector.z) + m41 / 100;
             result.y = (m12 * vector.x) + (m22 * vector.y) + (m32 * vector.z) + m42 / 100;
             result.z = (m13 * vector.x) + (m23 * vector.y) + (m33 * vector.z) + m43 / 100;
@@ -575,13 +572,19 @@ namespace CgfConverter
                 m43 = localTranslation.z,
                 // Rotation part
                 m11 = localRotation.m11,
-                m12 = localRotation.m12,
-                m13 = localRotation.m13,
-                m21 = localRotation.m21,
+                //m12 = localRotation.m12,
+                m12 = localRotation.m21,
+                //m13 = localRotation.m13,
+                m13 = localRotation.m31,
+                //m21 = localRotation.m21,
+                m21 = localRotation.m12,
                 m22 = localRotation.m22,
-                m23 = localRotation.m23,
-                m31 = localRotation.m31,
-                m32 = localRotation.m32,
+                //m23 = localRotation.m23,
+                m23 = localRotation.m32,
+                //m31 = localRotation.m31,
+                m31 = localRotation.m13,
+                //m32 = localRotation.m32,
+                m32 = localRotation.m23,
                 m33 = localRotation.m33,
                 // Scale part
                 m14 = localScale.x,
