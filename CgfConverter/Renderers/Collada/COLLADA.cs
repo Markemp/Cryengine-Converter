@@ -669,10 +669,6 @@ namespace CgfConverter
                                 }
                                 else
                                 {
-                                    //normal = tmpTangents.Normals[j];
-                                    //normal.x = normal.x / 32767.0;
-                                    //normal.y = normal.y / 32767.0;
-                                    //normal.z = normal.z / 32767.0;                                    
                                     normal = tmpVertsUVs.Normals[j];
                                 }
                                 normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", safe(normal.x), safe(normal.y), safe(normal.z));
@@ -686,20 +682,6 @@ namespace CgfConverter
                         CleanNumbers(vertString);
                         CleanNumbers(normString);
                         CleanNumbers(uvString);
-
-                        //floatArrayTangents.ID = tangentSource.ID + "-array";
-                        //floatArrayTangents.Digits = 6;
-                        //floatArrayTangents.Magnitude = 38;
-                        //floatArrayTangents.Count = (int)tmpTangents.NumElements * 2;
-                        //StringBuilder tangentString = new StringBuilder();
-                        // Create Tangent string
-                        //for (uint j = 0; j < tmpTangents.NumElements; j++)
-                        //{
-                        //    tangentString.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} ", 
-                        //        tmpTangents.Tangents[j, 0].w / 32767, tmpTangents.Tangents[j, 0].x / 32767, tmpTangents.Tangents[j, 0].y / 32767, tmpTangents.Tangents[j, 0].z / 32767,
-                        //        tmpTangents.Tangents[j, 1].w / 32767, tmpTangents.Tangents[j, 1].x / 32767, tmpTangents.Tangents[j, 1].y / 32767, tmpTangents.Tangents[j, 1].z / 32767);
-                        //}
-                        //CleanNumbers(tangentString);
 
                         #region Create the polylist node.
                         Grendgine_Collada_Polylist[] polylists = new Grendgine_Collada_Polylist[tmpMeshSubsets.NumMeshSubset];
@@ -749,7 +731,6 @@ namespace CgfConverter
                             StringBuilder p = new StringBuilder();
                             for (uint k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
                             {
-                                //p.AppendFormat("{0} {0} {0} {0} {1} {1} {1} {1} {2} {2} {2} {2} ", tmpIndices.Indices[k], tmpIndices.Indices[k + 1], tmpIndices.Indices[k + 2]);
                                 p.AppendFormat("{0} {0} {0} {1} {1} {1} {2} {2} {2} ", tmpIndices.Indices[k], tmpIndices.Indices[k + 1], tmpIndices.Indices[k + 2]);
                                 k += 2;
                             }
