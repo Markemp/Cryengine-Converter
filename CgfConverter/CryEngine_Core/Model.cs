@@ -29,11 +29,6 @@ namespace CgfConverter.CryEngineCore
         public List<ChunkHeader> ChunkHeaders { get; internal set; }
 
         /// <summary>
-        /// All the node chunks in this Model
-        /// </summary>
-        public List<ChunkNode> ChunkNodes { get; internal set; }
-
-        /// <summary>
         /// Lookup Table for Chunks, indexed by ChunkID
         /// </summary>
         public Dictionary<int, Chunk> ChunkMap { get; internal set; }

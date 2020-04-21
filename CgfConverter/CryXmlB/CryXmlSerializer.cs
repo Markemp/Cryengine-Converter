@@ -184,7 +184,9 @@ namespace HoloXPLOR.DataForge
 
                 var xmlDoc = new XmlDocument();
 
+#pragma warning disable CS0219 // The variable 'bugged' is assigned but its value is never used
                 var bugged = false;
+#pragma warning restore CS0219 // The variable 'bugged' is assigned but its value is never used
 
                 Dictionary<Int32, XmlElement> xmlMap = new Dictionary<Int32, XmlElement> { };
                 foreach (var node in nodeTable)

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <COLLADA xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" version="1.4.1" xmlns="http://www.collada.org/2005/11/COLLADASchema">
   <asset>
-    <created>2020-04-19T08:45:43.2279103-07:00</created>
-    <modified>2020-04-19T08:45:43.2279103-07:00</modified>
+    <created>2020-04-20T18:52:54.6749203-07:00</created>
+    <modified>2020-04-20T18:52:54.6749203-07:00</modified>
     <unit meter="1" name="meter" />
     <up_axis>Z_UP</up_axis>
     <contributor>

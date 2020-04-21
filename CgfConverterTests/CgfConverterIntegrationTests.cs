@@ -150,7 +150,7 @@ namespace CgfConverterTests
             Assert.AreEqual(1, node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material.Length);
             Assert.AreEqual("hellbringer_body-material", node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
             Assert.AreEqual("#hellbringer_body-material", node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
-            // Material Check
+            // library_materials Check
             int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
             var materials = daeFile.DaeObject.Library_Materials;
             Assert.AreEqual(5, actualMaterialsCount);
@@ -165,12 +165,51 @@ namespace CgfConverterTests
             Assert.AreEqual("#hellbringer_window-effect", materials.Material[3].Instance_Effect.URL);
             Assert.AreEqual("#Material #0-effect", materials.Material[4].Instance_Effect.URL);
 
+            // library_geometries check
+            Assert.AreEqual(1, daeFile.DaeObject.Library_Geometries.Geometry.Length);
+            var geometry = daeFile.DaeObject.Library_Geometries.Geometry[0];
+            Assert.AreEqual("hbr_right_torso-mesh", geometry.ID);
+            Assert.AreEqual("hbr_right_torso", geometry.Name);
+            Assert.AreEqual(3, geometry.Mesh.Source.Length);
+            Assert.AreEqual("hbr_right_torso-vertices", geometry.Mesh.Vertices.ID);
+            Assert.AreEqual(1, geometry.Mesh.Polylist.Length);
+            Assert.AreEqual(1908, geometry.Mesh.Polylist[0].Count);
+            var source = geometry.Mesh.Source;
+            var vertices = geometry.Mesh.Vertices;
+            var polylist = geometry.Mesh.Polylist;
+            // Source check
+            Assert.AreEqual("hbr_right_torso-mesh-pos", source[0].ID);
+            Assert.AreEqual("hbr_right_torso-pos", source[0].Name);
+            Assert.AreEqual("hbr_right_torso-mesh-pos-array", source[0].Float_Array.ID);
+            Assert.AreEqual(7035, source[0].Float_Array.Count);
+            var floatArray = source[0].Float_Array.Value_As_String;
+            Assert.IsTrue(floatArray.StartsWith("2.525999 -1.729837 -1.258107 2.526004 -1.863573 -1.080200 2.525999 -1.993050 -1.255200 2.740049 -0.917271 0.684382 2.740053 -0.917271 0.840976 2.793932"));
+            Assert.IsTrue(floatArray.EndsWith("-3.263152 2.340879 -1.480840 -3.231119 2.352005 -1.494859 -3.268093 2.329598 -1.478497 -3.234514 2.335588 -1.491449 -3.273033 2.320036 -1.471824 -3.237391"));
+            Assert.AreEqual((uint)2345, source[0].Technique_Common.Accessor.Count);
+            Assert.AreEqual((uint)0, source[0].Technique_Common.Accessor.Offset);
+            Assert.AreEqual(3, source[0].Technique_Common.Accessor.Param.Length);
+            Assert.AreEqual("X", source[0].Technique_Common.Accessor.Param[0].Name);
+            Assert.AreEqual("float", source[0].Technique_Common.Accessor.Param[0].Type);
+
 
             Assert.AreEqual("hbr_right_torso", daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].ID);
             Assert.AreEqual(1, daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].Instance_Geometry.Length);
             ValidateColladaXml(daeFile);
         }
 
+        [TestMethod]
+        public void AEGS_Avenger_Remodel_IntegrationTest()
+        {
+            var args = new String[] { @"..\..\ResourceFiles\SC\AEGS_Avenger_Remodel.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\SC\" };
+            int result = argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
+            CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
+
+            var daeFile = new COLLADA(argsHandler, cryData);
+            var daeObject = daeFile.DaeObject;
+            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+
+        }
 
         [TestMethod]
         public void SC_uee_asteroid_ACTutorial_rail_01()

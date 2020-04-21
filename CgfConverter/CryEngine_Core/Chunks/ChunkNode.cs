@@ -259,7 +259,7 @@ namespace CgfConverter.CryEngineCore
 
         public override string ToString()
         {
-            return $@"Chunk Type: {ChunkType}, ID: {ID:X}, Version: {Version}, Name: {Name}, Object Node ID: {ObjectNodeID}, Parent Node ID: {ParentNodeID}";
+            return $@"Chunk Type: {ChunkType}, ID: {ID:X}, Version: {Version}, Name: {Name}, Object Node ID: {ObjectNodeID:X}, Parent Node ID: {ParentNodeID:X}";
         }
     }
 }

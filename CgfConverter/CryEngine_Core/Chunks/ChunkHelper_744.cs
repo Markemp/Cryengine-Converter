@@ -18,10 +18,10 @@ namespace CgfConverter.CryEngineCore
             }
             else if (this.Version == 0x362)   // will probably never see these.
             {
-                Char[] tmpName = new Char[64];
+                char[] tmpName = new Char[64];
                 tmpName = b.ReadChars(64);
-                Int32 stringLength = 0;
-                for (Int32 i = 0, j = tmpName.Length; i < j; i++)
+                int stringLength = 0;
+                for (int i = 0, j = tmpName.Length; i < j; i++)
                 {
                     if (tmpName[i] == 0)
                     {

@@ -810,8 +810,12 @@ namespace CgfConverter
 
     public struct AABB
     {
+#pragma warning disable CS0169 // The field 'AABB.min' is never used
         Vector3 min;
+#pragma warning restore CS0169 // The field 'AABB.min' is never used
+#pragma warning disable CS0169 // The field 'AABB.max' is never used
         Vector3 max;
+#pragma warning restore CS0169 // The field 'AABB.max' is never used
     }
 
     public struct Tangent
@@ -1145,8 +1149,12 @@ namespace CgfConverter
     public struct InitialPosMatrix
     {
         // A bone initial position matrix.
+#pragma warning disable CS0169 // The field 'InitialPosMatrix.Rot' is never used
         Matrix33 Rot;              // type="Matrix33">
+#pragma warning restore CS0169 // The field 'InitialPosMatrix.Rot' is never used
+#pragma warning disable CS0169 // The field 'InitialPosMatrix.Pos' is never used
         Vector3 Pos;                // type="Vector3">
+#pragma warning restore CS0169 // The field 'InitialPosMatrix.Pos' is never used
     }
 
     public struct BoneLink
@@ -1189,26 +1197,54 @@ namespace CgfConverter
 
     public struct BoneEntity
     {
+#pragma warning disable CS0169 // The field 'BoneEntity.Bone_Id' is never used
         readonly int Bone_Id;                 //" type="int">Bone identifier.</add>
+#pragma warning restore CS0169 // The field 'BoneEntity.Bone_Id' is never used
+#pragma warning disable CS0169 // The field 'BoneEntity.Parent_Id' is never used
         readonly int Parent_Id;               //" type="int">Parent identifier.</add>
+#pragma warning restore CS0169 // The field 'BoneEntity.Parent_Id' is never used
+#pragma warning disable CS0169 // The field 'BoneEntity.Num_Children' is never used
         readonly int Num_Children;            //" type="uint" />
+#pragma warning restore CS0169 // The field 'BoneEntity.Num_Children' is never used
+#pragma warning disable CS0169 // The field 'BoneEntity.Bone_Name_CRC32' is never used
         readonly uint Bone_Name_CRC32;         //" type="uint">CRC32 of bone name as listed in the BoneNameListChunk.  In Python this can be calculated using zlib.crc32(name)</add>
+#pragma warning restore CS0169 // The field 'BoneEntity.Bone_Name_CRC32' is never used
+#pragma warning disable CS0169 // The field 'BoneEntity.Properties' is never used
         readonly string Properties;            //" type="String32" />
+#pragma warning restore CS0169 // The field 'BoneEntity.Properties' is never used
+#pragma warning disable CS0169 // The field 'BoneEntity.Physics' is never used
         BonePhysics Physics;            //" type="BonePhysics" />
+#pragma warning restore CS0169 // The field 'BoneEntity.Physics' is never used
     }
 
     public struct BonePhysics           // 26 total words = 104 total bytes
     {
+#pragma warning disable CS0169 // The field 'BonePhysics.Geometry' is never used
         readonly UInt32 Geometry;                //" type="Ref" template="BoneMeshChunk">Geometry of a separate mesh for this bone.</add>
+#pragma warning restore CS0169 // The field 'BonePhysics.Geometry' is never used
                                                  //<!-- joint parameters -->
 
+#pragma warning disable CS0169 // The field 'BonePhysics.Flags' is never used
         readonly UInt32 Flags;                   //" type="uint" />
+#pragma warning restore CS0169 // The field 'BonePhysics.Flags' is never used
+#pragma warning disable CS0169 // The field 'BonePhysics.Min' is never used
         Vector3 Min;                   //" type="Vector3" />
+#pragma warning restore CS0169 // The field 'BonePhysics.Min' is never used
+#pragma warning disable CS0169 // The field 'BonePhysics.Max' is never used
         Vector3 Max;                   //" type="Vector3" />
+#pragma warning restore CS0169 // The field 'BonePhysics.Max' is never used
+#pragma warning disable CS0169 // The field 'BonePhysics.Spring_Angle' is never used
         Vector3 Spring_Angle;          //" type="Vector3" />
+#pragma warning restore CS0169 // The field 'BonePhysics.Spring_Angle' is never used
+#pragma warning disable CS0169 // The field 'BonePhysics.Spring_Tension' is never used
         Vector3 Spring_Tension;        //" type="Vector3" />
+#pragma warning restore CS0169 // The field 'BonePhysics.Spring_Tension' is never used
+#pragma warning disable CS0169 // The field 'BonePhysics.Damping' is never used
         Vector3 Damping;               //" type="Vector3" />
+#pragma warning restore CS0169 // The field 'BonePhysics.Damping' is never used
+#pragma warning disable CS0169 // The field 'BonePhysics.Frame_Matrix' is never used
         Matrix33 Frame_Matrix;        //" type="Matrix33" />
+#pragma warning restore CS0169 // The field 'BonePhysics.Frame_Matrix' is never used
     }
 
     public struct MeshBoneMapping
@@ -1250,10 +1286,18 @@ namespace CgfConverter
 
     public struct MorphTargets
     {
+#pragma warning disable CS0169 // The field 'MorphTargets.MeshID' is never used
         readonly uint MeshID;
+#pragma warning restore CS0169 // The field 'MorphTargets.MeshID' is never used
+#pragma warning disable CS0169 // The field 'MorphTargets.Name' is never used
         readonly string Name;
+#pragma warning restore CS0169 // The field 'MorphTargets.Name' is never used
+#pragma warning disable CS0169 // The field 'MorphTargets.IntMorph' is never used
         readonly List<MeshMorphTargetVertex> IntMorph;
+#pragma warning restore CS0169 // The field 'MorphTargets.IntMorph' is never used
+#pragma warning disable CS0169 // The field 'MorphTargets.ExtMorph' is never used
         readonly List<MeshMorphTargetVertex> ExtMorph;
+#pragma warning restore CS0169 // The field 'MorphTargets.ExtMorph' is never used
     }
 
     public struct TFace
@@ -1330,10 +1374,18 @@ namespace CgfConverter
 
     public struct PhysicalProxyStub
     {
+#pragma warning disable CS0169 // The field 'PhysicalProxyStub.ChunkID' is never used
         readonly uint ChunkID;
+#pragma warning restore CS0169 // The field 'PhysicalProxyStub.ChunkID' is never used
+#pragma warning disable CS0169 // The field 'PhysicalProxyStub.Points' is never used
         readonly List<Vector3> Points;
+#pragma warning restore CS0169 // The field 'PhysicalProxyStub.Points' is never used
+#pragma warning disable CS0169 // The field 'PhysicalProxyStub.Indices' is never used
         readonly List<short> Indices;
+#pragma warning restore CS0169 // The field 'PhysicalProxyStub.Indices' is never used
+#pragma warning disable CS0169 // The field 'PhysicalProxyStub.Materials' is never used
         readonly List<string> Materials;
+#pragma warning restore CS0169 // The field 'PhysicalProxyStub.Materials' is never used
     }
 
     #endregion

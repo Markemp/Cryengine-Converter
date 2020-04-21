@@ -87,13 +87,27 @@ namespace CgfConverter
 
         struct _IMAGE_FILE_HEADER
         {
+#pragma warning disable CS0649 // Field 'Utils._IMAGE_FILE_HEADER.Machine' is never assigned to, and will always have its default value 0
             public ushort Machine;
+#pragma warning restore CS0649 // Field 'Utils._IMAGE_FILE_HEADER.Machine' is never assigned to, and will always have its default value 0
+#pragma warning disable CS0649 // Field 'Utils._IMAGE_FILE_HEADER.NumberOfSections' is never assigned to, and will always have its default value 0
             public ushort NumberOfSections;
+#pragma warning restore CS0649 // Field 'Utils._IMAGE_FILE_HEADER.NumberOfSections' is never assigned to, and will always have its default value 0
+#pragma warning disable CS0649 // Field 'Utils._IMAGE_FILE_HEADER.TimeDateStamp' is never assigned to, and will always have its default value 0
             public uint TimeDateStamp;
+#pragma warning restore CS0649 // Field 'Utils._IMAGE_FILE_HEADER.TimeDateStamp' is never assigned to, and will always have its default value 0
+#pragma warning disable CS0649 // Field 'Utils._IMAGE_FILE_HEADER.PointerToSymbolTable' is never assigned to, and will always have its default value 0
             public uint PointerToSymbolTable;
+#pragma warning restore CS0649 // Field 'Utils._IMAGE_FILE_HEADER.PointerToSymbolTable' is never assigned to, and will always have its default value 0
+#pragma warning disable CS0649 // Field 'Utils._IMAGE_FILE_HEADER.NumberOfSymbols' is never assigned to, and will always have its default value 0
             public uint NumberOfSymbols;
+#pragma warning restore CS0649 // Field 'Utils._IMAGE_FILE_HEADER.NumberOfSymbols' is never assigned to, and will always have its default value 0
+#pragma warning disable CS0649 // Field 'Utils._IMAGE_FILE_HEADER.SizeOfOptionalHeader' is never assigned to, and will always have its default value 0
             public ushort SizeOfOptionalHeader;
+#pragma warning restore CS0649 // Field 'Utils._IMAGE_FILE_HEADER.SizeOfOptionalHeader' is never assigned to, and will always have its default value 0
+#pragma warning disable CS0649 // Field 'Utils._IMAGE_FILE_HEADER.Characteristics' is never assigned to, and will always have its default value 0
             public ushort Characteristics;
+#pragma warning restore CS0649 // Field 'Utils._IMAGE_FILE_HEADER.Characteristics' is never assigned to, and will always have its default value 0
         };
 
         public static DateTime GetBuildDateTime(Assembly assembly)

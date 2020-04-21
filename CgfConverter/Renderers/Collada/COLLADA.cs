@@ -1084,9 +1084,7 @@ namespace CgfConverter
             DaeObject.Library_Controllers = libraryController;
         }
 
-        /// <summary>
-        /// Provides a library in which to place visual_scene elements. 
-        /// </summary>
+        /// <summary> Provides a library in which to place visual_scene elements. </summary>
         public void WriteLibrary_VisualScenes()
         {
             // Set up the library
@@ -1217,15 +1215,17 @@ namespace CgfConverter
                 // Star Citizen pair.  Get the Node and Mesh chunks from the geometry file, unless it's a Proxy node.
                 string nodeName = nodeChunk.Name;
                 int nodeID = nodeChunk.ID;
-                if (CryData.Models[1].NodeMap.ContainsKey(nodeID))        // make sure there is a geometry node in the geometry file
+                // make sure there is a geometry node in the geometry file
+
+                if (CryData.Models[0].ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Helper)
                 {
-                    ChunkNode geometryNode = CryData.Models[1].NodeMap.Values.Where(a => a.Name == nodeChunk.Name).First();
-                    ChunkMesh geometryMesh = (ChunkMesh)CryData.Models[1].ChunkMap[geometryNode.ObjectNodeID];
-                    tmpNode = CreateGeometryNode(geometryNode, geometryMesh);
+                    tmpNode = CreateSimpleNode(nodeChunk);
                 }
                 else
                 {
-                    tmpNode = CreateSimpleNode(nodeChunk);
+                    ChunkNode geometryNode = CryData.Models[1].NodeMap.Values.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
+                    ChunkMesh geometryMesh = (ChunkMesh)CryData.Models[1].ChunkMap[geometryNode.ObjectNodeID];
+                    tmpNode = CreateGeometryNode(geometryNode, geometryMesh);
                 }
             }
             else                    // Regular Cryengine file.
@@ -1342,7 +1342,6 @@ namespace CgfConverter
             List<Grendgine_Collada_Matrix> matrices = new List<Grendgine_Collada_Matrix>();
             // Populate the matrix.  This is based on the BONETOWORLD data in this bone.
             StringBuilder matrixValues = new StringBuilder();
-            //matrixValues.AppendFormat("\n\t\t\t{0,11:F6} {1,11:F6} {2,11:F6} {3,11:F6}\n\t\t\t{4,11:F6} {5,11:F6} {6,11:F6} {7,11:F6}\n\t\t\t{8,11:F6} {9,11:F6} {10,11:F6} {11,11:F6}\n\t\t\t0 0 0 1",
             matrixValues.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} 0 0 0 1",
                 bone.LocalTransform.m11,
                 bone.LocalTransform.m12,
@@ -1497,7 +1496,7 @@ namespace CgfConverter
 
         }
 
-        private void CalculateTransform(ChunkNode node)
+        private static void CalculateTransform(ChunkNode node)
         {
             // Calculate the LocalTransform matrix.
             // Node transform matrices are different than joint.  Translation and scale are reversed.
@@ -1511,15 +1510,16 @@ namespace CgfConverter
             //localRotation = node.ParentNode.Transform.GetRotation().ConjugateTransposeThisAndMultiply(node.Transform.GetRotation());  // Might need to multiply by inverse instead.
             //localTranslation = node.LocalRotation * (node.LocalTranslation - node.ParentNode.Transform.GetScale());
             //localScale = node.LocalTranslation - node.ParentNode.LocalTranslation;
-            /*localRotation = node.ParentNode.Transform.GetRotation().ConjugateTransposeThisAndMultiply(node.Transform.GetRotation());*/  // Might need to multiply by inverse instead.
-                                                                                                                                          //localRotation = node.ParentNode.Transform.GetRotation().Inverse() * node.Transform.GetRotation();
-                                                                                                                                          //localRotation = node.Transform.GetRotation();
-                                                                                                                                          //localRotation = node.ParentNode.Transform.GetRotation() * node.Transform.GetRotation();
-                                                                                                                                          //localTranslation = node.ParentNode.Transform.GetRotation() * node.Transform.GetScale();
-                                                                                                                                          //localScale = node.Transform.GetTranslation() - node.ParentNode.Transform.GetTranslation();
-                                                                                                                                          //}
-                                                                                                                                          //else
-                                                                                                                                          //{
+            /*localRotation = node.ParentNode.Transform.GetRotation().ConjugateTransposeThisAndMultiply(node.Transform.GetRotation());*/  
+                // Might need to multiply by inverse instead.
+                //localRotation = node.ParentNode.Transform.GetRotation().Inverse() * node.Transform.GetRotation();
+                //localRotation = node.Transform.GetRotation();
+                //localRotation = node.ParentNode.Transform.GetRotation() * node.Transform.GetRotation();
+                //localTranslation = node.ParentNode.Transform.GetRotation() * node.Transform.GetScale();
+                //localScale = node.Transform.GetTranslation() - node.ParentNode.Transform.GetTranslation();
+                //}
+                //else
+                //{
             localTranslation = node.Transform.GetScale();
             localRotation = node.Transform.GetRotation();
             localScale = node.Transform.GetTranslation();
@@ -1535,10 +1535,9 @@ namespace CgfConverter
             node.LocalTransform = node.LocalTransform.GetTransformFromParts(localScale, localRotation, localTranslation);
         }
 
-        private string CreateStringFromMatrix44(Matrix44 matrix)
+        private static string CreateStringFromMatrix44(Matrix44 matrix)
         {
             StringBuilder matrixValues = new StringBuilder();
-            //matrixValues.AppendFormat("\n\t\t\t{0,11:F6} {1,11:F6} {2,11:F6} {3,11:F6}\n\t\t\t{4,11:F6} {5,11:F6} {6,11:F6} {7,11:F6}\n\t\t\t{8,11:F6} {9,11:F6} {10,11:F6} {11,11:F6}\n\t\t\t0 0 0 1",
             matrixValues.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} {12:F6} {13:F6} {14:F6} {15:F6}",
                 matrix.m11,
                 matrix.m12,
@@ -1562,7 +1561,7 @@ namespace CgfConverter
         }
 
         /// <summary>Takes the Material file name and returns just the file name with no extension</summary>
-        private string CleanMtlFileName(string cleanMe)
+        private static string CleanMtlFileName(string cleanMe)
         {
             string[] stringSeparators = new string[] { @"\", @"/" };
             string[] result;
@@ -1579,26 +1578,25 @@ namespace CgfConverter
                 string[] periodSep = new string[] { @"." };
                 result = cleanMe.Split(periodSep, StringSplitOptions.None);
                 cleanMe = result[0];
-                //Console.WriteLine("Cleanme is {0}", cleanMe);
             }
             return cleanMe;
         }
 
-        private Double safe(Double value)
+        private static double safe(Double value)
         {
-            if (value == Double.NegativeInfinity)
-                return Double.MinValue;
+            if (value == double.NegativeInfinity)
+                return double.MinValue;
 
-            if (value == Double.PositiveInfinity)
-                return Double.MaxValue;
+            if (value == double.PositiveInfinity)
+                return double.MaxValue;
 
-            if (value == Double.NaN)
+            if (double.IsNaN(value))
                 return 0;
 
             return value;
         }
 
-        private void CleanNumbers(StringBuilder sb)
+        private static void CleanNumbers(StringBuilder sb)
         {
             sb.Replace("0.000000", "0");
             sb.Replace("-0.000000", "0");

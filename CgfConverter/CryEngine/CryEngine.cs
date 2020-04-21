@@ -63,7 +63,7 @@ namespace CgfConverter
 
             SkinningInfo = ConsolidateSkinningInfo();
             // For each node with geometry info, populate that node's Mesh Chunk GeometryInfo with the geometry data.
-            ConsolidateGeometryInfo();
+            // ConsolidateGeometryInfo();
 
             // Get the material file name
             var allMaterialChunks = this.Models.SelectMany(a => a.ChunkMap.Values).Where(c => c.ChunkType == ChunkTypeEnum.MtlName);
@@ -253,16 +253,6 @@ namespace CgfConverter
                 if (material.SubMaterials != null)
                     foreach (var subMaterial in material.SubMaterials.SelectMany(m => CryEngine.FlattenMaterials(m)))
                         yield return subMaterial;
-            }
-        }
-
-        private void ConsolidateGeometryInfo()
-        {
-            // TODO:  Finish this.
-            foreach (Model model in Models)
-            {
-                List<ChunkNode> nodes = model.ChunkNodes;
-
             }
         }
 
