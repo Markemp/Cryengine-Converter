@@ -7,42 +7,43 @@ namespace CgfConverter
 {
     public struct RangeEntity
     {
-        public string Name; // String32!  32 byte char array.
-        public int Start;
-        public int End;
+        public string Name { get; set; } // String32!  32 byte char array.
+        public int Start { get; set; }
+        public int End { get; set; }
     } // String32 Name, int Start, int End - complete
 
     public struct Vector3
     {
-        public double x;
-        public double y;
-        public double z;
-        public double w; // Currently Unused
-        private readonly object p1;
-        private readonly object p2;
-        private readonly object p3;
+        public double x { get; set; }
+        public double y {get; set;}
+        public double z { get; set; }
+        public double w { get; set; } // Currently Unused
 
-        public Vector3(object p1, object p2, object p3) : this()
+        public Vector3(double x, double y, double z) : this()
         {
-            this.p1 = p1;
-            this.p2 = p2;
-            this.p3 = p3;
+            this.x = x;
+            this.y = y;
+            this.z = z;
         }
 
-        public void ReadVector3(BinaryReader b)
+        public void ReadVector3(BinaryReader reader)
         {
-            this.x = b.ReadSingle();
-            this.y = b.ReadSingle();
-            this.z = b.ReadSingle();
+            if (reader == null)
+                throw new ArgumentNullException(nameof(reader));
+            x = reader.ReadSingle();
+            y = reader.ReadSingle();
+            z = reader.ReadSingle();
             return;
         }
 
         public Vector3 Add(Vector3 vector)
         {
-            Vector3 result = new Vector3();
-            result.x = vector.x + x;
-            result.y = vector.y + y;
-            result.z = vector.z + z;
+            Vector3 result = new Vector3
+            {
+                x = vector.x + x,
+                y = vector.y + y,
+                z = vector.z + z
+            };
             return result;
         }
 
@@ -87,6 +88,9 @@ namespace CgfConverter
 
         public Vector3 GetVector3(Vector<double> vector)
         {
+            if (vector == null)
+                throw new ArgumentNullException(nameof(vector));
+
             Vector3 result = new Vector3
             {
                 x = vector[0],
@@ -95,21 +99,14 @@ namespace CgfConverter
             };
             return result;
         }
-
-        public void WriteVector3(string label = null)
-        {
-            Utils.Log(LogLevelEnum.Debug, "*** WriteVector3 *** - {0}", label);
-            Utils.Log(LogLevelEnum.Debug, "{0:F7}  {1:F7}  {2:F7}", x, y, z);
-            Utils.Log(LogLevelEnum.Debug);
-        }
     }  // Vector in 3D space {x,y,z}
 
     public struct Vector4
     {
-        public Double x;
-        public Double y;
-        public Double z;
-        public Double w;
+        public double x { get; set; }
+        public double y { get; set; }
+        public double z { get; set; }
+        public double w { get; set; }
 
         public Vector4(double x, double y, double z, double w)
         {
@@ -150,21 +147,24 @@ namespace CgfConverter
         public double m32;
         public double m33;
 
-        public void ReadMatrix33(BinaryReader b)
+        public void ReadMatrix33(BinaryReader reader)
         {
             // Reads a Matrix33 structure
-            m11 = b.ReadSingle();
-            m12 = b.ReadSingle();
-            m13 = b.ReadSingle();
-            m21 = b.ReadSingle();
-            m22 = b.ReadSingle();
-            m23 = b.ReadSingle();
-            m31 = b.ReadSingle();
-            m32 = b.ReadSingle();
-            m33 = b.ReadSingle();
+            if (reader == null)
+                throw new ArgumentNullException(nameof(reader));
+
+            m11 = reader.ReadSingle();
+            m12 = reader.ReadSingle();
+            m13 = reader.ReadSingle();
+            m21 = reader.ReadSingle();
+            m22 = reader.ReadSingle();
+            m23 = reader.ReadSingle();
+            m31 = reader.ReadSingle();
+            m32 = reader.ReadSingle();
+            m33 = reader.ReadSingle();
         }
 
-        public bool Is_Identity()
+        public bool IsIdentity()
         {
             if (System.Math.Abs(m11 - 1.0) > 0.00001) { return false; }
             if (System.Math.Abs(m12) > 0.00001) { return false; }
@@ -178,7 +178,7 @@ namespace CgfConverter
             return true;
         }  // returns true if this is an identy matrix
 
-        public Matrix33 Get_Copy()    // returns a copy of the matrix33
+        public Matrix33 GetCopy()    // returns a copy of the matrix33
         {
             Matrix33 mat = new Matrix33
             {
@@ -195,7 +195,7 @@ namespace CgfConverter
             return mat;
         }
 
-        public Double Get_Determinant()
+        public double GetDeterminant()
         {
             return (m11 * m22 * m33
                   + m12 * m23 * m31
@@ -205,18 +205,20 @@ namespace CgfConverter
                   - m11 * m32 * m23);
         }
 
-        public Matrix33 Get_Transpose()    // returns a copy of the matrix33
+        public Matrix33 GetTranspose()    // returns a copy of the matrix33
         {
-            Matrix33 mat = new Matrix33();
-            mat.m11 = m11;
-            mat.m12 = m21;
-            mat.m13 = m31;
-            mat.m21 = m12;
-            mat.m22 = m22;
-            mat.m23 = m32;
-            mat.m31 = m13;
-            mat.m32 = m23;
-            mat.m33 = m33;
+            Matrix33 mat = new Matrix33
+            {
+                m11 = m11,
+                m12 = m21,
+                m13 = m31,
+                m21 = m12,
+                m22 = m22,
+                m23 = m32,
+                m31 = m13,
+                m32 = m23,
+                m33 = m33
+            };
             return mat;
         }
 
@@ -245,13 +247,12 @@ namespace CgfConverter
         public Vector3 Mult3x1(Vector3 vector)
         {
             // Multiply the 3x3 matrix by a Vector 3 to get the rotation
-            Vector3 result = new Vector3();
-            //result.x = (vector.x * m11) + (vector.y * m12) + (vector.z * m13);
-            //result.y = (vector.x * m21) + (vector.y * m22) + (vector.z * m23);
-            //result.z = (vector.x * m31) + (vector.y * m32) + (vector.z * m33);
-            result.x = (vector.x * m11) + (vector.y * m21) + (vector.z * m31);
-            result.y = (vector.x * m12) + (vector.y * m22) + (vector.z * m32);
-            result.z = (vector.x * m13) + (vector.y * m23) + (vector.z * m33);
+            Vector3 result = new Vector3
+            {
+                x = (vector.x * m11) + (vector.y * m21) + (vector.z * m31),
+                y = (vector.x * m12) + (vector.y * m22) + (vector.z * m32),
+                z = (vector.x * m13) + (vector.y * m23) + (vector.z * m33)
+            };
             return result;
         }
 
@@ -260,10 +261,10 @@ namespace CgfConverter
             return rhs.Mult3x1(lhs);
         }
 
-        public bool Is_Scale_Rotation() // Returns true if the matrix decomposes nicely into scale * rotation\
+        public bool IsScaleRotation() // Returns true if the matrix decomposes nicely into scale * rotation\
         {
             Matrix33 self_transpose, mat = new Matrix33();
-            self_transpose = this.Get_Transpose();
+            self_transpose = this.GetTranspose();
             mat = this.Mult(self_transpose);
             if (System.Math.Abs(mat.m12) + System.Math.Abs(mat.m13)
                 + System.Math.Abs(mat.m21) + System.Math.Abs(mat.m23)
@@ -276,15 +277,15 @@ namespace CgfConverter
             return true;
         }
 
-        public Vector3 Get_Scale()
+        public Vector3 GetScale()
         {
             // Get the scale, assuming is_scale_rotation is true
-            Matrix33 mat = this.Mult(this.Get_Transpose());
+            Matrix33 mat = this.Mult(this.GetTranspose());
             Vector3 scale = new Vector3();
             scale.x = (Double)System.Math.Pow(mat.m11, 0.5);
             scale.y = (Double)System.Math.Pow(mat.m22, 0.5);
             scale.z = (Double)System.Math.Pow(mat.m33, 0.5);
-            if (this.Get_Determinant() < 0)
+            if (this.GetDeterminant() < 0)
             {
                 scale.x = 0 - scale.x;
                 scale.y = 0 - scale.y;
@@ -298,17 +299,17 @@ namespace CgfConverter
 
         }
 
-        public Vector3 Get_Scale_Rotation()   // Gets the scale.  this should also return the rotation matrix, but..eh...
+        public Vector3 GetScaleRotation()   // Gets the scale.  this should also return the rotation matrix, but..eh...
         {
-            Vector3 scale = this.Get_Scale();
+            Vector3 scale = this.GetScale();
             return scale;
         }
 
-        public bool Is_Rotation()
+        public bool IsRotation()
         {
             // NOTE: 0.01 instead of CgfFormat.EPSILON to work around bad files
-            if (!this.Is_Scale_Rotation()) { return false; }
-            Vector3 scale = this.Get_Scale();
+            if (!this.IsScaleRotation()) { return false; }
+            Vector3 scale = this.GetScale();
             if (System.Math.Abs(scale.x - 1.0) > 0.01 || System.Math.Abs(scale.y - 1.0) > 0.01 || System.Math.Abs(scale.z - 1.0) > 0.1)
             {
                 return false;
@@ -398,12 +399,21 @@ namespace CgfConverter
             return result;
         }
 
-        public void WriteMatrix33(string label = null)
+        public bool Equals(Matrix33 matrix)
         {
-            Utils.Log(LogLevelEnum.Verbose, "====== {0} ===========", label);
-            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}", m11, m12, m13);
-            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}", m21, m22, m23);
-            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}", m31, m32, m33);
+            if (
+                matrix.m11 == m11 &&
+                matrix.m12 == m12 &&
+                matrix.m13 == m13 &&
+                matrix.m21 == m21 &&
+                matrix.m22 == m22 &&
+                matrix.m23 == m23 &&
+                matrix.m31 == m31 &&
+                matrix.m32 == m32 &&
+                matrix.m33 == m33)
+                return true;
+            else
+                return false;
         }
     }
 
@@ -432,12 +442,13 @@ namespace CgfConverter
         public Vector4 Mult4x1(Vector4 vector)
         {
             // Pass the matrix a Vector4 (4x1) vector to get the transform of the vector
-            Vector4 result = new Vector4();
-
-            result.x = (m11 * vector.x) + (m21 * vector.y) + (m31 * vector.z) + m41 / 100;
-            result.y = (m12 * vector.x) + (m22 * vector.y) + (m32 * vector.z) + m42 / 100;
-            result.z = (m13 * vector.x) + (m23 * vector.y) + (m33 * vector.z) + m43 / 100;
-            result.w = (m14 * vector.x) + (m24 * vector.y) + (m34 * vector.z) + m44 / 100;
+            Vector4 result = new Vector4
+            {
+                x = (m11 * vector.x) + (m21 * vector.y) + (m31 * vector.z) + m41 / 100,
+                y = (m12 * vector.x) + (m22 * vector.y) + (m32 * vector.z) + m42 / 100,
+                z = (m13 * vector.x) + (m23 * vector.y) + (m33 * vector.z) + m43 / 100,
+                w = (m14 * vector.x) + (m24 * vector.y) + (m34 * vector.z) + m44 / 100
+            };
 
             return result;
         }
@@ -560,10 +571,12 @@ namespace CgfConverter
 
         public Matrix44 GetTransformFromParts(Vector3 localTranslation, Matrix33 localRotation)
         {
-            var defaultScale = new Vector3();
-            defaultScale.x = 0.0f;
-            defaultScale.y = 0.0f;
-            defaultScale.z = 0.0f;
+            var defaultScale = new Vector3
+            {
+                x = 0.0f,
+                y = 0.0f,
+                z = 0.0f
+            };
             return GetTransformFromParts(localTranslation, localRotation, defaultScale);
         }
 
@@ -716,19 +729,6 @@ namespace CgfConverter
         public uint MatID;
         public Double Radius;
         public Vector3 Center;
-
-        public void WriteMeshSubset()
-        {
-            Utils.Log(LogLevelEnum.Verbose, "*** Mesh Subset ***");
-            Utils.Log(LogLevelEnum.Verbose, "    First Index:  {0}", FirstIndex);
-            Utils.Log(LogLevelEnum.Verbose, "    Num Indices:  {0}", NumIndices);
-            Utils.Log(LogLevelEnum.Verbose, "    First Vertex: {0}", FirstVertex);
-            Utils.Log(LogLevelEnum.Verbose, "    Num Vertices: {0}", NumVertices);
-            Utils.Log(LogLevelEnum.Verbose, "    Mat ID:       {0}", MatID);
-            Utils.Log(LogLevelEnum.Verbose, "    Radius:       {0:F7}", Radius);
-            Utils.Log(LogLevelEnum.Verbose, "    Center:");
-            Center.WriteVector3();
-        }
     }  // Contains data about the parts of a mesh, such as vertices, radius and center.
 
     public struct Key
@@ -1200,54 +1200,26 @@ namespace CgfConverter
 
     public struct BoneEntity
     {
-#pragma warning disable CS0169 // The field 'BoneEntity.Bone_Id' is never used
         readonly int Bone_Id;                 //" type="int">Bone identifier.</add>
-#pragma warning restore CS0169 // The field 'BoneEntity.Bone_Id' is never used
-#pragma warning disable CS0169 // The field 'BoneEntity.Parent_Id' is never used
         readonly int Parent_Id;               //" type="int">Parent identifier.</add>
-#pragma warning restore CS0169 // The field 'BoneEntity.Parent_Id' is never used
-#pragma warning disable CS0169 // The field 'BoneEntity.Num_Children' is never used
         readonly int Num_Children;            //" type="uint" />
-#pragma warning restore CS0169 // The field 'BoneEntity.Num_Children' is never used
-#pragma warning disable CS0169 // The field 'BoneEntity.Bone_Name_CRC32' is never used
         readonly uint Bone_Name_CRC32;         //" type="uint">CRC32 of bone name as listed in the BoneNameListChunk.  In Python this can be calculated using zlib.crc32(name)</add>
-#pragma warning restore CS0169 // The field 'BoneEntity.Bone_Name_CRC32' is never used
-#pragma warning disable CS0169 // The field 'BoneEntity.Properties' is never used
         readonly string Properties;            //" type="String32" />
-#pragma warning restore CS0169 // The field 'BoneEntity.Properties' is never used
-#pragma warning disable CS0169 // The field 'BoneEntity.Physics' is never used
         BonePhysics Physics;            //" type="BonePhysics" />
-#pragma warning restore CS0169 // The field 'BoneEntity.Physics' is never used
     }
 
     public struct BonePhysics           // 26 total words = 104 total bytes
     {
-#pragma warning disable CS0169 // The field 'BonePhysics.Geometry' is never used
         readonly UInt32 Geometry;                //" type="Ref" template="BoneMeshChunk">Geometry of a separate mesh for this bone.</add>
-#pragma warning restore CS0169 // The field 'BonePhysics.Geometry' is never used
                                                  //<!-- joint parameters -->
 
-#pragma warning disable CS0169 // The field 'BonePhysics.Flags' is never used
         readonly UInt32 Flags;                   //" type="uint" />
-#pragma warning restore CS0169 // The field 'BonePhysics.Flags' is never used
-#pragma warning disable CS0169 // The field 'BonePhysics.Min' is never used
         Vector3 Min;                   //" type="Vector3" />
-#pragma warning restore CS0169 // The field 'BonePhysics.Min' is never used
-#pragma warning disable CS0169 // The field 'BonePhysics.Max' is never used
         Vector3 Max;                   //" type="Vector3" />
-#pragma warning restore CS0169 // The field 'BonePhysics.Max' is never used
-#pragma warning disable CS0169 // The field 'BonePhysics.Spring_Angle' is never used
         Vector3 Spring_Angle;          //" type="Vector3" />
-#pragma warning restore CS0169 // The field 'BonePhysics.Spring_Angle' is never used
-#pragma warning disable CS0169 // The field 'BonePhysics.Spring_Tension' is never used
         Vector3 Spring_Tension;        //" type="Vector3" />
-#pragma warning restore CS0169 // The field 'BonePhysics.Spring_Tension' is never used
-#pragma warning disable CS0169 // The field 'BonePhysics.Damping' is never used
         Vector3 Damping;               //" type="Vector3" />
-#pragma warning restore CS0169 // The field 'BonePhysics.Damping' is never used
-#pragma warning disable CS0169 // The field 'BonePhysics.Frame_Matrix' is never used
         Matrix33 Frame_Matrix;        //" type="Matrix33" />
-#pragma warning restore CS0169 // The field 'BonePhysics.Frame_Matrix' is never used
     }
 
     public struct MeshBoneMapping

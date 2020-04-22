@@ -48,75 +48,75 @@ namespace CgfConverterTests
         [TestMethod]
         public void MWO_industrial_wetlamp_a_MaterialFileNotFound()
         {
-            var args = new String[] { @"..\..\ResourceFiles\industrial_wetlamp_a.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+            var args = new string[] { @"..\..\ResourceFiles\industrial_wetlamp_a.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
             int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
-            COLLADA daeFile = new COLLADA(argsHandler, cryData);
-            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
-            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            COLLADA colladaData = new COLLADA(argsHandler, cryData);
+            colladaData.GenerateDaeObject();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
             Assert.AreEqual(3, actualMaterialsCount);
-            ValidateColladaXml(daeFile);
+            ValidateColladaXml(colladaData);
         }
 
         [TestMethod]
         public void MWO_timberwolf_chr()
         {
-            var args = new String[] { @"..\..\ResourceFiles\timberwolf.chr", "-dds", "-dae", "-objectdir", @"d:\depot\lol\" };
+            var args = new string[] { @"..\..\ResourceFiles\timberwolf.chr", "-dds", "-dae", "-objectdir", @"d:\depot\lol\" };
             int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
-            COLLADA daeFile = new COLLADA(argsHandler, cryData);
-            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
-            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            COLLADA colladaData = new COLLADA(argsHandler, cryData);
+            colladaData.GenerateDaeObject();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
             Assert.AreEqual(11, actualMaterialsCount);
-            ValidateColladaXml(daeFile);
+            ValidateColladaXml(colladaData);
         }
 
         [TestMethod]
         public void MWO_candycane_a_MaterialFileNotAvailable()
         {
-            var args = new String[] { @"..\..\ResourceFiles\candycane_a.chr", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+            var args = new string[] { @"..\..\ResourceFiles\candycane_a.chr", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
             int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result); 
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
-            COLLADA daeFile = new COLLADA(argsHandler, cryData);
-            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
-            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            COLLADA colladaData = new COLLADA(argsHandler, cryData);
+            colladaData.GenerateDaeObject();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
             Assert.AreEqual(2, actualMaterialsCount);
-            ValidateColladaXml(daeFile);
+            ValidateColladaXml(colladaData);
         }
 
         [TestMethod]
         public void MWO_hbr_right_torso_uac5_bh1_cga()
         {
-            var args = new String[] { @"..\..\ResourceFiles\hbr_right_torso_uac5_bh1.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+            var args = new string[] { @"..\..\ResourceFiles\hbr_right_torso_uac5_bh1.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
             int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result); 
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
-            COLLADA daeFile = new COLLADA(argsHandler, cryData);
-            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
-            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            COLLADA colladaData = new COLLADA(argsHandler, cryData);
+            colladaData.GenerateDaeObject();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
             Assert.AreEqual(21, actualMaterialsCount);
-            ValidateColladaXml(daeFile);
+            ValidateColladaXml(colladaData);
         }
 
         [TestMethod]
         public void MWO_hbr_right_torso_cga()
         {
-            var args = new String[] { @"..\..\ResourceFiles\hbr_right_torso.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+            var args = new string[] { @"..\..\ResourceFiles\hbr_right_torso.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
             int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result); 
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
-            var daeFile = new COLLADA(argsHandler, cryData);
-            var daeObject = daeFile.DaeObject;
-            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
-            
+            var colladaData = new COLLADA(argsHandler, cryData);
+            var daeObject = colladaData.DaeObject;
+            colladaData.GenerateDaeObject();
+
             Assert.AreEqual("Scene", daeObject.Scene.Visual_Scene.Name);
             Assert.AreEqual("#Scene", daeObject.Scene.Visual_Scene.URL);
             // Visual Scene Check
@@ -151,8 +151,8 @@ namespace CgfConverterTests
             Assert.AreEqual("hellbringer_body-material", node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
             Assert.AreEqual("#hellbringer_body-material", node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
             // library_materials Check
-            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
-            var materials = daeFile.DaeObject.Library_Materials;
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
+            var materials = colladaData.DaeObject.Library_Materials;
             Assert.AreEqual(5, actualMaterialsCount);
             Assert.AreEqual("hellbringer_body-material", materials.Material[0].ID);
             Assert.AreEqual("decals-material", materials.Material[1].ID);
@@ -166,8 +166,8 @@ namespace CgfConverterTests
             Assert.AreEqual("#Material #0-effect", materials.Material[4].Instance_Effect.URL);
 
             // library_geometries check
-            Assert.AreEqual(1, daeFile.DaeObject.Library_Geometries.Geometry.Length);
-            var geometry = daeFile.DaeObject.Library_Geometries.Geometry[0];
+            Assert.AreEqual(1, colladaData.DaeObject.Library_Geometries.Geometry.Length);
+            var geometry = colladaData.DaeObject.Library_Geometries.Geometry[0];
             Assert.AreEqual("hbr_right_torso-mesh", geometry.ID);
             Assert.AreEqual("hbr_right_torso", geometry.Name);
             Assert.AreEqual(3, geometry.Mesh.Source.Length);
@@ -194,20 +194,20 @@ namespace CgfConverterTests
 
             Assert.AreEqual("hbr_right_torso", daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].ID);
             Assert.AreEqual(1, daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].Instance_Geometry.Length);
-            ValidateColladaXml(daeFile);
+            ValidateColladaXml(colladaData);
         }
 
         [TestMethod]
         public void AEGS_Avenger_IntegrationTest()
         {
-            var args = new String[] { @"..\..\ResourceFiles\SC\AEGS_Avenger.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\SC\" };
+            var args = new string[] { @"..\..\ResourceFiles\SC\AEGS_Avenger.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\SC\" };
             int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
-            var daeFile = new COLLADA(argsHandler, cryData);
-            var daeObject = daeFile.DaeObject;
-            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+            var colladaData = new COLLADA(argsHandler, cryData);
+            var daeObject = colladaData.DaeObject;
+            colladaData.GenerateDaeObject();
             // Make sure Rotations are still right
             const string frontLGDoorLeftMatrix = "1.000000 0.000000 0.000000 -0.300001 0.000000 -0.938131 -0.346280 0.512432 0.000000 0.346280 -0.938131 -1.835138 0.000000 0.000000 0.000000 1.000000";
             var noseNode = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].node[0];
@@ -220,133 +220,133 @@ namespace CgfConverterTests
         [TestMethod]
         public void SC_uee_asteroid_ACTutorial_rail_01()
         {
-            var args = new String[] { @"..\..\ResourceFiles\uee_asteroid_ACTutorial_rail_01.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+            var args = new string[] { @"..\..\ResourceFiles\uee_asteroid_ACTutorial_rail_01.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
             int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result); 
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
-            COLLADA daeFile = new COLLADA(argsHandler, cryData);
-            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
-            ValidateColladaXml(daeFile);
+            COLLADA colladaData = new COLLADA(argsHandler, cryData);
+            colladaData.GenerateDaeObject();
+            ValidateColladaXml(colladaData);
         }
 
         [TestMethod]
         public void UnknownSource_forest_ruin()
         {
-            var args = new String[] { @"..\..\ResourceFiles\forest_ruin.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+            var args = new string[] { @"..\..\ResourceFiles\forest_ruin.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
             int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
-            COLLADA daeFile = new COLLADA(argsHandler, cryData);
-            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+            COLLADA colladaData = new COLLADA(argsHandler, cryData);
+            colladaData.GenerateDaeObject();
 
-            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
             Assert.AreEqual(12, actualMaterialsCount);
 
-            ValidateColladaXml(daeFile);
+            ValidateColladaXml(colladaData);
         }
 
         [TestMethod]
         public void GhostSniper3_raquel_eyeoverlay_skin()
         {
-            var args = new String[] { @"..\..\ResourceFiles\Test01\raquel_eyeoverlay.skin", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\Test01\" };
+            var args = new string[] { @"..\..\ResourceFiles\Test01\raquel_eyeoverlay.skin", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\Test01\" };
             int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
-            COLLADA daeFile = new COLLADA(argsHandler, cryData);
-            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+            COLLADA colladaData = new COLLADA(argsHandler, cryData);
+            colladaData.GenerateDaeObject();
 
-            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
             Assert.AreEqual(6, actualMaterialsCount);
 
-            ValidateColladaXml(daeFile);
+            ValidateColladaXml(colladaData);
         }
 
         [TestMethod]
         public void Prey_Dahl_GenMaleBody01_MaterialFileFound()
         {
-            var args = new String[] { @"..\..\ResourceFiles\Prey\Dahl_GenMaleBody01.skin", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\Prey\" };
+            var args = new string[] { @"..\..\ResourceFiles\Prey\Dahl_GenMaleBody01.skin", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\Prey\" };
             int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
-            COLLADA daeFile = new COLLADA(argsHandler, cryData);
-            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+            COLLADA colladaData = new COLLADA(argsHandler, cryData);
+            colladaData.GenerateDaeObject();
 
-            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
             Assert.AreEqual(1, actualMaterialsCount);
 
-            ValidateColladaXml(daeFile);
+            ValidateColladaXml(colladaData);
         }
 
         [TestMethod]
         public void Prey_Dahl_GenMaleBody01_MaterialFileNotAvailable()
         {
-            var args = new String[] { @"..\..\ResourceFiles\Prey\Dahl_GenMaleBody01.skin" };
+            var args = new string[] { @"..\..\ResourceFiles\Prey\Dahl_GenMaleBody01.skin" };
             int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
-            COLLADA daeFile = new COLLADA(argsHandler, cryData);
-            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+            COLLADA colladaData = new COLLADA(argsHandler, cryData);
+            colladaData.GenerateDaeObject();
 
-            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
             Assert.AreEqual(1, actualMaterialsCount);
 
-            ValidateColladaXml(daeFile);
+            ValidateColladaXml(colladaData);
         }
 
         [TestMethod]
         public void Evolve_griffin_skin_NoMaterialFile()
         {
-            var args = new String[] { @"..\..\ResourceFiles\Evolve\griffin.skin" };
+            var args = new string[] { @"..\..\ResourceFiles\Evolve\griffin.skin" };
             int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
-            COLLADA daeFile = new COLLADA(argsHandler, cryData);
-            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+            COLLADA colladaData = new COLLADA(argsHandler, cryData);
+            colladaData.GenerateDaeObject();
 
-            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
             Assert.AreEqual(0, actualMaterialsCount);
 
-            ValidateColladaXml(daeFile);
+            ValidateColladaXml(colladaData);
         }
 
         [TestMethod]
         public void Evolve_griffin_menu_harpoon_skin_NoMaterialFile()
         {
-            var args = new String[] { @"..\..\ResourceFiles\Evolve\griffin_menu_harpoon.skin" };
+            var args = new string[] { @"..\..\ResourceFiles\Evolve\griffin_menu_harpoon.skin" };
             int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
-            COLLADA daeFile = new COLLADA(argsHandler, cryData);
-            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+            COLLADA colladaData = new COLLADA(argsHandler, cryData);
+            colladaData.GenerateDaeObject();
 
-            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
             Assert.AreEqual(0, actualMaterialsCount);
 
-            ValidateColladaXml(daeFile);
+            ValidateColladaXml(colladaData);
         }
 
         [TestMethod]
         public void Evolve_griffin_fp_skeleton_chr_NoMaterialFile()
         {
-            var args = new String[] { @"..\..\ResourceFiles\Evolve\griffin_fp_skeleton.chr" };
+            var args = new string[] { @"..\..\ResourceFiles\Evolve\griffin_fp_skeleton.chr" };
             int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
-            COLLADA daeFile = new COLLADA(argsHandler, cryData);
-            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+            COLLADA colladaData = new COLLADA(argsHandler, cryData);
+            colladaData.GenerateDaeObject();
 
-            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
             Assert.AreEqual(0, actualMaterialsCount);
 
-            ValidateColladaXml(daeFile);
+            ValidateColladaXml(colladaData);
         }
 
         [TestMethod]
@@ -357,13 +357,13 @@ namespace CgfConverterTests
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
-            COLLADA daeFile = new COLLADA(argsHandler, cryData);
-            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+            COLLADA colladaData = new COLLADA(argsHandler, cryData);
+            colladaData.GenerateDaeObject();
 
-            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
             Assert.AreEqual(0, actualMaterialsCount);
 
-            ValidateColladaXml(daeFile);
+            ValidateColladaXml(colladaData);
         }
 
         [TestMethod]
@@ -374,13 +374,13 @@ namespace CgfConverterTests
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
-            COLLADA daeFile = new COLLADA(argsHandler, cryData);
-            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+            COLLADA colladaData = new COLLADA(argsHandler, cryData);
+            colladaData.GenerateDaeObject();
 
-            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
             Assert.AreEqual(0, actualMaterialsCount);
 
-            ValidateColladaXml(daeFile);
+            ValidateColladaXml(colladaData);
         }
 
         [TestMethod]
@@ -391,21 +391,21 @@ namespace CgfConverterTests
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
-            COLLADA daeFile = new COLLADA(argsHandler, cryData);
-            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+            COLLADA colladaData = new COLLADA(argsHandler, cryData);
+            colladaData.GenerateDaeObject();
 
-            int actualMaterialsCount = daeFile.DaeObject.Library_Materials.Material.Count();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
             Assert.AreEqual(0, actualMaterialsCount);
 
-            ValidateColladaXml(daeFile);
+            ValidateColladaXml(colladaData);
         }
 
-        private void ValidateColladaXml(COLLADA daeFile)
+        private void ValidateColladaXml(COLLADA colladaData)
         {
             using (var stringWriter = new System.IO.StringWriter())
             {
-                var serializer = new XmlSerializer(daeFile.DaeObject.GetType());
-                serializer.Serialize(stringWriter, daeFile.DaeObject);
+                var serializer = new XmlSerializer(colladaData.DaeObject.GetType());
+                serializer.Serialize(stringWriter, colladaData.DaeObject);
                 string dae = stringWriter.ToString();
 
                 XmlDocument doc = new XmlDocument();

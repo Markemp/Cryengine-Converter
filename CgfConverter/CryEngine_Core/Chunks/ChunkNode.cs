@@ -15,7 +15,7 @@ namespace CgfConverter.CryEngineCore
         public int ObjectNodeID { get; internal set; }
         /// <summary> Node parent.  if 0xFFFFFFFF, it's the top node. </summary>
         public int ParentNodeID { get; internal set; }  // Parent nodeID
-        public int __NumChildren;
+        public int __NumChildren { get; internal set; }
         /// <summary> Material ID for this chunk </summary>
         public int MatID { get; internal set; }
         public Boolean IsGroupHead { get; internal set; }
@@ -40,10 +40,10 @@ namespace CgfConverter.CryEngineCore
         #endregion
 
         #region Calculated Properties
-        public Matrix44 LocalTransform = new Matrix44();            // Because Cryengine tends to store transform relative to world, we have to add all the transforms from the node to the root.  Calculated, row major.
-        public Vector3 LocalTranslation = new Vector3();            // To hold the local rotation vector
-        public Matrix33 LocalRotation = new Matrix33();             // to hold the local rotation matrix
-        public Vector3 LocalScale = new Vector3();                  // to hold the local scale matrix
+        public Matrix44 LocalTransform { get; set; }  = new Matrix44();            // Because Cryengine tends to store transform relative to world, we have to add all the transforms from the node to the root.  Calculated, row major.
+        public Vector3 LocalTranslation { get; set; } = new Vector3();            // To hold the local rotation vector
+        public Matrix33 LocalRotation { get; set; } = new Matrix33();             // to hold the local rotation matrix
+        public Vector3 LocalScale { get; set; } = new Vector3();                  // to hold the local scale matrix
 
         private ChunkNode _parentNode;
 
@@ -169,7 +169,7 @@ namespace CgfConverter.CryEngineCore
             this.MatID = b.ReadInt32();  // Material ID?
             this.SkipBytes(b, 4);
 
-            // Read the 4x4 transform matrix.  Should do a couple of for loops, but data structures...
+            // Read the 4x4 transform matrix.
             this.Transform = new Matrix44
             {
                 m11 = b.ReadSingle(),

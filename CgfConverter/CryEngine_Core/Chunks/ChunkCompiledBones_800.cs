@@ -61,17 +61,5 @@ namespace CgfConverter.CryEngineCore
             skin.HasSkinningInfo = true;
             skin.CompiledBones = BoneList;
         }
-
-        /// <summary>
-        /// Writes the results of common matrix math.  For testing purposes.
-        /// </summary>
-        /// <param name="localRotation">The matrix that the math functions will be applied to.</param>
-        private void WriteMatrices(Matrix33 localRotation)
-        {
-            localRotation.WriteMatrix33("Regular");
-            localRotation.Inverse().WriteMatrix33("Inverse");
-            localRotation.Conjugate().WriteMatrix33("Conjugate");
-            localRotation.ConjugateTranspose().WriteMatrix33("Conjugate Transpose");
-        }
     }
 }

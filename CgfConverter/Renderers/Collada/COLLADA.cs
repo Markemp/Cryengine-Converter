@@ -13,69 +13,40 @@ namespace CgfConverter
 {
     public class COLLADA : BaseRenderer // class to export to .dae format (COLLADA)
     {
-        FileInfo daeOutputFile;
-
-        public Grendgine_Collada DaeObject { get; private set; } = new Grendgine_Collada();       // This is the serializable class.
+        public Grendgine_Collada DaeObject { get; private set; } = new Grendgine_Collada();  // This is the serializable class.
         readonly XmlSerializer mySerializer = new XmlSerializer(typeof(Grendgine_Collada));
 
         public COLLADA(ArgsHandler argsHandler, CryEngine cryEngine) : base(argsHandler, cryEngine) { }
 
-        public override void Render(String outputDir = null, Boolean preservePath = true)
+        public override void Render(string outputDir = null, bool preservePath = true)
         {
-            // The root of the functions to write Collada files
+            GenerateDaeObject();
+
             // At this point, we should have a cryData.Asset object, fully populated.
             Utils.Log(LogLevelEnum.Debug);
             Utils.Log(LogLevelEnum.Debug, "*** Starting WriteCOLLADA() ***");
             Utils.Log(LogLevelEnum.Debug);
 
+            // File name will be "object name.dae"
+            var daeOutputFile = new FileInfo(this.GetOutputFile("dae", outputDir, preservePath));
+
+            if (!daeOutputFile.Directory.Exists)
+                daeOutputFile.Directory.Create();
+            TextWriter writer = new StreamWriter(daeOutputFile.FullName);   // Makes the Textwriter object for the output
+            mySerializer.Serialize(writer, DaeObject);                      // Serializes the daeObject and writes to the writer
+
+            writer.Close();
+            Utils.Log(LogLevelEnum.Debug, "End of Write Collada.  Export complete.");
+        }
+
+        public void GenerateDaeObject()
+        {
             Utils.Log(LogLevelEnum.Debug, "Number of models: {0}", CryData.Models.Count);
             for (int i = 0; i < CryData.Models.Count; i++)
             {
                 Utils.Log(LogLevelEnum.Debug, "\tNumber of nodes in model: {0}", CryData.Models[i].NodeMap.Count);
             }
-
-            #region Output testing
-            //foreach (ChunkDataStream stream in CryData.Models[1].ChunkMap.Values.Where(a => a.ChunkType == ChunkTypeEnum.DataStream))
-            //{
-            //    if (stream.DataStreamType == DataStreamTypeEnum.TANGENTS)
-            //    {
-            //        foreach (var vec in stream.Tangents)
-            //        {
-            //            Console.WriteLine("Tangent: {0:F6} {1:F6} {2:F6}", vec.x/127.0, vec.y/127.0, vec.z/127.0);
-            //        }
-            //        Console.WriteLine("Max x: {0}", stream.Normals.Max(a => a.x));
-            //        Console.WriteLine("Max y: {0}", stream.Normals.Max(a => a.y));
-            //        Console.WriteLine("Max z: {0}", stream.Normals.Max(a => a.z));
-            //    }
-            //}
-            //foreach (ChunkNode node in CryData.Models[1].NodeMap.Values)
-            //{
-            //    Console.WriteLine("Node Chunk {0} in model {1}", node.Name, node._model.FileName);
-            //    node.WriteChunk();
-            //    Console.ReadKey();
-            //}
-            //foreach (ChunkNode node in CryData.Models[1].NodeMap.Values.Where(a => a.Name.Contains("Belly_Wing_Right_Decal")))
-            //{
-            //    node.WriteChunk();
-            //    node.ParentNode.WriteChunk();
-            //    node.ParentNode.ParentNode.WriteChunk();
-            //    node.ParentNode.ParentNode.ParentNode.WriteChunk();
-            //    Console.ReadKey();
-            //}
-            //foreach (var result in CryData.Models[0].SkinningInfo.BoneMapping)        // To see if the bone index > than the number of bones and bone weights
-            //{
-            //    for (int i = 0; i < 4; i++)
-            //    {
-            //        if (result.Weight[i] > 0)
-            //            Console.WriteLine("Bone Weight: {0}", result.Weight[i]);
-            //    }
-            //}
-            //Console.WriteLine("{0} bone weights found", CryData.Models[0].SkinningInfo.BoneMapping.Count);
-
-            #endregion
-
-            // File name will be "object name.dae"
-            daeOutputFile = new FileInfo(this.GetOutputFile("dae", outputDir, preservePath));
+            
             WriteRootNode();
             WriteAsset();
             WriteLibrary_Images();
@@ -91,15 +62,6 @@ namespace CgfConverter
             }
             else
                 WriteLibrary_VisualScenes();
-
-            //WriteIDs();
-            if (!daeOutputFile.Directory.Exists)
-                daeOutputFile.Directory.Create();
-            TextWriter writer = new StreamWriter(daeOutputFile.FullName);   // Makes the Textwriter object for the output
-            mySerializer.Serialize(writer, DaeObject);                      // Serializes the daeObject and writes to the writer
-
-            writer.Close();
-            Utils.Log(LogLevelEnum.Debug, "End of Write Collada.  Export complete.");
         }
 
         private void WriteRootNode()
@@ -481,11 +443,8 @@ namespace CgfConverter
                     {
                         // TODO:  Implement this chunk
                     }
-                    if (tmpMeshChunk.MeshSubsets != 0)             // For the SC files, you can have Mesh chunks with no Mesh Subset.  Need to skip these.  They are in the .cga file and contain no geometry.  Just stub info.
+                    if (tmpMeshChunk.MeshSubsets != 0)   // For the SC files, you can have Mesh chunks with no Mesh Subset.  Need to skip these.  They are in the .cga file and contain no geometry.
                     {
-                        //Console.WriteLine("tmpMeshChunk ID is {0:X}", nodeChunk.ObjectNodeID);
-                        //tmpMeshChunk.WriteChunk();
-                        //Console.WriteLine("tmpmeshsubset ID is {0:X}", tmpMeshChunk.MeshSubsets);
                         ChunkMeshSubsets tmpMeshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
 
                         if (tmpMeshChunk.MeshSubsets != 0)

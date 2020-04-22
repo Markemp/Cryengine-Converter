@@ -14,32 +14,32 @@ namespace CgfConverter
             this.CryData = cryEngine;
         }
 
-        public abstract void Render(String outputDir = null, Boolean preservePath = true);
+        public abstract void Render(string outputDir = null, bool preservePath = true);
 
-        internal String GetOutputFile(String extension, String outputDir = null, Boolean preservePath = true)
+        internal string GetOutputFile(string extension, string outputDir = null, bool preservePath = true)
         {
-            String outputFile = String.Format("temp.{0}", extension);
+            string outputFile = string.Format("temp.{0}", extension);
 
-            if (String.IsNullOrWhiteSpace(outputDir))
+            if (string.IsNullOrWhiteSpace(outputDir))
             {
                 // Empty output directory means place alongside original models
                 // If you want relative path, use "."
                 if (Args.NoConflicts)
                 {
-                    outputFile = Path.Combine(new FileInfo(this.CryData.InputFile).DirectoryName, String.Format("{0}_out.{1}", Path.GetFileNameWithoutExtension(this.CryData.InputFile), extension));
+                    outputFile = Path.Combine(new FileInfo(this.CryData.InputFile).DirectoryName, string.Format("{0}_out.{1}", Path.GetFileNameWithoutExtension(this.CryData.InputFile), extension));
                 }
                 else
                 {
-                    outputFile = Path.Combine(new FileInfo(this.CryData.InputFile).DirectoryName, String.Format("{0}.{1}", Path.GetFileNameWithoutExtension(this.CryData.InputFile), extension));
+                    outputFile = Path.Combine(new FileInfo(this.CryData.InputFile).DirectoryName, string.Format("{0}.{1}", Path.GetFileNameWithoutExtension(this.CryData.InputFile), extension));
                 }
             }
             else
             {
                 // If we have an output directory
-                String preserveDir = preservePath ? Path.GetDirectoryName(this.CryData.InputFile) : "";
+                string preserveDir = preservePath ? Path.GetDirectoryName(this.CryData.InputFile) : "";
 
                 // Remove drive letter if necessary
-                if (!String.IsNullOrWhiteSpace(preserveDir) && !String.IsNullOrWhiteSpace(Path.GetPathRoot(preserveDir)))
+                if (!string.IsNullOrWhiteSpace(preserveDir) && !string.IsNullOrWhiteSpace(Path.GetPathRoot(preserveDir)))
                 {
                     preserveDir = preserveDir.Replace(Path.GetPathRoot(preserveDir), "");
                 }

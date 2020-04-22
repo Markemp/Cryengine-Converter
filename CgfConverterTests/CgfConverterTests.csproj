@@ -54,6 +54,7 @@
   <ItemGroup>
     <Compile Include="CgfConverterIntegrationTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Unit Tests\StructsTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Schemas\COLLADA_1_5.xsd">
