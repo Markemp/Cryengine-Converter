@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>	
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">	
+<asset>	
+ <created>2005-11-14T02:16:38Z</created>	
+ <modified>2005-11-15T11:36:38Z</modified>	
+ <revision>1.0</revision>	
+ </asset>	
+ <library_effects>	
+ <effect id="whitePhong">	
+ <profile_COMMON>	
+ <technique sid="phong1">	
+ <phong>	
+ <emission>	
+ <color>1.0 1.0 1.0 1.0</color>	
+ </emission>	
+ <ambient>	
+ <color>1.0 1.0 1.0 1.0</color>	
+ </ambient>	
+ <diffuse>	
+ <color>1.0 1.0 1.0 1.0</color>	
+ </diffuse>	
+ <specular>	
+ <color>1.0 1.0 1.0 1.0</color>	
+ </specular>	
+ <shininess>	
+ <float>20.0</float>	
+ </shininess>	
+ <reflective>	
+ <color>1.0 1.0 1.0 1.0</color>	
+ </reflective>	
+ <reflectivity>	
+ <float>0.5</float>	
+ </reflectivity>	
+ <transparent>	
+ <color>1.0 1.0 1.0 1.0</color>	
+ </transparent>	
+ <transparency>	
+ <float>1.0</float>	
+ </transparency>	
+ </phong>	
+ </technique>	
+ </profile_COMMON>	
+ </effect>	
+ </library_effects>	
+ <library_materials>	
+ <material id="whiteMaterial">	
+ <instance_effect url="#whitePhong"/>	
+ </material> 	
+ </library_materials>	
+ <library_geometries>	
+ <geometry id="box" name="box">	
+ <mesh>	
+ <source id="box-Pos">	
+ <float_array id="box-Pos-array" count="24">	
+ -0.5 0.5 0.5	
+ 0.5 0.5 0.5	
+ -0.5 -0.5 0.5	
+ 0.5 -0.5 0.5	
+ -0.5 0.5 -0.5	
+ 0.5 0.5 -0.5	
+ -0.5 -0.5 -0.5	
+ 0.5 -0.5 -0.5	
+ </float_array>	
+ <technique_common>	
+ <accessor source="#box-Pos-array" count="8" stride="3">	
+ <param name="X" type="float" />	
+ <param name="Y" type="float" />	
+ <param name="Z" type="float" />	
+ </accessor>	
+ </technique_common>	
+ </source>	
+ <source id="box-0-Normal">	
+ <float_array id="box-0-Normal-array" count="18">	
+ 1.0 0.0 0.0	
+ -1.0 0.0 0.0	
+ 0.0 1.0 0.0	
+ 0.0 -1.0 0.0	
+ 0.0 0.0 1.0	
+ 0.0 0.0 -1.0	
+ </float_array>	
+ <technique_common>	
+ <accessor source="#box-0-Normal-array" count="6" stride="3">	
+ <param name="X" type="float"/>	
+ <param name="Y" type="float"/>	
+ <param name="Z" type="float"/>	
+ </accessor>	
+ </technique_common>	
+ </source>	
+ <vertices id="box-Vtx">	
+ <input semantic="POSITION" source="#box-Pos"/>	
+ </vertices>	
+ <polygons count="6" material="WHITE">	
+ <input semantic="VERTEX" source="#box-Vtx" offset="0"/>	
+ <input semantic="NORMAL" source="#box-0-Normal" offset="1"/>	
+ <p>0 4 2 4 3 4 1 4</p>	
+ <p>0 2 1 2 5 2 4 2</p>	
+ <p>6 3 7 3 3 3 2 3</p>	
+ <p>0 1 4 1 6 1 2 1</p>	
+ <p>3 0 7 0 5 0 1 0</p>	
+ <p>5 5 7 5 6 5 4 5</p>	
+ </polygons>	
+ </mesh>	
+ </geometry>	
+ </library_geometries>	
+ <library_visual_scenes>	
+ <visual_scene id="DefaultScene">	
+ <node id="Box" name="Box">	
+ <translate> 0 0 0</translate> 	
+ <rotate> 0 0 1 0</rotate>	
+ <rotate> 0 1 0 0</rotate>	
+ <rotate> 1 0 0 0</rotate>	
+ <scale> 1 1 1</scale>	
+ <instance_geometry url="#box">	
+ <bind_material>	
+ <technique_common>	
+ <instance_material symbol="WHITE" target="#whiteMaterial"/>	
+ </technique_common>	
+ </bind_material>	
+ </instance_geometry>	
+ </node>	
+ </visual_scene>	
+ </library_visual_scenes>	
+ <scene>	
+ <instance_visual_scene url="#DefaultScene"/>	
+ </scene>	
+</COLLADA>
