@@ -384,15 +384,13 @@ namespace CgfConverter
 
         }
 
-        /// <summary>
-        /// Write the Library_Geometries element.  These won't be instantiated except through the visual scene or controllers.
-        /// </summary>
+        /// <summary> Write the Library_Geometries element.  These won't be instantiated except through the visual scene or controllers. </summary>
         public void WriteLibrary_Geometries()
         {
             Grendgine_Collada_Library_Geometries libraryGeometries = new Grendgine_Collada_Library_Geometries();
 
             // Make a list for all the geometries objects we will need. Will convert to array at end.  Define the array here as well
-            // Unfortunately we have to define a Geometry for EACH meshsubset in the meshsubsets, since the mesh can contain multiple materials
+            // We have to define a Geometry for EACH meshsubset in the meshsubsets, since the mesh can contain multiple materials
             List<Grendgine_Collada_Geometry> geometryList = new List<Grendgine_Collada_Geometry>();
 
             // For each of the nodes, we need to write the geometry.
@@ -401,12 +399,10 @@ namespace CgfConverter
             {
                 // Create a geometry object.  Use the chunk ID for the geometry ID
                 // Will have to be careful with this, since with .cga/.cgam pairs will need to match by Name.
-                // Now make the mesh object.  This will have 3 sources, 1 vertices, and 1 or more polylist (with material ID)
+                // Make the mesh object.  This will have 3 or 4 sources, 1 vertices, and 1 or more polylist (with material ID)
                 // If the Object ID of Node chunk points to a Helper or a Controller though, place an empty.
-                // Will have to figure out transforms here too.
                 // need to make a list of the sources and triangles to add to tmpGeo.Mesh
                 List<Grendgine_Collada_Source> sourceList = new List<Grendgine_Collada_Source>();
-                //List<Grendgine_Collada_Triangles> triList = new List<Grendgine_Collada_Triangles>();  // Use PolyList over trilist
                 List<Grendgine_Collada_Polylist> polylistList = new List<Grendgine_Collada_Polylist>();
                 ChunkDataStream tmpNormals = null;
                 ChunkDataStream tmpUVs = null;
@@ -415,16 +411,15 @@ namespace CgfConverter
                 ChunkDataStream tmpIndices = null;
                 ChunkDataStream tmpColors = null;
                 ChunkDataStream tmpTangents = null;
-                //GeometryInfo geometryInfo = nodeChunk.ObjectChunk.
 
-                // Don't render shields
+                // Don't render shields if skip flag enabled
                 if (this.Args.SkipShieldNodes && nodeChunk.Name.StartsWith("$shield"))
                 {
                     Utils.Log(LogLevelEnum.Debug, "Skipped shields node {0}", nodeChunk.Name);
                     continue;
                 }
 
-                // Don't render proxies
+                // Don't render proxies if skip flag enabled
                 if (this.Args.SkipProxyNodes && nodeChunk.Name.StartsWith("proxy"))
                 {
                     Utils.Log(LogLevelEnum.Debug, "Skipped proxy node {0}", nodeChunk.Name);
@@ -450,45 +445,29 @@ namespace CgfConverter
                     {
                         ChunkMeshSubsets tmpMeshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
 
-                        if (tmpMeshChunk.MeshSubsets != 0)
-                        {
-                            tmpMeshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
-                        }
-                        // Get pointers to the vertices data
                         if (tmpMeshChunk.VerticesData != 0)
-                        {
                             tmpVertices = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.VerticesData];
-                        }
+
                         if (tmpMeshChunk.NormalsData != 0)
-                        {
                             tmpNormals = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.NormalsData];
-                        }
+
                         if (tmpMeshChunk.UVsData != 0)
-                        {
                             tmpUVs = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.UVsData];
-                        }
+
                         if (tmpMeshChunk.VertsUVsData != 0)     // Star Citizen file.  That means VerticesData and UVsData will probably be empty.  Need to handle both cases.
-                        {
                             tmpVertsUVs = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.VertsUVsData];
-                        }
+
                         if (tmpMeshChunk.IndicesData != 0)
-                        {
                             tmpIndices = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.IndicesData];
-                        }
+
                         if (tmpMeshChunk.ColorsData != 0)
-                        {
                             tmpColors = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.ColorsData];
-                        }
-                        // Ignore Tangent data for now
+
                         if (tmpMeshChunk.TangentsData != 0)
-                        {
                             tmpTangents = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.TangentsData];
-                        }
-                        if (tmpVertices == null && tmpVertsUVs == null)
-                        {
-                            // There is no vertex data for this node.  Skip.
+
+                        if (tmpVertices == null && tmpVertsUVs == null) // There is no vertex data for this node.  Skip.
                             continue;
-                        }
 
                         // tmpGeo is a Geometry object for each meshsubset.  Name will be "Nodechunk name_matID".  Hopefully there is only one matID used per submesh
                         Grendgine_Collada_Geometry tmpGeo = new Grendgine_Collada_Geometry
@@ -500,19 +479,15 @@ namespace CgfConverter
                         tmpGeo.Mesh = tmpMesh;
 
                         // TODO:  Move the source creation to a separate function.  Too much retyping.
-                        Grendgine_Collada_Source[] source = new Grendgine_Collada_Source[4];        // 3 possible source types.
-                        // need a collada_source for position, normal, UV, tangents and color, what the source is (verts), and the tri index
-                        //Grendgine_Collada_Source posSource = GetMeshSource(tmpVertices, nodeChunk);       // TODO:  Implement this.
+                        Grendgine_Collada_Source[] source = new Grendgine_Collada_Source[4];        // 4 possible source types.
                         Grendgine_Collada_Source posSource = new Grendgine_Collada_Source();
                         Grendgine_Collada_Source normSource = new Grendgine_Collada_Source();
                         Grendgine_Collada_Source uvSource = new Grendgine_Collada_Source();
                         Grendgine_Collada_Source colorSource = new Grendgine_Collada_Source();
-                        //Grendgine_Collada_Source tangentSource = new Grendgine_Collada_Source();
                         source[0] = posSource;
                         source[1] = normSource;
                         source[2] = uvSource;
                         source[3] = colorSource;
-                        //source[3] = tangentSource;
                         posSource.ID = nodeChunk.Name + "-mesh-pos";
                         posSource.Name = nodeChunk.Name + "-pos";
                         normSource.ID = nodeChunk.Name + "-mesh-norm";
@@ -521,14 +496,12 @@ namespace CgfConverter
                         uvSource.Name = nodeChunk.Name + "-UV";
                         colorSource.ID = nodeChunk.Name + "-mesh-color";
                         colorSource.Name = nodeChunk.Name + "-color";
-                        //tangentSource.Name = nodeChunk.Name + "-tangent";
-                        //tangentSource.ID = nodeChunk.Name + "-mesh-tangent";
 
                         #region Create vertices node.  For polylist will just have VERTEX.
                         Grendgine_Collada_Vertices vertices = new Grendgine_Collada_Vertices();
                         vertices.ID = nodeChunk.Name + "-vertices";
                         tmpGeo.Mesh.Vertices = vertices;
-                        Grendgine_Collada_Input_Unshared[] inputshared = new Grendgine_Collada_Input_Unshared[3];
+                        Grendgine_Collada_Input_Unshared[] inputshared = new Grendgine_Collada_Input_Unshared[4];
                         Grendgine_Collada_Input_Unshared posInput = new Grendgine_Collada_Input_Unshared();
                         posInput.Semantic = Grendgine_Collada_Input_Semantic.POSITION;
                         vertices.Input = inputshared;
@@ -537,18 +510,15 @@ namespace CgfConverter
                         Grendgine_Collada_Input_Unshared normInput = new Grendgine_Collada_Input_Unshared();
                         Grendgine_Collada_Input_Unshared uvInput = new Grendgine_Collada_Input_Unshared();
                         Grendgine_Collada_Input_Unshared colorInput = new Grendgine_Collada_Input_Unshared();
-                        //Grendgine_Collada_Input_Unshared tangentInput = new Grendgine_Collada_Input_Unshared();
 
                         normInput.Semantic = Grendgine_Collada_Input_Semantic.NORMAL;
                         uvInput.Semantic = Grendgine_Collada_Input_Semantic.TEXCOORD;   // might need to replace TEXCOORD with UV
                         colorInput.Semantic = Grendgine_Collada_Input_Semantic.COLOR;
-                        //tangentInput.Semantic = Grendgine_Collada_Input_Semantic.TANGENT;
 
                         posInput.source = "#" + posSource.ID;
                         normInput.source = "#" + normSource.ID;
                         uvInput.source = "#" + uvSource.ID;
                         colorInput.source = "#" + colorSource.ID;
-                        //tangentInput.source = "#" + tangentSource.ID;
                         inputshared[0] = posInput;
 
                         // Create a float_array object to store all the data
@@ -586,11 +556,11 @@ namespace CgfConverter
                                 floatArrayColors.Count = (int)tmpColors.NumElements * 4;
                                 for (uint j = 0; j < tmpColors.NumElements; j++)  // Create Colors string
                                 {
-                                    colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6}",
-                                        tmpColors.RGBAColors[j].r,
-                                        tmpColors.RGBAColors[j].g,
-                                        tmpColors.RGBAColors[j].b,
-                                        tmpColors.RGBAColors[j].a);
+                                    colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ",
+                                        tmpColors.RGBAColors[j].r / 255.0,
+                                        tmpColors.RGBAColors[j].g / 255.0,
+                                        tmpColors.RGBAColors[j].b / 255.0,
+                                        tmpColors.RGBAColors[j].a / 255.0);
                                 }
                             }
                                 
@@ -662,7 +632,6 @@ namespace CgfConverter
                         CleanNumbers(vertString);
                         CleanNumbers(normString);
                         CleanNumbers(uvString);
-                        CleanNumbers(colorString);
 
                         #region Create the polylist node.
                         Grendgine_Collada_Polylist[] polylists = new Grendgine_Collada_Polylist[tmpMeshSubsets.NumMeshSubset];
@@ -677,7 +646,21 @@ namespace CgfConverter
                                 polylists[j].Material = CryData.Materials[(int)tmpMeshSubsets.MeshSubsets[j].MatID].Name + "-material";
                             }
                             // Create the 4 inputs.  vertex, normal, texcoord, color
-                            polylists[j].Input = new Grendgine_Collada_Input_Shared[3];
+                            if (tmpColors != null)
+                            {
+                                polylists[j].Input = new Grendgine_Collada_Input_Shared[4];
+                                polylists[j].Input[3] = new Grendgine_Collada_Input_Shared
+                                {
+                                    Semantic = Grendgine_Collada_Input_Semantic.COLOR,
+                                    Offset = 3,
+                                    source = "#" + colorSource.ID
+                                };
+                            }
+                            else
+                            {
+                                polylists[j].Input = new Grendgine_Collada_Input_Shared[3];
+                            }
+                           
                             polylists[j].Input[0] = new Grendgine_Collada_Input_Shared();
                             polylists[j].Input[0].Semantic = new Grendgine_Collada_Input_Semantic();
                             polylists[j].Input[0].Semantic = Grendgine_Collada_Input_Semantic.VERTEX;
@@ -691,20 +674,15 @@ namespace CgfConverter
                             polylists[j].Input[2].Semantic = Grendgine_Collada_Input_Semantic.TEXCOORD;
                             polylists[j].Input[2].Offset = 2;
                             polylists[j].Input[2].source = "#" + uvSource.ID;
-                            // TODO Figure out colors
-                            //if (tmpColors != null)
-                            //{
-                            //    polylists[j].Input[3] = new Grendgine_Collada_Input_Shared();
-                            //    polylists[j].Input[3].Semantic = Grendgine_Collada_Input_Semantic.COLOR;
-                            //    polylists[j].Input[3].Offset = 3;
-                            //    polylists[j].Input[3].source = "#" + colorSource.ID;
-                            //}
 
                             // Create the vcount list.  All triangles, so the subset number of indices.
                             StringBuilder vc = new StringBuilder();
                             for (uint k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
                             {
-                                vc.AppendFormat("3 ");
+                                if (tmpColors == null)
+                                    vc.AppendFormat(culture, "3 ");
+                                else
+                                    vc.AppendFormat(culture, "4 ");
                                 k += 2;
                             }
                             polylists[j].VCount = new Grendgine_Collada_Int_Array_String
@@ -714,11 +692,23 @@ namespace CgfConverter
 
                             // Create the P node for the Polylist.
                             StringBuilder p = new StringBuilder();
-                            for (uint k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
+                            if (tmpColors == null)
                             {
-                                p.AppendFormat("{0} {0} {0} {1} {1} {1} {2} {2} {2} ", tmpIndices.Indices[k], tmpIndices.Indices[k + 1], tmpIndices.Indices[k + 2]);
-                                k += 2;
+                                for (uint k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
+                                {
+                                    p.AppendFormat("{0} {0} {0} {1} {1} {1} {2} {2} {2} ", tmpIndices.Indices[k], tmpIndices.Indices[k + 1], tmpIndices.Indices[k + 2]);
+                                    k += 2;
+                                }
                             }
+                            else
+                            {
+                                for (uint k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
+                                {
+                                    p.AppendFormat("{0} {0} {0} {0} {1} {1} {1} {1} {2} {2} {2} {2} ", tmpIndices.Indices[k], tmpIndices.Indices[k + 1], tmpIndices.Indices[k + 2]);
+                                    k += 2;
+                                }
+                            }
+
                             polylists[j].P = new Grendgine_Collada_Int_Array_String();
                             polylists[j].P.Value_As_String = p.ToString().TrimEnd();
                         }
@@ -777,14 +767,11 @@ namespace CgfConverter
                         uvSource.Technique_Common.Accessor = new Grendgine_Collada_Accessor();
                         uvSource.Technique_Common.Accessor.Source = "#" + floatArrayUVs.ID;
                         uvSource.Technique_Common.Accessor.Stride = 2;
+                        
                         if (tmpVertices != null)
-                        {
                             uvSource.Technique_Common.Accessor.Count = tmpUVs.NumElements;
-                        }
                         else
-                        {
                             uvSource.Technique_Common.Accessor.Count = tmpVertsUVs.NumElements;
-                        }
 
                         Grendgine_Collada_Param[] paramUV = new Grendgine_Collada_Param[2];
                         paramUV[0] = new Grendgine_Collada_Param();

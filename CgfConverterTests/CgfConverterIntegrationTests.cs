@@ -115,8 +115,8 @@ namespace CgfConverterTests
 
             var colladaData = new COLLADA(argsHandler, cryData);
             var daeObject = colladaData.DaeObject;
-            colladaData.GenerateDaeObject();
-
+            //colladaData.GenerateDaeObject();
+            colladaData.Render();
             Assert.AreEqual("Scene", daeObject.Scene.Visual_Scene.Name);
             Assert.AreEqual("#Scene", daeObject.Scene.Visual_Scene.URL);
             // Visual Scene Check
@@ -427,7 +427,7 @@ namespace CgfConverterTests
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
             COLLADA colladaData = new COLLADA(argsHandler, cryData);
-            colladaData.GenerateDaeObject();
+            colladaData.Render();
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
             Assert.AreEqual(3, actualMaterialsCount);
@@ -482,3 +482,4 @@ namespace CgfConverterTests
         }
     }
 }
+

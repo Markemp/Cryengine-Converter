@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<COLLADA xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.4.1" xmlns="http://www.collada.org/2005/11/COLLADASchema">
+<COLLADA xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" version="1.4.1" xmlns="http://www.collada.org/2005/11/COLLADASchema">
   <asset>
-    <created>2020-05-01T18:53:38.3257796-07:00</created>
-    <modified>2020-05-01T18:53:38.3257796-07:00</modified>
+    <created>2020-05-02T14:22:44.7997255-07:00</created>
+    <modified>2020-05-02T14:22:44.7997255-07:00</modified>
     <unit meter="1" name="meter" />
     <up_axis>Z_UP</up_axis>
     <contributor>
@@ -199,6 +199,9 @@
               <param name="T" type="float" />
             </accessor>
           </technique_common>
+        </source>
+        <source id="hbr_right_torso-mesh-color" name="hbr_right_torso-color">
+          <float_array id="hbr_right_torso-mesh-color-array" count="0" />
         </source>
         <vertices id="hbr_right_torso-vertices">
           <input semantic="POSITION" source="#hbr_right_torso-mesh-pos" />
