@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -13,6 +14,8 @@ namespace CgfConverter
 {
     public class COLLADA : BaseRenderer // class to export to .dae format (COLLADA)
     {
+        CultureInfo culture = CultureInfo.CreateSpecificCulture("en-EN");
+
         public Grendgine_Collada DaeObject { get; private set; } = new Grendgine_Collada();  // This is the serializable class.
         readonly XmlSerializer mySerializer = new XmlSerializer(typeof(Grendgine_Collada));
 
@@ -472,11 +475,11 @@ namespace CgfConverter
                         {
                             tmpIndices = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.IndicesData];
                         }
-                        // Ignore Tangent and Color data for now.
                         if (tmpMeshChunk.ColorsData != 0)
                         {
                             tmpColors = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.ColorsData];
                         }
+                        // Ignore Tangent data for now
                         if (tmpMeshChunk.TangentsData != 0)
                         {
                             tmpTangents = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.TangentsData];
@@ -497,24 +500,27 @@ namespace CgfConverter
                         tmpGeo.Mesh = tmpMesh;
 
                         // TODO:  Move the source creation to a separate function.  Too much retyping.
-                        Grendgine_Collada_Source[] source = new Grendgine_Collada_Source[3];        // 3 possible source types.
+                        Grendgine_Collada_Source[] source = new Grendgine_Collada_Source[4];        // 3 possible source types.
                         // need a collada_source for position, normal, UV, tangents and color, what the source is (verts), and the tri index
                         //Grendgine_Collada_Source posSource = GetMeshSource(tmpVertices, nodeChunk);       // TODO:  Implement this.
                         Grendgine_Collada_Source posSource = new Grendgine_Collada_Source();
                         Grendgine_Collada_Source normSource = new Grendgine_Collada_Source();
                         Grendgine_Collada_Source uvSource = new Grendgine_Collada_Source();
+                        Grendgine_Collada_Source colorSource = new Grendgine_Collada_Source();
                         //Grendgine_Collada_Source tangentSource = new Grendgine_Collada_Source();
                         source[0] = posSource;
                         source[1] = normSource;
                         source[2] = uvSource;
-                        //source[3] = colorSource;
+                        source[3] = colorSource;
                         //source[3] = tangentSource;
                         posSource.ID = nodeChunk.Name + "-mesh-pos";
                         posSource.Name = nodeChunk.Name + "-pos";
                         normSource.ID = nodeChunk.Name + "-mesh-norm";
                         normSource.Name = nodeChunk.Name + "-norm";
+                        uvSource.ID = nodeChunk.Name + "-mesh-UV"; 
                         uvSource.Name = nodeChunk.Name + "-UV";
-                        uvSource.ID = nodeChunk.Name + "-mesh-UV";
+                        colorSource.ID = nodeChunk.Name + "-mesh-color";
+                        colorSource.Name = nodeChunk.Name + "-color";
                         //tangentSource.Name = nodeChunk.Name + "-tangent";
                         //tangentSource.ID = nodeChunk.Name + "-mesh-tangent";
 
@@ -541,6 +547,7 @@ namespace CgfConverter
                         posInput.source = "#" + posSource.ID;
                         normInput.source = "#" + normSource.ID;
                         uvInput.source = "#" + uvSource.ID;
+                        colorInput.source = "#" + colorSource.ID;
                         //tangentInput.source = "#" + tangentSource.ID;
                         inputshared[0] = posInput;
 
@@ -554,6 +561,7 @@ namespace CgfConverter
                         StringBuilder vertString = new StringBuilder();
                         StringBuilder normString = new StringBuilder();
                         StringBuilder uvString = new StringBuilder();
+                        StringBuilder colorString = new StringBuilder();
 
                         if (tmpVertices != null)  // Will be null if it's using VertsUVs.
                         {
@@ -569,21 +577,34 @@ namespace CgfConverter
                             floatArrayNormals.Digits = 6;
                             floatArrayNormals.Magnitude = 38;
                             if (tmpNormals != null)
-                            {
                                 floatArrayNormals.Count = (int)tmpNormals.NumElements * 3;
+                            floatArrayColors.ID = colorSource.ID + "-array";
+                            floatArrayColors.Digits = 6;
+                            floatArrayColors.Magnitude = 38;
+                            if (tmpColors != null)
+                            {
+                                floatArrayColors.Count = (int)tmpColors.NumElements * 4;
+                                for (uint j = 0; j < tmpColors.NumElements; j++)  // Create Colors string
+                                {
+                                    colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6}",
+                                        tmpColors.RGBAColors[j].r,
+                                        tmpColors.RGBAColors[j].g,
+                                        tmpColors.RGBAColors[j].b,
+                                        tmpColors.RGBAColors[j].a);
+                                }
                             }
+                                
                             // Create Vertices and normals string
                             for (uint j = 0; j < tmpMeshChunk.NumVertices; j++)
                             {
                                 Vector3 vertex = (tmpVertices.Vertices[j]);
-                                vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", vertex.x, vertex.y, vertex.z);
+                                vertString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", vertex.x, vertex.y, vertex.z);
                                 Vector3 normal = tmpNormals?.Normals[j] ?? new Vector3(0.0f, 0.0f, 0.0f);
-                                normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", safe(normal.x), safe(normal.y), safe(normal.z));
+                                normString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", safe(normal.x), safe(normal.y), safe(normal.z));
                             }
-                            // Create UV string
-                            for (uint j = 0; j < tmpUVs.NumElements; j++)
+                            for (uint j = 0; j < tmpUVs.NumElements; j++)     // Create UV string
                             {
-                                uvString.AppendFormat("{0:F6} {1:F6} ", safe(tmpUVs.UVs[j].U), 1 - safe(tmpUVs.UVs[j].V));
+                                uvString.AppendFormat(culture, "{0:F6} {1:F6} ", safe(tmpUVs.UVs[j].U), 1 - safe(tmpUVs.UVs[j].V));
                             }
                         }
                         else                // VertsUV structure.  Pull out verts and UVs from tmpVertsUVs.
@@ -641,6 +662,7 @@ namespace CgfConverter
                         CleanNumbers(vertString);
                         CleanNumbers(normString);
                         CleanNumbers(uvString);
+                        CleanNumbers(colorString);
 
                         #region Create the polylist node.
                         Grendgine_Collada_Polylist[] polylists = new Grendgine_Collada_Polylist[tmpMeshSubsets.NumMeshSubset];
@@ -654,7 +676,7 @@ namespace CgfConverter
                             {
                                 polylists[j].Material = CryData.Materials[(int)tmpMeshSubsets.MeshSubsets[j].MatID].Name + "-material";
                             }
-                            // Create the 4 inputs.  vertex, normal, texcoord, tangent
+                            // Create the 4 inputs.  vertex, normal, texcoord, color
                             polylists[j].Input = new Grendgine_Collada_Input_Shared[3];
                             polylists[j].Input[0] = new Grendgine_Collada_Input_Shared();
                             polylists[j].Input[0].Semantic = new Grendgine_Collada_Input_Semantic();
@@ -669,10 +691,14 @@ namespace CgfConverter
                             polylists[j].Input[2].Semantic = Grendgine_Collada_Input_Semantic.TEXCOORD;
                             polylists[j].Input[2].Offset = 2;
                             polylists[j].Input[2].source = "#" + uvSource.ID;
-                            //polylists[j].Input[3] = new Grendgine_Collada_Input_Shared();
-                            //polylists[j].Input[3].Semantic = Grendgine_Collada_Input_Semantic.TANGENT;
-                            //polylists[j].Input[3].Offset = 3;
-                            //polylists[j].Input[3].source = "#" + tangentSource.ID;
+                            // TODO Figure out colors
+                            //if (tmpColors != null)
+                            //{
+                            //    polylists[j].Input[3] = new Grendgine_Collada_Input_Shared();
+                            //    polylists[j].Input[3].Semantic = Grendgine_Collada_Input_Semantic.COLOR;
+                            //    polylists[j].Input[3].Offset = 3;
+                            //    polylists[j].Input[3].source = "#" + colorSource.ID;
+                            //}
 
                             // Create the vcount list.  All triangles, so the subset number of indices.
                             StringBuilder vc = new StringBuilder();
@@ -704,14 +730,12 @@ namespace CgfConverter
                         floatArrayVerts.Value_As_String = vertString.ToString().TrimEnd();
                         floatArrayNormals.Value_As_String = normString.ToString().TrimEnd();
                         floatArrayUVs.Value_As_String = uvString.ToString().TrimEnd();
-                        //floatArrayColors.Value_As_String = colorString.ToString();
-                        //floatArrayTangents.Value_As_String = tangentString.ToString().TrimEnd();
+                        floatArrayColors.Value_As_String = colorString.ToString();
 
                         source[0].Float_Array = floatArrayVerts;
                         source[1].Float_Array = floatArrayNormals;
                         source[2].Float_Array = floatArrayUVs;
-                        //source[3].Float_Array = floatArrayColors;
-                        //source[3].Float_Array = floatArrayTangents;
+                        source[3].Float_Array = floatArrayColors;
                         tmpGeo.Mesh.Source = source;
 
                         // create the technique_common for each of these
@@ -771,33 +795,28 @@ namespace CgfConverter
                         paramUV[1].Type = "float";
                         uvSource.Technique_Common.Accessor.Param = paramUV;
 
-                        //tangentSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source();
-                        //tangentSource.Technique_Common.Accessor = new Grendgine_Collada_Accessor();
-                        //tangentSource.Technique_Common.Accessor.Source = "#" + floatArrayTangents.ID;
-                        //tangentSource.Technique_Common.Accessor.Stride = 8;
-                        //tangentSource.Technique_Common.Accessor.Count = tmpTangents.NumElements;
-
-                        /*
-                        //if (tmpColors != null)
-                        //{
-                        //    colorSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source();
-                        //    colorSource.Technique_Common.Accessor = new Grendgine_Collada_Accessor();
-                        //    colorSource.Technique_Common.Accessor.Source = "#" + floatArrayColors.ID;
-                        //    colorSource.Technique_Common.Accessor.Stride = 3;
-                        //    colorSource.Technique_Common.Accessor.Count = tmpColors.NumElements;
-                        //    Grendgine_Collada_Param[] paramColor = new Grendgine_Collada_Param[3];
-                        //    paramColor[0] = new Grendgine_Collada_Param();
-                        //    paramColor[1] = new Grendgine_Collada_Param();
-                        //    paramColor[2] = new Grendgine_Collada_Param();
-                        //    paramColor[0].Name = "R";
-                        //    paramColor[0].Type = "float";
-                        //    paramColor[1].Name = "G";
-                        //    paramColor[1].Type = "float";
-                        //    paramColor[2].Name = "B";
-                        //    paramColor[2].Type = "float";
-                        //    colorSource.Technique_Common.Accessor.Param = paramColor;
-                        //}
-                        */
+                        if (tmpColors != null)
+                        {
+                            colorSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source();
+                            colorSource.Technique_Common.Accessor = new Grendgine_Collada_Accessor();
+                            colorSource.Technique_Common.Accessor.Source = "#" + floatArrayColors.ID;
+                            colorSource.Technique_Common.Accessor.Stride = 4;
+                            colorSource.Technique_Common.Accessor.Count = tmpColors.NumElements;
+                            Grendgine_Collada_Param[] paramColor = new Grendgine_Collada_Param[4];
+                            paramColor[0] = new Grendgine_Collada_Param();
+                            paramColor[1] = new Grendgine_Collada_Param();
+                            paramColor[2] = new Grendgine_Collada_Param();
+                            paramColor[3] = new Grendgine_Collada_Param();
+                            paramColor[0].Name = "R";
+                            paramColor[0].Type = "float";
+                            paramColor[1].Name = "G";
+                            paramColor[1].Type = "float";
+                            paramColor[2].Name = "B";
+                            paramColor[2].Type = "float";
+                            paramColor[3].Name = "A";
+                            paramColor[3].Type = "float";
+                            colorSource.Technique_Common.Accessor.Param = paramColor;
+                        }
 
                         geometryList.Add(tmpGeo);
 
@@ -1164,8 +1183,15 @@ namespace CgfConverter
                 else
                 {
                     ChunkNode geometryNode = CryData.Models[1].NodeMap.Values.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
-                    ChunkMesh geometryMesh = (ChunkMesh)CryData.Models[1].ChunkMap[geometryNode.ObjectNodeID];
-                    tmpNode = CreateGeometryNode(geometryNode, geometryMesh);
+                    if (geometryNode == null)
+                    {
+                        tmpNode = CreateSimpleNode(nodeChunk);  // Can't find geometry for given node.
+                    }
+                    else
+                    {
+                        ChunkMesh geometryMesh = (ChunkMesh)CryData.Models[1].ChunkMap[geometryNode.ObjectNodeID];
+                        tmpNode = CreateGeometryNode(geometryNode, geometryMesh);
+                    }
                 }
             }
             else                    // Regular Cryengine file.

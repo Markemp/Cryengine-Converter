@@ -181,7 +181,8 @@ namespace CgfConverter
 
             foreach (ChunkMtlName mtlChunk in allMaterialChunks)
             {
-                if (mtlChunk.MatType == MtlNameTypeEnum.Child || mtlChunk.MatType == MtlNameTypeEnum.Unknown1 || mtlChunk.MatType == MtlNameTypeEnum.MwoChild)
+                //if (mtlChunk.MatType == MtlNameTypeEnum.Child || mtlChunk.MatType == MtlNameTypeEnum.Unknown1 || mtlChunk.MatType == MtlNameTypeEnum.MwoChild)
+                if (mtlChunk.MatType != MtlNameTypeEnum.Library)
                 {
                     this.Materials.Add(Material.CreateDefaultMaterial(mtlChunk.Name));
                 }

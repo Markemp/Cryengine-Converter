@@ -170,7 +170,7 @@ namespace CgfConverterTests
             var geometry = colladaData.DaeObject.Library_Geometries.Geometry[0];
             Assert.AreEqual("hbr_right_torso-mesh", geometry.ID);
             Assert.AreEqual("hbr_right_torso", geometry.Name);
-            Assert.AreEqual(3, geometry.Mesh.Source.Length);
+            Assert.AreEqual(4, geometry.Mesh.Source.Length);
             Assert.AreEqual("hbr_right_torso-vertices", geometry.Mesh.Vertices.ID);
             Assert.AreEqual(1, geometry.Mesh.Polylist.Length);
             Assert.AreEqual(1908, geometry.Mesh.Polylist[0].Count);
@@ -218,9 +218,9 @@ namespace CgfConverterTests
         }
 
         [TestMethod]
-        public void SC_uee_asteroid_ACTutorial_rail_01()
+        public void SC_hangar_asteroid_controlroom_fan()
         {
-            var args = new string[] { @"..\..\ResourceFiles\uee_asteroid_ACTutorial_rail_01.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+            var args = new string[] { @"..\..\ResourceFiles\hangar_asteroid_controlroom_fan.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
             int result = argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result); 
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
@@ -242,7 +242,7 @@ namespace CgfConverterTests
             colladaData.GenerateDaeObject();
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-            Assert.AreEqual(12, actualMaterialsCount);
+            Assert.AreEqual(13, actualMaterialsCount);
 
             ValidateColladaXml(colladaData);
         }
@@ -396,6 +396,41 @@ namespace CgfConverterTests
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
             Assert.AreEqual(0, actualMaterialsCount);
+
+            ValidateColladaXml(colladaData);
+        }
+
+        [TestMethod]
+        public void Cnylgt_marauder_NoMaterialFile()
+        {
+            var args = new string[] { @"..\..\ResourceFiles\cnylgt_marauder.cga" };
+            int result = argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
+            CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
+
+            COLLADA colladaData = new COLLADA(argsHandler, cryData);
+            colladaData.GenerateDaeObject();
+
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
+            Assert.AreEqual(3, actualMaterialsCount);
+
+            ValidateColladaXml(colladaData);
+
+        }
+
+        [TestMethod]
+        public void Green_fern_bush_a_MaterialFileExists()
+        {
+            var args = new string[] { @"..\..\ResourceFiles\CryEngine\green_fern_bush_a.cgf" };
+            int result = argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
+            CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
+
+            COLLADA colladaData = new COLLADA(argsHandler, cryData);
+            colladaData.GenerateDaeObject();
+
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
+            Assert.AreEqual(3, actualMaterialsCount);
 
             ValidateColladaXml(colladaData);
         }

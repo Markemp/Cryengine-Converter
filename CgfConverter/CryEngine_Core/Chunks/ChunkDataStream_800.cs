@@ -57,17 +57,17 @@ namespace CgfConverter.CryEngineCore
             base.Read(b);
 
             this.Flags2 = b.ReadUInt32(); // another filler
-            UInt32 tmpdataStreamType = b.ReadUInt32();
+            uint tmpdataStreamType = b.ReadUInt32();
             this.DataStreamType = (DataStreamTypeEnum)Enum.ToObject(typeof(DataStreamTypeEnum), tmpdataStreamType);
             this.NumElements = b.ReadUInt32(); // number of elements in this chunk
 
             if (this._model.FileVersion == FileVersionEnum.CryTek_3_5 || this._model.FileVersion == FileVersionEnum.CryTek_3_4)
             {
-                this.BytesPerElement = b.ReadUInt32(); // bytes per element
+                this.BytesPerElement = b.ReadUInt32();
             }
             if (this._model.FileVersion == FileVersionEnum.CryTek_3_6)
             {
-                this.BytesPerElement = (UInt32)b.ReadInt16();        // Star Citizen 2.0 is using an int16 here now.
+                this.BytesPerElement = (uint)b.ReadInt16();        // Star Citizen 2.0 is using an int16 here now.
                 b.ReadInt16();                                       // unknown value.   Doesn't look like padding though.
             }
 
