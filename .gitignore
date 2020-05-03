@@ -310,4 +310,6 @@ OpenCover/
 *.skin*
 *.chr*
 *.dds
+*.dds.*
 *.mtl
+
