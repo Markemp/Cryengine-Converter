@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <COLLADA xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" version="1.4.1" xmlns="http://www.collada.org/2005/11/COLLADASchema">
   <asset>
-    <created>2020-05-02T16:28:28.2288649-07:00</created>
-    <modified>2020-05-02T16:28:28.2288649-07:00</modified>
+    <created>2020-05-03T16:39:29.7566899-07:00</created>
+    <modified>2020-05-03T16:39:29.7566899-07:00</modified>
     <unit meter="1" name="meter" />
     <up_axis>Z_UP</up_axis>
     <contributor>
@@ -20,13 +20,13 @@
   </asset>
   <library_images>
     <image id="green_fern_bush_Diffuse" name="green_fern_bush_Diffuse">
-      <init_from>/C:\Users\Geoff\Source\Repos\cgf-converter\CgfConverterTests\bin\Debug/objects/natural/bushes/green_fern_bush/green_fern_bush_leaf_a.dds</init_from>
+      <init_from>green_fern_bush_leaf_a.dds</init_from>
     </image>
     <image id="green_fern_bush_Bumpmap" name="green_fern_bush_Bumpmap">
-      <init_from>/C:\Users\Geoff\Source\Repos\cgf-converter\CgfConverterTests\bin\Debug/objects/natural/bushes/green_fern_bush/green_fern_bush_leaf_a_ddna.dds</init_from>
+      <init_from>green_fern_bush_leaf_a_ddna.dds</init_from>
     </image>
     <image id="green_fern_bush_Opacity" name="green_fern_bush_Opacity">
-      <init_from>/C:\Users\Geoff\Source\Repos\cgf-converter\CgfConverterTests\bin\Debug/objects/natural/bushes/green_fern_bush/green_fern_bush_leaf_a_trans.dds</init_from>
+      <init_from>green_fern_bush_leaf_a_trans.dds</init_from>
     </image>
   </library_images>
   <library_effects>

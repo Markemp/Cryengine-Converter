@@ -14,7 +14,7 @@ namespace CgfConverter
 {
     public class COLLADA : BaseRenderer // class to export to .dae format (COLLADA)
     {
-        CultureInfo culture = CultureInfo.CreateSpecificCulture("en-EN");
+        CultureInfo culture = CultureInfo.CreateSpecificCulture("en-US");
 
         public Grendgine_Collada DaeObject { get; private set; } = new Grendgine_Collada();  // This is the serializable class.
         readonly XmlSerializer mySerializer = new XmlSerializer(typeof(Grendgine_Collada));
@@ -67,13 +67,13 @@ namespace CgfConverter
                 WriteLibrary_VisualScenes();
         }
 
-        private void WriteRootNode()
+        protected void WriteRootNode()
         {
             //daeObject.Collada_Version = "1.5.0";  // Blender doesn't like 1.5. :(
             DaeObject.Collada_Version = "1.4.1";
         }
 
-        public void WriteAsset()
+        protected void WriteAsset()
         {
             // Writes the Asset element in a Collada XML doc
             DateTime fileCreated = DateTime.Now;
@@ -111,7 +111,7 @@ namespace CgfConverter
 
         }
 
-        public void WriteLibrary_Images()
+        protected void WriteLibrary_Images()
         {
             // List of all the images used by the asset.
             Grendgine_Collada_Library_Images libraryImages = new Grendgine_Collada_Library_Images();
@@ -135,23 +135,22 @@ namespace CgfConverter
                     StringBuilder builder = new StringBuilder();
                     if (CryData.Materials[k].Textures[i].File.Contains(@"/") || CryData.Materials[k].Textures[i].File.Contains(@"\"))
                     {
-                        // if Datadir is empty, need a clean name and can only search in the current directory.  If Datadir is provided, then look there.
-                        if (this.Args.DataDir == null)
+                        // if Datadir is default, need a clean name and can only search in the current directory.  If Datadir is provided, then look there.
+                        if (this.Args.DataDir.ToString() == ".")
                         {
                             builder.Append(CleanMtlFileName(CryData.Materials[k].Textures[i].File) + ".dds");
-                            if (Args.TiffTextures)
-                                builder.Replace(".dds", ".tif");
+                            string test = builder.ToString();
+                            if (!File.Exists(test))
+                            {
 
+                            }
                         }
+                            
                         else
-                        {
-                            builder.Append(@"/" + this.Args.DataDir.FullName.Replace(" ", @"%20") + @"/" + CryData.Materials[k].Textures[i].File);
-                        }
+                            builder.Append(@"/" + this.Args.DataDir.FullName + @"/" + CryData.Materials[k].Textures[i].File);
                     }
                     else
-                    {
                         builder = new StringBuilder(CryData.Materials[k].Textures[i].File);
-                    }
 
                     if (!this.Args.TiffTextures)
                     {
@@ -161,15 +160,13 @@ namespace CgfConverter
                     else
                         builder.Replace(".dds", ".tif");
 
+                    builder.Replace(" ", @"%20");
                     // if 1.4.1, use URI.  If 1.5.0, use Ref.
                     if (DaeObject.Collada_Version == "1.4.1")
-                    {
                         tmpImage.Init_From.Uri = builder.ToString();
-                    }
                     else
-                    {
                         tmpImage.Init_From.Ref = builder.ToString();
-                    }
+                    
                     imageList.Add(tmpImage);
                 }
             }
@@ -479,24 +476,23 @@ namespace CgfConverter
                         tmpGeo.Mesh = tmpMesh;
 
                         // TODO:  Move the source creation to a separate function.  Too much retyping.
-                        //Grendgine_Collada_Source[] source = new Grendgine_Collada_Source[4];        // 4 possible source types.
-                        Grendgine_Collada_Source[] source = new Grendgine_Collada_Source[3];        // 4 possible source types.
+                        Grendgine_Collada_Source[] source = new Grendgine_Collada_Source[4];        // 4 possible source types.
                         Grendgine_Collada_Source posSource = new Grendgine_Collada_Source();
                         Grendgine_Collada_Source normSource = new Grendgine_Collada_Source();
                         Grendgine_Collada_Source uvSource = new Grendgine_Collada_Source();
-                        //Grendgine_Collada_Source colorSource = new Grendgine_Collada_Source();
+                        Grendgine_Collada_Source colorSource = new Grendgine_Collada_Source();
                         source[0] = posSource;
                         source[1] = normSource;
                         source[2] = uvSource;
-                        //source[3] = colorSource;
+                        source[3] = colorSource;
                         posSource.ID = nodeChunk.Name + "-mesh-pos";
                         posSource.Name = nodeChunk.Name + "-pos";
                         normSource.ID = nodeChunk.Name + "-mesh-norm";
                         normSource.Name = nodeChunk.Name + "-norm";
                         uvSource.ID = nodeChunk.Name + "-mesh-UV"; 
                         uvSource.Name = nodeChunk.Name + "-UV";
-                        //colorSource.ID = nodeChunk.Name + "-mesh-color";
-                        //colorSource.Name = nodeChunk.Name + "-color";
+                        colorSource.ID = nodeChunk.Name + "-mesh-color";
+                        colorSource.Name = nodeChunk.Name + "-color";
 
                         #region Create vertices node.  For polylist will just have VERTEX.
                         Grendgine_Collada_Vertices vertices = new Grendgine_Collada_Vertices();
@@ -519,7 +515,7 @@ namespace CgfConverter
                         posInput.source = "#" + posSource.ID;
                         normInput.source = "#" + normSource.ID;
                         uvInput.source = "#" + uvSource.ID;
-                        //colorInput.source = "#" + colorSource.ID;
+                        colorInput.source = "#" + colorSource.ID;
                         inputshared[0] = posInput;
 
                         // Create a float_array object to store all the data
@@ -549,22 +545,22 @@ namespace CgfConverter
                             floatArrayNormals.Magnitude = 38;
                             if (tmpNormals != null)
                                 floatArrayNormals.Count = (int)tmpNormals.NumElements * 3;
-                            //floatArrayColors.ID = colorSource.ID + "-array";
-                            //floatArrayColors.Digits = 6;
-                            //floatArrayColors.Magnitude = 38;
-                            //if (tmpColors != null)
-                            //{
-                            //    floatArrayColors.Count = (int)tmpColors.NumElements * 4;
-                            //    for (uint j = 0; j < tmpColors.NumElements; j++)  // Create Colors string
-                            //    {
-                            //        colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ",
-                            //            tmpColors.RGBAColors[j].r / 255.0,
-                            //            tmpColors.RGBAColors[j].g / 255.0,
-                            //            tmpColors.RGBAColors[j].b / 255.0,
-                            //            tmpColors.RGBAColors[j].a / 255.0);
-                            //    }
-                            //}
-                                
+                            floatArrayColors.ID = colorSource.ID + "-array";
+                            floatArrayColors.Digits = 6;
+                            floatArrayColors.Magnitude = 38;
+                            if (tmpColors != null)
+                            {
+                                floatArrayColors.Count = (int)tmpColors.NumElements * 4;
+                                for (uint j = 0; j < tmpColors.NumElements; j++)  // Create Colors string
+                                {
+                                    colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ",
+                                        tmpColors.RGBAColors[j].r / 255.0,
+                                        tmpColors.RGBAColors[j].g / 255.0,
+                                        tmpColors.RGBAColors[j].b / 255.0,
+                                        tmpColors.RGBAColors[j].a / 255.0);
+                                }
+                            }
+
                             // Create Vertices and normals string
                             for (uint j = 0; j < tmpMeshChunk.NumVertices; j++)
                             {
@@ -647,21 +643,21 @@ namespace CgfConverter
                                 polylists[j].Material = CryData.Materials[(int)tmpMeshSubsets.MeshSubsets[j].MatID].Name + "-material";
                             }
                             // Create the 4 inputs.  vertex, normal, texcoord, color
-                            //if (tmpColors != null)
-                            //{
-                            //    polylists[j].Input = new Grendgine_Collada_Input_Shared[4];
-                            //    polylists[j].Input[3] = new Grendgine_Collada_Input_Shared
-                            //    {
-                            //        Semantic = Grendgine_Collada_Input_Semantic.COLOR,
-                            //        Offset = 3,
-                            //        source = "#" + colorSource.ID
-                            //    };
-                            //}
-                            //else
-                            //{
+                            if (tmpColors != null)
+                            {
+                                polylists[j].Input = new Grendgine_Collada_Input_Shared[4];
+                                polylists[j].Input[3] = new Grendgine_Collada_Input_Shared
+                                {
+                                    Semantic = Grendgine_Collada_Input_Semantic.COLOR,
+                                    Offset = 3,
+                                    source = "#" + colorSource.ID
+                                };
+                            }
+                            else
+                            {
                                 polylists[j].Input = new Grendgine_Collada_Input_Shared[3];
-                            //}
-                           
+                            }
+
                             polylists[j].Input[0] = new Grendgine_Collada_Input_Shared();
                             polylists[j].Input[0].Semantic = new Grendgine_Collada_Input_Semantic();
                             polylists[j].Input[0].Semantic = Grendgine_Collada_Input_Semantic.VERTEX;
@@ -680,10 +676,10 @@ namespace CgfConverter
                             StringBuilder vc = new StringBuilder();
                             for (uint k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
                             {
-                                //if (tmpColors == null)
+                                if (tmpColors == null)
                                     vc.AppendFormat(culture, "3 ");
-                                //else
-                                //    vc.AppendFormat(culture, "4 ");
+                                else
+                                    vc.AppendFormat(culture, "4 ");
                                 k += 2;
                             }
                             polylists[j].VCount = new Grendgine_Collada_Int_Array_String
@@ -693,22 +689,22 @@ namespace CgfConverter
 
                             // Create the P node for the Polylist.
                             StringBuilder p = new StringBuilder();
-                            //if (tmpColors == null)
-                            //{
+                            if (tmpColors == null)
+                            {
                                 for (uint k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
                                 {
                                     p.AppendFormat("{0} {0} {0} {1} {1} {1} {2} {2} {2} ", tmpIndices.Indices[k], tmpIndices.Indices[k + 1], tmpIndices.Indices[k + 2]);
                                     k += 2;
                                 }
-                            //}
-                            //else
-                            //{
-                            //    for (uint k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
-                            //    {
-                            //        p.AppendFormat("{0} {0} {0} {0} {1} {1} {1} {1} {2} {2} {2} {2} ", tmpIndices.Indices[k], tmpIndices.Indices[k + 1], tmpIndices.Indices[k + 2]);
-                            //        k += 2;
-                            //    }
-                            //}
+                            }
+                            else
+                            {
+                                for (uint k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
+                                {
+                                    p.AppendFormat("{0} {0} {0} {0} {1} {1} {1} {1} {2} {2} {2} {2} ", tmpIndices.Indices[k], tmpIndices.Indices[k + 1], tmpIndices.Indices[k + 2]);
+                                    k += 2;
+                                }
+                            }
 
                             polylists[j].P = new Grendgine_Collada_Int_Array_String();
                             polylists[j].P.Value_As_String = p.ToString().TrimEnd();
@@ -726,7 +722,7 @@ namespace CgfConverter
                         source[0].Float_Array = floatArrayVerts;
                         source[1].Float_Array = floatArrayNormals;
                         source[2].Float_Array = floatArrayUVs;
-                        //source[3].Float_Array = floatArrayColors;
+                        source[3].Float_Array = floatArrayColors;
                         tmpGeo.Mesh.Source = source;
 
                         // create the technique_common for each of these
@@ -783,28 +779,28 @@ namespace CgfConverter
                         paramUV[1].Type = "float";
                         uvSource.Technique_Common.Accessor.Param = paramUV;
 
-                        //if (tmpColors != null)
-                        //{
-                        //    colorSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source();
-                        //    colorSource.Technique_Common.Accessor = new Grendgine_Collada_Accessor();
-                        //    colorSource.Technique_Common.Accessor.Source = "#" + floatArrayColors.ID;
-                        //    colorSource.Technique_Common.Accessor.Stride = 4;
-                        //    colorSource.Technique_Common.Accessor.Count = tmpColors.NumElements;
-                        //    Grendgine_Collada_Param[] paramColor = new Grendgine_Collada_Param[4];
-                        //    paramColor[0] = new Grendgine_Collada_Param();
-                        //    paramColor[1] = new Grendgine_Collada_Param();
-                        //    paramColor[2] = new Grendgine_Collada_Param();
-                        //    paramColor[3] = new Grendgine_Collada_Param();
-                        //    paramColor[0].Name = "R";
-                        //    paramColor[0].Type = "float";
-                        //    paramColor[1].Name = "G";
-                        //    paramColor[1].Type = "float";
-                        //    paramColor[2].Name = "B";
-                        //    paramColor[2].Type = "float";
-                        //    paramColor[3].Name = "A";
-                        //    paramColor[3].Type = "float";
-                        //    colorSource.Technique_Common.Accessor.Param = paramColor;
-                        //}
+                        if (tmpColors != null)
+                        {
+                            colorSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source();
+                            colorSource.Technique_Common.Accessor = new Grendgine_Collada_Accessor();
+                            colorSource.Technique_Common.Accessor.Source = "#" + floatArrayColors.ID;
+                            colorSource.Technique_Common.Accessor.Stride = 4;
+                            colorSource.Technique_Common.Accessor.Count = tmpColors.NumElements;
+                            Grendgine_Collada_Param[] paramColor = new Grendgine_Collada_Param[4];
+                            paramColor[0] = new Grendgine_Collada_Param();
+                            paramColor[1] = new Grendgine_Collada_Param();
+                            paramColor[2] = new Grendgine_Collada_Param();
+                            paramColor[3] = new Grendgine_Collada_Param();
+                            paramColor[0].Name = "R";
+                            paramColor[0].Type = "float";
+                            paramColor[1].Name = "G";
+                            paramColor[1].Type = "float";
+                            paramColor[2].Name = "B";
+                            paramColor[2].Type = "float";
+                            paramColor[3].Name = "A";
+                            paramColor[3].Type = "float";
+                            colorSource.Technique_Common.Accessor.Param = paramColor;
+                        }
 
                         geometryList.Add(tmpGeo);
 

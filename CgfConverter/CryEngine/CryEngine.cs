@@ -2,13 +2,16 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Resources;
+using System.Runtime.CompilerServices;
 using CgfConverter.CryEngineCore;
 
 namespace CgfConverter
 {
-    // TODO: Move this to CryEngine_Core
     public partial class CryEngine
     {
+        private const string invalidExtensionErrorMessage = "Warning: Unsupported file extension - please use a cga, cgf, chr or skin file.";
+
         private static readonly HashSet<string> validExtensions = new HashSet<string>
         {
             ".cgf",
@@ -17,13 +20,65 @@ namespace CgfConverter
             ".skin",
             ".anim"
         };
-        private const string invalidExtensionErrorMessage = "Warning: Unsupported file extension - please use a cga, cgf, chr or skin file.";
         public List<Model> Models { get; internal set; } = new List<Model>();
         public List<Material> Materials { get; internal set; } = new List<Material>();
         public ChunkNode RootNode { get; internal set; }
         public ChunkCompiledBones Bones { get; internal set; }
         public SkinningInfo SkinningInfo { get; set; }
         public string InputFile { get; internal set; }
+        public List<Chunk> Chunks
+        {
+            get
+            {
+                if (this._chunks == null)
+                {
+                    this._chunks = this.Models.SelectMany(m => m.ChunkMap.Values).ToList();
+                }
+
+                return this._chunks;
+            }
+        }
+        public Dictionary<string, ChunkNode> NodeMap  // Cannot use the Node name for the key.  Across a couple files, you may have multiple nodes with same name.
+        {
+            get
+            {
+                if (this._nodeMap == null)
+                {
+                    this._nodeMap = new Dictionary<String, CryEngineCore.ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
+
+                    ChunkNode rootNode = null;
+
+                    Utils.Log(LogLevelEnum.Info, "Mapping Nodes");
+
+                    foreach (Model model in this.Models)
+                    {
+                        model.RootNode = rootNode = (rootNode ?? model.RootNode);  // Each model will have it's own rootnode.
+
+                        foreach (ChunkNode node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as CryEngineCore.ChunkNode))
+                        {
+                            // Preserve existing parents
+                            if (this._nodeMap.ContainsKey(node.Name))
+                            {
+                                ChunkNode parentNode = this._nodeMap[node.Name].ParentNode;
+
+                                if (parentNode != null)
+                                    parentNode = this._nodeMap[parentNode.Name];
+
+                                node.ParentNode = parentNode;
+                            }
+
+                            this._nodeMap[node.Name] = node;    // TODO:  fix this.  The node name can conflict.
+                        }
+                    }
+                }
+
+                return this._nodeMap;
+            }
+        }
+
+        private List<Chunk> _chunks;
+        private Dictionary<string, ChunkNode> _nodeMap;
+
         public CryEngine(string fileName, string dataDir)
         {
             this.InputFile = fileName;
@@ -32,14 +87,14 @@ namespace CgfConverter
             List<FileInfo> inputFiles = new List<FileInfo> { inputFile };
 
             // Validate file extension - handles .cgam / skinm
-            if (!CryEngine.validExtensions.Contains(inputFile.Extension))
+            if (!validExtensions.Contains(inputFile.Extension))
             {
                 Utils.Log(LogLevelEnum.Debug, invalidExtensionErrorMessage);
                 throw new FileLoadException(invalidExtensionErrorMessage, fileName);
             }
 
             #region m-File Auto-Detection
-            FileInfo mFile = new FileInfo(Path.ChangeExtension(fileName, String.Format("{0}m", inputFile.Extension)));
+            FileInfo mFile = new FileInfo(Path.ChangeExtension(fileName, string.Format("{0}m", inputFile.Extension)));
 
             if (mFile.Exists)
             {
@@ -61,7 +116,7 @@ namespace CgfConverter
                 this.Models.Add(model);
             }
 
-            SkinningInfo = ConsolidateSkinningInfo();
+            SkinningInfo = ConsolidateSkinningInfo(Models);
             // For each node with geometry info, populate that node's Mesh Chunk GeometryInfo with the geometry data.
             // ConsolidateGeometryInfo();
 
@@ -188,64 +243,13 @@ namespace CgfConverter
                 }
             }
         }
-        private List<Chunk> _chunks;
-        public List<Chunk> Chunks
-        {
-            get
-            {
-                if (this._chunks == null)
-                {
-                    this._chunks = this.Models.SelectMany(m => m.ChunkMap.Values).ToList();
-                }
-
-                return this._chunks;
-            }
-        }
-        private Dictionary<String, ChunkNode> _nodeMap;
-        public Dictionary<String, ChunkNode> NodeMap  // Cannot use the Node name for the key.  Across a couple files, you may have multiple nodes with same name.
-        {
-            get
-            {
-                if (this._nodeMap == null)
-                {
-                    this._nodeMap = new Dictionary<String, CryEngineCore.ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
-
-                    ChunkNode rootNode = null;
-
-                    Utils.Log(LogLevelEnum.Info, "Mapping Nodes");
-
-                    foreach (Model model in this.Models)
-                    {
-                        model.RootNode = rootNode = (rootNode ?? model.RootNode);  // Each model will have it's own rootnode.
-
-                        foreach (ChunkNode node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as CryEngineCore.ChunkNode))
-                        {
-                            // Preserve existing parents
-                            if (this._nodeMap.ContainsKey(node.Name))
-                            {
-                                ChunkNode parentNode = this._nodeMap[node.Name].ParentNode;
-
-                                if (parentNode != null)
-                                    parentNode = this._nodeMap[parentNode.Name];
-
-                                node.ParentNode = parentNode;
-                            }
-
-                            this._nodeMap[node.Name] = node;    // TODO:  fix this.  The node name can conflict.
-                        }
-                    }
-                }
-
-                return this._nodeMap;
-            }
-        }
 
         /// <summary>
         /// Flatten all child materials into a one dimensional list
         /// </summary>
         /// <param name="material"></param>
         /// <returns></returns>
-        private static IEnumerable<Material> FlattenMaterials(Material material)
+        protected static IEnumerable<Material> FlattenMaterials(Material material)
         {
             if (material != null)
             {
@@ -257,13 +261,16 @@ namespace CgfConverter
             }
         }
 
-        private SkinningInfo ConsolidateSkinningInfo()
+        protected static SkinningInfo ConsolidateSkinningInfo(List<Model> models)
         {
-            SkinningInfo skin = new SkinningInfo();
-            foreach (Model model in Models)
+            SkinningInfo skin = new SkinningInfo
             {
-                skin.HasSkinningInfo = Models.Any(a => a.SkinningInfo.HasSkinningInfo == true);
-                skin.HasBoneMapDatastream = Models.Any(a => a.SkinningInfo.HasBoneMapDatastream == true);
+                HasSkinningInfo = models.Any(a => a.SkinningInfo.HasSkinningInfo == true),
+                HasBoneMapDatastream = models.Any(a => a.SkinningInfo.HasBoneMapDatastream == true)
+            };
+
+            foreach (Model model in models)
+            {
                 if (model.SkinningInfo.IntFaces != null)
                 {
                     skin.IntFaces = model.SkinningInfo.IntFaces;

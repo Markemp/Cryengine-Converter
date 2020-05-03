@@ -436,6 +436,24 @@ namespace CgfConverterTests
             ValidateColladaXml(colladaData);
         }
 
+        [TestMethod]
+        public void SC_LR7_UOPP_VerifyImageFilePath()
+        {
+            var args = new string[] { @"..\..\ResourceFiles\SC\LR-7_UOPP.cga" };
+            int result = argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
+            CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
+
+            COLLADA colladaData = new COLLADA(argsHandler, cryData);
+            colladaData.GenerateDaeObject();
+
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
+            Assert.AreEqual(2, actualMaterialsCount);
+
+            ValidateColladaXml(colladaData);
+
+        }
+
         private void ValidateColladaXml(COLLADA colladaData)
         {
             using (var stringWriter = new System.IO.StringWriter())
