@@ -15,6 +15,7 @@ namespace CgfConverter
     public class COLLADA : BaseRenderer // class to export to .dae format (COLLADA)
     {
         CultureInfo culture = CultureInfo.CreateSpecificCulture("en-US");
+        private const string colladaVersion = "1.4.1";
 
         public Grendgine_Collada DaeObject { get; private set; } = new Grendgine_Collada();  // This is the serializable class.
         readonly XmlSerializer mySerializer = new XmlSerializer(typeof(Grendgine_Collada));
@@ -50,7 +51,7 @@ namespace CgfConverter
                 Utils.Log(LogLevelEnum.Debug, "\tNumber of nodes in model: {0}", CryData.Models[i].NodeMap.Count);
             }
             
-            WriteRootNode();
+            WriteRootNode(colladaVersion);
             WriteAsset();
             WriteLibrary_Images();
             WriteScene();
@@ -67,10 +68,13 @@ namespace CgfConverter
                 WriteLibrary_VisualScenes();
         }
 
-        protected void WriteRootNode()
+        protected void WriteRootNode(string version)
         {
-            //daeObject.Collada_Version = "1.5.0";  // Blender doesn't like 1.5. :(
-            DaeObject.Collada_Version = "1.4.1";
+            // Blender doesn't like 1.5. :(
+            if (version == "1.4.1")
+                DaeObject.Collada_Version = "1.4.1";
+            else if (version == "1.5.0")
+                DaeObject.Collada_Version = "1.5.0";
         }
 
         protected void WriteAsset()
