@@ -400,11 +400,9 @@ namespace CgfConverter
             {
                 // Create a geometry object.  Use the chunk ID for the geometry ID
                 // Will have to be careful with this, since with .cga/.cgam pairs will need to match by Name.
-                // Make the mesh object.  This will have 3 or 4 sources, 1 vertices, and 1 or more polylist (with material ID)
+                // Make the mesh object.  This will have 3 or 4 sources, 1 vertices, and 1 or more Triangles (with material ID)
                 // If the Object ID of Node chunk points to a Helper or a Controller though, place an empty.
                 // need to make a list of the sources and triangles to add to tmpGeo.Mesh
-                List<Grendgine_Collada_Source> sourceList = new List<Grendgine_Collada_Source>();
-                List<Grendgine_Collada_Polylist> polylistList = new List<Grendgine_Collada_Polylist>();
                 ChunkDataStream tmpNormals = null;
                 ChunkDataStream tmpUVs = null;
                 ChunkDataStream tmpVertices = null;
@@ -498,7 +496,7 @@ namespace CgfConverter
                         colorSource.ID = nodeChunk.Name + "-mesh-color";
                         colorSource.Name = nodeChunk.Name + "-color";
 
-                        #region Create vertices node.  For polylist will just have VERTEX.
+                        #region Create vertices node.  For Triangles will just have VERTEX.
                         Grendgine_Collada_Vertices vertices = new Grendgine_Collada_Vertices();
                         vertices.ID = nodeChunk.Name + "-vertices";
                         tmpGeo.Mesh.Vertices = vertices;
@@ -634,29 +632,22 @@ namespace CgfConverter
                         CleanNumbers(normString);
                         CleanNumbers(uvString);
 
-                        #region Create the polylist node.
-                        //Grendgine_Collada_Polylist[] polylists = new Grendgine_Collada_Polylist[tmpMeshSubsets.NumMeshSubset];
+                        #region Create the triangles node.
                         Grendgine_Collada_Triangles[] triangles = new Grendgine_Collada_Triangles[tmpMeshSubsets.NumMeshSubset];
-                        //tmpGeo.Mesh.Polylist = polylists;
                         tmpGeo.Mesh.Triangles = triangles;
 
-                        for (uint j = 0; j < tmpMeshSubsets.NumMeshSubset; j++) // Need to make a new Polylist entry for each submesh.
+                        for (uint j = 0; j < tmpMeshSubsets.NumMeshSubset; j++) // Need to make a new Triangles entry for each submesh.
                         {
-                            //polylists[j] = new Grendgine_Collada_Polylist();
-                            //polylists[j].Count = (int)tmpMeshSubsets.MeshSubsets[j].NumIndices / 3;
                             triangles[j] = new Grendgine_Collada_Triangles();
                             triangles[j].Count = (int)tmpMeshSubsets.MeshSubsets[j].NumIndices / 3;
 
                             if (CryData.Materials.Count != 0)
                             {
-                                //polylists[j].Material = CryData.Materials[(int)tmpMeshSubsets.MeshSubsets[j].MatID].Name + "-material";
                                 triangles[j].Material = CryData.Materials[(int)tmpMeshSubsets.MeshSubsets[j].MatID].Name + "-material";
                             }
                             // Create the 4 inputs.  vertex, normal, texcoord, color
                             if (tmpColors != null)
                             {
-                                //polylists[j].Input = new Grendgine_Collada_Input_Shared[4];
-                                //polylists[j].Input[3] = new Grendgine_Collada_Input_Shared
                                 triangles[j].Input = new Grendgine_Collada_Input_Shared[4];
                                 triangles[j].Input[3] = new Grendgine_Collada_Input_Shared
                                 {
@@ -667,23 +658,8 @@ namespace CgfConverter
                             }
                             else
                             {
-                                //polylists[j].Input = new Grendgine_Collada_Input_Shared[3];
                                 triangles[j].Input = new Grendgine_Collada_Input_Shared[3];
                             }
-
-                            //polylists[j].Input[0] = new Grendgine_Collada_Input_Shared();
-                            //polylists[j].Input[0].Semantic = new Grendgine_Collada_Input_Semantic();
-                            //polylists[j].Input[0].Semantic = Grendgine_Collada_Input_Semantic.VERTEX;
-                            //polylists[j].Input[0].Offset = 0;
-                            //polylists[j].Input[0].source = "#" + vertices.ID;
-                            //polylists[j].Input[1] = new Grendgine_Collada_Input_Shared();
-                            //polylists[j].Input[1].Semantic = Grendgine_Collada_Input_Semantic.NORMAL;
-                            //polylists[j].Input[1].Offset = 1;
-                            //polylists[j].Input[1].source = "#" + normSource.ID;
-                            //polylists[j].Input[2] = new Grendgine_Collada_Input_Shared();
-                            //polylists[j].Input[2].Semantic = Grendgine_Collada_Input_Semantic.TEXCOORD;
-                            //polylists[j].Input[2].Offset = 2;
-                            //polylists[j].Input[2].source = "#" + uvSource.ID;
 
                             triangles[j].Input[0] = new Grendgine_Collada_Input_Shared();
                             triangles[j].Input[0].Semantic = new Grendgine_Collada_Input_Semantic();
@@ -708,12 +684,8 @@ namespace CgfConverter
                                     vc.AppendFormat(culture, "4 ");
                                 k += 2;
                             }
-                            //polylists[j].VCount = new Grendgine_Collada_Int_Array_String
-                            //{
-                            //    Value_As_String = vc.ToString().TrimEnd()
-                            //};
 
-                            // Create the P node for the Polylist.
+                            // Create the P node for the Triangles.
                             StringBuilder p = new StringBuilder();
                             if (tmpColors == null)
                             {
@@ -732,8 +704,6 @@ namespace CgfConverter
                                 }
                             }
 
-                            //polylists[j].P = new Grendgine_Collada_Int_Array_String();
-                            //polylists[j].P.Value_As_String = p.ToString().TrimEnd()
                             triangles[j].P = new Grendgine_Collada_Int_Array_String();
                             triangles[j].P.Value_As_String = p.ToString().TrimEnd();
                         }

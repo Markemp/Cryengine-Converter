@@ -116,7 +116,7 @@ namespace CgfConverterTests
             var colladaData = new COLLADA(argsHandler, cryData);
             var daeObject = colladaData.DaeObject;
             //colladaData.GenerateDaeObject();
-            colladaData.Render();
+            colladaData.GenerateDaeObject();
             Assert.AreEqual("Scene", daeObject.Scene.Visual_Scene.Name);
             Assert.AreEqual("#Scene", daeObject.Scene.Visual_Scene.URL);
             // Visual Scene Check
@@ -177,6 +177,10 @@ namespace CgfConverterTests
             var source = geometry.Mesh.Source;
             var vertices = geometry.Mesh.Vertices;
             var triangles = geometry.Mesh.Triangles;
+            // Triangles check
+            Assert.AreEqual("hellbringer_body-material", triangles[0].Material);
+            Assert.AreEqual("#hbr_right_torso-mesh-pos", vertices.Input[0].source);
+            Assert.IsTrue(triangles[0].P.Value_As_String.StartsWith("0 0 0 1 1 1 2 2 2 3 3 3 4 4 4 5 5 5 5 5 5 6 6 6 3 3 3 7 7 7 8 8 8 9 9 9 9 9 9"));
             // Source check
             Assert.AreEqual("hbr_right_torso-mesh-pos", source[0].ID);
             Assert.AreEqual("hbr_right_torso-pos", source[0].Name);
@@ -428,10 +432,21 @@ namespace CgfConverterTests
             CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
 
             COLLADA colladaData = new COLLADA(argsHandler, cryData);
-            colladaData.Render();
+            colladaData.GenerateDaeObject();
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
             Assert.AreEqual(3, actualMaterialsCount);
+            var libraryGeometry = colladaData.DaeObject.Library_Geometries;
+            Assert.AreEqual(3, libraryGeometry.Geometry.Length);
+            // Validate geometry and colors
+            var mesh = colladaData.DaeObject.Library_Geometries.Geometry[0].Mesh;
+            Assert.AreEqual(4, mesh.Source.Length);
+            Assert.AreEqual(2, mesh.Triangles.Length);
+            // Validate Triangles
+            Assert.AreEqual(918, mesh.Triangles[0].Count);
+            Assert.AreEqual("green_fern_bush-material", mesh.Triangles[0].Material);
+            Assert.IsTrue(mesh.Triangles[0].P.Value_As_String.StartsWith("0 0 0 0 1 1 1 1 2 2 2 2 3 3 3 3 4 4 4 4 1 1 1 1 1 1 1 1 0 0 0 0 3 3 3 3 5"));
+            Assert.AreEqual(4, mesh.Triangles[0].Input.Length);
 
             ValidateColladaXml(colladaData);
         }
