@@ -172,11 +172,11 @@ namespace CgfConverterTests
             Assert.AreEqual("hbr_right_torso", geometry.Name);
             Assert.AreEqual(4, geometry.Mesh.Source.Length);
             Assert.AreEqual("hbr_right_torso-vertices", geometry.Mesh.Vertices.ID);
-            Assert.AreEqual(1, geometry.Mesh.Polylist.Length);
-            Assert.AreEqual(1908, geometry.Mesh.Polylist[0].Count);
+            Assert.AreEqual(1, geometry.Mesh.Triangles.Length);
+            Assert.AreEqual(1908, geometry.Mesh.Triangles[0].Count);
             var source = geometry.Mesh.Source;
             var vertices = geometry.Mesh.Vertices;
-            var polylist = geometry.Mesh.Polylist;
+            var triangles = geometry.Mesh.Triangles;
             // Source check
             Assert.AreEqual("hbr_right_torso-mesh-pos", source[0].ID);
             Assert.AreEqual("hbr_right_torso-pos", source[0].Name);

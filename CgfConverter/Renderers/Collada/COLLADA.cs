@@ -146,7 +146,7 @@ namespace CgfConverter
                             string test = builder.ToString();
                             if (!File.Exists(test))
                             {
-
+                                //TODO:  Check in ./textures subdir for the file as well.
                             }
                         }
                             
@@ -635,22 +635,30 @@ namespace CgfConverter
                         CleanNumbers(uvString);
 
                         #region Create the polylist node.
-                        Grendgine_Collada_Polylist[] polylists = new Grendgine_Collada_Polylist[tmpMeshSubsets.NumMeshSubset];
-                        tmpGeo.Mesh.Polylist = polylists;
+                        //Grendgine_Collada_Polylist[] polylists = new Grendgine_Collada_Polylist[tmpMeshSubsets.NumMeshSubset];
+                        Grendgine_Collada_Triangles[] triangles = new Grendgine_Collada_Triangles[tmpMeshSubsets.NumMeshSubset];
+                        //tmpGeo.Mesh.Polylist = polylists;
+                        tmpGeo.Mesh.Triangles = triangles;
 
                         for (uint j = 0; j < tmpMeshSubsets.NumMeshSubset; j++) // Need to make a new Polylist entry for each submesh.
                         {
-                            polylists[j] = new Grendgine_Collada_Polylist();
-                            polylists[j].Count = (int)tmpMeshSubsets.MeshSubsets[j].NumIndices / 3;
+                            //polylists[j] = new Grendgine_Collada_Polylist();
+                            //polylists[j].Count = (int)tmpMeshSubsets.MeshSubsets[j].NumIndices / 3;
+                            triangles[j] = new Grendgine_Collada_Triangles();
+                            triangles[j].Count = (int)tmpMeshSubsets.MeshSubsets[j].NumIndices / 3;
+
                             if (CryData.Materials.Count != 0)
                             {
-                                polylists[j].Material = CryData.Materials[(int)tmpMeshSubsets.MeshSubsets[j].MatID].Name + "-material";
+                                //polylists[j].Material = CryData.Materials[(int)tmpMeshSubsets.MeshSubsets[j].MatID].Name + "-material";
+                                triangles[j].Material = CryData.Materials[(int)tmpMeshSubsets.MeshSubsets[j].MatID].Name + "-material";
                             }
                             // Create the 4 inputs.  vertex, normal, texcoord, color
                             if (tmpColors != null)
                             {
-                                polylists[j].Input = new Grendgine_Collada_Input_Shared[4];
-                                polylists[j].Input[3] = new Grendgine_Collada_Input_Shared
+                                //polylists[j].Input = new Grendgine_Collada_Input_Shared[4];
+                                //polylists[j].Input[3] = new Grendgine_Collada_Input_Shared
+                                triangles[j].Input = new Grendgine_Collada_Input_Shared[4];
+                                triangles[j].Input[3] = new Grendgine_Collada_Input_Shared
                                 {
                                     Semantic = Grendgine_Collada_Input_Semantic.COLOR,
                                     Offset = 3,
@@ -659,23 +667,37 @@ namespace CgfConverter
                             }
                             else
                             {
-                                polylists[j].Input = new Grendgine_Collada_Input_Shared[3];
+                                //polylists[j].Input = new Grendgine_Collada_Input_Shared[3];
+                                triangles[j].Input = new Grendgine_Collada_Input_Shared[3];
                             }
 
-                            polylists[j].Input[0] = new Grendgine_Collada_Input_Shared();
-                            polylists[j].Input[0].Semantic = new Grendgine_Collada_Input_Semantic();
-                            polylists[j].Input[0].Semantic = Grendgine_Collada_Input_Semantic.VERTEX;
-                            polylists[j].Input[0].Offset = 0;
-                            polylists[j].Input[0].source = "#" + vertices.ID;
-                            polylists[j].Input[1] = new Grendgine_Collada_Input_Shared();
-                            polylists[j].Input[1].Semantic = Grendgine_Collada_Input_Semantic.NORMAL;
-                            polylists[j].Input[1].Offset = 1;
-                            polylists[j].Input[1].source = "#" + normSource.ID;
-                            polylists[j].Input[2] = new Grendgine_Collada_Input_Shared();
-                            polylists[j].Input[2].Semantic = Grendgine_Collada_Input_Semantic.TEXCOORD;
-                            polylists[j].Input[2].Offset = 2;
-                            polylists[j].Input[2].source = "#" + uvSource.ID;
+                            //polylists[j].Input[0] = new Grendgine_Collada_Input_Shared();
+                            //polylists[j].Input[0].Semantic = new Grendgine_Collada_Input_Semantic();
+                            //polylists[j].Input[0].Semantic = Grendgine_Collada_Input_Semantic.VERTEX;
+                            //polylists[j].Input[0].Offset = 0;
+                            //polylists[j].Input[0].source = "#" + vertices.ID;
+                            //polylists[j].Input[1] = new Grendgine_Collada_Input_Shared();
+                            //polylists[j].Input[1].Semantic = Grendgine_Collada_Input_Semantic.NORMAL;
+                            //polylists[j].Input[1].Offset = 1;
+                            //polylists[j].Input[1].source = "#" + normSource.ID;
+                            //polylists[j].Input[2] = new Grendgine_Collada_Input_Shared();
+                            //polylists[j].Input[2].Semantic = Grendgine_Collada_Input_Semantic.TEXCOORD;
+                            //polylists[j].Input[2].Offset = 2;
+                            //polylists[j].Input[2].source = "#" + uvSource.ID;
 
+                            triangles[j].Input[0] = new Grendgine_Collada_Input_Shared();
+                            triangles[j].Input[0].Semantic = new Grendgine_Collada_Input_Semantic();
+                            triangles[j].Input[0].Semantic = Grendgine_Collada_Input_Semantic.VERTEX;
+                            triangles[j].Input[0].Offset = 0;
+                            triangles[j].Input[0].source = "#" + vertices.ID;
+                            triangles[j].Input[1] = new Grendgine_Collada_Input_Shared();
+                            triangles[j].Input[1].Semantic = Grendgine_Collada_Input_Semantic.NORMAL;
+                            triangles[j].Input[1].Offset = 1;
+                            triangles[j].Input[1].source = "#" + normSource.ID;
+                            triangles[j].Input[2] = new Grendgine_Collada_Input_Shared();
+                            triangles[j].Input[2].Semantic = Grendgine_Collada_Input_Semantic.TEXCOORD;
+                            triangles[j].Input[2].Offset = 2;
+                            triangles[j].Input[2].source = "#" + uvSource.ID;
                             // Create the vcount list.  All triangles, so the subset number of indices.
                             StringBuilder vc = new StringBuilder();
                             for (uint k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
@@ -686,10 +708,10 @@ namespace CgfConverter
                                     vc.AppendFormat(culture, "4 ");
                                 k += 2;
                             }
-                            polylists[j].VCount = new Grendgine_Collada_Int_Array_String
-                            {
-                                Value_As_String = vc.ToString().TrimEnd()
-                            };
+                            //polylists[j].VCount = new Grendgine_Collada_Int_Array_String
+                            //{
+                            //    Value_As_String = vc.ToString().TrimEnd()
+                            //};
 
                             // Create the P node for the Polylist.
                             StringBuilder p = new StringBuilder();
@@ -710,8 +732,10 @@ namespace CgfConverter
                                 }
                             }
 
-                            polylists[j].P = new Grendgine_Collada_Int_Array_String();
-                            polylists[j].P.Value_As_String = p.ToString().TrimEnd();
+                            //polylists[j].P = new Grendgine_Collada_Int_Array_String();
+                            //polylists[j].P.Value_As_String = p.ToString().TrimEnd()
+                            triangles[j].P = new Grendgine_Collada_Int_Array_String();
+                            triangles[j].P.Value_As_String = p.ToString().TrimEnd();
                         }
 
                         #endregion
