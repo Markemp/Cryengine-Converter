@@ -64,6 +64,8 @@
   <ItemGroup>
     <Compile Include="CryEngine\CryEngine.cs" />
     <Compile Include="CryEngine\CryRender.cs" />
+    <Compile Include="CryEngine_Core\Chunks\ChunkBinaryXmlData.cs" />
+    <Compile Include="CryEngine_Core\Chunks\ChunkBinaryXmlData_3.cs" />
     <Compile Include="CryEngine_Core\Chunks\Chunk.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkBoneAnim.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkBoneAnim_290.cs" />

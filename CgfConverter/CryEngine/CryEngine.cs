@@ -18,7 +18,8 @@ namespace CgfConverter
             ".cga",
             ".chr",
             ".skin",
-            ".anim"
+            ".anim",
+            ".soc"
         };
         public List<Model> Models { get; internal set; } = new List<Model>();
         public List<Material> Materials { get; internal set; } = new List<Material>();

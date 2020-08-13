@@ -95,6 +95,9 @@ namespace CgfConverter.CryEngineCore
                     return Chunk.New<ChunkMeshMorphTargets>(version);
                 case ChunkTypeEnum.Mtl:
                 //Utils.Log(LogLevelEnum.Debug, "Mtl Chunk here");  // Obsolete.  Not used
+
+                case ChunkTypeEnum.BinaryXmlDataSC:
+                    return Chunk.New<ChunkBinaryXmlData>(version);
                 default:
                     return new ChunkUnknown();
             }

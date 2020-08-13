@@ -18,12 +18,8 @@ namespace CgfConverterConsole
             Utils.LogLevel = LogLevelEnum.None;      // Display NO error logs
             Utils.DebugLevel = LogLevelEnum.Debug;
 
-            args = new String[] { @"O:\Mods\Models\*.cg?", @"O:\Mods\Models\*.skin", @"O:\Mods\Models\*.chr", "-objectdir", @"O:\Mods\SC\Latest", "-tif", "-merge", "-obj", "-outdir", @"O:\Mods\Models\Export" };
-            args = new String[] { @"O:\Mods\SC\Latest\*.cg?", @"O:\Mods\SC\Latest\*.skin", @"O:\Mods\SC\Latest\*.chr", "-objectdir", @"O:\Mods\SC\Latest", "-tif", "-merge", "-obj", "-outdir", @"O:\Mods\Assets_Out" };
-            args = new String[] { @"Objects\*.cg?", @"Objects\*.skin", @"Objects\*.chr", "-objectdir", @"O:\Mods\SC\Latest", "-tif", "-merge", "-obj", "-outdir", @"Export" };
-            // args = new String[] { @"O:\Mods\Assets\*.cg?", "-objectdir", @"O:\Mods\SC\Latest", "-tif", "-merge", "-dae", "-outdir", @"O:\Mods\Assets_Out" };
-            args = new String[] { @"Objects\*.cg?", @"Objects\*.skin", @"Objects\*.chr", "-objectdir", @"O:\Mods\SC\Latest", "-tif", "-merge", "-obj", "-cry", "-dae", "-outdir", @"Export", "-skipshield", "-skipproxy" };
-            args = new String[] { @"Starfarer\*.cg?", "-objectdir", @"D:\Workspaces\github\Cryengine-Converter\cgf-converter\bin\dev_dolkensp", "-tif", "-merge", "-obj", "-cry", "-outdir", @"Export", "-skipshield", "-skipproxy" };
+            args = new String[] { @"C:\Users\PeterDolkens\Downloads\SOC'n'destroy\socpak\pisces_int.soc", "-objectdir", @"C:\Users\PeterDolkens\Downloads\SOC'n'destroy\socpak", "-obj", "-outdir", @"C:\Users\PeterDolkens\Downloads\SOC'n'destroy\socpak\out" };
+
 #endif
 
 #if DEV_MARKEMP
@@ -50,7 +46,7 @@ namespace CgfConverterConsole
 			//args = new String[] { @"d:\temp\prey\dahl_genmalebody01.skin", "-objectdir", @"d:\temp\prey", "-dae", "-dds" };
 #endif
 
-			ArgsHandler argsHandler = new ArgsHandler();
+            ArgsHandler argsHandler = new ArgsHandler();
             int result = argsHandler.ProcessArgs(args);
 
 #if !DEBUG

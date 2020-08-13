@@ -73,7 +73,10 @@
         CompiledIntSkinVerticesSC = 0xCCCC1005,
         CompiledExt2IntMapSC = 0xCCCC1006,
         UnknownSC1 = 0xCCCC2004,
-        BoneBoxesSC = 0x08013004
+        BoneBoxesSC = 0x08013004,
+
+
+        BinaryXmlDataSC = 0xcccbf004,
     }
 
     public enum ChunkTypetmp
