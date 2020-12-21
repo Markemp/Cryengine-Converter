@@ -13,6 +13,8 @@ namespace CgfConverterTests.TestUtilities
         internal readonly ArgsHandler argsHandler = new ArgsHandler();
         internal List<string> errors = new List<string>();
 
+        public double delta = 0.00000001;
+
         internal void GetSchemaSet()
         {
             schemaSet.Add(@"http://www.collada.org/2005/11/COLLADASchema", @"..\..\Schemas\collada_schema_1_4_1_ms.xsd");

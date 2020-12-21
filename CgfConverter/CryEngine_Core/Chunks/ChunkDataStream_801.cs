@@ -11,45 +11,45 @@ namespace CgfConverter.CryEngineCore
         {
             base.Read(b);
 
-            this.Flags2 = b.ReadUInt32(); // another filler
+            Flags2 = b.ReadUInt32(); // another filler
             uint tmpdataStreamType = b.ReadUInt32();
-            this.DataStreamType = (DataStreamTypeEnum)Enum.ToObject(typeof(DataStreamTypeEnum), tmpdataStreamType);
-            this.SkipBytes(b, 4);
-            this.NumElements = b.ReadUInt32(); // number of elements in this chunk
+            DataStreamType = (DataStreamTypeEnum)Enum.ToObject(typeof(DataStreamTypeEnum), tmpdataStreamType);
+            SkipBytes(b, 4);
+            NumElements = b.ReadUInt32(); // number of elements in this chunk
 
-            this.BytesPerElement = b.ReadUInt32(); // bytes per element
+            BytesPerElement = b.ReadUInt32(); // bytes per element
 
-            this.SkipBytes(b, 8);
+            SkipBytes(b, 8);
 
             // Now do loops to read for each of the different Data Stream Types.  If vertices, need to populate Vector3s for example.
-            switch (this.DataStreamType)
+            switch (DataStreamType)
             {
                 case DataStreamTypeEnum.VERTICES:
-                    this.Vertices = new Vector3[this.NumElements];
+                    Vertices = new Vector3[NumElements];
                     if (BytesPerElement == 12)
                     {
-                        for (Int32 i = 0; i < this.NumElements; i++)
+                        for (Int32 i = 0; i < NumElements; i++)
                         {
-                            this.Vertices[i].x = b.ReadSingle();
-                            this.Vertices[i].y = b.ReadSingle();
-                            this.Vertices[i].z = b.ReadSingle();
+                            Vertices[i].x = b.ReadSingle();
+                            Vertices[i].y = b.ReadSingle();
+                            Vertices[i].z = b.ReadSingle();
                         }
                     } else 
                     if (BytesPerElement == 8)
                     {
-                        for (Int32 i = 0; i < this.NumElements; i++)
+                        for (Int32 i = 0; i < NumElements; i++)
                         {
                             Half xshort = new Half();
                             xshort.bits = b.ReadUInt16();
-                            this.Vertices[i].x = xshort.ToSingle();
+                            Vertices[i].x = xshort.ToSingle();
 
                             Half yshort = new Half();
                             yshort.bits = b.ReadUInt16();
-                            this.Vertices[i].y = yshort.ToSingle();
+                            Vertices[i].y = yshort.ToSingle();
 
                             Half zshort = new Half();
                             zshort.bits = b.ReadUInt16();
-                            this.Vertices[i].z = zshort.ToSingle();
+                            Vertices[i].z = zshort.ToSingle();
                             b.ReadUInt16();
                         }
                     }
@@ -57,86 +57,78 @@ namespace CgfConverter.CryEngineCore
                     break;
 
                 case DataStreamTypeEnum.INDICES: 
-                    this.Indices = new UInt32[NumElements];
+                    Indices = new UInt32[NumElements];
 
-                    if (this.BytesPerElement == 2)
+                    if (BytesPerElement == 2)
                     {
-                        for (Int32 i = 0; i < this.NumElements; i++)
+                        for (Int32 i = 0; i < NumElements; i++)
                         {
-                            this.Indices[i] = (UInt32)b.ReadUInt16();
+                            Indices[i] = (UInt32)b.ReadUInt16();
                         }
                     }
-                    if (this.BytesPerElement == 4)
+                    if (BytesPerElement == 4)
                     {
-                        for (Int32 i = 0; i < this.NumElements; i++)
+                        for (Int32 i = 0; i < NumElements; i++)
                         {
-                            this.Indices[i] = b.ReadUInt32();
+                            Indices[i] = b.ReadUInt32();
                         }
                     }
                     break;
-
-                #region case DataStreamTypeEnum.NORMALS:
 
                 case DataStreamTypeEnum.NORMALS:
-                    this.Normals = new Vector3[this.NumElements];
+                    Normals = new Vector3[NumElements];
                     for (Int32 i = 0; i < NumElements; i++)
                     {
-                        this.Normals[i].x = b.ReadSingle();
-                        this.Normals[i].y = b.ReadSingle();
-                        this.Normals[i].z = b.ReadSingle();
+                        Normals[i].x = b.ReadSingle();
+                        Normals[i].y = b.ReadSingle();
+                        Normals[i].z = b.ReadSingle();
                     }
                     //Utils.Log(LogLevelEnum.Debug, "Offset is {0:X}", b.BaseStream.Position);
                     break;
-
-                #endregion
-                #region case DataStreamTypeEnum.UVS:
 
                 case DataStreamTypeEnum.UVS:
-                    this.UVs = new UV[this.NumElements];
-                    for (Int32 i = 0; i < this.NumElements; i++)
+                    UVs = new UV[NumElements];
+                    for (Int32 i = 0; i < NumElements; i++)
                     {
-                        this.UVs[i].U = b.ReadSingle();
-                        this.UVs[i].V = b.ReadSingle();
+                        UVs[i].U = b.ReadSingle();
+                        UVs[i].V = b.ReadSingle();
                     }
                     //Utils.Log(LogLevelEnum.Debug, "Offset is {0:X}", b.BaseStream.Position);
                     break;
 
-                #endregion
-                #region case DataStreamTypeEnum.TANGENTS:
-
                 case DataStreamTypeEnum.TANGENTS:
-                    this.Tangents = new Tangent[this.NumElements, 2];
-                    this.Normals = new Vector3[this.NumElements];
-                    for (Int32 i = 0; i < this.NumElements; i++)
+                    Tangents = new Tangent[NumElements, 2];
+                    Normals = new Vector3[NumElements];
+                    for (Int32 i = 0; i < NumElements; i++)
                     {
-                        switch (this.BytesPerElement)
+                        switch (BytesPerElement)
                         {
                             case 0x10:
                                 // These have to be divided by 32767 to be used properly (value between 0 and 1)
-                                this.Tangents[i, 0].x = b.ReadInt16();
-                                this.Tangents[i, 0].y = b.ReadInt16();
-                                this.Tangents[i, 0].z = b.ReadInt16();
-                                this.Tangents[i, 0].w = b.ReadInt16();
+                                Tangents[i, 0].x = b.ReadInt16();
+                                Tangents[i, 0].y = b.ReadInt16();
+                                Tangents[i, 0].z = b.ReadInt16();
+                                Tangents[i, 0].w = b.ReadInt16();
 
-                                this.Tangents[i, 1].x = b.ReadInt16();
-                                this.Tangents[i, 1].y = b.ReadInt16();
-                                this.Tangents[i, 1].z = b.ReadInt16();
-                                this.Tangents[i, 1].w = b.ReadInt16();
+                                Tangents[i, 1].x = b.ReadInt16();
+                                Tangents[i, 1].y = b.ReadInt16();
+                                Tangents[i, 1].z = b.ReadInt16();
+                                Tangents[i, 1].w = b.ReadInt16();
 
                                 break;
                             case 0x08:
                                 // These have to be divided by 127 to be used properly (value between 0 and 1)
                                 // Tangent
-                                this.Tangents[i, 0].w = b.ReadSByte() / 127.0;
-                                this.Tangents[i, 0].x = b.ReadSByte() / 127.0;
-                                this.Tangents[i, 0].y = b.ReadSByte() / 127.0;
-                                this.Tangents[i, 0].z = b.ReadSByte() / 127.0;
+                                Tangents[i, 0].w = b.ReadSByte() / 127.0;
+                                Tangents[i, 0].x = b.ReadSByte() / 127.0;
+                                Tangents[i, 0].y = b.ReadSByte() / 127.0;
+                                Tangents[i, 0].z = b.ReadSByte() / 127.0;
 
                                 // Binormal
-                                this.Tangents[i, 1].w = b.ReadSByte() / 127.0;
-                                this.Tangents[i, 1].x = b.ReadSByte() / 127.0;
-                                this.Tangents[i, 1].y = b.ReadSByte() / 127.0;
-                                this.Tangents[i, 1].z = b.ReadSByte() / 127.0;
+                                Tangents[i, 1].w = b.ReadSByte() / 127.0;
+                                Tangents[i, 1].x = b.ReadSByte() / 127.0;
+                                Tangents[i, 1].y = b.ReadSByte() / 127.0;
+                                Tangents[i, 1].z = b.ReadSByte() / 127.0;
 
                                 // Calculate the normal based on the cross product of the tangents.
                                 //this.Normals[i].x = (Tangents[i,0].y * Tangents[i,1].z - Tangents[i,0].z * Tangents[i,1].y);
@@ -153,73 +145,69 @@ namespace CgfConverter.CryEngineCore
                     // Utils.Log(LogLevelEnum.Debug, "Offset is {0:X}", b.BaseStream.Position);
                     break;
 
-                #endregion
-                #region case DataStreamTypeEnum.COLORS:
-
                 case DataStreamTypeEnum.COLORS:
-                    switch (this.BytesPerElement)
+                    switch (BytesPerElement)
                     {
                         case 3:
-                            this.RGBColors = new IRGB[this.NumElements];
+                            RGBColors = new IRGB[NumElements];
                             for (Int32 i = 0; i < NumElements; i++)
                             {
-                                this.RGBColors[i].r = b.ReadByte();
-                                this.RGBColors[i].g = b.ReadByte();
-                                this.RGBColors[i].b = b.ReadByte();
+                                RGBColors[i].r = b.ReadByte();
+                                RGBColors[i].g = b.ReadByte();
+                                RGBColors[i].b = b.ReadByte();
                             }
                             break;
 
                         case 4:
-                            this.RGBAColors = new IRGBA[this.NumElements];
-                            for (Int32 i = 0; i < this.NumElements; i++)
+                            RGBAColors = new IRGBA[NumElements];
+                            for (Int32 i = 0; i < NumElements; i++)
                             {
-                                this.RGBAColors[i].r = b.ReadByte();
-                                this.RGBAColors[i].g = b.ReadByte();
-                                this.RGBAColors[i].b = b.ReadByte();
-                                this.RGBAColors[i].a = b.ReadByte();
+                                RGBAColors[i].r = b.ReadByte();
+                                RGBAColors[i].g = b.ReadByte();
+                                RGBAColors[i].b = b.ReadByte();
+                                RGBAColors[i].a = b.ReadByte();
                             }
                             break;
                         default:
                             Utils.Log("Unknown Color Depth");
-                            for (Int32 i = 0; i < this.NumElements; i++)
+                            for (Int32 i = 0; i < NumElements; i++)
                             {
-                                this.SkipBytes(b, this.BytesPerElement);
+                                SkipBytes(b, BytesPerElement);
                             }
                             break;
                     }
                     break;
 
-                #endregion
                 #region case DataStreamTypeEnum.VERTSUVS:
 
                 case DataStreamTypeEnum.VERTSUVS:  // 3 half floats for verts, 3 half floats for normals, 2 half floats for UVs
                     // Utils.Log(LogLevelEnum.Debug, "In VertsUVs...");
-                    this.Vertices = new Vector3[this.NumElements];
-                    this.Normals = new Vector3[this.NumElements];
-                    this.RGBColors = new IRGB[this.NumElements];
-                    this.UVs = new UV[this.NumElements];
-                    switch (this.BytesPerElement)  // new Star Citizen files
+                    Vertices = new Vector3[NumElements];
+                    Normals = new Vector3[NumElements];
+                    RGBColors = new IRGB[NumElements];
+                    UVs = new UV[NumElements];
+                    switch (BytesPerElement)  // new Star Citizen files
                     {
                         case 20:  // Dymek wrote this.  Used in 2.6 skin files.  3 floats for vertex position, 4 bytes for normals, 2 halfs for UVs.  Normals are calculated from Tangents
-                            for (Int32 i = 0; i < this.NumElements; i++)
+                            for (Int32 i = 0; i < NumElements; i++)
                             {
-                                this.Vertices[i].x = b.ReadSingle();
-                                this.Vertices[i].y = b.ReadSingle();
-                                this.Vertices[i].z = b.ReadSingle();                  // For some reason, skins are an extra 1 meter in the z direction.
+                                Vertices[i].x = b.ReadSingle();
+                                Vertices[i].y = b.ReadSingle();
+                                Vertices[i].z = b.ReadSingle();                  // For some reason, skins are an extra 1 meter in the z direction.
 
                                 // Normals are stored in a signed byte, prob div by 127.
-                                this.Normals[i].x = (float)b.ReadSByte() / 127;
-                                this.Normals[i].y = (float)b.ReadSByte() / 127;
-                                this.Normals[i].z = (float)b.ReadSByte() / 127;
+                                Normals[i].x = (float)b.ReadSByte() / 127;
+                                Normals[i].y = (float)b.ReadSByte() / 127;
+                                Normals[i].z = (float)b.ReadSByte() / 127;
                                 b.ReadSByte(); // Should be FF.
 
                                 Half uvu = new Half();
                                 uvu.bits = b.ReadUInt16();
-                                this.UVs[i].U = uvu.ToSingle();
+                                UVs[i].U = uvu.ToSingle();
 
                                 Half uvv = new Half();
                                 uvv.bits = b.ReadUInt16();
-                                this.UVs[i].V = uvv.ToSingle();
+                                UVs[i].V = uvv.ToSingle();
 
                                 //bver = b.ReadUInt16();
                                 //ver = Byte4HexToFloat(bver.ToString("X8"));
@@ -232,26 +220,26 @@ namespace CgfConverter.CryEngineCore
                             break;
                         case 16:   // Dymek updated this.
                             //Console.WriteLine("method: (5), 3 half floats for verts, 3 colors, 2 half floats for UVs");
-                            for (Int32 i = 0; i < this.NumElements; i++)
+                            for (Int32 i = 0; i < NumElements; i++)
                             {
                                 ushort bver = 0;
                                 float ver = 0;
 
                                 bver = b.ReadUInt16();
                                 ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
-                                this.Vertices[i].x = ver;
+                                Vertices[i].x = ver;
 
                                 bver = b.ReadUInt16();
                                 ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
-                                this.Vertices[i].y = ver;
+                                Vertices[i].y = ver;
 
                                 bver = b.ReadUInt16();
                                 ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
-                                this.Vertices[i].z = ver;
+                                Vertices[i].z = ver;
 
                                 bver = b.ReadUInt16();
                                 ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
-                                this.Vertices[i].w = ver;       // Almost always 1
+                                Vertices[i].w = ver;       // Almost always 1
 
                                 // Next structure is Colors, not normals.  For 16 byte elements, normals are calculated from Tangent data.
                                 //this.RGBColors[i].r = b.ReadByte();
@@ -270,19 +258,19 @@ namespace CgfConverter.CryEngineCore
                                 quat.y = (b.ReadByte() - 128.0f) / 127.5f;
                                 quat.z = (b.ReadByte() - 128.0f) / 127.5f;
                                 quat.w = (b.ReadByte() - 128.0f) / 127.5f;
-                                this.Normals[i].x = (2 * (quat.x * quat.z + quat.y * quat.w));
-                                this.Normals[i].y = (2 * (quat.y * quat.z - quat.x * quat.w));
-                                this.Normals[i].z = (2 * (quat.z * quat.z + quat.w * quat.w)) - 1;
+                                Normals[i].x = (2 * (quat.x * quat.z + quat.y * quat.w));
+                                Normals[i].y = (2 * (quat.y * quat.z - quat.x * quat.w));
+                                Normals[i].z = (2 * (quat.z * quat.z + quat.w * quat.w)) - 1;
 
 
                                 // UVs ABSOLUTELY should use the Half structures.
                                 Half uvu = new Half();
                                 uvu.bits = b.ReadUInt16();
-                                this.UVs[i].U = uvu.ToSingle();
+                                UVs[i].U = uvu.ToSingle();
 
                                 Half uvv = new Half();
                                 uvv.bits = b.ReadUInt16();
-                                this.UVs[i].V = uvv.ToSingle();
+                                UVs[i].V = uvv.ToSingle();
 
                                 #region Legacy version using Halfs
                                 //Half xshort = new Half();
@@ -321,9 +309,9 @@ namespace CgfConverter.CryEngineCore
                             break;
                         default:
                             Utils.Log("Unknown VertUV structure");
-                            for (Int32 i = 0; i < this.NumElements; i++)
+                            for (Int32 i = 0; i < NumElements; i++)
                             {
-                                this.SkipBytes(b, this.BytesPerElement);
+                                SkipBytes(b, BytesPerElement);
                             }
                             break;
                     }
@@ -340,7 +328,7 @@ namespace CgfConverter.CryEngineCore
                     for (int i = 0; i < NumElements; i++)
                     {
                         MeshBoneMapping tmpMap = new MeshBoneMapping();
-                        switch (this.BytesPerElement)
+                        switch (BytesPerElement)
                         {
                             case 8:
                                 tmpMap.BoneIndex = new int[4];
@@ -386,35 +374,32 @@ namespace CgfConverter.CryEngineCore
                 #endregion
                 #region DataStreamTypeEnum.Unknown1
                 case DataStreamTypeEnum.UNKNOWN1:
-                    this.Tangents = new Tangent[this.NumElements, 2];
-                    this.Normals = new Vector3[this.NumElements];
+                    Tangents = new Tangent[NumElements, 2];
+                    Normals = new Vector3[NumElements];
                     for (Int32 i = 0; i < NumElements; i++)
                     {
-                        this.Tangents[i, 0].w = b.ReadSByte() / 127.0;
-                        this.Tangents[i, 0].x = b.ReadSByte() / 127.0;
-                        this.Tangents[i, 0].y = b.ReadSByte() / 127.0;
-                        this.Tangents[i, 0].z = b.ReadSByte() / 127.0;
+                        Tangents[i, 0].w = b.ReadSByte() / 127.0;
+                        Tangents[i, 0].x = b.ReadSByte() / 127.0;
+                        Tangents[i, 0].y = b.ReadSByte() / 127.0;
+                        Tangents[i, 0].z = b.ReadSByte() / 127.0;
 
                         // Binormal
-                        this.Tangents[i, 1].w = b.ReadSByte() / 127.0;
-                        this.Tangents[i, 1].x = b.ReadSByte() / 127.0;
-                        this.Tangents[i, 1].y = b.ReadSByte() / 127.0;
-                        this.Tangents[i, 1].z = b.ReadSByte() / 127.0;
+                        Tangents[i, 1].w = b.ReadSByte() / 127.0;
+                        Tangents[i, 1].x = b.ReadSByte() / 127.0;
+                        Tangents[i, 1].y = b.ReadSByte() / 127.0;
+                        Tangents[i, 1].z = b.ReadSByte() / 127.0;
 
                         // Calculate the normal based on the cross product of the tangents.
-                        this.Normals[i].x = (Tangents[i, 0].y * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].y);
-                        this.Normals[i].y = 0 - (Tangents[i, 0].x * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].x);
-                        this.Normals[i].z = (Tangents[i, 0].x * Tangents[i, 1].y - Tangents[i, 0].y * Tangents[i, 1].x);
+                        Normals[i].x = (Tangents[i, 0].y * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].y);
+                        Normals[i].y = 0 - (Tangents[i, 0].x * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].x);
+                        Normals[i].z = (Tangents[i, 0].x * Tangents[i, 1].y - Tangents[i, 0].y * Tangents[i, 1].x);
                     }
                     break;
                 #endregion // Prey normals?
-                #region default:
 
                 default:
                     Utils.Log(LogLevelEnum.Debug, "***** Unknown DataStream Type *****");
                     break;
-
-                    #endregion
             }
         }
 
@@ -462,7 +447,5 @@ namespace CgfConverter.CryEngineCore
             if (intPart == 0) { number =  dec; }*/
             return number;
         }
-
-        
     }
 }
