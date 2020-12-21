@@ -81,7 +81,7 @@ namespace CgfConverter.CryEngineCore
                 case DataStreamTypeEnum.VERTICES:  // Ref is 0x00000000
                     this.Vertices = new Vector3[this.NumElements];
 
-                    switch (this.BytesPerElement)
+                    switch (BytesPerElement)
                     {
                         case 12:
                             for (Int32 i = 0; i < this.NumElements; i++)

@@ -6,7 +6,7 @@ namespace CgfConverter.CryEngineCore
 {
     public class ChunkDataStream_801 : ChunkDataStream
     {
-        // Spriggan models, not sure which game.  SC, MWO uses 0800
+        // Spriggan models, not sure which game.  Also Crucible.  SC, MWO uses 0800
         public override void Read(BinaryReader b)
         {
             base.Read(b);
@@ -18,31 +18,45 @@ namespace CgfConverter.CryEngineCore
             this.NumElements = b.ReadUInt32(); // number of elements in this chunk
 
             this.BytesPerElement = b.ReadUInt32(); // bytes per element
-            //if (this.NumElements == 0) // For vertices, number of elements is frequently 0.
-            //{
-                
-            //}
+
             this.SkipBytes(b, 8);
 
             // Now do loops to read for each of the different Data Stream Types.  If vertices, need to populate Vector3s for example.
             switch (this.DataStreamType)
             {
-                #region case DataStreamTypeEnum.VERTICES:
-
-                case DataStreamTypeEnum.VERTICES:  // Ref is 0x00000000
+                case DataStreamTypeEnum.VERTICES:
                     this.Vertices = new Vector3[this.NumElements];
-                    for (Int32 i = 0; i < this.NumElements; i++)
+                    if (BytesPerElement == 12)
                     {
-                        this.Vertices[i].x = b.ReadSingle();
-                        this.Vertices[i].y = b.ReadSingle();
-                        this.Vertices[i].z = b.ReadSingle();
+                        for (Int32 i = 0; i < this.NumElements; i++)
+                        {
+                            this.Vertices[i].x = b.ReadSingle();
+                            this.Vertices[i].y = b.ReadSingle();
+                            this.Vertices[i].z = b.ReadSingle();
+                        }
+                    } else 
+                    if (BytesPerElement == 8)
+                    {
+                        for (Int32 i = 0; i < this.NumElements; i++)
+                        {
+                            Half xshort = new Half();
+                            xshort.bits = b.ReadUInt16();
+                            this.Vertices[i].x = xshort.ToSingle();
+
+                            Half yshort = new Half();
+                            yshort.bits = b.ReadUInt16();
+                            this.Vertices[i].y = yshort.ToSingle();
+
+                            Half zshort = new Half();
+                            zshort.bits = b.ReadUInt16();
+                            this.Vertices[i].z = zshort.ToSingle();
+                            b.ReadUInt16();
+                        }
                     }
+
                     break;
 
-                #endregion
-                #region case DataStreamTypeEnum.INDICES:
-
-                case DataStreamTypeEnum.INDICES:  // Ref is 
+                case DataStreamTypeEnum.INDICES: 
                     this.Indices = new UInt32[NumElements];
 
                     if (this.BytesPerElement == 2)
@@ -50,7 +64,6 @@ namespace CgfConverter.CryEngineCore
                         for (Int32 i = 0; i < this.NumElements; i++)
                         {
                             this.Indices[i] = (UInt32)b.ReadUInt16();
-                            //Console.WriteLine("Indices {0}: {1}", i, this.Indices[i]);
                         }
                     }
                     if (this.BytesPerElement == 4)
@@ -60,10 +73,8 @@ namespace CgfConverter.CryEngineCore
                             this.Indices[i] = b.ReadUInt32();
                         }
                     }
-                    //Utils.Log(LogLevelEnum.Debug, "Offset is {0:X}", b.BaseStream.Position);
                     break;
 
-                #endregion
                 #region case DataStreamTypeEnum.NORMALS:
 
                 case DataStreamTypeEnum.NORMALS:

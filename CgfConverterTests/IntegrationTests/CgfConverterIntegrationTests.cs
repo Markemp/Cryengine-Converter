@@ -1,11 +1,11 @@
-﻿using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Threading;
-using CgfConverter;
+﻿using CgfConverter;
 using CgfConverterTests.TestUtilities;
 using grendgine_collada;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Threading;
 
 namespace CgfConverterTests
 {
@@ -74,7 +74,7 @@ namespace CgfConverterTests
         {
             var args = new string[] { @"..\..\ResourceFiles\candycane_a.chr", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
             int result = testUtils.argsHandler.ProcessArgs(args);
-            Assert.AreEqual(0, result); 
+            Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
@@ -89,7 +89,7 @@ namespace CgfConverterTests
         {
             var args = new string[] { @"..\..\ResourceFiles\hbr_right_torso_uac5_bh1.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
             int result = testUtils.argsHandler.ProcessArgs(args);
-            Assert.AreEqual(0, result); 
+            Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
@@ -104,7 +104,7 @@ namespace CgfConverterTests
         {
             var args = new string[] { @"..\..\ResourceFiles\hbr_right_torso.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
             int result = testUtils.argsHandler.ProcessArgs(args);
-            Assert.AreEqual(0, result); 
+            Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
 
             var colladaData = new COLLADA(testUtils.argsHandler, cryData);
@@ -220,7 +220,7 @@ namespace CgfConverterTests
         {
             var args = new string[] { @"..\..\ResourceFiles\hangar_asteroid_controlroom_fan.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
             int result = testUtils.argsHandler.ProcessArgs(args);
-            Assert.AreEqual(0, result); 
+            Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);

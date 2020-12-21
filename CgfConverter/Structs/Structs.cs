@@ -99,6 +99,11 @@ namespace CgfConverter
             };
             return result;
         }
+
+        public override string ToString()
+        {
+            return $@"x: {x:F8}, y: {y:F8}, z: {z:F8}";
+        }
     }  // Vector in 3D space {x,y,z}
 
     public struct Vector4

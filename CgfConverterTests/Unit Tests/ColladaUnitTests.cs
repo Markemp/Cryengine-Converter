@@ -1,5 +1,4 @@
-﻿using CgfConverter;
-using CgfConverter.CryEngineCore;
+﻿using CgfConverter.CryEngineCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CgfConverterTests.Unit_Tests

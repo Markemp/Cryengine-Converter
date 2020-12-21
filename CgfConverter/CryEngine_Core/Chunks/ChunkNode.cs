@@ -163,6 +163,8 @@ namespace CgfConverter.CryEngineCore
 
             // Read the Name string
             this.Name = b.ReadFString(64);
+            if (String.IsNullOrEmpty(this.Name))
+                this.Name = "unknown";
             this.ObjectNodeID = b.ReadInt32(); // Object reference ID
             this.ParentNodeID = b.ReadInt32();
             this.__NumChildren = b.ReadInt32();
