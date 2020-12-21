@@ -76,49 +76,6 @@
         BoneBoxesSC = 0x08013004
     }
 
-    public enum ChunkTypetmp
-    {
-        Any,
-        Mesh,
-        Helper,
-        VertAnim,
-        BoneAnim,
-        GeomNameList,
-        BoneNameList,
-        MtlList,
-        MRM,
-        SceneProps,
-        Light,
-        PatchMesh,
-        Node,
-        Mtl,
-        Controller,
-        Timing,
-        BoneMesh,
-        BoneLightBinding,
-        MeshMorphTarget,
-        BoneInitialPos,
-        SourceInfo,
-        MtlName,
-        ExportFlags,
-        DataStream,
-        MeshSubsets,
-        MeshPhysicsData,
-        CompiledBones,
-        CompiledPhysicalBones,
-        CompiledMorphtargets,
-        CompiledPhysicalProxies,
-        CompiledIntFaces,
-        CompiledIntSkinVertices,
-        CompiledExt2IntMap,
-        BreakablePhysics,
-        FaceMap,
-        SpeedInfo,
-        FootPlantInfo,
-        BonesBoxes,
-        UnknownAAFC0005
-    }
-
     public enum ChunkVersion : uint
     {
         ChkVersion
@@ -195,17 +152,17 @@
         UVS,
         COLORS,
         COLORS2,
-        INDICES,
+        INDICES,    // 0x05
         TANGENTS,
         SHCOEFFS,
         SHAPEDEFORMATION,
-        BONEMAP,
+        BONEMAP,    // 0x09
         FACEMAP,
         VERTMATS,
         UNKNOWN1,   // Prey Normals?
         UNKNOWN2,
         UNKNOWN3,
-        VERTSUVS,
+        VERTSUVS,   // 0x0F
         UNKNOWN5,
         UNKNOWN6
     }  //complete

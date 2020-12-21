@@ -16,10 +16,10 @@ namespace CgfConverter.CryEngineCore
 
             reader.BaseStream.Seek(this._header.Offset, 0);
 
-            UInt32 peek = reader.ReadUInt32();
+            uint peek = reader.ReadUInt32();
 
             // Try and detect SourceInfo type - if it's there, we need to skip ahead a few bytes
-            if ((peek == (UInt32)ChunkTypeEnum.SourceInfo) || (peek + 0xCCCBF000 == (UInt32)ChunkTypeEnum.SourceInfo))
+            if ((peek == (uint)ChunkTypeEnum.SourceInfo) || (peek + 0xCCCBF000 == (uint)ChunkTypeEnum.SourceInfo))
             {
                 this.SkipBytes(reader, 12);
             }
