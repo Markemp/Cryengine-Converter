@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using CgfConverter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using CgfConverter;
-using Dolkens.Framework.Extensions;
 
 namespace CgfConverterTests.Unit_Tests
 {

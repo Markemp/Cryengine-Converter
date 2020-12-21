@@ -105,12 +105,12 @@ namespace CgfConverter.CryEngineCore
 
         public static T New<T>(uint version) where T : Chunk
         {
-            Dictionary<UInt32, Func<dynamic>> versionMap = null;
+            Dictionary<uint, Func<dynamic>> versionMap = null;
             Func<dynamic> factory = null;
 
             if (!_chunkFactoryCache.TryGetValue(typeof(T), out versionMap))
             {
-                versionMap = new Dictionary<UInt32, Func<dynamic>> { };
+                versionMap = new Dictionary<uint, Func<dynamic>> { };
                 _chunkFactoryCache[typeof(T)] = versionMap;
             }
 

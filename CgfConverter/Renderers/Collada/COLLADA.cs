@@ -14,7 +14,7 @@ namespace CgfConverter
 {
     public class COLLADA : BaseRenderer // class to export to .dae format (COLLADA)
     {
-        CultureInfo culture = CultureInfo.CreateSpecificCulture("en-US");
+        private readonly CultureInfo culture = CultureInfo.CreateSpecificCulture("en-US");
         private const string colladaVersion = "1.4.1";
 
         public Grendgine_Collada DaeObject { get; private set; } = new Grendgine_Collada();  // This is the serializable class.
@@ -989,7 +989,7 @@ namespace CgfConverter
                     vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[1] + " " + (index + 1) + " ");
                     vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[2] + " " + (index + 2) + " ");
                     vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[3] + " " + (index + 3) + " ");
-                    index = index + 4;
+                    index += 4;
                 }
             }
             else
@@ -1002,7 +1002,7 @@ namespace CgfConverter
                     vertices.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[2] + " " + (index + 2) + " ");
                     vertices.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[3] + " " + (index + 3) + " ");
 
-                    index = index + 4;
+                    index += 4;
                 }
             }
             vertexWeights.V = new Grendgine_Collada_Int_Array_String();
@@ -1217,9 +1217,8 @@ namespace CgfConverter
         private Grendgine_Collada_Node CreateSimpleNode(ChunkNode nodeChunk)
         {
             // This will be used to make the Collada node element for Node chunks that point to Helper Chunks and MeshPhysics
-            Grendgine_Collada_Node_Type nodeType = new Grendgine_Collada_Node_Type();
+            Grendgine_Collada_Node_Type nodeType = Grendgine_Collada_Node_Type.NODE;
             Grendgine_Collada_Node tmpNode = new Grendgine_Collada_Node();
-            nodeType = Grendgine_Collada_Node_Type.NODE;
             tmpNode.Type = nodeType;
             tmpNode.Name = nodeChunk.Name;
             tmpNode.ID = nodeChunk.Name;
@@ -1257,8 +1256,7 @@ namespace CgfConverter
                 List<Grendgine_Collada_Node> childNodes = new List<Grendgine_Collada_Node>();
                 foreach (ChunkNode childNodeChunk in nodeChunk.AllChildNodes.ToList())
                 {
-                    Grendgine_Collada_Node childNode = new Grendgine_Collada_Node();
-                    childNode = CreateNode(childNodeChunk);
+                    Grendgine_Collada_Node childNode = CreateNode(childNodeChunk); ;
                     childNodes.Add(childNode);
                 }
                 return childNodes.ToArray();
@@ -1332,8 +1330,7 @@ namespace CgfConverter
         {
             Grendgine_Collada_Node tmpNode = new Grendgine_Collada_Node();
             ChunkMeshSubsets tmpMeshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
-            Grendgine_Collada_Node_Type nodeType = new Grendgine_Collada_Node_Type();
-            nodeType = Grendgine_Collada_Node_Type.NODE;
+            Grendgine_Collada_Node_Type nodeType = Grendgine_Collada_Node_Type.NODE; 
             tmpNode.Type = nodeType;
             tmpNode.Name = nodeChunk.Name;
             tmpNode.ID = nodeChunk.Name;

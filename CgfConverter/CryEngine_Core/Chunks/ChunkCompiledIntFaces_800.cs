@@ -12,9 +12,9 @@ namespace CgfConverter.CryEngineCore
             Faces = new TFace[NumIntFaces];
             for (int i = 0; i < NumIntFaces; i++)
             {
-                Faces[i].i0 = b.ReadUInt16();
-                Faces[i].i1 = b.ReadUInt16();
-                Faces[i].i2 = b.ReadUInt16();
+                Faces[i].I0 = b.ReadUInt16();
+                Faces[i].I1 = b.ReadUInt16();
+                Faces[i].I2 = b.ReadUInt16();
             }
             SkinningInfo skin = GetSkinningInfo();
             skin.IntFaces = Faces.ToList();

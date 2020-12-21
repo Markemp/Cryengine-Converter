@@ -14,13 +14,13 @@ namespace CgfConverter.CryEngineCore
             return BitConverter.ToSingle(bytes, 0);
         }
 
-        public static int Byte1HexToIntType2(string hexString)
+        protected static int Byte1HexToIntType2(string hexString)
         {
             int value = Convert.ToSByte(hexString, 16);
             return value;
         }
 
-        public static float Byte2HexIntFracToFloat2(string hexString)
+        protected static float Byte2HexIntFracToFloat2(string hexString)
         {
             string sintPart = hexString.Substring(0, 2);
             string sfracPart = hexString.Substring(2, 2);
@@ -81,7 +81,7 @@ namespace CgfConverter.CryEngineCore
                 case DataStreamTypeEnum.VERTICES:  // Ref is 0x00000000
                     this.Vertices = new Vector3[this.NumElements];
 
-                    switch (this.BytesPerElement)
+                    switch (BytesPerElement)
                     {
                         case 12:
                             for (Int32 i = 0; i < this.NumElements; i++)
@@ -291,7 +291,7 @@ namespace CgfConverter.CryEngineCore
                     switch (this.BytesPerElement)  // new Star Citizen files
                     {
                         case 20:  // Dymek wrote this.  Used in 2.6 skin files.  3 floats for vertex position, 4 bytes for normals, 2 halfs for UVs.  Normals are calculated from Tangents
-                            for (Int32 i = 0; i < this.NumElements; i++)
+                            for (int i = 0; i < this.NumElements; i++)
                             {
                                 this.Vertices[i].x = b.ReadSingle();
                                 this.Vertices[i].y = b.ReadSingle();
@@ -344,10 +344,10 @@ namespace CgfConverter.CryEngineCore
                                 this.Vertices[i].w = ver;       // Almost always 1
 
                                 // Next structure is Colors, not normals.  For 16 byte elements, normals are calculated from Tangent data.
-                                //this.RGBColors[i].r = b.ReadByte();
-                                //this.RGBColors[i].g = b.ReadByte();
-                                //this.RGBColors[i].b = b.ReadByte();
-                                //b.ReadByte();           // additional byte.
+                                //this.RGBAColors[i].r = b.ReadByte();
+                                //this.RGBAColors[i].g = b.ReadByte();
+                                //this.RGBAColors[i].b = b.ReadByte();
+                                //this.RGBAColors[i].a = b.ReadByte();
 
                                 //this.Normals[i].x = (b.ReadByte() - 128.0f) / 127.5f;
                                 //this.Normals[i].y = (b.ReadByte() - 128.0f) / 127.5f;
