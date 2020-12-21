@@ -813,12 +813,8 @@ namespace CgfConverter
 
     public struct AABB
     {
-#pragma warning disable CS0169 // The field 'AABB.min' is never used
         Vector3 min;
-#pragma warning restore CS0169 // The field 'AABB.min' is never used
-#pragma warning disable CS0169 // The field 'AABB.max' is never used
         Vector3 max;
-#pragma warning restore CS0169 // The field 'AABB.max' is never used
     }
 
     public struct Tangent
@@ -1277,7 +1273,9 @@ namespace CgfConverter
 
     public struct TFace
     {
-        public UInt16 i0, i1, i2;
+        public UInt16 I0 { get; set; }
+        public UInt16 I1 { get; set; }
+        public UInt16 I2 { get; set; }
 
         //public static bool operator =(TFace face)
         //{
