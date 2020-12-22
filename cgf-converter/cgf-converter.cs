@@ -46,9 +46,6 @@ namespace CgfConverterConsole
 			//args = new String[] { @"d:\temp\prey\dahl_genmalebody01.skin", "-objectdir", @"d:\temp\prey", "-dae", "-dds" };
 #endif
 
-            ArgsHandler argsHandler = new ArgsHandler();
-            int result = argsHandler.ProcessArgs(args);
-
 #if !DEBUG
             try
             {
@@ -57,8 +54,9 @@ namespace CgfConverterConsole
             customCulture.NumberFormat.NumberDecimalSeparator = ".";
 
             Thread.CurrentThread.CurrentCulture = customCulture;
+            ArgsHandler argsHandler = new ArgsHandler();
 
-            if (result == 0)
+            if (argsHandler.ProcessArgs(args) == 0)
             {
                 foreach (String inputFile in argsHandler.InputFiles)
                 {
@@ -66,8 +64,6 @@ namespace CgfConverterConsole
                     {
                         // Read CryEngine Files
                         CryEngine cryData = new CryEngine(inputFile, argsHandler.DataDir.FullName);
-
-                        #region Render Output Files
 
                         if (argsHandler.OutputBlender == true)
                         {
@@ -96,8 +92,6 @@ namespace CgfConverterConsole
 
                             daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
                         }
-
-                        #endregion
                     }
                     catch (Exception ex)
                     {
@@ -110,6 +104,7 @@ namespace CgfConverterConsole
                         Utils.Log(LogLevelEnum.Critical, ex.StackTrace);
                         Utils.Log(LogLevelEnum.Critical, "********************************************************************************");
                         Utils.Log(LogLevelEnum.Critical);
+                        return 1;
                     }
                 }
             }
@@ -129,8 +124,7 @@ namespace CgfConverterConsole
             Console.WriteLine("Done...");
             Console.ReadKey();
 #endif
-
-            return result;
+            return 0;
         }
     }
 }

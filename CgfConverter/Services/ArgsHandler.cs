@@ -76,6 +76,7 @@ namespace CgfConverter
         /// Flag used to pass exceptions to installed debuggers
         /// </summary>
         public bool Throw { get; internal set; }
+        public bool DumpChunkInfo { get; internal set; }
 
         public ArgsHandler()
         {
@@ -297,8 +298,14 @@ namespace CgfConverter
                         Console.WriteLine("Prevent conflicts for mtl files enabled");
                         break;
                     #endregion
-
-
+                    #region case "-dumpchunkinfo"...
+                    case "-dump":
+                    case "-dumpchunk":
+                    case "-dumpchunkinfo":
+                        DumpChunkInfo = true;
+                        Console.WriteLine("Output chunk info for missing or invalid chunks.");
+                        break;
+                    #endregion
                     #region default...
 
                     default:
@@ -347,6 +354,7 @@ namespace CgfConverter
             Console.WriteLine("-tif:             Change the materials to look for .tif files instead of .dds.");
             Console.WriteLine();
             Console.WriteLine("-throw:           Throw Exceptions to installed debugger.");
+            Console.WriteLine("-dump:            Dump missing/bad chunk info for support.");
             Console.WriteLine();
         }
 

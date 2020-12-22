@@ -45,7 +45,7 @@ namespace CgfConverter
             {
                 if (this._nodeMap == null)
                 {
-                    this._nodeMap = new Dictionary<String, CryEngineCore.ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
+                    this._nodeMap = new Dictionary<String, ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
 
                     ChunkNode rootNode = null;
 
@@ -55,7 +55,7 @@ namespace CgfConverter
                     {
                         model.RootNode = rootNode = (rootNode ?? model.RootNode);  // Each model will have it's own rootnode.
 
-                        foreach (ChunkNode node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as CryEngineCore.ChunkNode))
+                        foreach (ChunkNode node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as ChunkNode))
                         {
                             // Preserve existing parents
                             if (this._nodeMap.ContainsKey(node.Name))
