@@ -492,6 +492,7 @@
     <Compile Include="Renderers\Wavefront\Wavefront.cs" />
     <Compile Include="Renderers\Wavefront\Wavefront.Material.cs" />
     <Compile Include="Services\ArgsHandler.cs" />
+    <Compile Include="Services\BinaryReaderBigEndian.cs" />
     <Compile Include="Services\MaterialLibraryCreator.cs" />
     <Compile Include="Services\TSpace.cs" />
     <Compile Include="Services\Utils.cs" />
