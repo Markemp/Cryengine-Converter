@@ -13,17 +13,11 @@ namespace CgfConverter.CryEngineCore
         internal ChunkHeader _header;
         internal Model _model;
 
-        /// <summary> Position of the start of the chunk </summary>
         public uint Offset { get; internal set; }
-        /// <summary> The Type of the Chunk </summary>
         public ChunkTypeEnum ChunkType { get; internal set; }
-        /// <summary> The Version of this Chunk </summary>
         internal uint Version;
-        /// <summary> The ID of this Chunk </summary>
         internal int ID;
-        /// <summary> The Size of this Chunk (in Bytes) </summary>
         internal uint Size;
-        /// <summary> Size of the data in the chunk.  This is the chunk size, minus the header (if there is one) </summary>
         public uint DataSize { get; set; }
 
         internal Dictionary<long, byte> SkippedBytes = new Dictionary<long, byte> { };
@@ -93,11 +87,10 @@ namespace CgfConverter.CryEngineCore
                     return Chunk.New<ChunkBoneNameList>(version);
                 case ChunkTypeEnum.MeshMorphTarget:
                     return Chunk.New<ChunkMeshMorphTargets>(version);
-                case ChunkTypeEnum.Mtl:
-                //Utils.Log(LogLevelEnum.Debug, "Mtl Chunk here");  // Obsolete.  Not used
-
                 case ChunkTypeEnum.BinaryXmlDataSC:
                     return Chunk.New<ChunkBinaryXmlData>(version);
+                case ChunkTypeEnum.Mtl:
+                    //Utils.Log(LogLevelEnum.Debug, "Mtl Chunk here");  // Obsolete.  Not used
                 default:
                     return new ChunkUnknown();
             }
