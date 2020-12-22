@@ -64,6 +64,7 @@ namespace CgfConverterConsole
                     {
                         // Read CryEngine Files
                         CryEngine cryData = new CryEngine(inputFile, argsHandler.DataDir.FullName);
+                        cryData.ProcessCryengineFiles();
 
                         if (argsHandler.OutputBlender == true)
                         {

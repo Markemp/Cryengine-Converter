@@ -135,20 +135,20 @@ namespace CgfConverter.CryEngineCore
         #region Public Methods
 
         /// <summary>
-        /// Load the specified file as a Model, and return it
+        /// Load the specified file as a Model
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
         public static Model FromFile(String fileName)
         {
-            Model buffer = new Model();
+            var buffer = new Model();
             buffer.Load(fileName);
             return buffer;
         }
 
-        public void Load(String fileName)
+        private void Load(String fileName)
         {
-            FileInfo inputFile = new FileInfo(fileName);
+            var inputFile = new FileInfo(fileName);
 
             Console.Title = String.Format("Processing {0}...", inputFile.Name);
 
@@ -159,16 +159,16 @@ namespace CgfConverter.CryEngineCore
 
             BinaryReader reader = new BinaryReader(File.Open(fileName, FileMode.Open));
             // Get the header.  This isn't essential for .cgam files, but we need this info to find the version and offset to the chunk table
-            this.Read_FileHeader(reader);
-            this.Read_ChunkHeaders(reader);
-            this.Read_Chunks(reader);
+            this.ReadFileHeader(reader);
+            this.ReadChunkHeaders(reader);
+            this.ReadChunks(reader);
 
             reader.Dispose();
         }
 
         #endregion
 
-        private void Read_FileHeader(BinaryReader b)
+        private void ReadFileHeader(BinaryReader b)
         {
             b.BaseStream.Seek(0, 0);
             this.FileSignature = b.ReadFString(4);
@@ -198,7 +198,7 @@ namespace CgfConverter.CryEngineCore
             throw new NotSupportedException(String.Format("Unsupported FileSignature {0}", this.FileSignature));
         }
 
-        private void Read_ChunkHeaders(BinaryReader b)
+        private void ReadChunkHeaders(BinaryReader b)
         {
             // need to seek to the start of the table here.  foffset points to the start of the table
             b.BaseStream.Seek(this.ChunkTableOffset, SeekOrigin.Begin);
@@ -211,7 +211,7 @@ namespace CgfConverter.CryEngineCore
             }
         }
 
-        private void Read_Chunks(BinaryReader reader)
+        private void ReadChunks(BinaryReader reader)
         {
             foreach (ChunkHeader chkHdr in this._chunks)
             {

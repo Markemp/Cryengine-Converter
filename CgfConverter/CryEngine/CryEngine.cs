@@ -1,10 +1,8 @@
-﻿using System;
+﻿using CgfConverter.CryEngineCore;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Resources;
-using System.Runtime.CompilerServices;
-using CgfConverter.CryEngineCore;
 
 namespace CgfConverter
 {
@@ -27,6 +25,7 @@ namespace CgfConverter
         public ChunkCompiledBones Bones { get; internal set; }
         public SkinningInfo SkinningInfo { get; set; }
         public string InputFile { get; internal set; }
+        public string DataDir { get; internal set; }
         public List<Chunk> Chunks
         {
             get
@@ -80,35 +79,29 @@ namespace CgfConverter
         private List<Chunk> _chunks;
         private Dictionary<string, ChunkNode> _nodeMap;
 
-        public CryEngine(string fileName, string dataDir)
+        public CryEngine(string filename, string dataDir)
         {
-            this.InputFile = fileName;
+            this.InputFile = filename;
+            this.DataDir = dataDir;
+        }
 
-            FileInfo inputFile = new FileInfo(fileName);
+        public void ProcessCryengineFiles()
+        {
+            FileInfo inputFile = new FileInfo(InputFile);
             List<FileInfo> inputFiles = new List<FileInfo> { inputFile };
-
             // Validate file extension - handles .cgam / skinm
             if (!validExtensions.Contains(inputFile.Extension))
             {
                 Utils.Log(LogLevelEnum.Debug, invalidExtensionErrorMessage);
-                throw new FileLoadException(invalidExtensionErrorMessage, fileName);
+                throw new FileLoadException(invalidExtensionErrorMessage, InputFile);
             }
 
-            #region m-File Auto-Detection
-            FileInfo mFile = new FileInfo(Path.ChangeExtension(fileName, string.Format("{0}m", inputFile.Extension)));
-
-            if (mFile.Exists)
-            {
-                Utils.Log(LogLevelEnum.Debug, "Found geometry file {0}", mFile.Name);
-                inputFiles.Add(mFile);
-            }
-            #endregion
-
-            this.Models = new List<Model>();
-
+            AutoDetectMFile(InputFile, inputFile, inputFiles);
+                
             foreach (var file in inputFiles)
             {
-                // Each file (.cga and .cgam if applicable) will have its own RootNode.  This can cause problems.  .cga files with a .cgam files won't have geometry for the one root node.
+                // Each file (.cga and .cgam if applicable) will have its own RootNode.  
+                // This can cause problems.  .cga files with a .cgam files won't have geometry for the one root node.
                 Model model = Model.FromFile(file.FullName);
                 if (this.RootNode == null)
                     RootNode = model.RootNode;  // This makes the assumption that we read the .cga file before the .cgam file.
@@ -154,7 +147,7 @@ namespace CgfConverter
                             cleanName = cleanName.Replace(character.ToString(), "");
                         }
                     }
-                    materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(fileName), cleanName));
+                    materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(InputFile), cleanName));
                 }
                 else if (mtlChunk.Name.Contains(@"/") || mtlChunk.Name.Contains(@"\"))
                 {
@@ -164,9 +157,9 @@ namespace CgfConverter
                     string[] result;
 
                     // if objectdir is provided, check objectdir + mtlchunk.name
-                    if (dataDir != null)
+                    if (DataDir != null)
                     {
-                        materialFile = new FileInfo(Path.Combine(dataDir, mtlChunk.Name));
+                        materialFile = new FileInfo(Path.Combine(DataDir, mtlChunk.Name));
                     }
                     else
                     {
@@ -185,7 +178,7 @@ namespace CgfConverter
                             cleanName = cleanName.Replace(character.ToString(), "");
                         }
                     }
-                    materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(fileName), cleanName));
+                    materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(InputFile), cleanName));
                 }
 
                 // First try relative to file being processed
@@ -194,19 +187,19 @@ namespace CgfConverter
 
                 // Then try just the last part of the chunk, relative to the file being processed
                 if (!materialFile.Exists)
-                    materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileName(cleanName)));
+                    materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(InputFile), Path.GetFileName(cleanName)));
                 if (materialFile.Extension != ".mtl")
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
 
                 // Then try relative to the ObjectDir
-                if (!materialFile.Exists && dataDir != null)
-                    materialFile = new FileInfo(Path.Combine(dataDir, cleanName));
+                if (!materialFile.Exists && DataDir != null)
+                    materialFile = new FileInfo(Path.Combine(DataDir, cleanName));
                 if (materialFile.Extension != ".mtl")
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
 
                 // Then try just the fileName.mtl
                 if (!materialFile.Exists)
-                    materialFile = new FileInfo(fileName);
+                    materialFile = new FileInfo(InputFile);
                 if (materialFile.Extension != ".mtl")
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
 
@@ -216,7 +209,7 @@ namespace CgfConverter
                 {
                     Utils.Log(LogLevelEnum.Debug, "Located material file {0}", materialFile.Name);
 
-                    this.Materials = CryEngine.FlattenMaterials(material).Where(m => m.Textures != null).ToList();
+                    this.Materials = FlattenMaterials(material).Where(m => m.Textures != null).ToList();
 
                     if (this.Materials.Count == 1)
                     {
@@ -237,11 +230,21 @@ namespace CgfConverter
 
             foreach (ChunkMtlName mtlChunk in allMaterialChunks)
             {
-                //if (mtlChunk.MatType == MtlNameTypeEnum.Child || mtlChunk.MatType == MtlNameTypeEnum.Unknown1 || mtlChunk.MatType == MtlNameTypeEnum.MwoChild)
                 if (mtlChunk.MatType != MtlNameTypeEnum.Library)
                 {
                     this.Materials.Add(Material.CreateDefaultMaterial(mtlChunk.Name));
                 }
+            }
+        }
+
+        private void AutoDetectMFile(string filename, FileInfo inputFile, List<FileInfo> inputFiles)
+        {
+            FileInfo mFile = new FileInfo(Path.ChangeExtension(filename, string.Format("{0}m", inputFile.Extension)));
+
+            if (mFile.Exists)
+            {
+                Utils.Log(LogLevelEnum.Debug, "Found geometry file {0}", mFile.Name);
+                inputFiles.Add(mFile);
             }
         }
 
@@ -250,19 +253,19 @@ namespace CgfConverter
         /// </summary>
         /// <param name="material"></param>
         /// <returns></returns>
-        protected static IEnumerable<Material> FlattenMaterials(Material material)
+        private IEnumerable<Material> FlattenMaterials(Material material)
         {
             if (material != null)
             {
                 yield return material;
 
                 if (material.SubMaterials != null)
-                    foreach (var subMaterial in material.SubMaterials.SelectMany(m => CryEngine.FlattenMaterials(m)))
+                    foreach (var subMaterial in material.SubMaterials.SelectMany(m => FlattenMaterials(m)))
                         yield return subMaterial;
             }
         }
 
-        protected static SkinningInfo ConsolidateSkinningInfo(List<Model> models)
+        private SkinningInfo ConsolidateSkinningInfo(List<Model> models)
         {
             SkinningInfo skin = new SkinningInfo
             {

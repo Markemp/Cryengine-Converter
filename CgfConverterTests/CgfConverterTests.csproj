@@ -53,6 +53,7 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IntegrationTests\ArcheAge\ArcheAgeTests.cs" />
     <Compile Include="IntegrationTests\CgfConverterIntegrationTests.cs" />
     <Compile Include="IntegrationTests\CrucibleTests\CrucibleTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -60,6 +61,7 @@
     <Compile Include="Unit Tests\StructsTests.cs" />
     <Compile Include="Unit Tests\CryXmlSerializerTests.cs" />
     <Compile Include="Unit Tests\ColladaUnitTests.cs" />
+    <Compile Include="Unit Tests\CryEngineTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

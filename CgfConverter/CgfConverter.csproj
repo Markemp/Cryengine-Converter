@@ -65,6 +65,7 @@
     <Compile Include="CryEngine_Core\Chunks\ChunkBoneNameList_745.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledBones.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledBones_800.cs" />
+    <Compile Include="CryEngine_Core\Chunks\ChunkCompiledBones_801.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledExtToIntMap.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledExtToIntMap_800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledIntFaces.cs" />
@@ -516,5 +517,6 @@
     <Analyzer Include="..\packages\Microsoft.NetFramework.Analyzers.3.0.0\analyzers\dotnet\cs\Microsoft.NetFramework.CSharp.Analyzers.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild"></Target>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+  </Target>
 </Project>

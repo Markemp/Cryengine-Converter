@@ -1,14 +1,27 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using CgfConverter;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.IO;
 
 namespace CgfConverterTests.Unit_Tests
 {
     [TestClass]
-    public class UnitTest1
+    public class CryEngineTests
     {
         [TestMethod]
-        public void TestMethod1()
+        [ExpectedException(typeof(FileLoadException))]
+        public void ProcessCryengineFiles_UnsupportedException()
         {
+            var ce = new CryEngine("filename.bad", "datadir");
+            ce.ProcessCryengineFiles();
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(FileNotFoundException))]
+        public void ProcessCryengineFiles_FileNotFoundException()
+        {
+            var ce = new CryEngine("filename.chr", "datadir");
+            ce.ProcessCryengineFiles();
         }
     }
 }

@@ -1007,9 +1007,7 @@ namespace CgfConverter
             physicsGeom = b.ReadUInt32();
             flags = b.ReadUInt32();
             min.ReadVector3(b);
-            // min.WriteVector3();
             max.ReadVector3(b);
-            // max.WriteVector3();
             spring_angle.ReadVector3(b);
             spring_tension.ReadVector3(b);
             damping.ReadVector3(b);
@@ -1058,6 +1056,26 @@ namespace CgfConverter
             boneToWorld = new BONETOWORLD();
             this.boneToWorld.ReadBoneToWorld(b);
             this.boneName = b.ReadFString(256);
+            this.limbID = b.ReadUInt32();
+            this.offsetParent = b.ReadInt32();
+            this.numChildren = b.ReadUInt32();
+            this.offsetChild = b.ReadInt32();
+            this.childIDs = new List<uint>();                    // Calculated
+        }
+
+        public void ReadCompiledBone_801(BinaryReader b)
+        {
+            // Reads just a single xx byte entry of a bone. At the end the seek position will be advanced, so keep that in mind.
+            this.ControllerID = b.ReadUInt32();                 // unique id of bone (generated from bone name)
+            physicsGeometry = new PhysicsGeometry[2];
+            this.physicsGeometry[0].ReadPhysicsGeometry(b);     // lod 0 is the physics of alive body, 
+            this.physicsGeometry[1].ReadPhysicsGeometry(b);     // lod 1 is the physics of a dead body
+            this.mass = b.ReadSingle();
+            worldToBone = new WORLDTOBONE();
+            this.worldToBone.GetWorldToBone(b);
+            boneToWorld = new BONETOWORLD();
+            this.boneToWorld.ReadBoneToWorld(b);
+            this.boneName = b.ReadFString(48);
             this.limbID = b.ReadUInt32();
             this.offsetParent = b.ReadInt32();
             this.numChildren = b.ReadUInt32();

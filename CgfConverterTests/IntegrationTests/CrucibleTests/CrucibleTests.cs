@@ -31,6 +31,7 @@ namespace CgfConverterTests.CrucibleTests
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
 
             Assert.AreEqual((uint)11, cryData.Models[0].NumChunks);
             Assert.AreEqual(ChunkTypeEnum.Node, cryData.Models[0].ChunkMap[22].ChunkType);
