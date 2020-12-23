@@ -82,6 +82,7 @@
     <Compile Include="CryEngine_Core\Chunks\ChunkController.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkController_826.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkDataStream.cs" />
+    <Compile Include="CryEngine_Core\Chunks\ChunkDataStream_80000800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkDataStream_801.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkDataStream_800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkExportFlags.cs" />
@@ -96,10 +97,12 @@
     <Compile Include="CryEngine_Core\Chunks\ChunkMeshMorphTargets.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMeshMorphTargets_800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMeshPhysicsData.cs" />
+    <Compile Include="CryEngine_Core\Chunks\ChunkMeshPhysicsData_80000800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMeshPhysicsData_800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMeshSubsets.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMeshSubsets_800000800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMeshSubsets_800.cs" />
+    <Compile Include="CryEngine_Core\Chunks\ChunkMesh_80000800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMesh_800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMesh_802.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMesh_801.cs" />
@@ -109,6 +112,7 @@
     <Compile Include="CryEngine_Core\Chunks\ChunkMtlName_80000800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMtlName_802.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkNode.cs" />
+    <Compile Include="CryEngine_Core\Chunks\ChunkNode_80000823.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkNode_823.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkNode_824.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkSceneProp.cs" />

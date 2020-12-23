@@ -144,21 +144,18 @@ namespace CgfConverter.CryEngineCore
             if (reader == null)
                 return;
 
-            if ((reader.BaseStream.Position > this.Offset + this.Size) && (this.Size > 0))
-                Utils.Log(LogLevelEnum.Debug, "Buffer Overflow in {2} 0x{0:X} ({1} bytes)", this.ID, reader.BaseStream.Position - this.Offset - this.Size, this.GetType().Name);
+            if ((reader.BaseStream.Position > Offset + Size) && (Size > 0))
+                Utils.Log(LogLevelEnum.Debug, "Buffer Overflow in {2} 0x{0:X} ({1} bytes)", ID, reader.BaseStream.Position - Offset - Size, GetType().Name);
 
-            if (reader.BaseStream.Length < this.Offset + this.Size)
-                Utils.Log(LogLevelEnum.Debug, "Corrupt Headers in {1} 0x{0:X}", this.ID, this.GetType().Name);
+            if (reader.BaseStream.Length < Offset + Size)
+                Utils.Log(LogLevelEnum.Debug, "Corrupt Headers in {1} 0x{0:X}", ID, GetType().Name);
 
             if (!bytesToSkip.HasValue)
-                bytesToSkip = (Int64)(this.Size - Math.Max(reader.BaseStream.Position - this.Offset, 0));
+                bytesToSkip = (Int64)(Size - Math.Max(reader.BaseStream.Position - Offset, 0));
 
             for (Int64 i = 0; i < bytesToSkip; i++)
             {
-                this.SkippedBytes[reader.BaseStream.Position - this.Offset] = reader.ReadByte();
-
-                // if (this.SkippedBytes[reader.BaseStream.Position - this.Offset - 1] == 0)
-                //     this.SkippedBytes.Remove(reader.BaseStream.Position - this.Offset - 1);
+                SkippedBytes[reader.BaseStream.Position - Offset] = reader.ReadByte();
             }
         }
 
@@ -167,30 +164,30 @@ namespace CgfConverter.CryEngineCore
             if (reader == null)
                 throw new ArgumentNullException(nameof(reader));
 
-            this.ChunkType = this._header.ChunkType;
-            this.Version = this._header.Version;
-            this.Offset = this._header.Offset;
-            this.ID = this._header.ID;
-            this.Size = this._header.Size;
-            this.DataSize = this.Size;          // For SC files, there is no header in chunks.  But need Datasize to calculate things.
+            ChunkType = _header.ChunkType;
+            Version = _header.Version;
+            Offset = _header.Offset;
+            ID = _header.ID;
+            Size = _header.Size;
+            DataSize = Size;          // For SC files, there is no header in chunks.  But need Datasize to calculate things.
 
-            reader.BaseStream.Seek(this._header.Offset, 0);
+            reader.BaseStream.Seek(_header.Offset, 0);
 
             // Star Citizen files don't have the type, version, offset and ID at the start of a chunk, so don't read them.
-            if (this._model.FileVersion == FileVersionEnum.CryTek_3_4 || this._model.FileVersion == FileVersionEnum.CryTek_3_5)
+            if (_model.FileVersion == FileVersionEnum.CryTek_3_4 || _model.FileVersion == FileVersionEnum.CryTek_3_5)
             {
-                this.ChunkType = (ChunkTypeEnum)Enum.ToObject(typeof(ChunkTypeEnum), reader.ReadUInt32());
-                this.Version = reader.ReadUInt32();
-                this.Offset = reader.ReadUInt32();
-                this.ID = reader.ReadInt32();
-                this.DataSize = this.Size - 16;
+                ChunkType = (ChunkTypeEnum)Enum.ToObject(typeof(ChunkTypeEnum), reader.ReadUInt32());
+                Version = reader.ReadUInt32();
+                Offset = reader.ReadUInt32();
+                ID = reader.ReadInt32();
+                DataSize = Size - 16;
             }
 
-            if (this.Offset != this._header.Offset || this.Size != this._header.Size)
+            if (Offset != _header.Offset || Size != _header.Size)
             {
                 Utils.Log(LogLevelEnum.Warning, "Conflict in chunk definition");
-                Utils.Log(LogLevelEnum.Warning, "{0:X}+{1:X}", this._header.Offset, this._header.Size);
-                Utils.Log(LogLevelEnum.Warning, "{0:X}+{1:X}", this.Offset, this.Size);
+                Utils.Log(LogLevelEnum.Warning, "{0:X}+{1:X}", _header.Offset, _header.Size);
+                Utils.Log(LogLevelEnum.Warning, "{0:X}+{1:X}", Offset, Size);
             }
         }
 
@@ -200,11 +197,11 @@ namespace CgfConverter.CryEngineCore
         /// <returns>Link to the SkinningInfo model.</returns>
         public SkinningInfo GetSkinningInfo()
         {
-            if (this._model.SkinningInfo == null)
+            if (_model.SkinningInfo == null)
             {
-                this._model.SkinningInfo = new SkinningInfo();
+                _model.SkinningInfo = new SkinningInfo();
             }
-            return this._model.SkinningInfo;
+            return _model.SkinningInfo;
         }
 
         public virtual void Write(BinaryWriter writer) { throw new NotImplementedException(); }

@@ -22,7 +22,7 @@
 
         public void WriteChunk()
         {
-            Utils.Log(LogLevelEnum.Debug, "*** START CompiledBone Chunk ***");
+            Utils.Log(LogLevelEnum.Debug, "*** START MeshPhysicsData Chunk ***");
             Utils.Log(LogLevelEnum.Debug, "    ChunkType:           {0}", ChunkType);
             Utils.Log(LogLevelEnum.Debug, "    Node ID:             {0:X}", ID);
             Utils.Log(LogLevelEnum.Debug, "    Node ID:             {0:X}", PhysicsDataSize);

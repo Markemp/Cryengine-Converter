@@ -171,11 +171,25 @@ namespace CgfConverter
             return BitConverter.ToUInt32(bytes, 0);
         }
 
+        public static int SwapIntEndian(int input)
+        {
+            byte[] bytes = BitConverter.GetBytes(input);
+            Array.Reverse(bytes, 0, bytes.Length);
+            return BitConverter.ToInt32(bytes, 0);
+        }
+
         public static Single SwapSingleEndian(Single input)
         {
             byte[] bytes = BitConverter.GetBytes(input);
             Array.Reverse(bytes, 0, bytes.Length);
             return BitConverter.ToSingle(bytes, 0);
+        }
+
+        public static UInt16 SwapUInt16Endian(UInt16 input)
+        {
+            byte[] bytes = BitConverter.GetBytes(input);
+            Array.Reverse(bytes, 0, bytes.Length);
+            return BitConverter.ToUInt16(bytes, 0);
         }
     }
 }

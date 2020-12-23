@@ -4,10 +4,9 @@ using System.IO;
 
 namespace CgfConverter.CryEngineCore
 {
+    // Reversed endian class of x0800 for console games
     public class ChunkDataStream_80000800 : ChunkDataStream
     {
-        // Reversed endian class of x0800 for console games
-
         public override void Read(BinaryReader b)
         {
             base.Read(b);
@@ -33,35 +32,9 @@ namespace CgfConverter.CryEngineCore
                         case 12:
                             for (Int32 i = 0; i < this.NumElements; i++)
                             {
-                                this.Vertices[i].x = b.ReadSingle();
-                                this.Vertices[i].y = b.ReadSingle();
-                                this.Vertices[i].z = b.ReadSingle();
-                            }
-                            break;
-                        case 8:  // Prey files, and old Star Citizen files
-                            for (Int32 i = 0; i < NumElements; i++)
-                            {
-                                Half xshort = new Half();
-                                xshort.bits = b.ReadUInt16();
-                                this.Vertices[i].x = xshort.ToSingle();
-
-                                Half yshort = new Half();
-                                yshort.bits = b.ReadUInt16();
-                                this.Vertices[i].y = yshort.ToSingle();
-
-                                Half zshort = new Half();
-                                zshort.bits = b.ReadUInt16();
-                                this.Vertices[i].z = zshort.ToSingle();
-                                b.ReadUInt16();
-                            }
-                            break;
-                        case 16:
-                            for (Int32 i = 0; i < this.NumElements; i++)
-                            {
-                                this.Vertices[i].x = b.ReadSingle();
-                                this.Vertices[i].y = b.ReadSingle();
-                                this.Vertices[i].z = b.ReadSingle();
-                                this.Vertices[i].w = b.ReadSingle(); // TODO:  Sometimes there's a W to these structures.  Will investigate.
+                                this.Vertices[i].x = Utils.SwapSingleEndian(b.ReadSingle());
+                                this.Vertices[i].y = Utils.SwapSingleEndian(b.ReadSingle());
+                                this.Vertices[i].z = Utils.SwapSingleEndian(b.ReadSingle());
                             }
                             break;
                     }
@@ -77,18 +50,16 @@ namespace CgfConverter.CryEngineCore
                     {
                         for (Int32 i = 0; i < this.NumElements; i++)
                         {
-                            this.Indices[i] = (UInt32)b.ReadUInt16();
-                            //Console.WriteLine("Indices {0}: {1}", i, this.Indices[i]);
+                            this.Indices[i] = (UInt32)Utils.SwapUInt16Endian(b.ReadUInt16());
                         }
                     }
                     if (this.BytesPerElement == 4)
                     {
                         for (Int32 i = 0; i < this.NumElements; i++)
                         {
-                            this.Indices[i] = b.ReadUInt32();
+                            this.Indices[i] = Utils.SwapUIntEndian(b.ReadUInt32());
                         }
                     }
-                    //Utils.Log(LogLevelEnum.Debug, "Offset is {0:X}", b.BaseStream.Position);
                     break;
 
                 #endregion
@@ -98,9 +69,9 @@ namespace CgfConverter.CryEngineCore
                     this.Normals = new Vector3[this.NumElements];
                     for (Int32 i = 0; i < NumElements; i++)
                     {
-                        this.Normals[i].x = b.ReadSingle();
-                        this.Normals[i].y = b.ReadSingle();
-                        this.Normals[i].z = b.ReadSingle();
+                        this.Normals[i].x = Utils.SwapSingleEndian(b.ReadSingle());
+                        this.Normals[i].y = Utils.SwapSingleEndian(b.ReadSingle());
+                        this.Normals[i].z = Utils.SwapSingleEndian(b.ReadSingle());
                     }
                     //Utils.Log(LogLevelEnum.Debug, "Offset is {0:X}", b.BaseStream.Position);
                     break;
@@ -112,10 +83,9 @@ namespace CgfConverter.CryEngineCore
                     this.UVs = new UV[this.NumElements];
                     for (Int32 i = 0; i < this.NumElements; i++)
                     {
-                        this.UVs[i].U = b.ReadSingle();
-                        this.UVs[i].V = b.ReadSingle();
+                        this.UVs[i].U = Utils.SwapSingleEndian(b.ReadSingle());
+                        this.UVs[i].V = Utils.SwapSingleEndian(b.ReadSingle());
                     }
-                    //Utils.Log(LogLevelEnum.Debug, "Offset is {0:X}", b.BaseStream.Position);
                     break;
 
                 #endregion
@@ -130,15 +100,15 @@ namespace CgfConverter.CryEngineCore
                         {
                             case 0x10:
                                 // These have to be divided by 32767 to be used properly (value between 0 and 1)
-                                this.Tangents[i, 0].x = b.ReadInt16();
-                                this.Tangents[i, 0].y = b.ReadInt16();
-                                this.Tangents[i, 0].z = b.ReadInt16();
-                                this.Tangents[i, 0].w = b.ReadInt16();
-
-                                this.Tangents[i, 1].x = b.ReadInt16();
-                                this.Tangents[i, 1].y = b.ReadInt16();
-                                this.Tangents[i, 1].z = b.ReadInt16();
-                                this.Tangents[i, 1].w = b.ReadInt16();
+                                this.Tangents[i, 0].x = Utils.SwapIntEndian(b.ReadInt16());
+                                this.Tangents[i, 0].y = Utils.SwapIntEndian(b.ReadInt16());
+                                this.Tangents[i, 0].z = Utils.SwapIntEndian(b.ReadInt16());
+                                this.Tangents[i, 0].w = Utils.SwapIntEndian(b.ReadInt16());
+                                                        
+                                this.Tangents[i, 1].x = Utils.SwapIntEndian(b.ReadInt16());
+                                this.Tangents[i, 1].y = Utils.SwapIntEndian(b.ReadInt16());
+                                this.Tangents[i, 1].z = Utils.SwapIntEndian(b.ReadInt16());
+                                this.Tangents[i, 1].w = Utils.SwapIntEndian(b.ReadInt16());
 
                                 break;
                             case 0x08:
@@ -155,22 +125,13 @@ namespace CgfConverter.CryEngineCore
                                 this.Tangents[i, 1].y = b.ReadSByte() / 127.0;
                                 this.Tangents[i, 1].z = b.ReadSByte() / 127.0;
 
-                                // Calculate the normal based on the cross product of the tangents.
-                                //this.Normals[i].x = (Tangents[i,0].y * Tangents[i,1].z - Tangents[i,0].z * Tangents[i,1].y);
-                                //this.Normals[i].y = 0 - (Tangents[i,0].x * Tangents[i,1].z - Tangents[i,0].z * Tangents[i,1].x); 
-                                //this.Normals[i].z = (Tangents[i,0].x * Tangents[i,1].y - Tangents[i,0].y * Tangents[i,1].x);
-                                //Console.WriteLine("Tangent: {0:F6} {1:F6} {2:F6}", Tangents[i,0].x, Tangents[i, 0].y, Tangents[i, 0].z);
-                                //Console.WriteLine("Binormal: {0:F6} {1:F6} {2:F6}", Tangents[i, 1].x, Tangents[i, 1].y, Tangents[i, 1].z);
-                                //Console.WriteLine("Normal: {0:F6} {1:F6} {2:F6}", Normals[i].x, Normals[i].y, Normals[i].z);
-                                break;
+                               break;
                             default:
                                 throw new Exception("Need to add new Tangent Size");
                         }
                     }
-                    // Utils.Log(LogLevelEnum.Debug, "Offset is {0:X}", b.BaseStream.Position);
                     break;
                 #endregion
-
                 #region case DataStreamTypeEnum.COLORS:
                 case DataStreamTypeEnum.COLORS:
                     switch (this.BytesPerElement)
@@ -205,7 +166,6 @@ namespace CgfConverter.CryEngineCore
                     }
                     break;
                 #endregion
-
                 #region case DataStreamTypeEnum.BONEMAP:
                 case DataStreamTypeEnum.BONEMAP:
                     SkinningInfo skin = GetSkinningInfo();
@@ -240,7 +200,7 @@ namespace CgfConverter.CryEngineCore
 
                                 for (int j = 0; j < 4; j++)         // read the 4 bone indexes first
                                 {
-                                    tmpMap.BoneIndex[j] = b.ReadUInt16();
+                                    tmpMap.BoneIndex[j] = Utils.SwapUInt16Endian(b.ReadUInt16());
 
                                 }
                                 for (int j = 0; j < 4; j++)           // read the weights.
@@ -253,12 +213,10 @@ namespace CgfConverter.CryEngineCore
                             default:
                                 Utils.Log("Unknown BoneMapping structure");
                                 break;
-
                         }
                     }
 
                     break;
-
 
                 #endregion
                 #region DataStreamTypeEnum.Unknown1
