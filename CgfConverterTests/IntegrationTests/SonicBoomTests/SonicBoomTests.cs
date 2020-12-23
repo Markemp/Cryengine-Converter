@@ -83,8 +83,8 @@ namespace CgfConverterTests.SonicBoom
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
 
-            Assert.AreEqual((uint)11, cryData.Models[0].NumChunks);
-            Assert.AreEqual(ChunkTypeEnum.Node, cryData.Models[0].ChunkMap[22].ChunkType);
+            Assert.AreEqual((uint)30, cryData.Models[0].NumChunks);
+            Assert.AreEqual(ChunkTypeEnum.Node, cryData.Models[0].ChunkMap[28].ChunkType);
             var datastream = cryData.Models[0].ChunkMap[16] as ChunkDataStream_801;
             Assert.AreEqual((uint)8, datastream.BytesPerElement);
             Assert.AreEqual((uint)96, datastream.NumElements);
