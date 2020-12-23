@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <COLLADA xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.4.1" xmlns="http://www.collada.org/2005/11/COLLADASchema">
   <asset>
-    <created>2020-12-23T08:04:43.8592982-07:00</created>
-    <modified>2020-12-23T08:04:43.8592982-07:00</modified>
+    <created>2020-12-23T10:51:13.1386272-07:00</created>
+    <modified>2020-12-23T10:51:13.1396221-07:00</modified>
     <unit meter="1" name="meter" />
     <up_axis>Z_UP</up_axis>
     <contributor>
@@ -17,32 +17,6 @@
   </asset>
   <library_images />
   <library_effects>
-    <effect id="Checkpoint-effect" name="Checkpoint">
-      <profile_COMMON>
-        <technique sid="common">
-          <phong>
-            <emission>
-              <color sid="emission" />
-            </emission>
-            <diffuse>
-              <color sid="diffuse">0.8 0.5 0.5</color>
-            </diffuse>
-            <specular>
-              <color sid="specular">1 1 1</color>
-            </specular>
-            <transparent>
-              <color>0</color>
-            </transparent>
-            <shininess>
-              <float sid="shininess">0.2</float>
-            </shininess>
-            <index_of_refraction>
-              <float>0</float>
-            </index_of_refraction>
-          </phong>
-        </technique>
-      </profile_COMMON>
-    </effect>
     <effect id="Check_Point_mat-effect" name="Check_Point_mat">
       <profile_COMMON>
         <technique sid="common">
@@ -97,9 +71,6 @@
     </effect>
   </library_effects>
   <library_materials>
-    <material id="Checkpoint-material" name="Checkpoint">
-      <instance_effect url="#Checkpoint-effect" />
-    </material>
     <material id="Check_Point_mat-material" name="Check_Point_mat">
       <instance_effect url="#Check_Point_mat-effect" />
     </material>
@@ -153,7 +124,7 @@
         <vertices id="checkpoint-vertices">
           <input semantic="POSITION" source="#checkpoint-mesh-pos" />
         </vertices>
-        <triangles count="640" material="Checkpoint-material">
+        <triangles count="640" material="Check_Point_mat-material">
           <input semantic="VERTEX" source="#checkpoint-vertices" offset="0" set="0" />
           <input semantic="NORMAL" source="#checkpoint-mesh-norm" offset="1" set="0" />
           <input semantic="TEXCOORD" source="#checkpoint-mesh-UV" offset="2" set="0" />
@@ -170,7 +141,7 @@
         <instance_geometry name="checkpoint" url="#checkpoint-mesh">
           <bind_material>
             <technique_common>
-              <instance_material target="#Checkpoint-material" symbol="Checkpoint-material" />
+              <instance_material target="#Check_Point_mat-material" symbol="Check_Point_mat-material" />
             </technique_common>
           </bind_material>
         </instance_geometry>

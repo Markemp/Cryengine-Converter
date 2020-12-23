@@ -44,7 +44,7 @@ namespace CgfConverterConsole
             //args = new String[] { @"D:\depot\SC\Data\Objects\Characters\Human\male_v7\armor\rsi\m_rsi_pilot_flightsuit_01.skin", "-objectdir", @"d:\depot\sc\data", "-dae", "-tif" };
             //args = new String[] { @"D:\depot\SC\Data\Objects\Characters\Human\male_v7\armor\slaver\m_slaver_medium_armor_01_core.skin", "-objectdir", @"d:\depot\sc\data", "-dae", "-tif" };
             //args = new String[] { @"d:\temp\prey\dahl_genmalebody01.skin", "-objectdir", @"d:\temp\prey", "-dae", "-dds" };
-            args = new string[] { @"c:\users\ggerb\source\repos\Cryengine-Converter\cgfconvertertests\resourcefiles\sonicboom\checkpoint.cgf" };
+            //args = new string[] { @"c:\users\ggerb\source\repos\Cryengine-Converter\cgfconvertertests\resourcefiles\sonicboom\checkpoint.cgf" };
 #endif
 
 

@@ -13,10 +13,10 @@ namespace CgfConverter
 
         public FileInfo OutputFile_Model { get; internal set; }
         public FileInfo OutputFile_Material { get; internal set; }
-        public UInt32 CurrentVertexPosition { get; internal set; }
-        public UInt32 TempIndicesPosition { get; internal set; }
-        public UInt32 TempVertexPosition { get; internal set; }
-        public UInt32 CurrentIndicesPosition { get; internal set; }
+        public int CurrentVertexPosition { get; internal set; }
+        public int TempIndicesPosition { get; internal set; }
+        public int TempVertexPosition { get; internal set; }
+        public int CurrentIndicesPosition { get; internal set; }
         public String GroupOverride { get; internal set; }
         public Int32 FaceIndex { get; internal set; }
 
@@ -197,8 +197,8 @@ namespace CgfConverter
 
             int numChildren = chunkNode.__NumChildren;           // use in a for loop to print the mesh for each child
 
-            var tempVertexPosition = this.CurrentVertexPosition;
-            var tempIndicesPosition = this.CurrentIndicesPosition;
+            var tempVertexPosition = CurrentVertexPosition;
+            var tempIndicesPosition = CurrentIndicesPosition;
 
             foreach (var meshSubset in tmpMeshSubsets.MeshSubsets)
             {
@@ -210,7 +210,7 @@ namespace CgfConverter
                     #region Write Vertices Out (v, vt)
 
                     // Probably using VertsUVs (3.7+).  Write those vertices out. Do UVs at same time.
-                    for (uint j = meshSubset.FirstVertex;
+                    for (int j = meshSubset.FirstVertex;
                         j < meshSubset.NumVertices + meshSubset.FirstVertex;
                         j++)
                     {
@@ -234,7 +234,7 @@ namespace CgfConverter
 
                     f.WriteLine();
 
-                    for (uint j = meshSubset.FirstVertex;
+                    for (int j = meshSubset.FirstVertex;
                         j < meshSubset.NumVertices + meshSubset.FirstVertex;
                         j++)
                     {
@@ -247,7 +247,7 @@ namespace CgfConverter
                 {
                     #region Write Vertices Out (v, vt)
 
-                    for (uint j = meshSubset.FirstVertex;
+                    for (int j = meshSubset.FirstVertex;
                         j < meshSubset.NumVertices + meshSubset.FirstVertex;
                         j++)
                     {
@@ -266,7 +266,7 @@ namespace CgfConverter
 
                     f.WriteLine();
 
-                    for (uint j = meshSubset.FirstVertex;
+                    for (var j = meshSubset.FirstVertex;
                         j < meshSubset.NumVertices + meshSubset.FirstVertex;
                         j++)
                     {
@@ -282,7 +282,7 @@ namespace CgfConverter
 
                 if (tmpMesh.NormalsData != 0)
                 {
-                    for (uint j = meshSubset.FirstVertex;
+                    for (var j = meshSubset.FirstVertex;
                         j < meshSubset.NumVertices + meshSubset.FirstVertex;
                         j++)
                     {
@@ -325,7 +325,7 @@ namespace CgfConverter
                 #endregion
 
                 // Now write out the faces info based on the MtlName
-                for (uint j = meshSubset.FirstIndex;
+                for (int j = meshSubset.FirstIndex;
                     j < meshSubset.NumIndices + meshSubset.FirstIndex;
                     j++)
                 {
@@ -342,8 +342,8 @@ namespace CgfConverter
             }
 
             // Extend the current vertex, uv and normal positions by the length of those arrays.
-            this.CurrentVertexPosition = tempVertexPosition;
-            this.CurrentIndicesPosition = tempIndicesPosition;
+            CurrentVertexPosition = tempVertexPosition;
+            CurrentIndicesPosition = tempIndicesPosition;
         }
 
         public void WriteObjHitBox(StreamWriter f, CryEngineCore.ChunkCompiledPhysicalProxies chunkProx)  // Pass a bone proxy to write to the stream.  For .chr files (armatures)
@@ -390,8 +390,8 @@ namespace CgfConverter
                     f.WriteLine(s2);
                     j = j + 2;
                 }
-                this.CurrentVertexPosition += chunkProx.PhysicalProxies[i].NumVertices;
-                this.CurrentIndicesPosition += chunkProx.PhysicalProxies[i].NumIndices;
+                CurrentVertexPosition += (int)chunkProx.PhysicalProxies[i].NumVertices;
+                CurrentIndicesPosition += (int)chunkProx.PhysicalProxies[i].NumIndices;
                 f.WriteLine();
             }
             f.WriteLine();

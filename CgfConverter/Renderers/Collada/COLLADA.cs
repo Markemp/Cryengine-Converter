@@ -643,6 +643,10 @@ namespace CgfConverter
 
                             if (CryData.Materials.Count != 0)
                             {
+                                if (tmpMeshSubsets.MeshSubsets[j].MatID > CryData.Materials.Count - 1)
+                                {
+                                    tmpMeshSubsets.MeshSubsets[j].MatID = 0;
+                                }
                                 triangles[j].Material = CryData.Materials[(int)tmpMeshSubsets.MeshSubsets[j].MatID].Name + "-material";
                             }
                             // Create the 4 inputs.  vertex, normal, texcoord, color
@@ -676,7 +680,7 @@ namespace CgfConverter
                             triangles[j].Input[2].source = "#" + uvSource.ID;
                             // Create the vcount list.  All triangles, so the subset number of indices.
                             StringBuilder vc = new StringBuilder();
-                            for (uint k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
+                            for (var k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
                             {
                                 if (tmpColors == null)
                                     vc.AppendFormat(culture, "3 ");
@@ -689,7 +693,7 @@ namespace CgfConverter
                             StringBuilder p = new StringBuilder();
                             if (tmpColors == null)
                             {
-                                for (uint k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
+                                for (var k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
                                 {
                                     p.AppendFormat("{0} {0} {0} {1} {1} {1} {2} {2} {2} ", tmpIndices.Indices[k], tmpIndices.Indices[k + 1], tmpIndices.Indices[k + 2]);
                                     k += 2;
@@ -697,7 +701,7 @@ namespace CgfConverter
                             }
                             else
                             {
-                                for (uint k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
+                                for (var k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
                                 {
                                     p.AppendFormat("{0} {0} {0} {0} {1} {1} {1} {1} {2} {2} {2} {2} ", tmpIndices.Indices[k], tmpIndices.Indices[k + 1], tmpIndices.Indices[k + 2]);
                                     k += 2;

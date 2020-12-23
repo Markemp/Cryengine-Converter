@@ -727,12 +727,12 @@ namespace CgfConverter
 
     public struct MeshSubset
     {
-        public uint FirstIndex;
-        public uint NumIndices;
-        public uint FirstVertex;
-        public uint NumVertices;
-        public uint MatID;
-        public Double Radius;
+        public int FirstIndex;
+        public int NumIndices;
+        public int FirstVertex;
+        public int NumVertices;
+        public int MatID;
+        public float Radius;
         public Vector3 Center;
     }  // Contains data about the parts of a mesh, such as vertices, radius and center.
 
@@ -1354,7 +1354,7 @@ namespace CgfConverter
         public uint NumIndices;
         public uint FirstVertex;
         public uint NumVertices;
-        public UInt32 Material;     // Size of the weird data at the end of the hitbox structure.
+        public uint Material;     // Size of the weird data at the end of the hitbox structure.
         public Vector3[] Vertices;    // Array of vertices (x,y,z) length NumVertices
         public UInt16[] Indices;      // Array of indices
 

@@ -7,7 +7,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 
-namespace CgfConverterTests.CrucibleTests
+namespace CgfConverterTests.Crucible
 {
     [TestClass]
     public class CrucibleTests

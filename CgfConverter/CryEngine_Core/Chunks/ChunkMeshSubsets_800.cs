@@ -15,11 +15,11 @@ namespace CgfConverter.CryEngineCore
             this.MeshSubsets = new MeshSubset[NumMeshSubset];
             for (Int32 i = 0; i < NumMeshSubset; i++)
             {
-                this.MeshSubsets[i].FirstIndex = b.ReadUInt32();
-                this.MeshSubsets[i].NumIndices = b.ReadUInt32();
-                this.MeshSubsets[i].FirstVertex = b.ReadUInt32();
-                this.MeshSubsets[i].NumVertices = b.ReadUInt32();
-                this.MeshSubsets[i].MatID = b.ReadUInt32();
+                this.MeshSubsets[i].FirstIndex = b.ReadInt32();
+                this.MeshSubsets[i].NumIndices = b.ReadInt32();
+                this.MeshSubsets[i].FirstVertex = b.ReadInt32();
+                this.MeshSubsets[i].NumVertices = b.ReadInt32();
+                this.MeshSubsets[i].MatID = b.ReadInt32();
                 this.MeshSubsets[i].Radius = b.ReadSingle();
                 this.MeshSubsets[i].Center.x = b.ReadSingle();
                 this.MeshSubsets[i].Center.y = b.ReadSingle();

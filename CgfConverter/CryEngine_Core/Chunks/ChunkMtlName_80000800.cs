@@ -10,11 +10,11 @@ namespace CgfConverter.CryEngine_Core.Chunks
         {
             base.Read(b);
 
-            this.MatType = (MtlNameTypeEnum)b.ReadUInt32();
+            this.MatType = (MtlNameTypeEnum)Utils.SwapUIntEndian(b.ReadUInt32());
             // if 0x01, then material lib.  If 0x12, mat name.  This is actually a bitstruct.
             this.SkipBytes(b, 4);               // NFlags2
             this.Name = b.ReadFString(128);
-            this.PhysicsType = new MtlNamePhysicsType[] { (MtlNamePhysicsType)b.ReadUInt32() };
+            this.PhysicsType = new MtlNamePhysicsType[] { (MtlNamePhysicsType)Utils.SwapUIntEndian(b.ReadUInt32()) };
 
             this.NumChildren = Utils.SwapUIntEndian(b.ReadUInt32());
             

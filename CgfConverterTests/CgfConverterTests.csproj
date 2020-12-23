@@ -56,6 +56,7 @@
     <Compile Include="IntegrationTests\ArcheAge\ArcheAgeTests.cs" />
     <Compile Include="IntegrationTests\CgfConverterIntegrationTests.cs" />
     <Compile Include="IntegrationTests\CrucibleTests\CrucibleTests.cs" />
+    <Compile Include="IntegrationTests\SonicBoomTests\SonicBoomTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestUtilities\TestUtils.cs" />
     <Compile Include="Unit Tests\StructsTests.cs" />
