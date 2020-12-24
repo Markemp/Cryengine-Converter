@@ -8,7 +8,7 @@ namespace CgfConverter.CryEngineCore
         public override void Read(BinaryReader b)
         {
             base.Read(b);
-            NumIntFaces = this.DataSize / 6;        // This is an array of TFaces, which are 3 uint16.
+            NumIntFaces = DataSize / 6;        // This is an array of TFaces, which are 3 uint16.
             Faces = new TFace[NumIntFaces];
             for (int i = 0; i < NumIntFaces; i++)
             {

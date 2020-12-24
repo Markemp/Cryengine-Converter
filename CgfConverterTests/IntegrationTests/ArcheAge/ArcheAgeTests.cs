@@ -32,6 +32,9 @@ namespace CgfConverterTests.IntegrationTests.ArcheAge
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
+
+            COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            colladaData.GenerateDaeObject();
         }
     }
 }

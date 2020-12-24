@@ -135,8 +135,8 @@ namespace CgfConverter.CryEngineCore
 
         public void Load(Model model, ChunkHeader header)
         {
-            this._model = model;
-            this._header = header;
+            _model = model;
+            _header = header;
         }
 
         public void SkipBytes(BinaryReader reader, Int64? bytesToSkip = null)
