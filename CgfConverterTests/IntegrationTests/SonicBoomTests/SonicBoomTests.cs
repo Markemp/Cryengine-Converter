@@ -2,6 +2,7 @@
 using CgfConverter.CryEngineCore;
 using CgfConverterTests.TestUtilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -13,6 +14,7 @@ namespace CgfConverterTests.SonicBoom
     public class SonicBoomTests
     {
         private readonly TestUtils testUtils = new TestUtils();
+        string userHome;
 
         [TestInitialize]
         public void Initialize()
@@ -20,20 +22,20 @@ namespace CgfConverterTests.SonicBoom
             CultureInfo customCulture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
             customCulture.NumberFormat.NumberDecimalSeparator = ".";
             Thread.CurrentThread.CurrentCulture = customCulture;
-
+            userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             testUtils.GetSchemaSet();
         }
 
         [TestMethod]
         public void Checkpoint_ValidateGeometry()
         {
-            var args = new string[] { @"..\..\ResourceFiles\SonicBoom\checkpoint.cgf", "-dds", "-dae" };
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SonicBoom\checkpoint.cgf", "-dds", "-dae" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
 
-            Assert.AreEqual((uint)11, cryData.Models[0].NumChunks);
+            Assert.AreEqual((uint)17, cryData.Models[0].NumChunks);
             Assert.AreEqual(ChunkTypeEnum.Node, cryData.Models[0].ChunkMap[22].ChunkType);
             var datastream = cryData.Models[0].ChunkMap[16] as ChunkDataStream_80000800;
             Assert.AreEqual((uint)8, datastream.BytesPerElement);
@@ -52,7 +54,7 @@ namespace CgfConverterTests.SonicBoom
         [TestMethod]
         public void JungleChase_ValidateGeometry()
         {
-            var args = new string[] { @"..\..\ResourceFiles\SonicBoom\jungle_chase.cgf", "-dds", "-dae" };
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SonicBoom\jungle_chase.cgf", "-dds", "-dae" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
@@ -77,7 +79,7 @@ namespace CgfConverterTests.SonicBoom
         [TestMethod]
         public void JungleChaseb_ValidateGeometry()
         {
-            var args = new string[] { @"..\..\ResourceFiles\SonicBoom\jungle_chase_b.cgf", "-dds", "-dae" };
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SonicBoom\jungle_chase_b.cgf", "-dds", "-dae" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);

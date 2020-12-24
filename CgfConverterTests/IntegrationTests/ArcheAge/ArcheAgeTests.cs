@@ -11,6 +11,7 @@ namespace CgfConverterTests.IntegrationTests.ArcheAge
     public class ArcheAgeTests
     {
         private readonly TestUtils testUtils = new TestUtils();
+        string userHome; 
 
         [TestInitialize]
         public void Initialize()
@@ -18,6 +19,7 @@ namespace CgfConverterTests.IntegrationTests.ArcheAge
             CultureInfo customCulture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
             customCulture.NumberFormat.NumberDecimalSeparator = ".";
             Thread.CurrentThread.CurrentCulture = customCulture;
+            userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
             testUtils.GetSchemaSet();
         }
@@ -25,7 +27,7 @@ namespace CgfConverterTests.IntegrationTests.ArcheAge
         [TestMethod]
         public void ArcheAge_ChrFileTest()
         {
-            var args = new string[] { @"..\..\ResourceFiles\ArcheAge\coupleduckship_foot.chr", "-dds", "-dae" };
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\ArcheAge\coupleduckship_foot.chr", "-dds", "-dae" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
