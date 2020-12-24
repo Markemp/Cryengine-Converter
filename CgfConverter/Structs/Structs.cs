@@ -1029,7 +1029,7 @@ namespace CgfConverter
         public WORLDTOBONE worldToBone;             // 4x3 matrix
         public BONETOWORLD boneToWorld;             // 4x3 matrix of world translations/rotations of the bones.
         public string boneName;                     // String256 in old terms; convert to a real null terminated string.
-        public uint limbID;                         // ID of this limb... usually just 0xFFFFFFFF
+        public int limbID;                         // ID of this limb... usually just 0xFFFFFFFF
         public int offsetParent;                    // offset to the parent in number of CompiledBone structs (584 bytes)
         public int offsetChild;                     // Offset to the first child to this bone in number of CompiledBone structs
         public uint numChildren;                    // Number of children to this bone
@@ -1046,41 +1046,38 @@ namespace CgfConverter
         public void ReadCompiledBone(BinaryReader b)
         {
             // Reads just a single 584 byte entry of a bone. At the end the seek position will be advanced, so keep that in mind.
-            this.ControllerID = b.ReadUInt32();                 // unique id of bone (generated from bone name)
+            ControllerID = b.ReadUInt32();                 // unique id of bone (generated from bone name)
             physicsGeometry = new PhysicsGeometry[2];
-            this.physicsGeometry[0].ReadPhysicsGeometry(b);     // lod 0 is the physics of alive body, 
-            this.physicsGeometry[1].ReadPhysicsGeometry(b);     // lod 1 is the physics of a dead body
-            this.mass = b.ReadSingle();
+            physicsGeometry[0].ReadPhysicsGeometry(b);     // lod 0 is the physics of alive body, 
+            physicsGeometry[1].ReadPhysicsGeometry(b);     // lod 1 is the physics of a dead body
+            mass = b.ReadSingle();
             worldToBone = new WORLDTOBONE();
-            this.worldToBone.GetWorldToBone(b);
+            worldToBone.GetWorldToBone(b);
             boneToWorld = new BONETOWORLD();
-            this.boneToWorld.ReadBoneToWorld(b);
-            this.boneName = b.ReadFString(256);
-            this.limbID = b.ReadUInt32();
-            this.offsetParent = b.ReadInt32();
-            this.numChildren = b.ReadUInt32();
-            this.offsetChild = b.ReadInt32();
-            this.childIDs = new List<uint>();                    // Calculated
+            boneToWorld.ReadBoneToWorld(b);
+            boneName = b.ReadFString(256);
+            limbID = b.ReadInt32();
+            offsetParent = b.ReadInt32();
+            numChildren = b.ReadUInt32();
+            offsetChild = b.ReadInt32();
+            childIDs = new List<uint>();                    // Calculated
         }
 
         public void ReadCompiledBone_801(BinaryReader b)
         {
             // Reads just a single xx byte entry of a bone. At the end the seek position will be advanced, so keep that in mind.
-            this.ControllerID = b.ReadUInt32();                 // unique id of bone (generated from bone name)
-            physicsGeometry = new PhysicsGeometry[2];
-            this.physicsGeometry[0].ReadPhysicsGeometry(b);     // lod 0 is the physics of alive body, 
-            this.physicsGeometry[1].ReadPhysicsGeometry(b);     // lod 1 is the physics of a dead body
-            this.mass = b.ReadSingle();
-            worldToBone = new WORLDTOBONE();
-            this.worldToBone.GetWorldToBone(b);
+            ControllerID = b.ReadUInt32();                 // unique id of bone (generated from bone name)
+            limbID = b.ReadInt32();
+            //_ = b.ReadFString(208);                 // Unknown for now
+            b.BaseStream.Position = b.BaseStream.Position + 208;
+            boneName = b.ReadFString(48);
+            offsetParent = b.ReadInt32();
+            numChildren = b.ReadUInt32();
+            offsetChild = b.ReadInt32();
             boneToWorld = new BONETOWORLD();
-            this.boneToWorld.ReadBoneToWorld(b);
-            this.boneName = b.ReadFString(48);
-            this.limbID = b.ReadUInt32();
-            this.offsetParent = b.ReadInt32();
-            this.numChildren = b.ReadUInt32();
-            this.offsetChild = b.ReadInt32();
-            this.childIDs = new List<uint>();                    // Calculated
+            boneToWorld.ReadBoneToWorld(b);
+            
+            childIDs = new List<uint>();                    // Calculated
         }
 
         public Matrix44 ToMatrix44(double[,] boneToWorld)

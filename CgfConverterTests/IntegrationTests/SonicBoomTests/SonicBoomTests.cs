@@ -3,7 +3,6 @@ using CgfConverter.CryEngineCore;
 using CgfConverterTests.TestUtilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -36,18 +35,18 @@ namespace CgfConverterTests.SonicBoom
             cryData.ProcessCryengineFiles();
 
             Assert.AreEqual((uint)17, cryData.Models[0].NumChunks);
-            Assert.AreEqual(ChunkTypeEnum.Node, cryData.Models[0].ChunkMap[22].ChunkType);
-            var datastream = cryData.Models[0].ChunkMap[16] as ChunkDataStream_80000800;
-            Assert.AreEqual((uint)8, datastream.BytesPerElement);
-            Assert.AreEqual((uint)96, datastream.NumElements);
-            Assert.AreEqual(-1.390625, datastream.Vertices[0].x, testUtils.delta);
-            Assert.AreEqual(1.9326171875, datastream.Vertices[0].y, testUtils.delta);
-            Assert.AreEqual(1.9189453125, datastream.Vertices[0].z, testUtils.delta);
+            Assert.AreEqual(ChunkTypeEnum.Node, cryData.Models[0].ChunkMap[33].ChunkType);
+            var datastream = cryData.Models[0].ChunkMap[23] as ChunkDataStream_80000800;
+            Assert.AreEqual((uint)12, datastream.BytesPerElement);
+            Assert.AreEqual((uint)629, datastream.NumElements);
+            Assert.AreEqual(-0.1071479171, datastream.Vertices[0].x, testUtils.delta);
+            Assert.AreEqual(0, datastream.Vertices[0].y, testUtils.delta);
+            Assert.AreEqual(0.983217179775238, datastream.Vertices[0].z, testUtils.delta);
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-            Assert.AreEqual(1, actualMaterialsCount);
+            Assert.AreEqual(2, actualMaterialsCount);
             testUtils.ValidateColladaXml(colladaData);
         }
 
@@ -61,13 +60,13 @@ namespace CgfConverterTests.SonicBoom
             cryData.ProcessCryengineFiles();
 
             Assert.AreEqual((uint)24, cryData.Models[0].NumChunks);
-            Assert.AreEqual(ChunkTypeEnum.Node, cryData.Models[0].ChunkMap[0x2F].ChunkType);
-            var datastream = cryData.Models[0].ChunkMap[0x28] as ChunkDataStream_80000800;
+            Assert.AreEqual(ChunkTypeEnum.Node, cryData.Models[0].ChunkMap[47].ChunkType);
+            var datastream = cryData.Models[0].ChunkMap[40] as ChunkDataStream_80000800;
             Assert.AreEqual((uint)12, datastream.BytesPerElement);
             Assert.AreEqual((uint)46244, datastream.NumElements);
-            Assert.AreEqual(-130.51466369628906, datastream.Vertices[0].x, testUtils.delta);
-            Assert.AreEqual(36.355838775634766, datastream.Vertices[0].y, testUtils.delta);
-            Assert.AreEqual(24.204965591430664, datastream.Vertices[0].z, testUtils.delta);
+            Assert.AreEqual(-130.51466369, datastream.Vertices[0].x, testUtils.delta);
+            Assert.AreEqual(36.3558387756, datastream.Vertices[0].y, testUtils.delta);
+            Assert.AreEqual(24.2049655914, datastream.Vertices[0].z, testUtils.delta);
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
@@ -86,18 +85,18 @@ namespace CgfConverterTests.SonicBoom
             cryData.ProcessCryengineFiles();
 
             Assert.AreEqual((uint)30, cryData.Models[0].NumChunks);
-            Assert.AreEqual(ChunkTypeEnum.Node, cryData.Models[0].ChunkMap[28].ChunkType);
-            var datastream = cryData.Models[0].ChunkMap[16] as ChunkDataStream_801;
-            Assert.AreEqual((uint)8, datastream.BytesPerElement);
-            Assert.AreEqual((uint)96, datastream.NumElements);
-            Assert.AreEqual(-1.390625, datastream.Vertices[0].x, testUtils.delta);
-            Assert.AreEqual(1.9326171875, datastream.Vertices[0].y, testUtils.delta);
-            Assert.AreEqual(1.9189453125, datastream.Vertices[0].z, testUtils.delta);
+            Assert.AreEqual(ChunkTypeEnum.Node, cryData.Models[0].ChunkMap[59].ChunkType);
+            var datastream = cryData.Models[0].ChunkMap[52] as ChunkDataStream_80000800;
+            Assert.AreEqual((uint)12, datastream.BytesPerElement);
+            Assert.AreEqual((uint)60794, datastream.NumElements);
+            Assert.AreEqual(104.20726013183594, datastream.Vertices[0].x, testUtils.delta);
+            Assert.AreEqual(137.044921875, datastream.Vertices[0].y, testUtils.delta);
+            Assert.AreEqual(24.923294067382812, datastream.Vertices[0].z, testUtils.delta);
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-            Assert.AreEqual(1, actualMaterialsCount);
+            Assert.AreEqual(18, actualMaterialsCount);
             testUtils.ValidateColladaXml(colladaData);
         }
     }
