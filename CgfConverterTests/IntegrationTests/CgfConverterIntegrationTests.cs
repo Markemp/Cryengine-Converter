@@ -9,7 +9,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 
-namespace CgfConverterTests
+namespace CgfConverterTests.IntegrationTests
 {
     [TestClass]
     public class CgfConverterIntegrationTests

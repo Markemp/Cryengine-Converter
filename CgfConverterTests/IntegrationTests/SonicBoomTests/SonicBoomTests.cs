@@ -7,7 +7,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 
-namespace CgfConverterTests.SonicBoom
+namespace CgfConverterTests.IntegrationTests.SonicBoom
 {
     [TestClass]
     public class SonicBoomTests

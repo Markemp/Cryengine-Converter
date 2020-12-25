@@ -3,7 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Xml;
 
-namespace CgfConverterTests
+namespace CgfConverterTests.IntegrationTests
 {
     [TestClass]
     public class CryXmlSerializerTests
