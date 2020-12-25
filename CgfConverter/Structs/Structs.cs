@@ -1069,7 +1069,7 @@ namespace CgfConverter
             ControllerID = b.ReadUInt32();                 // unique id of bone (generated from bone name)
             limbID = b.ReadInt32();
             //_ = b.ReadFString(208);                 // Unknown for now
-            b.BaseStream.Position = b.BaseStream.Position + 208;
+            b.BaseStream.Seek(208, SeekOrigin.Current);  //TODO: Try b.BaseStream.Seek(208, SeekOrigin.Current)
             boneName = b.ReadFString(48);
             offsetParent = b.ReadInt32();
             numChildren = b.ReadUInt32();
