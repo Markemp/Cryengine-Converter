@@ -3,20 +3,18 @@ using System.Linq;
 
 namespace CgfConverter.CryEngineCore
 {
-    public class ChunkCompiledIntSkinVertices_800 : ChunkCompiledIntSkinVertices
+    public class ChunkCompiledIntSkinVertices_801 : ChunkCompiledIntSkinVertices
     {
         public override void Read(BinaryReader b)
         {
             base.Read(b);
-            NumIntVertices = (int)((Size - 32) / 64);
+            NumIntVertices = (int)((Size - 32) / 40);
             IntSkinVertices = new IntSkinVertex[NumIntVertices];
             SkipBytes(b, 32);          // Padding between the chunk header and the first IntVertex.
-            // Size of the IntSkinVertex is 64 bytes
+            // Size of the IntSkinVertex is 40 bytes
             for (int i = 0; i < NumIntVertices; i++)
             {
-                IntSkinVertices[i].Obsolete0.ReadVector3(b);
                 IntSkinVertices[i].Position.ReadVector3(b);
-                IntSkinVertices[i].Obsolete2.ReadVector3(b);
                 // Read 4 bone IDs
                 IntSkinVertices[i].BoneIDs = new ushort[4];
                 for (int j = 0; j < 4; j++)

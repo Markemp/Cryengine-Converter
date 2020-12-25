@@ -645,7 +645,9 @@ namespace CgfConverter
                             {
                                 if (tmpMeshSubsets.MeshSubsets[j].MatID > CryData.Materials.Count - 1)
                                 {
-                                    tmpMeshSubsets.MeshSubsets[j].MatID = 0;
+                                    //TODO:  This isn't right, but prevents crashing. Looks like for some
+                                    // models it's the index - 8 (some Sonic Boom for example)
+                                    tmpMeshSubsets.MeshSubsets[j].MatID = 0;  
                                 }
                                 triangles[j].Material = CryData.Materials[(int)tmpMeshSubsets.MeshSubsets[j].MatID].Name + "-material";
                             }

@@ -855,7 +855,6 @@ namespace CgfConverter
                 for (int j = 0; j < 4; j++)
                 {
                     worldToBone[i, j] = b.ReadSingle();  // this might have to be switched to [j,i].  Who knows???
-                    //Utils.Log(LogLevelEnum.Debug, "worldToBone: {0:F7}", worldToBone[i, j]);
                 }
             }
             return;
@@ -888,27 +887,24 @@ namespace CgfConverter
 
         public void WriteWorldToBone()
         {
-            //Utils.Log(LogLevelEnum.Verbose);
-            //Utils.Log(LogLevelEnum.Verbose, "     *** World to Bone ***");
             Utils.Log(LogLevelEnum.Verbose, "     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[0, 0], this.worldToBone[0, 1], this.worldToBone[0, 2], this.worldToBone[0, 3]);
             Utils.Log(LogLevelEnum.Verbose, "     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[1, 0], this.worldToBone[1, 1], this.worldToBone[1, 2], this.worldToBone[1, 3]);
             Utils.Log(LogLevelEnum.Verbose, "     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[2, 0], this.worldToBone[2, 1], this.worldToBone[2, 2], this.worldToBone[2, 3]);
-            //Utils.Log(LogLevelEnum.Verbose);
         }
 
         internal Matrix33 GetWorldToBoneRotationMatrix()
         {
             Matrix33 result = new Matrix33
             {
-                m11 = this.worldToBone[0, 0],
-                m12 = this.worldToBone[0, 1],
-                m13 = this.worldToBone[0, 2],
-                m21 = this.worldToBone[1, 0],
-                m22 = this.worldToBone[1, 1],
-                m23 = this.worldToBone[1, 2],
-                m31 = this.worldToBone[2, 0],
-                m32 = this.worldToBone[2, 1],
-                m33 = this.worldToBone[2, 2]
+                m11 = worldToBone[0, 0],
+                m12 = worldToBone[0, 1],
+                m13 = worldToBone[0, 2],
+                m21 = worldToBone[1, 0],
+                m22 = worldToBone[1, 1],
+                m23 = worldToBone[1, 2],
+                m31 = worldToBone[2, 0],
+                m32 = worldToBone[2, 1],
+                m33 = worldToBone[2, 2]
             };
             return result;
         }
@@ -917,9 +913,9 @@ namespace CgfConverter
         {
             Vector3 result = new Vector3
             {
-                x = this.worldToBone[0, 3],
-                y = this.worldToBone[1, 3],
-                z = this.worldToBone[2, 3]
+                x = worldToBone[0, 3],
+                y = worldToBone[1, 3],
+                z = worldToBone[2, 3]
             };
             return result;
         }
@@ -1076,7 +1072,21 @@ namespace CgfConverter
             offsetChild = b.ReadInt32();
             boneToWorld = new BONETOWORLD();
             boneToWorld.ReadBoneToWorld(b);
-            
+            worldToBone = new WORLDTOBONE();
+            worldToBone.worldToBone = new double[3, 4];
+            worldToBone.worldToBone[0, 0] = boneToWorld.boneToWorld[0, 0];
+            worldToBone.worldToBone[0, 1] = boneToWorld.boneToWorld[0, 1];
+            worldToBone.worldToBone[0, 2] = boneToWorld.boneToWorld[0, 2];
+            worldToBone.worldToBone[0, 3] = boneToWorld.boneToWorld[0, 3];
+            worldToBone.worldToBone[1, 0] = boneToWorld.boneToWorld[1, 0];
+            worldToBone.worldToBone[1, 1] = boneToWorld.boneToWorld[1, 1];
+            worldToBone.worldToBone[1, 2] = boneToWorld.boneToWorld[1, 2];
+            worldToBone.worldToBone[1, 3] = boneToWorld.boneToWorld[1, 3];
+            worldToBone.worldToBone[2, 0] = boneToWorld.boneToWorld[2, 0];
+            worldToBone.worldToBone[2, 1] = boneToWorld.boneToWorld[2, 1];
+            worldToBone.worldToBone[2, 2] = boneToWorld.boneToWorld[2, 2];
+            worldToBone.worldToBone[2, 3] = boneToWorld.boneToWorld[2, 3];
+
             childIDs = new List<uint>();                    // Calculated
         }
 

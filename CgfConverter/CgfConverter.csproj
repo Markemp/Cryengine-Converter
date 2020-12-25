@@ -71,6 +71,7 @@
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledIntFaces.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledIntFaces_800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledIntSkinVertices.cs" />
+    <Compile Include="CryEngine_Core\Chunks\ChunkCompiledIntSkinVertices_801.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledIntSkinVertices_800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledMorphTargets.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledMorphTargets_800.cs" />
