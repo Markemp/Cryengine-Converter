@@ -8,9 +8,9 @@ namespace CgfConverter.CryEngineCore
         public override void Read(BinaryReader b)
         {
             base.Read(b);
-            NumIntVertices = (int)((this.Size - 32) / 64);
+            NumIntVertices = (int)((Size - 32) / 64);
             IntSkinVertices = new IntSkinVertex[NumIntVertices];
-            this.SkipBytes(b, 32);          // Padding between the chunk header and the first IntVertex.
+            SkipBytes(b, 32);          // Padding between the chunk header and the first IntVertex.
             // Size of the IntSkinVertex is 64 bytes
             for (int i = 0; i < NumIntVertices; i++)
             {

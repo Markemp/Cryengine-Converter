@@ -65,11 +65,13 @@
     <Compile Include="CryEngine_Core\Chunks\ChunkBoneNameList_745.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledBones.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledBones_800.cs" />
+    <Compile Include="CryEngine_Core\Chunks\ChunkCompiledBones_801.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledExtToIntMap.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledExtToIntMap_800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledIntFaces.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledIntFaces_800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledIntSkinVertices.cs" />
+    <Compile Include="CryEngine_Core\Chunks\ChunkCompiledIntSkinVertices_801.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledIntSkinVertices_800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledMorphTargets.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledMorphTargets_800.cs" />
@@ -81,6 +83,7 @@
     <Compile Include="CryEngine_Core\Chunks\ChunkController.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkController_826.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkDataStream.cs" />
+    <Compile Include="CryEngine_Core\Chunks\ChunkDataStream_80000800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkDataStream_801.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkDataStream_800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkExportFlags.cs" />
@@ -95,17 +98,22 @@
     <Compile Include="CryEngine_Core\Chunks\ChunkMeshMorphTargets.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMeshMorphTargets_800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMeshPhysicsData.cs" />
+    <Compile Include="CryEngine_Core\Chunks\ChunkMeshPhysicsData_80000800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMeshPhysicsData_800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMeshSubsets.cs" />
+    <Compile Include="CryEngine_Core\Chunks\ChunkMeshSubsets_800000800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMeshSubsets_800.cs" />
+    <Compile Include="CryEngine_Core\Chunks\ChunkMesh_80000800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMesh_800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMesh_802.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMesh_801.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMtlName.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMtlName_744.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMtlName_800.cs" />
+    <Compile Include="CryEngine_Core\Chunks\ChunkMtlName_80000800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMtlName_802.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkNode.cs" />
+    <Compile Include="CryEngine_Core\Chunks\ChunkNode_80000823.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkNode_823.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkNode_824.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkSceneProp.cs" />
@@ -489,6 +497,7 @@
     <Compile Include="Renderers\Wavefront\Wavefront.cs" />
     <Compile Include="Renderers\Wavefront\Wavefront.Material.cs" />
     <Compile Include="Services\ArgsHandler.cs" />
+    <Compile Include="Services\BinaryReaderBigEndian.cs" />
     <Compile Include="Services\MaterialLibraryCreator.cs" />
     <Compile Include="Services\TSpace.cs" />
     <Compile Include="Services\Utils.cs" />
@@ -509,12 +518,5 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup>
-    <Analyzer Include="..\packages\Microsoft.NetCore.Analyzers.3.0.0\analyzers\dotnet\cs\Microsoft.NetCore.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.NetCore.Analyzers.3.0.0\analyzers\dotnet\cs\Microsoft.NetCore.CSharp.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.NetFramework.Analyzers.3.0.0\analyzers\dotnet\cs\Microsoft.NetFramework.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.NetFramework.Analyzers.3.0.0\analyzers\dotnet\cs\Microsoft.NetFramework.CSharp.Analyzers.dll" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild"></Target>
 </Project>

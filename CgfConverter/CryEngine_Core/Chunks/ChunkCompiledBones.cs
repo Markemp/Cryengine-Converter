@@ -20,7 +20,6 @@ namespace CgfConverter.CryEngineCore
             if (bone.offsetParent != 0)
             {
                 return BoneDictionary[boneIndex + bone.offsetParent];
-                //return BoneList.Where(a => a.ControllerID == bone.parentID).First();
             }
             else
                 return null;

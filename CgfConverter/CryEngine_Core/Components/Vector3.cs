@@ -3,6 +3,7 @@ using System.Globalization;
 
 namespace CgfConverter.CryEngineCore.Components
 {
+    // TODO:  Replace this with System.Numerics Vector3
     public class Vector3
     {
         private float _x;

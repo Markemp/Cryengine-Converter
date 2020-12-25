@@ -2,17 +2,19 @@
 using CgfConverter.CryEngineCore;
 using CgfConverterTests.TestUtilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
 
-namespace CgfConverterTests.CrucibleTests
+namespace CgfConverterTests.IntegrationTests.Crucible
 {
     [TestClass]
     public class CrucibleTests
     {
         private readonly TestUtils testUtils = new TestUtils();
+        string userHome;
 
         [TestInitialize]
         public void Initialize()
@@ -20,6 +22,7 @@ namespace CgfConverterTests.CrucibleTests
             CultureInfo customCulture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
             customCulture.NumberFormat.NumberDecimalSeparator = ".";
             Thread.CurrentThread.CurrentCulture = customCulture;
+            userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
             testUtils.GetSchemaSet();
         }
@@ -27,10 +30,11 @@ namespace CgfConverterTests.CrucibleTests
         [TestMethod]
         public void TechnomancerPillar_ValidateGeometry()
         {
-            var args = new string[] { @"..\..\ResourceFiles\Crucible\technomancerpillar.cgf", "-dds", "-dae" };
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Crucible\technomancerpillar.cgf", "-dds", "-dae" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
 
             Assert.AreEqual((uint)11, cryData.Models[0].NumChunks);
             Assert.AreEqual(ChunkTypeEnum.Node, cryData.Models[0].ChunkMap[22].ChunkType);

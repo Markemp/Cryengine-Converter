@@ -727,12 +727,12 @@ namespace CgfConverter
 
     public struct MeshSubset
     {
-        public uint FirstIndex;
-        public uint NumIndices;
-        public uint FirstVertex;
-        public uint NumVertices;
-        public uint MatID;
-        public Double Radius;
+        public int FirstIndex;
+        public int NumIndices;
+        public int FirstVertex;
+        public int NumVertices;
+        public int MatID;
+        public float Radius;
         public Vector3 Center;
     }  // Contains data about the parts of a mesh, such as vertices, radius and center.
 
@@ -855,7 +855,6 @@ namespace CgfConverter
                 for (int j = 0; j < 4; j++)
                 {
                     worldToBone[i, j] = b.ReadSingle();  // this might have to be switched to [j,i].  Who knows???
-                    //Utils.Log(LogLevelEnum.Debug, "worldToBone: {0:F7}", worldToBone[i, j]);
                 }
             }
             return;
@@ -888,27 +887,24 @@ namespace CgfConverter
 
         public void WriteWorldToBone()
         {
-            //Utils.Log(LogLevelEnum.Verbose);
-            //Utils.Log(LogLevelEnum.Verbose, "     *** World to Bone ***");
             Utils.Log(LogLevelEnum.Verbose, "     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[0, 0], this.worldToBone[0, 1], this.worldToBone[0, 2], this.worldToBone[0, 3]);
             Utils.Log(LogLevelEnum.Verbose, "     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[1, 0], this.worldToBone[1, 1], this.worldToBone[1, 2], this.worldToBone[1, 3]);
             Utils.Log(LogLevelEnum.Verbose, "     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[2, 0], this.worldToBone[2, 1], this.worldToBone[2, 2], this.worldToBone[2, 3]);
-            //Utils.Log(LogLevelEnum.Verbose);
         }
 
         internal Matrix33 GetWorldToBoneRotationMatrix()
         {
             Matrix33 result = new Matrix33
             {
-                m11 = this.worldToBone[0, 0],
-                m12 = this.worldToBone[0, 1],
-                m13 = this.worldToBone[0, 2],
-                m21 = this.worldToBone[1, 0],
-                m22 = this.worldToBone[1, 1],
-                m23 = this.worldToBone[1, 2],
-                m31 = this.worldToBone[2, 0],
-                m32 = this.worldToBone[2, 1],
-                m33 = this.worldToBone[2, 2]
+                m11 = worldToBone[0, 0],
+                m12 = worldToBone[0, 1],
+                m13 = worldToBone[0, 2],
+                m21 = worldToBone[1, 0],
+                m22 = worldToBone[1, 1],
+                m23 = worldToBone[1, 2],
+                m31 = worldToBone[2, 0],
+                m32 = worldToBone[2, 1],
+                m33 = worldToBone[2, 2]
             };
             return result;
         }
@@ -917,9 +913,9 @@ namespace CgfConverter
         {
             Vector3 result = new Vector3
             {
-                x = this.worldToBone[0, 3],
-                y = this.worldToBone[1, 3],
-                z = this.worldToBone[2, 3]
+                x = worldToBone[0, 3],
+                y = worldToBone[1, 3],
+                z = worldToBone[2, 3]
             };
             return result;
         }
@@ -1007,9 +1003,7 @@ namespace CgfConverter
             physicsGeom = b.ReadUInt32();
             flags = b.ReadUInt32();
             min.ReadVector3(b);
-            // min.WriteVector3();
             max.ReadVector3(b);
-            // max.WriteVector3();
             spring_angle.ReadVector3(b);
             spring_tension.ReadVector3(b);
             damping.ReadVector3(b);
@@ -1031,7 +1025,7 @@ namespace CgfConverter
         public WORLDTOBONE worldToBone;             // 4x3 matrix
         public BONETOWORLD boneToWorld;             // 4x3 matrix of world translations/rotations of the bones.
         public string boneName;                     // String256 in old terms; convert to a real null terminated string.
-        public uint limbID;                         // ID of this limb... usually just 0xFFFFFFFF
+        public int limbID;                         // ID of this limb... usually just 0xFFFFFFFF
         public int offsetParent;                    // offset to the parent in number of CompiledBone structs (584 bytes)
         public int offsetChild;                     // Offset to the first child to this bone in number of CompiledBone structs
         public uint numChildren;                    // Number of children to this bone
@@ -1048,21 +1042,52 @@ namespace CgfConverter
         public void ReadCompiledBone(BinaryReader b)
         {
             // Reads just a single 584 byte entry of a bone. At the end the seek position will be advanced, so keep that in mind.
-            this.ControllerID = b.ReadUInt32();                 // unique id of bone (generated from bone name)
+            ControllerID = b.ReadUInt32();                 // unique id of bone (generated from bone name)
             physicsGeometry = new PhysicsGeometry[2];
-            this.physicsGeometry[0].ReadPhysicsGeometry(b);     // lod 0 is the physics of alive body, 
-            this.physicsGeometry[1].ReadPhysicsGeometry(b);     // lod 1 is the physics of a dead body
-            this.mass = b.ReadSingle();
+            physicsGeometry[0].ReadPhysicsGeometry(b);     // lod 0 is the physics of alive body, 
+            physicsGeometry[1].ReadPhysicsGeometry(b);     // lod 1 is the physics of a dead body
+            mass = b.ReadSingle();
             worldToBone = new WORLDTOBONE();
-            this.worldToBone.GetWorldToBone(b);
+            worldToBone.GetWorldToBone(b);
             boneToWorld = new BONETOWORLD();
-            this.boneToWorld.ReadBoneToWorld(b);
-            this.boneName = b.ReadFString(256);
-            this.limbID = b.ReadUInt32();
-            this.offsetParent = b.ReadInt32();
-            this.numChildren = b.ReadUInt32();
-            this.offsetChild = b.ReadInt32();
-            this.childIDs = new List<uint>();                    // Calculated
+            boneToWorld.ReadBoneToWorld(b);
+            boneName = b.ReadFString(256);
+            limbID = b.ReadInt32();
+            offsetParent = b.ReadInt32();
+            numChildren = b.ReadUInt32();
+            offsetChild = b.ReadInt32();
+            childIDs = new List<uint>();                    // Calculated
+        }
+
+        public void ReadCompiledBone_801(BinaryReader b)
+        {
+            // Reads just a single xx byte entry of a bone. At the end the seek position will be advanced, so keep that in mind.
+            ControllerID = b.ReadUInt32();                 // unique id of bone (generated from bone name)
+            limbID = b.ReadInt32();
+            //_ = b.ReadFString(208);                 // Unknown for now
+            b.BaseStream.Seek(208, SeekOrigin.Current);  //TODO: Try b.BaseStream.Seek(208, SeekOrigin.Current)
+            boneName = b.ReadFString(48);
+            offsetParent = b.ReadInt32();
+            numChildren = b.ReadUInt32();
+            offsetChild = b.ReadInt32();
+            boneToWorld = new BONETOWORLD();
+            boneToWorld.ReadBoneToWorld(b);
+            worldToBone = new WORLDTOBONE();
+            worldToBone.worldToBone = new double[3, 4];
+            worldToBone.worldToBone[0, 0] = boneToWorld.boneToWorld[0, 0];
+            worldToBone.worldToBone[0, 1] = boneToWorld.boneToWorld[0, 1];
+            worldToBone.worldToBone[0, 2] = boneToWorld.boneToWorld[0, 2];
+            worldToBone.worldToBone[0, 3] = boneToWorld.boneToWorld[0, 3];
+            worldToBone.worldToBone[1, 0] = boneToWorld.boneToWorld[1, 0];
+            worldToBone.worldToBone[1, 1] = boneToWorld.boneToWorld[1, 1];
+            worldToBone.worldToBone[1, 2] = boneToWorld.boneToWorld[1, 2];
+            worldToBone.worldToBone[1, 3] = boneToWorld.boneToWorld[1, 3];
+            worldToBone.worldToBone[2, 0] = boneToWorld.boneToWorld[2, 0];
+            worldToBone.worldToBone[2, 1] = boneToWorld.boneToWorld[2, 1];
+            worldToBone.worldToBone[2, 2] = boneToWorld.boneToWorld[2, 2];
+            worldToBone.worldToBone[2, 3] = boneToWorld.boneToWorld[2, 3];
+
+            childIDs = new List<uint>();                    // Calculated
         }
 
         public Matrix44 ToMatrix44(double[,] boneToWorld)
@@ -1336,7 +1361,7 @@ namespace CgfConverter
         public uint NumIndices;
         public uint FirstVertex;
         public uint NumVertices;
-        public UInt32 Material;     // Size of the weird data at the end of the hitbox structure.
+        public uint Material;     // Size of the weird data at the end of the hitbox structure.
         public Vector3[] Vertices;    // Array of vertices (x,y,z) length NumVertices
         public UInt16[] Indices;      // Array of indices
 

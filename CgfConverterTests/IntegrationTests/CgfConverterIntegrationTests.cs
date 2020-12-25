@@ -3,17 +3,19 @@ using CgfConverter.CryEngineCore;
 using CgfConverterTests.TestUtilities;
 using grendgine_collada;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
 
-namespace CgfConverterTests
+namespace CgfConverterTests.IntegrationTests
 {
     [TestClass]
     public class CgfConverterIntegrationTests
     {
         private readonly TestUtils testUtils = new TestUtils();
+        string userHome;
 
         [TestInitialize]
         public void Initialize()
@@ -22,6 +24,7 @@ namespace CgfConverterTests
             CultureInfo customCulture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
             customCulture.NumberFormat.NumberDecimalSeparator = ".";
             Thread.CurrentThread.CurrentCulture = customCulture;
+            userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
             testUtils.GetSchemaSet();
         }
@@ -29,24 +32,25 @@ namespace CgfConverterTests
         [TestMethod]
         public void SimpleCubeSchemaValidation()
         {
-            testUtils.ValidateXml(@"..\..\ResourceFiles\simple_cube.dae");
+            testUtils.ValidateXml($@"{userHome}\OneDrive\ResourceFiles\simple_cube.dae");
             Assert.AreEqual(0, testUtils.errors.Count);
         }
 
         [TestMethod]
         public void SimpleCubeSchemaValidation_BadColladaWithOneError()
         {
-            testUtils.ValidateXml(@"..\..\ResourceFiles\simple_cube_bad.dae");
+            testUtils.ValidateXml($@"{userHome}\OneDrive\ResourceFiles\simple_cube_bad.dae");
             Assert.AreEqual(1, testUtils.errors.Count);
         }
 
         [TestMethod]
         public void MWO_industrial_wetlamp_a_MaterialFileNotFound()
         {
-            var args = new string[] { @"..\..\ResourceFiles\industrial_wetlamp_a.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\industrial_wetlamp_a.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
@@ -58,10 +62,11 @@ namespace CgfConverterTests
         [TestMethod]
         public void MWO_timberwolf_chr()
         {
-            var args = new string[] { @"..\..\ResourceFiles\timberwolf.chr", "-dds", "-dae", "-objectdir", @"d:\depot\lol\" };
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\timberwolf.chr", "-dds", "-dae", "-objectdir", @"d:\depot\lol\" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
@@ -73,10 +78,11 @@ namespace CgfConverterTests
         [TestMethod]
         public void MWO_candycane_a_MaterialFileNotAvailable()
         {
-            var args = new string[] { @"..\..\ResourceFiles\candycane_a.chr", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\candycane_a.chr", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
@@ -88,10 +94,11 @@ namespace CgfConverterTests
         [TestMethod]
         public void MWO_hbr_right_torso_uac5_bh1_cga()
         {
-            var args = new string[] { @"..\..\ResourceFiles\hbr_right_torso_uac5_bh1.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\hbr_right_torso_uac5_bh1.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
@@ -103,10 +110,11 @@ namespace CgfConverterTests
         [TestMethod]
         public void MWO_hbr_right_torso_cga()
         {
-            var args = new string[] { @"..\..\ResourceFiles\hbr_right_torso.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\hbr_right_torso.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
 
             var colladaData = new COLLADA(testUtils.argsHandler, cryData);
             var daeObject = colladaData.DaeObject;
@@ -199,10 +207,11 @@ namespace CgfConverterTests
         [TestMethod]
         public void AEGS_Avenger_IntegrationTest()
         {
-            var args = new string[] { @"..\..\ResourceFiles\SC\AEGS_Avenger.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\SC\" };
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\AEGS_Avenger.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\SC\" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
 
             var colladaData = new COLLADA(testUtils.argsHandler, cryData);
             var daeObject = colladaData.DaeObject;
@@ -219,10 +228,11 @@ namespace CgfConverterTests
         [TestMethod]
         public void SC_hangar_asteroid_controlroom_fan()
         {
-            var args = new string[] { @"..\..\ResourceFiles\hangar_asteroid_controlroom_fan.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\hangar_asteroid_controlroom_fan.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
@@ -232,10 +242,11 @@ namespace CgfConverterTests
         [TestMethod]
         public void UnknownSource_forest_ruin()
         {
-            var args = new string[] { @"..\..\ResourceFiles\forest_ruin.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\forest_ruin.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
@@ -249,10 +260,11 @@ namespace CgfConverterTests
         [TestMethod]
         public void GhostSniper3_raquel_eyeoverlay_skin()
         {
-            var args = new string[] { @"..\..\ResourceFiles\Test01\raquel_eyeoverlay.skin", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\Test01\" };
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Test01\raquel_eyeoverlay.skin", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\Test01\" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
@@ -266,10 +278,11 @@ namespace CgfConverterTests
         [TestMethod]
         public void Prey_Dahl_GenMaleBody01_MaterialFileFound()
         {
-            var args = new string[] { @"..\..\ResourceFiles\Prey\Dahl_GenMaleBody01.skin", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\Prey\" };
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Prey\Dahl_GenMaleBody01.skin", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\Prey\" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
@@ -283,10 +296,11 @@ namespace CgfConverterTests
         [TestMethod]
         public void Prey_Dahl_GenMaleBody01_MaterialFileNotAvailable()
         {
-            var args = new string[] { @"..\..\ResourceFiles\Prey\Dahl_GenMaleBody01.skin" };
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Prey\Dahl_GenMaleBody01.skin" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
@@ -300,10 +314,11 @@ namespace CgfConverterTests
         [TestMethod]
         public void Evolve_griffin_skin_NoMaterialFile()
         {
-            var args = new string[] { @"..\..\ResourceFiles\Evolve\griffin.skin" };
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Evolve\griffin.skin" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
@@ -317,10 +332,11 @@ namespace CgfConverterTests
         [TestMethod]
         public void Evolve_griffin_menu_harpoon_skin_NoMaterialFile()
         {
-            var args = new string[] { @"..\..\ResourceFiles\Evolve\griffin_menu_harpoon.skin" };
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Evolve\griffin_menu_harpoon.skin" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
@@ -334,10 +350,11 @@ namespace CgfConverterTests
         [TestMethod]
         public void Evolve_griffin_fp_skeleton_chr_NoMaterialFile()
         {
-            var args = new string[] { @"..\..\ResourceFiles\Evolve\griffin_fp_skeleton.chr" };
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Evolve\griffin_fp_skeleton.chr" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
@@ -351,10 +368,11 @@ namespace CgfConverterTests
         [TestMethod]
         public void UnknownSource_osv_96_muzzle_brake_01_fp_NoMaterialFile()
         {
-            var args = new string[] { @"..\..\ResourceFiles\osv_96_muzzle_brake_01_fp.cgf" };
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\osv_96_muzzle_brake_01_fp.cgf" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
@@ -368,10 +386,11 @@ namespace CgfConverterTests
         [TestMethod]
         public void UnknownSource_spriggan_proto_mesh_skin_NoMaterialFile()
         {
-            var args = new string[] { @"..\..\ResourceFiles\spriggan_proto_mesh.skin" };
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\spriggan_proto_mesh.skin" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
 
             Assert.AreEqual((uint)41, cryData.Models[0].NumChunks);
             Assert.AreEqual(ChunkTypeEnum.Node, cryData.Models[0].ChunkMap[47].ChunkType);
@@ -396,10 +415,11 @@ namespace CgfConverterTests
         [TestMethod]
         public void UnknownSource_spriggan_proto_skel_chr_NoMaterialFile()
         {
-            var args = new string[] { @"..\..\ResourceFiles\spriggan_proto_skel.chr" };
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\spriggan_proto_skel.chr" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
@@ -414,7 +434,7 @@ namespace CgfConverterTests
         //[TestMethod]
         //public void Cnylgt_marauder_NoMaterialFile()
         //{
-        //    var args = new string[] { @"..\..\ResourceFiles\cnylgt_marauder.cga" };
+        //    var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\cnylgt_marauder.cga" };
         //    int result = argsHandler.ProcessArgs(args);
         //    Assert.AreEqual(0, result);
         //    CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
@@ -431,10 +451,11 @@ namespace CgfConverterTests
         [TestMethod]
         public void Green_fern_bush_a_MaterialFileExists()
         {
-            var args = new string[] { @"..\..\ResourceFiles\CryEngine\green_fern_bush_a.cgf" };
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\CryEngine\green_fern_bush_a.cgf" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
@@ -459,10 +480,11 @@ namespace CgfConverterTests
         [TestMethod]
         public void SC_LR7_UOPP_VerifyImageFilePath()
         {
-            var args = new string[] { @"..\..\ResourceFiles\SC\LR-7_UOPP.cga" };
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\LR-7_UOPP.cga" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
