@@ -1093,6 +1093,7 @@ namespace CgfConverter
         {
             ControllerID = b.ReadUInt32();                 // unique id of bone (generated from bone name)
             limbID = b.ReadInt32();
+            parentID = b.ReadUInt32();
         }
 
         public Matrix44 ToMatrix44(double[,] boneToWorld)
