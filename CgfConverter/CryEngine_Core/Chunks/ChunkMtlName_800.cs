@@ -9,19 +9,19 @@ namespace CgfConverter.CryEngineCore
         {
             base.Read(b);
 
-            this.MatType = (MtlNameTypeEnum)b.ReadUInt32();
+            MatType = (MtlNameTypeEnum)b.ReadUInt32();
             // if 0x01, then material lib.  If 0x12, mat name.  This is actually a bitstruct.
-            this.SkipBytes(b, 4);               // NFlags2
-            this.Name = b.ReadFString(128);
-            this.PhysicsType = new MtlNamePhysicsType[] { (MtlNamePhysicsType)b.ReadUInt32() };
-            this.NumChildren = b.ReadUInt32();
+            SkipBytes(b, 4);               // NFlags2
+            Name = b.ReadFString(128);
+            PhysicsType = new MtlNamePhysicsType[] { (MtlNamePhysicsType)b.ReadUInt32() };
+            NumChildren = b.ReadUInt32();
             // Now we need to read the Children references.  2 parts; the number of children, and then 66 - numchildren padding
-            this.ChildIDs = new uint[this.NumChildren];
-            for (Int32 i = 0; i < this.NumChildren; i++)
+            ChildIDs = new uint[NumChildren];
+            for (int i = 0; i < NumChildren; i++)
             {
-                this.ChildIDs[i] = b.ReadUInt32();
+                ChildIDs[i] = b.ReadUInt32();
             }
-            this.SkipBytes(b, 32);
+            SkipBytes(b, 32);
         }
     }
 }

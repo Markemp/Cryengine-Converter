@@ -6,7 +6,7 @@ namespace CgfConverter.CryEngineCore
 {
     public abstract class ChunkCompiledBones : Chunk     //  0xACDC0000:  Bones info
     {
-        public String RootBoneName;         // Controller ID?  Name?  Not sure yet.
+        public string RootBoneName;         // Controller ID?  Name?  Not sure yet.
         public CompiledBone RootBone;       // First bone in the data structure.  Usually Bip01
         public int NumBones;                // Number of bones in the chunk
 

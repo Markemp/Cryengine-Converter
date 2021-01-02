@@ -204,40 +204,7 @@ namespace CgfConverterTests.IntegrationTests
             testUtils.ValidateColladaXml(colladaData);
         }
 
-        [TestMethod]
-        public void AEGS_Avenger_IntegrationTest()
-        {
-            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\AEGS_Avenger.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\SC\" };
-            int result = testUtils.argsHandler.ProcessArgs(args);
-            Assert.AreEqual(0, result);
-            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
-            cryData.ProcessCryengineFiles();
-
-            var colladaData = new COLLADA(testUtils.argsHandler, cryData);
-            var daeObject = colladaData.DaeObject;
-            colladaData.GenerateDaeObject();
-            // Make sure Rotations are still right
-            const string frontLGDoorLeftMatrix = "1.000000 0.000000 0.000000 -0.300001 0.000000 -0.938131 -0.346280 0.512432 0.000000 0.346280 -0.938131 -1.835138 0.000000 0.000000 0.000000 1.000000";
-            var noseNode = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].node[0];
-            Assert.AreEqual("Nose", noseNode.ID);
-            Assert.AreEqual("Front_LG_Door_Left", noseNode.node[28].ID);
-            Assert.AreEqual(frontLGDoorLeftMatrix, noseNode.node[28].Matrix[0].Value_As_String);
-
-        }
-
-        [TestMethod]
-        public void SC_hangar_asteroid_controlroom_fan()
-        {
-            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\hangar_asteroid_controlroom_fan.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
-            int result = testUtils.argsHandler.ProcessArgs(args);
-            Assert.AreEqual(0, result);
-            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
-            cryData.ProcessCryengineFiles();
-
-            COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
-            colladaData.GenerateDaeObject();
-            testUtils.ValidateColladaXml(colladaData);
-        }
+       
 
         [TestMethod]
         public void UnknownSource_forest_ruin()

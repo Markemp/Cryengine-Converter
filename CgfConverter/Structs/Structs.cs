@@ -1064,8 +1064,7 @@ namespace CgfConverter
             // Reads just a single xx byte entry of a bone. At the end the seek position will be advanced, so keep that in mind.
             ControllerID = b.ReadUInt32();                 // unique id of bone (generated from bone name)
             limbID = b.ReadInt32();
-            //_ = b.ReadFString(208);                 // Unknown for now
-            b.BaseStream.Seek(208, SeekOrigin.Current);  //TODO: Try b.BaseStream.Seek(208, SeekOrigin.Current)
+            b.BaseStream.Seek(208, SeekOrigin.Current); 
             boneName = b.ReadFString(48);
             offsetParent = b.ReadInt32();
             numChildren = b.ReadUInt32();
@@ -1088,6 +1087,12 @@ namespace CgfConverter
             worldToBone.worldToBone[2, 3] = boneToWorld.boneToWorld[2, 3];
 
             childIDs = new List<uint>();                    // Calculated
+        }
+
+        public void ReadCompiledBone_900(BinaryReader b)
+        {
+            ControllerID = b.ReadUInt32();                 // unique id of bone (generated from bone name)
+            limbID = b.ReadInt32();
         }
 
         public Matrix44 ToMatrix44(double[,] boneToWorld)

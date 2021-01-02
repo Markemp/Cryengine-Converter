@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace CgfConverter.CryEngineCore
+﻿namespace CgfConverter.CryEngineCore
 {
-    public abstract class ChunkMtlName : CryEngineCore.Chunk  // cccc0014:  provides material name as used in the .mtl file
+    public abstract class ChunkMtlName : Chunk  // cccc0014:  provides material name as used in the .mtl file
     {
         /// <summary>
         /// Type of Material associated with this name
@@ -11,7 +9,7 @@ namespace CgfConverter.CryEngineCore
         /// <summary>
         /// Name of the Material
         /// </summary>
-        public String Name { get; set; }
+        public string Name { get; set; }
         public MtlNamePhysicsType[] PhysicsType { get; internal set; }
         /// <summary>
         /// Number of Materials in this name (Max: 66)

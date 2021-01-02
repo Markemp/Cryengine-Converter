@@ -7,8 +7,8 @@ namespace CgfConverter.CryEngineCore
         public override void Read(BinaryReader b)
         {
             base.Read(b);
-            this.SkipBytes(b, 32);  // Padding between the chunk header and the first bone.
-            this.NumBones = (int)((this.Size - 32) / 152);
+            SkipBytes(b, 32);  // Padding between the chunk header and the first bone.
+            NumBones = (int)((Size - 32) / 152);
 
             for (uint i = 0; i < NumBones; i++)
             {

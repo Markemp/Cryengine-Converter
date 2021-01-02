@@ -66,6 +66,7 @@
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledBones.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledBones_800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledBones_801.cs" />
+    <Compile Include="CryEngine_Core\Chunks\ChunkCompiledBones_900.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledExtToIntMap.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledExtToIntMap_800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkCompiledIntFaces.cs" />
@@ -92,6 +93,7 @@
     <Compile Include="CryEngine_Core\Chunks\ChunkHeader_744.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkHeader_745.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkHeader_746.cs" />
+    <Compile Include="CryEngine_Core\Chunks\ChunkHeader_900.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkHelper.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkHelper_744.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMesh.cs" />
@@ -112,6 +114,7 @@
     <Compile Include="CryEngine_Core\Chunks\ChunkMtlName_800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMtlName_80000800.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkMtlName_802.cs" />
+    <Compile Include="CryEngine_Core\Chunks\ChunkMtlName_900.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkNode.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkNode_80000823.cs" />
     <Compile Include="CryEngine_Core\Chunks\ChunkNode_823.cs" />

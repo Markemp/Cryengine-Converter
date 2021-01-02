@@ -82,6 +82,9 @@ namespace CgfConverter.CryEngineCore
                     return Chunk.New<ChunkCompiledMorphTargets>(version);
                 case ChunkTypeEnum.CompiledPhysicalProxiesSC:
                     return Chunk.New<ChunkCompiledPhysicalProxies>(version);
+                // SC IVO chunks
+                case ChunkTypeEnum.MtlNameIvo:
+                    return Chunk.New<ChunkMtlName>(version);
                 // Old chunks
                 case ChunkTypeEnum.BoneNameList:
                     return Chunk.New<ChunkBoneNameList>(version);
@@ -130,7 +133,7 @@ namespace CgfConverter.CryEngineCore
                 return factory.Invoke() as T;
             }
 
-            throw new NotSupportedException(String.Format("Version {0:X} of {1} is not supported", version, typeof(T).Name));
+            throw new NotSupportedException(string.Format("Version {0:X} of {1} is not supported", version, typeof(T).Name));
         }
 
         public void Load(Model model, ChunkHeader header)

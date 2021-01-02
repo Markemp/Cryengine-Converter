@@ -8,19 +8,19 @@ namespace CgfConverter.CryEngineCore
         public override void Read(BinaryReader b)
         {
             base.Read(b);
-            this.SkipBytes(b, 32);  // Padding between the chunk header and the first bone.
+            SkipBytes(b, 32);  // Padding between the chunk header and the first bone.
             Vector3 localTranslation;
             Matrix33 localRotation;
 
             //  Read the first bone with ReadCompiledBone, then recursively grab all the children for each bone you find.
             //  Each bone structure is 584 bytes, so will need to seek childOffset * 584 each time, and go back.
-            NumBones = (int)((this.Size - 32) / 584);
+            NumBones = (int)((Size - 32) / 584);
             for (int i = 0; i < NumBones; i++)
             {
                 CompiledBone tempBone = new CompiledBone();
                 tempBone.ReadCompiledBone(b);
                 if (RootBone == null)  // First bone read is root bone
-                    this.RootBone = tempBone;
+                    RootBone = tempBone;
 
                 tempBone.LocalTranslation = tempBone.boneToWorld.GetBoneToWorldTranslationVector();       // World positions of the bone
                 tempBone.LocalRotation = tempBone.boneToWorld.GetBoneToWorldRotationMatrix();            // World rotation of the bone.
