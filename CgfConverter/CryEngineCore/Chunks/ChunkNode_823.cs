@@ -3,7 +3,7 @@ using System.IO;
 
 namespace CgfConverter.CryEngineCore
 {
-    public class ChunkNode_824 : ChunkNode {
+    public class ChunkNode_823 : ChunkNode {
         public override void Read(BinaryReader b)
         {
             base.Read(b);
@@ -47,7 +47,7 @@ namespace CgfConverter.CryEngineCore
             };
 
             // Read the rotation Rot Quad
-            Rot = new Quat
+            Rot = new Quaternion
             {
                 w = b.ReadSingle(),
                 x = b.ReadSingle(),

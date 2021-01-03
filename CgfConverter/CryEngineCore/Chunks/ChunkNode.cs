@@ -25,7 +25,7 @@ namespace CgfConverter.CryEngineCore
         /// <summary> Position vector of Transform </summary>
         public Vector3 Pos { get; internal set; }
         /// <summary> Rotation component of Transform </summary>
-        public Quat Rot { get; internal set; }
+        public Quaternion Rot { get; internal set; }
         /// <summary> Scalar component of Transform </summary>
         public Vector3 Scale { get; internal set; }
         /// <summary> Position Controller ID - Obsolete </summary>

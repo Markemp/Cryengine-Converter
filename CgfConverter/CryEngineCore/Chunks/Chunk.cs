@@ -85,6 +85,8 @@ namespace CgfConverter.CryEngineCore
                 // SC IVO chunks
                 case ChunkTypeEnum.MtlNameIvo:
                     return Chunk.New<ChunkMtlName>(version);
+                case ChunkTypeEnum.CompiledBonesIvo:
+                    return Chunk.New<ChunkCompiledBones>(version);
                 // Old chunks
                 case ChunkTypeEnum.BoneNameList:
                     return Chunk.New<ChunkBoneNameList>(version);

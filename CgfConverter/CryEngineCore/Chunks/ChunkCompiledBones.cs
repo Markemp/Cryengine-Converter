@@ -27,12 +27,7 @@ namespace CgfConverter.CryEngineCore
 
         public List<CompiledBone> GetAllChildBones(CompiledBone bone)
         {
-            if (bone.numChildren > 0)
-            {
-                return BoneList.Where(a => bone.childIDs.Contains(a.ControllerID)).ToList();
-            }
-            else
-                return null;
+            return BoneList.Where(a => bone.childIDs.Contains(a.ControllerID)).ToList();
         }
 
         public List<string> GetBoneNames()
@@ -75,26 +70,6 @@ namespace CgfConverter.CryEngineCore
                 m44 = 1
             };
             return transform;
-        }
-
-        protected void SetRootBoneLocalTransformMatrix()
-        {
-            RootBone.LocalTransform.m11 = RootBone.boneToWorld.boneToWorld[0, 0];
-            RootBone.LocalTransform.m12 = RootBone.boneToWorld.boneToWorld[0, 1];
-            RootBone.LocalTransform.m13 = RootBone.boneToWorld.boneToWorld[0, 2];
-            RootBone.LocalTransform.m14 = RootBone.boneToWorld.boneToWorld[0, 3];
-            RootBone.LocalTransform.m21 = RootBone.boneToWorld.boneToWorld[1, 0];
-            RootBone.LocalTransform.m22 = RootBone.boneToWorld.boneToWorld[1, 1];
-            RootBone.LocalTransform.m23 = RootBone.boneToWorld.boneToWorld[1, 2];
-            RootBone.LocalTransform.m24 = RootBone.boneToWorld.boneToWorld[1, 3];
-            RootBone.LocalTransform.m31 = RootBone.boneToWorld.boneToWorld[2, 0];
-            RootBone.LocalTransform.m32 = RootBone.boneToWorld.boneToWorld[2, 1];
-            RootBone.LocalTransform.m33 = RootBone.boneToWorld.boneToWorld[2, 2];
-            RootBone.LocalTransform.m34 = RootBone.boneToWorld.boneToWorld[2, 3];
-            RootBone.LocalTransform.m41 = 0;
-            RootBone.LocalTransform.m42 = 0;
-            RootBone.LocalTransform.m43 = 0;
-            RootBone.LocalTransform.m44 = 1;
         }
 
         public override string ToString()

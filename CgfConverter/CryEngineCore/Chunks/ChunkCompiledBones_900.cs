@@ -1,0 +1,94 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+
+namespace CgfConverter.CryEngineCore
+{
+    public class ChunkCompiledBones_900 : ChunkCompiledBones
+    {
+        public override void Read(BinaryReader b)
+        {
+            base.Read(b);
+            NumBones = b.ReadInt32();
+
+            for (int i = 0; i < NumBones; i++)
+            {
+                CompiledBone tempBone = new CompiledBone();
+                tempBone.ReadCompiledBone_900(b);
+
+                if (RootBone == null)  // First bone read is root bone
+                    RootBone = tempBone;
+
+                BoneList.Add(tempBone);
+                BoneDictionary[i] = tempBone;
+            }
+
+            List<string> boneNames = GetNullSeparatedStrings(NumBones, b);
+
+            // Post bone read setup.  Parents, children, etc.
+            // Add the ChildID to the parent bone.  This will help with navigation. Also set up the TransformSoFar
+            foreach (CompiledBone bone in BoneList)
+            {
+                SetParentBone(bone);
+                AddChildIDToParent(bone);
+                SetBoneLocalTransformMatrix(bone);
+            }
+        }
+
+        private void SetBoneLocalTransformMatrix(CompiledBone bone)
+        {
+            //Vector3 localTranslation;
+            //Matrix33 localRotation;
+
+            //bone.LocalTranslation = bone.boneToWorld.GetBoneToWorldTranslationVector();       // World positions of the bone
+            //bone.LocalRotation = bone.boneToWorld.GetBoneToWorldRotationMatrix();            // World rotation of the bone.
+
+            //if (bone.parentID != 0)
+            //{
+            //    localRotation = GetParentBone(bone, i).boneToWorld
+            //        .GetBoneToWorldRotationMatrix()
+            //        .ConjugateTransposeThisAndMultiply(bone.boneToWorld.GetBoneToWorldRotationMatrix());
+            //    localTranslation = GetParentBone(bone, i)
+            //        .LocalRotation * (bone.LocalTranslation - GetParentBone(bone, i)
+            //        .boneToWorld.GetBoneToWorldTranslationVector());
+            //}
+            //else
+            //{
+            //    localTranslation = bone.boneToWorld.GetBoneToWorldTranslationVector();
+            //    localRotation = bone.boneToWorld.GetBoneToWorldRotationMatrix();
+            //}
+
+            //bone.LocalTransform = GetTransformFromParts(localTranslation, localRotation);
+        }
+
+        void SetParentBone(CompiledBone bone)
+        {
+            // offsetParent is really parent index.
+            if (bone.offsetParent != -1)
+            {
+                bone.parentID = BoneList[bone.offsetParent].ControllerID;
+            }
+        }
+
+        protected List<string> GetNullSeparatedStrings(int numberOfNames, BinaryReader b)
+        {
+            List<string> names = new List<string>();
+            StringBuilder builder = new StringBuilder();
+
+            for (int i = 0; i < numberOfNames; i++)
+            {    
+                char c = b.ReadChar();
+                while (c != 0)
+                {
+                    builder.Append(c);
+                    c = b.ReadChar();
+                }
+                names.Add(builder.ToString());
+                builder.Clear();
+            }
+
+            return names;
+        }
+    }
+}

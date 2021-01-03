@@ -3,7 +3,7 @@ using System.IO;
 
 namespace CgfConverter.CryEngineCore
 {
-    public class ChunkCompiledBones_800 : ChunkCompiledBones
+    class ChunkCompiledBones_801 : ChunkCompiledBones
     {
         public override void Read(BinaryReader b)
         {
@@ -13,12 +13,12 @@ namespace CgfConverter.CryEngineCore
             Matrix33 localRotation;
 
             //  Read the first bone with ReadCompiledBone, then recursively grab all the children for each bone you find.
-            //  Each bone structure is 584 bytes, so will need to seek childOffset * 584 each time, and go back.
-            NumBones = (int)((Size - 32) / 584);
+            //  Each bone structure is 324 bytes, so will need to seek childOffset * 324 each time, and go back.
+            NumBones = (int)((Size - 48) / 324);
             for (int i = 0; i < NumBones; i++)
             {
-                CompiledBone tempBone = new CompiledBone();
-                tempBone.ReadCompiledBone(b);
+                var tempBone = new CompiledBone();
+                tempBone.ReadCompiledBone_801(b);
                 if (RootBone == null)  // First bone read is root bone
                     RootBone = tempBone;
 

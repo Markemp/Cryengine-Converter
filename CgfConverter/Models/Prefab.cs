@@ -55,7 +55,7 @@ namespace CgfConverter.Models
                 using (Stream fileStream = materialfile.OpenRead())
                 {
                     return HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<PrefabsLibrary>(fileStream);
-                    //return HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<CryEngine_Core.Material>(materialfile.FullName);
+                    //return HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<CryEngineCore.Material>(materialfile.FullName);
                 }
             }
             catch (Exception ex)

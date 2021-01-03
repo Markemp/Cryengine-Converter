@@ -92,11 +92,11 @@ namespace CgfConverter
                 Author = "Heffay",
                 Author_Website = "https://github.com/Markemp/Cryengine-Converter",
                 Author_Email = "markemp@gmail.com",
-                Source_Data = this.CryData.RootNode.Name                    // The cgf/cga/skin/whatever file we read
+                Source_Data = CryData.RootNode.Name                    // The cgf/cga/skin/whatever file we read
             };
             // Get the actual file creators from the Source Chunk
             contributors[1] = new Grendgine_Collada_Asset_Contributor();
-            foreach (CryEngineCore.ChunkSourceInfo tmpSource in this.CryData.Chunks.Where(a => a.ChunkType == ChunkTypeEnum.SourceInfo))
+            foreach (ChunkSourceInfo tmpSource in CryData.Chunks.Where(a => a.ChunkType == ChunkTypeEnum.SourceInfo))
             {
                 contributors[1].Author = tmpSource.Author;
                 contributors[1].Source_Data = tmpSource.SourceFile;

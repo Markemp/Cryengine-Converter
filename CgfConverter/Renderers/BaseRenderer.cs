@@ -26,17 +26,17 @@ namespace CgfConverter
                 // If you want relative path, use "."
                 if (Args.NoConflicts)
                 {
-                    outputFile = Path.Combine(new FileInfo(this.CryData.InputFile).DirectoryName, string.Format("{0}_out.{1}", Path.GetFileNameWithoutExtension(this.CryData.InputFile), extension));
+                    outputFile = Path.Combine(new FileInfo(CryData.InputFile).DirectoryName, string.Format("{0}_out.{1}", Path.GetFileNameWithoutExtension(CryData.InputFile), extension));
                 }
                 else
                 {
-                    outputFile = Path.Combine(new FileInfo(this.CryData.InputFile).DirectoryName, string.Format("{0}.{1}", Path.GetFileNameWithoutExtension(this.CryData.InputFile), extension));
+                    outputFile = Path.Combine(new FileInfo(CryData.InputFile).DirectoryName, string.Format("{0}.{1}", Path.GetFileNameWithoutExtension(CryData.InputFile), extension));
                 }
             }
             else
             {
                 // If we have an output directory
-                string preserveDir = preservePath ? Path.GetDirectoryName(this.CryData.InputFile) : "";
+                string preserveDir = preservePath ? Path.GetDirectoryName(CryData.InputFile) : "";
 
                 // Remove drive letter if necessary
                 if (!string.IsNullOrWhiteSpace(preserveDir) && !string.IsNullOrWhiteSpace(Path.GetPathRoot(preserveDir)))
@@ -44,7 +44,7 @@ namespace CgfConverter
                     preserveDir = preserveDir.Replace(Path.GetPathRoot(preserveDir), "");
                 }
 
-                outputFile = Path.Combine(outputDir, preserveDir, Path.ChangeExtension(Path.GetFileNameWithoutExtension(this.CryData.InputFile), extension));
+                outputFile = Path.Combine(outputDir, preserveDir, Path.ChangeExtension(Path.GetFileNameWithoutExtension(CryData.InputFile), extension));
             }
 
             return outputFile;
