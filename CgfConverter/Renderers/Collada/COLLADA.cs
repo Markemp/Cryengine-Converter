@@ -61,7 +61,7 @@ namespace CgfConverter
             // If there is Skinning info, create the controller library and set up visual scene to refer to it.  Otherwise just write the Visual Scene
             if (CryData.SkinningInfo.HasSkinningInfo)
             {
-                WriteLibrary_Controllers();
+                //WriteLibrary_Controllers();
                 WriteLibrary_VisualScenesWithSkeleton();
             }
             else
@@ -109,10 +109,9 @@ namespace CgfConverter
                 Meter = 1.0,
                 Name = "meter"
             };
-            asset.Title = this.CryData.RootNode.Name;
+            asset.Title = CryData.RootNode.Name;
             DaeObject.Asset = asset;
             DaeObject.Asset.Contributor = contributors;
-
         }
 
         protected void WriteLibrary_Images()
@@ -140,7 +139,7 @@ namespace CgfConverter
                     if (CryData.Materials[k].Textures[i].File.Contains(@"/") || CryData.Materials[k].Textures[i].File.Contains(@"\"))
                     {
                         // if Datadir is default, need a clean name and can only search in the current directory.  If Datadir is provided, then look there.
-                        if (this.Args.DataDir.ToString() == ".")
+                        if (Args.DataDir.ToString() == ".")
                         {
                             builder.Append(CleanMtlFileName(CryData.Materials[k].Textures[i].File) + ".dds");
                             string test = builder.ToString();
@@ -151,12 +150,12 @@ namespace CgfConverter
                         }
                             
                         else
-                            builder.Append(@"/" + this.Args.DataDir.FullName + @"/" + CryData.Materials[k].Textures[i].File);
+                            builder.Append(@"/" + Args.DataDir.FullName + @"/" + CryData.Materials[k].Textures[i].File);
                     }
                     else
                         builder = new StringBuilder(CryData.Materials[k].Textures[i].File);
 
-                    if (!this.Args.TiffTextures)
+                    if (!Args.TiffTextures)
                     {
                         builder.Replace(".tif", ".dds");
                         builder.Replace(".TIF", ".dds");
@@ -396,7 +395,7 @@ namespace CgfConverter
 
             // For each of the nodes, we need to write the geometry.
             // Use a foreach statement to get all the node chunks.  This will get us the meshes, which will contain the vertex, UV and normal info.
-            foreach (ChunkNode nodeChunk in this.CryData.Chunks.Where(a => a.ChunkType == ChunkTypeEnum.Node))
+            foreach (ChunkNode nodeChunk in CryData.Chunks.Where(a => a.ChunkType == ChunkTypeEnum.Node))
             {
                 // Create a geometry object.  Use the chunk ID for the geometry ID
                 // Will have to be careful with this, since with .cga/.cgam pairs will need to match by Name.
@@ -412,14 +411,14 @@ namespace CgfConverter
                 ChunkDataStream tmpTangents = null;
 
                 // Don't render shields if skip flag enabled
-                if (this.Args.SkipShieldNodes && nodeChunk.Name.StartsWith("$shield"))
+                if (Args.SkipShieldNodes && nodeChunk.Name.StartsWith("$shield"))
                 {
                     Utils.Log(LogLevelEnum.Debug, "Skipped shields node {0}", nodeChunk.Name);
                     continue;
                 }
 
                 // Don't render proxies if skip flag enabled
-                if (this.Args.SkipProxyNodes && nodeChunk.Name.StartsWith("proxy"))
+                if (Args.SkipProxyNodes && nodeChunk.Name.StartsWith("proxy"))
                 {
                     Utils.Log(LogLevelEnum.Debug, "Skipped proxy node {0}", nodeChunk.Name);
                     continue;
@@ -819,216 +818,219 @@ namespace CgfConverter
 
         public void WriteLibrary_Controllers()
         {
-            // Set up the controller library.
-            Grendgine_Collada_Library_Controllers libraryController = new Grendgine_Collada_Library_Controllers();
+            if (DaeObject.Library_Geometries.Geometry.Length != 0)
+            {
+                // Set up the controller library.
+                Grendgine_Collada_Library_Controllers libraryController = new Grendgine_Collada_Library_Controllers();
 
-            // There can be multiple controllers in the controller library.  But for Cryengine files, there is only one rig.
-            // So if a rig exists, make that the controller.  This applies mostly to .chr files, which will have a rig and geometry.
-            Grendgine_Collada_Controller controller = new Grendgine_Collada_Controller();          // just need the one.
-            controller.ID = "Controller";
-            // Create the skin object and assign to the controller
-            Grendgine_Collada_Skin skin = new Grendgine_Collada_Skin
-            {
-                source = "#" + DaeObject.Library_Geometries.Geometry[0].ID,
-                Bind_Shape_Matrix = new Grendgine_Collada_Float_Array_String()
-            };
-            skin.Bind_Shape_Matrix.Value_As_String = CreateStringFromMatrix44(Matrix44.Identity());  // We will assume the BSM is the identity matrix for now
-            // Create the 3 sources for this controller:  joints, bind poses, and weights
-            skin.Source = new Grendgine_Collada_Source[3];
-
-            // Populate the data.
-            // Need to map the exterior vertices (geometry) to the int vertices.  Or use the Bone Map datastream if it exists (check HasBoneMapDatastream).
-            #region Joints Source
-            Grendgine_Collada_Source jointsSource = new Grendgine_Collada_Source()
-            {
-                ID = "Controller-joints"
-            };
-            jointsSource.Name_Array = new Grendgine_Collada_Name_Array()
-            {
-                ID = "Controller-joints-array",
-                Count = CryData.SkinningInfo.CompiledBones.Count,
-            };
-            StringBuilder boneNames = new StringBuilder();
-            for (int i = 0; i < CryData.SkinningInfo.CompiledBones.Count; i++)
-            {
-                boneNames.Append(CryData.SkinningInfo.CompiledBones[i].boneName.Replace(' ', '_') + " ");
-            }
-            jointsSource.Name_Array.Value_Pre_Parse = boneNames.ToString().TrimEnd();
-            jointsSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source();
-            jointsSource.Technique_Common.Accessor = new Grendgine_Collada_Accessor
-            {
-                Source = "#Controller-joints-array",
-                Count = (uint)CryData.SkinningInfo.CompiledBones.Count,
-                Stride = 1
-            };
-            skin.Source[0] = jointsSource;
-            #endregion
-
-            #region Bind Pose Array Source
-            Grendgine_Collada_Source bindPoseArraySource = new Grendgine_Collada_Source()
-            {
-                ID = "Controller-bind_poses"
-            };
-            bindPoseArraySource.Float_Array = new Grendgine_Collada_Float_Array()
-            {
-                ID = "Controller-bind_poses-array",
-                Count = CryData.SkinningInfo.CompiledBones.Count * 16,
-            };
-            bindPoseArraySource.Float_Array.Value_As_String = GetBindPoseArray(CryData.SkinningInfo.CompiledBones);
-            bindPoseArraySource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
-            {
-                Accessor = new Grendgine_Collada_Accessor
+                // There can be multiple controllers in the controller library.  But for Cryengine files, there is only one rig.
+                // So if a rig exists, make that the controller.  This applies mostly to .chr files, which will have a rig and may have geometry.
+                Grendgine_Collada_Controller controller = new Grendgine_Collada_Controller();          // just need the one.
+                controller.ID = "Controller";
+                // Create the skin object and assign to the controller
+                Grendgine_Collada_Skin skin = new Grendgine_Collada_Skin
                 {
-                    Source = "#Controller-bind_poses-array",
+                    source = "#" + DaeObject.Library_Geometries.Geometry[0].ID,
+                    Bind_Shape_Matrix = new Grendgine_Collada_Float_Array_String()
+                };
+                skin.Bind_Shape_Matrix.Value_As_String = CreateStringFromMatrix44(Matrix44.Identity());  // We will assume the BSM is the identity matrix for now
+                                                                                                         // Create the 3 sources for this controller:  joints, bind poses, and weights
+                skin.Source = new Grendgine_Collada_Source[3];
+
+                // Populate the data.
+                // Need to map the exterior vertices (geometry) to the int vertices.  Or use the Bone Map datastream if it exists (check HasBoneMapDatastream).
+                #region Joints Source
+                Grendgine_Collada_Source jointsSource = new Grendgine_Collada_Source()
+                {
+                    ID = "Controller-joints"
+                };
+                jointsSource.Name_Array = new Grendgine_Collada_Name_Array()
+                {
+                    ID = "Controller-joints-array",
+                    Count = CryData.SkinningInfo.CompiledBones.Count,
+                };
+                StringBuilder boneNames = new StringBuilder();
+                for (int i = 0; i < CryData.SkinningInfo.CompiledBones.Count; i++)
+                {
+                    boneNames.Append(CryData.SkinningInfo.CompiledBones[i].boneName.Replace(' ', '_') + " ");
+                }
+                jointsSource.Name_Array.Value_Pre_Parse = boneNames.ToString().TrimEnd();
+                jointsSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source();
+                jointsSource.Technique_Common.Accessor = new Grendgine_Collada_Accessor
+                {
+                    Source = "#Controller-joints-array",
                     Count = (uint)CryData.SkinningInfo.CompiledBones.Count,
-                    Stride = 16,
-                }
-            };
-            bindPoseArraySource.Technique_Common.Accessor.Param = new Grendgine_Collada_Param[1];
-            bindPoseArraySource.Technique_Common.Accessor.Param[0] = new Grendgine_Collada_Param
-            {
-                Name = "TRANSFORM",
-                Type = "float4x4"
-            };
-            skin.Source[1] = bindPoseArraySource;
-            #endregion
+                    Stride = 1
+                };
+                skin.Source[0] = jointsSource;
+                #endregion
 
-            #region Weights Source
-            Grendgine_Collada_Source weightArraySource = new Grendgine_Collada_Source()
-            {
-                ID = "Controller-weights"
-            };
-            weightArraySource.Technique_Common = new Grendgine_Collada_Technique_Common_Source();
-            Grendgine_Collada_Accessor accessor = weightArraySource.Technique_Common.Accessor = new Grendgine_Collada_Accessor();
-
-            weightArraySource.Float_Array = new Grendgine_Collada_Float_Array()
-            {
-                ID = "Controller-weights-array",
-            };
-            StringBuilder weights = new StringBuilder();
-
-            if (CryData.SkinningInfo.IntVertices == null)       // This is a case where there are bones, and only Bone Mapping data from a datastream chunk.  Skin files.
-            {
-                weightArraySource.Float_Array.Count = CryData.SkinningInfo.BoneMapping.Count;
-                for (int i = 0; i < CryData.SkinningInfo.BoneMapping.Count; i++)
+                #region Bind Pose Array Source
+                Grendgine_Collada_Source bindPoseArraySource = new Grendgine_Collada_Source()
                 {
-                    for (int j = 0; j < 4; j++)
+                    ID = "Controller-bind_poses"
+                };
+                bindPoseArraySource.Float_Array = new Grendgine_Collada_Float_Array()
+                {
+                    ID = "Controller-bind_poses-array",
+                    Count = CryData.SkinningInfo.CompiledBones.Count * 16,
+                };
+                bindPoseArraySource.Float_Array.Value_As_String = GetBindPoseArray(CryData.SkinningInfo.CompiledBones);
+                bindPoseArraySource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
+                {
+                    Accessor = new Grendgine_Collada_Accessor
                     {
-                        weights.Append(((float)CryData.SkinningInfo.BoneMapping[i].Weight[j] / 255).ToString() + " ");
+                        Source = "#Controller-bind_poses-array",
+                        Count = (uint)CryData.SkinningInfo.CompiledBones.Count,
+                        Stride = 16,
                     }
                 };
-                accessor.Count = (uint)CryData.SkinningInfo.BoneMapping.Count * 4;
-            }
-            else                                                // Bones and int verts.  Will use int verts for weights, but this doesn't seem perfect either.
-            {
-                weightArraySource.Float_Array.Count = CryData.SkinningInfo.Ext2IntMap.Count;
-                for (int i = 0; i < CryData.SkinningInfo.Ext2IntMap.Count; i++)
+                bindPoseArraySource.Technique_Common.Accessor.Param = new Grendgine_Collada_Param[1];
+                bindPoseArraySource.Technique_Common.Accessor.Param[0] = new Grendgine_Collada_Param
                 {
-                    for (int j = 0; j < 4; j++)
-                    {
-                        weights.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].Weights[j] + " ");
-                    }
-                    accessor.Count = (uint)CryData.SkinningInfo.Ext2IntMap.Count * 4;
+                    Name = "TRANSFORM",
+                    Type = "float4x4"
                 };
-            }
-            CleanNumbers(weights);
-            weightArraySource.Float_Array.Value_As_String = weights.ToString().TrimEnd();
-            // Add technique_common part.
-            accessor.Source = "#Controller-weights-array";
-            accessor.Stride = 1;
-            accessor.Param = new Grendgine_Collada_Param[1];
-            accessor.Param[0] = new Grendgine_Collada_Param();
-            accessor.Param[0].Name = "WEIGHT";
-            accessor.Param[0].Type = "float";
-            skin.Source[2] = weightArraySource;
+                skin.Source[1] = bindPoseArraySource;
+                #endregion
 
-            #endregion
+                #region Weights Source
+                Grendgine_Collada_Source weightArraySource = new Grendgine_Collada_Source()
+                {
+                    ID = "Controller-weights"
+                };
+                weightArraySource.Technique_Common = new Grendgine_Collada_Technique_Common_Source();
+                Grendgine_Collada_Accessor accessor = weightArraySource.Technique_Common.Accessor = new Grendgine_Collada_Accessor();
 
-            #region Joints
-            skin.Joints = new Grendgine_Collada_Joints
-            {
-                Input = new Grendgine_Collada_Input_Unshared[2]
-            };
-            skin.Joints.Input[0] = new Grendgine_Collada_Input_Unshared
-            {
-                Semantic = new Grendgine_Collada_Input_Semantic()
-            };
-            skin.Joints.Input[0].Semantic = Grendgine_Collada_Input_Semantic.JOINT;
-            skin.Joints.Input[0].source = "#Controller-joints";
-            skin.Joints.Input[1] = new Grendgine_Collada_Input_Unshared
-            {
-                Semantic = new Grendgine_Collada_Input_Semantic()
-            };
-            skin.Joints.Input[1].Semantic = Grendgine_Collada_Input_Semantic.INV_BIND_MATRIX;
-            skin.Joints.Input[1].source = "#Controller-bind_poses";
-            #endregion
+                weightArraySource.Float_Array = new Grendgine_Collada_Float_Array()
+                {
+                    ID = "Controller-weights-array",
+                };
+                StringBuilder weights = new StringBuilder();
 
-            #region Vertex Weights
-            Grendgine_Collada_Vertex_Weights vertexWeights = skin.Vertex_Weights = new Grendgine_Collada_Vertex_Weights();
-            vertexWeights.Count = CryData.SkinningInfo.BoneMapping.Count;
-            skin.Vertex_Weights.Input = new Grendgine_Collada_Input_Shared[2];
-            Grendgine_Collada_Input_Shared jointSemantic = skin.Vertex_Weights.Input[0] = new Grendgine_Collada_Input_Shared();
-            jointSemantic.Semantic = Grendgine_Collada_Input_Semantic.JOINT;
-            jointSemantic.source = "#Controller-joints";
-            jointSemantic.Offset = 0;
-            Grendgine_Collada_Input_Shared weightSemantic = skin.Vertex_Weights.Input[1] = new Grendgine_Collada_Input_Shared();
-            weightSemantic.Semantic = Grendgine_Collada_Input_Semantic.WEIGHT;
-            weightSemantic.source = "#Controller-weights";
-            weightSemantic.Offset = 1;
-            StringBuilder vCount = new StringBuilder();
-            //for (int i = 0; i < CryData.Models[0].SkinningInfo.IntVertices.Count; i++)
-            for (int i = 0; i < CryData.SkinningInfo.BoneMapping.Count; i++)
-            {
-                vCount.Append("4 ");
-            };
-            vertexWeights.VCount = new Grendgine_Collada_Int_Array_String();
-            vertexWeights.VCount.Value_As_String = vCount.ToString().TrimEnd();
-            StringBuilder vertices = new StringBuilder();
-            //for (int i = 0; i < CryData.Models[0].SkinningInfo.IntVertices.Count * 4; i++)
-            int index = 0;
-            if (!CryData.Models[0].SkinningInfo.HasIntToExtMapping)
-            {
+                if (CryData.SkinningInfo.IntVertices == null)       // This is a case where there are bones, and only Bone Mapping data from a datastream chunk.  Skin files.
+                {
+                    weightArraySource.Float_Array.Count = CryData.SkinningInfo.BoneMapping.Count;
+                    for (int i = 0; i < CryData.SkinningInfo.BoneMapping.Count; i++)
+                    {
+                        for (int j = 0; j < 4; j++)
+                        {
+                            weights.Append(((float)CryData.SkinningInfo.BoneMapping[i].Weight[j] / 255).ToString() + " ");
+                        }
+                    };
+                    accessor.Count = (uint)CryData.SkinningInfo.BoneMapping.Count * 4;
+                }
+                else                                                // Bones and int verts.  Will use int verts for weights, but this doesn't seem perfect either.
+                {
+                    weightArraySource.Float_Array.Count = CryData.SkinningInfo.Ext2IntMap.Count;
+                    for (int i = 0; i < CryData.SkinningInfo.Ext2IntMap.Count; i++)
+                    {
+                        for (int j = 0; j < 4; j++)
+                        {
+                            weights.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].Weights[j] + " ");
+                        }
+                        accessor.Count = (uint)CryData.SkinningInfo.Ext2IntMap.Count * 4;
+                    };
+                }
+                CleanNumbers(weights);
+                weightArraySource.Float_Array.Value_As_String = weights.ToString().TrimEnd();
+                // Add technique_common part.
+                accessor.Source = "#Controller-weights-array";
+                accessor.Stride = 1;
+                accessor.Param = new Grendgine_Collada_Param[1];
+                accessor.Param[0] = new Grendgine_Collada_Param();
+                accessor.Param[0].Name = "WEIGHT";
+                accessor.Param[0].Type = "float";
+                skin.Source[2] = weightArraySource;
+
+                #endregion
+
+                #region Joints
+                skin.Joints = new Grendgine_Collada_Joints
+                {
+                    Input = new Grendgine_Collada_Input_Unshared[2]
+                };
+                skin.Joints.Input[0] = new Grendgine_Collada_Input_Unshared
+                {
+                    Semantic = new Grendgine_Collada_Input_Semantic()
+                };
+                skin.Joints.Input[0].Semantic = Grendgine_Collada_Input_Semantic.JOINT;
+                skin.Joints.Input[0].source = "#Controller-joints";
+                skin.Joints.Input[1] = new Grendgine_Collada_Input_Unshared
+                {
+                    Semantic = new Grendgine_Collada_Input_Semantic()
+                };
+                skin.Joints.Input[1].Semantic = Grendgine_Collada_Input_Semantic.INV_BIND_MATRIX;
+                skin.Joints.Input[1].source = "#Controller-bind_poses";
+                #endregion
+
+                #region Vertex Weights
+                Grendgine_Collada_Vertex_Weights vertexWeights = skin.Vertex_Weights = new Grendgine_Collada_Vertex_Weights();
+                vertexWeights.Count = CryData.SkinningInfo.BoneMapping.Count;
+                skin.Vertex_Weights.Input = new Grendgine_Collada_Input_Shared[2];
+                Grendgine_Collada_Input_Shared jointSemantic = skin.Vertex_Weights.Input[0] = new Grendgine_Collada_Input_Shared();
+                jointSemantic.Semantic = Grendgine_Collada_Input_Semantic.JOINT;
+                jointSemantic.source = "#Controller-joints";
+                jointSemantic.Offset = 0;
+                Grendgine_Collada_Input_Shared weightSemantic = skin.Vertex_Weights.Input[1] = new Grendgine_Collada_Input_Shared();
+                weightSemantic.Semantic = Grendgine_Collada_Input_Semantic.WEIGHT;
+                weightSemantic.source = "#Controller-weights";
+                weightSemantic.Offset = 1;
+                StringBuilder vCount = new StringBuilder();
+                //for (int i = 0; i < CryData.Models[0].SkinningInfo.IntVertices.Count; i++)
                 for (int i = 0; i < CryData.SkinningInfo.BoneMapping.Count; i++)
                 {
-                    int wholePart = (int)i / 4;
-                    vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[0] + " " + index + " ");
-                    vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[1] + " " + (index + 1) + " ");
-                    vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[2] + " " + (index + 2) + " ");
-                    vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[3] + " " + (index + 3) + " ");
-                    index += 4;
-                }
-            }
-            else
-            {
-                for (int i = 0; i < CryData.SkinningInfo.Ext2IntMap.Count; i++)
+                    vCount.Append("4 ");
+                };
+                vertexWeights.VCount = new Grendgine_Collada_Int_Array_String();
+                vertexWeights.VCount.Value_As_String = vCount.ToString().TrimEnd();
+                StringBuilder vertices = new StringBuilder();
+                //for (int i = 0; i < CryData.Models[0].SkinningInfo.IntVertices.Count * 4; i++)
+                int index = 0;
+                if (!CryData.Models[0].SkinningInfo.HasIntToExtMapping)
                 {
-                    int wholePart = (int)i / 4;
-                    vertices.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[0] + " " + index + " ");
-                    vertices.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[1] + " " + (index + 1) + " ");
-                    vertices.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[2] + " " + (index + 2) + " ");
-                    vertices.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[3] + " " + (index + 3) + " ");
-
-                    index += 4;
+                    for (int i = 0; i < CryData.SkinningInfo.BoneMapping.Count; i++)
+                    {
+                        int wholePart = (int)i / 4;
+                        vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[0] + " " + index + " ");
+                        vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[1] + " " + (index + 1) + " ");
+                        vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[2] + " " + (index + 2) + " ");
+                        vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[3] + " " + (index + 3) + " ");
+                        index += 4;
+                    }
                 }
+                else
+                {
+                    for (int i = 0; i < CryData.SkinningInfo.Ext2IntMap.Count; i++)
+                    {
+                        int wholePart = (int)i / 4;
+                        vertices.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[0] + " " + index + " ");
+                        vertices.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[1] + " " + (index + 1) + " ");
+                        vertices.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[2] + " " + (index + 2) + " ");
+                        vertices.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[3] + " " + (index + 3) + " ");
+
+                        index += 4;
+                    }
+                }
+                vertexWeights.V = new Grendgine_Collada_Int_Array_String();
+                vertexWeights.V.Value_As_String = vertices.ToString().TrimEnd();
+                #endregion
+
+                // create the extra element for the FCOLLADA profile
+                controller.Extra = new Grendgine_Collada_Extra[1];
+                controller.Extra[0] = new Grendgine_Collada_Extra();
+                controller.Extra[0].Technique = new Grendgine_Collada_Technique[1];
+                controller.Extra[0].Technique[0] = new Grendgine_Collada_Technique();
+                controller.Extra[0].Technique[0].profile = "FCOLLADA";
+                controller.Extra[0].Technique[0].UserProperties = "SkinController";
+
+
+                // Add the parts to their parents
+                controller.Skin = skin;
+                libraryController.Controller = new Grendgine_Collada_Controller[1];
+                libraryController.Controller[0] = controller;
+                DaeObject.Library_Controllers = libraryController;
             }
-            vertexWeights.V = new Grendgine_Collada_Int_Array_String();
-            vertexWeights.V.Value_As_String = vertices.ToString().TrimEnd();
-            #endregion
-
-            // create the extra element for the FCOLLADA profile
-            controller.Extra = new Grendgine_Collada_Extra[1];
-            controller.Extra[0] = new Grendgine_Collada_Extra();
-            controller.Extra[0].Technique = new Grendgine_Collada_Technique[1];
-            controller.Extra[0].Technique[0] = new Grendgine_Collada_Technique();
-            controller.Extra[0].Technique[0].profile = "FCOLLADA";
-            controller.Extra[0].Technique[0].UserProperties = "SkinController";
-
-
-            // Add the parts to their parents
-            controller.Skin = skin;
-            libraryController.Controller = new Grendgine_Collada_Controller[1];
-            libraryController.Controller[0] = controller;
-            DaeObject.Library_Controllers = libraryController;
         }
 
         /// <summary> Provides a library in which to place visual_scene elements. </summary>
@@ -1042,7 +1044,9 @@ namespace CgfConverter
             List<Grendgine_Collada_Node> nodes = new List<Grendgine_Collada_Node>();
 
             // Check to see if there is a CompiledBones chunk.  If so, add a Node.
-            if (CryData.Chunks.Any(a => a.ChunkType == ChunkTypeEnum.CompiledBones || a.ChunkType == ChunkTypeEnum.CompiledBonesSC))
+            if (CryData.Chunks.Any(a => a.ChunkType == ChunkTypeEnum.CompiledBones || 
+                a.ChunkType == ChunkTypeEnum.CompiledBonesSC ||
+                a.ChunkType == ChunkTypeEnum.CompiledBonesIvo))
             {
                 Grendgine_Collada_Node boneNode = new Grendgine_Collada_Node();
                 boneNode = CreateJointNode(CryData.Bones.RootBone);
@@ -1079,9 +1083,7 @@ namespace CgfConverter
             DaeObject.Library_Visual_Scene = libraryVisualScenes;
         }
 
-        /// <summary>
-        /// Provides a library in which to place visual_scene elements for chr files (rigs + geometry). 
-        /// </summary>
+        /// <summary> Provides a library in which to place visual_scene elements for chr files (rigs + geometry). </summary>
         public void WriteLibrary_VisualScenesWithSkeleton()
         {
             // Set up the library
@@ -1092,7 +1094,9 @@ namespace CgfConverter
             List<Grendgine_Collada_Node> nodes = new List<Grendgine_Collada_Node>();
 
             // Check to see if there is a CompiledBones chunk.  If so, add a Node.  
-            if (CryData.Chunks.Any(a => a.ChunkType == ChunkTypeEnum.CompiledBones || a.ChunkType == ChunkTypeEnum.CompiledBonesSC))
+            if (CryData.Chunks.Any(a => a.ChunkType == ChunkTypeEnum.CompiledBones || 
+                a.ChunkType == ChunkTypeEnum.CompiledBonesSC ||
+                a.ChunkType == ChunkTypeEnum.CompiledBonesIvo))
             {
                 Grendgine_Collada_Node boneNode = new Grendgine_Collada_Node();
                 boneNode = CreateJointNode(CryData.Bones.RootBone);
@@ -1428,14 +1432,7 @@ namespace CgfConverter
             return value.ToString().TrimEnd();
         }
 
-        private string GetRootBoneName(ChunkCompiledBones bones)
-        {
-            return bones.RootBone.boneName;
-        }
-
-        /// <summary>
-        /// Adds the scene element to the Collada document.
-        /// </summary>
+        /// <summary> Adds the scene element to the Collada document. </summary>
         private void WriteScene()
         {
             Grendgine_Collada_Scene scene = new Grendgine_Collada_Scene();
@@ -1513,7 +1510,7 @@ namespace CgfConverter
             return cleanMe;
         }
 
-        private static double safe(Double value)
+        private static double safe(double value)
         {
             if (value == double.NegativeInfinity)
                 return double.MinValue;

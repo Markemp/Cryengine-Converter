@@ -30,49 +30,49 @@ namespace CgfConverter
         {
             get
             {
-                if (this._chunks == null)
+                if (_chunks == null)
                 {
-                    this._chunks = this.Models.SelectMany(m => m.ChunkMap.Values).ToList();
+                    _chunks = Models.SelectMany(m => m.ChunkMap.Values).ToList();
                 }
 
-                return this._chunks;
+                return _chunks;
             }
         }
         public Dictionary<string, ChunkNode> NodeMap  // Cannot use the Node name for the key.  Across a couple files, you may have multiple nodes with same name.
         {
             get
             {
-                if (this._nodeMap == null)
+                if (_nodeMap == null)
                 {
-                    this._nodeMap = new Dictionary<String, ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
+                    _nodeMap = new Dictionary<string, ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
 
                     ChunkNode rootNode = null;
 
                     Utils.Log(LogLevelEnum.Info, "Mapping Nodes");
 
-                    foreach (Model model in this.Models)
+                    foreach (Model model in Models)
                     {
                         model.RootNode = rootNode = (rootNode ?? model.RootNode);  // Each model will have it's own rootnode.
 
                         foreach (ChunkNode node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as ChunkNode))
                         {
                             // Preserve existing parents
-                            if (this._nodeMap.ContainsKey(node.Name))
+                            if (_nodeMap.ContainsKey(node.Name))
                             {
-                                ChunkNode parentNode = this._nodeMap[node.Name].ParentNode;
+                                ChunkNode parentNode = _nodeMap[node.Name].ParentNode;
 
                                 if (parentNode != null)
-                                    parentNode = this._nodeMap[parentNode.Name];
+                                    parentNode = _nodeMap[parentNode.Name];
 
                                 node.ParentNode = parentNode;
                             }
 
-                            this._nodeMap[node.Name] = node;    // TODO:  fix this.  The node name can conflict.
+                            _nodeMap[node.Name] = node;    // TODO:  fix this.  The node name can conflict.
                         }
                     }
                 }
 
-                return this._nodeMap;
+                return _nodeMap;
             }
         }
 

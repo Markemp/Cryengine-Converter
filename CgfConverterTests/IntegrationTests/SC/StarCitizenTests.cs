@@ -33,8 +33,8 @@ namespace CgfConverterTests.IntegrationTests.SC
             cryData.ProcessCryengineFiles();
 
             var colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            colladaData.GenerateDaeObject(); 
             var daeObject = colladaData.DaeObject;
-            colladaData.GenerateDaeObject();
 
             Assert.AreEqual(1, cryData.Materials.Count);
         }

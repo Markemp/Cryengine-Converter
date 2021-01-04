@@ -40,53 +40,54 @@ namespace CgfConverter.CryEngineCore
             get
             {
                 // Turns out chunk IDs are ints, not uints.  ~0 is shorthand for -1, or 0xFFFFFFFF in the uint world.
-                if (this.ParentNodeID == ~0)  // aka 0xFFFFFFFF
+                if (ParentNodeID == ~0)  // aka 0xFFFFFFFF
                     return null;
 
-                if (this._parentNode == null)
+                if (_parentNode == null)
                 {
-                    if (this._model.ChunkMap.ContainsKey(this.ParentNodeID))
-                        this._parentNode = this._model.ChunkMap[this.ParentNodeID] as ChunkNode;
+                    if (_model.ChunkMap.ContainsKey(ParentNodeID))
+                        _parentNode = _model.ChunkMap[ParentNodeID] as ChunkNode;
                     else
-                        this._parentNode = this._model.RootNode;
+                        _parentNode = _model.RootNode;
                 }
 
-                return this._parentNode;
+                return _parentNode;
             }
             set
             {
-                this.ParentNodeID = value == null ? ~0 : value.ID;
-                this._parentNode = value;
+                ParentNodeID = value == null ? ~0 : value.ID;
+                _parentNode = value;
             }
         }
 
         private Chunk _objectChunk;
+        
         public Chunk ObjectChunk
         {
             get
             {
-                if ((this._objectChunk == null) && this._model.ChunkMap.ContainsKey(this.ObjectNodeID))
+                if ((_objectChunk == null) && _model.ChunkMap.ContainsKey(ObjectNodeID))
                 {
-                    this._objectChunk = this._model.ChunkMap[this.ObjectNodeID];
+                    _objectChunk = _model.ChunkMap[ObjectNodeID];
                 }
 
-                return this._objectChunk;
+                return _objectChunk;
             }
-            set { this._objectChunk = value; }
+            set { _objectChunk = value; }
         }
 
         public Vector3 TransformSoFar
         {
             get
             {
-                if (this.ParentNode != null)
+                if (ParentNode != null)
                 {
-                    return this.ParentNode.TransformSoFar.Add(this.Transform.GetTranslation());
+                    return ParentNode.TransformSoFar.Add(Transform.GetTranslation());
                 }
                 else
                 {
                     // TODO: What should this be?
-                    return this.Transform.GetTranslation();
+                    return Transform.GetTranslation();
                 }
             }
         }
@@ -95,13 +96,13 @@ namespace CgfConverter.CryEngineCore
         {
             get
             {
-                if (this.ParentNode != null)
+                if (ParentNode != null)
                 {
-                    return this.Transform.GetRotation().Mult(this.ParentNode.RotSoFar);
+                    return Transform.GetRotation().Mult(ParentNode.RotSoFar);
                 }
                 else
                 {
-                    return this._model.RootNode.Transform.GetRotation();
+                    return _model.RootNode.Transform.GetRotation();
                     // TODO: What should this be?
                 }
             }
@@ -111,13 +112,13 @@ namespace CgfConverter.CryEngineCore
         {
             get
             {
-                if (this.__NumChildren == 0)
+                if (__NumChildren == 0)
                 {
                     return null;
                 }
                 else
                 {
-                    var node = this._model.NodeMap.Values.Where(a => a.ParentNodeID == this.ID).ToList();
+                    var node = _model.NodeMap.Values.Where(a => a.ParentNodeID == ID).ToList();
                     return node;
                 }
             }
@@ -136,9 +137,9 @@ namespace CgfConverter.CryEngineCore
 
             // Apply the local transforms (rotation and translation) to the vector
             // Do rotations.  Rotations must come first, then translate.
-            vec3 = this.RotSoFar.Mult3x1(vec3);
+            vec3 = RotSoFar.Mult3x1(vec3);
             // Do translations.  I think this is right.  Objects in right place, not rotated right.
-            vec3 = vec3.Add(this.TransformSoFar);
+            vec3 = vec3.Add(TransformSoFar);
             //}
 
             return vec3;

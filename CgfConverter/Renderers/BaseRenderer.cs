@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 
 namespace CgfConverter
 {
@@ -10,8 +9,8 @@ namespace CgfConverter
 
         public BaseRenderer(ArgsHandler argsHandler, CryEngine cryEngine)
         {
-            this.Args = argsHandler;
-            this.CryData = cryEngine;
+            Args = argsHandler;
+            CryData = cryEngine;
         }
 
         public abstract void Render(string outputDir = null, bool preservePath = true);

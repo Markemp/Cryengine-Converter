@@ -12,8 +12,7 @@ namespace CgfConverter.CryEngineCore
             Version = reader.ReadUInt32();
             Offset = (uint)reader.ReadUInt64();  // All other versions use uint.  No idea why uint64 is needed.
             // 0x900 version chunks no longer have chunk IDs.  Use a randon mumber for now.
-            Random rnd = new Random();
-            ID = rnd.Next(10000);
+            ID = Chunk.GetNextRandom();
         }
     }
 }

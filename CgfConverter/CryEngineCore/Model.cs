@@ -26,12 +26,12 @@ namespace CgfConverter.CryEngineCore
         /// <summary>
         /// Collection of all loaded Chunks
         /// </summary>
-        public List<ChunkHeader> ChunkHeaders { get; internal set; }
+        public List<ChunkHeader> ChunkHeaders { get; internal set; } = new List<ChunkHeader> { };
 
         /// <summary>
         /// Lookup Table for Chunks, indexed by ChunkID
         /// </summary>
-        public Dictionary<int, Chunk> ChunkMap { get; internal set; }
+        public Dictionary<int, Chunk> ChunkMap { get; internal set; } = new Dictionary<int, Chunk> { };
 
         /// <summary>
         /// The name of the currently processed file
@@ -61,7 +61,7 @@ namespace CgfConverter.CryEngineCore
         /// <summary>
         /// Contains all the information about bones and skinning them.  This a reference to the Cryengine object, since multiple Models can exist for a single object).
         /// </summary>
-        public SkinningInfo SkinningInfo { get; set; }
+        public SkinningInfo SkinningInfo { get; set; } = new SkinningInfo();
 
         /// <summary>
         /// The Bones in the model.  The CompiledBones chunk will have a unique RootBone.
@@ -109,26 +109,15 @@ namespace CgfConverter.CryEngineCore
 
         #region Private Fields
 
-        public List<ChunkHeader> _chunks = new List<ChunkHeader> { };
+        public List<ChunkHeader> chunkHeaders = new List<ChunkHeader> { };
 
         #endregion
 
         #region Calculated Properties
 
-        public int NodeCount { get { return this.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Count(); } }
+        public int NodeCount { get { return ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Count(); } }
 
-        public int BoneCount { get { return this.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.CompiledBones).Count(); } }
-
-        #endregion
-
-        #region Constructor/s
-
-        public Model()
-        {
-            ChunkMap = new Dictionary<int, CryEngineCore.Chunk> { };
-            ChunkHeaders = new List<ChunkHeader> { };
-            SkinningInfo = new SkinningInfo();
-        }
+        public int BoneCount { get { return ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.CompiledBones).Count(); } }
 
         #endregion
 
@@ -186,7 +175,7 @@ namespace CgfConverter.CryEngineCore
                 FileVersion = (FileVersionEnum)b.ReadUInt32();  // 0x0900
                 NumChunks = b.ReadUInt32();
                 ChunkTableOffset = b.ReadInt32();
-
+                CreateDummyRootNode();
                 return;
             }
 
@@ -206,6 +195,19 @@ namespace CgfConverter.CryEngineCore
             throw new NotSupportedException(string.Format("Unsupported FileSignature {0}", FileSignature));
         }
 
+        private void CreateDummyRootNode()
+        {
+            ChunkNode rootNode = new ChunkNode_823();
+            rootNode.Name = FileName;
+            rootNode.ObjectNodeID = 1;      // No node IDs in #ivo files
+            rootNode.ParentNodeID = ~0;     // No parent
+            rootNode.__NumChildren = 0;     // Single object
+            rootNode.MatID = 0;
+            rootNode.Transform = Matrix44.CreateDefaultRootNodeMatrix();
+            rootNode.ChunkType = ChunkTypeEnum.Node;
+            RootNode = rootNode;
+        }
+
         private void ReadChunkHeaders(BinaryReader b)
         {
             // need to seek to the start of the table here.  foffset points to the start of the table
@@ -215,13 +217,13 @@ namespace CgfConverter.CryEngineCore
             {
                 ChunkHeader header = Chunk.New<ChunkHeader>((uint)FileVersion);
                 header.Read(b);
-                _chunks.Add(header);
+                chunkHeaders.Add(header);
             }
         }
 
         private void ReadChunks(BinaryReader reader)
         {
-            foreach (ChunkHeader chunkHeaderItem in _chunks)
+            foreach (ChunkHeader chunkHeaderItem in chunkHeaders)
             {
                 ChunkMap[chunkHeaderItem.ID] = Chunk.New(chunkHeaderItem.ChunkType, chunkHeaderItem.Version);
                 ChunkMap[chunkHeaderItem.ID].Load(this, chunkHeaderItem);

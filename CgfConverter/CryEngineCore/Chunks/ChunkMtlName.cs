@@ -1,19 +1,13 @@
 ﻿namespace CgfConverter.CryEngineCore
 {
-    public abstract class ChunkMtlName : Chunk  // cccc0014:  provides material name as used in the .mtl file
+    public abstract class ChunkMtlName : Chunk  
     {
-        /// <summary>
-        /// Type of Material associated with this name
-        /// </summary>
+        /// <summary> Type of Material associated with this name </summary>
         public MtlNameTypeEnum MatType { get; internal set; }
-        /// <summary>
-        /// Name of the Material
-        /// </summary>
+        /// <summary> Name of the Material </summary>
         public string Name { get; set; }
         public MtlNamePhysicsType[] PhysicsType { get; internal set; }
-        /// <summary>
-        /// Number of Materials in this name (Max: 66)
-        /// </summary>
+        /// <summary> Number of Materials in this name (Max: 66) </summary>
         public uint NumChildren { get; internal set; }
         public uint[] ChildIDs { get; internal set; }
 
