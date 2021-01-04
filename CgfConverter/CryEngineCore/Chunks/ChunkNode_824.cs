@@ -47,7 +47,7 @@ namespace CgfConverter.CryEngineCore
             };
 
             // Read the rotation Rot Quad
-            Rot = new Quat
+            Rot = new Quaternion
             {
                 w = b.ReadSingle(),
                 x = b.ReadSingle(),

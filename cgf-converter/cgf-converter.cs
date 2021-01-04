@@ -59,7 +59,7 @@ namespace CgfConverterConsole
 #endif
                 if (argsHandler.ProcessArgs(args) == 0)
                 {
-                    foreach (String inputFile in argsHandler.InputFiles)
+                    foreach (string inputFile in argsHandler.InputFiles)
                     {
                         try
                         {

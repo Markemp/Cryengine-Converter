@@ -30,49 +30,49 @@ namespace CgfConverter
         {
             get
             {
-                if (this._chunks == null)
+                if (_chunks == null)
                 {
-                    this._chunks = this.Models.SelectMany(m => m.ChunkMap.Values).ToList();
+                    _chunks = Models.SelectMany(m => m.ChunkMap.Values).ToList();
                 }
 
-                return this._chunks;
+                return _chunks;
             }
         }
         public Dictionary<string, ChunkNode> NodeMap  // Cannot use the Node name for the key.  Across a couple files, you may have multiple nodes with same name.
         {
             get
             {
-                if (this._nodeMap == null)
+                if (_nodeMap == null)
                 {
-                    this._nodeMap = new Dictionary<String, ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
+                    _nodeMap = new Dictionary<string, ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
 
                     ChunkNode rootNode = null;
 
                     Utils.Log(LogLevelEnum.Info, "Mapping Nodes");
 
-                    foreach (Model model in this.Models)
+                    foreach (Model model in Models)
                     {
                         model.RootNode = rootNode = (rootNode ?? model.RootNode);  // Each model will have it's own rootnode.
 
                         foreach (ChunkNode node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as ChunkNode))
                         {
                             // Preserve existing parents
-                            if (this._nodeMap.ContainsKey(node.Name))
+                            if (_nodeMap.ContainsKey(node.Name))
                             {
-                                ChunkNode parentNode = this._nodeMap[node.Name].ParentNode;
+                                ChunkNode parentNode = _nodeMap[node.Name].ParentNode;
 
                                 if (parentNode != null)
-                                    parentNode = this._nodeMap[parentNode.Name];
+                                    parentNode = _nodeMap[parentNode.Name];
 
                                 node.ParentNode = parentNode;
                             }
 
-                            this._nodeMap[node.Name] = node;    // TODO:  fix this.  The node name can conflict.
+                            _nodeMap[node.Name] = node;    // TODO:  fix this.  The node name can conflict.
                         }
                     }
                 }
 
-                return this._nodeMap;
+                return _nodeMap;
             }
         }
 
@@ -81,15 +81,15 @@ namespace CgfConverter
 
         public CryEngine(string filename, string dataDir)
         {
-            this.InputFile = filename;
-            this.DataDir = dataDir;
+            InputFile = filename;
+            DataDir = dataDir;
         }
 
         public void ProcessCryengineFiles()
         {
             FileInfo inputFile = new FileInfo(InputFile);
             List<FileInfo> inputFiles = new List<FileInfo> { inputFile };
-            // Validate file extension - handles .cgam / skinm
+            
             if (!validExtensions.Contains(inputFile.Extension))
             {
                 Utils.Log(LogLevelEnum.Debug, invalidExtensionErrorMessage);
@@ -103,11 +103,11 @@ namespace CgfConverter
                 // Each file (.cga and .cgam if applicable) will have its own RootNode.  
                 // This can cause problems.  .cga files with a .cgam files won't have geometry for the one root node.
                 Model model = Model.FromFile(file.FullName);
-                if (this.RootNode == null)
+                if (RootNode == null)
                     RootNode = model.RootNode;  // This makes the assumption that we read the .cga file before the .cgam file.
 
-                this.Bones = this.Bones ?? model.Bones;
-                this.Models.Add(model);
+                Bones = Bones ?? model.Bones;
+                Models.Add(model);
             }
 
             SkinningInfo = ConsolidateSkinningInfo(Models);
@@ -115,7 +115,9 @@ namespace CgfConverter
             // ConsolidateGeometryInfo();
 
             // Get the material file name
-            var allMaterialChunks = this.Models.SelectMany(a => a.ChunkMap.Values).Where(c => c.ChunkType == ChunkTypeEnum.MtlName);
+            var allMaterialChunks = Models
+                .SelectMany(a => a.ChunkMap.Values)
+                .Where(c => c.ChunkType == ChunkTypeEnum.MtlName || c.ChunkType == ChunkTypeEnum.MtlNameIvo);
             foreach (ChunkMtlName mtlChunk in allMaterialChunks)
             {
                 // Don't process child or collision materials for now
@@ -173,7 +175,7 @@ namespace CgfConverter
                     var charsToClean = cleanName.ToCharArray().Intersect(Path.GetInvalidFileNameChars()).ToArray();
                     if (charsToClean.Length > 0)
                     {
-                        foreach (Char character in charsToClean)
+                        foreach (char character in charsToClean)
                         {
                             cleanName = cleanName.Replace(character.ToString(), "");
                         }
@@ -209,12 +211,12 @@ namespace CgfConverter
                 {
                     Utils.Log(LogLevelEnum.Debug, "Located material file {0}", materialFile.Name);
 
-                    this.Materials = FlattenMaterials(material).Where(m => m.Textures != null).ToList();
+                    Materials = FlattenMaterials(material).Where(m => m.Textures != null).ToList();
 
-                    if (this.Materials.Count == 1)
+                    if (Materials.Count == 1)
                     {
                         // only one material, so it's a material file with no submaterials.  Check and set the name
-                        this.Materials[0].Name = this.RootNode.Name;
+                        Materials[0].Name = RootNode.Name;
                     }
 
                     // Early return - we have the material map
@@ -232,7 +234,7 @@ namespace CgfConverter
             {
                 if (mtlChunk.MatType != MtlNameTypeEnum.Library)
                 {
-                    this.Materials.Add(Material.CreateDefaultMaterial(mtlChunk.Name));
+                    Materials.Add(Material.CreateDefaultMaterial(mtlChunk.Name));
                 }
             }
         }

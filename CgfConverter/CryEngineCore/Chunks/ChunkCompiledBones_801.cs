@@ -1,12 +1,7 @@
-﻿using CgfConverter.CryEngineCore;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace CgfConverter.CryEngine_Core.Chunks
+namespace CgfConverter.CryEngineCore
 {
     class ChunkCompiledBones_801 : ChunkCompiledBones
     {
@@ -18,7 +13,7 @@ namespace CgfConverter.CryEngine_Core.Chunks
             Matrix33 localRotation;
 
             //  Read the first bone with ReadCompiledBone, then recursively grab all the children for each bone you find.
-            //  Each bone structure is 324 bytes, so will need to seek childOffset * 584 each time, and go back.
+            //  Each bone structure is 324 bytes, so will need to seek childOffset * 324 each time, and go back.
             NumBones = (int)((Size - 48) / 324);
             for (int i = 0; i < NumBones; i++)
             {

@@ -269,11 +269,11 @@ namespace CgfConverter
         public bool IsScaleRotation() // Returns true if the matrix decomposes nicely into scale * rotation\
         {
             Matrix33 self_transpose, mat = new Matrix33();
-            self_transpose = this.GetTranspose();
-            mat = this.Mult(self_transpose);
-            if (System.Math.Abs(mat.m12) + System.Math.Abs(mat.m13)
-                + System.Math.Abs(mat.m21) + System.Math.Abs(mat.m23)
-                + System.Math.Abs(mat.m31) + System.Math.Abs(mat.m32) > 0.01)
+            self_transpose = GetTranspose();
+            mat = Mult(self_transpose);
+            if (Math.Abs(mat.m12) + Math.Abs(mat.m13)
+                + Math.Abs(mat.m21) + Math.Abs(mat.m23)
+                + Math.Abs(mat.m31) + Math.Abs(mat.m32) > 0.01)
             {
                 Utils.Log(LogLevelEnum.Debug, " is a Scale_Rot matrix");
                 return false;
@@ -285,12 +285,12 @@ namespace CgfConverter
         public Vector3 GetScale()
         {
             // Get the scale, assuming is_scale_rotation is true
-            Matrix33 mat = this.Mult(this.GetTranspose());
+            Matrix33 mat = Mult(GetTranspose());
             Vector3 scale = new Vector3();
-            scale.x = (Double)System.Math.Pow(mat.m11, 0.5);
-            scale.y = (Double)System.Math.Pow(mat.m22, 0.5);
-            scale.z = (Double)System.Math.Pow(mat.m33, 0.5);
-            if (this.GetDeterminant() < 0)
+            scale.x = (Double)Math.Pow(mat.m11, 0.5);
+            scale.y = (Double)Math.Pow(mat.m22, 0.5);
+            scale.z = (Double)Math.Pow(mat.m33, 0.5);
+            if (GetDeterminant() < 0)
             {
                 scale.x = 0 - scale.x;
                 scale.y = 0 - scale.y;
@@ -306,16 +306,16 @@ namespace CgfConverter
 
         public Vector3 GetScaleRotation()   // Gets the scale.  this should also return the rotation matrix, but..eh...
         {
-            Vector3 scale = this.GetScale();
+            Vector3 scale = GetScale();
             return scale;
         }
 
         public bool IsRotation()
         {
             // NOTE: 0.01 instead of CgfFormat.EPSILON to work around bad files
-            if (!this.IsScaleRotation()) { return false; }
-            Vector3 scale = this.GetScale();
-            if (System.Math.Abs(scale.x - 1.0) > 0.01 || System.Math.Abs(scale.y - 1.0) > 0.01 || System.Math.Abs(scale.z - 1.0) > 0.1)
+            if (!IsScaleRotation()) { return false; }
+            Vector3 scale = GetScale();
+            if (Math.Abs(scale.x - 1.0) > 0.01 || Math.Abs(scale.y - 1.0) > 0.01 || Math.Abs(scale.z - 1.0) > 0.1)
             {
                 return false;
             }
@@ -329,43 +329,43 @@ namespace CgfConverter
         public Matrix<double> ToMathMatrix()
         {
             Matrix<double> result = Matrix<double>.Build.Dense(3, 3);
-            result[0, 0] = this.m11;
-            result[0, 1] = this.m12;
-            result[0, 2] = this.m13;
-            result[1, 0] = this.m21;
-            result[1, 1] = this.m22;
-            result[1, 2] = this.m23;
-            result[2, 0] = this.m31;
-            result[2, 1] = this.m32;
-            result[2, 2] = this.m33;
+            result[0, 0] = m11;
+            result[0, 1] = m12;
+            result[0, 2] = m13;
+            result[1, 0] = m21;
+            result[1, 1] = m22;
+            result[1, 2] = m23;
+            result[2, 0] = m31;
+            result[2, 1] = m32;
+            result[2, 2] = m33;
             return result;
         }
 
         public double Determinant()
         {
             Matrix<double> matrix = Matrix<double>.Build.Dense(3, 3);
-            matrix = this.ToMathMatrix();
+            matrix = ToMathMatrix();
             return matrix.Determinant();
         }
 
         public Matrix33 Inverse()
         {
             Matrix<double> matrix = Matrix<double>.Build.Dense(3, 3);
-            matrix = this.ToMathMatrix().Inverse();
+            matrix = ToMathMatrix().Inverse();
             return GetMatrix33(matrix);
         }
 
         public Matrix33 Conjugate()
         {
             Matrix<double> matrix = Matrix<double>.Build.Dense(3, 3);
-            matrix = this.ToMathMatrix().Conjugate();
+            matrix = ToMathMatrix().Conjugate();
             return GetMatrix33(matrix);
         }
 
         public Matrix33 ConjugateTranspose()
         {
             Matrix<double> matrix = Matrix<double>.Build.Dense(3, 3);
-            matrix = this.ToMathMatrix().ConjugateTranspose();
+            matrix = ToMathMatrix().ConjugateTranspose();
             return GetMatrix33(matrix);
         }
 
@@ -374,7 +374,7 @@ namespace CgfConverter
             Matrix<double> matrix = Matrix<double>.Build.Dense(3, 3);
             Matrix<double> matrix2 = Matrix<double>.Build.Dense(3, 3);
             matrix2 = inputMatrix.ToMathMatrix();
-            matrix = this.ToMathMatrix().ConjugateTransposeThisAndMultiply(matrix2);
+            matrix = ToMathMatrix().ConjugateTransposeThisAndMultiply(matrix2);
             return GetMatrix33(matrix);
         }
 
@@ -427,22 +427,22 @@ namespace CgfConverter
     /// </summary>
     public struct Matrix44    // a 4x4 transformation matrix.  first value is row, second is column.
     {
-        public Double m11;
-        public Double m12;
-        public Double m13;
-        public Double m14;
-        public Double m21;
-        public Double m22;
-        public Double m23;
-        public Double m24;
-        public Double m31;
-        public Double m32;
-        public Double m33;
-        public Double m34;
-        public Double m41;
-        public Double m42;
-        public Double m43;
-        public Double m44;
+        public double m11;
+        public double m12;
+        public double m13;
+        public double m14;
+        public double m21;
+        public double m22;
+        public double m23;
+        public double m24;
+        public double m31;
+        public double m32;
+        public double m33;
+        public double m34;
+        public double m41;
+        public double m42;
+        public double m43;
+        public double m44;
 
         public Vector4 Mult4x1(Vector4 vector)
         {
@@ -570,7 +570,7 @@ namespace CgfConverter
         public Matrix44 Inverse()
         {
             Matrix<double> matrix = Matrix<double>.Build.Dense(4, 4);
-            matrix = this.ToMathMatrix().Inverse();
+            matrix = ToMathMatrix().Inverse();
             return GetMatrix44(matrix);
         }
 
@@ -637,6 +637,29 @@ namespace CgfConverter
             };
         }
 
+        public static Matrix44 CreateDefaultRootNodeMatrix()
+        {
+            return new Matrix44()
+            {
+                m11 = 1,
+                m12 = 0,
+                m13 = 0,
+                m14 = 0,
+                m21 = 0,
+                m22 = 1,
+                m23 = 0,
+                m24 = 0,
+                m31 = 0,
+                m32 = 0,
+                m33 = 1,
+                m34 = 0,
+                m41 = 1,
+                m42 = 1,
+                m43 = 1,
+                m44 = 0
+            };
+        }
+
         public Matrix<double> ToMathMatrix()
         {
             Matrix<double> result = Matrix<double>.Build.Dense(4, 4);
@@ -682,35 +705,60 @@ namespace CgfConverter
             };
             return result;
         }
-
-        public void WriteMatrix44()
-        {
-            Utils.Log(LogLevelEnum.Verbose, "=============================================");
-            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}  {3:F7}", m11, m12, m13, m14);
-            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}  {3:F7}", m21, m22, m23, m24);
-            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}  {3:F7}", m31, m32, m33, m34);
-            Utils.Log(LogLevelEnum.Verbose, "{0:F7}  {1:F7}  {2:F7}  {3:F7}", m41, m42, m43, m44);
-            Utils.Log(LogLevelEnum.Verbose);
-        }
-
-
     }
 
     /// <summary>
     /// A quaternion (x,y,z,w)
     /// </summary>
-    public struct Quat
+    public struct Quaternion
     {
-        public Double x;
-        public Double y;
-        public Double z;
-        public Double w;
+        public float x;
+        public float y;
+        public float z;
+        public float w;
+
+        public Matrix33 ConvertToRotationalMatrix()
+        {
+            // https://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToMatrix/index.htm
+            var rotationalMatrix = new Matrix33();
+            double sqw = w * w;
+            double sqx = x * x;
+            double sqy = y * y;
+            double sqz = z * z;
+
+            // invs (inverse square length) is only required if quaternion is not already normalised
+            double invs = 1 / (sqx + sqy + sqz + sqw);
+            rotationalMatrix.m11 = (sqx - sqy - sqz + sqw) * invs; // since sqw + sqx + sqy + sqz =1/invs*invs
+            rotationalMatrix.m22 = (-sqx + sqy - sqz + sqw) * invs;
+            rotationalMatrix.m33 = (-sqx - sqy + sqz + sqw) * invs;
+
+            double tmp1 = x * y;
+            double tmp2 = z * w;
+            rotationalMatrix.m21 = 2.0 * (tmp1 + tmp2) * invs;
+            rotationalMatrix.m12 = 2.0 * (tmp1 - tmp2) * invs;
+
+            tmp1 = x * z;
+            tmp2 = y * w;
+            rotationalMatrix.m31 = 2.0 * (tmp1 - tmp2) * invs;
+            rotationalMatrix.m13 = 2.0 * (tmp1 + tmp2) * invs;
+            tmp1 = y * z;
+            tmp2 = x * w;
+            rotationalMatrix.m32 = 2.0 * (tmp1 + tmp2) * invs;
+            rotationalMatrix.m23 = 2.0 * (tmp1 - tmp2) * invs;
+
+            return rotationalMatrix;
+        }
+
+        public override string ToString()
+        {
+            return $@"x: {x}, y: {y}, z: {z}, w: {w}";
+        }
     }
 
     /// <summary>
     /// Vertex with position p(Vector3) and normal n(Vector3)
     /// </summary>
-    public struct Vertex      // 
+    public struct Vertex
     {
         public Vector3 p;  // position
         public Vector3 n;  // normal
@@ -741,7 +789,7 @@ namespace CgfConverter
         public int Time; // Time in ticks
         public Vector3 AbsPos; // absolute position
         public Vector3 RelPos; // relative position
-        public Quat RelQuat; //Relative Quaternion if ARG==1?
+        public Quaternion RelQuat; //Relative Quaternion if ARG==1?
         public Vector3 Unknown1; // If ARG==6 or 10?
         public Double[] Unknown2; // If ARG==9?  array length = 2
     }
@@ -811,9 +859,9 @@ namespace CgfConverter
 
     public struct FRGB
     {
-        public Double r; // Double Red
-        public Double g; // Double green
-        public Double b; // Double blue
+        public double r; // Double Red
+        public double g; // Double green
+        public double b; // Double blue
     }
 
     public struct AABB
@@ -837,19 +885,33 @@ namespace CgfConverter
         public int[] Index;     // Array of 4 ints
         public float[] w;       // Array of 4 floats
         public Matrix33 M;
-
     }
 
-    /// <summary>
-    /// WORLDTOBONE is also the Bind Pose Matrix (BPM)
-    /// </summary>
+    /// <summary> WORLDTOBONE is also the Bind Pose Matrix (BPM) </summary>
     public struct WORLDTOBONE
     {
-        public Double[,] worldToBone;   //  4x3 structure
+        public double[,] worldToBone;   //  4x3 structure
+
+        public WORLDTOBONE(Matrix33 worldRotation, Vector3 worldTransform) : this()
+        {
+            worldToBone = new double[3, 4];
+            worldToBone[0, 0] = worldRotation.m11;
+            worldToBone[0, 1] = worldRotation.m12;
+            worldToBone[0, 2] = worldRotation.m13;
+            worldToBone[1, 0] = worldRotation.m21;
+            worldToBone[1, 1] = worldRotation.m22;
+            worldToBone[1, 2] = worldRotation.m23;
+            worldToBone[2, 0] = worldRotation.m31;
+            worldToBone[2, 1] = worldRotation.m32;
+            worldToBone[2, 2] = worldRotation.m33;
+            worldToBone[0, 3] = worldTransform.x;
+            worldToBone[1, 3] = worldTransform.y;
+            worldToBone[2, 3] = worldTransform.z;
+        }
 
         public void GetWorldToBone(BinaryReader b)
         {
-            worldToBone = new Double[3, 4];
+            worldToBone = new double[3, 4];
             for (int i = 0; i < 3; i++)
             {
                 for (int j = 0; j < 4; j++)
@@ -885,13 +947,6 @@ namespace CgfConverter
 
         }
 
-        public void WriteWorldToBone()
-        {
-            Utils.Log(LogLevelEnum.Verbose, "     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[0, 0], this.worldToBone[0, 1], this.worldToBone[0, 2], this.worldToBone[0, 3]);
-            Utils.Log(LogLevelEnum.Verbose, "     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[1, 0], this.worldToBone[1, 1], this.worldToBone[1, 2], this.worldToBone[1, 3]);
-            Utils.Log(LogLevelEnum.Verbose, "     {0:F7}  {1:F7}  {2:F7}", this.worldToBone[2, 0], this.worldToBone[2, 1], this.worldToBone[2, 2], this.worldToBone[2, 3]);
-        }
-
         internal Matrix33 GetWorldToBoneRotationMatrix()
         {
             Matrix33 result = new Matrix33
@@ -921,16 +976,31 @@ namespace CgfConverter
         }
     }
 
-    /// <summary>
-    /// BONETOWORLD contains the world space location/rotation of a bone.
-    /// </summary>
+    /// <summary> BONETOWORLD contains the world space location/rotation of a bone. </summary>
     public struct BONETOWORLD
     {
-        public Double[,] boneToWorld;   //  4x3 structure
+        public double[,] boneToWorld;   //  4x3 structure
+
+        public BONETOWORLD(Matrix33 matrix33, Vector3 relativeTransform) : this()
+        {
+            boneToWorld = new double[3, 4];
+            boneToWorld[0, 0] = matrix33.m11;
+            boneToWorld[0, 1] = matrix33.m12;
+            boneToWorld[0, 2] = matrix33.m13;
+            boneToWorld[1, 0] = matrix33.m21;
+            boneToWorld[1, 1] = matrix33.m22;
+            boneToWorld[1, 2] = matrix33.m23;
+            boneToWorld[2, 0] = matrix33.m31;
+            boneToWorld[2, 1] = matrix33.m32;
+            boneToWorld[2, 2] = matrix33.m33;
+            boneToWorld[0, 3] = relativeTransform.x;
+            boneToWorld[1, 3] = relativeTransform.y;
+            boneToWorld[2, 3] = relativeTransform.z;
+        }
 
         public void ReadBoneToWorld(BinaryReader b)
         {
-            boneToWorld = new Double[3, 4];
+            boneToWorld = new double[3, 4];
             //Utils.Log(LogLevelEnum.Debug, "GetBoneToWorld");
             for (int i = 0; i < 3; i++)
             {
@@ -943,23 +1013,21 @@ namespace CgfConverter
             return;
         }
 
-        /// <summary>
-        /// Returns the world space rotational matrix in a Math.net 3x3 matrix.
-        /// </summary>
+        /// <summary> Returns the world space rotational matrix in a Math.net 3x3 matrix. </summary>
         /// <returns>Matrix33</returns>
         public Matrix33 GetBoneToWorldRotationMatrix()
         {
             Matrix33 result = new Matrix33
             {
-                m11 = this.boneToWorld[0, 0],
-                m12 = this.boneToWorld[0, 1],
-                m13 = this.boneToWorld[0, 2],
-                m21 = this.boneToWorld[1, 0],
-                m22 = this.boneToWorld[1, 1],
-                m23 = this.boneToWorld[1, 2],
-                m31 = this.boneToWorld[2, 0],
-                m32 = this.boneToWorld[2, 1],
-                m33 = this.boneToWorld[2, 2]
+                m11 = boneToWorld[0, 0],
+                m12 = boneToWorld[0, 1],
+                m13 = boneToWorld[0, 2],
+                m21 = boneToWorld[1, 0],
+                m22 = boneToWorld[1, 1],
+                m23 = boneToWorld[1, 2],
+                m31 = boneToWorld[2, 0],
+                m32 = boneToWorld[2, 1],
+                m33 = boneToWorld[2, 2]
             };
             return result;
         }
@@ -968,29 +1036,18 @@ namespace CgfConverter
         {
             Vector3 result = new Vector3
             {
-                x = this.boneToWorld[0, 3],
-                y = this.boneToWorld[1, 3],
-                z = this.boneToWorld[2, 3]
+                x = boneToWorld[0, 3],
+                y = boneToWorld[1, 3],
+                z = boneToWorld[2, 3]
             };
             return result;
         }
-
-        public void WriteBoneToWorld()
-        {
-            Utils.Log(LogLevelEnum.Verbose);
-            Utils.Log(LogLevelEnum.Verbose, "*** Bone to World ***");
-            Utils.Log(LogLevelEnum.Verbose, "{0:F6}  {1:F6}  {2:F6} {3:F6}", this.boneToWorld[0, 0], this.boneToWorld[0, 1], this.boneToWorld[0, 2], this.boneToWorld[0, 3]);
-            Utils.Log(LogLevelEnum.Verbose, "{0:F6}  {1:F6}  {2:F6} {3:F6}", this.boneToWorld[1, 0], this.boneToWorld[1, 1], this.boneToWorld[1, 2], this.boneToWorld[1, 3]);
-            Utils.Log(LogLevelEnum.Verbose, "{0:F6}  {1:F6}  {2:F6} {3:F6}", this.boneToWorld[2, 0], this.boneToWorld[2, 1], this.boneToWorld[2, 2], this.boneToWorld[2, 3]);
-            Utils.Log(LogLevelEnum.Verbose);
-        }
-
     }
 
     public struct PhysicsGeometry
     {
-        public UInt32 physicsGeom;
-        public UInt32 flags;              // 0x0C ?
+        public uint physicsGeom;
+        public uint flags;              // 0x0C ?
         public Vector3 min;
         public Vector3 max;
         public Vector3 spring_angle;
@@ -1013,122 +1070,6 @@ namespace CgfConverter
         public void WritePhysicsGeometry()
         {
             Utils.Log(LogLevelEnum.Verbose, "WritePhysicsGeometry");
-        }
-
-    }
-
-    public class CompiledBone       // This is the same as BoneDescData
-    {
-        public uint ControllerID { get; set; }
-        public PhysicsGeometry[] physicsGeometry;   // 2 of these.  One for live objects, other for dead (ragdoll?)
-        public Double mass;                         // 0xD8 ?
-        public WORLDTOBONE worldToBone;             // 4x3 matrix
-        public BONETOWORLD boneToWorld;             // 4x3 matrix of world translations/rotations of the bones.
-        public string boneName;                     // String256 in old terms; convert to a real null terminated string.
-        public int limbID;                         // ID of this limb... usually just 0xFFFFFFFF
-        public int offsetParent;                    // offset to the parent in number of CompiledBone structs (584 bytes)
-        public int offsetChild;                     // Offset to the first child to this bone in number of CompiledBone structs
-        public uint numChildren;                    // Number of children to this bone
-
-        public uint parentID;                       // Not part of the read structure, but the controllerID of the parent bone put into the Bone Dictionary (the key)
-        public Int64 offset;                        // Not part of the structure, but the position in the file where this bone started.
-        public List<uint> childIDs;                 // Not part of read struct.  Contains the controllerIDs of the children to this bone.
-        public Matrix44 LocalTransform = new Matrix44();            // Because Cryengine tends to store transform relative to world, we have to add all the transforms from the node to the root.  Calculated, row major.
-        public Vector3 LocalTranslation = new Vector3();            // To hold the local rotation vector
-        public Matrix33 LocalRotation = new Matrix33();             // to hold the local rotation matrix
-
-        public CompiledBone ParentBone { get; set; }
-
-        public void ReadCompiledBone(BinaryReader b)
-        {
-            // Reads just a single 584 byte entry of a bone. At the end the seek position will be advanced, so keep that in mind.
-            ControllerID = b.ReadUInt32();                 // unique id of bone (generated from bone name)
-            physicsGeometry = new PhysicsGeometry[2];
-            physicsGeometry[0].ReadPhysicsGeometry(b);     // lod 0 is the physics of alive body, 
-            physicsGeometry[1].ReadPhysicsGeometry(b);     // lod 1 is the physics of a dead body
-            mass = b.ReadSingle();
-            worldToBone = new WORLDTOBONE();
-            worldToBone.GetWorldToBone(b);
-            boneToWorld = new BONETOWORLD();
-            boneToWorld.ReadBoneToWorld(b);
-            boneName = b.ReadFString(256);
-            limbID = b.ReadInt32();
-            offsetParent = b.ReadInt32();
-            numChildren = b.ReadUInt32();
-            offsetChild = b.ReadInt32();
-            childIDs = new List<uint>();                    // Calculated
-        }
-
-        public void ReadCompiledBone_801(BinaryReader b)
-        {
-            // Reads just a single xx byte entry of a bone. At the end the seek position will be advanced, so keep that in mind.
-            ControllerID = b.ReadUInt32();                 // unique id of bone (generated from bone name)
-            limbID = b.ReadInt32();
-            //_ = b.ReadFString(208);                 // Unknown for now
-            b.BaseStream.Seek(208, SeekOrigin.Current);  //TODO: Try b.BaseStream.Seek(208, SeekOrigin.Current)
-            boneName = b.ReadFString(48);
-            offsetParent = b.ReadInt32();
-            numChildren = b.ReadUInt32();
-            offsetChild = b.ReadInt32();
-            boneToWorld = new BONETOWORLD();
-            boneToWorld.ReadBoneToWorld(b);
-            worldToBone = new WORLDTOBONE();
-            worldToBone.worldToBone = new double[3, 4];
-            worldToBone.worldToBone[0, 0] = boneToWorld.boneToWorld[0, 0];
-            worldToBone.worldToBone[0, 1] = boneToWorld.boneToWorld[0, 1];
-            worldToBone.worldToBone[0, 2] = boneToWorld.boneToWorld[0, 2];
-            worldToBone.worldToBone[0, 3] = boneToWorld.boneToWorld[0, 3];
-            worldToBone.worldToBone[1, 0] = boneToWorld.boneToWorld[1, 0];
-            worldToBone.worldToBone[1, 1] = boneToWorld.boneToWorld[1, 1];
-            worldToBone.worldToBone[1, 2] = boneToWorld.boneToWorld[1, 2];
-            worldToBone.worldToBone[1, 3] = boneToWorld.boneToWorld[1, 3];
-            worldToBone.worldToBone[2, 0] = boneToWorld.boneToWorld[2, 0];
-            worldToBone.worldToBone[2, 1] = boneToWorld.boneToWorld[2, 1];
-            worldToBone.worldToBone[2, 2] = boneToWorld.boneToWorld[2, 2];
-            worldToBone.worldToBone[2, 3] = boneToWorld.boneToWorld[2, 3];
-
-            childIDs = new List<uint>();                    // Calculated
-        }
-
-        public Matrix44 ToMatrix44(double[,] boneToWorld)
-        {
-            Matrix44 matrix = new Matrix44
-            {
-                m11 = boneToWorld[0, 0],
-                m12 = boneToWorld[0, 1],
-                m13 = boneToWorld[0, 2],
-                m14 = boneToWorld[0, 3],
-                m21 = boneToWorld[1, 0],
-                m22 = boneToWorld[1, 1],
-                m23 = boneToWorld[1, 2],
-                m24 = boneToWorld[1, 3],
-                m31 = boneToWorld[2, 0],
-                m32 = boneToWorld[2, 1],
-                m33 = boneToWorld[2, 2],
-                m34 = boneToWorld[2, 3],
-                m41 = 0,
-                m42 = 0,
-                m43 = 0,
-                m44 = 1
-            };
-            return matrix;
-        }
-
-        public void WriteCompiledBone()
-        {
-            // Output the bone to the console
-            Utils.Log(LogLevelEnum.Verbose);
-            Utils.Log(LogLevelEnum.Verbose, "*** Compiled bone {0}", boneName);
-            Utils.Log(LogLevelEnum.Verbose, "    Parent Name: {0}", parentID);
-            Utils.Log(LogLevelEnum.Verbose, "    Offset in file: {0:X}", offset);
-            Utils.Log(LogLevelEnum.Verbose, "    Controller ID: {0}", ControllerID);
-            Utils.Log(LogLevelEnum.Verbose, "    World To Bone:");
-            boneToWorld.WriteBoneToWorld();
-            Utils.Log(LogLevelEnum.Verbose, "    Limb ID: {0}", limbID);
-            Utils.Log(LogLevelEnum.Verbose, "    Parent Offset: {0}", offsetParent);
-            Utils.Log(LogLevelEnum.Verbose, "    Child Offset:  {0}", offsetChild);
-            Utils.Log(LogLevelEnum.Verbose, "    Number of Children:  {0}", numChildren);
-            Utils.Log(LogLevelEnum.Verbose, "*** End Bone {0}", boneName);
         }
     }
 
@@ -1154,36 +1095,22 @@ namespace CgfConverter
         public void ReadCompiledPhysicalBone(BinaryReader b)
         {
             // Reads just a single 584 byte entry of a bone. At the end the seek position will be advanced, so keep that in mind.
-            this.BoneIndex = b.ReadUInt32();                 // unique id of bone (generated from bone name)
-            this.ParentOffset = b.ReadUInt32();
-            this.NumChildren = b.ReadUInt32();
-            this.ControllerID = b.ReadUInt32();
-            this.prop = b.ReadChars(32);                    // Not sure what this is used for.
-            this.PhysicsGeometry.ReadPhysicsGeometry(b);
+            BoneIndex = b.ReadUInt32();                 // unique id of bone (generated from bone name)
+            ParentOffset = b.ReadUInt32();
+            NumChildren = b.ReadUInt32();
+            ControllerID = b.ReadUInt32();
+            prop = b.ReadChars(32);                    // Not sure what this is used for.
+            PhysicsGeometry.ReadPhysicsGeometry(b);
 
-            this.childIDs = new List<uint>();                    // Calculated
-        }
-
-        public void WriteCompiledPhysicalBone()
-        {
-            // Output the bone to the console
-            Utils.Log(LogLevelEnum.Verbose);
-            Utils.Log(LogLevelEnum.Verbose, "*** Compiled bone ID {0}", BoneIndex);
-            Utils.Log(LogLevelEnum.Verbose, "    Parent Offset: {0}", ParentOffset);
-            Utils.Log(LogLevelEnum.Verbose, "    Controller ID: {0}", ControllerID);
-            Utils.Log(LogLevelEnum.Verbose, "*** End Bone {0}", BoneIndex);
+            childIDs = new List<uint>();                    // Calculated
         }
     }
 
     public struct InitialPosMatrix
     {
         // A bone initial position matrix.
-#pragma warning disable CS0169 // The field 'InitialPosMatrix.Rot' is never used
-        Matrix33 Rot;              // type="Matrix33">
-#pragma warning restore CS0169 // The field 'InitialPosMatrix.Rot' is never used
-#pragma warning disable CS0169 // The field 'InitialPosMatrix.Pos' is never used
-        Vector3 Pos;                // type="Vector3">
-#pragma warning restore CS0169 // The field 'InitialPosMatrix.Pos' is never used
+        Matrix33 Rotation;              // type="Matrix33">
+        Vector3 Position;                // type="Vector3">
     }
 
     public struct BoneLink
@@ -1236,10 +1163,10 @@ namespace CgfConverter
 
     public struct BonePhysics           // 26 total words = 104 total bytes
     {
-        readonly UInt32 Geometry;                //" type="Ref" template="BoneMeshChunk">Geometry of a separate mesh for this bone.</add>
+        readonly uint Geometry;                //" type="Ref" template="BoneMeshChunk">Geometry of a separate mesh for this bone.</add>
                                                  //<!-- joint parameters -->
 
-        readonly UInt32 Flags;                   //" type="uint" />
+        readonly uint Flags;                   //" type="uint" />
         Vector3 Min;                   //" type="Vector3" />
         Vector3 Max;                   //" type="Vector3" />
         Vector3 Spring_Angle;          //" type="Vector3" />
@@ -1287,18 +1214,10 @@ namespace CgfConverter
 
     public struct MorphTargets
     {
-#pragma warning disable CS0169 // The field 'MorphTargets.MeshID' is never used
         readonly uint MeshID;
-#pragma warning restore CS0169 // The field 'MorphTargets.MeshID' is never used
-#pragma warning disable CS0169 // The field 'MorphTargets.Name' is never used
         readonly string Name;
-#pragma warning restore CS0169 // The field 'MorphTargets.Name' is never used
-#pragma warning disable CS0169 // The field 'MorphTargets.IntMorph' is never used
         readonly List<MeshMorphTargetVertex> IntMorph;
-#pragma warning restore CS0169 // The field 'MorphTargets.IntMorph' is never used
-#pragma warning disable CS0169 // The field 'MorphTargets.ExtMorph' is never used
         readonly List<MeshMorphTargetVertex> ExtMorph;
-#pragma warning restore CS0169 // The field 'MorphTargets.ExtMorph' is never used
     }
 
     public struct TFace
@@ -1351,7 +1270,7 @@ namespace CgfConverter
         public float Slope;
         public int AnimFlags;
         public float[] MoveDir;
-        public Quat StartPosition;
+        public Quaternion StartPosition;
     }
 
     public struct PhysicalProxy
@@ -1364,54 +1283,17 @@ namespace CgfConverter
         public uint Material;     // Size of the weird data at the end of the hitbox structure.
         public Vector3[] Vertices;    // Array of vertices (x,y,z) length NumVertices
         public UInt16[] Indices;      // Array of indices
-
-        public void WriteHitBox()
-        {
-            Utils.Log(LogLevelEnum.Verbose, "     ** Hitbox **");
-            Utils.Log(LogLevelEnum.Verbose, "        ID: {0:X}", ID);
-            Utils.Log(LogLevelEnum.Verbose, "        Num Vertices: {0:X}", NumVertices);
-            Utils.Log(LogLevelEnum.Verbose, "        Num Indices:  {0:X}", NumIndices);
-            Utils.Log(LogLevelEnum.Verbose, "        Material Index: {0:X}", Material);
-        }
     }
 
     public struct PhysicalProxyStub
     {
-#pragma warning disable CS0169 // The field 'PhysicalProxyStub.ChunkID' is never used
         readonly uint ChunkID;
-#pragma warning restore CS0169 // The field 'PhysicalProxyStub.ChunkID' is never used
-#pragma warning disable CS0169 // The field 'PhysicalProxyStub.Points' is never used
         readonly List<Vector3> Points;
-#pragma warning restore CS0169 // The field 'PhysicalProxyStub.Points' is never used
-#pragma warning disable CS0169 // The field 'PhysicalProxyStub.Indices' is never used
         readonly List<short> Indices;
-#pragma warning restore CS0169 // The field 'PhysicalProxyStub.Indices' is never used
-#pragma warning disable CS0169 // The field 'PhysicalProxyStub.Materials' is never used
         readonly List<string> Materials;
-#pragma warning restore CS0169 // The field 'PhysicalProxyStub.Materials' is never used
     }
 
     #endregion
-
-    public struct PhysicsData
-    {
-        // Collision or hitbox info.  Part of the MeshPhysicsData chunk
-        public int Unknown4;
-        public int Unknown5;
-        public float[] Unknown6;  // array length 3, Inertia?
-        public Quat Rot;  // Most definitely a quaternion. Probably describes rotation of the physics object.
-        public Vector3 Center;  // Center, or position. Probably describes translation of the physics object. Often corresponds to the center of the mesh data as described in the submesh chunk.
-        public float Unknown10; // Mass?
-        public int Unknown11;
-        public int Unknown12;
-        public float Unknown13;
-        public float Unknown14;
-        public PhysicsPrimitiveType PrimitiveType;
-        public PhysicsCube Cube;  // Primitive Type 0
-        public PhysicsPolyhedron PolyHedron;  // Primitive Type 1
-        public PhysicsCylinder Cylinder; // Primitive Type 5
-        public PhysicsShape6 UnknownShape6;  // Primitive Type 6
-    }
 
     public struct PhysicsCube
     {

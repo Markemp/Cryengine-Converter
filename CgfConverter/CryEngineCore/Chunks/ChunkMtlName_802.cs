@@ -1,0 +1,24 @@
+﻿using System;
+using System.IO;
+
+namespace CgfConverter.CryEngineCore
+{
+    public class ChunkMtlName_802 : ChunkMtlName
+    {
+        public override void Read(BinaryReader b)
+        {
+            // Appears to have 4 more Bytes than ChunkMtlName_744
+            base.Read(b);
+
+            Name = b.ReadFString(128);
+            NumChildren = b.ReadUInt32();
+            PhysicsType = new MtlNamePhysicsType[NumChildren];
+            MatType = NumChildren == 0 ? MtlNameTypeEnum.Single : MtlNameTypeEnum.Library;
+
+            for (int i = 0; i < NumChildren; i++)
+            {
+                PhysicsType[i] = (MtlNamePhysicsType)Enum.ToObject(typeof(MtlNamePhysicsType), b.ReadUInt32());
+            }
+        }
+    }
+}

@@ -9,7 +9,7 @@ namespace CgfConverter.CryEngineCore
             base.Read(b);
 
             Name = b.ReadFString(64);
-            if (String.IsNullOrEmpty(Name))
+            if (string.IsNullOrEmpty(Name))
                 Name = "unknown";
             ObjectNodeID = b.ReadInt32(); // Object reference ID
             ParentNodeID = b.ReadInt32();
@@ -47,7 +47,7 @@ namespace CgfConverter.CryEngineCore
             };
 
             // Read the rotation Rot Quad
-            Rot = new Quat
+            Rot = new Quaternion
             {
                 w = b.ReadSingle(),
                 x = b.ReadSingle(),

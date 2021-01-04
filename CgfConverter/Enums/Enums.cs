@@ -74,7 +74,10 @@
         CompiledExt2IntMapSC = 0xCCCC1006,
         UnknownSC1 = 0xCCCC2004,
         BoneBoxesSC = 0x08013004,
-
+        // Star Citizen #ivo file chunks
+        MtlNameIvo = 0x8335674E,
+        CompiledBonesIvo = 0xC201973C,
+        CompiledPhysicalBonesIvo = 0x90C687DC,
 
         BinaryXmlDataSC = 0xcccbf004,
     }

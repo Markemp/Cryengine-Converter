@@ -8,6 +8,9 @@ namespace CgfConverter.CryEngineCore
 {
     public abstract class Chunk : IBinaryChunk
     {
+        protected static Random rnd = new Random();
+        protected static List<int> alreadyPickedRandoms = new List<int>();
+
         private readonly static Dictionary<Type, Dictionary<uint, Func<dynamic>>> _chunkFactoryCache = new Dictionary<Type, Dictionary<uint, Func<dynamic>>> { };
 
         internal ChunkHeader _header;
@@ -82,6 +85,11 @@ namespace CgfConverter.CryEngineCore
                     return Chunk.New<ChunkCompiledMorphTargets>(version);
                 case ChunkTypeEnum.CompiledPhysicalProxiesSC:
                     return Chunk.New<ChunkCompiledPhysicalProxies>(version);
+                // SC IVO chunks
+                case ChunkTypeEnum.MtlNameIvo:
+                    return Chunk.New<ChunkMtlName>(version);
+                case ChunkTypeEnum.CompiledBonesIvo:
+                    return Chunk.New<ChunkCompiledBones>(version);
                 // Old chunks
                 case ChunkTypeEnum.BoneNameList:
                     return Chunk.New<ChunkBoneNameList>(version);
@@ -130,7 +138,7 @@ namespace CgfConverter.CryEngineCore
                 return factory.Invoke() as T;
             }
 
-            throw new NotSupportedException(String.Format("Version {0:X} of {1} is not supported", version, typeof(T).Name));
+            throw new NotSupportedException(string.Format("Version {0:X} of {1} is not supported", version, typeof(T).Name));
         }
 
         public void Load(Model model, ChunkHeader header)
@@ -139,7 +147,7 @@ namespace CgfConverter.CryEngineCore
             _header = header;
         }
 
-        public void SkipBytes(BinaryReader reader, Int64? bytesToSkip = null)
+        public void SkipBytes(BinaryReader reader, long? bytesToSkip = null)
         {
             if (reader == null)
                 return;
@@ -151,9 +159,9 @@ namespace CgfConverter.CryEngineCore
                 Utils.Log(LogLevelEnum.Debug, "Corrupt Headers in {1} 0x{0:X}", ID, GetType().Name);
 
             if (!bytesToSkip.HasValue)
-                bytesToSkip = (Int64)(Size - Math.Max(reader.BaseStream.Position - Offset, 0));
+                bytesToSkip = (long)(Size - Math.Max(reader.BaseStream.Position - Offset, 0));
 
-            for (Int64 i = 0; i < bytesToSkip; i++)
+            for (long i = 0; i < bytesToSkip; i++)
             {
                 SkippedBytes[reader.BaseStream.Position - Offset] = reader.ReadByte();
             }
@@ -209,6 +217,21 @@ namespace CgfConverter.CryEngineCore
         public override string ToString()
         {
             return $@"Chunk Type: {ChunkType}, Ver: {Version:X}, Offset: {Offset:X}, ID: {ID:X}, Size: {Size}";
+        }
+
+        public static int GetNextRandom()
+        {
+            bool available = false;
+            int rand = 0;
+            while (!available) {
+                rand = rnd.Next(100000);
+                if (!alreadyPickedRandoms.Contains(rand))
+                {
+                    alreadyPickedRandoms.Add(rand);
+                    available = true;
+                }
+            }
+            return rand;
         }
     }
 }
