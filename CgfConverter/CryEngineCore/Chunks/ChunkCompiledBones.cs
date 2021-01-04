@@ -14,7 +14,7 @@ namespace CgfConverter.CryEngineCore
         public Dictionary<int, CompiledBone> BoneDictionary = new Dictionary<int, CompiledBone>();  // Dictionary of all the CompiledBone objects based on parent offset(?).
         public List<CompiledBone> BoneList = new List<CompiledBone>();
 
-        public CompiledBone GetParentBone(CompiledBone bone, int boneIndex)
+        public virtual CompiledBone GetParentBone(CompiledBone bone)
         {
             // Should only be one parent.
             if (bone.offsetParent != 0)

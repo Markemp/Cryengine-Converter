@@ -61,7 +61,7 @@ namespace CgfConverter
             // If there is Skinning info, create the controller library and set up visual scene to refer to it.  Otherwise just write the Visual Scene
             if (CryData.SkinningInfo.HasSkinningInfo)
             {
-                //WriteLibrary_Controllers();
+                WriteLibrary_Controllers();
                 WriteLibrary_VisualScenesWithSkeleton();
             }
             else
