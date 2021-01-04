@@ -32,6 +32,10 @@ namespace CgfConverterTests.IntegrationTests.SC
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
 
+            var colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            var daeObject = colladaData.DaeObject;
+            colladaData.GenerateDaeObject();
+
             Assert.AreEqual(1, cryData.Materials.Count);
         }
 

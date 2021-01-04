@@ -28,11 +28,12 @@ namespace CgfConverter.CryEngineCore
 
             // Post bone read setup.  Parents, children, etc.
             // Add the ChildID to the parent bone.  This will help with navigation. Also set up the TransformSoFar
-            foreach (CompiledBone bone in BoneList)
+            for (int i = 0; i < NumBones; i++)
             {
-                SetParentBone(bone);
-                AddChildIDToParent(bone);
-                SetBoneLocalTransformMatrix(bone);
+                BoneList[i].boneName = boneNames[i];
+                SetParentBone(BoneList[i]);
+                AddChildIDToParent(BoneList[i]);
+                SetBoneLocalTransformMatrix(BoneList[i]);
             }
         }
 

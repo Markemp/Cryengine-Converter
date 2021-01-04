@@ -32,7 +32,7 @@ namespace CgfConverter
             Utils.Log(LogLevelEnum.Debug);
 
             // File name will be "object name.dae"
-            var daeOutputFile = new FileInfo(this.GetOutputFile("dae", outputDir, preservePath));
+            var daeOutputFile = new FileInfo(GetOutputFile("dae", outputDir, preservePath));
 
             if (!daeOutputFile.Directory.Exists)
                 daeOutputFile.Directory.Create();
@@ -1315,9 +1315,9 @@ namespace CgfConverter
             tmpNode.Matrix = matrices.ToArray();
 
             // Recursively call this for each of the child bones to this bone.
-            if (bone.numChildren > 0)
+            if (bone.childIDs.Count > 0)
             {
-                Grendgine_Collada_Node[] childNodes = new Grendgine_Collada_Node[bone.numChildren];
+                Grendgine_Collada_Node[] childNodes = new Grendgine_Collada_Node[bone.childIDs.Count];
                 int counter = 0;
 
                 foreach (CompiledBone childBone in CryData.Bones.GetAllChildBones(bone))

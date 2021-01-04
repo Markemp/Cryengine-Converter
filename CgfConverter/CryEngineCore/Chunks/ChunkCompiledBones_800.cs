@@ -25,8 +25,9 @@ namespace CgfConverter.CryEngineCore
 
                 tempBone.LocalTranslation = tempBone.boneToWorld.GetBoneToWorldTranslationVector();       // World positions of the bone
                 tempBone.LocalRotation = tempBone.boneToWorld.GetBoneToWorldRotationMatrix();            // World rotation of the bone.
-                //tempBone.ParentBone = BoneMap[i + tempBone.offsetParent];
-                tempBone.ParentBone = GetParentBone(tempBone, i);
+                
+                if (tempBone.offsetParent != 0)
+                    tempBone.ParentBone = BoneList[i + tempBone.offsetParent];
                 
                 if (tempBone.ParentBone != null)
                 {

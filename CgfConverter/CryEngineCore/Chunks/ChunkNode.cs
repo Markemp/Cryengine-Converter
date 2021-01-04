@@ -9,33 +9,21 @@ namespace CgfConverter.CryEngineCore
     {
         #region Chunk Properties
 
-        /// <summary> Chunk Name (String[64]) </summary>
-        public String Name { get; internal set; }
-        /// <summary> Mesh or Helper Object ID </summary>
+        public string Name { get; internal set; }
         public int ObjectNodeID { get; internal set; }
-        /// <summary> Node parent.  if 0xFFFFFFFF, it's the top node. </summary>
         public int ParentNodeID { get; internal set; }  // Parent nodeID
         public int __NumChildren { get; internal set; }
-        /// <summary> Material ID for this chunk </summary>
         public int MatID { get; internal set; }
-        public Boolean IsGroupHead { get; internal set; }
-        public Boolean IsGroupMember { get; internal set; }
-        /// <summary> Transformation Matrix </summary>
+        public bool IsGroupHead { get; internal set; }
+        public bool IsGroupMember { get; internal set; }
         public Matrix44 Transform { get; internal set; }
-        /// <summary> Position vector of Transform </summary>
         public Vector3 Pos { get; internal set; }
-        /// <summary> Rotation component of Transform </summary>
         public Quaternion Rot { get; internal set; }
-        /// <summary> Scalar component of Transform </summary>
         public Vector3 Scale { get; internal set; }
-        /// <summary> Position Controller ID - Obsolete </summary>
-        public int PosCtrlID { get; internal set; }
-        /// <summary> Rotation Controller ID - Obsolete </summary>
-        public int RotCtrlID { get; internal set; }
-        /// <summary> Scalar Controller ID - Obsolete </summary>
-        public int SclCtrlID { get; internal set; }
-        /// <summary> Appears to be a Blob of properties, separated by new lines </summary>
-        public String Properties { get; internal set; }
+        public int PosCtrlID { get; internal set; }  // Obsolete
+        public int RotCtrlID { get; internal set; }  // Obsolete
+        public int SclCtrlID { get; internal set; }  // Obsolete
+        public string Properties { get; internal set; }
 
         #endregion
 
