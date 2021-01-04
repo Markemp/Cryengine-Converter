@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace CgfConverter.CryEngineCore
@@ -39,28 +40,28 @@ namespace CgfConverter.CryEngineCore
 
         private void SetBoneLocalTransformMatrix(CompiledBone bone)
         {
-            //Vector3 localTranslation;
-            //Matrix33 localRotation;
+            Vector3 localTranslation;
+            Matrix33 localRotation;
 
-            //bone.LocalTranslation = bone.boneToWorld.GetBoneToWorldTranslationVector();       // World positions of the bone
-            //bone.LocalRotation = bone.boneToWorld.GetBoneToWorldRotationMatrix();            // World rotation of the bone.
+            bone.LocalTranslation = bone.boneToWorld.GetBoneToWorldTranslationVector();       // World positions of the bone
+            bone.LocalRotation = bone.boneToWorld.GetBoneToWorldRotationMatrix();            // World rotation of the bone.
 
-            //if (bone.parentID != 0)
-            //{
-            //    localRotation = GetParentBone(bone, i).boneToWorld
-            //        .GetBoneToWorldRotationMatrix()
-            //        .ConjugateTransposeThisAndMultiply(bone.boneToWorld.GetBoneToWorldRotationMatrix());
-            //    localTranslation = GetParentBone(bone, i)
-            //        .LocalRotation * (bone.LocalTranslation - GetParentBone(bone, i)
-            //        .boneToWorld.GetBoneToWorldTranslationVector());
-            //}
-            //else
-            //{
-            //    localTranslation = bone.boneToWorld.GetBoneToWorldTranslationVector();
-            //    localRotation = bone.boneToWorld.GetBoneToWorldRotationMatrix();
-            //}
+            if (bone.parentID != 0)
+            {
+                localRotation = GetParentBone(bone).boneToWorld
+                    .GetBoneToWorldRotationMatrix()
+                    .ConjugateTransposeThisAndMultiply(bone.boneToWorld.GetBoneToWorldRotationMatrix());
+                localTranslation = GetParentBone(bone)
+                    .LocalRotation * (bone.LocalTranslation - GetParentBone(bone)
+                    .boneToWorld.GetBoneToWorldTranslationVector());
+            }
+            else
+            {
+                localTranslation = bone.boneToWorld.GetBoneToWorldTranslationVector();
+                localRotation = bone.boneToWorld.GetBoneToWorldRotationMatrix();
+            }
 
-            //bone.LocalTransform = GetTransformFromParts(localTranslation, localRotation);
+            bone.LocalTransform = GetTransformFromParts(localTranslation, localRotation);
         }
 
         void SetParentBone(CompiledBone bone)
@@ -70,6 +71,12 @@ namespace CgfConverter.CryEngineCore
             {
                 bone.parentID = BoneList[bone.offsetParent].ControllerID;
             }
+        }
+
+        public override CompiledBone GetParentBone(CompiledBone bone)
+        {
+            // Should only be one parent.
+            return BoneList.Where(a => a.ControllerID == bone.parentID).FirstOrDefault();
         }
 
         protected List<string> GetNullSeparatedStrings(int numberOfNames, BinaryReader b)
