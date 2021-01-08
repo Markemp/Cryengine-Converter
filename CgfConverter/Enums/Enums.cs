@@ -65,6 +65,7 @@
         BonesBoxes = 0xAAFC0004,        // unknown chunk
         FoliageInfo = 0xAAFC0005,       // unknown chunk
         // Star Citizen versions
+        NodeSC = 0xCCCC100B,
         CompiledBonesSC = 0xCCCC1000,
         CompiledPhysicalBonesSC = 0xCCCC1001,
         CompiledMorphTargetsSC = 0xCCCC1002,
