@@ -24,7 +24,7 @@ namespace CgfConverterTests.IntegrationTests.SC
         }
 
         [TestMethod]
-        public void BehrRifle_312IvoFile()
+        public void BehrRifle_312IvoChrFile()
         {
             var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\3.12.0\brfl_fps_behr_p4ar.chr", "-dds", "-dae" };
             int result = testUtils.argsHandler.ProcessArgs(args);
@@ -37,6 +37,19 @@ namespace CgfConverterTests.IntegrationTests.SC
             var daeObject = colladaData.DaeObject;
 
             Assert.AreEqual(1, cryData.Materials.Count);
+        }
+
+        [TestMethod]
+        public void BehrRifle_312IvoSkinFile()
+        {
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\3.12.0\brfl_fps_behr_p4ar_parts.skin", "-dds", "-dae" };
+            int result = testUtils.argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
+            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
+
+            var colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            colladaData.GenerateDaeObject();
         }
 
         [TestMethod]

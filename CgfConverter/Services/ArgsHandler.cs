@@ -309,10 +309,8 @@ namespace CgfConverter
                     #region default...
 
                     default:
-                        this.InputFiles.AddRange(GetFiles(inputArgs[i]));
-
+                        InputFiles.AddRange(GetFiles(inputArgs[i]));
                         Console.WriteLine("Input file set to {0}", inputArgs[i]);
-
                         break;
 
                         #endregion
@@ -320,15 +318,15 @@ namespace CgfConverter
             }
 
             // Ensure we have a file to process
-            if (this.InputFiles.Count == 0)
+            if (InputFiles.Count == 0)
             {
                 PrintUsage();
                 return 1;
             }
 
             // Default to Collada (.dae) format
-            if (!this.OutputBlender && !this.OutputCollada && !this.OutputWavefront && !this.OutputFBX)
-                this.OutputCollada = true;
+            if (!OutputBlender && !OutputCollada && !OutputWavefront && !OutputFBX)
+                OutputCollada = true;
 
             return 0;
         }
