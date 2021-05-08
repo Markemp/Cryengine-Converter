@@ -46,12 +46,6 @@
         public Vector3 MinBound; // 800 minimum coordinate values
         public Vector3 MaxBound; // 800 Max coord values
 
-        /// <summary>
-        /// The actual geometry info for this mesh.
-        /// </summary>
-        public GeometryInfo GeometryInfo { get; set; }
-
-        //public ChunkMeshSubsets chunkMeshSubset; // pointer to the mesh subset that belongs to this mesh
         public override string ToString()
         {
             return $@"Chunk Type: {ChunkType}, ID: {ID:X}, Version: {Version}";

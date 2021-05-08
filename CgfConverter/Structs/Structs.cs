@@ -1212,18 +1212,6 @@ namespace CgfConverter
         public UInt16 I0 { get; set; }
         public UInt16 I1 { get; set; }
         public UInt16 I2 { get; set; }
-
-        //public static bool operator =(TFace face)
-        //{
-        //    if (face.i0 == i0 && face.i1 == i1 && face.i2 == i2)
-        //    {
-        //        return true;
-        //    }
-        //    else
-        //    {
-        //        return false;
-        //    }
-        //}
     }
 
     public class MeshCollisionInfo
@@ -1233,11 +1221,6 @@ namespace CgfConverter
         public Vector3 Position;
         public List<short> Indices;
         public int BoneID;
-
-        public MeshCollisionInfo()
-        {
-
-        }
     }
 
     public struct IntSkinVertex

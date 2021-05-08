@@ -13,7 +13,7 @@ namespace CgfConverter.CryEngineCore
 
             Flags2 = b.ReadUInt32(); // another filler
             uint tmpdataStreamType = b.ReadUInt32();
-            DataStreamType = (DataStreamTypeEnum)Enum.ToObject(typeof(DataStreamTypeEnum), tmpdataStreamType);
+            DataStreamType = (DATASTREAMTYPE)Enum.ToObject(typeof(DATASTREAMTYPE), tmpdataStreamType);
             SkipBytes(b, 4);
             NumElements = b.ReadUInt32(); // number of elements in this chunk
 
@@ -24,7 +24,7 @@ namespace CgfConverter.CryEngineCore
             // Now do loops to read for each of the different Data Stream Types.  If vertices, need to populate Vector3s for example.
             switch (DataStreamType)
             {
-                case DataStreamTypeEnum.VERTICES:
+                case DATASTREAMTYPE.VERTICES:
                     Vertices = new Vector3[NumElements];
                     if (BytesPerElement == 12)
                     {
@@ -56,7 +56,7 @@ namespace CgfConverter.CryEngineCore
 
                     break;
 
-                case DataStreamTypeEnum.INDICES: 
+                case DATASTREAMTYPE.INDICES: 
                     Indices = new UInt32[NumElements];
 
                     if (BytesPerElement == 2)
@@ -75,7 +75,7 @@ namespace CgfConverter.CryEngineCore
                     }
                     break;
 
-                case DataStreamTypeEnum.NORMALS:
+                case DATASTREAMTYPE.NORMALS:
                     Normals = new Vector3[NumElements];
                     for (Int32 i = 0; i < NumElements; i++)
                     {
@@ -86,7 +86,7 @@ namespace CgfConverter.CryEngineCore
                     //Utils.Log(LogLevelEnum.Debug, "Offset is {0:X}", b.BaseStream.Position);
                     break;
 
-                case DataStreamTypeEnum.UVS:
+                case DATASTREAMTYPE.UVS:
                     UVs = new UV[NumElements];
                     for (Int32 i = 0; i < NumElements; i++)
                     {
@@ -96,7 +96,7 @@ namespace CgfConverter.CryEngineCore
                     //Utils.Log(LogLevelEnum.Debug, "Offset is {0:X}", b.BaseStream.Position);
                     break;
 
-                case DataStreamTypeEnum.TANGENTS:
+                case DATASTREAMTYPE.TANGENTS:
                     Tangents = new Tangent[NumElements, 2];
                     Normals = new Vector3[NumElements];
                     for (Int32 i = 0; i < NumElements; i++)
@@ -145,7 +145,7 @@ namespace CgfConverter.CryEngineCore
                     // Utils.Log(LogLevelEnum.Debug, "Offset is {0:X}", b.BaseStream.Position);
                     break;
 
-                case DataStreamTypeEnum.COLORS:
+                case DATASTREAMTYPE.COLORS:
                     switch (BytesPerElement)
                     {
                         case 3:
@@ -180,7 +180,7 @@ namespace CgfConverter.CryEngineCore
 
                 #region case DataStreamTypeEnum.VERTSUVS:
 
-                case DataStreamTypeEnum.VERTSUVS:  // 3 half floats for verts, 3 half floats for normals, 2 half floats for UVs
+                case DATASTREAMTYPE.VERTSUVS:  // 3 half floats for verts, 3 half floats for normals, 2 half floats for UVs
                     // Utils.Log(LogLevelEnum.Debug, "In VertsUVs...");
                     Vertices = new Vector3[NumElements];
                     Normals = new Vector3[NumElements];
@@ -318,7 +318,7 @@ namespace CgfConverter.CryEngineCore
                     break;
                 #endregion
                 #region case DataStreamTypeEnum.BONEMAP:
-                case DataStreamTypeEnum.BONEMAP:
+                case DATASTREAMTYPE.BONEMAP:
                     SkinningInfo skin = GetSkinningInfo();
                     skin.HasBoneMapDatastream = true;
 
@@ -373,7 +373,7 @@ namespace CgfConverter.CryEngineCore
 
                 #endregion
                 #region DataStreamTypeEnum.Unknown1
-                case DataStreamTypeEnum.UNKNOWN1:
+                case DATASTREAMTYPE.UNKNOWN1:
                     Tangents = new Tangent[NumElements, 2];
                     Normals = new Vector3[NumElements];
                     for (Int32 i = 0; i < NumElements; i++)
