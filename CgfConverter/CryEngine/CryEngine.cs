@@ -54,7 +54,7 @@ namespace CgfConverter
                     {
                         model.RootNode = rootNode = (rootNode ?? model.RootNode);  // Each model will have it's own rootnode.
 
-                        foreach (ChunkNode node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as ChunkNode))
+                        foreach (ChunkNode node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkType.Node).Select(c => c as ChunkNode))
                         {
                             // Preserve existing parents
                             if (_nodeMap.ContainsKey(node.Name))
@@ -117,11 +117,11 @@ namespace CgfConverter
             // Get the material file name
             var allMaterialChunks = Models
                 .SelectMany(a => a.ChunkMap.Values)
-                .Where(c => c.ChunkType == ChunkTypeEnum.MtlName || c.ChunkType == ChunkTypeEnum.MtlNameIvo);
+                .Where(c => c.ChunkType == ChunkType.MtlName || c.ChunkType == ChunkType.MtlNameIvo);
             foreach (ChunkMtlName mtlChunk in allMaterialChunks)
             {
                 // Don't process child or collision materials for now
-                if (mtlChunk.MatType == MtlNameTypeEnum.Child || mtlChunk.MatType == MtlNameTypeEnum.Unknown1)
+                if (mtlChunk.MatType == MtlNameType.Child || mtlChunk.MatType == MtlNameType.Unknown1)
                     continue;
 
                 if (mtlChunk.Name.Contains(":"))
@@ -232,7 +232,7 @@ namespace CgfConverter
 
             foreach (ChunkMtlName mtlChunk in allMaterialChunks)
             {
-                if (mtlChunk.MatType != MtlNameTypeEnum.Library)
+                if (mtlChunk.MatType != MtlNameType.Library)
                 {
                     Materials.Add(Material.CreateDefaultMaterial(mtlChunk.Name));
                 }

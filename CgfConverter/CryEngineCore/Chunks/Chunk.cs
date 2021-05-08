@@ -17,7 +17,7 @@ namespace CgfConverter.CryEngineCore
         internal Model _model;
 
         public uint Offset { get; internal set; }
-        public ChunkTypeEnum ChunkType { get; internal set; }
+        public ChunkType ChunkType { get; internal set; }
         internal uint Version;
         internal int ID;
         internal uint Size;
@@ -25,83 +25,83 @@ namespace CgfConverter.CryEngineCore
 
         internal Dictionary<long, byte> SkippedBytes = new Dictionary<long, byte> { };
 
-        public static Chunk New(ChunkTypeEnum chunkType, uint version)
+        public static Chunk New(ChunkType chunkType, uint version)
         {
             switch (chunkType)
             {
-                case ChunkTypeEnum.SourceInfo:
+                case ChunkType.SourceInfo:
                     return Chunk.New<ChunkSourceInfo>(version);
-                case ChunkTypeEnum.Timing:
+                case ChunkType.Timing:
                     return Chunk.New<ChunkTimingFormat>(version);
-                case ChunkTypeEnum.ExportFlags:
+                case ChunkType.ExportFlags:
                     return Chunk.New<ChunkExportFlags>(version);
-                case ChunkTypeEnum.MtlName:
+                case ChunkType.MtlName:
                     return Chunk.New<ChunkMtlName>(version);
-                case ChunkTypeEnum.DataStream:
+                case ChunkType.DataStream:
                     return Chunk.New<ChunkDataStream>(version);
-                case ChunkTypeEnum.Mesh:
+                case ChunkType.Mesh:
                     return Chunk.New<ChunkMesh>(version);
-                case ChunkTypeEnum.MeshSubsets:
+                case ChunkType.MeshSubsets:
                     return Chunk.New<ChunkMeshSubsets>(version);
-                case ChunkTypeEnum.Node:
+                case ChunkType.Node:
                     return Chunk.New<ChunkNode>(version);
-                case ChunkTypeEnum.Helper:
+                case ChunkType.Helper:
                     return Chunk.New<ChunkHelper>(version);
-                case ChunkTypeEnum.Controller:
+                case ChunkType.Controller:
                     return Chunk.New<ChunkController>(version);
-                case ChunkTypeEnum.SceneProps:
+                case ChunkType.SceneProps:
                     return Chunk.New<ChunkSceneProp>(version);
-                case ChunkTypeEnum.MeshPhysicsData:
+                case ChunkType.MeshPhysicsData:
                     return Chunk.New<ChunkMeshPhysicsData>(version);
-                case ChunkTypeEnum.BoneAnim:
+                case ChunkType.BoneAnim:
                     return Chunk.New<ChunkBoneAnim>(version);
                 // Compiled chunks
-                case ChunkTypeEnum.CompiledBones:
+                case ChunkType.CompiledBones:
                     return Chunk.New<ChunkCompiledBones>(version);
-                case ChunkTypeEnum.CompiledPhysicalProxies:
+                case ChunkType.CompiledPhysicalProxies:
                     return Chunk.New<ChunkCompiledPhysicalProxies>(version);
-                case ChunkTypeEnum.CompiledPhysicalBones:
+                case ChunkType.CompiledPhysicalBones:
                     return Chunk.New<ChunkCompiledPhysicalBones>(version);
-                case ChunkTypeEnum.CompiledIntSkinVertices:
+                case ChunkType.CompiledIntSkinVertices:
                     return Chunk.New<ChunkCompiledIntSkinVertices>(version);
-                case ChunkTypeEnum.CompiledMorphTargets:
+                case ChunkType.CompiledMorphTargets:
                     return Chunk.New<ChunkCompiledMorphTargets>(version);
-                case ChunkTypeEnum.CompiledExt2IntMap:
+                case ChunkType.CompiledExt2IntMap:
                     return Chunk.New<ChunkCompiledExtToIntMap>(version);
-                case ChunkTypeEnum.CompiledIntFaces:
+                case ChunkType.CompiledIntFaces:
                     return Chunk.New<ChunkCompiledIntFaces>(version);
                 // Star Citizen equivalents
-                case ChunkTypeEnum.CompiledBonesSC:
+                case ChunkType.CompiledBonesSC:
                     return Chunk.New<ChunkCompiledBones>(version);
-                case ChunkTypeEnum.CompiledPhysicalBonesSC:
+                case ChunkType.CompiledPhysicalBonesSC:
                     return Chunk.New<ChunkCompiledPhysicalBones>(version);
-                case ChunkTypeEnum.CompiledExt2IntMapSC:
+                case ChunkType.CompiledExt2IntMapSC:
                     return Chunk.New<ChunkCompiledExtToIntMap>(version);
-                case ChunkTypeEnum.CompiledIntFacesSC:
+                case ChunkType.CompiledIntFacesSC:
                     return Chunk.New<ChunkCompiledIntFaces>(version);
-                case ChunkTypeEnum.CompiledIntSkinVerticesSC:
+                case ChunkType.CompiledIntSkinVerticesSC:
                     return Chunk.New<ChunkCompiledIntSkinVertices>(version);
-                case ChunkTypeEnum.CompiledMorphTargetsSC:
+                case ChunkType.CompiledMorphTargetsSC:
                     return Chunk.New<ChunkCompiledMorphTargets>(version);
-                case ChunkTypeEnum.CompiledPhysicalProxiesSC:
+                case ChunkType.CompiledPhysicalProxiesSC:
                     return Chunk.New<ChunkCompiledPhysicalProxies>(version);
                 // SC IVO chunks
-                case ChunkTypeEnum.MtlNameIvo:
+                case ChunkType.MtlNameIvo:
                     return Chunk.New<ChunkMtlName>(version);
-                case ChunkTypeEnum.CompiledBonesIvo:
+                case ChunkType.CompiledBonesIvo:
                     return Chunk.New<ChunkCompiledBones>(version);
-                case ChunkTypeEnum.MeshIvo:
+                case ChunkType.MeshIvo:
                     return Chunk.New<ChunkMesh>(version);
-                case ChunkTypeEnum.IvoSkin:
+                case ChunkType.IvoSkin:
                     return Chunk.New<ChunkIvoSkin>(version);
                 // Old chunks
-                case ChunkTypeEnum.BoneNameList:
+                case ChunkType.BoneNameList:
                     return Chunk.New<ChunkBoneNameList>(version);
-                case ChunkTypeEnum.MeshMorphTarget:
+                case ChunkType.MeshMorphTarget:
                     return Chunk.New<ChunkMeshMorphTargets>(version);
-                case ChunkTypeEnum.BinaryXmlDataSC:
+                case ChunkType.BinaryXmlDataSC:
                     return Chunk.New<ChunkBinaryXmlData>(version);
-                case ChunkTypeEnum.Mtl:
+                case ChunkType.Mtl:
                     //Utils.Log(LogLevelEnum.Debug, "Mtl Chunk here");  // Obsolete.  Not used
                 default:
                     return new ChunkUnknown();
@@ -186,9 +186,9 @@ namespace CgfConverter.CryEngineCore
             reader.BaseStream.Seek(_header.Offset, 0);
 
             // Star Citizen files don't have the type, version, offset and ID at the start of a chunk, so don't read them.
-            if (_model.FileVersion == FileVersionEnum.CryTek_3_4 || _model.FileVersion == FileVersionEnum.CryTek_3_5)
+            if (_model.FileVersion == FileVersion.CryTek_3_4 || _model.FileVersion == FileVersion.CryTek_3_5)
             {
-                ChunkType = (ChunkTypeEnum)Enum.ToObject(typeof(ChunkTypeEnum), reader.ReadUInt32());
+                ChunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), reader.ReadUInt32());
                 Version = reader.ReadUInt32();
                 Offset = reader.ReadUInt32();
                 ID = reader.ReadInt32();

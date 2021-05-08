@@ -46,12 +46,12 @@ namespace CgfConverter.CryEngineCore
         /// <summary>
         /// The type of file (geometry or animation)
         /// </summary>
-        public FileTypeEnum FileType { get; internal set; }
+        public FileType FileType { get; internal set; }
 
         /// <summary>
         /// The version of the file
         /// </summary>
-        public FileVersionEnum FileVersion { get; internal set; }
+        public FileVersion FileVersion { get; internal set; }
 
         /// <summary>
         /// Position of the Chunk Header table
@@ -85,7 +85,7 @@ namespace CgfConverter.CryEngineCore
                     ChunkNode rootNode = null;
                     RootNode = rootNode = (rootNode ?? RootNode);  // Each model will have it's own rootnode.
 
-                    foreach (ChunkNode node in ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Select(c => c as ChunkNode))
+                    foreach (ChunkNode node in ChunkMap.Values.Where(c => c.ChunkType == ChunkType.Node).Select(c => c as ChunkNode))
                     {
                         // Preserve existing parents
                         if (nodeMap.ContainsKey(node.ID))
@@ -115,9 +115,9 @@ namespace CgfConverter.CryEngineCore
 
         #region Calculated Properties
 
-        public int NodeCount { get { return ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.Node).Count(); } }
+        public int NodeCount { get { return ChunkMap.Values.Where(c => c.ChunkType == ChunkType.Node).Count(); } }
 
-        public int BoneCount { get { return ChunkMap.Values.Where(c => c.ChunkType == ChunkTypeEnum.CompiledBones).Count(); } }
+        public int BoneCount { get { return ChunkMap.Values.Where(c => c.ChunkType == ChunkType.CompiledBones).Count(); } }
 
         #endregion
 
@@ -164,7 +164,7 @@ namespace CgfConverter.CryEngineCore
 
             if (FileSignature == "CrCh")           // file signature v3.6+
             {
-                FileVersion = (FileVersionEnum)b.ReadUInt32();    // 0x746
+                FileVersion = (FileVersion)b.ReadUInt32();    // 0x746
                 NumChunks = b.ReadUInt32();       // number of Chunks in the chunk table
                 ChunkTableOffset = b.ReadInt32(); // location of the chunk table
 
@@ -172,7 +172,7 @@ namespace CgfConverter.CryEngineCore
             } 
             else if (FileSignature == "#ivo")
             {
-                FileVersion = (FileVersionEnum)b.ReadUInt32();  // 0x0900
+                FileVersion = (FileVersion)b.ReadUInt32();  // 0x0900
                 NumChunks = b.ReadUInt32();
                 ChunkTableOffset = b.ReadInt32();
                 CreateDummyRootNode();
@@ -184,8 +184,8 @@ namespace CgfConverter.CryEngineCore
 
             if (FileSignature == "CryTek")         // file signature v3.5-
             {
-                FileType = (FileTypeEnum)b.ReadUInt32();
-                FileVersion = (FileVersionEnum)b.ReadUInt32();    // 0x744 0x745
+                FileType = (FileType)b.ReadUInt32();
+                FileVersion = (FileVersion)b.ReadUInt32();    // 0x744 0x745
                 ChunkTableOffset = b.ReadInt32() + 4;
                 NumChunks = b.ReadUInt32();       // number of Chunks in the chunk table
 
@@ -204,7 +204,7 @@ namespace CgfConverter.CryEngineCore
             rootNode.__NumChildren = 0;     // Single object
             rootNode.MatID = 0;
             rootNode.Transform = Matrix44.CreateDefaultRootNodeMatrix();
-            rootNode.ChunkType = ChunkTypeEnum.Node;
+            rootNode.ChunkType = ChunkType.Node;
             RootNode = rootNode;
         }
 
@@ -233,15 +233,15 @@ namespace CgfConverter.CryEngineCore
                 ChunkMap[chunkHeaderItem.ID].SkipBytes(reader);
 
                 // Assume first node read in Model[0] is root node.  This may be bad if they aren't in order!
-                if (chunkHeaderItem.ChunkType == ChunkTypeEnum.Node && RootNode == null)
+                if (chunkHeaderItem.ChunkType == ChunkType.Node && RootNode == null)
                 {
                     RootNode = ChunkMap[chunkHeaderItem.ID] as ChunkNode;
                 }
 
                 // Add Bones to the model.  We are assuming there is only one CompiledBones chunk per file.
-                if (chunkHeaderItem.ChunkType == ChunkTypeEnum.CompiledBones || 
-                    chunkHeaderItem.ChunkType == ChunkTypeEnum.CompiledBonesSC ||
-                    chunkHeaderItem.ChunkType == ChunkTypeEnum.CompiledBonesIvo)
+                if (chunkHeaderItem.ChunkType == ChunkType.CompiledBones || 
+                    chunkHeaderItem.ChunkType == ChunkType.CompiledBonesSC ||
+                    chunkHeaderItem.ChunkType == ChunkType.CompiledBonesIvo)
                 {
                     Bones = ChunkMap[chunkHeaderItem.ID] as ChunkCompiledBones;
                     SkinningInfo.HasSkinningInfo = true;

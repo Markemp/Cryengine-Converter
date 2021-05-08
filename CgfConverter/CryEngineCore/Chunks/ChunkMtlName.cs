@@ -3,7 +3,7 @@
     public abstract class ChunkMtlName : Chunk  
     {
         /// <summary> Type of Material associated with this name </summary>
-        public MtlNameTypeEnum MatType { get; internal set; }
+        public MtlNameType MatType { get; internal set; }
         /// <summary> Name of the Material </summary>
         public string Name { get; set; }
         public MtlNamePhysicsType[] PhysicsType { get; internal set; }
