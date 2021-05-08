@@ -911,19 +911,6 @@ namespace CgfConverter
         }
     }   // May also be known as ColorB.
 
-    public struct FRGB
-    {
-        public double r; // Double Red
-        public double g; // Double green
-        public double b; // Double blue
-    }
-
-    public struct AABB
-    {
-        Vector3 min;
-        Vector3 max;
-    }
-
     public struct Tangent
     {
         // Tangents.  Divide each component by 32767 to get the actual value

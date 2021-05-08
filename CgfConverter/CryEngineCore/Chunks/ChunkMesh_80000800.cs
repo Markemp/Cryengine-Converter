@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 
 namespace CgfConverter.CryEngineCore
 {
@@ -30,7 +29,7 @@ namespace CgfConverter.CryEngineCore
             FaceMapData = Utils.SwapIntEndian(b.ReadInt32());
             VertMatsData = Utils.SwapIntEndian(b.ReadInt32());
             SkipBytes(b, 16);
-            for (Int32 i = 0; i < 4; i++)
+            for (int i = 0; i < 4; i++)
             {
                 PhysicsData[i] = Utils.SwapIntEndian(b.ReadInt32());
                 if (PhysicsData[i] != 0)

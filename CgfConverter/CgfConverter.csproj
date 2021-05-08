@@ -54,6 +54,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CryEngineCore\Chunks\ChunkMesh_900.cs" />
     <Compile Include="CryEngine\CryEngine.cs" />
     <Compile Include="CryEngine\CryRender.cs" />
     <Compile Include="CryEngineCore\Chunks\ChunkBinaryXmlData.cs" />

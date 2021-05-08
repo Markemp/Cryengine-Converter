@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace CgfConverter.CryEngineCore
+﻿namespace CgfConverter.CryEngineCore
 {
     /// <summary>
     /// Geometry info contains all the vertex, color, normal, UV, tangent, index, etc.  Basically if you have a Node chunk with a Mesh and Submesh, this will contain the summary of all
@@ -17,15 +15,15 @@ namespace CgfConverter.CryEngineCore
         public UV[] UVs { get; set; }            // for datastreamType of 2, length is NumElements.
         public IRGB[] RGBColors { get; set; }    // for dataStreamType of 3, length is NumElements.  Bytes per element of 3
         public IRGBA[] RGBAColors { get; set; }  // for dataStreamType of 4, length is NumElements.  Bytes per element of 4
-        public UInt32[] Indices { get; set; }    // for dataStreamType of 5, length is NumElements.
+        public uint[] Indices { get; set; }    // for dataStreamType of 5, length is NumElements.
         // For Tangents on down, this may be a 2 element array.  See line 846+ in cgf.xml
         public Tangent[,] Tangents { get; set; }  // for dataStreamType of 6, length is NumElements, 2.  
-        public Byte[,] ShCoeffs { get; set; }     // for dataStreamType of 7, length is NumElement,BytesPerElements.
-        public Byte[,] ShapeDeformation { get; set; } // for dataStreamType of 8, length is NumElements,BytesPerElement.
-        public Byte[,] BoneMap { get; set; }      // for dataStreamType of 9, length is NumElements,BytesPerElement, 2.
-        //public MeshBoneMapping[] BoneMap;      // for dataStreamType of 9, length is NumElements,BytesPerElement.
-        public Byte[,] FaceMap { get; set; }      // for dataStreamType of 10, length is NumElements,BytesPerElement.
-        public Byte[,] VertMats { get; set; }     // for dataStreamType of 11, length is NumElements,BytesPerElement.
+        public byte[,] ShCoeffs { get; set; }     // for dataStreamType of 7, length is NumElement,BytesPerElements.
+        public byte[,] ShapeDeformation { get; set; } // for dataStreamType of 8, length is NumElements,BytesPerElement.
+        public byte[,] BoneMap { get; set; }      // for dataStreamType of 9, length is NumElements,BytesPerElement, 2.
+        //public MeshBoneMapping[] BoneMap;      // for dataStreamType of 9, length is NumElements, BytesPerElement.
+        public byte[,] FaceMap { get; set; }      // for dataStreamType of 10, length is NumElements,BytesPerElement.
+        public byte[,] VertMats { get; set; }     // for dataStreamType of 11, length is NumElements,BytesPerElement.
 
 
     }
