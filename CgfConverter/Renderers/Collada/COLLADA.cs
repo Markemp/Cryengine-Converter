@@ -96,7 +96,7 @@ namespace CgfConverter
             };
             // Get the actual file creators from the Source Chunk
             contributors[1] = new Grendgine_Collada_Asset_Contributor();
-            foreach (ChunkSourceInfo tmpSource in CryData.Chunks.Where(a => a.ChunkType == ChunkTypeEnum.SourceInfo))
+            foreach (ChunkSourceInfo tmpSource in CryData.Chunks.Where(a => a.ChunkType == ChunkType.SourceInfo))
             {
                 contributors[1].Author = tmpSource.Author;
                 contributors[1].Source_Data = tmpSource.SourceFile;
@@ -395,7 +395,7 @@ namespace CgfConverter
 
             // For each of the nodes, we need to write the geometry.
             // Use a foreach statement to get all the node chunks.  This will get us the meshes, which will contain the vertex, UV and normal info.
-            foreach (ChunkNode nodeChunk in CryData.Chunks.Where(a => a.ChunkType == ChunkTypeEnum.Node))
+            foreach (ChunkNode nodeChunk in CryData.Chunks.Where(a => a.ChunkType == ChunkType.Node))
             {
                 // Create a geometry object.  Use the chunk ID for the geometry ID
                 // Will have to be careful with this, since with .cga/.cgam pairs will need to match by Name.
@@ -430,7 +430,7 @@ namespace CgfConverter
                     continue;
                 }
 
-                if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Mesh)
+                if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkType.Mesh)
                 {
                     // Get the mesh chunk and submesh chunk for this node.
                     ChunkMesh tmpMeshChunk = (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID];
@@ -1044,9 +1044,9 @@ namespace CgfConverter
             List<Grendgine_Collada_Node> nodes = new List<Grendgine_Collada_Node>();
 
             // Check to see if there is a CompiledBones chunk.  If so, add a Node.
-            if (CryData.Chunks.Any(a => a.ChunkType == ChunkTypeEnum.CompiledBones || 
-                a.ChunkType == ChunkTypeEnum.CompiledBonesSC ||
-                a.ChunkType == ChunkTypeEnum.CompiledBonesIvo))
+            if (CryData.Chunks.Any(a => a.ChunkType == ChunkType.CompiledBones || 
+                a.ChunkType == ChunkType.CompiledBonesSC ||
+                a.ChunkType == ChunkType.CompiledBonesIvo))
             {
                 Grendgine_Collada_Node boneNode = new Grendgine_Collada_Node();
                 boneNode = CreateJointNode(CryData.Bones.RootBone);
@@ -1094,9 +1094,9 @@ namespace CgfConverter
             List<Grendgine_Collada_Node> nodes = new List<Grendgine_Collada_Node>();
 
             // Check to see if there is a CompiledBones chunk.  If so, add a Node.  
-            if (CryData.Chunks.Any(a => a.ChunkType == ChunkTypeEnum.CompiledBones || 
-                a.ChunkType == ChunkTypeEnum.CompiledBonesSC ||
-                a.ChunkType == ChunkTypeEnum.CompiledBonesIvo))
+            if (CryData.Chunks.Any(a => a.ChunkType == ChunkType.CompiledBones || 
+                a.ChunkType == ChunkType.CompiledBonesSC ||
+                a.ChunkType == ChunkType.CompiledBonesIvo))
             {
                 Grendgine_Collada_Node boneNode = new Grendgine_Collada_Node();
                 boneNode = CreateJointNode(CryData.Bones.RootBone);
@@ -1168,7 +1168,7 @@ namespace CgfConverter
                 int nodeID = nodeChunk.ID;
 
                 // make sure there is a geometry node in the geometry file
-                if (CryData.Models[0].ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Helper)
+                if (CryData.Models[0].ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkType.Helper)
                 {
                     tmpNode = CreateSimpleNode(nodeChunk);
                 }
@@ -1188,7 +1188,7 @@ namespace CgfConverter
             }
             else                    // Regular Cryengine file.
             {
-                if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkTypeEnum.Mesh)
+                if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkType.Mesh)
                 {
                     ChunkMesh tmpMeshChunk = (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID];
                     if (tmpMeshChunk.MeshSubsets == 0 || tmpMeshChunk.NumVertices == 0)  // Can have a node with a mesh and meshsubset, but no vertices.  Write as simple node.

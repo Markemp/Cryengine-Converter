@@ -6,7 +6,7 @@
     public abstract class ChunkHelper : Chunk
     {
         public string Name;
-        public HelperTypeEnum HelperType;
+        public HelperType HelperType;
         public Vector3 Pos;
         public Matrix44 Transform;
 

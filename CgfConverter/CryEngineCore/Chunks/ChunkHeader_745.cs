@@ -8,7 +8,7 @@ namespace CgfConverter.CryEngineCore
         public override void Read(BinaryReader reader)
         {
             uint headerType = reader.ReadUInt32();
-            ChunkType = (ChunkTypeEnum)headerType;
+            ChunkType = (ChunkType)headerType;
             Version = reader.ReadUInt32();
             Offset = reader.ReadUInt32();
             ID = reader.ReadInt32();

@@ -1,18 +1,19 @@
 ﻿namespace CgfConverter
 {
-    public enum FileVersionEnum : uint
+    public enum FileVersion : uint
     {
         CryTek_3_4 = 0x744,
         CryTek_3_5 = 0x745,
         CryTek_3_6 = 0x746,
     }
-    // Enums
-    public enum FileTypeEnum : uint
+    
+    public enum FileType : uint
     {
         GEOM = 0xFFFF0000,
         ANIM = 0xFFFF0001
     }  // complete
-    public enum MtlNameTypeEnum : uint
+
+    public enum MtlNameType : uint
     {
         // It looks like there is a 0x04 type now as well, for mech parts.  Not sure what that is.
         // Also a 0x0B type now as well.
@@ -23,7 +24,8 @@
         Unknown1 = 0x0B,        // Collision materials?  In MWO, these are the torsos, arms, legs from body/<mech>.mtl
         Unknown2 = 0x04
     }
-    public enum ChunkTypeEnum : uint    // complete
+
+    public enum ChunkType : uint    // complete
     {
         Any = 0x0,
         Mesh = 0xCCCC0000,
@@ -90,7 +92,7 @@
         ChkVersion
     }    //complete
 
-    public enum HelperTypeEnum : uint
+    public enum HelperType : uint
     {
         POINT,
         DUMMY,
@@ -154,7 +156,7 @@
         AUTOCUBIC
     }  //complete
 
-    public enum DATASTREAMTYPE : uint
+    public enum DatastreamType : uint
     {
         VERTICES,
         NORMALS,
@@ -176,7 +178,7 @@
         UNKNOWN6
     }  //complete
 
-    public enum IVODATASTREAMTYPE : uint {
+    public enum IvoDatastreamType : uint {
         COLORS = 0x9CF3F615,
         INDICES = 0xEECDC168,
         TANGENTS = 0xB95E9A1B,

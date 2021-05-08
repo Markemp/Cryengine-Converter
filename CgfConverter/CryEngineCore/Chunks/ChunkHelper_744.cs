@@ -9,7 +9,7 @@ namespace CgfConverter.CryEngineCore
         {
             base.Read(b);
 
-            this.HelperType = (HelperTypeEnum)Enum.ToObject(typeof(HelperTypeEnum), b.ReadUInt32());
+            this.HelperType = (HelperType)Enum.ToObject(typeof(HelperType), b.ReadUInt32());
             if (this.Version == 0x744)  // only has the Position.
             {
                 this.Pos.x = b.ReadSingle();
@@ -30,7 +30,7 @@ namespace CgfConverter.CryEngineCore
                     }
                 }
                 this.Name = new string(tmpName, 0, stringLength);
-                this.HelperType = (HelperTypeEnum)Enum.ToObject(typeof(HelperTypeEnum), b.ReadUInt32());
+                this.HelperType = (HelperType)Enum.ToObject(typeof(HelperType), b.ReadUInt32());
                 this.Pos.x = b.ReadSingle();
                 this.Pos.y = b.ReadSingle();
                 this.Pos.z = b.ReadSingle();

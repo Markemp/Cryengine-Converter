@@ -37,7 +37,7 @@ namespace CgfConverterTests.IntegrationTests.Crucible
             cryData.ProcessCryengineFiles();
 
             Assert.AreEqual((uint)11, cryData.Models[0].NumChunks);
-            Assert.AreEqual(ChunkTypeEnum.Node, cryData.Models[0].ChunkMap[22].ChunkType);
+            Assert.AreEqual(ChunkType.Node, cryData.Models[0].ChunkMap[22].ChunkType);
             var datastream = cryData.Models[0].ChunkMap[16] as ChunkDataStream_801;
             Assert.AreEqual((uint)8, datastream.BytesPerElement);
             Assert.AreEqual((uint)96, datastream.NumElements);
