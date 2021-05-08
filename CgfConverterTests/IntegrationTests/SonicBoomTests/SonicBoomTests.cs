@@ -35,7 +35,7 @@ namespace CgfConverterTests.IntegrationTests.SonicBoom
             cryData.ProcessCryengineFiles();
 
             Assert.AreEqual((uint)17, cryData.Models[0].NumChunks);
-            Assert.AreEqual(ChunkTypeEnum.Node, cryData.Models[0].ChunkMap[33].ChunkType);
+            Assert.AreEqual(ChunkType.Node, cryData.Models[0].ChunkMap[33].ChunkType);
             var datastream = cryData.Models[0].ChunkMap[23] as ChunkDataStream_80000800;
             Assert.AreEqual((uint)12, datastream.BytesPerElement);
             Assert.AreEqual((uint)629, datastream.NumElements);
@@ -60,7 +60,7 @@ namespace CgfConverterTests.IntegrationTests.SonicBoom
             cryData.ProcessCryengineFiles();
 
             Assert.AreEqual((uint)24, cryData.Models[0].NumChunks);
-            Assert.AreEqual(ChunkTypeEnum.Node, cryData.Models[0].ChunkMap[47].ChunkType);
+            Assert.AreEqual(ChunkType.Node, cryData.Models[0].ChunkMap[47].ChunkType);
             var datastream = cryData.Models[0].ChunkMap[40] as ChunkDataStream_80000800;
             Assert.AreEqual((uint)12, datastream.BytesPerElement);
             Assert.AreEqual((uint)46244, datastream.NumElements);
@@ -85,7 +85,7 @@ namespace CgfConverterTests.IntegrationTests.SonicBoom
             cryData.ProcessCryengineFiles();
 
             Assert.AreEqual((uint)30, cryData.Models[0].NumChunks);
-            Assert.AreEqual(ChunkTypeEnum.Node, cryData.Models[0].ChunkMap[59].ChunkType);
+            Assert.AreEqual(ChunkType.Node, cryData.Models[0].ChunkMap[59].ChunkType);
             var datastream = cryData.Models[0].ChunkMap[52] as ChunkDataStream_80000800;
             Assert.AreEqual((uint)12, datastream.BytesPerElement);
             Assert.AreEqual((uint)60794, datastream.NumElements);

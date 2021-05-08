@@ -13,7 +13,7 @@ namespace CgfConverter.CryEngineCore
 
             this.Flags2 = Utils.SwapUIntEndian(b.ReadUInt32()); // another filler
             uint tmpdataStreamType = Utils.SwapUIntEndian(b.ReadUInt32());
-            this.DataStreamType = (DATASTREAMTYPE)Enum.ToObject(typeof(DATASTREAMTYPE), tmpdataStreamType);
+            this.DataStreamType = (DatastreamType)Enum.ToObject(typeof(DatastreamType), tmpdataStreamType);
             this.NumElements = Utils.SwapUIntEndian(b.ReadUInt32()); // number of elements in this chunk
             this.BytesPerElement = Utils.SwapUIntEndian(b.ReadUInt32());
 
@@ -24,7 +24,7 @@ namespace CgfConverter.CryEngineCore
             {
                 #region case DataStreamTypeEnum.VERTICES:
 
-                case DATASTREAMTYPE.VERTICES:  // Ref is 0x00000000
+                case DatastreamType.VERTICES:  // Ref is 0x00000000
                     this.Vertices = new Vector3[this.NumElements];
 
                     switch (BytesPerElement)
@@ -43,7 +43,7 @@ namespace CgfConverter.CryEngineCore
                 #endregion
                 #region case DataStreamTypeEnum.INDICES:
 
-                case DATASTREAMTYPE.INDICES:  // Ref is 
+                case DatastreamType.INDICES:  // Ref is 
                     this.Indices = new UInt32[NumElements];
 
                     if (this.BytesPerElement == 2)
@@ -65,7 +65,7 @@ namespace CgfConverter.CryEngineCore
                 #endregion
                 #region case DataStreamTypeEnum.NORMALS:
 
-                case DATASTREAMTYPE.NORMALS:
+                case DatastreamType.NORMALS:
                     this.Normals = new Vector3[this.NumElements];
                     for (Int32 i = 0; i < NumElements; i++)
                     {
@@ -79,7 +79,7 @@ namespace CgfConverter.CryEngineCore
                 #endregion
                 #region case DataStreamTypeEnum.UVS:
 
-                case DATASTREAMTYPE.UVS:
+                case DatastreamType.UVS:
                     this.UVs = new UV[this.NumElements];
                     for (Int32 i = 0; i < this.NumElements; i++)
                     {
@@ -91,7 +91,7 @@ namespace CgfConverter.CryEngineCore
                 #endregion
                 #region case DataStreamTypeEnum.TANGENTS:
 
-                case DATASTREAMTYPE.TANGENTS:
+                case DatastreamType.TANGENTS:
                     this.Tangents = new Tangent[this.NumElements, 2];
                     this.Normals = new Vector3[this.NumElements];
                     for (Int32 i = 0; i < this.NumElements; i++)
@@ -133,7 +133,7 @@ namespace CgfConverter.CryEngineCore
                     break;
                 #endregion
                 #region case DataStreamTypeEnum.COLORS:
-                case DATASTREAMTYPE.COLORS:
+                case DatastreamType.COLORS:
                     switch (this.BytesPerElement)
                     {
                         case 3:
@@ -167,7 +167,7 @@ namespace CgfConverter.CryEngineCore
                     break;
                 #endregion
                 #region case DataStreamTypeEnum.BONEMAP:
-                case DATASTREAMTYPE.BONEMAP:
+                case DatastreamType.BONEMAP:
                     SkinningInfo skin = GetSkinningInfo();
                     skin.HasBoneMapDatastream = true;
 
@@ -220,7 +220,7 @@ namespace CgfConverter.CryEngineCore
 
                 #endregion
                 #region DataStreamTypeEnum.Unknown1
-                case DATASTREAMTYPE.UNKNOWN1:
+                case DatastreamType.UNKNOWN1:
                     this.Tangents = new Tangent[this.NumElements, 2];
                     this.Normals = new Vector3[this.NumElements];
                     for (Int32 i = 0; i < NumElements; i++)

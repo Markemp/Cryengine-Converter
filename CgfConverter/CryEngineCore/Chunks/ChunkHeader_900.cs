@@ -8,7 +8,7 @@ namespace CgfConverter.CryEngineCore
         public override void Read(BinaryReader reader)
         {
             uint headerType = reader.ReadUInt32();
-            ChunkType = (ChunkTypeEnum)headerType;
+            ChunkType = (ChunkType)headerType;
             Version = reader.ReadUInt32();
             Offset = (uint)reader.ReadUInt64();  // All other versions use uint.  No idea why uint64 is needed.
             // 0x900 version chunks no longer have chunk IDs.  Use a randon mumber for now.

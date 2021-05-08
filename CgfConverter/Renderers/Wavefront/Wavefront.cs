@@ -97,10 +97,10 @@ namespace CgfConverter
                     {
                         #region case ChunkTypeEnum.Mesh:
 
-                        case ChunkTypeEnum.Mesh:
+                        case ChunkType.Mesh:
                             // Render Meshes
 
-                            if ((node.ParentNode != null) && (node.ParentNode.ChunkType != ChunkTypeEnum.Node))
+                            if ((node.ParentNode != null) && (node.ParentNode.ChunkType != ChunkType.Node))
                             {
                                 Utils.Log(LogLevelEnum.Debug, "Rendering {0} to parent {1}", node.Name, node.ParentNode.Name);
                             }
@@ -115,7 +115,7 @@ namespace CgfConverter
                         #endregion
                         #region case ChunkTypeEnum.Helper:
 
-                        case ChunkTypeEnum.Helper:
+                        case ChunkType.Helper:
                             // Ignore Helpers nodes
                             // TODO: Investigate if there's something we should do here
                             break;
@@ -133,7 +133,7 @@ namespace CgfConverter
                 }
 
                 // If this is a .chr file, just write out the hitbox info.  OBJ files can't do armatures.
-                foreach (CryEngineCore.ChunkCompiledPhysicalProxies tmpProxy in this.CryData.Chunks.Where(a => a.ChunkType == ChunkTypeEnum.CompiledPhysicalProxies))
+                foreach (CryEngineCore.ChunkCompiledPhysicalProxies tmpProxy in this.CryData.Chunks.Where(a => a.ChunkType == ChunkType.CompiledPhysicalProxies))
                 {
                     // TODO: align these properly
                     this.WriteObjHitBox(file, tmpProxy);
