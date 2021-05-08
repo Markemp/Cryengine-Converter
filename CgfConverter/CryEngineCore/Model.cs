@@ -232,7 +232,6 @@ namespace CgfConverter.CryEngineCore
                 // Ensure we read to end of structure
                 ChunkMap[chunkHeaderItem.ID].SkipBytes(reader);
 
-                // TODO: Change this to detect node with ~0 (0xFFFFFFFF) parent ID
                 // Assume first node read in Model[0] is root node.  This may be bad if they aren't in order!
                 if (chunkHeaderItem.ChunkType == ChunkTypeEnum.Node && RootNode == null)
                 {

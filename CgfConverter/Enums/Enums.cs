@@ -79,6 +79,8 @@
         MtlNameIvo = 0x8335674E,
         CompiledBonesIvo = 0xC201973C,
         CompiledPhysicalBonesIvo = 0x90C687DC,
+        MeshIvo = 0x9293B9D8,
+        DatastreamIvo = 0xB875B2D9,
 
         BinaryXmlDataSC = 0xcccbf004,
     }

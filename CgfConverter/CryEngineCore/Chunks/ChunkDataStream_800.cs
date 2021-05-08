@@ -149,8 +149,7 @@ namespace CgfConverter.CryEngineCore
                     {
                         for (int i = 0; i < NumElements; i++)
                         {
-                            Indices[i] = (uint)b.ReadUInt16();
-                            //Console.WriteLine("Indices {0}: {1}", i, Indices[i]);
+                            Indices[i] = b.ReadUInt16();
                         }
                     }
                     if (BytesPerElement == 4)
@@ -160,7 +159,6 @@ namespace CgfConverter.CryEngineCore
                             Indices[i] = b.ReadUInt32();
                         }
                     }
-                    //Utils.Log(LogLevelEnum.Debug, "Offset is {0:X}", b.BaseStream.Position);
                     break;
 
                 #endregion
