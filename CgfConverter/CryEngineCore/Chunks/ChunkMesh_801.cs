@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 
 namespace CgfConverter.CryEngineCore
 {
@@ -9,36 +8,36 @@ namespace CgfConverter.CryEngineCore
         {
             base.Read(b);
 
-            this.Flags1 = b.ReadInt32();
-            this.Flags2 = b.ReadInt32();
-            this.NumVertices = b.ReadInt32();
-            this.NumIndices = b.ReadInt32();
-            this.NumVertSubsets = b.ReadInt32();
-            this.MeshSubsets = b.ReadInt32();           // Chunk ID of mesh subsets 
-            this.VertsAnimID = b.ReadInt32();
-            this.VerticesData = b.ReadInt32();
-            this.NormalsData = b.ReadInt32();           // Chunk ID of the datastream for the normals for this mesh
-            this.UVsData = b.ReadInt32();               // Chunk ID of the Normals datastream
-            this.ColorsData = b.ReadInt32();
-            this.Colors2Data = b.ReadInt32();
-            this.IndicesData = b.ReadInt32();
-            this.TangentsData = b.ReadInt32();
-            this.SkipBytes(b, 16);
-            for (Int32 i = 0; i < 4; i++)
+            Flags1 = b.ReadInt32();
+            Flags2 = b.ReadInt32();
+            NumVertices = b.ReadInt32();
+            NumIndices = b.ReadInt32();
+            NumVertSubsets = b.ReadInt32();
+            MeshSubsets = b.ReadInt32();           // Chunk ID of mesh subsets 
+            VertsAnimID = b.ReadInt32();
+            VerticesData = b.ReadInt32();
+            NormalsData = b.ReadInt32();           // Chunk ID of the datastream for the normals for this mesh
+            UVsData = b.ReadInt32();               // Chunk ID of the Normals datastream
+            ColorsData = b.ReadInt32();
+            Colors2Data = b.ReadInt32();
+            IndicesData = b.ReadInt32();
+            TangentsData = b.ReadInt32();
+            SkipBytes(b, 16);
+            for (int i = 0; i < 4; i++)
             {
-                this.PhysicsData[i] = b.ReadInt32();
+                PhysicsData[i] = b.ReadInt32();
             }
-            this.VertsUVsData = b.ReadInt32();          // This should be a vertsUV Chunk ID.
-            this.ShCoeffsData = b.ReadInt32();
-            this.ShapeDeformationData = b.ReadInt32();
-            this.BoneMapData = b.ReadInt32();
-            this.FaceMapData = b.ReadInt32();
-            this.MinBound.x = b.ReadSingle();
-            this.MinBound.y = b.ReadSingle();
-            this.MinBound.z = b.ReadSingle();
-            this.MaxBound.x = b.ReadSingle();
-            this.MaxBound.y = b.ReadSingle();
-            this.MaxBound.z = b.ReadSingle();
+            VertsUVsData = b.ReadInt32();          // This should be a vertsUV Chunk ID.
+            ShCoeffsData = b.ReadInt32();
+            ShapeDeformationData = b.ReadInt32();
+            BoneMapData = b.ReadInt32();
+            FaceMapData = b.ReadInt32();
+            MinBound.x = b.ReadSingle();
+            MinBound.y = b.ReadSingle();
+            MinBound.z = b.ReadSingle();
+            MaxBound.x = b.ReadSingle();
+            MaxBound.y = b.ReadSingle();
+            MaxBound.z = b.ReadSingle();
         }
     }
 }
