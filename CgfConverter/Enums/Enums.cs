@@ -80,7 +80,7 @@
         CompiledBonesIvo = 0xC201973C,
         CompiledPhysicalBonesIvo = 0x90C687DC,
         MeshIvo = 0x9293B9D8,
-        DatastreamIvo = 0xB875B2D9,
+        IvoSkin = 0xB875B2D9,
 
         BinaryXmlDataSC = 0xcccbf004,
     }
@@ -154,7 +154,7 @@
         AUTOCUBIC
     }  //complete
 
-    public enum DataStreamTypeEnum : uint
+    public enum DATASTREAMTYPE : uint
     {
         VERTICES,
         NORMALS,
@@ -175,6 +175,15 @@
         UNKNOWN5,
         UNKNOWN6
     }  //complete
+
+    public enum IVODATASTREAMTYPE : uint {
+        COLORS = 0x9CF3F615,
+        INDICES = 0xEECDC168,
+        TANGENTS = 0xB95E9A1B,
+        BONEMAP = 0x677C7B23,
+        VERTSUVS = 0x91329AE9
+    };
+
     public enum PhysicsPrimitiveType : uint
     {
         CUBE = 0X0,
