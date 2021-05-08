@@ -92,6 +92,8 @@ namespace CgfConverter.CryEngineCore
                     return Chunk.New<ChunkCompiledBones>(version);
                 case ChunkTypeEnum.MeshIvo:
                     return Chunk.New<ChunkMesh>(version);
+                case ChunkTypeEnum.IvoSkin:
+                    return Chunk.New<ChunkIvoSkin>(version);
                 // Old chunks
                 case ChunkTypeEnum.BoneNameList:
                     return Chunk.New<ChunkBoneNameList>(version);
