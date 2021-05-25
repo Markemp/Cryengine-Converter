@@ -5,19 +5,8 @@ using System.Linq;
 
 namespace CgfConverter.CryEngineCore
 {
-
-    /// <summary>
-    /// CryEngine cgf/cga/skin file handler
-    /// 
-    /// Structure:
-    ///   HEADER        <- Provides information about the format of the file
-    ///   CHUNKHEADER[] <- Provides information about locations of CHUNKs
-    ///   CHUNK[]
-    /// </summary>
     public class Model
     {
-        #region Public Properties
-
         /// <summary>
         /// The Root of the loaded object
         /// </summary>
@@ -104,8 +93,6 @@ namespace CgfConverter.CryEngineCore
                 return nodeMap;
             }
         }
-
-        #endregion
 
         #region Private Fields
 
@@ -210,7 +197,6 @@ namespace CgfConverter.CryEngineCore
 
         private void ReadChunkHeaders(BinaryReader b)
         {
-            // need to seek to the start of the table here.  foffset points to the start of the table
             b.BaseStream.Seek(ChunkTableOffset, SeekOrigin.Begin);
 
             for (int i = 0; i < NumChunks; i++)
