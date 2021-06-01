@@ -54,6 +54,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CryEngineCore\Chunks\ChunkDataStream_900.cs" />
     <Compile Include="CryEngineCore\Chunks\ChunkIvoSkin.cs" />
     <Compile Include="CryEngineCore\Chunks\ChunkIvoSkin_900.cs" />
     <Compile Include="CryEngineCore\Chunks\ChunkMeshSubsets_900.cs" />
