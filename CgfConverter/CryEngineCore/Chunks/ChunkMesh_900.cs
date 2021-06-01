@@ -10,7 +10,7 @@ namespace CgfConverter.CryEngineCore
             Flags2 = 0;
             NumVertices = b.ReadInt32();
             NumIndices = b.ReadInt32();
-            NumVertSubsets = b.ReadInt32();
+            NumVertSubsets = b.ReadUInt32();
             SkipBytes(b, 4);
             MinBound.x = b.ReadSingle();
             MinBound.y = b.ReadSingle();
