@@ -13,7 +13,6 @@ namespace CgfConverter.CryEngineCore
         {
             base.Read(b);
 
-            // NumMeshSubset = b.ReadUInt32();  // number of mesh subsets
             MeshSubsets = new MeshSubset[NumMeshSubset];
             for (int i = 0; i < NumMeshSubset; i++)
             {
@@ -29,6 +28,5 @@ namespace CgfConverter.CryEngineCore
                 SkipBytes(b, 12);  // 3 unknowns; possibly floats;
             }
         }
-    
     }
 }
