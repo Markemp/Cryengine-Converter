@@ -57,8 +57,8 @@ namespace CgfConverter.CryEngineCore
             base.Read(b);
 
             Flags2 = b.ReadUInt32(); // another filler
-            uint tmpdataStreamType = b.ReadUInt32();
-            DataStreamType = (DatastreamType)Enum.ToObject(typeof(DatastreamType), tmpdataStreamType);
+            uint dataStreamType = b.ReadUInt32();
+            DataStreamType = (DatastreamType)Enum.ToObject(typeof(DatastreamType), dataStreamType);
             NumElements = b.ReadUInt32(); // number of elements in this chunk
 
             if (_model.FileVersion == FileVersion.CryTek_3_5 || _model.FileVersion == FileVersion.CryTek_3_4)
@@ -279,7 +279,6 @@ namespace CgfConverter.CryEngineCore
                 #region case DataStreamTypeEnum.VERTSUVS:
 
                 case DatastreamType.VERTSUVS:  // 3 half floats for verts, 3 half floats for normals, 2 half floats for UVs
-                    // Utils.Log(LogLevelEnum.Debug, "In VertsUVs...");
                     Vertices = new Vector3[NumElements];
                     Normals = new Vector3[NumElements];
                     RGBColors = new IRGB[NumElements];

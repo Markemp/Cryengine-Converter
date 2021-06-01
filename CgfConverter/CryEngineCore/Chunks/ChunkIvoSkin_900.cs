@@ -26,7 +26,23 @@ namespace CgfConverter.CryEngineCore.Chunks
             subsetsChunk._header.Offset = (uint)b.BaseStream.Position;
             subsetsChunk.ID = 3; 
             subsetsChunk.Read(b);
-            
+
+            // Indices datastream
+            ChunkDataStream_900 indicesDatastreamChunk = new ChunkDataStream_900((uint)meshChunk.NumIndices);
+            indicesDatastreamChunk._model = _model;
+            indicesDatastreamChunk._header = _header;
+            indicesDatastreamChunk._header.Offset = (uint)b.BaseStream.Position;
+            indicesDatastreamChunk.ID = 4;
+            indicesDatastreamChunk.Read(b);
+
+            // VertsUV datastream
+            ChunkDataStream_900 vertsUvsDatastreamChunk = new ChunkDataStream_900((uint)meshChunk.NumVertices);
+            vertsUvsDatastreamChunk._model = _model;
+            vertsUvsDatastreamChunk._header = _header;
+            vertsUvsDatastreamChunk._header.Offset = (uint)b.BaseStream.Position;
+            vertsUvsDatastreamChunk.ID = 5;
+            vertsUvsDatastreamChunk.Read(b);
+
         }
     }
 }

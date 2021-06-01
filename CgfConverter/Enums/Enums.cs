@@ -175,16 +175,13 @@
         UNKNOWN3,
         VERTSUVS,   // 0x0F
         UNKNOWN5,
-        UNKNOWN6
-    }  //complete
-
-    public enum IvoDatastreamType : uint {
-        COLORS = 0x9CF3F615,
-        INDICES = 0xEECDC168,
-        TANGENTS = 0xB95E9A1B,
-        BONEMAP = 0x677C7B23,
-        VERTSUVS = 0x91329AE9
-    };
+        UNKNOWN6,
+        IVOCOLORS = 0x9CF3F615,
+        IVOINDICES = 0xEECDC168,
+        IVOTANGENTS = 0xB95E9A1B,
+        IVOBONEMAP = 0x677C7B23,
+        IVOVERTSUVS = 0x91329AE9
+    }
 
     public enum PhysicsPrimitiveType : uint
     {

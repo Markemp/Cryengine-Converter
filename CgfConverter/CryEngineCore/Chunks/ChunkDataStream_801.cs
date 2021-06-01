@@ -6,18 +6,17 @@ namespace CgfConverter.CryEngineCore
 {
     public class ChunkDataStream_801 : ChunkDataStream
     {
-        // Spriggan models, not sure which game.  Also Crucible.  SC, MWO uses 0800
         public override void Read(BinaryReader b)
         {
             base.Read(b);
 
             Flags2 = b.ReadUInt32(); // another filler
-            uint tmpdataStreamType = b.ReadUInt32();
-            DataStreamType = (DatastreamType)Enum.ToObject(typeof(DatastreamType), tmpdataStreamType);
+            uint datastreamType = b.ReadUInt32();
+            DataStreamType = (DatastreamType)Enum.ToObject(typeof(DatastreamType), datastreamType);
             SkipBytes(b, 4);
             NumElements = b.ReadUInt32(); // number of elements in this chunk
 
-            BytesPerElement = b.ReadUInt32(); // bytes per element
+            BytesPerElement = b.ReadUInt32();
 
             SkipBytes(b, 8);
 
@@ -28,7 +27,7 @@ namespace CgfConverter.CryEngineCore
                     Vertices = new Vector3[NumElements];
                     if (BytesPerElement == 12)
                     {
-                        for (Int32 i = 0; i < NumElements; i++)
+                        for (int i = 0; i < NumElements; i++)
                         {
                             Vertices[i].x = b.ReadSingle();
                             Vertices[i].y = b.ReadSingle();
@@ -37,7 +36,7 @@ namespace CgfConverter.CryEngineCore
                     } else 
                     if (BytesPerElement == 8)
                     {
-                        for (Int32 i = 0; i < NumElements; i++)
+                        for (int i = 0; i < NumElements; i++)
                         {
                             Half xshort = new Half();
                             xshort.bits = b.ReadUInt16();
@@ -57,18 +56,18 @@ namespace CgfConverter.CryEngineCore
                     break;
 
                 case DatastreamType.INDICES: 
-                    Indices = new UInt32[NumElements];
+                    Indices = new uint[NumElements];
 
                     if (BytesPerElement == 2)
                     {
-                        for (Int32 i = 0; i < NumElements; i++)
+                        for (int i = 0; i < NumElements; i++)
                         {
-                            Indices[i] = (UInt32)b.ReadUInt16();
+                            Indices[i] = (uint)b.ReadUInt16();
                         }
                     }
                     if (BytesPerElement == 4)
                     {
-                        for (Int32 i = 0; i < NumElements; i++)
+                        for (int i = 0; i < NumElements; i++)
                         {
                             Indices[i] = b.ReadUInt32();
                         }
@@ -77,7 +76,7 @@ namespace CgfConverter.CryEngineCore
 
                 case DatastreamType.NORMALS:
                     Normals = new Vector3[NumElements];
-                    for (Int32 i = 0; i < NumElements; i++)
+                    for (int i = 0; i < NumElements; i++)
                     {
                         Normals[i].x = b.ReadSingle();
                         Normals[i].y = b.ReadSingle();
@@ -88,7 +87,7 @@ namespace CgfConverter.CryEngineCore
 
                 case DatastreamType.UVS:
                     UVs = new UV[NumElements];
-                    for (Int32 i = 0; i < NumElements; i++)
+                    for (int i = 0; i < NumElements; i++)
                     {
                         UVs[i].U = b.ReadSingle();
                         UVs[i].V = b.ReadSingle();
@@ -99,7 +98,7 @@ namespace CgfConverter.CryEngineCore
                 case DatastreamType.TANGENTS:
                     Tangents = new Tangent[NumElements, 2];
                     Normals = new Vector3[NumElements];
-                    for (Int32 i = 0; i < NumElements; i++)
+                    for (int i = 0; i < NumElements; i++)
                     {
                         switch (BytesPerElement)
                         {
@@ -150,7 +149,7 @@ namespace CgfConverter.CryEngineCore
                     {
                         case 3:
                             RGBColors = new IRGB[NumElements];
-                            for (Int32 i = 0; i < NumElements; i++)
+                            for (int i = 0; i < NumElements; i++)
                             {
                                 RGBColors[i].r = b.ReadByte();
                                 RGBColors[i].g = b.ReadByte();
@@ -160,7 +159,7 @@ namespace CgfConverter.CryEngineCore
 
                         case 4:
                             RGBAColors = new IRGBA[NumElements];
-                            for (Int32 i = 0; i < NumElements; i++)
+                            for (int i = 0; i < NumElements; i++)
                             {
                                 RGBAColors[i].r = b.ReadByte();
                                 RGBAColors[i].g = b.ReadByte();
@@ -170,7 +169,7 @@ namespace CgfConverter.CryEngineCore
                             break;
                         default:
                             Utils.Log("Unknown Color Depth");
-                            for (Int32 i = 0; i < NumElements; i++)
+                            for (int i = 0; i < NumElements; i++)
                             {
                                 SkipBytes(b, BytesPerElement);
                             }
@@ -189,7 +188,7 @@ namespace CgfConverter.CryEngineCore
                     switch (BytesPerElement)  // new Star Citizen files
                     {
                         case 20:  // Dymek wrote this.  Used in 2.6 skin files.  3 floats for vertex position, 4 bytes for normals, 2 halfs for UVs.  Normals are calculated from Tangents
-                            for (Int32 i = 0; i < NumElements; i++)
+                            for (int i = 0; i < NumElements; i++)
                             {
                                 Vertices[i].x = b.ReadSingle();
                                 Vertices[i].y = b.ReadSingle();
@@ -220,7 +219,7 @@ namespace CgfConverter.CryEngineCore
                             break;
                         case 16:   // Dymek updated this.
                             //Console.WriteLine("method: (5), 3 half floats for verts, 3 colors, 2 half floats for UVs");
-                            for (Int32 i = 0; i < NumElements; i++)
+                            for (int i = 0; i < NumElements; i++)
                             {
                                 ushort bver = 0;
                                 float ver = 0;
@@ -262,8 +261,6 @@ namespace CgfConverter.CryEngineCore
                                 Normals[i].y = (2 * (quat.y * quat.z - quat.x * quat.w));
                                 Normals[i].z = (2 * (quat.z * quat.z + quat.w * quat.w)) - 1;
 
-
-                                // UVs ABSOLUTELY should use the Half structures.
                                 Half uvu = new Half();
                                 uvu.bits = b.ReadUInt16();
                                 UVs[i].U = uvu.ToSingle();
@@ -309,7 +306,7 @@ namespace CgfConverter.CryEngineCore
                             break;
                         default:
                             Utils.Log("Unknown VertUV structure");
-                            for (Int32 i = 0; i < NumElements; i++)
+                            for (int i = 0; i < NumElements; i++)
                             {
                                 SkipBytes(b, BytesPerElement);
                             }
@@ -376,7 +373,7 @@ namespace CgfConverter.CryEngineCore
                 case DatastreamType.UNKNOWN1:
                     Tangents = new Tangent[NumElements, 2];
                     Normals = new Vector3[NumElements];
-                    for (Int32 i = 0; i < NumElements; i++)
+                    for (int i = 0; i < NumElements; i++)
                     {
                         Tangents[i, 0].w = b.ReadSByte() / 127.0;
                         Tangents[i, 0].x = b.ReadSByte() / 127.0;
@@ -426,7 +423,7 @@ namespace CgfConverter.CryEngineCore
             short intnum = short.Parse(sfracPart, System.Globalization.NumberStyles.AllowHexSpecifier);
             var intbytes = BitConverter.GetBytes(intnum);
             string intbinary = Convert.ToString(intbytes[0], 2).PadLeft(8, '0');
-            string binaryIntPart = intbinary;
+            //string binaryIntPart = intbinary;
 
             short num = short.Parse(sfracPart, System.Globalization.NumberStyles.AllowHexSpecifier);
             var bytes = BitConverter.GetBytes(num);
@@ -440,8 +437,7 @@ namespace CgfConverter.CryEngineCore
                 if (binaryFracPart[i] == '0') continue;
                 dec += (float)Math.Pow(2, (i + 1) * (-1));
             }
-            float number = 0;
-            number = (float)intPart + dec;
+            float number = (float)intPart + dec; ;
             /*if (intPart > 0) { number = (float)intPart + dec; }
             if (intPart < 0) { number = (float)intPart - dec; }
             if (intPart == 0) { number =  dec; }*/
