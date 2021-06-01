@@ -7,63 +7,43 @@ namespace CgfConverter.CryEngineCore
 {
     public class Model
     {
-        /// <summary>
-        /// The Root of the loaded object
-        /// </summary>
+        /// <summary> The Root of the loaded object </summary>
         public ChunkNode RootNode { get; internal set; }
 
-        /// <summary>
-        /// Collection of all loaded Chunks
-        /// </summary>
+        /// <summary> Collection of all loaded Chunks </summary>
         public List<ChunkHeader> ChunkHeaders { get; internal set; } = new List<ChunkHeader> { };
 
-        /// <summary>
-        /// Lookup Table for Chunks, indexed by ChunkID
-        /// </summary>
+        /// <summary> Lookup Table for Chunks, indexed by ChunkID </summary>
         public Dictionary<int, Chunk> ChunkMap { get; internal set; } = new Dictionary<int, Chunk> { };
 
-        /// <summary>
-        /// The name of the currently processed file
-        /// </summary>
+        /// <summary> The name of the currently processed file </summary>
         public string FileName { get; internal set; }
 
-        /// <summary>
-        /// The File Signature - CryTek for 3.5 and lower. CrCh for 3.6 and higher
-        /// </summary>
+        /// <summary> The File Signature - CryTek for 3.5 and lower. CrCh for 3.6 and higher. #ivo for some SC files. </summary>
         public string FileSignature { get; internal set; }
 
-        /// <summary>
-        /// The type of file (geometry or animation)
-        /// </summary>
+        /// <summary> The type of file (geometry or animation) </summary>
         public FileType FileType { get; internal set; }
 
-        /// <summary>
-        /// The version of the file
-        /// </summary>
         public FileVersion FileVersion { get; internal set; }
 
-        /// <summary>
-        /// Position of the Chunk Header table
-        /// </summary>
+        /// <summary> Position of the Chunk Header table </summary>
         public int ChunkTableOffset { get; internal set; }
 
         /// <summary>
-        /// Contains all the information about bones and skinning them.  This a reference to the Cryengine object, since multiple Models can exist for a single object).
+        /// Contains all the information about bones and skinning them.  This a reference to the Cryengine object, 
+        /// since multiple Models can exist for a single object).
         /// </summary>
         public SkinningInfo SkinningInfo { get; set; } = new SkinningInfo();
 
-        /// <summary>
-        /// The Bones in the model.  The CompiledBones chunk will have a unique RootBone.
-        /// </summary>
+        /// <summary> The Bones in the model.  The CompiledBones chunk will have a unique RootBone. </summary>
         public ChunkCompiledBones Bones { get; internal set; }
 
         public uint NumChunks { get; internal set; }
 
         private Dictionary<int, ChunkNode> nodeMap { get; set; }
 
-        /// <summary>
-        /// Node map for this model only.
-        /// </summary>
+        /// <summary> Node map for this model only. </summary>
         public Dictionary<int, ChunkNode> NodeMap      // This isn't right.  Nodes can have duplicate names.
         {
             get

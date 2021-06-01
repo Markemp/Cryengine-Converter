@@ -4,20 +4,18 @@ namespace CgfConverter.CryEngineCore
 {
     class ChunkMeshSubsets_900 : ChunkMeshSubsets
     {
-        private int numVertSubsets;
-
-        public ChunkMeshSubsets_900(int numVertSubsets)
+        public ChunkMeshSubsets_900(uint numVertSubsets)
         {
-            this.numVertSubsets = numVertSubsets;
+            NumMeshSubset = numVertSubsets;
         }
 
         public override void Read(BinaryReader b)
         {
             base.Read(b);
 
-            NumMeshSubset = b.ReadUInt32();  // number of mesh subsets
-            MeshSubsets = new MeshSubset[numVertSubsets];
-            for (int i = 0; i < numVertSubsets; i++)
+            // NumMeshSubset = b.ReadUInt32();  // number of mesh subsets
+            MeshSubsets = new MeshSubset[NumMeshSubset];
+            for (int i = 0; i < NumMeshSubset; i++)
             {
                 MeshSubsets[i].MatID = b.ReadInt32();
                 MeshSubsets[i].FirstIndex = b.ReadInt32();
