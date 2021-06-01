@@ -86,7 +86,5 @@ namespace CgfConverterTests.IntegrationTests.SC
             colladaData.GenerateDaeObject();
             testUtils.ValidateColladaXml(colladaData);
         }
-
-
     }
 }

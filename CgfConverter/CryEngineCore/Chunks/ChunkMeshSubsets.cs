@@ -10,7 +10,7 @@ namespace CgfConverter.CryEngineCore
 
         // For bone ID meshes? Not sure where this is used yet.
         public uint NumberOfBoneIDs;
-        public UInt16[] BoneIDs;
+        public ushort[] BoneIDs;
 
         public override string ToString()
         {
@@ -23,7 +23,7 @@ namespace CgfConverter.CryEngineCore
             Utils.Log(LogLevelEnum.Verbose, "    ChunkType:       {0}", ChunkType);
             Utils.Log(LogLevelEnum.Verbose, "    Mesh SubSet ID:  {0:X}", ID);
             Utils.Log(LogLevelEnum.Verbose, "    Number of Mesh Subsets: {0}", NumMeshSubset);
-            for (Int32 i = 0; i < NumMeshSubset; i++)
+            for (int i = 0; i < NumMeshSubset; i++)
             {
                 Utils.Log(LogLevelEnum.Verbose, "        ** Mesh Subset:          {0}", i);
                 Utils.Log(LogLevelEnum.Verbose, "           First Index:          {0}", MeshSubsets[i].FirstIndex);
