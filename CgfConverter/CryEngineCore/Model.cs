@@ -166,13 +166,15 @@ namespace CgfConverter.CryEngineCore
         {
             ChunkNode rootNode = new ChunkNode_823();
             rootNode.Name = FileName;
-            rootNode.ObjectNodeID = 1;      // No node IDs in #ivo files
+            rootNode.ObjectNodeID = 2;      // No node IDs in #ivo files
             rootNode.ParentNodeID = ~0;     // No parent
             rootNode.__NumChildren = 0;     // Single object
             rootNode.MatID = 0;
             rootNode.Transform = Matrix44.CreateDefaultRootNodeMatrix();
             rootNode.ChunkType = ChunkType.Node;
             RootNode = rootNode;
+            rootNode._model = this;
+            ChunkMap.Add(1, rootNode);
         }
 
         private void ReadChunkHeaders(BinaryReader b)
