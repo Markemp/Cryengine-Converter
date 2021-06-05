@@ -207,7 +207,6 @@ namespace CgfConverter
                     tmpMaterial.ID = CryData.Materials[i].Name + "-material";          // this is the order the materials appear in the .mtl file.  Needed for geometries.
                     tmpMaterial.Instance_Effect.URL = "#" + CryData.Materials[i].Name + "-effect";
                 }
-                // The # in front of tmpMaterial.name is needed to reference the effect in Library_effects.
 
                 materials[i] = tmpMaterial;
             }
@@ -216,7 +215,7 @@ namespace CgfConverter
 
         public void WriteLibrary_Effects()
         {
-            // The Effects library.  This is actual material stuff, so... let's get into it!  First, let's make a library effects object
+            // The Effects library.  This is actual material stuff.
             Grendgine_Collada_Library_Effects libraryEffects = new Grendgine_Collada_Library_Effects();
             // Like materials.  We will need one effect for each material.
             int numEffects = CryData.Materials.Count;
@@ -370,18 +369,14 @@ namespace CgfConverter
 
                 #endregion
 
-
-
                 tmpEffect.Profile_COMMON = profiles.ToArray();
                 profile.New_Param = new Grendgine_Collada_New_Param[newparams.Count];
                 profile.New_Param = newparams.ToArray();
-
-
             }
+
             libraryEffects.Effect = effects;
             DaeObject.Library_Effects = libraryEffects;
             // libraryEffects contains a number of effects objects.  One effects object for each material.
-
         }
 
         /// <summary> Write the Library_Geometries element.  These won't be instantiated except through the visual scene or controllers. </summary>
