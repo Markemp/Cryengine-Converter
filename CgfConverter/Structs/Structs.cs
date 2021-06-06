@@ -1054,10 +1054,6 @@ namespace CgfConverter
             framemtx.ReadMatrix33(b);
             return;
         }
-        public void WritePhysicsGeometry()
-        {
-            Utils.Log(LogLevelEnum.Verbose, "WritePhysicsGeometry");
-        }
     }
 
     public class CompiledPhysicalBone
@@ -1074,22 +1070,17 @@ namespace CgfConverter
         public uint parentID;                       // ControllerID of parent
         public List<uint> childIDs;                 // Not part of read struct.  Contains the controllerIDs of the children to this bone.
 
-        public CompiledBone GetBonePartner()
-        {
-            return null;
-        }
-
         public void ReadCompiledPhysicalBone(BinaryReader b)
         {
             // Reads just a single 584 byte entry of a bone. At the end the seek position will be advanced, so keep that in mind.
-            BoneIndex = b.ReadUInt32();                 // unique id of bone (generated from bone name)
+            BoneIndex = b.ReadUInt32();                // unique id of bone (generated from bone name)
             ParentOffset = b.ReadUInt32();
             NumChildren = b.ReadUInt32();
             ControllerID = b.ReadUInt32();
             prop = b.ReadChars(32);                    // Not sure what this is used for.
             PhysicsGeometry.ReadPhysicsGeometry(b);
 
-            childIDs = new List<uint>();                    // Calculated
+            childIDs = new List<uint>();               // Calculated
         }
     }
 

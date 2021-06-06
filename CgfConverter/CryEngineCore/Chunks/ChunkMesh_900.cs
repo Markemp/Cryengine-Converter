@@ -23,8 +23,8 @@ namespace CgfConverter.CryEngineCore
 
             VertsUVsData = 4;
             NormalsData = 5;
-            TangentsData = 6;
-            ColorsData = 7;
+            ColorsData = 6;
+            TangentsData = 7;
         }
     }
 }
