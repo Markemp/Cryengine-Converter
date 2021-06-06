@@ -2,7 +2,7 @@
 
 namespace CgfConverter.CryEngineCore
 {
-    public class ChunkCompiledPhysicalBones_800 : ChunkCompiledPhysicalBones     //  0xACDC0000:  Bones info
+    public class ChunkCompiledPhysicalBones_800 : ChunkCompiledPhysicalBones
     {
         public override void Read(BinaryReader b)
         {
@@ -29,8 +29,6 @@ namespace CgfConverter.CryEngineCore
             {
                 AddChildIDToParent(bone);
             }
-            SkinningInfo skin = GetSkinningInfo();
-            //skin.PhysicalBoneMeshes
         }
     }
 }
