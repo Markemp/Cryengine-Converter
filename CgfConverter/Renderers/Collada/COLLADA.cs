@@ -284,7 +284,6 @@ namespace CgfConverter
                 foreach (var texture in CryData.Materials[i].Textures)
                 //for (int j=0; j < CryData.Materials[i].Textures.Length; j++)
                 {
-                    //Console.WriteLine("Processing material texture {0}", CleanName(texture.File));
                     if (texture.Map == CryEngineCore.Material.Texture.MapTypeEnum.Diffuse)
                     {
                         diffound = true;
@@ -295,7 +294,6 @@ namespace CgfConverter
                     }
                     if (texture.Map == CryEngineCore.Material.Texture.MapTypeEnum.Specular)
                     {
-                        //Console.WriteLine("Found spec map");
                         specfound = true;
                         phong.Specular.Texture = new Grendgine_Collada_Texture();
                         phong.Specular.Texture.Texture = CleanMtlFileName(texture.File) + "-sampler";
@@ -338,7 +336,6 @@ namespace CgfConverter
                 }
                 if (specfound == false)
                 {
-                    //Console.WriteLine("No spec found, using color");
                     phong.Specular.Color = new Grendgine_Collada_Color();
                     phong.Specular.Color.sID = "specular";
                     if (CryData.Materials[i].__Specular != null)

@@ -228,9 +228,6 @@ namespace CgfConverter.CryEngineCore
                                 //Normals[i].x = (Tangents[i,0].y * Tangents[i,1].z - Tangents[i,0].z * Tangents[i,1].y);
                                 //Normals[i].y = 0 - (Tangents[i,0].x * Tangents[i,1].z - Tangents[i,0].z * Tangents[i,1].x); 
                                 //Normals[i].z = (Tangents[i,0].x * Tangents[i,1].y - Tangents[i,0].y * Tangents[i,1].x);
-                                //Console.WriteLine("Tangent: {0:F6} {1:F6} {2:F6}", Tangents[i,0].x, Tangents[i, 0].y, Tangents[i, 0].z);
-                                //Console.WriteLine("Binormal: {0:F6} {1:F6} {2:F6}", Tangents[i, 1].x, Tangents[i, 1].y, Tangents[i, 1].z);
-                                //Console.WriteLine("Normal: {0:F6} {1:F6} {2:F6}", Normals[i].x, Normals[i].y, Normals[i].z);
                                 break;
                             default:
                                 throw new Exception("Need to add new Tangent Size");
@@ -316,7 +313,6 @@ namespace CgfConverter.CryEngineCore
                             }
                             break;
                         case 16:   // Dymek updated 
-                            //Console.WriteLine("method: (5), 3 half floats for verts, 3 colors, 2 half floats for UVs");
                             for (Int32 i = 0; i < NumElements; i++)
                             {
                                 ushort bver = 0;
