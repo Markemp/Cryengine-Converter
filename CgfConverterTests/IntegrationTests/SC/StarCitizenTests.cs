@@ -84,6 +84,10 @@ namespace CgfConverterTests.IntegrationTests.SC
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
+
+            var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
+            Assert.AreEqual(3, geometries.Length);
+
             testUtils.ValidateColladaXml(colladaData);
         }
 
@@ -106,8 +110,12 @@ namespace CgfConverterTests.IntegrationTests.SC
             Assert.AreEqual(1, controllers.Length);
             Assert.AreEqual(1, geometries.Length);
 
-            var meshes = geometries[0].Mesh;
-            Assert.AreEqual(4, meshes.Source);
+            var mesh = geometries[0].Mesh;
+            Assert.AreEqual(4, mesh.Source.Length);
+            Assert.AreEqual("brfl_fps_behr_p4ar_parts-vertices", mesh.Vertices.ID);
+            Assert.AreEqual(9, mesh.Triangles.Length);
+            Assert.AreEqual(78, mesh.Triangles[0].Count);
+            Assert.AreEqual(134, mesh.Triangles[8].Count);
 
             testUtils.ValidateColladaXml(colladaData);
         }
