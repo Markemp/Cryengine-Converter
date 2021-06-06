@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace CgfConverter.CryEngineCore
 {
-    public abstract class ChunkCompiledPhysicalBones : Chunk     //  0xACDC0000:  Bones info
+    public abstract class ChunkCompiledPhysicalBones : Chunk
     {
         public char[] Reserved;             // 32 byte array
         public CompiledPhysicalBone RootPhysicalBone;       // First bone in the data structure.  Usually Bip01

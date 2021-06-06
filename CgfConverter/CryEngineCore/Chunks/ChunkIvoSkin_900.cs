@@ -19,6 +19,9 @@ namespace CgfConverter.CryEngineCore.Chunks
             meshChunk.ChunkType = ChunkType.Mesh;
             meshChunk.Read(b);
             meshChunk.ID = 2;
+            meshChunk.MeshSubsets = 3;
+            meshChunk.IndicesData = 4;
+            meshChunk.VertsUVsData = 5;
             model.ChunkMap.Add(meshChunk.ID, meshChunk);
             
             SkipBytes(b, 120);
@@ -52,6 +55,26 @@ namespace CgfConverter.CryEngineCore.Chunks
             vertsUvsDatastreamChunk.Read(b);
             vertsUvsDatastreamChunk.ID = 5;
             model.ChunkMap.Add(vertsUvsDatastreamChunk.ID, vertsUvsDatastreamChunk);
+
+            // Colors datastream
+            ChunkDataStream_900 colors = new ChunkDataStream_900((uint)meshChunk.NumVertices);
+            colors._model = _model;
+            colors._header = _header;
+            colors._header.Offset = (uint)b.BaseStream.Position;
+            colors.ChunkType = ChunkType.DataStream;
+            colors.Read(b);
+            colors.ID = 6;
+            model.ChunkMap.Add(colors.ID, colors);
+
+            // Tangents datastream
+            ChunkDataStream_900 tangents = new ChunkDataStream_900((uint)meshChunk.NumVertices);
+            tangents._model = _model;
+            tangents._header = _header;
+            tangents._header.Offset = (uint)b.BaseStream.Position;
+            tangents.ChunkType = ChunkType.DataStream;
+            tangents.Read(b);
+            tangents.ID = 7;
+            model.ChunkMap.Add(tangents.ID, tangents);
         }
     }
 }
