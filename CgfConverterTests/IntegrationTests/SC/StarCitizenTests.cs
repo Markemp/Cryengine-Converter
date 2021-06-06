@@ -86,5 +86,30 @@ namespace CgfConverterTests.IntegrationTests.SC
             colladaData.GenerateDaeObject();
             testUtils.ValidateColladaXml(colladaData);
         }
+
+        [TestMethod]
+        public void SC_BehrRifle_34()
+        {
+            var args = new string[] { 
+                $@"{userHome}\OneDrive\ResourceFiles\SC\brfl_fps_behr_p4ar_parts_3.4.skin", 
+                "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+            int result = testUtils.argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
+            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
+
+            COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            colladaData.GenerateDaeObject();
+
+            var controllers = colladaData.DaeObject.Library_Controllers.Controller;
+            var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
+            Assert.AreEqual(1, controllers.Length);
+            Assert.AreEqual(1, geometries.Length);
+
+            var meshes = geometries[0].Mesh;
+            Assert.AreEqual(4, meshes.Source);
+
+            testUtils.ValidateColladaXml(colladaData);
+        }
     }
 }
