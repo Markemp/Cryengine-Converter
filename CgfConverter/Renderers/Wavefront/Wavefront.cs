@@ -199,6 +199,7 @@ namespace CgfConverter
 
             var tempVertexPosition = CurrentVertexPosition;
             var tempIndicesPosition = CurrentIndicesPosition;
+            var transformSoFar = chunkNode.TransformSoFar;
 
             foreach (var meshSubset in tmpMeshSubsets.MeshSubsets)
             {
@@ -227,7 +228,7 @@ namespace CgfConverter
                         tmpVertsUVs.Vertices[j].y = tmpVertsUVs.Vertices[j].y * multiplerY + (tmpMesh.MaxBound.y + tmpMesh.MinBound.y) / 2;
                         tmpVertsUVs.Vertices[j].z = tmpVertsUVs.Vertices[j].z * multiplerZ + (tmpMesh.MaxBound.z + tmpMesh.MinBound.z) / 2;
 
-                        Vector3 vertex = chunkNode.GetTransform(tmpVertsUVs.Vertices[j]);
+                        Vector3 vertex = transformSoFar * tmpVertsUVs.Vertices[j];
 
                         f.WriteLine("v {0:F7} {1:F7} {2:F7}", safe(vertex.x), safe(vertex.y), safe(vertex.z));
                     }
@@ -253,8 +254,8 @@ namespace CgfConverter
                     {
                         if (tmpVertices != null)
                         {
-                            // Rotate/translate the vertex
-                            Vector3 vertex = chunkNode.GetTransform(tmpVertices.Vertices[j]);
+                            // Rotate/translate the vertex                            
+                            Vector3 vertex = transformSoFar * tmpVertices.Vertices[j];
 
                             f.WriteLine("v {0:F7} {1:F7} {2:F7}", safe(vertex.x), safe(vertex.y), safe(vertex.z));
                         }

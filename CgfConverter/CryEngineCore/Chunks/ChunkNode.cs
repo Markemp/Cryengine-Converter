@@ -7,6 +7,7 @@ namespace CgfConverter.CryEngineCore
 {
     public abstract class ChunkNode : Chunk          // cccc000b:   Node
     {
+        protected double VERTEX_SCALE = 1d / 100;
         #region Chunk Properties
 
         public string Name { get; internal set; }
@@ -76,18 +77,18 @@ namespace CgfConverter.CryEngineCore
             set { _objectChunk = value; }
         }
 
-        public Vector3 TransformSoFar
+        public Matrix44 TransformSoFar
         {
             get
             {
                 if (ParentNode != null)
                 {
-                    return ParentNode.TransformSoFar.Add(Transform.GetTranslation());
+                    return Transform * ParentNode.TransformSoFar;
                 }
                 else
                 {
                     // TODO: What should this be?
-                    return Transform.GetTranslation();
+                    return Transform;
                 }
             }
         }
@@ -133,15 +134,10 @@ namespace CgfConverter.CryEngineCore
         /// <returns></returns>
         public Vector3 GetTransform(Vector3 transform)
         {
-            Vector3 vec3 = transform;
-
-            // Apply the local transforms (rotation and translation) to the vector
-            // Do rotations.  Rotations must come first, then translate.
-            vec3 = RotSoFar.Mult3x1(vec3);
-            // Do translations.  I think this is right.  Objects in right place, not rotated right.
-            vec3 = vec3.Add(TransformSoFar);
-            //}
-
+            // Apply the transforms (rotation and translation) to the vector.
+            // Work on the single matrix
+            Vector3 vec3 = TransformSoFar*transform;
+            
             return vec3;
         }
 
