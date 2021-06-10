@@ -49,15 +49,7 @@ namespace CgfConverter.CryEngineCore
                 y = b.ReadSingle() * VERTEX_SCALE,
                 z = b.ReadSingle() * VERTEX_SCALE,
             };
-
-            // Read the position Pos Vector3
-            Pos = new Vector3
-            {
-                x = b.ReadSingle() / 100,
-                y = b.ReadSingle() / 100,
-                z = b.ReadSingle() / 100,
-            };
-
+           
             // Read the rotation Rot Quad
             Rot = new Quaternion
             {
