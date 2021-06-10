@@ -124,7 +124,7 @@ namespace CgfConverter
         public Vector3 ToVector3()
         {
             Vector3 result = new Vector3();
-            if (w == 0)
+            if (w == 0 || w == 1)
             {
                 result.x = x;
                 result.y = y;
@@ -444,27 +444,81 @@ namespace CgfConverter
         public double m43;
         public double m44;
 
+        public Matrix44(Vector4 firstRow, Vector4 secondRow, Vector4 thirdRow, Vector4 fourthRow)
+        {
+            m11 = firstRow.x;
+            m12 = secondRow.x;
+            m13 = thirdRow.x;
+            m14 = fourthRow.x;
+
+            m21 = firstRow.y;
+            m22 = secondRow.y;
+            m23 = thirdRow.y;
+            m24 = fourthRow.y;
+
+            m31 = firstRow.z;
+            m32 = secondRow.z;
+            m33 = thirdRow.z;
+            m34 = fourthRow.z;
+
+            m41 = firstRow.w;
+            m42 = secondRow.w;
+            m43 = thirdRow.w;
+            m44 = fourthRow.w;
+        }
         public Vector4 Mult4x1(Vector4 vector)
         {
             // Pass the matrix a Vector4 (4x1) vector to get the transform of the vector
             Vector4 result = new Vector4
             {
-                x = (m11 * vector.x) + (m21 * vector.y) + (m31 * vector.z) + m41 / 100,
-                y = (m12 * vector.x) + (m22 * vector.y) + (m32 * vector.z) + m42 / 100,
-                z = (m13 * vector.x) + (m23 * vector.y) + (m33 * vector.z) + m43 / 100,
-                w = (m14 * vector.x) + (m24 * vector.y) + (m34 * vector.z) + m44 / 100
+                x = (m11 * vector.x) + (m21 * vector.y) + (m31 * vector.z) + (m41 * vector.w),
+                y = (m12 * vector.x) + (m22 * vector.y) + (m32 * vector.z) + (m42 * vector.w),
+                z = (m13 * vector.x) + (m23 * vector.y) + (m33 * vector.z) + (m43 * vector.w),
+                w = (m14 * vector.x) + (m24 * vector.y) + (m34 * vector.z) + (m44 * vector.w)
             };
 
             return result;
         }
 
+        public void ReadMatrix44(BinaryReader reader)
+        {
+            m11 = reader.ReadSingle();
+            m12 = reader.ReadSingle();
+            m13 = reader.ReadSingle();
+            m14 = reader.ReadSingle();
+            m21 = reader.ReadSingle();
+            m22 = reader.ReadSingle();
+            m23 = reader.ReadSingle();
+            m24 = reader.ReadSingle();
+            m31 = reader.ReadSingle();
+            m32 = reader.ReadSingle();
+            m33 = reader.ReadSingle();
+            m34 = reader.ReadSingle();
+            m41 = reader.ReadSingle();
+            m42 = reader.ReadSingle();
+            m43 = reader.ReadSingle();
+            m44 = reader.ReadSingle();
+        }
+
         public static Vector4 operator *(Matrix44 lhs, Vector4 vector)
         {
             Vector4 result = new Vector4();
-            result.x = (lhs.m11 * vector.x) + (lhs.m21 * vector.y) + (lhs.m31 * vector.z) + lhs.m41 / 100;
-            result.y = (lhs.m12 * vector.x) + (lhs.m22 * vector.y) + (lhs.m32 * vector.z) + lhs.m42 / 100;
-            result.z = (lhs.m13 * vector.x) + (lhs.m23 * vector.y) + (lhs.m33 * vector.z) + lhs.m43 / 100;
-            result.w = (lhs.m14 * vector.x) + (lhs.m24 * vector.y) + (lhs.m34 * vector.z) + lhs.m44 / 100;
+            result.x = (lhs.m11 * vector.x) + (lhs.m21 * vector.y) + (lhs.m31 * vector.z) + (lhs.m41 * vector.w);
+            result.y = (lhs.m12 * vector.x) + (lhs.m22 * vector.y) + (lhs.m32 * vector.z) + (lhs.m42 * vector.w);
+            result.z = (lhs.m13 * vector.x) + (lhs.m23 * vector.y) + (lhs.m33 * vector.z) + (lhs.m43 * vector.w);
+            result.w = (lhs.m14 * vector.x) + (lhs.m24 * vector.y) + (lhs.m34 * vector.z) + (lhs.m44 * vector.w);
+            
+            return result;
+        }
+
+        public static Vector3 operator *(Matrix44 lhs, Vector3 vector)
+        {
+            Vector3 result = new Vector3();
+            result.x = (lhs.m11 * vector.x) + (lhs.m21 * vector.y) + (lhs.m31 * vector.z) + lhs.m41;
+            result.y = (lhs.m12 * vector.x) + (lhs.m22 * vector.y) + (lhs.m32 * vector.z) + lhs.m42;
+            result.z = (lhs.m13 * vector.x) + (lhs.m23 * vector.y) + (lhs.m33 * vector.z) + lhs.m43;
+            result.w = (lhs.m14 * vector.x) + (lhs.m24 * vector.y) + (lhs.m34 * vector.z) + lhs.m44;
+
             return result;
         }
 
@@ -528,9 +582,9 @@ namespace CgfConverter
         {
             return new Vector3
             {
-                x = m41 / 100,
-                y = m42 / 100,
-                z = m43 / 100
+                x = m41,
+                y = m42,
+                z = m43 
             };
         }
 

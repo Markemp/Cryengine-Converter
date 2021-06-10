@@ -18,7 +18,7 @@ namespace CgfConverter.CryEngineCore
             SkipBytes(b, 4);
 
             // Read the 4x4 transform matrix.
-            Transform = new Matrix44
+            Matrix44 transform = new Matrix44
             {
                 m11 = Utils.SwapSingleEndian(b.ReadSingle()),
                 m12 = Utils.SwapSingleEndian(b.ReadSingle()),
@@ -32,18 +32,22 @@ namespace CgfConverter.CryEngineCore
                 m32 = Utils.SwapSingleEndian(b.ReadSingle()),
                 m33 = Utils.SwapSingleEndian(b.ReadSingle()),
                 m34 = Utils.SwapSingleEndian(b.ReadSingle()),
-                m41 = Utils.SwapSingleEndian(b.ReadSingle()),
-                m42 = Utils.SwapSingleEndian(b.ReadSingle()),
-                m43 = Utils.SwapSingleEndian(b.ReadSingle()),
+                m41 = Utils.SwapSingleEndian(b.ReadSingle()) * VERTEX_SCALE,
+                m42 = Utils.SwapSingleEndian(b.ReadSingle()) * VERTEX_SCALE,
+                m43 = Utils.SwapSingleEndian(b.ReadSingle()) * VERTEX_SCALE,
                 m44 = Utils.SwapSingleEndian(b.ReadSingle()),
             };
+            //original transform matrix is 3x4 stored as 4x4
+            transform.m14 = transform.m24 = transform.m34 = 0d;
+            transform.m44 = 1d;
+            Transform = transform;
 
             // Read the position Pos Vector3
             Pos = new Vector3
             {
-                x = Utils.SwapSingleEndian(b.ReadSingle() / 100),
-                y = Utils.SwapSingleEndian(b.ReadSingle() / 100),
-                z = Utils.SwapSingleEndian(b.ReadSingle() / 100),
+                x = Utils.SwapSingleEndian(b.ReadSingle()) * VERTEX_SCALE,
+                y = Utils.SwapSingleEndian(b.ReadSingle()) * VERTEX_SCALE,
+                z = Utils.SwapSingleEndian(b.ReadSingle()) * VERTEX_SCALE,
             };
 
             // Read the rotation Rot Quad
