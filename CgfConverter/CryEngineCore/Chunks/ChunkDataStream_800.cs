@@ -313,83 +313,50 @@ namespace CgfConverter.CryEngineCore
                             }
                             break;
                         case 16:   // Dymek updated 
-                            for (Int32 i = 0; i < NumElements; i++)
+                            for (int i = 0; i < NumElements; i++)
                             {
-                                ushort bver = 0;
-                                float ver = 0;
+                                //ushort bver = 0;
+                                //float ver = 0;
 
-                                bver = b.ReadUInt16();
-                                ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
-                                Vertices[i].x = ver;
+                                //bver = b.ReadUInt16();
+                                //ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
+                                //Vertices[i].x = ver;
 
-                                bver = b.ReadUInt16();
-                                ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
-                                Vertices[i].y = ver;
+                                //bver = b.ReadUInt16();
+                                //ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
+                                //Vertices[i].y = ver;
 
-                                bver = b.ReadUInt16();
-                                ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
-                                Vertices[i].z = ver;
+                                //bver = b.ReadUInt16();
+                                //ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
+                                //Vertices[i].z = ver;
 
-                                bver = b.ReadUInt16();
-                                ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
-                                Vertices[i].w = ver;       // Almost always 1
+                                //bver = b.ReadUInt16();
+                                //ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
+                                //Vertices[i].w = ver;       // Almost always 1
 
-                                // Next structure is Colors, not normals.  For 16 byte elements, normals are calculated from Tangent data.
-                                //RGBAColors[i].r = b.ReadByte();
-                                //RGBAColors[i].g = b.ReadByte();
-                                //RGBAColors[i].b = b.ReadByte();
-                                //RGBAColors[i].a = b.ReadByte();
+                                //// Next structure is Colors, not normals.  For 16 byte elements, normals are calculated from Tangent data.
+                                ////RGBAColors[i].r = b.ReadByte();
+                                ////RGBAColors[i].g = b.ReadByte();
+                                ////RGBAColors[i].b = b.ReadByte();
+                                ////RGBAColors[i].a = b.ReadByte();
 
-                                //Normals[i].x = (b.ReadByte() - 128.0f) / 127.5f;
-                                //Normals[i].y = (b.ReadByte() - 128.0f) / 127.5f;
-                                //Normals[i].z = (b.ReadByte() - 128.0f) / 127.5f;
-                                //b.ReadByte();           // additional byte.
+                                ////Normals[i].x = (b.ReadByte() - 128.0f) / 127.5f;
+                                ////Normals[i].y = (b.ReadByte() - 128.0f) / 127.5f;
+                                ////Normals[i].z = (b.ReadByte() - 128.0f) / 127.5f;
+                                ////b.ReadByte();           // additional byte.
 
-                                // Read a Quat, convert it to vector3
-                                Vector4 quat = new Vector4();
-                                quat.x = (b.ReadByte() - 128.0f) / 127.5f;
-                                quat.y = (b.ReadByte() - 128.0f) / 127.5f;
-                                quat.z = (b.ReadByte() - 128.0f) / 127.5f;
-                                quat.w = (b.ReadByte() - 128.0f) / 127.5f;
-                                Normals[i].x = (2 * (quat.x * quat.z + quat.y * quat.w));
-                                Normals[i].y = (2 * (quat.y * quat.z - quat.x * quat.w));
-                                Normals[i].z = (2 * (quat.z * quat.z + quat.w * quat.w)) - 1;
+                                //// Read a Quat, convert it to vector3
+                                //Vector4 quat = new Vector4();
+                                //quat.x = (b.ReadByte() - 128.0f) / 127.5f;
+                                //quat.y = (b.ReadByte() - 128.0f) / 127.5f;
+                                //quat.z = (b.ReadByte() - 128.0f) / 127.5f;
+                                //quat.w = (b.ReadByte() - 128.0f) / 127.5f;
+                                //Normals[i].x = (2 * (quat.x * quat.z + quat.y * quat.w));
+                                //Normals[i].y = (2 * (quat.y * quat.z - quat.x * quat.w));
+                                //Normals[i].z = (2 * (quat.z * quat.z + quat.w * quat.w)) - 1;
 
 
-                                // UVs ABSOLUTELY should use the Half structures.
-                                Half uvu = new Half();
-                                uvu.bits = b.ReadUInt16();
-                                UVs[i].U = uvu.ToSingle();
-
-                                Half uvv = new Half();
-                                uvv.bits = b.ReadUInt16();
-                                UVs[i].V = uvv.ToSingle();
-
-                                #region Legacy version using Halfs
-                                //Half xshort = new Half();
-                                //xshort.bits = b.ReadUInt16();
-                                //Vertices[i].x = xshort.ToSingle();
-
-                                //Half yshort = new Half();
-                                //yshort.bits = b.ReadUInt16();
-                                //Vertices[i].y = yshort.ToSingle();
-
-                                //Half zshort = new Half();
-                                //zshort.bits = b.ReadUInt16();
-                                //Vertices[i].z = zshort.ToSingle();
-
-                                //Half xnorm = new Half();
-                                //xnorm.bits = b.ReadUInt16();
-                                //Normals[i].x = xnorm.ToSingle();
-
-                                //Half ynorm = new Half();
-                                //ynorm.bits = b.ReadUInt16();
-                                //Normals[i].y = ynorm.ToSingle();
-
-                                //Half znorm = new Half();
-                                //znorm.bits = b.ReadUInt16();
-                                //Normals[i].z = znorm.ToSingle();
-
+                                //// UVs ABSOLUTELY should use the Half structures.
                                 //Half uvu = new Half();
                                 //uvu.bits = b.ReadUInt16();
                                 //UVs[i].U = uvu.ToSingle();
@@ -397,6 +364,39 @@ namespace CgfConverter.CryEngineCore
                                 //Half uvv = new Half();
                                 //uvv.bits = b.ReadUInt16();
                                 //UVs[i].V = uvv.ToSingle();
+
+                                #region Legacy version using Halfs
+                                Half xshort = new Half();
+                                xshort.bits = b.ReadUInt16();
+                                Vertices[i].x = xshort.ToSingle();
+
+                                Half yshort = new Half();
+                                yshort.bits = b.ReadUInt16();
+                                Vertices[i].y = yshort.ToSingle();
+
+                                Half zshort = new Half();
+                                zshort.bits = b.ReadUInt16();
+                                Vertices[i].z = zshort.ToSingle();
+
+                                Half xnorm = new Half();
+                                xnorm.bits = b.ReadUInt16();
+                                Normals[i].x = xnorm.ToSingle();
+
+                                Half ynorm = new Half();
+                                ynorm.bits = b.ReadUInt16();
+                                Normals[i].y = ynorm.ToSingle();
+
+                                Half znorm = new Half();
+                                znorm.bits = b.ReadUInt16();
+                                Normals[i].z = znorm.ToSingle();
+
+                                Half uvu = new Half();
+                                uvu.bits = b.ReadUInt16();
+                                UVs[i].U = uvu.ToSingle();
+
+                                Half uvv = new Half();
+                                uvv.bits = b.ReadUInt16();
+                                UVs[i].V = uvv.ToSingle();
                                 #endregion
                             }
                             break;
