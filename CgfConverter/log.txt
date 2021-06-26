@@ -1,0 +1,9 @@
+2021-06-26 08:54:30.457 -07:00 [INF] Loaded 2 extensions
+2021-06-26 08:54:30.657 -07:00 [INF] MSBuild registered from C:\Program Files\dotnet\sdk\5.0.301\
+2021-06-26 08:54:34.483 -07:00 [INF] Initializing upgrade step Select an entrypoint
+2021-06-26 08:54:34.488 -07:00 [INF] Setting entrypoint to only project in solution: C:\Users\Geoff\Source\Repos\cgf-converter\CgfConverter\cgfconverter.csproj
+2021-06-26 08:54:34.662 -07:00 [INF] Initializing upgrade step Finalize upgrade
+2021-06-26 08:54:39.030 -07:00 [INF] Applying upgrade step Finalize upgrade
+2021-06-26 08:54:39.032 -07:00 [INF] Upgrade step Finalize upgrade applied successfully
+2021-06-26 08:54:41.324 -07:00 [INF] Upgrade has completed. Please review any changes.
+2021-06-26 08:54:41.333 -07:00 [INF] No state to save

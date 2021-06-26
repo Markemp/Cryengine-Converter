@@ -124,6 +124,7 @@ namespace CgfConverter.CryEngineCore
                                 Half zshort = new Half();
                                 zshort.bits = b.ReadUInt16();
                                 Vertices[i].z = zshort.ToSingle();
+                                
                                 b.ReadUInt16();
                             }
                             break;

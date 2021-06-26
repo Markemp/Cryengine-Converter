@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+
+    <IsPackable>false</IsPackable>
+
+    <Version>1.2.0</Version>
+
+    <Authors>Geoff Gerber</Authors>
+
+    <Company>Heffay Presents</Company>
+
+    <Description>Integration Tests</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="ResourceFiles\**" />
+    <EmbeddedResource Remove="ResourceFiles\**" />
+    <None Remove="ResourceFiles\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
+    <PackageReference Include="MSTest.TestAdapter" Version="2.2.3" />
+    <PackageReference Include="MSTest.TestFramework" Version="2.2.3" />
+    <PackageReference Include="coverlet.collector" Version="3.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CgfConverter\CgfConverter.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Schemas\COLLADA_1_5.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Update="Schemas\collada_schema_1_4.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Update="Schemas\collada_schema_1_4_1_ms.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Update="Schemas\xml.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Update="Schemas\XMLSchema.xsd">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+
+</Project>
