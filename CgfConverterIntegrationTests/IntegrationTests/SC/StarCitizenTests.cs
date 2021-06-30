@@ -57,7 +57,7 @@ namespace CgfConverterTests.IntegrationTests.SC
         }
 
         [TestMethod]
-        public void AEGS_Avenger_IntegrationTest()
+        public void AEGS_Avenger()
         {
             var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\AEGS_Avenger.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\SC\" };
             int result = testUtils.argsHandler.ProcessArgs(args);
@@ -75,6 +75,7 @@ namespace CgfConverterTests.IntegrationTests.SC
             Assert.AreEqual("Front_LG_Door_Left", noseNode.node[28].ID);
             Assert.AreEqual(frontLGDoorLeftMatrix, noseNode.node[28].Matrix[0].Value_As_String);
 
+            testUtils.ValidateColladaXml(colladaData);
         }
 
         [TestMethod]
@@ -120,6 +121,33 @@ namespace CgfConverterTests.IntegrationTests.SC
             Assert.AreEqual(9, mesh.Triangles.Length);
             Assert.AreEqual(78, mesh.Triangles[0].Count);
             Assert.AreEqual(134, mesh.Triangles[8].Count);
+
+            testUtils.ValidateColladaXml(colladaData);
+        }
+
+        [TestMethod]
+        public void BehrRifle_312_NonIVO()
+        {
+            var args = new string[] {
+                $@"{userHome}\OneDrive\ResourceFiles\SC\3.12.0\brfl_fps_behr_p4ar_body.cgf",
+                "-dds", "-dae" };
+            int result = testUtils.argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
+            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
+
+            COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            colladaData.GenerateDaeObject();
+
+            var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
+            Assert.AreEqual(1, geometries.Length);
+
+            var mesh = geometries[0].Mesh;
+            Assert.AreEqual(4, mesh.Source.Length);
+            Assert.AreEqual("brfl_fps_behr_p4ar_body-vertices", mesh.Vertices.ID);
+            Assert.AreEqual(13, mesh.Triangles.Length);
+            Assert.AreEqual(84, mesh.Triangles[0].Count);
+            Assert.AreEqual(1460, mesh.Triangles[8].Count);
 
             testUtils.ValidateColladaXml(colladaData);
         }

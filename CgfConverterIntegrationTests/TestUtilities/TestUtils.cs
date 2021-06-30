@@ -13,7 +13,7 @@ namespace CgfConverterTests.TestUtilities
         internal readonly ArgsHandler argsHandler = new ArgsHandler();
         internal List<string> errors = new List<string>();
 
-        public double delta = 0.00000001;
+        public static double delta = 0.00000001;
 
         internal void GetSchemaSet()
         {
@@ -42,10 +42,8 @@ namespace CgfConverterTests.TestUtilities
 
         internal void ValidateXml(string xmlFile)
         {
-            using (XmlReader reader = XmlReader.Create(xmlFile, settings))
-            {
-                while (reader.Read()) ;
-            }
+            using XmlReader reader = XmlReader.Create(xmlFile, settings);
+            while (reader.Read()) ;
         }
 
         internal void ValidationEventHandler(object sender, ValidationEventArgs e)

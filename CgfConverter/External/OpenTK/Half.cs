@@ -243,7 +243,7 @@ namespace CgfConverter
 
         /// <summary>Converts the 16-bit half to 32-bit floating-point.</summary>
         /// <returns>A single-precision floating-point number.</returns>
-        public Single ToSingle()
+        public float ToSingle()
         {
             int i = HalfToFloat(bits);
 
@@ -254,7 +254,7 @@ namespace CgfConverter
         }
 
         /// <summary>Ported from OpenEXR's IlmBase 1.0.1</summary>
-        private Int32 HalfToFloat(UInt16 ui16)
+        private int HalfToFloat(UInt16 ui16)
         {
 
             Int32 sign = (ui16 >> 15) & 0x00000001;

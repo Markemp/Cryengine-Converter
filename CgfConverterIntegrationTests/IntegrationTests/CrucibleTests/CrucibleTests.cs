@@ -41,9 +41,9 @@ namespace CgfConverterTests.IntegrationTests.Crucible
             var datastream = cryData.Models[0].ChunkMap[16] as ChunkDataStream_801;
             Assert.AreEqual((uint)8, datastream.BytesPerElement);
             Assert.AreEqual((uint)96, datastream.NumElements);
-            Assert.AreEqual(-1.390625, datastream.Vertices[0].x, testUtils.delta);
-            Assert.AreEqual(1.9326171875, datastream.Vertices[0].y, testUtils.delta);
-            Assert.AreEqual(1.9189453125, datastream.Vertices[0].z, testUtils.delta);
+            Assert.AreEqual(-1.390625, datastream.Vertices[0].x, TestUtils.delta);
+            Assert.AreEqual(1.9326171875, datastream.Vertices[0].y, TestUtils.delta);
+            Assert.AreEqual(1.9189453125, datastream.Vertices[0].z, TestUtils.delta);
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();

@@ -1,7 +1,6 @@
 ﻿using CgfConverter;
 using CgfConverter.CryEngineCore;
 using CgfConverterTests.TestUtilities;
-using grendgine_collada;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -201,9 +200,9 @@ namespace CgfConverterTests.IntegrationTests
             var datastream = cryData.Models[0].ChunkMap[40] as ChunkDataStream_801;
             Assert.AreEqual((uint)12, datastream.BytesPerElement);
             Assert.AreEqual((uint)22252, datastream.NumElements);
-            Assert.AreEqual(0.29570183, datastream.Vertices[0].x, testUtils.delta);
-            Assert.AreEqual(0.42320457, datastream.Vertices[0].y, testUtils.delta);
-            Assert.AreEqual(3.24175549, datastream.Vertices[0].z, testUtils.delta);
+            Assert.AreEqual(0.29570183, datastream.Vertices[0].x, TestUtils.delta);
+            Assert.AreEqual(0.42320457, datastream.Vertices[0].y, TestUtils.delta);
+            Assert.AreEqual(3.24175549, datastream.Vertices[0].z, TestUtils.delta);
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();

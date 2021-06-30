@@ -14,7 +14,6 @@ namespace CgfConverterTests.IntegrationTests.MWO
     {
         private readonly TestUtils testUtils = new TestUtils();
         string userHome;
-        private const float epsilon = 0.000001f;
 
         [TestInitialize]
         public void Initialize()
@@ -58,9 +57,9 @@ namespace CgfConverterTests.IntegrationTests.MWO
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
             Assert.AreEqual(11, actualMaterialsCount);
             
+            // Visual Scene Check 
             Assert.AreEqual("Scene", daeObject.Scene.Visual_Scene.Name);
             Assert.AreEqual("#Scene", daeObject.Scene.Visual_Scene.URL);
-            // Visual Scene Check
             Assert.AreEqual(1, daeObject.Library_Visual_Scene.Visual_Scene.Length);
             Assert.AreEqual("Scene", daeObject.Library_Visual_Scene.Visual_Scene[0].ID);
             Assert.AreEqual(2, daeObject.Library_Visual_Scene.Visual_Scene[0].Node.Length);
