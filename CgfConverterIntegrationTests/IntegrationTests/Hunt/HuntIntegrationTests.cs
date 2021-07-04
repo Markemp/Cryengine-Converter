@@ -1,5 +1,6 @@
 ﻿using CgfConverter;
 using CgfConverterTests.TestUtilities;
+using grendgine_collada;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Globalization;
@@ -144,6 +145,57 @@ namespace CgfConverterTests.IntegrationTests.Hunt
             var nameArray = controllerJoints.Name_Array.Value();
             Assert.AreEqual(91, nameArray.Count());
             Assert.IsTrue(nameArray.Contains("L_leg_spiral_01"));
+
+            // Geometry Library check
+            var geometry = daeObject.Library_Geometries.Geometry;
+            Assert.AreEqual("assassin_body-mesh", geometry[0].ID);
+            Assert.AreEqual("assassin_body", geometry[0].Name);
+            var mesh = geometry[0].Mesh;
+            var sources = mesh.Source;
+            Assert.AreEqual(4, sources.Length);
+            Assert.IsNotNull(mesh.Vertices);
+            Assert.IsNull(mesh.Trifans);
+            var triangles = mesh.Triangles[0];
+            Assert.AreEqual(10213, triangles.Count);
+            Assert.AreEqual(3, triangles.Input.Length);
+            Assert.AreEqual(Grendgine_Collada_Input_Semantic.VERTEX, triangles.Input[0].Semantic);
+            Assert.AreEqual("#assassin_body-vertices", triangles.Input[0].source);
+            Assert.AreEqual(0, triangles.Input[0].Offset);
+            Assert.AreEqual(0, triangles.Input[0].Set);
+            Assert.AreEqual(Grendgine_Collada_Input_Semantic.NORMAL, triangles.Input[1].Semantic);
+            Assert.AreEqual("#assassin_body-mesh-norm", triangles.Input[1].source);
+            Assert.AreEqual(1, triangles.Input[1].Offset);
+            Assert.AreEqual(0, triangles.Input[1].Set); 
+            Assert.AreEqual(Grendgine_Collada_Input_Semantic.TEXCOORD, triangles.Input[2].Semantic);
+            Assert.AreEqual("#assassin_body-mesh-UV", triangles.Input[2].source);
+            Assert.AreEqual(2, triangles.Input[2].Offset);
+            Assert.IsTrue(triangles.P.Value_As_String.StartsWith("0 0 0 1 1 1 2 2 2 2 2 2 1 1 1 3 3 3 4 4 4 1 1 1 0 0 0 2 2 2"));
+
+            // Geometry Source checks
+            var vertices = mesh.Source[0];
+            var normals = mesh.Source[1];
+            var uvs = mesh.Source[2];
+            var colors = mesh.Source[3];
+            Assert.AreEqual("assassin_body-mesh-pos", vertices.ID);
+            Assert.AreEqual("assassin_body-pos", vertices.Name);
+            Assert.AreEqual("assassin_body-mesh-norm", normals.ID);
+            Assert.AreEqual("assassin_body-norm", normals.Name);
+            Assert.AreEqual("assassin_body-mesh-UV", uvs.ID);
+            Assert.AreEqual("assassin_body-UV", uvs.Name);
+            Assert.AreEqual("assassin_body-mesh-color", colors.ID);
+            Assert.AreEqual("assassin_body-color", colors.Name);
+            Assert.AreEqual(18087, vertices.Float_Array.Count);
+            Assert.AreEqual("assassin_body-mesh-pos-array", vertices.Float_Array.ID);
+            Assert.IsTrue(vertices.Float_Array.Value_As_String.StartsWith("0.050568 0.100037 2.091797 0.048096 0.124878 2.099609 0.059082 0.102295 2.117188 0.049042 0.124695 2.113281 0.016800 0.109009"));
+            Assert.AreEqual((uint)6029, vertices.Technique_Common.Accessor.Count);
+            Assert.AreEqual((uint)3, vertices.Technique_Common.Accessor.Stride);
+            Assert.AreEqual(18087, normals.Float_Array.Count);
+            Assert.AreEqual((uint)6029, normals.Technique_Common.Accessor.Count);
+            Assert.AreEqual((uint)3, normals.Technique_Common.Accessor.Stride);
+            Assert.AreEqual(12058, uvs.Float_Array.Count);
+            Assert.AreEqual((uint)6029, uvs.Technique_Common.Accessor.Count);
+            Assert.AreEqual((uint)2, uvs.Technique_Common.Accessor.Stride);
+            Assert.AreEqual(0, colors.Float_Array.Count);  // No color data for this model?
 
             testUtils.ValidateColladaXml(colladaData);
         }

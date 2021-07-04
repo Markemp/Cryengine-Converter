@@ -139,6 +139,7 @@ namespace CgfConverterTests.IntegrationTests.SC
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
+            // Geometry Library checks
             var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
             Assert.AreEqual(1, geometries.Length);
 
@@ -148,6 +149,31 @@ namespace CgfConverterTests.IntegrationTests.SC
             Assert.AreEqual(13, mesh.Triangles.Length);
             Assert.AreEqual(84, mesh.Triangles[0].Count);
             Assert.AreEqual(1460, mesh.Triangles[8].Count);
+
+            var vertices = mesh.Source[0];
+            var normals = mesh.Source[1];
+            var uvs = mesh.Source[2];
+            var colors = mesh.Source[3];
+            Assert.AreEqual("brfl_fps_behr_p4ar_body-mesh-pos", vertices.ID);
+            Assert.AreEqual("brfl_fps_behr_p4ar_body-pos", vertices.Name);
+            Assert.AreEqual("brfl_fps_behr_p4ar_body-mesh-norm", normals.ID);
+            Assert.AreEqual("brfl_fps_behr_p4ar_body-norm", normals.Name);
+            Assert.AreEqual("brfl_fps_behr_p4ar_body-mesh-UV", uvs.ID);
+            Assert.AreEqual("brfl_fps_behr_p4ar_body-UV", uvs.Name);
+            Assert.AreEqual("brfl_fps_behr_p4ar_body-mesh-color", colors.ID);
+            Assert.AreEqual("brfl_fps_behr_p4ar_body-color", colors.Name);
+            Assert.AreEqual(56058, vertices.Float_Array.Count);
+            Assert.AreEqual("brfl_fps_behr_p4ar_body-mesh-pos-array", vertices.Float_Array.ID);
+            Assert.IsTrue(vertices.Float_Array.Value_As_String.StartsWith("-0.020622 0.180945 0.097055 -0.020622 0.178238 0.092718 -0.020622 0.175470 0.097055 -0.020622 0.175408 0.105175 -0.020622"));
+            Assert.AreEqual((uint)18686, vertices.Technique_Common.Accessor.Count);
+            Assert.AreEqual((uint)3, vertices.Technique_Common.Accessor.Stride);
+            Assert.AreEqual(56058, normals.Float_Array.Count);
+            Assert.AreEqual((uint)18686, normals.Technique_Common.Accessor.Count);
+            Assert.AreEqual((uint)3, normals.Technique_Common.Accessor.Stride);
+            Assert.AreEqual(37372, uvs.Float_Array.Count);
+            Assert.AreEqual((uint)18686, uvs.Technique_Common.Accessor.Count);
+            Assert.AreEqual((uint)2, uvs.Technique_Common.Accessor.Stride);
+            Assert.AreEqual(0, colors.Float_Array.Count);  // No color data for this model?
 
             testUtils.ValidateColladaXml(colladaData);
         }

@@ -2,7 +2,7 @@
 
 namespace CgfConverter.CryEngineCore
 {
-    public abstract class ChunkDataStream : Chunk // cccc0016:  Contains data such as vertices, normals, etc.
+    public abstract class ChunkDataStream : Chunk // Contains data such as vertices, normals, etc.
     {
         public uint Flags { get; set; } // not used, but looks like the start of the Data Stream chunk
         public uint Flags1 { get; set; } // not used.  UInt32 after Flags that looks like offsets
