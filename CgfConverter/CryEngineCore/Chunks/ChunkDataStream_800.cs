@@ -320,35 +320,20 @@ namespace CgfConverter.CryEngineCore
                             {
                                 for (int i = 0; i < NumElements; i++)
                                 {
-                                    ushort bver = 0;
-                                    float ver = 0;
+                                    ushort bver;
+                                    float ver;
 
                                     bver = b.ReadUInt16();
-                                    ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
-                                    Vertices[i].x = ver;
+                                    Vertices[i].x = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
 
                                     bver = b.ReadUInt16();
-                                    ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
-                                    Vertices[i].y = ver;
+                                    Vertices[i].y = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
 
                                     bver = b.ReadUInt16();
-                                    ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
-                                    Vertices[i].z = ver;
+                                    Vertices[i].z = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
 
                                     bver = b.ReadUInt16();
-                                    ver = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
-                                    Vertices[i].w = ver;       // Almost always 1
-
-                                    // Next structure is Colors, not normals.  For 16 byte elements, normals are calculated from Tangent data.
-                                    //RGBAColors[i].r = b.ReadByte();
-                                    //RGBAColors[i].g = b.ReadByte();
-                                    //RGBAColors[i].b = b.ReadByte();
-                                    //RGBAColors[i].a = b.ReadByte();
-
-                                    //Normals[i].x = (b.ReadByte() - 128.0f) / 127.5f;
-                                    //Normals[i].y = (b.ReadByte() - 128.0f) / 127.5f;
-                                    //Normals[i].z = (b.ReadByte() - 128.0f) / 127.5f;
-                                    //b.ReadByte();           // additional byte.
+                                    Vertices[i].w = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;  // Almost always 1
 
                                     // Read a Quat, convert it to vector3
                                     Vector4 quat = new Vector4();

@@ -8,6 +8,8 @@ namespace CgfConverter
 {
     public partial class CryEngine
     {
+        public string MtlFile { get; private set; }
+
         private const string invalidExtensionErrorMessage = "Warning: Unsupported file extension - please use a cga, cgf, chr or skin file.";
 
         private static readonly HashSet<string> validExtensions = new HashSet<string>
@@ -118,6 +120,7 @@ namespace CgfConverter
             var allMaterialChunks = Models
                 .SelectMany(a => a.ChunkMap.Values)
                 .Where(c => c.ChunkType == ChunkType.MtlName || c.ChunkType == ChunkType.MtlNameIvo);
+
             foreach (ChunkMtlName mtlChunk in allMaterialChunks)
             {
                 // Don't process child or collision materials for now
@@ -130,8 +133,9 @@ namespace CgfConverter
                     mtlChunk.Name = parts[1];
                 }
 
-                // The Replace part is for SC files that point to a _core material file that doesn't exist.
-                string cleanName = mtlChunk.Name.Replace("_core", "");
+                // The Replace part is for SC files that point to a _core material file that doesn't exist. (no longer needed?)
+                // string cleanName = mtlChunk.Name.Replace("_core", "");
+                string cleanName = mtlChunk.Name;
 
                 FileInfo materialFile;
 
@@ -144,7 +148,7 @@ namespace CgfConverter
                     var charsToClean = cleanName.ToCharArray().Intersect(Path.GetInvalidFileNameChars()).ToArray();
                     if (charsToClean.Length > 0)
                     {
-                        foreach (Char character in charsToClean)
+                        foreach (char character in charsToClean)
                         {
                             cleanName = cleanName.Replace(character.ToString(), "");
                         }
@@ -154,15 +158,12 @@ namespace CgfConverter
                 else if (mtlChunk.Name.Contains(@"/") || mtlChunk.Name.Contains(@"\"))
                 {
                     // The mtlname has a path.  Most likely starts at the Objects directory.
-                    // 
                     string[] stringSeparators = new string[] { @"\", @"/" };
                     string[] result;
 
                     // if objectdir is provided, check objectdir + mtlchunk.name
                     if (DataDir != null)
-                    {
                         materialFile = new FileInfo(Path.Combine(DataDir, mtlChunk.Name));
-                    }
                     else
                     {
                         // object dir not provided, but we have a path.  Just grab the last part of the name and check the dir of the cga file
@@ -204,6 +205,9 @@ namespace CgfConverter
                     materialFile = new FileInfo(InputFile);
                 if (materialFile.Extension != ".mtl")
                     materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
+
+                if (materialFile.Extension == ".mtl")
+                    MtlFile = materialFile.Name;
 
                 Material material = Material.FromFile(materialFile);
 

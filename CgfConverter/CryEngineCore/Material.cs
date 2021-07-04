@@ -15,39 +15,36 @@ namespace CgfConverter.CryEngineCore
     {
         #region Data Structures
 
-        /// <summary>
-        /// Color used in XML serialization/deserialization
-        /// </summary>
         internal class Color
         {
-            public Double Red;
-            public Double Green;
-            public Double Blue;
+            public double Red;
+            public double Green;
+            public double Blue;
 
             /// <summary>
             /// Deserialize a string into a Color object
             /// </summary>
             /// <param name="value"></param>
             /// <returns></returns>
-            public static Color Deserialize(String value)
+            public static Color Deserialize(string value)
             {
-                if (String.IsNullOrWhiteSpace(value))
+                if (string.IsNullOrWhiteSpace(value))
                     return null;
 
-                String[] parts = value.Split(',');
+                string[] parts = value.Split(',');
 
                 if (parts.Length != 3)
                     return null;
 
-                Color buffer = new Color();
+                Color buffer = new();
 
-                if (!Double.TryParse(parts[0], out buffer.Red))
+                if (!double.TryParse(parts[0], out buffer.Red))
                     return null;
 
-                if (!Double.TryParse(parts[1], out buffer.Green))
+                if (!double.TryParse(parts[1], out buffer.Green))
                     return null;
 
-                if (!Double.TryParse(parts[2], out buffer.Blue))
+                if (!double.TryParse(parts[2], out buffer.Blue))
                     return null;
 
                 return buffer;
@@ -58,14 +55,14 @@ namespace CgfConverter.CryEngineCore
             /// </summary>
             /// <param name="input"></param>
             /// <returns></returns>
-            public static String Serialize(Color input)
+            public static string Serialize(Color input)
             {
                 return (input == null) ? null : string.Format("{0},{1},{2}", input.Red, input.Green, input.Blue);
             }
 
             public override string ToString()
             {
-                return $@"R: {Red.ToString()}, G: {Green.ToString()}, B: {Blue.ToString()}";
+                return $@"R: {Red}, G: {Green}, B: {Blue}";
             }
         }
 
@@ -106,13 +103,13 @@ namespace CgfConverter.CryEngineCore
             }
 
             [XmlAttribute(AttributeName = "Map")]
-            public String __Map
+            public string __Map
             {
-                get { return Enum.GetName(typeof(MapTypeEnum), this.Map); }
+                get { return Enum.GetName(typeof(MapTypeEnum), Map); }
                 set
                 {
                     _ = Enum.TryParse(value, out MapTypeEnum buffer);
-                    this.Map = buffer;
+                    Map = buffer;
                 }
             }
 
@@ -126,7 +123,7 @@ namespace CgfConverter.CryEngineCore
             /// Location of the texture
             /// </summary>
             [XmlAttribute(AttributeName = "File")]
-            public String File { get; set; }
+            public string File { get; set; }
 
             /// <summary>
             /// The type of the texture
@@ -149,33 +146,33 @@ namespace CgfConverter.CryEngineCore
         public class TextureModifier
         {
             [XmlAttribute(AttributeName = "TexMod_RotateType")]
-            public Int32 RotateType { get; set; }
+            public int RotateType { get; set; }
 
             [XmlAttribute(AttributeName = "TexMod_TexGenType")]
-            public Int32 GenType { get; set; }
+            public int GenType { get; set; }
 
             [XmlAttribute(AttributeName = "TexMod_bTexGenProjected")]
             [DefaultValue(1)]
-            public Int32 __Projected
+            public int __Projected
             {
                 get { return this.Projected ? 1 : 0; }
-                set { this.Projected = value == 1; }
+                set { Projected = value == 1; }
             }
 
             [XmlIgnore]
-            public Boolean Projected { get; set; }
+            public bool Projected { get; set; }
 
             [XmlAttribute(AttributeName = "TileU")]
             [DefaultValue(0)]
-            public Double TileU { get; set; }
+            public double TileU { get; set; }
 
             [XmlAttribute(AttributeName = "TileV")]
             [DefaultValue(0)]
-            public Double TileV { get; set; }
+            public double TileV { get; set; }
 
             [XmlAttribute(AttributeName = "OffsetU")]
             [DefaultValue(0)]
-            public Double OffsetU { get; set; }
+            public double OffsetU { get; set; }
         }
 
         /// <summary>
@@ -270,8 +267,8 @@ namespace CgfConverter.CryEngineCore
         [DefaultValue("")]
         public string __Diffuse
         {
-            get { return Color.Serialize(this.Diffuse); }
-            set { this.Diffuse = Color.Deserialize(value); }
+            get { return Color.Serialize(Diffuse); }
+            set { Diffuse = Color.Deserialize(value); }
         }
 
         [XmlIgnore]
@@ -281,8 +278,8 @@ namespace CgfConverter.CryEngineCore
         [DefaultValue("")]
         public string __Specular
         {
-            get { return Color.Serialize(this.Specular); }
-            set { this.Specular = Color.Deserialize(value); }
+            get { return Color.Serialize(Specular); }
+            set { Specular = Color.Deserialize(value); }
         }
 
         [XmlIgnore]
@@ -292,8 +289,8 @@ namespace CgfConverter.CryEngineCore
         [DefaultValue("")]
         public string __Emissive
         {
-            get { return Color.Serialize(this.Emissive); }
-            set { this.Emissive = Color.Deserialize(value); }
+            get { return Color.Serialize(Emissive); }
+            set { Emissive = Color.Deserialize(value); }
         }
 
         [XmlIgnore]
@@ -304,27 +301,27 @@ namespace CgfConverter.CryEngineCore
         /// </summary>
         [XmlAttribute(AttributeName = "Opacity")]
         [DefaultValue(1)]
-        public Double Opacity { get; set; }
+        public double Opacity { get; set; }
 
         [XmlAttribute(AttributeName = "CloakAmount")]
         [DefaultValue(1)]
-        public Double Cloak { get; set; }
+        public double Cloak { get; set; }
 
         [XmlAttribute(AttributeName = "Shininess")]
         [DefaultValue(0)]
-        public Double Shininess { get; set; }
+        public double Shininess { get; set; }
 
         [XmlAttribute(AttributeName = "Glossiness")]
         [DefaultValue(0)]
-        public Double Glossiness { get; set; }
+        public double Glossiness { get; set; }
 
         [XmlAttribute(AttributeName = "GlowAmount")]
         [DefaultValue(0)]
-        public Double GlowAmount { get; set; }
+        public double GlowAmount { get; set; }
 
         [XmlAttribute(AttributeName = "AlphaTest")]
         [DefaultValue(0)]
-        public Double AlphaTest { get; set; }
+        public double AlphaTest { get; set; }
 
         #endregion
 
@@ -379,7 +376,7 @@ namespace CgfConverter.CryEngineCore
 
         public override string ToString()
         {
-            return $@"Name: {Name}, Diffuse: {Diffuse.ToString()}";
+            return $@"Name: {Name}, Diffuse: {Diffuse}";
         }
     }
 }

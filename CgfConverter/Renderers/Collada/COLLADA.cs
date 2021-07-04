@@ -109,6 +109,14 @@ namespace CgfConverter
                 Meter = 1.0,
                 Name = "meter"
             };
+            asset.Extra = new Grendgine_Collada_Extra[]
+            {
+                new Grendgine_Collada_Extra()
+                {
+                    Type = "mtl_file",
+                    ID = CryData.MtlFile
+                }
+            };
             asset.Title = CryData.RootNode.Name;
             DaeObject.Asset = asset;
             DaeObject.Asset.Contributor = contributors;

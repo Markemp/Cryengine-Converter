@@ -36,7 +36,7 @@ namespace CgfConverterTests.IntegrationTests.SC
             colladaData.GenerateDaeObject(); 
             var daeObject = colladaData.DaeObject;
 
-            Assert.AreEqual(1, cryData.Materials.Count);
+            Assert.AreEqual(17, cryData.Materials.Count);
 
             testUtils.ValidateColladaXml(colladaData);
         }
