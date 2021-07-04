@@ -113,8 +113,9 @@ namespace CgfConverter
             {
                 new Grendgine_Collada_Extra()
                 {
-                    Type = "mtl_file",
-                    ID = CryData.MtlFile
+                    Name = CryData.MtlFile ?? "",
+                    ID = "material_file_name",
+                    Type = "mtl_file"
                 }
             };
             asset.Title = CryData.RootNode.Name;
