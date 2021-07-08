@@ -321,7 +321,6 @@ namespace CgfConverter.CryEngineCore
                                 for (int i = 0; i < NumElements; i++)
                                 {
                                     ushort bver;
-                                    float ver;
 
                                     bver = b.ReadUInt16();
                                     Vertices[i].x = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
@@ -452,7 +451,6 @@ namespace CgfConverter.CryEngineCore
                             default:
                                 Utils.Log("Unknown BoneMapping structure");
                                 break;
-
                         }
                     }
 

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -36,6 +35,11 @@ namespace CgfConverter.CryEngineCore
                 AddChildIDToParent(BoneList[i]);
                 SetBoneLocalTransformMatrix(BoneList[i]);
             }
+
+            SkinningInfo skin = GetSkinningInfo();
+            skin.CompiledBones = new List<CompiledBone>();
+            skin.HasSkinningInfo = true;
+            skin.CompiledBones = BoneList;
         }
 
         private void SetBoneLocalTransformMatrix(CompiledBone bone)

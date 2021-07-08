@@ -6,7 +6,7 @@ namespace CgfConverter.CryEngineCore.Chunks
     {
         public override void Read(BinaryReader b)
         {
-            var model = this._model;
+            var model = _model;
 
             base.Read(b);
 
@@ -75,6 +75,16 @@ namespace CgfConverter.CryEngineCore.Chunks
             tangents.Read(b);
             tangents.ID = 7;
             model.ChunkMap.Add(tangents.ID, tangents);
+
+            // Bonemap datastream
+            ChunkDataStream_900 bonemap = new ChunkDataStream_900((uint)meshChunk.NumVertices);
+            bonemap._model = _model;
+            bonemap._header = _header;
+            bonemap._header.Offset = (uint)b.BaseStream.Position;
+            bonemap.ChunkType = ChunkType.DataStream;
+            bonemap.Read(b);
+            bonemap.ID = 8;
+            model.ChunkMap.Add(bonemap.ID, bonemap);
         }
     }
 }
