@@ -30,9 +30,9 @@ namespace CgfConverter.CryEngineCore
                             Indices[i] = b.ReadUInt16();
                         }
                         if (NumElements % 2 == 1)
-                        {
                             SkipBytes(b, 2);
-                        }
+                        else
+                            SkipBytes(b, 4);
                     } 
                     else if (BytesPerElement == 4)
                     {
