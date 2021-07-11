@@ -170,13 +170,13 @@
         BONEMAP,    // 0x09
         FACEMAP,
         VERTMATS,
-        UNKNOWN1,   // Prey Normals?
+        QTANGENTS,   // Prey Normals?
         UNKNOWN2,
         UNKNOWN3,
         VERTSUVS,   // 0x0F
         UNKNOWN5,
         UNKNOWN6,
-        IVOCOLORS = 0x9CF3F615,
+        IVONORMALS = 0x9CF3F615,
         IVOINDICES = 0xEECDC168,
         IVOTANGENTS = 0xB95E9A1B,
         IVOBONEMAP = 0x677C7B23,

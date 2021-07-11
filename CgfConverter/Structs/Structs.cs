@@ -909,15 +909,15 @@ namespace CgfConverter
                 a = b.ReadByte()
             };
         }
-    }   // May also be known as ColorB.
+    }
 
     public struct Tangent
     {
         // Tangents.  Divide each component by 32767 to get the actual value
-        public double x;
-        public double y;
-        public double z;
-        public double w;  // Handness?  Either 32767 (+1.0) or -32767 (-1.0)
+        public float x;
+        public float y;
+        public float z;
+        public float w;  // Handness?  Either 32767 (+1.0) or -32767 (-1.0)
     }
 
     public struct SkinVertex

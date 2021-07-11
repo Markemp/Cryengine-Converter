@@ -453,7 +453,7 @@ namespace CgfConverter
                         if (tmpMeshChunk.UVsData != 0)
                             tmpUVs = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.UVsData];
 
-                        if (tmpMeshChunk.VertsUVsData != 0)     // Star Citizen file.  That means VerticesData and UVsData will probably be empty.  Need to handle both cases.
+                        if (tmpMeshChunk.VertsUVsData != 0)
                             tmpVertsUVs = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.VertsUVsData];
 
                         if (tmpMeshChunk.IndicesData != 0)
@@ -556,10 +556,10 @@ namespace CgfConverter
                                 for (uint j = 0; j < tmpColors.NumElements; j++)  // Create Colors string
                                 {
                                     colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ",
-                                        tmpColors.RGBAColors[j].r / 255.0,
-                                        tmpColors.RGBAColors[j].g / 255.0,
-                                        tmpColors.RGBAColors[j].b / 255.0,
-                                        tmpColors.RGBAColors[j].a / 255.0);
+                                        tmpColors.Colors[j].r / 255.0,
+                                        tmpColors.Colors[j].g / 255.0,
+                                        tmpColors.Colors[j].b / 255.0,
+                                        tmpColors.Colors[j].a / 255.0);
                                 }
                             }
 

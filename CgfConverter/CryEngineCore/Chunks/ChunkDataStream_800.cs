@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BinaryReaderExtensions;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -7,52 +8,6 @@ namespace CgfConverter.CryEngineCore
     public class ChunkDataStream_800 : ChunkDataStream
     {
         private short starCitizenFlag = 0;
-
-        // This includes changes for 2.6 created by Dymek (byte4/1/2hex, and 20 byte per element vertices).  Thank you!
-        public static float Byte4HexToFloat(string hexString)
-        {
-            uint num = uint.Parse(hexString, System.Globalization.NumberStyles.AllowHexSpecifier);
-            var bytes = BitConverter.GetBytes(num);
-            return BitConverter.ToSingle(bytes, 0);
-        }
-
-        protected static int Byte1HexToIntType2(string hexString)
-        {
-            int value = Convert.ToSByte(hexString, 16);
-            return value;
-        }
-
-        protected static float Byte2HexIntFracToFloat2(string hexString)
-        {
-            string sintPart = hexString.Substring(0, 2);
-            string sfracPart = hexString.Substring(2, 2);
-
-            int intPart = Byte1HexToIntType2(sintPart);
-
-            short intnum = short.Parse(sfracPart, System.Globalization.NumberStyles.AllowHexSpecifier);
-            var intbytes = BitConverter.GetBytes(intnum);
-            string intbinary = Convert.ToString(intbytes[0], 2).PadLeft(8, '0');
-            string binaryIntPart = intbinary;
-
-            short num = short.Parse(sfracPart, System.Globalization.NumberStyles.AllowHexSpecifier);
-            var bytes = BitConverter.GetBytes(num);
-            string binary = Convert.ToString(bytes[0], 2).PadLeft(8, '0');
-            string binaryFracPart = binary;
-
-            //convert Fractional Part
-            float dec = 0;
-            for (int i = 0; i < binaryFracPart.Length; i++)
-            {
-                if (binaryFracPart[i] == '0') continue;
-                dec += (float)Math.Pow(2, (i + 1) * (-1));
-            }
-            float number = 0;
-            number = (float)intPart + dec;
-            /*if (intPart > 0) { number = (float)intPart + dec; }
-            if (intPart < 0) { number = (float)intPart - dec; }
-            if (intPart == 0) { number =  dec; }*/
-            return number;
-        }
 
         public override void Read(BinaryReader b)
         {
@@ -216,16 +171,16 @@ namespace CgfConverter.CryEngineCore
                             case 0x08:
                                 // These have to be divided by 127 to be used properly (value between 0 and 1)
                                 // Tangent
-                                Tangents[i, 0].w = b.ReadSByte() / 127.0;
-                                Tangents[i, 0].x = b.ReadSByte() / 127.0;
-                                Tangents[i, 0].y = b.ReadSByte() / 127.0;
-                                Tangents[i, 0].z = b.ReadSByte() / 127.0;
+                                Tangents[i, 0].w = b.ReadSByte() / 127;
+                                Tangents[i, 0].x = b.ReadSByte() / 127;
+                                Tangents[i, 0].y = b.ReadSByte() / 127;
+                                Tangents[i, 0].z = b.ReadSByte() / 127;
 
                                 // Binormal
-                                Tangents[i, 1].w = b.ReadSByte() / 127.0;
-                                Tangents[i, 1].x = b.ReadSByte() / 127.0;
-                                Tangents[i, 1].y = b.ReadSByte() / 127.0;
-                                Tangents[i, 1].z = b.ReadSByte() / 127.0;
+                                Tangents[i, 1].w = b.ReadSByte() / 127;
+                                Tangents[i, 1].x = b.ReadSByte() / 127;
+                                Tangents[i, 1].y = b.ReadSByte() / 127;
+                                Tangents[i, 1].z = b.ReadSByte() / 127;
 
                                 // Calculate the normal based on the cross product of the tangents.
                                 //Normals[i].x = (Tangents[i,0].y * Tangents[i,1].z - Tangents[i,0].z * Tangents[i,1].y);
@@ -246,23 +201,21 @@ namespace CgfConverter.CryEngineCore
                     switch (BytesPerElement)
                     {
                         case 3:
-                            RGBColors = new IRGB[NumElements];
+                            Colors = new IRGBA[NumElements];
                             for (int i = 0; i < NumElements; i++)
                             {
-                                RGBColors[i].r = b.ReadByte();
-                                RGBColors[i].g = b.ReadByte();
-                                RGBColors[i].b = b.ReadByte();
+                                Colors[i].r = b.ReadByte();
+                                Colors[i].g = b.ReadByte();
+                                Colors[i].b = b.ReadByte();
+                                Colors[i].a = 255;
                             }
                             break;
 
                         case 4:
-                            RGBAColors = new IRGBA[NumElements];
+                            Colors = new IRGBA[NumElements];
                             for (int i = 0; i < NumElements; i++)
                             {
-                                RGBAColors[i].r = b.ReadByte();
-                                RGBAColors[i].g = b.ReadByte();
-                                RGBAColors[i].b = b.ReadByte();
-                                RGBAColors[i].a = b.ReadByte();
+                                Colors[i] = b.ReadColor();
                             }
                             break;
                         default:
@@ -281,7 +234,7 @@ namespace CgfConverter.CryEngineCore
                 case DatastreamType.VERTSUVS:
                     Vertices = new Vector3[NumElements];
                     Normals = new Vector3[NumElements];
-                    RGBColors = new IRGB[NumElements];
+                    Colors = new IRGBA[NumElements];
                     UVs = new UV[NumElements];
                     switch (BytesPerElement)  // new Star Citizen files
                     {
@@ -320,26 +273,17 @@ namespace CgfConverter.CryEngineCore
                             {
                                 for (int i = 0; i < NumElements; i++)
                                 {
-                                    ushort bver;
-
-                                    bver = b.ReadUInt16();
-                                    Vertices[i].x = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
-
-                                    bver = b.ReadUInt16();
-                                    Vertices[i].y = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
-
-                                    bver = b.ReadUInt16();
-                                    Vertices[i].z = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
-
-                                    bver = b.ReadUInt16();
-                                    Vertices[i].w = Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;  // Almost always 1
+                                    Vertices[i].x = b.ReadCryHalf();
+                                    Vertices[i].y = b.ReadCryHalf();
+                                    Vertices[i].z = b.ReadCryHalf();
+                                    Vertices[i].w = b.ReadCryHalf();
 
                                     // Read a Quat, convert it to vector3
                                     Vector4 quat = new Vector4();
-                                    quat.x = (b.ReadByte() - 128.0f) / 127.5f;
-                                    quat.y = (b.ReadByte() - 128.0f) / 127.5f;
-                                    quat.z = (b.ReadByte() - 128.0f) / 127.5f;
-                                    quat.w = (b.ReadByte() - 128.0f) / 127.5f;
+                                    quat.x = b.ReadSByte() / 127.5f;
+                                    quat.y = b.ReadSByte() / 127.5f;
+                                    quat.z = b.ReadSByte() / 127.5f;
+                                    quat.w = b.ReadSByte() / 127.5f;
                                     Normals[i].x = (2 * (quat.x * quat.z + quat.y * quat.w));
                                     Normals[i].y = (2 * (quat.y * quat.z - quat.x * quat.w));
                                     Normals[i].z = (2 * (quat.z * quat.z + quat.w * quat.w)) - 1;
@@ -457,22 +401,22 @@ namespace CgfConverter.CryEngineCore
                     break;
 
                 #endregion
-                #region DataStreamTypeEnum.Unknown1
-                case DatastreamType.UNKNOWN1:
+                #region DataStreamTypeEnum.QTangents
+                case DatastreamType.QTANGENTS:
                     Tangents = new Tangent[NumElements, 2];
                     Normals = new Vector3[NumElements];
                     for (int i = 0; i < NumElements; i++)
                     {
-                        Tangents[i, 0].w = b.ReadSByte() / 127.0;
-                        Tangents[i, 0].x = b.ReadSByte() / 127.0;
-                        Tangents[i, 0].y = b.ReadSByte() / 127.0;
-                        Tangents[i, 0].z = b.ReadSByte() / 127.0;
+                        Tangents[i, 0].w = b.ReadSByte() / 127;
+                        Tangents[i, 0].x = b.ReadSByte() / 127;
+                        Tangents[i, 0].y = b.ReadSByte() / 127;
+                        Tangents[i, 0].z = b.ReadSByte() / 127;
 
                         // Binormal
-                        Tangents[i, 1].w = b.ReadSByte() / 127.0;
-                        Tangents[i, 1].x = b.ReadSByte() / 127.0;
-                        Tangents[i, 1].y = b.ReadSByte() / 127.0;
-                        Tangents[i, 1].z = b.ReadSByte() / 127.0;
+                        Tangents[i, 1].w = b.ReadSByte() / 127;
+                        Tangents[i, 1].x = b.ReadSByte() / 127;
+                        Tangents[i, 1].y = b.ReadSByte() / 127;
+                        Tangents[i, 1].z = b.ReadSByte() / 127;
 
                         // Calculate the normal based on the cross product of the tangents.
                         Normals[i].x = (Tangents[i, 0].y * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].y);

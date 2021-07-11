@@ -7,7 +7,7 @@ namespace CgfConverter.CryEngineCore
         public override void Read(BinaryReader b)
         {
             Flags1 = b.ReadInt32();
-            Flags2 = 0;
+            Flags2 = b.ReadInt32();
             NumVertices = b.ReadInt32();
             NumIndices = b.ReadInt32();
             NumVertSubsets = b.ReadUInt32();

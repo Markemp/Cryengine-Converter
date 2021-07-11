@@ -2,13 +2,13 @@
 {
     public class ChunkIvoSkin : Chunk
     {
-        GeometryInfo geometryInfo;
-        ChunkMesh meshChunk;
-        ChunkMeshSubsets meshSubsetsChunk;
-        ChunkDataStream indices;
-        ChunkDataStream vertsUvs;
-        ChunkDataStream colors;
-        ChunkDataStream tangents;
+        public GeometryInfo geometryInfo;
+        public ChunkMesh meshChunk;
+        public ChunkMeshSubsets meshSubsetsChunk;
+        public ChunkDataStream indices;
+        public ChunkDataStream vertsUvs;
+        public ChunkDataStream colors;
+        public ChunkDataStream tangents;
 
     }
 }

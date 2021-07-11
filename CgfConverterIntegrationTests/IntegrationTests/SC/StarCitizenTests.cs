@@ -177,5 +177,24 @@ namespace CgfConverterTests.IntegrationTests.SC
 
             testUtils.ValidateColladaXml(colladaData);
         }
+
+        [TestMethod]
+        public void DRAK_Buccaneer_Landing_Gear_Front_Skin()
+        {
+            var args = new string[] {
+                $@"{userHome}\OneDrive\ResourceFiles\SC\DRAK_Buccaneer_Landing_Gear_Front_Skin.skin",
+                "-dds", "-dae" };
+            int result = testUtils.argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
+            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
+
+            COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            colladaData.GenerateDaeObject();
+
+            // Geometry Library checks
+            var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
+            Assert.AreEqual(1, geometries.Length);
+        }
     }
 }

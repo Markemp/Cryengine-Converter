@@ -12,14 +12,15 @@ namespace CgfConverter.CryEngineCore
         public uint BytesPerElement { get; set; } // Bytes per data entry
         public uint Reserved1 { get; set; }
         public uint Reserved2 { get; set; }
-        // Need to be careful with using float for Vertices and normals.  technically it's a floating point of length BytesPerElement.  May need to fix this.
-        public Vector3[] Vertices;  // For dataStreamType of 0, length is NumElements. 
-        public Vector3[] Normals;   // For dataStreamType of 1, length is NumElements.
+        
+        public Vector3[] Vertices;
+        public Vector3[] Normals;
+        public UV[] UVs;
+        public uint[] Indices;
+        public IRGBA[] Colors;
 
-        public UV[] UVs;            // for datastreamType of 2, length is NumElements.
-        public IRGB[] RGBColors;    // for dataStreamType of 3, length is NumElements.  Bytes per element of 3
-        public IRGBA[] RGBAColors;  // for dataStreamType of 4, length is NumElements.  Bytes per element of 4
-        public uint[] Indices;    // for dataStreamType of 5, length is NumElements.
+        //public IRGB[] RGBColors;    // for dataStreamType of 3, length is NumElements.  Bytes per element of 3
+        //public IRGBA[] RGBAColors;  // for dataStreamType of 4, length is NumElements.  Bytes per element of 4
         // For Tangents on down, this may be a 2 element array.  See line 846+ in cgf.xml
         public Tangent[,] Tangents;  // for dataStreamType of 6, length is NumElements, 2.  
         public byte[,] ShCoeffs;     // for dataStreamType of 7, length is NumElement,BytesPerElements.
