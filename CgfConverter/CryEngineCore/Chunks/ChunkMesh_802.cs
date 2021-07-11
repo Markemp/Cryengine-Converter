@@ -13,7 +13,7 @@ namespace CgfConverter.CryEngineCore
             NumVertices = b.ReadInt32();
             NumIndices = b.ReadInt32();
             NumVertSubsets = b.ReadUInt32();
-            MeshSubsets = b.ReadInt32();           // Chunk ID of MeshSubsets 
+            MeshSubsetsData = b.ReadInt32();           // Chunk ID of MeshSubsets 
             SkipBytes(b, 4);
             VerticesData = b.ReadInt32();
             SkipBytes(b, 28);

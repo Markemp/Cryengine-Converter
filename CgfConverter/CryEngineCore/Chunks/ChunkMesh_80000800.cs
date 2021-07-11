@@ -14,7 +14,7 @@ namespace CgfConverter.CryEngineCore
             NumVertices = Utils.SwapIntEndian(b.ReadInt32());
             NumIndices = Utils.SwapIntEndian(b.ReadInt32());   //  Number of indices
             SkipBytes(b, 4);
-            MeshSubsets = Utils.SwapIntEndian(b.ReadInt32());  // refers to ID in mesh subsets  1d for candle.  Just 1 for 0x800 type
+            MeshSubsetsData = Utils.SwapIntEndian(b.ReadInt32());  // refers to ID in mesh subsets  1d for candle.  Just 1 for 0x800 type
             SkipBytes(b, 4);
             VerticesData = Utils.SwapIntEndian(b.ReadInt32());  // ID of the datastream for the vertices for this mesh
             NormalsData = Utils.SwapIntEndian(b.ReadInt32());   // ID of the datastream for the normals for this mesh

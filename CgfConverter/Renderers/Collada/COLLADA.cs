@@ -440,9 +440,9 @@ namespace CgfConverter
                     {
                         // TODO:  Implement this chunk
                     }
-                    if (tmpMeshChunk.MeshSubsets != 0)   // For the SC files, you can have Mesh chunks with no Mesh Subset.  Need to skip these.  They are in the .cga file and contain no geometry.
+                    if (tmpMeshChunk.MeshSubsetsData != 0)   // For the SC files, you can have Mesh chunks with no Mesh Subset.  Need to skip these.  They are in the .cga file and contain no geometry.
                     {
-                        ChunkMeshSubsets tmpMeshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
+                        ChunkMeshSubsets tmpMeshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsetsData];  // Listed as Object ID for the Node
 
                         if (tmpMeshChunk.VerticesData != 0)
                             tmpVertices = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.VerticesData];
@@ -1192,14 +1192,14 @@ namespace CgfConverter
                 if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkType.Mesh)
                 {
                     ChunkMesh tmpMeshChunk = (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID];
-                    if (tmpMeshChunk.MeshSubsets == 0 || tmpMeshChunk.NumVertices == 0)  // Can have a node with a mesh and meshsubset, but no vertices.  Write as simple node.
+                    if (tmpMeshChunk.MeshSubsetsData == 0 || tmpMeshChunk.NumVertices == 0)  // Can have a node with a mesh and meshsubset, but no vertices.  Write as simple node.
                     {
                         // The mesh points to a meshphysics chunk.  Process as a simple node.
                         tmpNode = CreateSimpleNode(nodeChunk);
                     }
                     else
                     {
-                        if (nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsets].ID != 0)
+                        if (nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsetsData].ID != 0)
                         {
                             tmpNode = CreateGeometryNode(nodeChunk, (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID]);
                         }
@@ -1340,7 +1340,7 @@ namespace CgfConverter
         private Grendgine_Collada_Node CreateGeometryNode(ChunkNode nodeChunk, ChunkMesh tmpMeshChunk)
         {
             Grendgine_Collada_Node tmpNode = new Grendgine_Collada_Node();
-            ChunkMeshSubsets tmpMeshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
+            ChunkMeshSubsets tmpMeshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsetsData];  // Listed as Object ID for the Node
             Grendgine_Collada_Node_Type nodeType = Grendgine_Collada_Node_Type.NODE; 
             tmpNode.Type = nodeType;
             tmpNode.Name = nodeChunk.Name;

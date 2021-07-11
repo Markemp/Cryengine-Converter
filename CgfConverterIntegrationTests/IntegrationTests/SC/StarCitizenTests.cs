@@ -52,7 +52,8 @@ namespace CgfConverterTests.IntegrationTests.SC
 
             var colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
-            
+            var daeObject = colladaData.DaeObject;
+
             testUtils.ValidateColladaXml(colladaData);
         }
 

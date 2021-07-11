@@ -22,6 +22,7 @@ namespace CgfConverter.CryEngineCore
 
             switch (DataStreamType)
             {
+                #region IVOINDICES
                 case DatastreamType.IVOINDICES:
                     Indices = new uint[NumElements];
                     if (BytesPerElement == 2)
@@ -43,6 +44,8 @@ namespace CgfConverter.CryEngineCore
                         }
                     }
                     break;
+                #endregion
+                #region IVOVERTSUVS
                 case DatastreamType.IVOVERTSUVS:
                     Vertices = new Vector3[NumElements];
                     Normals = new Vector3[NumElements];
@@ -74,6 +77,8 @@ namespace CgfConverter.CryEngineCore
                             break;
                     }
                     break;
+                #endregion
+                #region IVONORMALS
                 case DatastreamType.IVONORMALS:
                     switch (BytesPerElement)
                     {
@@ -103,6 +108,8 @@ namespace CgfConverter.CryEngineCore
                             break;
                     }
                     break;
+                #endregion
+                #region IVOTANGENTS
                 case DatastreamType.IVOTANGENTS:
                     Tangents = new Tangent[NumElements, 2];
                     Normals = new Vector3[NumElements];
@@ -142,17 +149,18 @@ namespace CgfConverter.CryEngineCore
                         ////Tangents[i, 1].w = b.ReadSByte() / 127;
                     }
                     break;
+                #endregion
                 case DatastreamType.IVOBONEMAP:
                     SkinningInfo skin = GetSkinningInfo();
                     skin.HasBoneMapDatastream = true;
-
                     skin.BoneMapping = new List<MeshBoneMapping>();
-                    MeshBoneMapping tmpMap = new MeshBoneMapping();
+                    
                     switch (BytesPerElement)
                     {
                         case 12:
                             for (int i = 0; i < NumElements; i++)
                             {
+                                MeshBoneMapping tmpMap = new MeshBoneMapping();
                                 tmpMap.BoneIndex = new int[4];
                                 tmpMap.Weight = new int[4];
 
@@ -178,7 +186,6 @@ namespace CgfConverter.CryEngineCore
                     }
 
                     break;
-
             }
         }
     }

@@ -166,7 +166,7 @@ namespace CgfConverter
             if (tmpMesh == null)
                 return;
 
-            if (tmpMesh.MeshSubsets == 0)   // This is probably wrong.  These may be parents with no geometry, but still have an offset
+            if (tmpMesh.MeshSubsetsData == 0)   // This is probably wrong.  These may be parents with no geometry, but still have an offset
             {
                 Utils.Log(LogLevelEnum.Debug, "*******Found a Mesh chunk with no Submesh ID (ID: {0:X}, Name: {1}).  Skipping...", tmpMesh.ID, chunkNode.Name);
                 // tmpMesh.WriteChunk();
@@ -186,7 +186,7 @@ namespace CgfConverter
             // Going to assume that there is only one VerticesData datastream for now.  Need to watch for this.   
             // Some 801 types have vertices and not VertsUVs.
             CryEngineCore.ChunkMtlName tmpMtlName = chunkNode._model.ChunkMap.GetValue(chunkNode.MatID, null) as CryEngineCore.ChunkMtlName;
-            CryEngineCore.ChunkMeshSubsets tmpMeshSubsets = tmpMesh._model.ChunkMap.GetValue(tmpMesh.MeshSubsets, null) as CryEngineCore.ChunkMeshSubsets; // Listed as Object ID for the Node
+            CryEngineCore.ChunkMeshSubsets tmpMeshSubsets = tmpMesh._model.ChunkMap.GetValue(tmpMesh.MeshSubsetsData, null) as CryEngineCore.ChunkMeshSubsets; // Listed as Object ID for the Node
             CryEngineCore.ChunkDataStream tmpIndices = tmpMesh._model.ChunkMap.GetValue(tmpMesh.IndicesData, null) as CryEngineCore.ChunkDataStream;
             CryEngineCore.ChunkDataStream tmpVertices = tmpMesh._model.ChunkMap.GetValue(tmpMesh.VerticesData, null) as CryEngineCore.ChunkDataStream;
             CryEngineCore.ChunkDataStream tmpNormals = tmpMesh._model.ChunkMap.GetValue(tmpMesh.NormalsData, null) as CryEngineCore.ChunkDataStream;

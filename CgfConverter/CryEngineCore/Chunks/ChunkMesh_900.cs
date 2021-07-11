@@ -6,7 +6,7 @@ namespace CgfConverter.CryEngineCore
     {
         public override void Read(BinaryReader b)
         {
-            Flags1 = b.ReadInt32();
+            Flags1 = 0;
             Flags2 = b.ReadInt32();
             NumVertices = b.ReadInt32();
             NumIndices = b.ReadInt32();
@@ -21,10 +21,12 @@ namespace CgfConverter.CryEngineCore
 
             ID = 2; // Node chunk ID = 1
 
-            VertsUVsData = 4;
-            NormalsData = 5;
-            ColorsData = 6;
+            IndicesData = 4;
+            VertsUVsData = 5;
+            NormalsData = 6;
             TangentsData = 7;
+            BoneMapData = 8;
+            ColorsData = 9;
         }
     }
 }

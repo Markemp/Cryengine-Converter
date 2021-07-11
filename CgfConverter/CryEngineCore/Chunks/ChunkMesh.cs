@@ -19,7 +19,7 @@
         //public ChunkMtlName Material; // 623, Material Chunk, never encountered?
         public uint NumVertSubsets { get; set; } // 801, Number of vert subsets
         public int VertsAnimID { get; set; }
-        public int MeshSubsets { get; set; } // 800  Reference of the mesh subsets
+        public int MeshSubsetsData { get; set; } // 800  Reference of the mesh subsets
         // public ChunkVertAnim VertAnims; // 744.  not implemented
         // public Vertex[] Vertices; // 744.  not implemented
         // public Face[,] Faces; // 744.  Not implemented
@@ -56,7 +56,7 @@
             Utils.Log(LogLevelEnum.Verbose, "*** START MESH CHUNK ***");
             Utils.Log(LogLevelEnum.Verbose, "    ChunkType:           {0}", ChunkType);
             Utils.Log(LogLevelEnum.Verbose, "    Chunk ID:            {0:X}", ID);
-            Utils.Log(LogLevelEnum.Verbose, "    MeshSubSetID:        {0:X}", MeshSubsets);
+            Utils.Log(LogLevelEnum.Verbose, "    MeshSubSetID:        {0:X}", MeshSubsetsData);
             Utils.Log(LogLevelEnum.Verbose, "    Vertex Datastream:   {0:X}", VerticesData);
             Utils.Log(LogLevelEnum.Verbose, "    Normals Datastream:  {0:X}", NormalsData);
             Utils.Log(LogLevelEnum.Verbose, "    UVs Datastream:      {0:X}", UVsData);

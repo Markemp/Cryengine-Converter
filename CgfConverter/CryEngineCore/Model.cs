@@ -172,6 +172,7 @@ namespace CgfConverter.CryEngineCore
             rootNode.MatID = 0;
             rootNode.Transform = Matrix44.CreateDefaultRootNodeMatrix();
             rootNode.ChunkType = ChunkType.Node;
+            rootNode.ID = 1;
             RootNode = rootNode;
             rootNode._model = this;
             ChunkMap.Add(1, rootNode);

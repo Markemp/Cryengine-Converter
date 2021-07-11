@@ -352,16 +352,14 @@ namespace CgfConverter.CryEngineCore
                 case DatastreamType.BONEMAP:
                     SkinningInfo skin = GetSkinningInfo();
                     skin.HasBoneMapDatastream = true;
-
                     skin.BoneMapping = new List<MeshBoneMapping>();
 
-                    // Bones should have 4 bone IDs (index) and 4 weights.
-                    for (int i = 0; i < NumElements; i++)
+                    switch (BytesPerElement)
                     {
-                        MeshBoneMapping tmpMap = new MeshBoneMapping();
-                        switch (BytesPerElement)
-                        {
-                            case 8:
+                        case 8:
+                            for (int i = 0; i < NumElements; i++)
+                            {
+                                MeshBoneMapping tmpMap = new MeshBoneMapping();
                                 tmpMap.BoneIndex = new int[4];
                                 tmpMap.Weight = new int[4];
 
@@ -375,8 +373,12 @@ namespace CgfConverter.CryEngineCore
                                     tmpMap.Weight[j] = b.ReadByte();
                                 }
                                 skin.BoneMapping.Add(tmpMap);
-                                break;
-                            case 12:
+                            }
+                            break;
+                        case 12:
+                            for (int i = 0; i < NumElements; i++)
+                            {
+                                MeshBoneMapping tmpMap = new MeshBoneMapping();
                                 tmpMap.BoneIndex = new int[4];
                                 tmpMap.Weight = new int[4];
 
@@ -390,18 +392,18 @@ namespace CgfConverter.CryEngineCore
                                     tmpMap.Weight[j] = b.ReadByte();
                                 }
                                 skin.BoneMapping.Add(tmpMap);
+                            }
+                            break;
 
-                                break;
-                            default:
-                                Utils.Log("Unknown BoneMapping structure");
-                                break;
-                        }
+                        default:
+                            Utils.Log("Unknown BoneMapping structure");
+                            break;
                     }
 
                     break;
 
                 #endregion
-                #region DataStreamTypeEnum.QTangents
+                #region case DataStreamTypeEnum.QTangents
                 case DatastreamType.QTANGENTS:
                     Tangents = new Tangent[NumElements, 2];
                     Normals = new Vector3[NumElements];

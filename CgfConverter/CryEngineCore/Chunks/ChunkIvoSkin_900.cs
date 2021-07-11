@@ -15,6 +15,7 @@ namespace CgfConverter.CryEngineCore.Chunks
          * 6: Normals
          * 7: Tangents
          * 8: Bonemap  (assume all #ivo files have armatures)
+         * 9: Colors
          */
         private bool hasNormalsChunk = false;  // If Flags2 of the meshchunk is 5, there is a separate normals chunk
 
@@ -23,6 +24,7 @@ namespace CgfConverter.CryEngineCore.Chunks
             var model = _model;
 
             base.Read(b);
+            SkipBytes(b, 4);
 
             ChunkMesh_900 meshChunk = new ChunkMesh_900();
             meshChunk._model = _model;
@@ -31,12 +33,7 @@ namespace CgfConverter.CryEngineCore.Chunks
             meshChunk.ChunkType = ChunkType.Mesh;
             meshChunk.Read(b);
             meshChunk.ID = 2;
-            meshChunk.MeshSubsets = 3;
-            meshChunk.IndicesData = 4;
-            meshChunk.VertsUVsData = 5;
-            meshChunk.NormalsData = 6;
-            meshChunk.TangentsData = 7;
-            meshChunk.BoneMapData = 8;
+            meshChunk.MeshSubsetsData = 3;
             model.ChunkMap.Add(meshChunk.ID, meshChunk);
 
             if (meshChunk.Flags2 == 5)
@@ -48,9 +45,9 @@ namespace CgfConverter.CryEngineCore.Chunks
             // Create dummy header info here (ChunkType, version, size, offset)
             subsetsChunk._model = _model;
             subsetsChunk._header = _header;
-            subsetsChunk._header.Offset = (uint)b.BaseStream.Position;
-            subsetsChunk.ChunkType = ChunkType.MeshSubsets;
+            subsetsChunk._header.Offset = (uint)b.BaseStream.Position; 
             subsetsChunk.Read(b);
+            subsetsChunk.ChunkType = ChunkType.MeshSubsets;
             subsetsChunk.ID = 3;
             model.ChunkMap.Add(subsetsChunk.ID, subsetsChunk);
 
@@ -66,8 +63,9 @@ namespace CgfConverter.CryEngineCore.Chunks
                         indicesDatastreamChunk._model = _model;
                         indicesDatastreamChunk._header = _header;
                         indicesDatastreamChunk._header.Offset = (uint)b.BaseStream.Position;
-                        indicesDatastreamChunk.ChunkType = ChunkType.DataStream;
                         indicesDatastreamChunk.Read(b);
+                        indicesDatastreamChunk.DataStreamType = DatastreamType.INDICES;
+                        indicesDatastreamChunk.ChunkType = ChunkType.DataStream;
                         indicesDatastreamChunk.ID = 4;
                         model.ChunkMap.Add(indicesDatastreamChunk.ID, indicesDatastreamChunk);
                         break;
@@ -75,19 +73,32 @@ namespace CgfConverter.CryEngineCore.Chunks
                         ChunkDataStream_900 vertsUvsDatastreamChunk = new ChunkDataStream_900((uint)meshChunk.NumVertices);
                         vertsUvsDatastreamChunk._model = _model;
                         vertsUvsDatastreamChunk._header = _header;
-                        vertsUvsDatastreamChunk._header.Offset = (uint)b.BaseStream.Position;
-                        vertsUvsDatastreamChunk.ChunkType = ChunkType.DataStream;
+                        vertsUvsDatastreamChunk._header.Offset = (uint)b.BaseStream.Position; 
                         vertsUvsDatastreamChunk.Read(b);
+                        vertsUvsDatastreamChunk.DataStreamType = DatastreamType.VERTSUVS;
+                        vertsUvsDatastreamChunk.ChunkType = ChunkType.DataStream;
                         vertsUvsDatastreamChunk.ID = 5;
                         model.ChunkMap.Add(vertsUvsDatastreamChunk.ID, vertsUvsDatastreamChunk);
+                        
+                        // Create colors chunk
+                        ChunkDataStream_900 c = new ChunkDataStream_900((uint)meshChunk.NumVertices);
+                        c._model = _model;
+                        c._header = _header;
+                        c.ChunkType = ChunkType.DataStream;
+                        c.BytesPerElement = 4;
+                        c.DataStreamType = DatastreamType.COLORS;
+                        c.Colors = vertsUvsDatastreamChunk.Colors;
+                        c.ID = 9;
+                        model.ChunkMap.Add(c.ID, c);
                         break;
                     case DatastreamType.IVONORMALS:
                         ChunkDataStream_900 normals = new ChunkDataStream_900((uint)meshChunk.NumVertices);
                         normals._model = _model;
                         normals._header = _header;
-                        normals._header.Offset = (uint)b.BaseStream.Position;
-                        normals.ChunkType = ChunkType.DataStream;
+                        normals._header.Offset = (uint)b.BaseStream.Position; 
                         normals.Read(b);
+                        normals.DataStreamType = DatastreamType.NORMALS;
+                        normals.ChunkType = ChunkType.DataStream;
                         normals.ID = 6;
                         model.ChunkMap.Add(normals.ID, normals);
                         break;
@@ -95,19 +106,35 @@ namespace CgfConverter.CryEngineCore.Chunks
                         ChunkDataStream_900 tangents = new ChunkDataStream_900((uint)meshChunk.NumVertices);
                         tangents._model = _model;
                         tangents._header = _header;
-                        tangents._header.Offset = (uint)b.BaseStream.Position;
-                        tangents.ChunkType = ChunkType.DataStream;
+                        tangents._header.Offset = (uint)b.BaseStream.Position; 
                         tangents.Read(b);
+                        tangents.DataStreamType = DatastreamType.TANGENTS;
+                        tangents.ChunkType = ChunkType.DataStream;
                         tangents.ID = 7;
                         model.ChunkMap.Add(tangents.ID, tangents);
+                        if (!hasNormalsChunk)
+                        {
+                            // Create a normals chunk from Tangents data
+                            ChunkDataStream_900 norms = new ChunkDataStream_900((uint)meshChunk.NumVertices);
+                            norms._model = _model;
+                            norms._header = _header;
+                            //norms._header.Offset = (uint)b.BaseStream.Position;
+                            norms.ChunkType = ChunkType.DataStream;
+                            norms.BytesPerElement = 4;
+                            norms.DataStreamType = DatastreamType.NORMALS;
+                            norms.Normals = tangents.Normals;
+                            norms.ID = 6;
+                            model.ChunkMap.Add(norms.ID, norms);
+                        }
                         break;
                     case DatastreamType.IVOBONEMAP:
                         ChunkDataStream_900 bonemap = new ChunkDataStream_900((uint)meshChunk.NumVertices);
                         bonemap._model = _model;
                         bonemap._header = _header;
-                        bonemap._header.Offset = (uint)b.BaseStream.Position;
-                        bonemap.ChunkType = ChunkType.DataStream;
+                        bonemap._header.Offset = (uint)b.BaseStream.Position; 
                         bonemap.Read(b);
+                        bonemap.DataStreamType = DatastreamType.BONEMAP;
+                        bonemap.ChunkType = ChunkType.DataStream;
                         bonemap.ID = 8;
                         model.ChunkMap.Add(bonemap.ID, bonemap);
                         break;

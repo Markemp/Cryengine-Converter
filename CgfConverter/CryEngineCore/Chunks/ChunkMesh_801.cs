@@ -13,7 +13,7 @@ namespace CgfConverter.CryEngineCore
             NumVertices = b.ReadInt32();
             NumIndices = b.ReadInt32();
             NumVertSubsets = b.ReadUInt32();
-            MeshSubsets = b.ReadInt32();           // Chunk ID of mesh subsets 
+            MeshSubsetsData = b.ReadInt32();           // Chunk ID of mesh subsets 
             VertsAnimID = b.ReadInt32();
             VerticesData = b.ReadInt32();
             NormalsData = b.ReadInt32();           // Chunk ID of the datastream for the normals for this mesh

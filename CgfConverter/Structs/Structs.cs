@@ -845,13 +845,13 @@ namespace CgfConverter
         public Vector3 RelPos; // relative position
         public Quaternion RelQuat; //Relative Quaternion if ARG==1?
         public Vector3 Unknown1; // If ARG==6 or 10?
-        public Double[] Unknown2; // If ARG==9?  array length = 2
+        public float[] Unknown2; // If ARG==9?  array length = 2
     }
 
     public struct UV
     {
-        public Double U;
-        public Double V;
+        public float U;
+        public float V;
     }
 
     public struct UVFace
