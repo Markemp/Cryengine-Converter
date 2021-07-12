@@ -63,6 +63,7 @@ namespace CgfConverter.CryEngineCore
             {
                 AddChildIDToParent(bone);
             }
+
             SkinningInfo skin = GetSkinningInfo();
             skin.CompiledBones = new List<CompiledBone>();
             skin.HasSkinningInfo = true;

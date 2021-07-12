@@ -33,7 +33,6 @@ namespace CgfConverter.CryEngineCore
                 BoneList[i].boneName = boneNames[i];
                 SetParentBone(BoneList[i]);
                 AddChildIDToParent(BoneList[i]);
-                SetBoneLocalTransformMatrix(BoneList[i]);
             }
 
             SkinningInfo skin = GetSkinningInfo();

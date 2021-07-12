@@ -197,5 +197,25 @@ namespace CgfConverterTests.IntegrationTests.SC
             var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
             Assert.AreEqual(1, geometries.Length);
         }
+
+        [TestMethod]
+        public void Mobiglass()
+        {
+            var args = new string[] {
+                $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\f_mobiglas_civilian_01.skin",
+                "-dds", "-dae" };
+            int result = testUtils.argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
+            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
+
+            COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            colladaData.GenerateDaeObject();
+
+            // Geometry Library checks
+            var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
+            Assert.AreEqual(1, geometries.Length);
+            
+        }
     }
 }
