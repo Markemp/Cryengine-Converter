@@ -21,6 +21,19 @@ namespace BinaryReaderExtensions
             return xshort.ToSingle();
         }
 
+        public static Quaternion ReadQuaternion(this BinaryReader r)
+        {
+            var q = new Quaternion()
+            {
+                x = r.ReadSingle(),
+                y = r.ReadSingle(),
+                z = r.ReadSingle(),
+                w = r.ReadSingle()
+            };
+
+            return q;
+        }
+
         public static IRGBA ReadColor(this BinaryReader r)
         {
             IRGBA c = new IRGBA();
