@@ -21,15 +21,33 @@ namespace BinaryReaderExtensions
             return xshort.ToSingle();
         }
 
-        public static Quaternion ReadQuaternion(this BinaryReader r)
+        public static Quaternion ReadQuaternion(this BinaryReader r, InputType inputType = InputType.Single)
         {
-            var q = new Quaternion()
+            Quaternion q;
+
+            switch (inputType)
             {
-                x = r.ReadSingle(),
-                y = r.ReadSingle(),
-                z = r.ReadSingle(),
-                w = r.ReadSingle()
-            };
+                case InputType.Single:
+                    q = new Quaternion()
+                    {
+                        x = r.ReadSingle(),
+                        y = r.ReadSingle(),
+                        z = r.ReadSingle(),
+                        w = r.ReadSingle()
+                    };
+                    break;
+                case InputType.Half:
+                    q = new Quaternion()
+                    {
+                        x = r.ReadHalf(),
+                        y = r.ReadHalf(),
+                        z = r.ReadHalf(),
+                        w = r.ReadHalf()
+                    };
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
 
             return q;
         }
@@ -42,6 +60,14 @@ namespace BinaryReaderExtensions
             c.b = r.ReadByte();
             c.a = r.ReadByte();
             return c;
+        }
+
+        public enum InputType
+        {
+            Half,
+            CryHalf,
+            Single,
+            Double
         }
 
         static float Byte4HexToFloat(string hexString)
