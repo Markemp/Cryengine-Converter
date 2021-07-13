@@ -46,8 +46,8 @@ namespace CgfConverter.CryEngineCore
             Vector3 localTranslation;
             Matrix33 localRotation;
 
-            bone.LocalTranslation = bone.boneToWorld.GetBoneToWorldTranslationVector();       // World positions of the bone
-            bone.LocalRotation = bone.boneToWorld.GetBoneToWorldRotationMatrix();            // World rotation of the bone.
+            //bone.LocalTranslation = bone.boneToWorld.GetBoneToWorldTranslationVector();       // World positions of the bone
+            //bone.LocalRotation = bone.boneToWorld.GetBoneToWorldRotationMatrix();            // World rotation of the bone.
 
             if (bone.parentID != 0)
             {

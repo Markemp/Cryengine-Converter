@@ -18,7 +18,7 @@ namespace CgfConverter.CryEngineCore
             for (int i = 0; i < NumBones; i++)
             {
                 CompiledBone tempBone = new CompiledBone();
-                tempBone.ReadCompiledBone(b);
+                tempBone.ReadCompiledBone_800(b);
 
                 if (RootBone == null)  // First bone read is root bone
                     RootBone = tempBone;

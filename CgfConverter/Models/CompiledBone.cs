@@ -1,10 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
+using System.Collections.Generic;
 
 namespace CgfConverter
 {
-    public class CompiledBone       // This is the same as BoneDescData
+    public class CompiledBone
     {
         public uint ControllerID { get; set; }
         public PhysicsGeometry[] physicsGeometry;  // 2 of these.  One for live objects, other for dead (ragdoll?)
@@ -17,18 +18,19 @@ namespace CgfConverter
         public int offsetChild;                    // Offset to the first child to this bone in number of CompiledBone structs
         public uint numChildren;                   // Number of children to this bone
 
+        public Matrix4x4 BindPoseMatrix;           // Use the inverse of this to place in Collada file
         public long offset;                        // Calculated position in the file where this bone started.
         
         public uint parentID;                           // Calculated controllerID of the parent bone put into the Bone Dictionary (the key)
         public List<uint> childIDs = new List<uint>();  // Calculated controllerIDs of the children to this bone.
         
-        public Matrix44 LocalTransform = new Matrix44();           // Because Cryengine tends to store transform relative to world, we have to add all the transforms from the node to the root.  Calculated, row major.
-        public Vector3 LocalTranslation = new Vector3();            // To hold the local rotation vector
+        public Matrix44 LocalTransform = new Matrix44();
+        public Vector3 LocalTranslation { get; set; } = new Vector3();            // To hold the local rotation vector
         public Matrix33 LocalRotation = new Matrix33();             // to hold the local rotation matrix
 
         public CompiledBone ParentBone { get; set; }
 
-        public void ReadCompiledBone(BinaryReader b)
+        public void ReadCompiledBone_800(BinaryReader b)
         {
             // Reads just a single 584 byte entry of a bone.
             ControllerID = b.ReadUInt32();                 // unique id of bone (generated from bone name)

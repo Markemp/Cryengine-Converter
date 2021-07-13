@@ -14,6 +14,13 @@ namespace BinaryReaderExtensions
             return Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
         }
 
+        public static float ReadHalf(this BinaryReader r)
+        {
+            CgfConverter.Half xshort = new CgfConverter.Half();
+            xshort.bits = r.ReadUInt16();
+            return xshort.ToSingle();
+        }
+
         public static IRGBA ReadColor(this BinaryReader r)
         {
             IRGBA c = new IRGBA();
