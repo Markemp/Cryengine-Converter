@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using Extensions;
+using System.IO;
 
 namespace CgfConverter.CryEngineCore
 {
@@ -32,12 +33,8 @@ namespace CgfConverter.CryEngineCore
             ShapeDeformationData = b.ReadInt32();
             BoneMapData = b.ReadInt32();
             FaceMapData = b.ReadInt32();
-            MinBound.x = b.ReadSingle();
-            MinBound.y = b.ReadSingle();
-            MinBound.z = b.ReadSingle();
-            MaxBound.x = b.ReadSingle();
-            MaxBound.y = b.ReadSingle();
-            MaxBound.z = b.ReadSingle();
+            MinBound = b.ReadVector3();
+            MaxBound = b.ReadVector3();
         }
     }
 }

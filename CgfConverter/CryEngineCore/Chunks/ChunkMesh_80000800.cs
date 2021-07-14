@@ -35,12 +35,12 @@ namespace CgfConverter.CryEngineCore
                 if (PhysicsData[i] != 0)
                     MeshPhysicsData = PhysicsData[i];
             }
-            MinBound.x = Utils.SwapSingleEndian(b.ReadSingle());
-            MinBound.y = Utils.SwapSingleEndian(b.ReadSingle());
-            MinBound.z = Utils.SwapSingleEndian(b.ReadSingle());
-            MaxBound.x = Utils.SwapSingleEndian(b.ReadSingle());
-            MaxBound.y = Utils.SwapSingleEndian(b.ReadSingle());
-            MaxBound.z = Utils.SwapSingleEndian(b.ReadSingle());
+            MinBound.X = Utils.SwapSingleEndian(b.ReadSingle());
+            MinBound.Y = Utils.SwapSingleEndian(b.ReadSingle());
+            MinBound.Z = Utils.SwapSingleEndian(b.ReadSingle());
+            MaxBound.X = Utils.SwapSingleEndian(b.ReadSingle());
+            MaxBound.Y = Utils.SwapSingleEndian(b.ReadSingle());
+            MaxBound.Z = Utils.SwapSingleEndian(b.ReadSingle());
         }
     }
 }

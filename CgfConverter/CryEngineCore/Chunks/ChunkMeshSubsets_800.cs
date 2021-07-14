@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using Extensions;
+using System.IO;
 
 namespace CgfConverter.CryEngineCore
 {
@@ -20,9 +21,7 @@ namespace CgfConverter.CryEngineCore
                 MeshSubsets[i].NumVertices = b.ReadInt32();
                 MeshSubsets[i].MatID = b.ReadInt32();
                 MeshSubsets[i].Radius = b.ReadSingle();
-                MeshSubsets[i].Center.x = b.ReadSingle();
-                MeshSubsets[i].Center.y = b.ReadSingle();
-                MeshSubsets[i].Center.z = b.ReadSingle();
+                MeshSubsets[i].Center = b.ReadVector3();
             }
         }
     }

@@ -4,7 +4,7 @@ using System;
 using System.IO;
 using System.Numerics;
 
-namespace BinaryReaderExtensions
+namespace Extensions
 {
     // This includes changes for 2.6 created by Dymek (byte4/1/2hex, and 20 byte per element vertices).  Thank you!
     public static class BinaryReaderExtensions

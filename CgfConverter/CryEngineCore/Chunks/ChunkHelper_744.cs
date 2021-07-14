@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Extensions;
+using System;
 using System.IO;
 
 namespace CgfConverter.CryEngineCore
@@ -9,14 +10,12 @@ namespace CgfConverter.CryEngineCore
         {
             base.Read(b);
 
-            this.HelperType = (HelperType)Enum.ToObject(typeof(HelperType), b.ReadUInt32());
-            if (this.Version == 0x744)  // only has the Position.
+            HelperType = (HelperType)Enum.ToObject(typeof(HelperType), b.ReadUInt32());
+            if (Version == 0x744)  // only has the Position.
             {
-                this.Pos.x = b.ReadSingle();
-                this.Pos.y = b.ReadSingle();
-                this.Pos.z = b.ReadSingle();
+                Pos = b.ReadVector3();
             }
-            else if (this.Version == 0x362)   // will probably never see these.
+            else if (Version == 0x362)   // will probably never see these.
             {
                 char[] tmpName = new Char[64];
                 tmpName = b.ReadChars(64);
@@ -29,11 +28,9 @@ namespace CgfConverter.CryEngineCore
                         break;
                     }
                 }
-                this.Name = new string(tmpName, 0, stringLength);
-                this.HelperType = (HelperType)Enum.ToObject(typeof(HelperType), b.ReadUInt32());
-                this.Pos.x = b.ReadSingle();
-                this.Pos.y = b.ReadSingle();
-                this.Pos.z = b.ReadSingle();
+                Name = new string(tmpName, 0, stringLength);
+                HelperType = (HelperType)Enum.ToObject(typeof(HelperType), b.ReadUInt32());
+                Pos = b.ReadVector3();
             }
         }
     }

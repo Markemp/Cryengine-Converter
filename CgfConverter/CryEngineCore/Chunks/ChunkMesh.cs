@@ -1,4 +1,6 @@
-﻿namespace CgfConverter.CryEngineCore
+﻿using System.Numerics;
+
+namespace CgfConverter.CryEngineCore
 {
     public abstract class ChunkMesh : Chunk
     {
@@ -64,8 +66,8 @@
             Utils.Log(LogLevelEnum.Verbose, "    Tangents Datastream: {0:X}", TangentsData);
             Utils.Log(LogLevelEnum.Verbose, "    Mesh Physics Data:   {0:X}", MeshPhysicsData);
             Utils.Log(LogLevelEnum.Verbose, "    VertUVs:             {0:X}", VertsUVsData);
-            Utils.Log(LogLevelEnum.Verbose, "    MinBound:            {0:F7}, {1:F7}, {2:F7}", MinBound.x, MinBound.y, MinBound.z);
-            Utils.Log(LogLevelEnum.Verbose, "    MaxBound:            {0:F7}, {1:F7}, {2:F7}", MaxBound.x, MaxBound.y, MaxBound.z);
+            Utils.Log(LogLevelEnum.Verbose, "    MinBound:            {0:F7}, {1:F7}, {2:F7}", MinBound.X, MinBound.Y, MinBound.Z);
+            Utils.Log(LogLevelEnum.Verbose, "    MaxBound:            {0:F7}, {1:F7}, {2:F7}", MaxBound.X, MaxBound.Y, MaxBound.Z);
             Utils.Log(LogLevelEnum.Verbose, "*** END MESH CHUNK ***");
         }
     }

@@ -1,4 +1,4 @@
-﻿using BinaryReaderExtensions;
+﻿using Extensions;
 using System;
 using System.IO;
 using System.Numerics;

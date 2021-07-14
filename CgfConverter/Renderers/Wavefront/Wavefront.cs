@@ -1,9 +1,11 @@
-﻿using System;
+﻿using CgfConverter.Structs;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
-//using CgfConverter;
+using Extensions;
 
 namespace CgfConverter
 {
@@ -218,19 +220,24 @@ namespace CgfConverter
                         // Let's try this using this node chunk's rotation matrix, and the transform is the sum of all the transforms.
                         // Get the transform.
                         // Dymek's code.  Scales the object by the bounding box.
-                        double multiplerX = Math.Abs(tmpMesh.MinBound.x - tmpMesh.MaxBound.x) / 2f;
-                        double multiplerY = Math.Abs(tmpMesh.MinBound.y - tmpMesh.MaxBound.y) / 2f;
-                        double multiplerZ = Math.Abs(tmpMesh.MinBound.z - tmpMesh.MaxBound.z) / 2f;
+                        float multiplerX = Math.Abs(tmpMesh.MinBound.X - tmpMesh.MaxBound.X) / 2f;
+                        float multiplerY = Math.Abs(tmpMesh.MinBound.Y - tmpMesh.MaxBound.Y) / 2f;
+                        float multiplerZ = Math.Abs(tmpMesh.MinBound.Z - tmpMesh.MaxBound.Z) / 2f;
                         if (multiplerX < 1) { multiplerX = 1; }
                         if (multiplerY < 1) { multiplerY = 1; }
                         if (multiplerZ < 1) { multiplerZ = 1; }
-                        tmpVertsUVs.Vertices[j].x = tmpVertsUVs.Vertices[j].x * multiplerX + (tmpMesh.MaxBound.x + tmpMesh.MinBound.x) / 2;
-                        tmpVertsUVs.Vertices[j].y = tmpVertsUVs.Vertices[j].y * multiplerY + (tmpMesh.MaxBound.y + tmpMesh.MinBound.y) / 2;
-                        tmpVertsUVs.Vertices[j].z = tmpVertsUVs.Vertices[j].z * multiplerZ + (tmpMesh.MaxBound.z + tmpMesh.MinBound.z) / 2;
+                        tmpVertsUVs.Vertices[j].X = tmpVertsUVs.Vertices[j].X * multiplerX + (tmpMesh.MaxBound.X + tmpMesh.MinBound.X) / 2;
+                        tmpVertsUVs.Vertices[j].Y = tmpVertsUVs.Vertices[j].Y * multiplerY + (tmpMesh.MaxBound.Y + tmpMesh.MinBound.Y) / 2;
+                        tmpVertsUVs.Vertices[j].Z = tmpVertsUVs.Vertices[j].Z * multiplerZ + (tmpMesh.MaxBound.Z + tmpMesh.MinBound.Z) / 2;
 
-                        Vector3 vertex = transformSoFar * tmpVertsUVs.Vertices[j];
+                        Vector3 scale;
+                        Quaternion rotation;
+                        Vector3 translation;
+                        Matrix4x4.Decompose(transformSoFar, out scale, out rotation, out translation);
+                        Matrix3x3 rotMatrix = rotation.ConvertToRotationMatrix();
+                        Vector3 vertex = rotMatrix * tmpVertsUVs.Vertices[j];
 
-                        f.WriteLine("v {0:F7} {1:F7} {2:F7}", safe(vertex.x), safe(vertex.y), safe(vertex.z));
+                        f.WriteLine("v {0:F7} {1:F7} {2:F7}", safe(vertex.X), safe(vertex.Y), safe(vertex.Z));
                     }
 
                     f.WriteLine();
@@ -254,10 +261,15 @@ namespace CgfConverter
                     {
                         if (tmpVertices != null)
                         {
-                            // Rotate/translate the vertex                            
-                            Vector3 vertex = transformSoFar * tmpVertices.Vertices[j];
+                            // Rotate/translate the vertex
+                            Vector3 scale;
+                            Quaternion rotation;
+                            Vector3 translation;
+                            Matrix4x4.Decompose(transformSoFar, out scale, out rotation, out translation);
+                            Matrix3x3 rotMatrix = rotation.ConvertToRotationMatrix();
+                            Vector3 vertex = rotMatrix * tmpVertices.Vertices[j];
 
-                            f.WriteLine("v {0:F7} {1:F7} {2:F7}", safe(vertex.x), safe(vertex.y), safe(vertex.z));
+                            f.WriteLine("v {0:F7} {1:F7} {2:F7}", safe(vertex.X), safe(vertex.Y), safe(vertex.Z));
                         }
                         else
                         {
@@ -288,9 +300,9 @@ namespace CgfConverter
                         j++)
                     {
                         f.WriteLine("vn {0:F7} {1:F7} {2:F7}",
-                            tmpNormals.Normals[j].x,
-                            tmpNormals.Normals[j].y,
-                            tmpNormals.Normals[j].z);
+                            tmpNormals.Normals[j].X,
+                            tmpNormals.Normals[j].Y,
+                            tmpNormals.Normals[j].Z);
                     }
                 }
 
@@ -368,9 +380,9 @@ namespace CgfConverter
                     //Vector3 vertex = chunkNode.GetTransform(tmpVertsUVs.Vertices[j]);
 
                     string s1 = String.Format("v {0:F7} {1:F7} {2:F7}",
-                        chunkProx.PhysicalProxies[i].Vertices[j].x,
-                        chunkProx.PhysicalProxies[i].Vertices[j].y,
-                        chunkProx.PhysicalProxies[i].Vertices[j].z);
+                        chunkProx.PhysicalProxies[i].Vertices[j].X,
+                        chunkProx.PhysicalProxies[i].Vertices[j].Y,
+                        chunkProx.PhysicalProxies[i].Vertices[j].Z);
                     f.WriteLine(s1);
                 }
                 f.WriteLine();

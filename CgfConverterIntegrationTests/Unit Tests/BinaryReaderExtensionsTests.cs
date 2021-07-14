@@ -1,7 +1,7 @@
-﻿using BinaryReaderExtensions;
+﻿using Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
-using static BinaryReaderExtensions.BinaryReaderExtensions;
+using static Extensions.BinaryReaderExtensions;
 
 namespace CgfConverterIntegrationTests.Unit_Tests
 {

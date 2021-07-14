@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using BinaryReaderExtensions;
+using System.Numerics;
+using Extensions;
+using static Extensions.BinaryReaderExtensions;
 
 namespace CgfConverter.CryEngineCore
 {
@@ -30,9 +32,7 @@ namespace CgfConverter.CryEngineCore
                     {
                         for (int i = 0; i < NumElements; i++)
                         {
-                            Vertices[i].x = b.ReadSingle();
-                            Vertices[i].y = b.ReadSingle();
-                            Vertices[i].z = b.ReadSingle();
+                            Vertices[i] = b.ReadVector3();
                         }
                     }
                     else
@@ -40,17 +40,7 @@ namespace CgfConverter.CryEngineCore
                     {
                         for (int i = 0; i < NumElements; i++)
                         {
-                            Half xshort = new Half();
-                            xshort.bits = b.ReadUInt16();
-                            Vertices[i].x = xshort.ToSingle();
-
-                            Half yshort = new Half();
-                            yshort.bits = b.ReadUInt16();
-                            Vertices[i].y = yshort.ToSingle();
-
-                            Half zshort = new Half();
-                            zshort.bits = b.ReadUInt16();
-                            Vertices[i].z = zshort.ToSingle();
+                            Vertices[i] = b.ReadVector3(InputType.Half);
                             b.ReadUInt16();
                         }
                     }
@@ -80,11 +70,8 @@ namespace CgfConverter.CryEngineCore
                     Normals = new Vector3[NumElements];
                     for (int i = 0; i < NumElements; i++)
                     {
-                        Normals[i].x = b.ReadSingle();
-                        Normals[i].y = b.ReadSingle();
-                        Normals[i].z = b.ReadSingle();
+                        Normals[i] = b.ReadVector3();
                     }
-                    //Utils.Log(LogLevelEnum.Debug, "Offset is {0:X}", b.BaseStream.Position);
                     break;
 
                 case DatastreamType.UVS:
@@ -94,7 +81,6 @@ namespace CgfConverter.CryEngineCore
                         UVs[i].U = b.ReadSingle();
                         UVs[i].V = b.ReadSingle();
                     }
-                    //Utils.Log(LogLevelEnum.Debug, "Offset is {0:X}", b.BaseStream.Position);
                     break;
 
                 case DatastreamType.TANGENTS:
@@ -187,32 +173,23 @@ namespace CgfConverter.CryEngineCore
                         case 20:  // Dymek wrote this.  Used in 2.6 skin files.  3 floats for vertex position, 4 bytes for normals, 2 halfs for UVs.  Normals are calculated from Tangents
                             for (int i = 0; i < NumElements; i++)
                             {
-                                Vertices[i].x = b.ReadSingle();
-                                Vertices[i].y = b.ReadSingle();
-                                Vertices[i].z = b.ReadSingle();      // For some reason, skins are an extra 1 meter in the z direction.
+                                Vertices[i] = b.ReadVector3(); // For some reason, skins are an extra 1 meter in the z direction.
 
                                 // Normals are stored in a signed byte, prob div by 127.
-                                Normals[i].x = b.ReadSByte() / 127.0;
-                                Normals[i].y = b.ReadSByte() / 127.0;
-                                Normals[i].z = b.ReadSByte() / 127.0;
+                                Normals[i].X = b.ReadSByte() / 127.0f;
+                                Normals[i].Y = b.ReadSByte() / 127.0f;
+                                Normals[i].Z = b.ReadSByte() / 127.0f;
                                 b.ReadSByte();
 
-                                Half uvu = new Half();
-                                uvu.bits = b.ReadUInt16();
-                                UVs[i].U = uvu.ToSingle();
-
-                                Half uvv = new Half();
-                                uvv.bits = b.ReadUInt16();
-                                UVs[i].V = uvv.ToSingle();
+                                UVs[i].U = b.ReadHalf();
+                                UVs[i].V = b.ReadHalf();
                             }
                             break;
                         case 16:   // Dymek updated this.
                             for (int i = 0; i < NumElements; i++)
                             {
-                                Vertices[i].x = b.ReadCryHalf();
-                                Vertices[i].y = b.ReadCryHalf();
-                                Vertices[i].z = b.ReadCryHalf();
-                                Vertices[i].w = b.ReadCryHalf();
+                                Vertices[i] = b.ReadVector3(InputType.CryHalf);
+                                SkipBytes(b, 2);
 
                                 // Next structure is Colors, not normals.  For 16 byte elements, normals are calculated from Tangent data.
                                 //this.RGBColors[i].r = b.ReadByte();
@@ -227,22 +204,16 @@ namespace CgfConverter.CryEngineCore
 
                                 // Read a Quat, convert it to vector3
                                 Vector4 quat = new Vector4();
-                                quat.x = (b.ReadByte() - 128.0f) / 127.5f;
-                                quat.y = (b.ReadByte() - 128.0f) / 127.5f;
-                                quat.z = (b.ReadByte() - 128.0f) / 127.5f;
-                                quat.w = (b.ReadByte() - 128.0f) / 127.5f;
-                                Normals[i].x = (2 * (quat.x * quat.z + quat.y * quat.w));
-                                Normals[i].y = (2 * (quat.y * quat.z - quat.x * quat.w));
-                                Normals[i].z = (2 * (quat.z * quat.z + quat.w * quat.w)) - 1;
+                                quat.X = (b.ReadByte() - 128.0f) / 127.5f;
+                                quat.Y = (b.ReadByte() - 128.0f) / 127.5f;
+                                quat.Z = (b.ReadByte() - 128.0f) / 127.5f;
+                                quat.W = (b.ReadByte() - 128.0f) / 127.5f;
+                                Normals[i].X = (2f * (quat.X * quat.Z + quat.Y * quat.W));
+                                Normals[i].Y = (2f * (quat.Y * quat.Z - quat.X * quat.W));
+                                Normals[i].Z = (2f * (quat.Z * quat.Z + quat.W * quat.W)) - 1f;
 
-                                Half uvu = new Half();
-                                uvu.bits = b.ReadUInt16();
-                                UVs[i].U = uvu.ToSingle();
-
-                                Half uvv = new Half();
-                                uvv.bits = b.ReadUInt16();
-                                UVs[i].V = uvv.ToSingle();
-
+                                UVs[i].U = b.ReadHalf();
+                                UVs[i].V = b.ReadHalf();
                                 #region Legacy version using Halfs
                                 //Half xshort = new Half();
                                 //xshort.bits = b.ReadUInt16();
@@ -361,9 +332,9 @@ namespace CgfConverter.CryEngineCore
                         Tangents[i, 1].z = b.ReadSByte() / 127;
 
                         // Calculate the normal based on the cross product of the tangents.
-                        Normals[i].x = (Tangents[i, 0].y * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].y);
-                        Normals[i].y = 0 - (Tangents[i, 0].x * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].x);
-                        Normals[i].z = (Tangents[i, 0].x * Tangents[i, 1].y - Tangents[i, 0].y * Tangents[i, 1].x);
+                        Normals[i].X = (Tangents[i, 0].y * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].y);
+                        Normals[i].Y = 0 - (Tangents[i, 0].x * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].x);
+                        Normals[i].Z = (Tangents[i, 0].x * Tangents[i, 1].y - Tangents[i, 0].y * Tangents[i, 1].x);
                     }
                     break;
                 #endregion // Prey normals?

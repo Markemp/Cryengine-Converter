@@ -1,7 +1,8 @@
-﻿using BinaryReaderExtensions;
+﻿using Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 
 namespace CgfConverter.CryEngineCore
 {
@@ -56,9 +57,7 @@ namespace CgfConverter.CryEngineCore
                         case 20:
                             for (int i = 0; i < NumElements; i++)
                             {
-                                Vertices[i].x = b.ReadSingle();
-                                Vertices[i].y = b.ReadSingle();
-                                Vertices[i].z = b.ReadSingle(); // For some reason, skins are an extra 1 meter in the z direction.
+                                Vertices[i] = b.ReadVector3(); // For some reason, skins are an extra 1 meter in the z direction.
 
                                 Colors[i] = b.ReadColor();
 
@@ -86,13 +85,13 @@ namespace CgfConverter.CryEngineCore
                             Normals = new Vector3[NumElements];
                             for (int i = 0; i < NumElements; i++)
                             {
-                                var x = b.ReadSByte() / 128.0;
-                                var y = b.ReadSByte() / 128.0;
-                                var z = b.ReadSByte() / 128.0;
-                                var w = b.ReadSByte() / 128.0;
-                                Normals[i].x = (2.0 * (x * z + y * w));
-                                Normals[i].y = (2.0 * (y * z - x * w));
-                                Normals[i].z = (2.0 * (z * z + w * w)) - 1.0;
+                                var x = b.ReadSByte() / 128.0f;
+                                var y = b.ReadSByte() / 128.0f;
+                                var z = b.ReadSByte() / 128.0f;
+                                var w = b.ReadSByte() / 128.0f;
+                                Normals[i].X = 2.0f * (x * z + y * w);
+                                Normals[i].Y = 2.0f * (y * z - x * w);
+                                Normals[i].Z = (2.0f * (z * z + w * w)) - 1.0f;
                             }
                             if (NumElements % 2 == 1)
                             {
@@ -127,9 +126,9 @@ namespace CgfConverter.CryEngineCore
                         Tangents[i, 1].z = b.ReadSByte() / 127f;
 
                         // Calculate the normal based on the cross product of the tangents.
-                        Normals[i].x = (Tangents[i, 0].y * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].y);
-                        Normals[i].y = 0 - (Tangents[i, 0].x * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].x);
-                        Normals[i].z = (Tangents[i, 0].x * Tangents[i, 1].y - Tangents[i, 0].y * Tangents[i, 1].x);
+                        Normals[i].X = (Tangents[i, 0].y * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].y);
+                        Normals[i].Y = 0 - (Tangents[i, 0].x * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].x);
+                        Normals[i].Z = (Tangents[i, 0].x * Tangents[i, 1].y - Tangents[i, 0].y * Tangents[i, 1].x);
 
                         //// These have to be divided by 32767 to be used properly (value between -1 and 1)
                         //// Tangent

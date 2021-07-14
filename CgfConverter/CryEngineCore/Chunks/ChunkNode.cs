@@ -1,5 +1,5 @@
-﻿using CgfConverter.CryEngineCore.Components;
-using CgfConverter.Structs;
+﻿using CgfConverter.Structs;
+using Extensions;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -134,7 +134,12 @@ namespace CgfConverter.CryEngineCore
         {
             // Apply the transforms (rotation and translation) to the vector.
             // Work on the single matrix
-            Vector3 vec3 = TransformSoFar * transform;
+            Vector3 scale;
+            Quaternion rotation;
+            Vector3 translation;
+            Matrix4x4.Decompose(TransformSoFar, out scale, out rotation, out translation);
+            Matrix3x3 rotMatrix = rotation.ConvertToRotationMatrix();
+            Vector3 vec3 = rotMatrix * transform;
             
             return vec3;
         }

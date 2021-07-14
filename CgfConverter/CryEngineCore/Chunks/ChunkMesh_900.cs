@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using Extensions;
+using System.IO;
 
 namespace CgfConverter.CryEngineCore
 {
@@ -12,12 +13,8 @@ namespace CgfConverter.CryEngineCore
             NumIndices = b.ReadInt32();
             NumVertSubsets = b.ReadUInt32();
             SkipBytes(b, 4);
-            MinBound.x = b.ReadSingle();
-            MinBound.y = b.ReadSingle();
-            MinBound.z = b.ReadSingle();
-            MaxBound.x = b.ReadSingle();
-            MaxBound.y = b.ReadSingle();
-            MaxBound.z = b.ReadSingle();
+            MinBound = b.ReadVector3();
+            MaxBound = b.ReadVector3();
 
             ID = 2; // Node chunk ID = 1
 

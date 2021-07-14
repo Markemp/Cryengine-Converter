@@ -59,6 +59,11 @@ namespace CgfConverter.Structs
             return mat2;
         }
 
+        internal Matrix3x3 ConjugateTransposeThisAndMultiply(Matrix3x3 matrix3x3)
+        {
+            throw new NotImplementedException();
+        }
+
         public static Matrix3x3 operator *(Matrix3x3 lhs, Matrix3x3 rhs)
         {
             return lhs.Mult(rhs);
@@ -116,7 +121,6 @@ namespace CgfConverter.Structs
             {
                 return scale;
             }
-
         }
 
         public Vector3 GetScaleRotation()   // Gets the scale.  this should also return the rotation matrix, but..eh...

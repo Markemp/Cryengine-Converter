@@ -39,9 +39,9 @@ namespace CgfConverterTests.IntegrationTests.SonicBoom
             var datastream = cryData.Models[0].ChunkMap[23] as ChunkDataStream_80000800;
             Assert.AreEqual((uint)12, datastream.BytesPerElement);
             Assert.AreEqual((uint)629, datastream.NumElements);
-            Assert.AreEqual(-0.1071479171, datastream.Vertices[0].x, TestUtils.delta);
-            Assert.AreEqual(0, datastream.Vertices[0].y, TestUtils.delta);
-            Assert.AreEqual(0.983217179775238, datastream.Vertices[0].z, TestUtils.delta);
+            Assert.AreEqual(-0.1071479171, datastream.Vertices[0].X, TestUtils.delta);
+            Assert.AreEqual(0, datastream.Vertices[0].Y, TestUtils.delta);
+            Assert.AreEqual(0.983217179775238, datastream.Vertices[0].Z, TestUtils.delta);
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
@@ -64,9 +64,9 @@ namespace CgfConverterTests.IntegrationTests.SonicBoom
             var datastream = cryData.Models[0].ChunkMap[40] as ChunkDataStream_80000800;
             Assert.AreEqual((uint)12, datastream.BytesPerElement);
             Assert.AreEqual((uint)46244, datastream.NumElements);
-            Assert.AreEqual(-130.51466369, datastream.Vertices[0].x, TestUtils.delta);
-            Assert.AreEqual(36.3558387756, datastream.Vertices[0].y, TestUtils.delta);
-            Assert.AreEqual(24.2049655914, datastream.Vertices[0].z, TestUtils.delta);
+            Assert.AreEqual(-130.51466369, datastream.Vertices[0].X, TestUtils.delta);
+            Assert.AreEqual(36.3558387756, datastream.Vertices[0].Y, TestUtils.delta);
+            Assert.AreEqual(24.2049655914, datastream.Vertices[0].Z, TestUtils.delta);
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
@@ -89,9 +89,9 @@ namespace CgfConverterTests.IntegrationTests.SonicBoom
             var datastream = cryData.Models[0].ChunkMap[52] as ChunkDataStream_80000800;
             Assert.AreEqual((uint)12, datastream.BytesPerElement);
             Assert.AreEqual((uint)60794, datastream.NumElements);
-            Assert.AreEqual(104.20726013183594, datastream.Vertices[0].x, TestUtils.delta);
-            Assert.AreEqual(137.044921875, datastream.Vertices[0].y, TestUtils.delta);
-            Assert.AreEqual(24.923294067382812, datastream.Vertices[0].z, TestUtils.delta);
+            Assert.AreEqual(104.20726013183594, datastream.Vertices[0].X, TestUtils.delta);
+            Assert.AreEqual(137.044921875, datastream.Vertices[0].Y, TestUtils.delta);
+            Assert.AreEqual(24.923294067382812, datastream.Vertices[0].Z, TestUtils.delta);
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();

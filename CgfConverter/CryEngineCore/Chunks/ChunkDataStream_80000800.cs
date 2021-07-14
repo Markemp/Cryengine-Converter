@@ -1,7 +1,8 @@
-﻿using BinaryReaderExtensions;
+﻿using Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 
 namespace CgfConverter.CryEngineCore
 {
@@ -31,11 +32,11 @@ namespace CgfConverter.CryEngineCore
                     switch (BytesPerElement)
                     {
                         case 12:
-                            for (Int32 i = 0; i < this.NumElements; i++)
+                            for (int i = 0; i < NumElements; i++)
                             {
-                                this.Vertices[i].x = Utils.SwapSingleEndian(b.ReadSingle());
-                                this.Vertices[i].y = Utils.SwapSingleEndian(b.ReadSingle());
-                                this.Vertices[i].z = Utils.SwapSingleEndian(b.ReadSingle());
+                                Vertices[i].X = Utils.SwapSingleEndian(b.ReadSingle());
+                                Vertices[i].Y = Utils.SwapSingleEndian(b.ReadSingle());
+                                Vertices[i].Z = Utils.SwapSingleEndian(b.ReadSingle());
                             }
                             break;
                     }
@@ -67,12 +68,12 @@ namespace CgfConverter.CryEngineCore
                 #region case DataStreamTypeEnum.NORMALS:
 
                 case DatastreamType.NORMALS:
-                    this.Normals = new Vector3[this.NumElements];
-                    for (Int32 i = 0; i < NumElements; i++)
+                    Normals = new Vector3[NumElements];
+                    for (int i = 0; i < NumElements; i++)
                     {
-                        this.Normals[i].x = Utils.SwapSingleEndian(b.ReadSingle());
-                        this.Normals[i].y = Utils.SwapSingleEndian(b.ReadSingle());
-                        this.Normals[i].z = Utils.SwapSingleEndian(b.ReadSingle());
+                        Normals[i].X = Utils.SwapSingleEndian(b.ReadSingle());
+                        Normals[i].Y = Utils.SwapSingleEndian(b.ReadSingle());
+                        Normals[i].Z = Utils.SwapSingleEndian(b.ReadSingle());
                     }
                     //Utils.Log(LogLevelEnum.Debug, "Offset is {0:X}", b.BaseStream.Position);
                     break;
@@ -93,23 +94,23 @@ namespace CgfConverter.CryEngineCore
                 #region case DataStreamTypeEnum.TANGENTS:
 
                 case DatastreamType.TANGENTS:
-                    this.Tangents = new Tangent[this.NumElements, 2];
-                    this.Normals = new Vector3[this.NumElements];
-                    for (Int32 i = 0; i < this.NumElements; i++)
+                    Tangents = new Tangent[NumElements, 2];
+                    Normals = new Vector3[NumElements];
+                    for (int i = 0; i < NumElements; i++)
                     {
-                        switch (this.BytesPerElement)
+                        switch (BytesPerElement)
                         {
                             case 0x10:
                                 // These have to be divided by 32767 to be used properly (value between 0 and 1)
-                                this.Tangents[i, 0].x = Utils.SwapIntEndian(b.ReadInt16());
-                                this.Tangents[i, 0].y = Utils.SwapIntEndian(b.ReadInt16());
-                                this.Tangents[i, 0].z = Utils.SwapIntEndian(b.ReadInt16());
-                                this.Tangents[i, 0].w = Utils.SwapIntEndian(b.ReadInt16());
-                                                        
-                                this.Tangents[i, 1].x = Utils.SwapIntEndian(b.ReadInt16());
-                                this.Tangents[i, 1].y = Utils.SwapIntEndian(b.ReadInt16());
-                                this.Tangents[i, 1].z = Utils.SwapIntEndian(b.ReadInt16());
-                                this.Tangents[i, 1].w = Utils.SwapIntEndian(b.ReadInt16());
+                                Tangents[i, 0].x = Utils.SwapIntEndian(b.ReadInt16());
+                                Tangents[i, 0].y = Utils.SwapIntEndian(b.ReadInt16());
+                                Tangents[i, 0].z = Utils.SwapIntEndian(b.ReadInt16());
+                                Tangents[i, 0].w = Utils.SwapIntEndian(b.ReadInt16());
+                                                   
+                                Tangents[i, 1].x = Utils.SwapIntEndian(b.ReadInt16());
+                                Tangents[i, 1].y = Utils.SwapIntEndian(b.ReadInt16());
+                                Tangents[i, 1].z = Utils.SwapIntEndian(b.ReadInt16());
+                                Tangents[i, 1].w = Utils.SwapIntEndian(b.ReadInt16());
 
                                 break;
                             case 0x08:
@@ -236,9 +237,9 @@ namespace CgfConverter.CryEngineCore
                         Tangents[i, 1].z = b.ReadSByte() / 127;
 
                         // Calculate the normal based on the cross product of the tangents.
-                        Normals[i].x = (Tangents[i, 0].y * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].y);
-                        Normals[i].y = 0 - (Tangents[i, 0].x * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].x);
-                        Normals[i].z = (Tangents[i, 0].x * Tangents[i, 1].y - Tangents[i, 0].y * Tangents[i, 1].x);
+                        Normals[i].X = (Tangents[i, 0].y * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].y);
+                        Normals[i].Y = 0 - (Tangents[i, 0].x * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].x);
+                        Normals[i].Z = (Tangents[i, 0].x * Tangents[i, 1].y - Tangents[i, 0].y * Tangents[i, 1].x);
                     }
                     break;
                 #endregion // Prey normals?

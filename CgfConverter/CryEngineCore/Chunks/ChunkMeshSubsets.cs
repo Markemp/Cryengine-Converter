@@ -32,7 +32,7 @@ namespace CgfConverter.CryEngineCore
                 Utils.Log(LogLevelEnum.Verbose, "           Number of Vertices:   {0}  (next will be {1})", MeshSubsets[i].NumVertices, MeshSubsets[i].NumVertices + MeshSubsets[i].FirstVertex);
                 Utils.Log(LogLevelEnum.Verbose, "           Material ID:          {0}", MeshSubsets[i].MatID);
                 Utils.Log(LogLevelEnum.Verbose, "           Radius:               {0}", MeshSubsets[i].Radius);
-                Utils.Log(LogLevelEnum.Verbose, "           Center:   {0},{1},{2}", MeshSubsets[i].Center.x, MeshSubsets[i].Center.y, MeshSubsets[i].Center.z);
+                Utils.Log(LogLevelEnum.Verbose, "           Center:   {0},{1},{2}", MeshSubsets[i].Center.X, MeshSubsets[i].Center.Y, MeshSubsets[i].Center.Z);
                 Utils.Log(LogLevelEnum.Verbose, "        ** Mesh Subset {0} End", i);
             }
             Utils.Log(LogLevelEnum.Verbose, "*** END MESH SUBSET CHUNK ***");

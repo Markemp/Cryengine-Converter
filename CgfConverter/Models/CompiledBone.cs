@@ -24,7 +24,7 @@ namespace CgfConverter
         
         public uint parentID;                           // Calculated controllerID of the parent bone put into the Bone Dictionary (the key)
         public List<uint> childIDs = new List<uint>();  // Calculated controllerIDs of the children to this bone.
-        
+
         public Matrix4x4 LocalTransform = new Matrix4x4();
         public Vector3 LocalTranslation { get; set; } = new Vector3();            // To hold the local rotation vector
         public Matrix3x3 LocalRotation = new Matrix3x3();             // to hold the local rotation matrix
@@ -112,8 +112,9 @@ namespace CgfConverter
                 Y = b.ReadSingle(),
                 Z = b.ReadSingle()
             };
-            worldToBone = new WORLDTOBONE(worldQuat.ConvertToRotationalMatrix(), worldTransform);
-            boneToWorld = new BONETOWORLD(relativeQuat.ConvertToRotationalMatrix(), relativeTransform);
+            BindPoseMatrix = Matrix4x4.Transform(Matrix4x4.Identity, worldQuat);
+            //worldToBone = new WORLDTOBONE(worldQuat.ConvertToRotationalMatrix(), worldTransform);
+            //boneToWorld = new BONETOWORLD(relativeQuat.ConvertToRotationalMatrix(), relativeTransform);
         }
     }
 }

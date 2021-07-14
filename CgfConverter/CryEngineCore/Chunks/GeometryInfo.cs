@@ -1,4 +1,6 @@
-﻿namespace CgfConverter.CryEngineCore
+﻿using System.Numerics;
+
+namespace CgfConverter.CryEngineCore
 {
     /// <summary>
     /// Geometry info contains all the vertex, color, normal, UV, tangent, index, etc.  Basically if you have a Node chunk with a Mesh and Submesh, 

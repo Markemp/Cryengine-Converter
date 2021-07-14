@@ -1,7 +1,7 @@
 ﻿using CgfConverter.Structs;
 using System.Numerics;
 
-namespace CgfConverter.CryEngineCore.Components
+namespace Extensions
 {
     public static class Matrix4x4Extensions    // Extensions for System.Numerics Matrix4x4
     {
@@ -44,7 +44,30 @@ namespace CgfConverter.CryEngineCore.Components
                 M41 = 0,
                 M42 = 0,
                 M43 = 0,
-                M44 = 0
+                M44 = 1
+            };
+        }
+
+        public static Matrix4x4 CreateTransformFromParts(Vector3 translation, Matrix3x3 rotation)
+        {
+            return new Matrix4x4
+            {
+                M11 = rotation.M11,
+                M12 = rotation.M12,
+                M13 = rotation.M13,
+                M14 = 0,
+                M21 = rotation.M21,
+                M22 = rotation.M22,
+                M23 = rotation.M23,
+                M24 = 0,
+                M31 = rotation.M31,
+                M32 = rotation.M32,
+                M33 = rotation.M33,
+                M34 = 0,
+                M41 = translation.X,
+                M42 = translation.Y,
+                M43 = translation.Z,
+                M44 = 1
             };
         }
 

@@ -1,10 +1,9 @@
-﻿using System;
+﻿using Extensions;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using static CgfConverter.CryEngineCore.Components.Matrix4x4Extensions;
-using CgfConverter.CryEngineCore.Components;
 
 namespace CgfConverter.CryEngineCore
 {
@@ -173,7 +172,7 @@ namespace CgfConverter.CryEngineCore
             rootNode.ParentNodeID = ~0;     // No parent
             rootNode.__NumChildren = 0;     // Single object
             rootNode.MatID = 0;
-            rootNode.Transform = CreateDefaultRootNodeMatrix();
+            rootNode.Transform = Matrix4x4Extensions.CreateDefaultRootNodeMatrix();
             rootNode.ChunkType = ChunkType.Node;
             rootNode.ID = 1;
             RootNode = rootNode;

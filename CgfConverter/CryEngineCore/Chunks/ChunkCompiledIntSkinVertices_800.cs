@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using Extensions;
+using System.IO;
 using System.Linq;
 
 namespace CgfConverter.CryEngineCore
@@ -14,9 +15,9 @@ namespace CgfConverter.CryEngineCore
             // Size of the IntSkinVertex is 64 bytes
             for (int i = 0; i < NumIntVertices; i++)
             {
-                IntSkinVertices[i].Obsolete0.ReadVector3(b);
-                IntSkinVertices[i].Position.ReadVector3(b);
-                IntSkinVertices[i].Obsolete2.ReadVector3(b);
+                IntSkinVertices[i].Obsolete0 = b.ReadVector3();
+                IntSkinVertices[i].Position = b.ReadVector3();
+                IntSkinVertices[i].Obsolete2 = b.ReadVector3();
                 // Read 4 bone IDs
                 IntSkinVertices[i].BoneIDs = new ushort[4];
                 for (int j = 0; j < 4; j++)

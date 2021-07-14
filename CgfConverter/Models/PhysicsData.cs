@@ -1,4 +1,6 @@
-﻿namespace CgfConverter
+﻿using System.Numerics;
+
+namespace CgfConverter
 {
     public struct PhysicsData
     {

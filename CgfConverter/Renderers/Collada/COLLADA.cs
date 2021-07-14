@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using CgfConverter.CryEngineCore;
+using CgfConverter.Structs;
+using Extensions;
 using grendgine_collada;
 
 namespace CgfConverter
@@ -567,9 +570,9 @@ namespace CgfConverter
                             for (uint j = 0; j < tmpMeshChunk.NumVertices; j++)
                             {
                                 Vector3 vertex = (tmpVertices.Vertices[j]);
-                                vertString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", vertex.x, vertex.y, vertex.z);
+                                vertString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", vertex.X, vertex.Y, vertex.Z);
                                 Vector3 normal = tmpNormals?.Normals[j] ?? new Vector3(0.0f, 0.0f, 0.0f);
-                                normString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", safe(normal.x), safe(normal.y), safe(normal.z));
+                                normString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", safe(normal.X), safe(normal.Y), safe(normal.Z));
                             }
                             for (uint j = 0; j < tmpUVs.NumElements; j++)     // Create UV string
                             {
@@ -597,19 +600,19 @@ namespace CgfConverter
                                 // Dymek's code to rescale by bounding box.  Only apply to geometry (cga or cgf), and not skin or chr objects.
                                 if (!CryData.InputFile.EndsWith("skin") && !CryData.InputFile.EndsWith("chr"))
                                 {
-                                    double multiplerX = Math.Abs(tmpMeshChunk.MinBound.x - tmpMeshChunk.MaxBound.x) / 2f;
-                                    double multiplerY = Math.Abs(tmpMeshChunk.MinBound.y - tmpMeshChunk.MaxBound.y) / 2f;
-                                    double multiplerZ = Math.Abs(tmpMeshChunk.MinBound.z - tmpMeshChunk.MaxBound.z) / 2f;
+                                    float multiplerX = Math.Abs(tmpMeshChunk.MinBound.X - tmpMeshChunk.MaxBound.X) / 2f;
+                                    float multiplerY = Math.Abs(tmpMeshChunk.MinBound.Y - tmpMeshChunk.MaxBound.Y) / 2f;
+                                    float multiplerZ = Math.Abs(tmpMeshChunk.MinBound.Z - tmpMeshChunk.MaxBound.Z) / 2f;
                                     if (multiplerX < 1) { multiplerX = 1; }
                                     if (multiplerY < 1) { multiplerY = 1; }
                                     if (multiplerZ < 1) { multiplerZ = 1; }
-                                    tmpVertsUVs.Vertices[j].x = tmpVertsUVs.Vertices[j].x * multiplerX + (tmpMeshChunk.MaxBound.x + tmpMeshChunk.MinBound.x) / 2;
-                                    tmpVertsUVs.Vertices[j].y = tmpVertsUVs.Vertices[j].y * multiplerY + (tmpMeshChunk.MaxBound.y + tmpMeshChunk.MinBound.y) / 2;
-                                    tmpVertsUVs.Vertices[j].z = tmpVertsUVs.Vertices[j].z * multiplerZ + (tmpMeshChunk.MaxBound.z + tmpMeshChunk.MinBound.z) / 2;
+                                    tmpVertsUVs.Vertices[j].X = tmpVertsUVs.Vertices[j].X * multiplerX + (tmpMeshChunk.MaxBound.X + tmpMeshChunk.MinBound.X) / 2;
+                                    tmpVertsUVs.Vertices[j].Y = tmpVertsUVs.Vertices[j].Y * multiplerY + (tmpMeshChunk.MaxBound.Y + tmpMeshChunk.MinBound.Y) / 2;
+                                    tmpVertsUVs.Vertices[j].Z = tmpVertsUVs.Vertices[j].Z * multiplerZ + (tmpMeshChunk.MaxBound.Z + tmpMeshChunk.MinBound.Z) / 2;
                                 }
 
                                 Vector3 vertex = tmpVertsUVs.Vertices[j];
-                                vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", vertex.x, vertex.y, vertex.z);
+                                vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", vertex.X, vertex.Y, vertex.Z);
                                 Vector3 normal = new Vector3();
                                 // Normals depend on the data size.  16 byte structures have the normals in the Tangents.  20 byte structures are in the VertsUV.
                                 if (tmpVertsUVs.BytesPerElement == 20)
@@ -620,7 +623,7 @@ namespace CgfConverter
                                 {
                                     normal = tmpVertsUVs.Normals[j];
                                 }
-                                normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", safe(normal.x), safe(normal.y), safe(normal.z));
+                                normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", safe(normal.X), safe(normal.Y), safe(normal.Z));
                             }
                             // Create UV string
                             for (uint j = 0; j < tmpVertsUVs.NumElements; j++)
@@ -834,7 +837,7 @@ namespace CgfConverter
                     source = "#" + DaeObject.Library_Geometries.Geometry[0].ID,
                     Bind_Shape_Matrix = new Grendgine_Collada_Float_Array_String()
                 };
-                skin.Bind_Shape_Matrix.Value_As_String = CreateStringFromMatrix44(Matrix44.Identity());  // We will assume the BSM is the identity matrix for now
+                skin.Bind_Shape_Matrix.Value_As_String = CreateStringFromMatrix44(Matrix4x4.Identity);  // We will assume the BSM is the identity matrix for now
                                                                                                          // Create the 3 sources for this controller:  joints, bind poses, and weights
                 skin.Source = new Grendgine_Collada_Source[3];
 
@@ -1115,7 +1118,7 @@ namespace CgfConverter
             };
             rootNode.Matrix[0] = new Grendgine_Collada_Matrix
             {
-                Value_As_String = CreateStringFromMatrix44(Matrix44.Identity())
+                Value_As_String = CreateStringFromMatrix44(Matrix4x4.Identity)
             };
             rootNode.Instance_Controller = new Grendgine_Collada_Instance_Controller[1];
             rootNode.Instance_Controller[0] = new Grendgine_Collada_Instance_Controller();
@@ -1240,10 +1243,10 @@ namespace CgfConverter
             StringBuilder matrixString = new StringBuilder();
             CalculateTransform(nodeChunk);
             matrixString.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} {12:F6} {13:F6} {14:F6} {15:F6}",
-                nodeChunk.LocalTransform.m11, nodeChunk.LocalTransform.m12, nodeChunk.LocalTransform.m13, nodeChunk.LocalTransform.m14,
-                nodeChunk.LocalTransform.m21, nodeChunk.LocalTransform.m22, nodeChunk.LocalTransform.m23, nodeChunk.LocalTransform.m24,
-                nodeChunk.LocalTransform.m31, nodeChunk.LocalTransform.m32, nodeChunk.LocalTransform.m33, nodeChunk.LocalTransform.m34,
-                nodeChunk.LocalTransform.m41, nodeChunk.LocalTransform.m42, nodeChunk.LocalTransform.m43, nodeChunk.LocalTransform.m44);
+                nodeChunk.LocalTransform.M11, nodeChunk.LocalTransform.M12, nodeChunk.LocalTransform.M13, nodeChunk.LocalTransform.M14,
+                nodeChunk.LocalTransform.M21, nodeChunk.LocalTransform.M22, nodeChunk.LocalTransform.M23, nodeChunk.LocalTransform.M24,
+                nodeChunk.LocalTransform.M31, nodeChunk.LocalTransform.M32, nodeChunk.LocalTransform.M33, nodeChunk.LocalTransform.M34,
+                nodeChunk.LocalTransform.M41, nodeChunk.LocalTransform.M42, nodeChunk.LocalTransform.M43, nodeChunk.LocalTransform.M44);
 
             matrix.Value_As_String = matrixString.ToString();
             matrix.sID = "transform";
@@ -1300,18 +1303,18 @@ namespace CgfConverter
             // Populate the matrix.  This is based on the BONETOWORLD data in this bone.
             StringBuilder matrixValues = new StringBuilder();
             matrixValues.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} 0 0 0 1",
-                bone.LocalTransform.m11,
-                bone.LocalTransform.m12,
-                bone.LocalTransform.m13,
-                bone.LocalTransform.m14,
-                bone.LocalTransform.m21,
-                bone.LocalTransform.m22,
-                bone.LocalTransform.m23,
-                bone.LocalTransform.m24,
-                bone.LocalTransform.m31,
-                bone.LocalTransform.m32,
-                bone.LocalTransform.m33,
-                bone.LocalTransform.m34
+                bone.LocalTransform.M11,
+                bone.LocalTransform.M12,
+                bone.LocalTransform.M13,
+                bone.LocalTransform.M14,
+                bone.LocalTransform.M21,
+                bone.LocalTransform.M22,
+                bone.LocalTransform.M23,
+                bone.LocalTransform.M24,
+                bone.LocalTransform.M31,
+                bone.LocalTransform.M32,
+                bone.LocalTransform.M33,
+                bone.LocalTransform.M34
                 );
 
             CleanNumbers(matrixValues);
@@ -1358,10 +1361,10 @@ namespace CgfConverter
             // Use same principle as CreateJointNode.  The Transform matrix (Matrix44) is the world transform matrix.
             CalculateTransform(nodeChunk);
             matrixString.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} {12:F6} {13:F6} {14:F6} {15:F6}",
-                nodeChunk.LocalTransform.m11, nodeChunk.LocalTransform.m12, nodeChunk.LocalTransform.m13, nodeChunk.LocalTransform.m14,
-                nodeChunk.LocalTransform.m21, nodeChunk.LocalTransform.m22, nodeChunk.LocalTransform.m23, nodeChunk.LocalTransform.m24,
-                nodeChunk.LocalTransform.m31, nodeChunk.LocalTransform.m32, nodeChunk.LocalTransform.m33, nodeChunk.LocalTransform.m34,
-                nodeChunk.LocalTransform.m41, nodeChunk.LocalTransform.m42, nodeChunk.LocalTransform.m43, nodeChunk.LocalTransform.m44);
+                nodeChunk.LocalTransform.M11, nodeChunk.LocalTransform.M12, nodeChunk.LocalTransform.M13, nodeChunk.LocalTransform.M14,
+                nodeChunk.LocalTransform.M21, nodeChunk.LocalTransform.M22, nodeChunk.LocalTransform.M23, nodeChunk.LocalTransform.M24,
+                nodeChunk.LocalTransform.M31, nodeChunk.LocalTransform.M32, nodeChunk.LocalTransform.M33, nodeChunk.LocalTransform.M34,
+                nodeChunk.LocalTransform.M41, nodeChunk.LocalTransform.M42, nodeChunk.LocalTransform.M43, nodeChunk.LocalTransform.M44);
             matrix.Value_As_String = matrixString.ToString();
             matrix.sID = "transform";
             matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
@@ -1450,40 +1453,41 @@ namespace CgfConverter
             // Calculate the LocalTransform matrix.
             // Node transform matrices are different than joint.  Translation and scale are reversed.
 
-            Vector3 localTranslation;
-            Matrix3x3 localRotation;
-            Vector3 localScale;
+            Matrix4x4 localTransform;
+            Matrix4x4.Invert(node.Transform, out localTransform);
+            node.LocalTransform = localTransform;
+            //Vector3 localTranslation;
+            //Quaternion localRot;
+            //Vector3 localScale;
+            //Matrix4x4.Decompose(node.Transform, out localScale, out localRot, out localTranslation);
+            //Matrix3x3 localRotation = localRot.ConvertToRotationMatrix();
 
-            localTranslation = node.Transform.GetScale();
-            localRotation = node.Transform.GetRotation();
-            localScale = node.Transform.GetTranslation();
-
-            node.LocalTranslation = localTranslation;
-            node.LocalScale = localScale;
-            node.LocalRotation = localRotation;
-            node.LocalTransform = node.LocalTransform.GetTransformFromParts(localScale, localRotation, localTranslation);
+            //node.LocalTranslation = localTranslation;
+            //node.LocalScale = localScale;
+            //node.LocalRotation = localRotation;
+            //node.LocalTransform = node.LocalTransform.GetTransformFromParts(localScale, localRotation, localTranslation);
         }
 
-        private static string CreateStringFromMatrix44(Matrix44 matrix)
+        private static string CreateStringFromMatrix44(Matrix4x4 matrix)
         {
             StringBuilder matrixValues = new StringBuilder();
             matrixValues.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} {12:F6} {13:F6} {14:F6} {15:F6}",
-                matrix.m11,
-                matrix.m12,
-                matrix.m13,
-                matrix.m14,
-                matrix.m21,
-                matrix.m22,
-                matrix.m23,
-                matrix.m24,
-                matrix.m31,
-                matrix.m32,
-                matrix.m33,
-                matrix.m34,
-                matrix.m41,
-                matrix.m42,
-                matrix.m43,
-                matrix.m44
+                matrix.M11,
+                matrix.M12,
+                matrix.M13,
+                matrix.M14,
+                matrix.M21,
+                matrix.M22,
+                matrix.M23,
+                matrix.M24,
+                matrix.M31,
+                matrix.M32,
+                matrix.M33,
+                matrix.M34,
+                matrix.M41,
+                matrix.M42,
+                matrix.M43,
+                matrix.M44
                 );
             CleanNumbers(matrixValues);
             return matrixValues.ToString();

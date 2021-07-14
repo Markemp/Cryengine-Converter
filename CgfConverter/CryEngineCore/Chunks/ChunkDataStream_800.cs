@@ -1,9 +1,9 @@
-﻿using BinaryReaderExtensions;
+﻿using Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
-using static BinaryReaderExtensions.BinaryReaderExtensions;
+using static Extensions.BinaryReaderExtensions;
 
 namespace CgfConverter.CryEngineCore
 {

@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using CgfConverter.Structs;
+using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 
 namespace CgfConverter.CryEngineCore
 {
