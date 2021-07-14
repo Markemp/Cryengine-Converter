@@ -32,7 +32,7 @@ namespace CgfConverter.CryEngineCore
                 return null;
         }
 
-        protected Matrix44 GetTransformFromParts(Vector3 localTranslation, Matrix33 localRotation)
+        protected Matrix44 GetTransformFromParts(Vector3 localTranslation, Matrix3x3 localRotation)
         {
             Matrix44 transform = new Matrix44
             {

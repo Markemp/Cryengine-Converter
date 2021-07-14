@@ -1,6 +1,8 @@
 ﻿using CgfConverter;
+using CgfConverter.Structs;
 using System;
 using System.IO;
+using System.Numerics;
 
 namespace BinaryReaderExtensions
 {
@@ -21,6 +23,34 @@ namespace BinaryReaderExtensions
             return xshort.ToSingle();
         }
 
+        public static Vector3 ReadVector3(this BinaryReader r, InputType inputType = InputType.Single)
+        {
+            Vector3 v;
+            switch (inputType)
+            {
+                case InputType.Single:
+                    v = new()
+                    {
+                        X = r.ReadSingle(),
+                        Y = r.ReadSingle(),
+                        Z = r.ReadSingle()
+                    };
+                    break;
+                case InputType.Half:
+                    v = new()
+                    {
+                        X = r.ReadHalf(),
+                        Y = r.ReadHalf(),
+                        Z = r.ReadHalf()
+                    };
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            return v;
+        }
+
         public static Quaternion ReadQuaternion(this BinaryReader r, InputType inputType = InputType.Single)
         {
             Quaternion q;
@@ -28,21 +58,21 @@ namespace BinaryReaderExtensions
             switch (inputType)
             {
                 case InputType.Single:
-                    q = new Quaternion()
+                    q = new System.Numerics.Quaternion()
                     {
-                        x = r.ReadSingle(),
-                        y = r.ReadSingle(),
-                        z = r.ReadSingle(),
-                        w = r.ReadSingle()
+                        X = r.ReadSingle(),
+                        Y = r.ReadSingle(),
+                        Z = r.ReadSingle(),
+                        W = r.ReadSingle()
                     };
                     break;
                 case InputType.Half:
-                    q = new Quaternion()
+                    q = new System.Numerics.Quaternion()
                     {
-                        x = r.ReadHalf(),
-                        y = r.ReadHalf(),
-                        z = r.ReadHalf(),
-                        w = r.ReadHalf()
+                        X = r.ReadHalf(),
+                        Y = r.ReadHalf(),
+                        Z = r.ReadHalf(),
+                        W = r.ReadHalf()
                     };
                     break;
                 default:
@@ -54,12 +84,36 @@ namespace BinaryReaderExtensions
 
         public static IRGBA ReadColor(this BinaryReader r)
         {
-            IRGBA c = new IRGBA();
-            c.r = r.ReadByte();
-            c.g = r.ReadByte();
-            c.b = r.ReadByte();
-            c.a = r.ReadByte();
+            var c = new IRGBA()
+            {
+                r = r.ReadByte(),
+                g = r.ReadByte(),
+                b = r.ReadByte(),
+                a = r.ReadByte()
+            };
             return c;
+        }
+
+        public static Matrix3x3 ReadMatrix3x3(this BinaryReader reader)
+        {
+            // Reads a Matrix33 structure
+            if (reader == null)
+                throw new ArgumentNullException(nameof(reader));
+
+            Matrix3x3 m = new()
+            {
+                M11 = reader.ReadSingle(),
+                M12 = reader.ReadSingle(),
+                M13 = reader.ReadSingle(),
+                M21 = reader.ReadSingle(),
+                M22 = reader.ReadSingle(),
+                M23 = reader.ReadSingle(),
+                M31 = reader.ReadSingle(),
+                M32 = reader.ReadSingle(),
+                M33 = reader.ReadSingle()
+            };
+
+            return m;
         }
 
         public enum InputType

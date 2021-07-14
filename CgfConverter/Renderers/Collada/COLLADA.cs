@@ -1451,7 +1451,7 @@ namespace CgfConverter
             // Node transform matrices are different than joint.  Translation and scale are reversed.
 
             Vector3 localTranslation;
-            Matrix33 localRotation;
+            Matrix3x3 localRotation;
             Vector3 localScale;
 
             localTranslation = node.Transform.GetScale();

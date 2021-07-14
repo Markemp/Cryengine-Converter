@@ -1,6 +1,8 @@
-﻿using System;
+﻿using CgfConverter.Structs;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 
 namespace CgfConverter.CryEngineCore
 {
@@ -46,29 +48,29 @@ namespace CgfConverter.CryEngineCore
             }
         }
 
-        protected Matrix44 GetTransformFromParts(Vector3 localTranslation, Matrix33 localRotation)
+        protected Matrix4x4 GetTransformFromParts(Vector3 localTranslation, Matrix3x3 localRotation)
         {
-            Matrix44 transform = new Matrix44
+            Matrix4x4 transform = new Matrix4x4
             {
                 // Translation part
-                m14 = localTranslation.x,
-                m24 = localTranslation.y,
-                m34 = localTranslation.z,
+                M41 = localTranslation.X,
+                M42 = localTranslation.Y,
+                M43 = localTranslation.Z,
                 // Rotation part
-                m11 = localRotation.m11,
-                m12 = localRotation.m12,
-                m13 = localRotation.m13,
-                m21 = localRotation.m21,
-                m22 = localRotation.m22,
-                m23 = localRotation.m23,
-                m31 = localRotation.m31,
-                m32 = localRotation.m32,
-                m33 = localRotation.m33,
+                M11 = localRotation.M11,
+                M12 = localRotation.M12,
+                M13 = localRotation.M13,
+                M21 = localRotation.M21,
+                M22 = localRotation.M22,
+                M23 = localRotation.M23,
+                M31 = localRotation.M31,
+                M32 = localRotation.M32,
+                M33 = localRotation.M33,
                 // Set final row
-                m41 = 0,
-                m42 = 0,
-                m43 = 0,
-                m44 = 1
+                M14 = 0,
+                M24 = 0,
+                M34 = 0,
+                M44 = 1
             };
             return transform;
         }

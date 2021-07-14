@@ -10,7 +10,7 @@ namespace CgfConverter.CryEngineCore
             base.Read(b);
             SkipBytes(b, 32);  // Padding between the chunk header and the first bone.
             Vector3 localTranslation;
-            Matrix33 localRotation;
+            Matrix3x3 localRotation;
 
             //  Read the first bone with ReadCompiledBone, then recursively grab all the children for each bone you find.
             //  Each bone structure is 324 bytes, so will need to seek childOffset * 324 each time, and go back.

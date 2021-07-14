@@ -1,12 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using CgfConverter.CryEngineCore.Components;
+using CgfConverter.Structs;
+using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 
 namespace CgfConverter.CryEngineCore
 {
     public abstract class ChunkNode : Chunk          // cccc000b:   Node
     {
-        protected double VERTEX_SCALE = 1d / 100;
-        #region Chunk Properties
+        protected float VERTEX_SCALE = 1f / 100;
 
         public string Name { get; internal set; }
         public int ObjectNodeID { get; internal set; }
@@ -15,7 +17,7 @@ namespace CgfConverter.CryEngineCore
         public int MatID { get; internal set; }
         public bool IsGroupHead { get; internal set; }
         public bool IsGroupMember { get; internal set; }
-        public Matrix44 Transform { get; internal set; }
+        public Matrix4x4 Transform { get; internal set; }
         public Vector3 Pos { get; internal set; }
         public Quaternion Rot { get; internal set; }
         public Vector3 Scale { get; internal set; }
@@ -24,12 +26,10 @@ namespace CgfConverter.CryEngineCore
         public int SclCtrlID { get; internal set; }  // Obsolete
         public string Properties { get; internal set; }
 
-        #endregion
-
         #region Calculated Properties
-        public Matrix44 LocalTransform { get; set; }  = new Matrix44();            // Because Cryengine tends to store transform relative to world, we have to add all the transforms from the node to the root.  Calculated, row major.
+        public Matrix4x4 LocalTransform { get; set; }  = new Matrix4x4();            // Because Cryengine tends to store transform relative to world, we have to add all the transforms from the node to the root.  Calculated, row major.
         public Vector3 LocalTranslation { get; set; } = new Vector3();            // To hold the local rotation vector
-        public Matrix33 LocalRotation { get; set; } = new Matrix33();             // to hold the local rotation matrix
+        public Matrix3x3 LocalRotation { get; set; } = new Matrix3x3();             // to hold the local rotation matrix
         public Vector3 LocalScale { get; set; } = new Vector3();                  // to hold the local scale matrix
 
         private ChunkNode _parentNode;
@@ -38,7 +38,7 @@ namespace CgfConverter.CryEngineCore
         {
             get
             {
-                // Turns out chunk IDs are ints, not uints.  ~0 is shorthand for -1, or 0xFFFFFFFF in the uint world.
+                // ~0 is shorthand for -1, or 0xFFFFFFFF in the uint world.
                 if (ParentNodeID == ~0)  // aka 0xFFFFFFFF
                     return null;
 
@@ -75,7 +75,7 @@ namespace CgfConverter.CryEngineCore
             set { _objectChunk = value; }
         }
 
-        public Matrix44 TransformSoFar
+        public Matrix4x4 TransformSoFar
         {
             get
             {
@@ -91,7 +91,7 @@ namespace CgfConverter.CryEngineCore
             }
         }
 
-        public Matrix33 RotSoFar
+        public Matrix3x3 RotSoFar
         {
             get
             {
@@ -134,7 +134,7 @@ namespace CgfConverter.CryEngineCore
         {
             // Apply the transforms (rotation and translation) to the vector.
             // Work on the single matrix
-            Vector3 vec3 = TransformSoFar*transform;
+            Vector3 vec3 = TransformSoFar * transform;
             
             return vec3;
         }

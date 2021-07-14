@@ -2,6 +2,7 @@
 using System.IO;
 using System.Numerics;
 using System.Collections.Generic;
+using CgfConverter.Structs;
 
 namespace CgfConverter
 {
@@ -24,9 +25,9 @@ namespace CgfConverter
         public uint parentID;                           // Calculated controllerID of the parent bone put into the Bone Dictionary (the key)
         public List<uint> childIDs = new List<uint>();  // Calculated controllerIDs of the children to this bone.
         
-        public Matrix44 LocalTransform = new Matrix44();
+        public Matrix4x4 LocalTransform = new Matrix4x4();
         public Vector3 LocalTranslation { get; set; } = new Vector3();            // To hold the local rotation vector
-        public Matrix33 LocalRotation = new Matrix33();             // to hold the local rotation matrix
+        public Matrix3x3 LocalRotation = new Matrix3x3();             // to hold the local rotation matrix
 
         public CompiledBone ParentBone { get; set; }
 
@@ -63,7 +64,7 @@ namespace CgfConverter
             boneToWorld = new BONETOWORLD();
             boneToWorld.ReadBoneToWorld(b);
             worldToBone = new WORLDTOBONE();
-            worldToBone.worldToBone = new double[3, 4];
+            worldToBone.worldToBone = new float[3, 4];
             worldToBone.worldToBone[0, 0] = boneToWorld.boneToWorld[0, 0];
             worldToBone.worldToBone[0, 1] = boneToWorld.boneToWorld[0, 1];
             worldToBone.worldToBone[0, 2] = boneToWorld.boneToWorld[0, 2];
@@ -87,29 +88,29 @@ namespace CgfConverter
             offsetParent = b.ReadInt32();
             Quaternion relativeQuat = new Quaternion
             {
-                x = b.ReadSingle(),
-                y = b.ReadSingle(),
-                z = b.ReadSingle(),
-                w = b.ReadSingle()
+                X = b.ReadSingle(),
+                Y = b.ReadSingle(),
+                Z = b.ReadSingle(),
+                W = b.ReadSingle()
             };
             Vector3 relativeTransform = new Vector3
             {
-                x = b.ReadSingle(),
-                y = b.ReadSingle(),
-                z = b.ReadSingle()
+                X = b.ReadSingle(),
+                Y = b.ReadSingle(),
+                Z = b.ReadSingle()
             };
             Quaternion worldQuat = new Quaternion
             {
-                x = b.ReadSingle(),
-                y = b.ReadSingle(),
-                z = b.ReadSingle(),
-                w = b.ReadSingle()
+                X = b.ReadSingle(),
+                Y = b.ReadSingle(),
+                Z = b.ReadSingle(),
+                W = b.ReadSingle()
             };
             Vector3 worldTransform = new Vector3
             {
-                x = b.ReadSingle(),
-                y = b.ReadSingle(),
-                z = b.ReadSingle()
+                X = b.ReadSingle(),
+                Y = b.ReadSingle(),
+                Z = b.ReadSingle()
             };
             worldToBone = new WORLDTOBONE(worldQuat.ConvertToRotationalMatrix(), worldTransform);
             boneToWorld = new BONETOWORLD(relativeQuat.ConvertToRotationalMatrix(), relativeTransform);

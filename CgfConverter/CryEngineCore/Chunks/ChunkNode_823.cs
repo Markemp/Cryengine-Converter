@@ -1,5 +1,7 @@
-﻿using System;
+﻿using BinaryReaderExtensions;
+using System;
 using System.IO;
+using System.Numerics;
 
 namespace CgfConverter.CryEngineCore
 {
@@ -18,55 +20,30 @@ namespace CgfConverter.CryEngineCore
             SkipBytes(b, 4);
 
             // Read the 4x4 transform matrix.
-            Matrix44 transform = new Matrix44
+            Transform = new Matrix4x4
             {
-                m11 = b.ReadSingle(),
-                m12 = b.ReadSingle(),
-                m13 = b.ReadSingle(),
-                m14 = b.ReadSingle(),
-                m21 = b.ReadSingle(),
-                m22 = b.ReadSingle(),
-                m23 = b.ReadSingle(),
-                m24 = b.ReadSingle(),
-                m31 = b.ReadSingle(),
-                m32 = b.ReadSingle(),
-                m33 = b.ReadSingle(),
-                m34 = b.ReadSingle(),
-                m41 = b.ReadSingle() * VERTEX_SCALE,
-                m42 = b.ReadSingle() * VERTEX_SCALE,
-                m43 = b.ReadSingle() * VERTEX_SCALE,
-                m44 = b.ReadSingle(),
-            };
-            //original transform matrix is 3x4 stored as 4x4.
-            transform.m14 = transform.m24 = transform.m34 = 0d;
-            transform.m44 = 1d;
-            Transform = transform;
-
-            // Read the position Pos Vector3
-            Pos = new Vector3
-            {
-                x = b.ReadSingle() * VERTEX_SCALE,
-                y = b.ReadSingle() * VERTEX_SCALE,
-                z = b.ReadSingle() * VERTEX_SCALE,
+                M11 = b.ReadSingle(),
+                M12 = b.ReadSingle(),
+                M13 = b.ReadSingle(),
+                M14 = b.ReadSingle() * VERTEX_SCALE,
+                M21 = b.ReadSingle(),
+                M22 = b.ReadSingle(),
+                M23 = b.ReadSingle(),
+                M24 = b.ReadSingle() * VERTEX_SCALE,
+                M31 = b.ReadSingle(),
+                M32 = b.ReadSingle(),
+                M33 = b.ReadSingle(),
+                M34 = b.ReadSingle() * VERTEX_SCALE,
+                M41 = b.ReadSingle(),
+                M42 = b.ReadSingle(),
+                M43 = b.ReadSingle(),
+                M44 = b.ReadSingle(),
             };
 
-            // Read the rotation Rot Quad
-            Rot = new Quaternion
-            {
-                w = b.ReadSingle(),
-                x = b.ReadSingle(),
-                y = b.ReadSingle(),
-                z = b.ReadSingle(),
-            };
-
-            // Read the Scale Vector 3
-            Scale = new Vector3
-            {
-                x = b.ReadSingle(),
-                y = b.ReadSingle(),
-                z = b.ReadSingle(),
-            };
-
+            Pos = b.ReadVector3() * VERTEX_SCALE;
+            Rot = b.ReadQuaternion();
+            Scale = b.ReadVector3();
+            
             // read the controller pos/rot/scale
             PosCtrlID = b.ReadInt32();
             RotCtrlID = b.ReadInt32();

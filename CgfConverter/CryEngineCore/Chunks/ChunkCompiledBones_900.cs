@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using CgfConverter.Structs;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 
 namespace CgfConverter.CryEngineCore
@@ -44,7 +46,7 @@ namespace CgfConverter.CryEngineCore
         private void SetBoneLocalTransformMatrix(CompiledBone bone)
         {
             Vector3 localTranslation;
-            Matrix33 localRotation;
+            Matrix3x3 localRotation;
 
             //bone.LocalTranslation = bone.boneToWorld.GetBoneToWorldTranslationVector();       // World positions of the bone
             //bone.LocalRotation = bone.boneToWorld.GetBoneToWorldRotationMatrix();            // World rotation of the bone.

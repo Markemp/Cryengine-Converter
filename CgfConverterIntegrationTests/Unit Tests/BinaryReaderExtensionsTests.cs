@@ -8,6 +8,8 @@ namespace CgfConverterIntegrationTests.Unit_Tests
     [TestClass]
     public class BinaryReaderExtensionsTests
     {
+        private const float delta = 0.000001f;
+
         [TestMethod]
         public void ReadQuaternion_SingleType_0001()
         {
@@ -22,10 +24,10 @@ namespace CgfConverterIntegrationTests.Unit_Tests
             using var reader = new BinaryReader(source);
             var quat = reader.ReadQuaternion();
 
-            Assert.AreEqual(0, quat.x);
-            Assert.AreEqual(0, quat.y);
-            Assert.AreEqual(0, quat.z);
-            Assert.AreEqual(1, quat.w);
+            Assert.AreEqual(0, quat.X);
+            Assert.AreEqual(0, quat.Y);
+            Assert.AreEqual(0, quat.Z);
+            Assert.AreEqual(1, quat.W);
         }
 
         [TestMethod]
@@ -42,10 +44,10 @@ namespace CgfConverterIntegrationTests.Unit_Tests
             using var reader = new BinaryReader(source);
             var quat = reader.ReadQuaternion(InputType.Half);
 
-            Assert.AreEqual(0, quat.x);
-            Assert.AreEqual(0, quat.y);
-            Assert.AreEqual(0, quat.z);
-            Assert.AreEqual(1, quat.w);
+            Assert.AreEqual(0, quat.X);
+            Assert.AreEqual(0, quat.Y);
+            Assert.AreEqual(0, quat.Z);
+            Assert.AreEqual(1.875, quat.W);
         }
 
         [TestMethod]
@@ -63,10 +65,10 @@ namespace CgfConverterIntegrationTests.Unit_Tests
             using var reader = new BinaryReader(source);
             var quat = reader.ReadQuaternion(InputType.Half);
 
-            Assert.AreEqual(0, quat.x);
-            Assert.AreEqual(0, quat.y);
-            Assert.AreEqual(0, quat.z);
-            Assert.AreEqual(1, quat.w);
+            Assert.AreEqual(0.0074577, quat.X, delta);
+            Assert.AreEqual(1.4550781, quat.Y, delta);
+            Assert.AreEqual(0.0594787, quat.Z, delta);
+            Assert.AreEqual(1.0410156, quat.W, delta);
         }
     }
 }
