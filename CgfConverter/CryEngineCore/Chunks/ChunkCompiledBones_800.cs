@@ -43,8 +43,8 @@ namespace CgfConverter.CryEngineCore
                 if (tempBone.parentID != 0)
                 {
                     localRotation = GetParentBone(tempBone).boneToWorld
-                        .GetBoneToWorldRotationMatrix()
-                        .ConjugateTransposeThisAndMultiply(tempBone.boneToWorld.GetBoneToWorldRotationMatrix());
+                        .GetBoneToWorldRotationMatrix();
+                        //.ConjugateTransposeThisAndMultiply(tempBone.boneToWorld.GetBoneToWorldRotationMatrix());
                     localTranslation = GetParentBone(tempBone)
                         .LocalRotation * (tempBone.LocalTranslation - GetParentBone(tempBone)
                         .boneToWorld.GetBoneToWorldTranslationVector());

@@ -116,6 +116,30 @@ namespace Extensions
             return m;
         }
 
+        public static Matrix3x4 ReadMatrix3x4(this BinaryReader r)
+        {
+            if (r == null)
+                throw new ArgumentNullException(nameof(r));
+
+            Matrix3x4 m = new()
+            {
+                M11 = r.ReadSingle(),
+                M12 = r.ReadSingle(),
+                M13 = r.ReadSingle(),
+                M14 = r.ReadSingle(),
+                M21 = r.ReadSingle(),
+                M22 = r.ReadSingle(),
+                M23 = r.ReadSingle(),
+                M24 = r.ReadSingle(),
+                M31 = r.ReadSingle(),
+                M32 = r.ReadSingle(),
+                M33 = r.ReadSingle(),
+                M34 = r.ReadSingle()
+            };
+
+            return m;
+        }
+
         public enum InputType
         {
             Half,

@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Numerics;
 using Extensions;
 using CgfConverterTests.TestUtilities;
+using System.IO;
 
 namespace CgfConverterIntegrationTests.Unit_Tests
 {
@@ -55,6 +56,83 @@ namespace CgfConverterIntegrationTests.Unit_Tests
             Assert.AreEqual(0.5, matrix.M11, TestUtils.delta);
             Assert.AreEqual(0.600000023, matrix.M22, TestUtils.delta);
             Assert.AreEqual(-0.5, matrix.M33, TestUtils.delta);
+        }
+
+        [TestMethod]
+        public void Matrix4x4_Transpose()
+        {
+            var m = GetTestMatrix4x4();
+            Matrix4x4.Transpose(m);
+
+            Assert.AreEqual(0.11, m.M11, TestUtils.delta);
+            Assert.AreEqual(0.21, m.M12, TestUtils.delta);
+            Assert.AreEqual(0.31, m.M13, TestUtils.delta);
+            Assert.AreEqual(1.0, m.M14, TestUtils.delta);
+            Assert.AreEqual(0.12, m.M21, TestUtils.delta);
+            Assert.AreEqual(0.22, m.M22, TestUtils.delta);
+            Assert.AreEqual(0.32, m.M23, TestUtils.delta);
+        }
+
+        [TestMethod]
+        public void ConvertMatrix3x4_To_Matrix4x4()
+        {
+            var buffer = TestUtils.GetBone1WorldToBoneBytes();
+
+            using var source = new MemoryStream(buffer);
+            using var reader = new BinaryReader(source);
+            var m34 = reader.ReadMatrix3x4();
+            var m = m34.ConvertToTransformMatrix();
+
+            Assert.AreEqual(0, m.M11, delta);
+            Assert.AreEqual(0, m.M12, delta);
+            Assert.AreEqual(-1, m.M13, delta);
+            Assert.AreEqual(0.0233046, m.M14, delta);
+            Assert.AreEqual(0.9999999, m.M21, delta);
+            Assert.AreEqual(-1.629207e-07, m.M22, delta);
+            Assert.AreEqual(-3.264332e-22, m.M23, delta);
+            Assert.AreEqual(-1.659635e-16, m.M24, delta);
+            Assert.AreEqual(-1.629207e-07, m.M31, delta);
+            Assert.AreEqual(-0.9999999, m.M32, delta);
+            Assert.AreEqual(7.549789e-08, m.M33, delta);
+            Assert.AreEqual(-2.778125e-09, m.M34, delta);
+            Assert.AreEqual(0, m.M41, delta);
+            Assert.AreEqual(0, m.M42, delta);
+            Assert.AreEqual(0, m.M43, delta);
+            Assert.AreEqual(1, m.M44, delta);
+        }
+
+        [TestMethod]
+        public void CompareBPM_Bone1()
+        {
+            var expectedBPM = TestUtils.GetExpectedBone1BPM();
+
+            var buffer = TestUtils.GetBone1WorldToBoneBytes();
+
+            using var source = new MemoryStream(buffer);
+            using var reader = new BinaryReader(source);
+            Matrix4x4 actualBPM;
+            Matrix4x4.Invert(reader.ReadMatrix3x4().ConvertToTransformMatrix(), out actualBPM);
+
+            TestUtils.CompareTwoTransformMatrices(expectedBPM, actualBPM);
+        }
+
+        [TestMethod]
+        public void CompareBPM_Bone2()
+        {
+            var expectedBPM = TestUtils.GetExpectedBone2BPM();
+
+            var buffer = TestUtils.GetBone2WorldToBoneBytes();
+            var buffer2 = TestUtils.GetBone2BoneToWorldBytes();
+
+            using var source = new MemoryStream(buffer);
+            using var reader = new BinaryReader(source);
+            Matrix4x4 actualBPM;
+            //Matrix4x4.Invert(reader.ReadMatrix3x4().ConvertToTransformMatrix(), out actualBPM);
+            actualBPM = reader.ReadMatrix3x4().ConvertToTransformMatrix();
+
+            // Try to multiply Bone1BPM * Bone2BPM.Inverse
+
+            TestUtils.CompareTwoTransformMatrices(expectedBPM, actualBPM);
         }
 
         private Vector3 GetTestVector3()

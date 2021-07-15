@@ -1,4 +1,5 @@
-﻿using Extensions;
+﻿using CgfConverterTests.TestUtilities;
+using Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 using static Extensions.BinaryReaderExtensions;
@@ -8,7 +9,7 @@ namespace CgfConverterIntegrationTests.Unit_Tests
     [TestClass]
     public class BinaryReaderExtensionsTests
     {
-        private const float delta = 0.000001f;
+        private const float delta = 0.0000001f;
 
         [TestMethod]
         public void ReadQuaternion_SingleType_0001()
@@ -69,6 +70,29 @@ namespace CgfConverterIntegrationTests.Unit_Tests
             Assert.AreEqual(1.4550781, quat.Y, delta);
             Assert.AreEqual(0.0594787, quat.Z, delta);
             Assert.AreEqual(1.0410156, quat.W, delta);
+        }
+
+        [TestMethod]
+        public void ReadMatrix3x4_Bone1W2B()
+        {
+            var buffer = TestUtils.GetBone1WorldToBoneBytes();
+
+            using var source = new MemoryStream(buffer);
+            using var reader = new BinaryReader(source);
+            var m = reader.ReadMatrix3x4();
+
+            Assert.AreEqual(0, m.M11, delta);
+            Assert.AreEqual(0, m.M12, delta);
+            Assert.AreEqual(-1, m.M13, delta);
+            Assert.AreEqual(0.0233046, m.M14, delta);
+            Assert.AreEqual(0.9999999, m.M21, delta);
+            Assert.AreEqual(-1.629207e-07, m.M22, delta);
+            Assert.AreEqual(-3.264332e-22, m.M23, delta);
+            Assert.AreEqual(-1.659635e-16, m.M24, delta);
+            Assert.AreEqual(-1.629207e-07, m.M31, delta);
+            Assert.AreEqual(-0.9999999, m.M32, delta);
+            Assert.AreEqual(7.549789e-08, m.M33, delta);
+            Assert.AreEqual(-2.778125e-09, m.M34, delta);
         }
     }
 }

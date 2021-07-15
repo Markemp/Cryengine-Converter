@@ -106,10 +106,12 @@ namespace CgfConverter.Structs
         {
             // Get the scale, assuming is_scale_rotation is true
             Matrix3x3 mat = Mult(GetTranspose());
-            Vector3 scale = new Vector3();
-            scale.X = (float)Math.Pow(mat.M11, 0.5);
-            scale.Y = (float)Math.Pow(mat.M22, 0.5);
-            scale.Z = (float)Math.Pow(mat.M33, 0.5);
+            Vector3 scale = new Vector3
+            {
+                X = (float)Math.Pow(mat.M11, 0.5),
+                Y = (float)Math.Pow(mat.M22, 0.5),
+                Z = (float)Math.Pow(mat.M33, 0.5)
+            };
             if (GetDeterminant() < 0)
             {
                 scale.X = 0 - scale.X;
@@ -141,43 +143,9 @@ namespace CgfConverter.Structs
             return true;
         }
 
-        //public Matrix33 Inverse()
-        //{
-        //    Matrix<double> matrix = Matrix<double>.Build.Dense(3, 3);
-        //    matrix = ToMathMatrix().Inverse();
-        //    return GetMatrix33(matrix);
-        //}
-
-        //public Matrix33 Conjugate()
-        //{
-        //    Matrix<double> matrix = Matrix<double>.Build.Dense(3, 3);
-        //    matrix = ToMathMatrix().Conjugate();
-        //    return GetMatrix33(matrix);
-        //}
-
-        //public Matrix33 ConjugateTranspose()
-        //{
-        //    Matrix<double> matrix = Matrix<double>.Build.Dense(3, 3);
-        //    matrix = ToMathMatrix().ConjugateTranspose();
-        //    return GetMatrix33(matrix);
-        //}
-
-        //public Matrix33 ConjugateTransposeThisAndMultiply(Matrix33 inputMatrix)
-        //{
-        //    Matrix<double> matrix = Matrix<double>.Build.Dense(3, 3);
-        //    Matrix<double> matrix2 = Matrix<double>.Build.Dense(3, 3);
-        //    matrix2 = inputMatrix.ToMathMatrix();
-        //    matrix = ToMathMatrix().ConjugateTransposeThisAndMultiply(matrix2);
-        //    return GetMatrix33(matrix);
-        //}
-
-        //public Vector3 Diagonal()
-        //{
-        //    Vector3 result = new Vector3();
-        //    Vector<double> vector = Vector<double>.Build.Dense(3);
-        //    vector = this.ToMathMatrix().Diagonal();
-        //    result = result.GetVector3(vector);
-        //    return result;
-        //}
+        public override string ToString()
+        {
+            return $"[[{M11:F3}, {M12:F3}, {M13:F3}], [{M21:F3}, {M22:F3}, {M23:F3}], [{M31:F3}, {M32:F3}, {M33:F3}]]";
+        }
     }
 }
