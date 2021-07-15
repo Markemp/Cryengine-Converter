@@ -61,16 +61,16 @@ namespace CgfConverterIntegrationTests.Unit_Tests
         [TestMethod]
         public void Matrix4x4_Transpose()
         {
-            var m = GetTestMatrix4x4();
-            Matrix4x4.Transpose(m);
+            var actual = GetTestMatrix4x4();
+            var expected = Matrix4x4.Transpose(actual);
 
-            Assert.AreEqual(0.11, m.M11, TestUtils.delta);
-            Assert.AreEqual(0.21, m.M12, TestUtils.delta);
-            Assert.AreEqual(0.31, m.M13, TestUtils.delta);
-            Assert.AreEqual(1.0, m.M14, TestUtils.delta);
-            Assert.AreEqual(0.12, m.M21, TestUtils.delta);
-            Assert.AreEqual(0.22, m.M22, TestUtils.delta);
-            Assert.AreEqual(0.32, m.M23, TestUtils.delta);
+            Assert.AreEqual(expected.M11, actual.M11, TestUtils.delta);
+            Assert.AreEqual(expected.M21, actual.M12, TestUtils.delta);
+            Assert.AreEqual(expected.M31, actual.M13, TestUtils.delta);
+            Assert.AreEqual(expected.M41, actual.M14, TestUtils.delta);
+            Assert.AreEqual(expected.M12, actual.M21, TestUtils.delta);
+            Assert.AreEqual(expected.M22, actual.M22, TestUtils.delta);
+            Assert.AreEqual(expected.M32, actual.M23, TestUtils.delta);
         }
 
         [TestMethod]
