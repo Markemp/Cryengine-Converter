@@ -145,7 +145,7 @@ namespace CgfConverter.Structs
 
         public override string ToString()
         {
-            return $"[[{M11:F3}, {M12:F3}, {M13:F3}], [{M21:F3}, {M22:F3}, {M23:F3}], [{M31:F3}, {M32:F3}, {M33:F3}]]";
+            return $"[[{M11:F4}, {M12:F4}, {M13:F4}], [{M21:F4}, {M22:F4}, {M23:F4}], [{M31:F4}, {M32:F4}, {M33:F4}]]";
         }
     }
 }

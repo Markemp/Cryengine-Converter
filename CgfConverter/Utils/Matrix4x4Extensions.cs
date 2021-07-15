@@ -104,56 +104,15 @@ namespace Extensions
             };
         }
 
-        //public Vector3 GetBoneTranslation()
-        //{
-        //    return new Vector3
-        //    {
-        //        x = m14,
-        //        y = m24,
-        //        z = m34
-        //    };
-        //}
-
-        //public double[,] ConvertTo4x4Array()
-        //{
-        //    double[,] result = new double[4, 4];
-        //    result[0, 0] = this.m11;
-        //    result[0, 1] = this.m12;
-        //    result[0, 2] = this.m13;
-        //    result[0, 3] = this.m14;
-        //    result[1, 0] = this.m21;
-        //    result[1, 1] = this.m22;
-        //    result[1, 2] = this.m23;
-        //    result[1, 3] = this.m24;
-        //    result[2, 0] = this.m31;
-        //    result[2, 1] = this.m32;
-        //    result[2, 2] = this.m33;
-        //    result[2, 3] = this.m34;
-        //    result[3, 0] = this.m41;
-        //    result[3, 1] = this.m42;
-        //    result[3, 2] = this.m43;
-        //    result[3, 3] = this.m44;
-
-        //    return result;
-        //}
-
-        //public Matrix44 Inverse()
-        //{
-        //    Matrix<double> matrix = Matrix<double>.Build.Dense(4, 4);
-        //    matrix = ToMathMatrix().Inverse();
-        //    return GetMatrix44(matrix);
-        //}
-
-        //public Matrix44 GetTransformFromParts(Vector3 localTranslation, Matrix33 localRotation)
-        //{
-        //    var defaultScale = new Vector3
-        //    {
-        //        x = 0.0f,
-        //        y = 0.0f,
-        //        z = 0.0f
-        //    };
-        //    return GetTransformFromParts(localTranslation, localRotation, defaultScale);
-        //}
+        public static Vector3 GetTranslation(this Matrix4x4 m)
+        {
+            return new Vector3
+            {
+                X = m.M14,
+                Y = m.M24,
+                Z = m.M34
+            };
+        }
 
         //public Matrix44 GetTransformFromParts(Vector3 localTranslation, Matrix33 localRotation, Vector3 localScale)
         //{
@@ -184,96 +143,5 @@ namespace Extensions
         //    return transform;
         //}
 
-        //public static Matrix44 Identity()
-        //{
-        //    return new Matrix44()
-        //    {
-        //        m11 = 1,
-        //        m12 = 0,
-        //        m13 = 0,
-        //        m14 = 0,
-        //        m21 = 0,
-        //        m22 = 1,
-        //        m23 = 0,
-        //        m24 = 0,
-        //        m31 = 0,
-        //        m32 = 0,
-        //        m33 = 1,
-        //        m34 = 0,
-        //        m41 = 0,
-        //        m42 = 0,
-        //        m43 = 0,
-        //        m44 = 1
-        //    };
-        //}
-
-        //public static Matrix44 CreateDefaultRootNodeMatrix()
-        //{
-        //    return new Matrix44()
-        //    {
-        //        m11 = 1,
-        //        m12 = 0,
-        //        m13 = 0,
-        //        m14 = 0,
-        //        m21 = 0,
-        //        m22 = 1,
-        //        m23 = 0,
-        //        m24 = 0,
-        //        m31 = 0,
-        //        m32 = 0,
-        //        m33 = 1,
-        //        m34 = 0,
-        //        m41 = 1,
-        //        m42 = 1,
-        //        m43 = 1,
-        //        m44 = 0
-        //    };
-        //}
-
-        //public Matrix<double> ToMathMatrix()
-        //{
-        //    Matrix<double> result = Matrix<double>.Build.Dense(4, 4);
-        //    result[0, 0] = this.m11;
-        //    result[0, 1] = this.m12;
-        //    result[0, 2] = this.m13;
-        //    result[0, 3] = this.m14;
-        //    result[1, 0] = this.m21;
-        //    result[1, 1] = this.m22;
-        //    result[1, 2] = this.m23;
-        //    result[1, 3] = this.m24;
-        //    result[2, 0] = this.m31;
-        //    result[2, 1] = this.m32;
-        //    result[2, 2] = this.m33;
-        //    result[2, 3] = this.m34;
-        //    result[3, 0] = this.m41;
-        //    result[3, 1] = this.m42;
-        //    result[3, 2] = this.m43;
-        //    result[3, 3] = this.m44;
-        //    return result;
-        //}
-
-        //public Matrix44 GetMatrix44(Matrix<double> matrix)
-        //{
-        //    Matrix44 result = new Matrix44
-        //    {
-        //        m11 = matrix[0, 0],
-        //        m12 = matrix[0, 1],
-        //        m13 = matrix[0, 2],
-        //        m14 = matrix[0, 3],
-        //        m21 = matrix[1, 0],
-        //        m22 = matrix[1, 1],
-        //        m23 = matrix[1, 2],
-        //        m24 = matrix[1, 3],
-        //        m31 = matrix[2, 0],
-        //        m32 = matrix[2, 1],
-        //        m33 = matrix[2, 2],
-        //        m34 = matrix[2, 3],
-        //        m41 = matrix[3, 0],
-        //        m42 = matrix[3, 1],
-        //        m43 = matrix[3, 2],
-        //        m44 = matrix[3, 3],
-        //    };
-        //    return result;
-        //}
     }
 }
