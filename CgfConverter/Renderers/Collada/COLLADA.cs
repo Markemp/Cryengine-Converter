@@ -1428,7 +1428,8 @@ namespace CgfConverter
             StringBuilder value = new StringBuilder();
             for (int i = 0; i < compiledBones.Count; i++)
             {
-                value.Append(CreateStringFromMatrix44(compiledBones[i].worldToBone.GetMatrix44().Inverse()) + " ");
+                //value.Append(CreateStringFromMatrix44(compiledBones[i].worldToBone.GetMatrix44().Inverse()) + " ");
+                value.Append(CreateStringFromMatrix44(compiledBones[i].worldToBone.GetMatrix44()) + " ");
             }
             return value.ToString().TrimEnd();
         }
