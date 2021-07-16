@@ -3,6 +3,7 @@ using System.IO;
 using System.Numerics;
 using System.Collections.Generic;
 using CgfConverter.Structs;
+using Extensions;
 
 namespace CgfConverter
 {
@@ -11,23 +12,24 @@ namespace CgfConverter
         public uint ControllerID { get; set; }
         public PhysicsGeometry[] physicsGeometry;  // 2 of these.  One for live objects, other for dead (ragdoll?)
         public double mass;                        // 0xD8 ?
-        public WORLDTOBONE worldToBone;            // 4x3 matrix
-        public BONETOWORLD boneToWorld;            // 4x3 matrix of world translations/rotations of the bones.
+        public Matrix3x4 worldToBone;              // 4x3 matrix   WORLDTOBONE is also the Bind Pose Matrix (BPM)
+        public Matrix3x4 boneToWorld;              // 4x3 matrix of world translations/rotations of the bones.
         public string boneName;                    // String256 in old terms; convert to a real null terminated string.
         public int limbID;                         // ID of this limb... usually just 0xFFFFFFFF
         public int offsetParent;                   // offset to the parent in number of CompiledBone structs (584 bytes)
         public int offsetChild;                    // Offset to the first child to this bone in number of CompiledBone structs
         public uint numChildren;                   // Number of children to this bone
 
-        public Matrix4x4 BindPoseMatrix;           // Use the inverse of this to place in Collada file
+        public Matrix4x4 BindPoseMatrix;           // Use the inverse of this to place in Collada file.
+        public Matrix4x4 WorldTransformMatrix;     // Not sure what to use with this yet.
         public long offset;                        // Calculated position in the file where this bone started.
         
         public uint parentID;                           // Calculated controllerID of the parent bone put into the Bone Dictionary (the key)
         public List<uint> childIDs = new List<uint>();  // Calculated controllerIDs of the children to this bone.
 
-        public Matrix4x4 LocalTransform = new Matrix4x4();
-        public Vector3 LocalTranslation { get; set; } = new Vector3();            // To hold the local rotation vector
-        public Matrix3x3 LocalRotation = new Matrix3x3();             // to hold the local rotation matrix
+        //public Matrix4x4 LocalTransform = new Matrix4x4();
+        //public Vector3 LocalTranslation { get; set; } = new Vector3();            // To hold the local rotation vector
+        //public Matrix3x3 LocalRotation = new Matrix3x3();             // to hold the local rotation matrix
 
         public CompiledBone ParentBone { get; set; }
 
@@ -39,10 +41,10 @@ namespace CgfConverter
             physicsGeometry[0].ReadPhysicsGeometry(b);     // LOD 0 is the physics of alive body, 
             physicsGeometry[1].ReadPhysicsGeometry(b);     // LOD 1 is the physics of a dead body
             mass = b.ReadSingle();
-            worldToBone = new WORLDTOBONE();
-            worldToBone.GetWorldToBone(b);
-            boneToWorld = new BONETOWORLD();
-            boneToWorld.ReadBoneToWorld(b);
+            worldToBone = b.ReadMatrix3x4();
+            BindPoseMatrix = worldToBone.ConvertToTransformMatrix();
+            boneToWorld = b.ReadMatrix3x4();
+            WorldTransformMatrix = boneToWorld.ConvertToTransformMatrix();
             boneName = b.ReadFString(256);
             limbID = b.ReadInt32();
             offsetParent = b.ReadInt32();
@@ -61,22 +63,10 @@ namespace CgfConverter
             numChildren = b.ReadUInt32();
             offsetChild = b.ReadInt32();
             // TODO:  This may be quaternion and translation vectors. 
-            boneToWorld = new BONETOWORLD();
-            boneToWorld.ReadBoneToWorld(b);
-            worldToBone = new WORLDTOBONE();
-            worldToBone.worldToBone = new float[3, 4];
-            worldToBone.worldToBone[0, 0] = boneToWorld.boneToWorld[0, 0];
-            worldToBone.worldToBone[0, 1] = boneToWorld.boneToWorld[0, 1];
-            worldToBone.worldToBone[0, 2] = boneToWorld.boneToWorld[0, 2];
-            worldToBone.worldToBone[0, 3] = boneToWorld.boneToWorld[0, 3];
-            worldToBone.worldToBone[1, 0] = boneToWorld.boneToWorld[1, 0];
-            worldToBone.worldToBone[1, 1] = boneToWorld.boneToWorld[1, 1];
-            worldToBone.worldToBone[1, 2] = boneToWorld.boneToWorld[1, 2];
-            worldToBone.worldToBone[1, 3] = boneToWorld.boneToWorld[1, 3];
-            worldToBone.worldToBone[2, 0] = boneToWorld.boneToWorld[2, 0];
-            worldToBone.worldToBone[2, 1] = boneToWorld.boneToWorld[2, 1];
-            worldToBone.worldToBone[2, 2] = boneToWorld.boneToWorld[2, 2];
-            worldToBone.worldToBone[2, 3] = boneToWorld.boneToWorld[2, 3];
+            worldToBone = b.ReadMatrix3x4();
+            BindPoseMatrix = worldToBone.ConvertToTransformMatrix();
+            boneToWorld = b.ReadMatrix3x4();
+            WorldTransformMatrix = boneToWorld.ConvertToTransformMatrix();
 
             childIDs = new List<uint>();                    // Calculated
         }

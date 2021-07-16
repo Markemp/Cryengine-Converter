@@ -24,8 +24,8 @@ namespace CgfConverter.CryEngineCore
                 if (RootBone == null)  // First bone read is root bone
                     RootBone = tempBone;
 
-                tempBone.LocalTranslation = tempBone.boneToWorld.GetBoneToWorldTranslationVector();       // World positions of the bone
-                tempBone.LocalRotation = tempBone.boneToWorld.GetBoneToWorldRotationMatrix();            // World rotation of the bone.
+                //tempBone.LocalTranslation = tempBone.boneToWorld.GetBoneToWorldTranslationVector();       // World positions of the bone
+                //tempBone.LocalRotation = tempBone.boneToWorld.GetBoneToWorldRotationMatrix();            // World rotation of the bone.
                 //tempBone.ParentBone = BoneMap[i + tempBone.offsetParent];
                 tempBone.ParentBone = GetParentBone(tempBone);
                 if (tempBone.ParentBone != null)
@@ -39,19 +39,20 @@ namespace CgfConverter.CryEngineCore
 
                 if (tempBone.parentID != 0)
                 {
-                    localRotation = GetParentBone(tempBone).boneToWorld
-                        .GetBoneToWorldRotationMatrix()
-                        .ConjugateTransposeThisAndMultiply(tempBone.boneToWorld.GetBoneToWorldRotationMatrix());
-                    localTranslation = GetParentBone(tempBone)
-                        .LocalRotation * (tempBone.LocalTranslation - GetParentBone(tempBone)
-                        .boneToWorld.GetBoneToWorldTranslationVector());
+                    // TODO:  Figure out how to calculate the WorldTransformMatrix to use for JOINT nodes in the Library_Visual_Scene
+                    //localRotation = GetParentBone(tempBone).boneToWorld
+                    //    .GetBoneToWorldRotationMatrix()
+                    //    .ConjugateTransposeThisAndMultiply(tempBone.boneToWorld.GetBoneToWorldRotationMatrix());
+                    //localTranslation = GetParentBone(tempBone)
+                    //    .LocalRotation * (tempBone.LocalTranslation - GetParentBone(tempBone)
+                    //    .boneToWorld.GetBoneToWorldTranslationVector());
                 }
                 else
                 {
-                    localTranslation = tempBone.boneToWorld.GetBoneToWorldTranslationVector();
-                    localRotation = tempBone.boneToWorld.GetBoneToWorldRotationMatrix();
+                    //localTranslation = tempBone.boneToWorld.GetBoneToWorldTranslationVector();
+                    //localRotation = tempBone.boneToWorld.GetBoneToWorldRotationMatrix();
                 }
-                tempBone.LocalTransform = GetTransformFromParts(localTranslation, localRotation);
+                //tempBone.LocalTransform = GetTransformFromParts(localTranslation, localRotation);
 
                 BoneList.Add(tempBone);
                 BoneDictionary[i] = tempBone;

@@ -135,155 +135,130 @@ namespace CgfConverter
     /// <summary> WORLDTOBONE is also the Bind Pose Matrix (BPM) </summary>
     public struct WORLDTOBONE
     {
-        public float[,] worldToBone;   //  4x3 structure
+        //public float[,] worldToBone;   //  4x3 structure
 
-        public WORLDTOBONE(Matrix3x3 worldRotation, Vector3 worldTransform) : this()
-        {
-            worldToBone = new float[3, 4];
-            worldToBone[0, 0] = worldRotation.M11;
-            worldToBone[0, 1] = worldRotation.M12;
-            worldToBone[0, 2] = worldRotation.M13;
-            worldToBone[0, 3] = worldTransform.X;
-            worldToBone[1, 0] = worldRotation.M21;
-            worldToBone[1, 1] = worldRotation.M22;
-            worldToBone[1, 2] = worldRotation.M23;
-            worldToBone[1, 3] = worldTransform.Y;
-            worldToBone[2, 0] = worldRotation.M31;
-            worldToBone[2, 1] = worldRotation.M32;
-            worldToBone[2, 2] = worldRotation.M33;
-            worldToBone[2, 3] = worldTransform.Z;
-        }
+        //public WORLDTOBONE(Matrix3x3 worldRotation, Vector3 worldTransform) : this()
+        //{
+        //    worldToBone = new float[3, 4];
+        //    worldToBone[0, 0] = worldRotation.M11;
+        //    worldToBone[0, 1] = worldRotation.M12;
+        //    worldToBone[0, 2] = worldRotation.M13;
+        //    worldToBone[0, 3] = worldTransform.X;
+        //    worldToBone[1, 0] = worldRotation.M21;
+        //    worldToBone[1, 1] = worldRotation.M22;
+        //    worldToBone[1, 2] = worldRotation.M23;
+        //    worldToBone[1, 3] = worldTransform.Y;
+        //    worldToBone[2, 0] = worldRotation.M31;
+        //    worldToBone[2, 1] = worldRotation.M32;
+        //    worldToBone[2, 2] = worldRotation.M33;
+        //    worldToBone[2, 3] = worldTransform.Z;
+        //}
 
-        public void GetWorldToBone(BinaryReader b)
-        {
-            worldToBone = new float[3, 4];
-            for (int i = 0; i < 3; i++)
-            {
-                for (int j = 0; j < 4; j++)
-                {
-                    worldToBone[i, j] = b.ReadSingle();  // this might have to be switched to [j,i].  Who knows???
-                }
-            }
-            return;
-        }
+        //public void GetWorldToBone(BinaryReader b)
+        //{
+        //    worldToBone = new float[3, 4];
+        //    for (int i = 0; i < 3; i++)
+        //    {
+        //        for (int j = 0; j < 4; j++)
+        //        {
+        //            worldToBone[i, j] = b.ReadSingle();  // this might have to be switched to [j,i].  Who knows???
+        //        }
+        //    }
+        //    return;
+        //}
 
-        public Matrix4x4 GetMatrix44()
-        {
-            Matrix4x4 matrix = new Matrix4x4
-            {
-                M11 = (float)worldToBone[0, 0],
-                M12 = (float)worldToBone[0, 1],
-                M13 = (float)worldToBone[0, 2],
-                M14 = 0,
-                M21 = (float)worldToBone[1, 0],
-                M22 = (float)worldToBone[1, 1],
-                M23 = (float)worldToBone[1, 2],
-                M24 = 0,
-                M31 = (float)worldToBone[2, 0],
-                M32 = (float)worldToBone[2, 1],
-                M33 = (float)worldToBone[2, 2],
-                M34 = 0,
-                M41 = (float)worldToBone[0, 3],
-                M42 = (float)worldToBone[1, 3],
-                M43 = (float)worldToBone[2, 3],
-                M44 = 1
-            };
-            return matrix;
+        //internal Matrix3x3 GetWorldToBoneRotationMatrix()
+        //{
+        //    Matrix3x3 result = new Matrix3x3
+        //    {
+        //        M11 = worldToBone[0, 0],
+        //        M12 = worldToBone[0, 1],
+        //        M13 = worldToBone[0, 2],
+        //        M21 = worldToBone[1, 0],
+        //        M22 = worldToBone[1, 1],
+        //        M23 = worldToBone[1, 2],
+        //        M31 = worldToBone[2, 0],
+        //        M32 = worldToBone[2, 1],
+        //        M33 = worldToBone[2, 2]
+        //    };
+        //    return result;
+        //}
 
-        }
-
-        internal Matrix3x3 GetWorldToBoneRotationMatrix()
-        {
-            Matrix3x3 result = new Matrix3x3
-            {
-                M11 = worldToBone[0, 0],
-                M12 = worldToBone[0, 1],
-                M13 = worldToBone[0, 2],
-                M21 = worldToBone[1, 0],
-                M22 = worldToBone[1, 1],
-                M23 = worldToBone[1, 2],
-                M31 = worldToBone[2, 0],
-                M32 = worldToBone[2, 1],
-                M33 = worldToBone[2, 2]
-            };
-            return result;
-        }
-
-        internal Vector3 GetWorldToBoneTranslationVector()
-        {
-            Vector3 result = new Vector3
-            {
-                X = (float)worldToBone[0, 3],
-                Y = (float)worldToBone[1, 3],
-                Z = (float)worldToBone[2, 3]
-            };
-            return result;
-        }
+        //internal Vector3 GetWorldToBoneTranslationVector()
+        //{
+        //    Vector3 result = new Vector3
+        //    {
+        //        X = (float)worldToBone[0, 3],
+        //        Y = (float)worldToBone[1, 3],
+        //        Z = (float)worldToBone[2, 3]
+        //    };
+        //    return result;
+        //}
     }
 
     /// <summary> BONETOWORLD contains the world space location/rotation of a bone. </summary>
     public struct BONETOWORLD
     {
-        public float[,] boneToWorld;   //  4x3 structure
+        //public float[,] boneToWorld;   //  4x3 structure
 
-        public BONETOWORLD(Matrix3x3 matrix33, Vector3 relativeTransform) : this()
-        {
-            boneToWorld = new float[3, 4];
-            boneToWorld[0, 0] = matrix33.M11;
-            boneToWorld[0, 1] = matrix33.M12;
-            boneToWorld[0, 2] = matrix33.M13;
-            boneToWorld[1, 0] = matrix33.M21;
-            boneToWorld[1, 1] = matrix33.M22;
-            boneToWorld[1, 2] = matrix33.M23;
-            boneToWorld[2, 0] = matrix33.M31;
-            boneToWorld[2, 1] = matrix33.M32;
-            boneToWorld[2, 2] = matrix33.M33;
-            boneToWorld[0, 3] = relativeTransform.X;
-            boneToWorld[1, 3] = relativeTransform.Y;
-            boneToWorld[2, 3] = relativeTransform.Z;
-        }
+        //public BONETOWORLD(Matrix3x3 matrix33, Vector3 relativeTransform) : this()
+        //{
+        //    boneToWorld = new float[3, 4];
+        //    boneToWorld[0, 0] = matrix33.M11;
+        //    boneToWorld[0, 1] = matrix33.M12;
+        //    boneToWorld[0, 2] = matrix33.M13;
+        //    boneToWorld[1, 0] = matrix33.M21;
+        //    boneToWorld[1, 1] = matrix33.M22;
+        //    boneToWorld[1, 2] = matrix33.M23;
+        //    boneToWorld[2, 0] = matrix33.M31;
+        //    boneToWorld[2, 1] = matrix33.M32;
+        //    boneToWorld[2, 2] = matrix33.M33;
+        //    boneToWorld[0, 3] = relativeTransform.X;
+        //    boneToWorld[1, 3] = relativeTransform.Y;
+        //    boneToWorld[2, 3] = relativeTransform.Z;
+        //}
 
-        public void ReadBoneToWorld(BinaryReader b)
-        {
-            boneToWorld = new float[3, 4];
+        //public void ReadBoneToWorld(BinaryReader b)
+        //{
+        //    boneToWorld = new float[3, 4];
 
-            for (int i = 0; i < 3; i++)
-            {
-                for (int j = 0; j < 4; j++)
-                {
-                    boneToWorld[i, j] = b.ReadSingle();
-                }
-            }
-            return;
-        }
+        //    for (int i = 0; i < 3; i++)
+        //    {
+        //        for (int j = 0; j < 4; j++)
+        //        {
+        //            boneToWorld[i, j] = b.ReadSingle();
+        //        }
+        //    }
+        //    return;
+        //}
 
-        public Matrix3x3 GetBoneToWorldRotationMatrix()
-        {
-            Matrix3x3 result = new Matrix3x3
-            {
-                M11 = boneToWorld[0, 0],
-                M12 = boneToWorld[0, 1],
-                M13 = boneToWorld[0, 2],
-                M21 = boneToWorld[1, 0],
-                M22 = boneToWorld[1, 1],
-                M23 = boneToWorld[1, 2],
-                M31 = boneToWorld[2, 0],
-                M32 = boneToWorld[2, 1],
-                M33 = boneToWorld[2, 2]
-            };
-            return result;
-        }
+        //public Matrix3x3 GetBoneToWorldRotationMatrix()
+        //{
+        //    Matrix3x3 result = new Matrix3x3
+        //    {
+        //        M11 = boneToWorld[0, 0],
+        //        M12 = boneToWorld[0, 1],
+        //        M13 = boneToWorld[0, 2],
+        //        M21 = boneToWorld[1, 0],
+        //        M22 = boneToWorld[1, 1],
+        //        M23 = boneToWorld[1, 2],
+        //        M31 = boneToWorld[2, 0],
+        //        M32 = boneToWorld[2, 1],
+        //        M33 = boneToWorld[2, 2]
+        //    };
+        //    return result;
+        //}
 
-        public Vector3 GetBoneToWorldTranslationVector()
-        {
-            Vector3 result = new Vector3
-            {
-                X = boneToWorld[0, 3],
-                Y = boneToWorld[1, 3],
-                Z = boneToWorld[2, 3]
-            };
-            return result;
-        }
+        //public Vector3 GetBoneToWorldTranslationVector()
+        //{
+        //    Vector3 result = new Vector3
+        //    {
+        //        X = boneToWorld[0, 3],
+        //        Y = boneToWorld[1, 3],
+        //        Z = boneToWorld[2, 3]
+        //    };
+        //    return result;
+        //}
     }
 
     public struct PhysicsGeometry

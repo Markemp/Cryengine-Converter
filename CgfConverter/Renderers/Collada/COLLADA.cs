@@ -9,8 +9,6 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using CgfConverter.CryEngineCore;
-using CgfConverter.Structs;
-using Extensions;
 using grendgine_collada;
 
 namespace CgfConverter
@@ -837,7 +835,7 @@ namespace CgfConverter
                     source = "#" + DaeObject.Library_Geometries.Geometry[0].ID,
                     Bind_Shape_Matrix = new Grendgine_Collada_Float_Array_String()
                 };
-                skin.Bind_Shape_Matrix.Value_As_String = CreateStringFromMatrix44(Matrix4x4.Identity);  // We will assume the BSM is the identity matrix for now
+                skin.Bind_Shape_Matrix.Value_As_String = CreateStringFromMatrix4x4(Matrix4x4.Identity);  // We will assume the BSM is the identity matrix for now
                                                                                                          // Create the 3 sources for this controller:  joints, bind poses, and weights
                 skin.Source = new Grendgine_Collada_Source[3];
 
@@ -1118,7 +1116,7 @@ namespace CgfConverter
             };
             rootNode.Matrix[0] = new Grendgine_Collada_Matrix
             {
-                Value_As_String = CreateStringFromMatrix44(Matrix4x4.Identity)
+                Value_As_String = CreateStringFromMatrix4x4(Matrix4x4.Identity)
             };
             rootNode.Instance_Controller = new Grendgine_Collada_Instance_Controller[1];
             rootNode.Instance_Controller[0] = new Grendgine_Collada_Instance_Controller();
@@ -1303,18 +1301,30 @@ namespace CgfConverter
             // Populate the matrix.  This is based on the BONETOWORLD data in this bone.
             StringBuilder matrixValues = new StringBuilder();
             matrixValues.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} 0 0 0 1",
-                bone.LocalTransform.M11,
-                bone.LocalTransform.M12,
-                bone.LocalTransform.M13,
-                bone.LocalTransform.M14,
-                bone.LocalTransform.M21,
-                bone.LocalTransform.M22,
-                bone.LocalTransform.M23,
-                bone.LocalTransform.M24,
-                bone.LocalTransform.M31,
-                bone.LocalTransform.M32,
-                bone.LocalTransform.M33,
-                bone.LocalTransform.M34
+                //bone.LocalTransform.M11,
+                //bone.LocalTransform.M12,
+                //bone.LocalTransform.M13,
+                //bone.LocalTransform.M14,
+                //bone.LocalTransform.M21,
+                //bone.LocalTransform.M22,
+                //bone.LocalTransform.M23,
+                //bone.LocalTransform.M24,
+                //bone.LocalTransform.M31,
+                //bone.LocalTransform.M32,
+                //bone.LocalTransform.M33,
+                //bone.LocalTransform.M34
+                bone.WorldTransformMatrix.M11,
+                bone.WorldTransformMatrix.M12,
+                bone.WorldTransformMatrix.M13,
+                bone.WorldTransformMatrix.M14,
+                bone.WorldTransformMatrix.M21,
+                bone.WorldTransformMatrix.M22,
+                bone.WorldTransformMatrix.M23,
+                bone.WorldTransformMatrix.M24,
+                bone.WorldTransformMatrix.M31,
+                bone.WorldTransformMatrix.M32,
+                bone.WorldTransformMatrix.M33,
+                bone.WorldTransformMatrix.M34
                 );
 
             CleanNumbers(matrixValues);
@@ -1431,7 +1441,7 @@ namespace CgfConverter
             StringBuilder value = new StringBuilder();
             for (int i = 0; i < compiledBones.Count; i++)
             {
-                value.Append(CreateStringFromMatrix44(compiledBones[i].worldToBone.GetMatrix44()) + " ");
+                value.Append(CreateStringFromMatrix4x4(compiledBones[i].BindPoseMatrix) + " ");
             }
             return value.ToString().TrimEnd();
         }
@@ -1468,7 +1478,7 @@ namespace CgfConverter
             //node.LocalTransform = node.LocalTransform.GetTransformFromParts(localScale, localRotation, localTranslation);
         }
 
-        private static string CreateStringFromMatrix44(Matrix4x4 matrix)
+        private static string CreateStringFromMatrix4x4(Matrix4x4 matrix)
         {
             StringBuilder matrixValues = new StringBuilder();
             matrixValues.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} {12:F6} {13:F6} {14:F6} {15:F6}",
