@@ -44,6 +44,12 @@ namespace CgfConverterIntegrationTests.IntegrationTests
         }
 
         [TestMethod]
+        public void MultiplyBone0W2BandBone1W2B()
+        {
+            var result = givenBone0W2B * givenBone1W2B;
+        }
+
+        [TestMethod]
         public void Bone1FromW2B()
         {
             Matrix4x4 w2bInverse;
@@ -94,6 +100,7 @@ namespace CgfConverterIntegrationTests.IntegrationTests
             Matrix4x4 bone1BPM;
             Matrix4x4.Invert(bone1, out bone1BPM);
 
+            // Inverted correctBone1Matrix (these values are the correct collada values
             // {1               -0.000089       0               -0.023396   }
             // {0.000089        1               -0.000009       -0.0000021  }
             // {0               0.0000009       1               0           }
