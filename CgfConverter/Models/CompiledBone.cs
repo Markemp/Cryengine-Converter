@@ -12,16 +12,16 @@ namespace CgfConverter
         public uint ControllerID { get; set; }
         public PhysicsGeometry[] physicsGeometry;  // 2 of these.  One for live objects, other for dead (ragdoll?)
         public double mass;                        // 0xD8 ?
-        public Matrix3x4 worldToBone;              // 4x3 matrix   WORLDTOBONE is also the Bind Pose Matrix (BPM)
-        public Matrix3x4 boneToWorld;              // 4x3 matrix of world translations/rotations of the bones.
+        public Matrix3x4 WorldToBone;              // 4x3 matrix   WORLDTOBONE is also the Bind Pose Matrix (BPM)
+        public Matrix3x4 BoneToWorld;              // 4x3 matrix of world translations/rotations of the bones.
         public string boneName;                    // String256 in old terms; convert to a real null terminated string.
         public int limbID;                         // ID of this limb... usually just 0xFFFFFFFF
         public int offsetParent;                   // offset to the parent in number of CompiledBone structs (584 bytes)
         public int offsetChild;                    // Offset to the first child to this bone in number of CompiledBone structs
         public uint numChildren;                   // Number of children to this bone
 
-        public Matrix4x4 BindPoseMatrix;           // Use the inverse of this to place in Collada file.
-        public Matrix4x4 WorldTransformMatrix;     // Not sure what to use with this yet.
+        public Matrix4x4 BindPoseMatrix;           // This is the WorldToBone matrix for library_controllers
+        public Matrix4x4 LocalTransform;          // 
         public long offset;                        // Calculated position in the file where this bone started.
         
         public uint parentID;                           // Calculated controllerID of the parent bone put into the Bone Dictionary (the key)
@@ -41,10 +41,10 @@ namespace CgfConverter
             physicsGeometry[0].ReadPhysicsGeometry(b);     // LOD 0 is the physics of alive body, 
             physicsGeometry[1].ReadPhysicsGeometry(b);     // LOD 1 is the physics of a dead body
             mass = b.ReadSingle();
-            worldToBone = b.ReadMatrix3x4();
-            BindPoseMatrix = worldToBone.ConvertToTransformMatrix();
-            boneToWorld = b.ReadMatrix3x4();
-            WorldTransformMatrix = boneToWorld.ConvertToTransformMatrix();
+            WorldToBone = b.ReadMatrix3x4();
+            BindPoseMatrix = WorldToBone.ConvertToTransformMatrix();
+            BoneToWorld = b.ReadMatrix3x4();
+            // TransformMatrix = BoneToWorld.ConvertToTransformMatrix();
             boneName = b.ReadFString(256);
             limbID = b.ReadInt32();
             offsetParent = b.ReadInt32();
@@ -63,10 +63,10 @@ namespace CgfConverter
             numChildren = b.ReadUInt32();
             offsetChild = b.ReadInt32();
             // TODO:  This may be quaternion and translation vectors. 
-            worldToBone = b.ReadMatrix3x4();
-            BindPoseMatrix = worldToBone.ConvertToTransformMatrix();
-            boneToWorld = b.ReadMatrix3x4();
-            WorldTransformMatrix = boneToWorld.ConvertToTransformMatrix();
+            WorldToBone = b.ReadMatrix3x4();
+            BindPoseMatrix = WorldToBone.ConvertToTransformMatrix();
+            BoneToWorld = b.ReadMatrix3x4();
+            // TransformMatrix = BoneToWorld.ConvertToTransformMatrix();
 
             childIDs = new List<uint>();                    // Calculated
         }
@@ -102,7 +102,12 @@ namespace CgfConverter
                 Y = b.ReadSingle(),
                 Z = b.ReadSingle()
             };
-            BindPoseMatrix = Matrix4x4.Transform(Matrix4x4.Identity, worldQuat);
+            BindPoseMatrix = Matrix4x4.CreateFromQuaternion(worldQuat);
+            BindPoseMatrix.M14 = worldTransform.X;
+            BindPoseMatrix.M24 = worldTransform.Y;
+            BindPoseMatrix.M34 = worldTransform.Z;
+            BindPoseMatrix.M44 = 1.0f;
+            //BindPoseMatrix = Matrix4x4.Transform(Matrix4x4.Identity, worldQuat);
             //worldToBone = new WORLDTOBONE(worldQuat.ConvertToRotationalMatrix(), worldTransform);
             //boneToWorld = new BONETOWORLD(relativeQuat.ConvertToRotationalMatrix(), relativeTransform);
         }

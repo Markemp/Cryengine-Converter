@@ -28,11 +28,16 @@ namespace CgfConverterIntegrationTests.IntegrationTests
            0,           0,          0,          1);
 
         private Matrix4x4 givenBone0W2B = new Matrix4x4(-0.000000f, -0.000000f, -1.000000f, 0.023305f, 1.000000f, -0.000000f, -0.000000f, -0.000000f, -0.000000f, -1.000000f, 0.000000f, -0.000000f, 0, 0, 0, 1);
-        private Matrix4x4 givenBone0B2W = new Matrix4x4(-0.000000f, 1.000000f, -0.000000f, 0.000000f, -0.000000f, -0.000000f, -1.000000f, -0.000000f, -1.000000f, -0.000000f, 0.000000f, 0.023305f, 0, 0, 0, 1);
         private Matrix4x4 givenBone1W2B = new Matrix4x4(-0.000089f, -0.000000f, -1.000000f, -0.000092f, 1.000000f, 0.000008f, -0.000089f, -0.000000f, 0.000008f, -1.000000f, 0.000000f, -0.000000f, 0, 0, 0, 1);
-        private Matrix4x4 givenBone1B2W = new Matrix4x4(-0.000089f, 1.000000f, 0.000008f, 0.000000f, -0.000000f, 0.000008f, -1.000000f, -0.000000f, -1.000000f, -0.000089f, 0.000000f, -0.000092f, 0, 0, 0, 1);
         private Matrix4x4 givenBone2W2B = new Matrix4x4(-0.000091f, -0.000000f, -1.000000f, -0.026455f, 1.000000f, 0.000008f, -0.000091f, -0.000000f, 0.000008f, -1.000000f, 0.000000f, -0.000000f, 0, 0, 0, 1);
+        
+        private Matrix4x4 givenBone0B2W = new Matrix4x4(-0.000000f, 1.000000f, -0.000000f, 0.000000f, -0.000000f, -0.000000f, -1.000000f, -0.000000f, -1.000000f, -0.000000f, 0.000000f, 0.023305f, 0, 0, 0, 1);
+        private Matrix4x4 givenBone1B2W = new Matrix4x4(-0.000089f, 1.000000f, 0.000008f, 0.000000f, -0.000000f, 0.000008f, -1.000000f, -0.000000f, -1.000000f, -0.000089f, 0.000000f, -0.000092f, 0, 0, 0, 1);
         private Matrix4x4 givenBone2B2W = new Matrix4x4(-0.000091f, 1.000000f, 0.000008f, -0.000002f, -0.000000f, 0.000008f, -1.000000f, -0.000000f, -1.000000f, -0.000091f, 0.000000f, -0.026455f, 0, 0, 0, 1);
+
+        private Matrix4x4 givenBone0B2W2 = new Matrix4x4(-0.000000f, 1.000000f, -0.000000f, 0.000000f, -0.000000f, -0.000000f, -1.000000f, -0.000000f, -1.000000f, -0.000000f, 0.000000f, 0, 0, 0, 0.023305f, 1);
+        private Matrix4x4 givenBone1B2W2 = new Matrix4x4(-0.000089f, 1.000000f, 0.000008f, 0.000000f, -0.000000f, 0.000008f, -1.000000f, -0.000000f, -1.000000f, -0.000089f, 0.000000f, 0, 0, 0, -0.000092f, 1);
+
 
         [TestMethod]
         public void Bone0FromW2B()
@@ -44,26 +49,35 @@ namespace CgfConverterIntegrationTests.IntegrationTests
         }
 
         [TestMethod]
+        public void CreateMatrix4x4FromQuatAndTranslationVector()
+        {
+            Vector3 v = new Vector3(2.0f, 3.0f, 4.0f);
+            Quaternion q = new Quaternion(0, 0, 0, 1);
+
+            Matrix4x4 actual = Matrix4x4.CreateFromQuaternion(q);
+            actual.M14 = v.X;
+            actual.M24 = v.Y;
+            actual.M34 = v.Z;
+
+            Assert.AreEqual(1, actual.M11, TestUtils.delta);
+            Assert.AreEqual(0, actual.M12, TestUtils.delta);
+            Assert.AreEqual(2.0, actual.M14, TestUtils.delta);
+            Assert.AreEqual(1, actual.M22, TestUtils.delta);
+        }
+
+        [TestMethod]
         public void MultiplyBone0W2BandBone1W2B()
         {
             var result = givenBone0W2B * givenBone1W2B;
         }
 
         [TestMethod]
-        public void Bone1FromW2B()
+        public void Bone1FromB2W()
         {
-            Matrix4x4 w2bInverse;
-            Matrix4x4.Invert(givenBone1W2B, out w2bInverse);
-            Matrix4x4 b2wInverse;
-            Matrix4x4.Invert(givenBone1B2W, out b2wInverse);
+            Matrix4x4 transposedBone1B2W = Matrix4x4.Transpose(givenBone0B2W2);
+            var actual = transposedBone1B2W * givenBone1B2W2;
 
-            AssertExtensions.AreEqual(correctBone1Matrix4x4, b2wInverse * correctBone1Matrix4x4, TestUtils.delta);
-            //AssertExtensions.AreEqual(correctBone1Matrix4x4, w2bInverse * correctBone1Matrix4x4, TestUtils.delta);
-            //AssertExtensions.AreEqual(correctBone1Matrix4x4, correctBone1Matrix4x4 * b2wInverse, TestUtils.delta);
-            //AssertExtensions.AreEqual(correctBone1Matrix4x4, correctBone1Matrix4x4 * w2bInverse, TestUtils.delta);
-            //AssertExtensions.AreEqual(correctBone1Matrix4x4, b2wInverse, TestUtils.delta);
-            //AssertExtensions.AreEqual(correctBone1Matrix4x4, w2bInverse, TestUtils.delta);
-
+            AssertExtensions.AreEqual(transposedBone1B2W, correctBone1Matrix4x4, TestUtils.delta);
         }
 
 

@@ -1313,18 +1313,18 @@ namespace CgfConverter
                 //bone.LocalTransform.M32,
                 //bone.LocalTransform.M33,
                 //bone.LocalTransform.M34
-                bone.WorldTransformMatrix.M11,
-                bone.WorldTransformMatrix.M12,
-                bone.WorldTransformMatrix.M13,
-                bone.WorldTransformMatrix.M14,
-                bone.WorldTransformMatrix.M21,
-                bone.WorldTransformMatrix.M22,
-                bone.WorldTransformMatrix.M23,
-                bone.WorldTransformMatrix.M24,
-                bone.WorldTransformMatrix.M31,
-                bone.WorldTransformMatrix.M32,
-                bone.WorldTransformMatrix.M33,
-                bone.WorldTransformMatrix.M34
+                bone.LocalTransform.M11,
+                bone.LocalTransform.M12,
+                bone.LocalTransform.M13,
+                bone.LocalTransform.M14,
+                bone.LocalTransform.M21,
+                bone.LocalTransform.M22,
+                bone.LocalTransform.M23,
+                bone.LocalTransform.M24,
+                bone.LocalTransform.M31,
+                bone.LocalTransform.M32,
+                bone.LocalTransform.M33,
+                bone.LocalTransform.M34
                 );
 
             CleanNumbers(matrixValues);

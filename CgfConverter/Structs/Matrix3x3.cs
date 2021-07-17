@@ -3,17 +3,72 @@ using System.Numerics;
 
 namespace CgfConverter.Structs
 {
-    public struct Matrix3x3    // a 3x3 transformation matrix
+    /// <summary>
+    /// 3x3 Rotation matrices in Cryengine files.  Inspiration/code based from
+    /// https://referencesource.microsoft.com/#System.Numerics/System/Numerics/Matrix4x4.cs,48ce53b7e55d0436
+    /// </summary>
+    public struct Matrix3x3 : IEquatable<Matrix3x3>
     {
-        public float M11 { get; set; }
-        public float M12 { get; set; }
-        public float M13 { get; set; }
-        public float M21 { get; set; }
-        public float M22 { get; set; }
-        public float M23 { get; set; }
-        public float M31 { get; set; }
-        public float M32 { get; set; }
-        public float M33 { get; set; }
+        public float M11;
+        public float M12;
+        public float M13;
+        public float M21;
+        public float M22;
+        public float M23;
+        public float M31;
+        public float M32;
+        public float M33;
+
+        public Matrix3x3(float m11, float m12, float m13,
+                         float m21, float m22, float m23,
+                         float m31, float m32, float m33)
+        {
+            M11 = m11;
+            M12 = m12;
+            M13 = m13;
+
+            M21 = m21;
+            M22 = m22;
+            M23 = m23;
+
+            M31 = m31;
+            M32 = m32;
+            M33 = m33;
+        }
+
+        private static readonly Matrix3x3 _identity = new Matrix3x3
+        (
+            1f, 0f, 0f,
+            0f, 1f, 0f,
+            0f, 0f, 1f
+        );
+
+        public static Matrix3x3 Identity
+        {
+            get { return _identity; }
+        }
+
+        /// <summary>
+        /// Transposes the rows and columns of a matrix.
+        /// </summary>
+        /// <param name="matrix">The source matrix.</param>
+        /// <returns>The transposed matrix.</returns>
+        public static Matrix3x3 Transpose(Matrix3x3 matrix)
+        {
+            Matrix3x3 result;
+
+            result.M11 = matrix.M11;
+            result.M12 = matrix.M21;
+            result.M13 = matrix.M31;
+            result.M21 = matrix.M12;
+            result.M22 = matrix.M22;
+            result.M23 = matrix.M32;
+            result.M31 = matrix.M13;
+            result.M32 = matrix.M23;
+            result.M33 = matrix.M33;
+
+            return result;
+        }
 
         public double GetDeterminant()
         {
@@ -146,6 +201,19 @@ namespace CgfConverter.Structs
         public override string ToString()
         {
             return $"[[{M11:F4}, {M12:F4}, {M13:F4}], [{M21:F4}, {M22:F4}, {M23:F4}], [{M31:F4}, {M32:F4}, {M33:F4}]]";
+        }
+
+        /// <summary>
+        /// Returns a boolean indicating whether this matrix instance is equal to the other given matrix.
+        /// </summary>
+        /// <param name="other">The matrix to compare this instance to.</param>
+        /// <returns>True if the matrices are equal; False otherwise.</returns>
+        public bool Equals(Matrix3x3 other)
+        {
+            return (M11 == other.M11 && M22 == other.M22 && M33 == other.M33 && // Check diagonal element first for early out.
+                    M12 == other.M12 && M13 == other.M13 &&
+                    M21 == other.M21 && M23 == other.M23 &&
+                    M31 == other.M31 && M32 == other.M32);
         }
     }
 }
