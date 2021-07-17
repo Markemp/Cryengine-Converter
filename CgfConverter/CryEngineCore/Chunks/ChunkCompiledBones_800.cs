@@ -1,7 +1,5 @@
-﻿using CgfConverter.Structs;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Numerics;
 
 namespace CgfConverter.CryEngineCore
 {
@@ -45,13 +43,15 @@ namespace CgfConverter.CryEngineCore
                     //localTranslation = GetParentBone(tempBone)
                     //    .LocalRotation * (tempBone.LocalTranslation - GetParentBone(tempBone)
                     //    .boneToWorld.GetBoneToWorldTranslationVector());
+
+
                 }
                 else
                 {
+                    tempBone.LocalTransform = tempBone.BoneToWorld.ConvertToTransformMatrix();
                     //localTranslation = tempBone.boneToWorld.GetBoneToWorldTranslationVector();
                     //localRotation = tempBone.boneToWorld.GetBoneToWorldRotationMatrix();
                 }
-                //tempBone.LocalTransform = GetTransformFromParts(localTranslation, localRotation);
 
                 BoneList.Add(tempBone);
                 BoneDictionary[i] = tempBone;

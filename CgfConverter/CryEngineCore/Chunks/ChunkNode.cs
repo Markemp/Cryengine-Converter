@@ -124,26 +124,6 @@ namespace CgfConverter.CryEngineCore
         }
         #endregion
 
-        /// <summary>
-        /// Gets the transform of the vertex.  This will be both the rotation and translation of this vertex, plus all the parents.
-        /// The transform matrix is a 4x4 matrix.  Vector3 is a 3x1.  We need to convert vector3 to vector4, multiply the matrix, then convert back to vector3.
-        /// </summary>
-        /// <param name="transform"></param>
-        /// <returns></returns>
-        public Vector3 GetTransform(Vector3 transform)
-        {
-            // Apply the transforms (rotation and translation) to the vector.
-            // Work on the single matrix
-            Vector3 scale;
-            Quaternion rotation;
-            Vector3 translation;
-            Matrix4x4.Decompose(TransformSoFar, out scale, out rotation, out translation);
-            Matrix3x3 rotMatrix = rotation.ConvertToRotationMatrix();
-            Vector3 vec3 = rotMatrix * transform;
-            
-            return vec3;
-        }
-
         public override string ToString()
         {
             return $@"Chunk Type: {ChunkType}, ID: {ID:X}, Version: {Version}, Name: {Name}, Object Node ID: {ObjectNodeID:X}, Parent Node ID: {ParentNodeID:X}";
