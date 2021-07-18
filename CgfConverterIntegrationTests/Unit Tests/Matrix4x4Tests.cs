@@ -51,7 +51,7 @@ namespace CgfConverterIntegrationTests.Unit_Tests
         [TestMethod]
         public void Matrix4x4_CreateScale_ProperElements()
         {
-            var matrix = Matrix4x4.CreateScale(GetTestVector3());
+            var matrix = Matrix4x4.CreateScale(GetTestVector3()); // (0.5, 0.6, -0.5)
 
             Assert.AreEqual(0.5, matrix.M11, TestUtils.delta);
             Assert.AreEqual(0.600000023, matrix.M22, TestUtils.delta);

@@ -19,6 +19,18 @@ namespace CgfConverter.Structs
         public float M32;
         public float M33;
 
+        private static readonly Matrix3x3 _identity = new Matrix3x3
+            (
+                1f, 0f, 0f,
+                0f, 1f, 0f,
+                0f, 0f, 1f
+            );
+
+        public static Matrix3x3 Identity
+        {
+            get { return _identity; }
+        }
+
         public Matrix3x3(float m11, float m12, float m13,
                          float m21, float m22, float m23,
                          float m31, float m32, float m33)
@@ -36,16 +48,37 @@ namespace CgfConverter.Structs
             M33 = m33;
         }
 
-        private static readonly Matrix3x3 _identity = new Matrix3x3
-        (
-            1f, 0f, 0f,
-            0f, 1f, 0f,
-            0f, 0f, 1f
-        );
-
-        public static Matrix3x3 Identity
+        /// <summary>
+        /// Creates a rotation matrix from the given Quaternion rotation value.
+        /// </summary>
+        /// <param name="quaternion">The source Quaternion.</param>
+        /// <returns>The rotation matrix.</returns>
+        public static Matrix3x3 CreateFromQuaternion(Quaternion quaternion)
         {
-            get { return _identity; }
+            Matrix3x3 result;
+
+            float xx = quaternion.X * quaternion.X;
+            float yy = quaternion.Y * quaternion.Y;
+            float zz = quaternion.Z * quaternion.Z;
+
+            float xy = quaternion.X * quaternion.Y;
+            float wz = quaternion.Z * quaternion.W;
+            float xz = quaternion.Z * quaternion.X;
+            float wy = quaternion.Y * quaternion.W;
+            float yz = quaternion.Y * quaternion.Z;
+            float wx = quaternion.X * quaternion.W;
+
+            result.M11 = 1.0f - 2.0f * (yy + zz);
+            result.M12 = 2.0f * (xy + wz);
+            result.M13 = 2.0f * (xz - wy);
+            result.M21 = 2.0f * (xy - wz);
+            result.M22 = 1.0f - 2.0f * (zz + xx);
+            result.M23 = 2.0f * (yz + wx);
+            result.M31 = 2.0f * (xz + wy);
+            result.M32 = 2.0f * (yz - wx);
+            result.M33 = 1.0f - 2.0f * (yy + xx);
+
+            return result;
         }
 
         /// <summary>
@@ -70,134 +103,45 @@ namespace CgfConverter.Structs
             return result;
         }
 
-        public double GetDeterminant()
+        public static Matrix3x3 Mult(Matrix3x3 value1, Matrix3x3 value2)
         {
-            return (M11 * M22 * M33
-                  + M12 * M23 * M31
-                  + M13 * M21 * M32
-                  - M31 * M22 * M13
-                  - M21 * M12 * M33
-                  - M11 * M32 * M23);
+            Matrix3x3 m;
+
+            m.M11 = (value1.M11 * value2.M11) + (value1.M12 * value2.M21) + (value1.M13 * value2.M31);
+            m.M12 = (value1.M11 * value2.M12) + (value1.M12 * value2.M22) + (value1.M13 * value2.M32);
+            m.M13 = (value1.M11 * value2.M13) + (value1.M12 * value2.M23) + (value1.M13 * value2.M33);
+            m.M21 = (value1.M21 * value2.M11) + (value1.M22 * value2.M21) + (value1.M23 * value2.M31);
+            m.M22 = (value1.M21 * value2.M12) + (value1.M22 * value2.M22) + (value1.M23 * value2.M32);
+            m.M23 = (value1.M21 * value2.M13) + (value1.M22 * value2.M23) + (value1.M23 * value2.M33);
+            m.M31 = (value1.M31 * value2.M11) + (value1.M32 * value2.M21) + (value1.M33 * value2.M31);
+            m.M32 = (value1.M31 * value2.M12) + (value1.M32 * value2.M22) + (value1.M33 * value2.M32);
+            m.M33 = (value1.M31 * value2.M13) + (value1.M32 * value2.M23) + (value1.M33 * value2.M33);
+            
+            return m;
         }
 
-        public Matrix3x3 GetTranspose()    // returns a copy of the matrix33
+        public static Vector3 Mult(Matrix3x3 matrix, Vector3 vector)
         {
-            Matrix3x3 mat = new Matrix3x3
+            // Multiply the 3x3 matrix by a Vector 3 to get the rotation
+            return new Vector3
             {
-                M11 = M11,
-                M12 = M21,
-                M13 = M31,
-                M21 = M12,
-                M22 = M22,
-                M23 = M32,
-                M31 = M13,
-                M32 = M23,
-                M33 = M33
+                X = ((vector.X * matrix.M11) + (vector.Y * matrix.M21) + (vector.Z * matrix.M31)),
+                Y = ((vector.X * matrix.M12) + (vector.Y * matrix.M22) + (vector.Z * matrix.M32)),
+                Z = ((vector.X * matrix.M13) + (vector.Y * matrix.M23) + (vector.Z * matrix.M33))
             };
-            return mat;
-        }
-
-        public Matrix3x3 Mult(Matrix3x3 mat)
-        {
-            Matrix3x3 mat2 = new Matrix3x3
-            {
-                M11 = (M11 * mat.M11) + (M12 * mat.M21) + (M13 * mat.M31),
-                M12 = (M11 * mat.M12) + (M12 * mat.M22) + (M13 * mat.M32),
-                M13 = (M11 * mat.M13) + (M12 * mat.M23) + (M13 * mat.M33),
-                M21 = (M21 * mat.M11) + (M22 * mat.M21) + (M23 * mat.M31),
-                M22 = (M21 * mat.M12) + (M22 * mat.M22) + (M23 * mat.M32),
-                M23 = (M21 * mat.M13) + (M22 * mat.M23) + (M23 * mat.M33),
-                M31 = (M31 * mat.M11) + (M32 * mat.M21) + (M33 * mat.M31),
-                M32 = (M31 * mat.M12) + (M32 * mat.M22) + (M33 * mat.M32),
-                M33 = (M31 * mat.M13) + (M32 * mat.M23) + (M33 * mat.M33)
-            };
-            return mat2;
-        }
-
-        internal Matrix3x3 ConjugateTransposeThisAndMultiply(Matrix3x3 matrix3x3)
-        {
-            throw new NotImplementedException();
         }
 
         public static Matrix3x3 operator *(Matrix3x3 lhs, Matrix3x3 rhs)
         {
-            return lhs.Mult(rhs);
+            return Mult(lhs, rhs);
         }
 
-        public Vector3 Mult3x1(Vector3 vector)
+        public static Vector3 operator *(Matrix3x3 matrix, Vector3 vector)
         {
-            // Multiply the 3x3 matrix by a Vector 3 to get the rotation
-            Vector3 result = new Vector3
-            {
-                X = ((vector.X * M11) + (vector.Y * M21) + (vector.Z * M31)),
-                Y = ((vector.X * M12) + (vector.Y * M22) + (vector.Z * M32)),
-                Z = ((vector.X * M13) + (vector.Y * M23) + (vector.Z * M33))
-            };
-            return result;
+            return Mult(matrix, vector);
         }
 
-        public static Vector3 operator *(Matrix3x3 rhs, Vector3 lhs)
-        {
-            return rhs.Mult3x1(lhs);
-        }
-
-        public bool IsScaleRotation() // Returns true if the matrix decomposes nicely into scale * rotation\
-        {
-            Matrix3x3 self_transpose, mat = new Matrix3x3();
-            self_transpose = GetTranspose();
-            mat = Mult(self_transpose);
-            if (Math.Abs(mat.M12) + Math.Abs(mat.M13)
-                + Math.Abs(mat.M21) + Math.Abs(mat.M23)
-                + Math.Abs(mat.M31) + Math.Abs(mat.M32) > 0.01)
-            {
-                Utils.Log(LogLevelEnum.Debug, " is a Scale_Rot matrix");
-                return false;
-            }
-            Utils.Log(LogLevelEnum.Debug, " is not a Scale_Rot matrix");
-            return true;
-        }
-
-        public Vector3 GetScale()
-        {
-            // Get the scale, assuming is_scale_rotation is true
-            Matrix3x3 mat = Mult(GetTranspose());
-            Vector3 scale = new Vector3
-            {
-                X = (float)Math.Pow(mat.M11, 0.5),
-                Y = (float)Math.Pow(mat.M22, 0.5),
-                Z = (float)Math.Pow(mat.M33, 0.5)
-            };
-            if (GetDeterminant() < 0)
-            {
-                scale.X = 0 - scale.X;
-                scale.Y = 0 - scale.Y;
-                scale.Z = 0 - scale.Z;
-                return scale;
-            }
-            else
-            {
-                return scale;
-            }
-        }
-
-        public Vector3 GetScaleRotation()   // Gets the scale.  this should also return the rotation matrix, but..eh...
-        {
-            Vector3 scale = GetScale();
-            return scale;
-        }
-
-        public bool IsRotation()
-        {
-            // NOTE: 0.01 instead of CgfFormat.EPSILON to work around bad files
-            if (!IsScaleRotation()) { return false; }
-            Vector3 scale = GetScale();
-            if (Math.Abs(scale.X - 1.0) > 0.01 || Math.Abs(scale.Y - 1.0) > 0.01 || Math.Abs(scale.Z - 1.0) > 0.1)
-            {
-                return false;
-            }
-            return true;
-        }
-
+       
         public override string ToString()
         {
             return $"[[{M11:F4}, {M12:F4}, {M13:F4}], [{M21:F4}, {M22:F4}, {M23:F4}], [{M31:F4}, {M32:F4}, {M33:F4}]]";

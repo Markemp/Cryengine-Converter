@@ -21,7 +21,7 @@ namespace CgfConverter
         public uint numChildren;                   // Number of children to this bone
 
         public Matrix4x4 BindPoseMatrix;           // This is the WorldToBone matrix for library_controllers
-        public Matrix4x4 LocalTransform;          // 
+        public Matrix4x4 LocalTransform;           // 
         public long offset;                        // Calculated position in the file where this bone started.
         
         public uint parentID;                           // Calculated controllerID of the parent bone put into the Bone Dictionary (the key)

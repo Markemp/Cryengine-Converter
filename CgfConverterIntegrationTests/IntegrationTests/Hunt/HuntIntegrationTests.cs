@@ -95,7 +95,7 @@ namespace CgfConverterTests.IntegrationTests.Hunt
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
 
-            Assert.AreEqual(0.00000f, cryData.Models[1].RootNode.LocalRotation.M11, TestUtils.delta);
+            Assert.AreEqual(0.00000f, cryData.Models[1].RootNode.LocalTransform.M11, TestUtils.delta);
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             var daeObject = colladaData.DaeObject;
