@@ -4,7 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 using static Extensions.BinaryReaderExtensions;
 
-namespace CgfConverterIntegrationTests.Unit_Tests
+namespace CgfConverterIntegrationTests.UnitTests
 {
     [TestClass]
     public class BinaryReaderExtensionsTests

@@ -45,9 +45,30 @@ namespace Extensions
             };
         }
 
-        //public static Matrix4x4 CreateLocalTransform
+        public static Matrix4x4 CreateFromMatrix3x4(Matrix3x4 matrix)
+        {
+            return new Matrix4x4()
+            {
+                M11 = matrix.M11,
+                M12 = matrix.M12,
+                M13 = matrix.M13,
+                M14 = matrix.M14,
+                M21 = matrix.M21,
+                M22 = matrix.M22,
+                M23 = matrix.M23,
+                M24 = matrix.M24,
+                M31 = matrix.M31,
+                M32 = matrix.M32,
+                M33 = matrix.M33,
+                M34 = matrix.M34,
+                M41 = 0,
+                M42 = 0,
+                M43 = 0,
+                M44 = 1
+            };
+        }
 
-        public static Matrix4x4 CreateFromRotationMatrix(this Matrix4x4 m4, Matrix3x3 m3)
+        public static Matrix4x4 CreateFromRotationMatrix(Matrix3x3 m3)
         {
             return new Matrix4x4()
             {
@@ -70,6 +91,19 @@ namespace Extensions
             };
         }
 
+        public static Matrix4x4 CreateLocalTransformFromB2W(Matrix4x4 parent, Matrix4x4 child)
+        {
+            var parentRot = parent.GetRotation();
+            var parentTranslation = parent.GetTranslation();
+
+            var childRot = child.GetRotation();
+            var childTranslation = child.GetTranslation();
+
+            var newRot = Matrix3x3.Transpose(parentRot) * childRot;
+            var newTranslation = parent.GetRotation() * (childTranslation - parentTranslation);
+            return Matrix4x4Extensions.CreateTransformFromParts(newTranslation, newRot);
+        }
+
         public static Matrix4x4 CreateTransformFromParts(Vector3 translation, Matrix3x3 rotation)
         {
             return new Matrix4x4
@@ -77,18 +111,18 @@ namespace Extensions
                 M11 = rotation.M11,
                 M12 = rotation.M12,
                 M13 = rotation.M13,
-                M14 = 0,
+                M14 = translation.X,
                 M21 = rotation.M21,
                 M22 = rotation.M22,
                 M23 = rotation.M23,
-                M24 = 0,
+                M24 = translation.Y,
                 M31 = rotation.M31,
                 M32 = rotation.M32,
                 M33 = rotation.M33,
-                M34 = 0,
-                M41 = translation.X,
-                M42 = translation.Y,
-                M43 = translation.Z,
+                M34 = translation.Z,
+                M41 = 0,
+                M42 = 0,
+                M43 = 0,
                 M44 = 1
             };
         }

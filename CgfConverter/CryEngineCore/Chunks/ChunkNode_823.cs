@@ -13,6 +13,7 @@ namespace CgfConverter.CryEngineCore
             Name = b.ReadFString(64);
             if (string.IsNullOrEmpty(Name))
                 Name = "unknown";
+
             ObjectNodeID = b.ReadInt32(); // Object reference ID
             ParentNodeID = b.ReadInt32();
             __NumChildren = b.ReadInt32();
@@ -51,6 +52,8 @@ namespace CgfConverter.CryEngineCore
 
             Properties = b.ReadPString();
             // Good enough for now.
+
+            SetLocalTransform();
         }
     }
 }
