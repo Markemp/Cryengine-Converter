@@ -36,6 +36,7 @@ namespace CgfConverter.CryEngineCore
 
                 if (tempBone.parentID != 0)
                 {
+                    //tempBone.LocalTransform = tempBone.BoneToWorld
                     // TODO:  Figure out how to get the LocalTransform for the Library_Visual_Scene JOINT node (bones) transforms
                     //localRotation = GetParentBone(tempBone).boneToWorld
                     //    .GetBoneToWorldRotationMatrix();

@@ -25,6 +25,28 @@ namespace Extensions
             };
         }
 
+        public static Vector3 GetScale(this Matrix4x4 matrix)
+        {
+            return new Vector3
+            {
+                X = matrix.M41,
+                Y = matrix.M42,
+                Z = matrix.M43
+            };
+        }
+
+        public static Vector3 GetTranslation(this Matrix4x4 m)
+        {
+            return new Vector3
+            {
+                X = m.M14,
+                Y = m.M24,
+                Z = m.M34
+            };
+        }
+
+        //public static Matrix4x4 CreateLocalTransform
+
         public static Matrix4x4 CreateFromRotationMatrix(this Matrix4x4 m4, Matrix3x3 m3)
         {
             return new Matrix4x4()
@@ -93,55 +115,5 @@ namespace Extensions
                 M44 = 1.0f
             };
         }
-
-        public static Vector3 GetScale(this Matrix4x4 matrix)
-        {
-            return new Vector3
-            {
-                X = matrix.M14,
-                Y = matrix.M24,
-                Z = matrix.M34
-            };
-        }
-
-        public static Vector3 GetTranslation(this Matrix4x4 m)
-        {
-            return new Vector3
-            {
-                X = m.M14,
-                Y = m.M24,
-                Z = m.M34
-            };
-        }
-
-        //public Matrix44 GetTransformFromParts(Vector3 localTranslation, Matrix33 localRotation, Vector3 localScale)
-        //{
-        //    Matrix44 transform = new Matrix44
-        //    {
-        //        // For Node Chunks, the translation appears to be along the bottom of the matrix, and scale on right side.
-        //        // Translation part
-        //        m41 = localTranslation.x,
-        //        m42 = localTranslation.y,
-        //        m43 = localTranslation.z,
-        //        // Rotation part.  Invert this matrix, which results in proper rotation in Blender.
-        //        m11 = localRotation.m11,
-        //        m12 = localRotation.m21,
-        //        m13 = localRotation.m31,
-        //        m21 = localRotation.m12,
-        //        m22 = localRotation.m22,
-        //        m23 = localRotation.m32,
-        //        m31 = localRotation.m13,
-        //        m32 = localRotation.m23,
-        //        m33 = localRotation.m33,
-        //        // Scale part
-        //        m14 = localScale.x,
-        //        m24 = localScale.y,
-        //        m34 = localScale.z,
-        //        // Set final row
-        //        m44 = 1
-        //    };
-        //    return transform;
-        //}
-
     }
 }

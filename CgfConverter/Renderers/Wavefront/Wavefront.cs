@@ -201,7 +201,7 @@ namespace CgfConverter
 
             var tempVertexPosition = CurrentVertexPosition;
             var tempIndicesPosition = CurrentIndicesPosition;
-            var transformSoFar = chunkNode.TransformSoFar;
+            var localTransform = chunkNode.LocalTransform;
 
             foreach (var meshSubset in tmpMeshSubsets.MeshSubsets)
             {
@@ -233,7 +233,7 @@ namespace CgfConverter
                         Vector3 scale;
                         Quaternion rotation;
                         Vector3 translation;
-                        Matrix4x4.Decompose(transformSoFar, out scale, out rotation, out translation);
+                        Matrix4x4.Decompose(localTransform, out scale, out rotation, out translation);
                         Matrix3x3 rotMatrix = rotation.ConvertToRotationMatrix();
                         Vector3 vertex = rotMatrix * tmpVertsUVs.Vertices[j];
 
@@ -265,7 +265,7 @@ namespace CgfConverter
                             Vector3 scale;
                             Quaternion rotation;
                             Vector3 translation;
-                            Matrix4x4.Decompose(transformSoFar, out scale, out rotation, out translation);
+                            Matrix4x4.Decompose(localTransform, out scale, out rotation, out translation);
                             Matrix3x3 rotMatrix = rotation.ConvertToRotationMatrix();
                             Vector3 vertex = rotMatrix * tmpVertices.Vertices[j];
 

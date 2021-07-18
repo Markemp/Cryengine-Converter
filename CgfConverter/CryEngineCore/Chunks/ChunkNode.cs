@@ -1,6 +1,4 @@
-﻿using CgfConverter.Structs;
-using Extensions;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 
@@ -26,20 +24,28 @@ namespace CgfConverter.CryEngineCore
         public int SclCtrlID { get; internal set; }  // Obsolete
         public string Properties { get; internal set; }
 
-        #region Calculated Properties
-        public Matrix4x4 LocalTransform { get; set; }  = new Matrix4x4();            // Because Cryengine tends to store transform relative to world, we have to add all the transforms from the node to the root.  Calculated, row major.
-        public Vector3 LocalTranslation { get; set; } = new Vector3();            // To hold the local rotation vector
-        public Matrix3x3 LocalRotation { get; set; } = new Matrix3x3();             // to hold the local rotation matrix
-        public Vector3 LocalScale { get; set; } = new Vector3();                  // to hold the local scale matrix
+        public Matrix4x4 LocalTransform; // Set after all chunks in model are read.
 
+        //{
+        //    get
+        //    {
+        //        if (ParentNode == null)
+        //            return Transform;
+        //        else
+        //        {
+        //            return Transform.CalculateLocalTransform(ParentNode.Transform);
+        //        }
+        //    }
+        //}
+
+        #region Calculated Properties
         private ChunkNode _parentNode;
 
         public ChunkNode ParentNode
         {
             get
             {
-                // ~0 is shorthand for -1, or 0xFFFFFFFF in the uint world.
-                if (ParentNodeID == ~0)  // aka 0xFFFFFFFF
+                if (ParentNodeID == ~0)  // aka 0xFFFFFFFF, or -1
                     return null;
 
                 if (_parentNode == null)
@@ -73,38 +79,6 @@ namespace CgfConverter.CryEngineCore
                 return _objectChunk;
             }
             set { _objectChunk = value; }
-        }
-
-        public Matrix4x4 TransformSoFar
-        {
-            get
-            {
-                if (ParentNode != null)
-                {
-                    return Transform * ParentNode.TransformSoFar;
-                }
-                else
-                {
-                    // TODO: What should this be?
-                    return Transform;
-                }
-            }
-        }
-
-        public Matrix3x3 RotSoFar
-        {
-            get
-            {
-                if (ParentNode != null)
-                {
-                    return Transform.GetRotation().Mult(ParentNode.RotSoFar);
-                }
-                else
-                {
-                    return _model.RootNode.Transform.GetRotation();
-                    // TODO: What should this be?
-                }
-            }
         }
 
         public List<ChunkNode> AllChildNodes
