@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using CgfConverter.Structs;
+using Extensions;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 
@@ -26,17 +28,18 @@ namespace CgfConverter.CryEngineCore
 
         public Matrix4x4 LocalTransform; // Set after all chunks in model are read.
 
-        //{
-        //    get
-        //    {
-        //        if (ParentNode == null)
-        //            return Transform;
-        //        else
-        //        {
-        //            return Transform.CalculateLocalTransform(ParentNode.Transform);
-        //        }
-        //    }
-        //}
+        public void SetLocalTransform()
+        {
+            if (ParentNode == null)
+                LocalTransform = Transform;
+            else
+            {
+                var newRotation = Matrix3x3.Transpose(ParentNode.Transform.GetRotation()) * Transform.GetRotation();
+                var newTranslation = ParentNode.Transform.GetRotation() * (Transform.GetTranslation() - ParentNode.Transform.GetTranslation());
+
+                LocalTransform = Matrix4x4Extensions.CreateTransformFromParts(newTranslation, newRotation);
+            }
+        }
 
         #region Calculated Properties
         private ChunkNode _parentNode;

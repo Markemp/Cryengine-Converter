@@ -51,6 +51,8 @@ namespace CgfConverter.CryEngineCore
 
             Properties = b.ReadPString();
             // Good enough for now.
+
+            SetLocalTransform();
         }
     }
 }

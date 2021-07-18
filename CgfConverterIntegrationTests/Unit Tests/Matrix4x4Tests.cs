@@ -5,7 +5,7 @@ using Extensions;
 using CgfConverterTests.TestUtilities;
 using System.IO;
 
-namespace CgfConverterIntegrationTests.Unit_Tests
+namespace CgfConverterIntegrationTests.UnitTests
 {
     [TestClass]
     public class Matrix4x4Tests
@@ -112,25 +112,6 @@ namespace CgfConverterIntegrationTests.Unit_Tests
             using var reader = new BinaryReader(source);
             Matrix4x4 actualBPM;
             Matrix4x4.Invert(reader.ReadMatrix3x4().ConvertToTransformMatrix(), out actualBPM);
-
-            TestUtils.CompareTwoTransformMatrices(expectedBPM, actualBPM);
-        }
-
-        [TestMethod]
-        public void CompareBPM_Bone2()
-        {
-            var expectedBPM = TestUtils.GetExpectedBone2BPM();
-
-            var buffer = TestUtils.GetBone2WorldToBoneBytes();
-            var buffer2 = TestUtils.GetBone2BoneToWorldBytes();
-
-            using var source = new MemoryStream(buffer);
-            using var reader = new BinaryReader(source);
-            Matrix4x4 actualBPM;
-            //Matrix4x4.Invert(reader.ReadMatrix3x4().ConvertToTransformMatrix(), out actualBPM);
-            actualBPM = reader.ReadMatrix3x4().ConvertToTransformMatrix();
-
-            // Try to multiply Bone1BPM * Bone2BPM.Inverse
 
             TestUtils.CompareTwoTransformMatrices(expectedBPM, actualBPM);
         }

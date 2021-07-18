@@ -13,9 +13,7 @@ namespace CgfConverter
         public int End { get; set; }
     }
 
-    /// <summary>
-    /// Vertex with position p(Vector3) and normal n(Vector3)
-    /// </summary>
+    /// <summary>Vertex with position p(Vector3) and normal n(Vector3) </summary>
     public struct Vertex
     {
         public Vector3 p;  // position
@@ -73,12 +71,6 @@ namespace CgfConverter
         public uint RotKeyTimeTrack;
         public uint RotTrack;
     }
-
-    /*public struct TextureMap
-    {
-
-    }*/
-    // Fill this in later.  line 369 in cgf.xml.
 
     public struct IRGB
     {
@@ -196,72 +188,7 @@ namespace CgfConverter
         //}
     }
 
-    /// <summary> BONETOWORLD contains the world space location/rotation of a bone. </summary>
-    public struct BONETOWORLD
-    {
-        //public float[,] boneToWorld;   //  4x3 structure
-
-        //public BONETOWORLD(Matrix3x3 matrix33, Vector3 relativeTransform) : this()
-        //{
-        //    boneToWorld = new float[3, 4];
-        //    boneToWorld[0, 0] = matrix33.M11;
-        //    boneToWorld[0, 1] = matrix33.M12;
-        //    boneToWorld[0, 2] = matrix33.M13;
-        //    boneToWorld[1, 0] = matrix33.M21;
-        //    boneToWorld[1, 1] = matrix33.M22;
-        //    boneToWorld[1, 2] = matrix33.M23;
-        //    boneToWorld[2, 0] = matrix33.M31;
-        //    boneToWorld[2, 1] = matrix33.M32;
-        //    boneToWorld[2, 2] = matrix33.M33;
-        //    boneToWorld[0, 3] = relativeTransform.X;
-        //    boneToWorld[1, 3] = relativeTransform.Y;
-        //    boneToWorld[2, 3] = relativeTransform.Z;
-        //}
-
-        //public void ReadBoneToWorld(BinaryReader b)
-        //{
-        //    boneToWorld = new float[3, 4];
-
-        //    for (int i = 0; i < 3; i++)
-        //    {
-        //        for (int j = 0; j < 4; j++)
-        //        {
-        //            boneToWorld[i, j] = b.ReadSingle();
-        //        }
-        //    }
-        //    return;
-        //}
-
-        //public Matrix3x3 GetBoneToWorldRotationMatrix()
-        //{
-        //    Matrix3x3 result = new Matrix3x3
-        //    {
-        //        M11 = boneToWorld[0, 0],
-        //        M12 = boneToWorld[0, 1],
-        //        M13 = boneToWorld[0, 2],
-        //        M21 = boneToWorld[1, 0],
-        //        M22 = boneToWorld[1, 1],
-        //        M23 = boneToWorld[1, 2],
-        //        M31 = boneToWorld[2, 0],
-        //        M32 = boneToWorld[2, 1],
-        //        M33 = boneToWorld[2, 2]
-        //    };
-        //    return result;
-        //}
-
-        //public Vector3 GetBoneToWorldTranslationVector()
-        //{
-        //    Vector3 result = new Vector3
-        //    {
-        //        X = boneToWorld[0, 3],
-        //        Y = boneToWorld[1, 3],
-        //        Z = boneToWorld[2, 3]
-        //    };
-        //    return result;
-        //}
-    }
-
-    public struct PhysicsGeometry
+       public struct PhysicsGeometry
     {
         public uint physicsGeom;
         public uint flags;              // 0x0C ?
@@ -370,16 +297,14 @@ namespace CgfConverter
 
     public struct BonePhysics           // 26 total words = 104 total bytes
     {
-        readonly uint Geometry;                //" type="Ref" template="BoneMeshChunk">Geometry of a separate mesh for this bone.</add>
-                                                 //<!-- joint parameters -->
-
-        readonly uint Flags;                   //" type="uint" />
-        Vector3 Min;                   //" type="Vector3" />
-        Vector3 Max;                   //" type="Vector3" />
-        Vector3 Spring_Angle;          //" type="Vector3" />
-        Vector3 Spring_Tension;        //" type="Vector3" />
-        Vector3 Damping;               //" type="Vector3" />
-        Matrix3x3 Frame_Matrix;        //" type="Matrix33" />
+        readonly uint Geometry;
+        readonly uint Flags;
+        Vector3 Min;                   
+        Vector3 Max;                   
+        Vector3 Spring_Angle;          
+        Vector3 Spring_Tension;        
+        Vector3 Damping;               
+        Matrix3x3 Frame_Matrix;        
     }
 
     public struct MeshBoneMapping

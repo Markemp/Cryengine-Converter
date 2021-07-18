@@ -45,8 +45,18 @@ namespace CgfConverter.CryEngineCore
 
         private Dictionary<int, ChunkNode> nodeMap { get; set; }
 
-        /// <summary> Node map for this model only. </summary>
-        public Dictionary<int, ChunkNode> NodeMap      // This isn't right.  Nodes can have duplicate names.
+        
+
+        #region Private Fields
+
+        public List<ChunkHeader> chunkHeaders = new List<ChunkHeader> { };
+
+        #endregion
+
+        #region Calculated Properties
+
+        /// <summary> All NodeChunks for this model in a dictionary by chunk Id. </summary>
+        public Dictionary<int, ChunkNode> NodeMap
         {
             get
             {
@@ -76,14 +86,6 @@ namespace CgfConverter.CryEngineCore
             }
         }
 
-        #region Private Fields
-
-        public List<ChunkHeader> chunkHeaders = new List<ChunkHeader> { };
-
-        #endregion
-
-        #region Calculated Properties
-
         public int NodeCount { get { return ChunkMap.Values.Where(c => c.ChunkType == ChunkType.Node).Count(); } }
 
         public int BoneCount { get { return ChunkMap.Values.Where(c => c.ChunkType == ChunkType.CompiledBones).Count(); } }
@@ -92,11 +94,7 @@ namespace CgfConverter.CryEngineCore
 
         #region Public Methods
 
-        /// <summary>
-        /// Load the specified file as a Model
-        /// </summary>
-        /// <param name="fileName"></param>
-        /// <returns></returns>
+        /// <summary> Load the specified file as a Model</summary>
         public static Model FromFile(string fileName)
         {
             var buffer = new Model();
