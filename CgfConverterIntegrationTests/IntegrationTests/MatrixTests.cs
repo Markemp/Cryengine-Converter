@@ -1,4 +1,5 @@
-﻿using CgfConverterIntegrationTests.Extensions;
+﻿using CgfConverter.Structs;
+using CgfConverterIntegrationTests.Extensions;
 using CgfConverterTests.TestUtilities;
 using Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -42,6 +43,12 @@ namespace CgfConverterIntegrationTests.UnitTests
         private Matrix4x4 givenBone0B2W = new Matrix4x4(-0.000000f, 1.000000f, -0.000000f, 0.000000f, -0.000000f, -0.000000f, -1.000000f, -0.000000f, -1.000000f, -0.000000f, 0.000000f, 0.023305f, 0, 0, 0, 1);
         private Matrix4x4 givenBone1B2W = new Matrix4x4(-0.000089f, 1.000000f, 0.000008f, 0.000000f, -0.000000f, 0.000008f, -1.000000f, -0.000000f, -1.000000f, -0.000089f, 0.000000f, -0.000092f, 0, 0, 0, 1);
         private Matrix4x4 givenBone2B2W = new Matrix4x4(-0.000091f, 1.000000f, 0.000008f, -0.000002f, -0.000000f, 0.000008f, -1.000000f, -0.000000f, -1.000000f, -0.000091f, 0.000000f, -0.026455f, 0, 0, 0, 1);
+
+        // SC Avenger rotation tests
+        private Matrix3x3 parentRotation = new(1, 0, 0, 0, 1, 0, 0, 0, 1);      // Nose
+        private Vector3 parentTranslation = new(0, 5.703f, -0.473f);
+        private Matrix3x3 expectedChildRotation = new(1, 0, 0, 0, -0.938131f, -0.346280f, 0, 0.346280f, -0.938131f);
+        private Vector3 expectedChildTranslation = new(-0.300001f, 0.512432f, -1.835138f);
 
         [TestMethod]
         public void BonesFromW2BWorldToBoneHasCorrectBPM()
