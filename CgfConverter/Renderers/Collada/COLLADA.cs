@@ -1239,7 +1239,6 @@ namespace CgfConverter
 
             Grendgine_Collada_Matrix matrix = new Grendgine_Collada_Matrix();
             StringBuilder matrixString = new StringBuilder();
-            CalculateTransform(nodeChunk);
             matrixString.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} {12:F6} {13:F6} {14:F6} {15:F6}",
                 nodeChunk.LocalTransform.M11, nodeChunk.LocalTransform.M12, nodeChunk.LocalTransform.M13, nodeChunk.LocalTransform.M14,
                 nodeChunk.LocalTransform.M21, nodeChunk.LocalTransform.M22, nodeChunk.LocalTransform.M23, nodeChunk.LocalTransform.M24,
@@ -1348,7 +1347,6 @@ namespace CgfConverter
 
             // matrixString might have to be an identity matrix, since GetTransform is applying the transform to all the vertices.
             // Use same principle as CreateJointNode.  The Transform matrix (Matrix44) is the world transform matrix.
-            CalculateTransform(nodeChunk);
             matrixString.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} {12:F6} {13:F6} {14:F6} {15:F6}",
                 nodeChunk.LocalTransform.M11, nodeChunk.LocalTransform.M12, nodeChunk.LocalTransform.M13, nodeChunk.LocalTransform.M14,
                 nodeChunk.LocalTransform.M21, nodeChunk.LocalTransform.M22, nodeChunk.LocalTransform.M23, nodeChunk.LocalTransform.M24,
@@ -1435,26 +1433,6 @@ namespace CgfConverter
             scene.Visual_Scene = visualScene;
             DaeObject.Scene = scene;
 
-        }
-
-        private static void CalculateTransform(ChunkNode node)
-        {
-            // Calculate the LocalTransform matrix.
-            // Node transform matrices are different than joint.  Translation and scale are reversed.
-
-            Matrix4x4 localTransform;
-            Matrix4x4.Invert(node.Transform, out localTransform);
-            node.LocalTransform = localTransform;
-            //Vector3 localTranslation;
-            //Quaternion localRot;
-            //Vector3 localScale;
-            //Matrix4x4.Decompose(node.Transform, out localScale, out localRot, out localTranslation);
-            //Matrix3x3 localRotation = localRot.ConvertToRotationMatrix();
-
-            //node.LocalTranslation = localTranslation;
-            //node.LocalScale = localScale;
-            //node.LocalRotation = localRotation;
-            //node.LocalTransform = node.LocalTransform.GetTransformFromParts(localScale, localRotation, localTranslation);
         }
 
         private static string CreateStringFromMatrix4x4(Matrix4x4 matrix)
