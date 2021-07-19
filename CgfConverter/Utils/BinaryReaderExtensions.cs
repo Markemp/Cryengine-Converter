@@ -58,7 +58,7 @@ namespace Extensions
             switch (inputType)
             {
                 case InputType.Single:
-                    q = new System.Numerics.Quaternion()
+                    q = new Quaternion()
                     {
                         X = r.ReadSingle(),
                         Y = r.ReadSingle(),
@@ -67,7 +67,7 @@ namespace Extensions
                     };
                     break;
                 case InputType.Half:
-                    q = new System.Numerics.Quaternion()
+                    q = new Quaternion()
                     {
                         X = r.ReadHalf(),
                         Y = r.ReadHalf(),

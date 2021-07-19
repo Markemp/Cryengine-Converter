@@ -156,6 +156,22 @@ namespace CgfConverterTests.IntegrationTests.MWO
             Assert.IsTrue(controllerBindPose.Float_Array.Value_As_String.StartsWith(bindPoseArray) || controllerBindPose.Float_Array.Value_As_String.StartsWith(bindPoseArrayNegZeros));
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
             Assert.AreEqual(2, actualMaterialsCount);
+
+            // VisualScene
+            var scene = daeObject.Library_Visual_Scene.Visual_Scene[0];
+            Assert.AreEqual(2, scene.Node.Length);
+            var armature = scene.Node[0];
+            var instance = scene.Node[1];
+            Assert.AreEqual("Armature", armature.ID);
+            Assert.AreEqual("Bip01", armature.Name);
+            Assert.AreEqual("-0 1 -0 0 -0 -0 -1 -0 -1 -0 0 0.023305 0 0 0 1", armature.Matrix[0].Value_As_String);
+            Assert.AreEqual("Armature_hang_seg1", armature.node[0].ID);
+            Assert.AreEqual("hang_seg1", armature.node[0].Name);
+            Assert.AreEqual("1 0.000089 -0 0.023396 -0.000089 1 0.000009 0 0 -0.000009 1 -0 0 0 0 1", armature.node[0].Matrix[0].Value_As_String);
+            Assert.AreEqual("Armature_hang_seg2", armature.node[0].node[0].ID);
+            Assert.AreEqual("hang_seg2", armature.node[0].node[0].Name);
+            Assert.AreEqual("1 0.000002 -0 0.026363 -0.000002 1 -0 -0 0 0 1 -0 0 0 0 1", armature.node[0].node[0].Matrix[0].Value_As_String);
+
             testUtils.ValidateColladaXml(colladaData);
         }
 

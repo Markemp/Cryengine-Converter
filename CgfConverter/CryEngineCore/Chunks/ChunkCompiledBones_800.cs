@@ -23,9 +23,6 @@ namespace CgfConverter.CryEngineCore
                 if (RootBone == null)  // First bone read is root bone
                     RootBone = tempBone;
 
-                //tempBone.LocalTranslation = tempBone.boneToWorld.GetBoneToWorldTranslationVector();       // World positions of the bone
-                //tempBone.LocalRotation = tempBone.boneToWorld.GetBoneToWorldRotationMatrix();            // World rotation of the bone.
-                
                 if (tempBone.offsetParent != 0)
                     tempBone.ParentBone = BoneList[i + tempBone.offsetParent];
                 
@@ -33,26 +30,6 @@ namespace CgfConverter.CryEngineCore
                     tempBone.parentID = tempBone.ParentBone.ControllerID;
                 else
                     tempBone.parentID = 0;
-
-                if (tempBone.parentID != 0)
-                {
-                    //tempBone.LocalTransform = tempBone.BoneToWorld
-                    // TODO:  Figure out how to get the LocalTransform for the Library_Visual_Scene JOINT node (bones) transforms
-                    //localRotation = GetParentBone(tempBone).boneToWorld
-                    //    .GetBoneToWorldRotationMatrix();
-                    //    //.ConjugateTransposeThisAndMultiply(tempBone.boneToWorld.GetBoneToWorldRotationMatrix());
-                    //localTranslation = GetParentBone(tempBone)
-                    //    .LocalRotation * (tempBone.LocalTranslation - GetParentBone(tempBone)
-                    //    .boneToWorld.GetBoneToWorldTranslationVector());
-
-
-                }
-                else
-                {
-                    tempBone.LocalTransform = tempBone.BoneToWorld.ConvertToTransformMatrix();
-                    //localTranslation = tempBone.boneToWorld.GetBoneToWorldTranslationVector();
-                    //localRotation = tempBone.boneToWorld.GetBoneToWorldRotationMatrix();
-                }
 
                 BoneList.Add(tempBone);
                 BoneDictionary[i] = tempBone;

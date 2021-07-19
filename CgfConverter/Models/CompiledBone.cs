@@ -21,18 +21,31 @@ namespace CgfConverter
         public uint numChildren;                   // Number of children to this bone
 
         public Matrix4x4 BindPoseMatrix;           // This is the WorldToBone matrix for library_controllers
-        public Matrix4x4 LocalTransform;           // 
+        
         public long offset;                        // Calculated position in the file where this bone started.
         
         public uint parentID;                           // Calculated controllerID of the parent bone put into the Bone Dictionary (the key)
         public List<uint> childIDs = new List<uint>();  // Calculated controllerIDs of the children to this bone.
 
-        //public Matrix4x4 LocalTransform = new Matrix4x4();
-        //public Vector3 LocalTranslation { get; set; } = new Vector3();            // To hold the local rotation vector
-        //public Matrix3x3 LocalRotation = new Matrix3x3();             // to hold the local rotation matrix
 
-        public CompiledBone ParentBone { get; set; }
+        public CompiledBone ParentBone;
 
+        public Matrix4x4 LocalTransform
+        {
+            get 
+            { 
+                if (offsetParent == 0) // No parent
+                {
+                    return Matrix4x4Extensions.CreateFromMatrix3x4(BoneToWorld);
+                }
+                else 
+                {
+                    return Matrix4x4Extensions.CreateLocalTransformFromB2W(
+                        Matrix4x4Extensions.CreateFromMatrix3x4(ParentBone.BoneToWorld),
+                        Matrix4x4Extensions.CreateFromMatrix3x4(BoneToWorld));
+                }
+            }
+        }
         public void ReadCompiledBone_800(BinaryReader b)
         {
             // Reads just a single 584 byte entry of a bone.
@@ -44,7 +57,6 @@ namespace CgfConverter
             WorldToBone = b.ReadMatrix3x4();
             BindPoseMatrix = WorldToBone.ConvertToTransformMatrix();
             BoneToWorld = b.ReadMatrix3x4();
-            // TransformMatrix = BoneToWorld.ConvertToTransformMatrix();
             boneName = b.ReadFString(256);
             limbID = b.ReadInt32();
             offsetParent = b.ReadInt32();
@@ -66,7 +78,6 @@ namespace CgfConverter
             WorldToBone = b.ReadMatrix3x4();
             BindPoseMatrix = WorldToBone.ConvertToTransformMatrix();
             BoneToWorld = b.ReadMatrix3x4();
-            // TransformMatrix = BoneToWorld.ConvertToTransformMatrix();
 
             childIDs = new List<uint>();                    // Calculated
         }
@@ -106,7 +117,11 @@ namespace CgfConverter
             BindPoseMatrix.M14 = worldTransform.X;
             BindPoseMatrix.M24 = worldTransform.Y;
             BindPoseMatrix.M34 = worldTransform.Z;
+            BindPoseMatrix.M41 = 0;
+            BindPoseMatrix.M42 = 0;
+            BindPoseMatrix.M43 = 0;
             BindPoseMatrix.M44 = 1.0f;
+
             //BindPoseMatrix = Matrix4x4.Transform(Matrix4x4.Identity, worldQuat);
             //worldToBone = new WORLDTOBONE(worldQuat.ConvertToRotationalMatrix(), worldTransform);
             //boneToWorld = new BONETOWORLD(relativeQuat.ConvertToRotationalMatrix(), relativeTransform);
