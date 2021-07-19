@@ -1,5 +1,4 @@
 ﻿using CgfConverter.Structs;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -28,20 +27,6 @@ namespace CgfConverter.CryEngineCore
                 return null;
         }
 
-        //public void SetLocalTransform(CompiledBone bone)
-        //{
-        //    if (bone.GetParentBone() == null)
-        //        LocalTransform = Transform;
-        //    else
-        //    {
-        //        var newRotation = Matrix3x3.Transpose(ParentNode.Transform.GetRotation()) * Transform.GetRotation();
-        //        var newTranslation = ParentNode.Transform.GetRotation() * (Transform.GetTranslation() - ParentNode.Transform.GetTranslation());
-
-        //        LocalTransform = Matrix4x4Extensions.CreateTransformFromParts(newTranslation, newRotation);
-        //    }
-        //}
-
-
         public List<CompiledBone> GetAllChildBones(CompiledBone bone)
         {
             return BoneList.Where(a => bone.childIDs.Contains(a.ControllerID)).ToList();
@@ -49,7 +34,7 @@ namespace CgfConverter.CryEngineCore
 
         public List<string> GetBoneNames()
         {
-            return BoneList.Select(a => a.boneName).ToList();  // May need to replace space in bone names with _.
+            return BoneList.Select(a => a.boneName).ToList();
         }
 
         protected void AddChildIDToParent(CompiledBone bone)

@@ -1300,32 +1300,11 @@ namespace CgfConverter
             List<Grendgine_Collada_Matrix> matrices = new List<Grendgine_Collada_Matrix>();
             // Populate the matrix.  This is based on the BONETOWORLD data in this bone.
             StringBuilder matrixValues = new StringBuilder();
+            var localTransform = bone.LocalTransform;
             matrixValues.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} 0 0 0 1",
-                //bone.LocalTransform.M11,
-                //bone.LocalTransform.M12,
-                //bone.LocalTransform.M13,
-                //bone.LocalTransform.M14,
-                //bone.LocalTransform.M21,
-                //bone.LocalTransform.M22,
-                //bone.LocalTransform.M23,
-                //bone.LocalTransform.M24,
-                //bone.LocalTransform.M31,
-                //bone.LocalTransform.M32,
-                //bone.LocalTransform.M33,
-                //bone.LocalTransform.M34
-                bone.LocalTransform.M11,
-                bone.LocalTransform.M12,
-                bone.LocalTransform.M13,
-                bone.LocalTransform.M14,
-                bone.LocalTransform.M21,
-                bone.LocalTransform.M22,
-                bone.LocalTransform.M23,
-                bone.LocalTransform.M24,
-                bone.LocalTransform.M31,
-                bone.LocalTransform.M32,
-                bone.LocalTransform.M33,
-                bone.LocalTransform.M34
-                );
+                localTransform.M11, localTransform.M12, localTransform.M13, localTransform.M14,
+                localTransform.M21, localTransform.M22, localTransform.M23, localTransform.M24,
+                localTransform.M31, localTransform.M32, localTransform.M33, localTransform.M34);
 
             CleanNumbers(matrixValues);
             matrix.Value_As_String = matrixValues.ToString();

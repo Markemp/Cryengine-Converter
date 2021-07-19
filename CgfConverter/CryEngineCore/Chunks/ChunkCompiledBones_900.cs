@@ -1,8 +1,6 @@
-﻿using CgfConverter.Structs;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Numerics;
 using System.Text;
 
 namespace CgfConverter.CryEngineCore
@@ -42,32 +40,6 @@ namespace CgfConverter.CryEngineCore
             skin.HasSkinningInfo = true;
             skin.CompiledBones = BoneList;
         }
-
-        //private void SetBoneLocalTransformMatrix(CompiledBone bone)
-        //{
-        //    Vector3 localTranslation;
-        //    Matrix3x3 localRotation;
-
-        //    //bone.LocalTranslation = bone.boneToWorld.GetBoneToWorldTranslationVector();       // World positions of the bone
-        //    //bone.LocalRotation = bone.boneToWorld.GetBoneToWorldRotationMatrix();            // World rotation of the bone.
-
-        //    if (bone.parentID != 0)
-        //    {
-        //        localRotation = GetParentBone(bone).boneToWorld
-        //            .GetBoneToWorldRotationMatrix()
-        //            .ConjugateTransposeThisAndMultiply(bone.boneToWorld.GetBoneToWorldRotationMatrix());
-        //        localTranslation = GetParentBone(bone)
-        //            .LocalRotation * (bone.LocalTranslation - GetParentBone(bone)
-        //            .boneToWorld.GetBoneToWorldTranslationVector());
-        //    }
-        //    else
-        //    {
-        //        localTranslation = bone.boneToWorld.GetBoneToWorldTranslationVector();
-        //        localRotation = bone.boneToWorld.GetBoneToWorldRotationMatrix();
-        //    }
-
-        //    bone.LocalTransform = GetTransformFromParts(localTranslation, localRotation);
-        //}
 
         void SetParentBone(CompiledBone bone)
         {

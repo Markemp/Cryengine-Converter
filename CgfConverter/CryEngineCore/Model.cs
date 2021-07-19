@@ -32,10 +32,7 @@ namespace CgfConverter.CryEngineCore
         /// <summary> Position of the Chunk Header table </summary>
         public int ChunkTableOffset { get; internal set; }
 
-        /// <summary>
-        /// Contains all the information about bones and skinning them.  This a reference to the Cryengine object, 
-        /// since multiple Models can exist for a single object).
-        /// </summary>
+        /// <summary>Contains all the information about bones and skinning them.  This a reference to the Cryengine object, since multiple Models can exist for a single object).</summary>
         public SkinningInfo SkinningInfo { get; set; } = new SkinningInfo();
 
         /// <summary> The Bones in the model.  The CompiledBones chunk will have a unique RootBone. </summary>
@@ -44,8 +41,6 @@ namespace CgfConverter.CryEngineCore
         public uint NumChunks { get; internal set; }
 
         private Dictionary<int, ChunkNode> nodeMap { get; set; }
-
-        
 
         #region Private Fields
 

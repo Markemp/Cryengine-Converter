@@ -3,6 +3,7 @@ using Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 using static Extensions.BinaryReaderExtensions;
+using System.Numerics;
 
 namespace CgfConverterIntegrationTests.UnitTests
 {
@@ -70,6 +71,25 @@ namespace CgfConverterIntegrationTests.UnitTests
             Assert.AreEqual(1.4550781, quat.Y, delta);
             Assert.AreEqual(0.0594787, quat.Z, delta);
             Assert.AreEqual(1.0410156, quat.W, delta);
+        }
+
+        [TestMethod]
+        public void ReadVector3()
+        {
+            var buffer = new byte[] {
+                0xA3, 0x1F, 0xD2, 0x3D,
+                0x9D, 0x2B, 0x2A, 0x3C,
+                0xD7, 0xFB, 0x48, 0x3F,
+                0xFE, 0x58, 0x1C, 0x3F
+            };
+
+            var expected = new Vector3(0.102599405f, 0.010386375f, 0.7850928f);
+
+            using var source = new MemoryStream(buffer);
+            using var reader = new BinaryReader(source);
+            var vector = reader.ReadVector3();
+
+            Assert.AreEqual(expected, vector);
         }
 
         [TestMethod]
