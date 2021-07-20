@@ -1,5 +1,4 @@
-﻿using CgfConverter.Structs;
-using CgfConverterIntegrationTests.Extensions;
+﻿using CgfConverterIntegrationTests.Extensions;
 using CgfConverterTests.TestUtilities;
 using Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -45,25 +44,14 @@ namespace CgfConverterIntegrationTests.UnitTests
         private Matrix4x4 givenBone2B2W = new Matrix4x4(-0.000091f, 1.000000f, 0.000008f, -0.000002f, -0.000000f, 0.000008f, -1.000000f, -0.000000f, -1.000000f, -0.000091f, 0.000000f, -0.026455f, 0, 0, 0, 1);
 
         // SC Avenger rotation tests
-        private Matrix3x3 parentRotation = new(1, 0, 0, -0, 1, 0, 0, 0, 1);      // Nose
-        private Vector3 parentTranslation = new(0.000007f, 5.70299866f, -0.47300030f);
-        private Matrix4x4 parentTransform = new(1, 0, 0, 0, -0, 1, 0, 0, 0, 0, 1, 0, 0.000007f, 5.70299866f, -0.47300030f, 1);
-        
-        private Matrix3x3 childRotation = new(1, 0, 0, 0, 0.939693f, -0.342020f, 0, 0.342020f, 0.939693f);
-        private Vector3 childTranslation = new(0.3000012f, 0.5124316f, -1.835138f);
-        private Matrix4x4 childTransform = new(1, 0, 0, 0, 0, 0.939693f, -0.342020f, 0, 0, 0.342020f, 0.939693f, 0, 0.300001f, 0.524316f, -1.835138f, 1);
-        
-        private Matrix3x3 expectedChildRotation = new(1, 0, 0, 0, -0.938131f, -0.346280f, 0, 0.346280f, -0.938131f);
-        private Vector3 expectedChildTranslation = new(-0.300001f, 0.512432f, -1.835138f);
-
-        private Matrix4x4 parentTransform2 = new(1, 0, 0, 0, -0, 1, 0, 5.70299866f, 0, 0, 1, -0.47300030f, 0, 0, 0, 1);
-        private Matrix4x4 childTransform2 = new(1, 0, 0, 0, 0, -0.938131f, 0.346280f, 0, 0, -0.346280f, -0.938131f, 0, -0.30000120f, 0.51243164f, -1.83513809f, 1);
-        private Matrix4x4 expectedTransform = new(1, -0, 0, -0.300001f, 0, -0.938131f, -0.346280f, 0.512432f, 0, 0.346280f, -0.938131f, -1.835138f, 0, 0, 0, 1);  // correct answer
+        private Matrix4x4 noseTransform = new(1, 0, 0, 0, -0, 1, 0, 5.70299866f, 0, 0, 1, -0.47300030f, 0, 0, 0, 1);
+        private Matrix4x4 doorTransform = new(1, 0, 0, 0, 0, -0.938131f, 0.346280f, 0, 0, -0.346280f, -0.938131f, 0, -0.30000120f, 0.51243164f, -1.83513809f, 1);
+        private Matrix4x4 expectedDoorTransform = new(1, -0, 0, -0.300001f, 0, -0.938131f, -0.346280f, 0.512432f, 0, 0.346280f, -0.938131f, -1.835138f, 0, 0, 0, 1);  // correct answer
 
         [TestMethod]
         public void SC_Avenger_NodeTransformTests()
         {
-            AssertExtensions.AreEqual(Matrix4x4.Transpose(childTransform2), expectedTransform, 0.000005f);
+            AssertExtensions.AreEqual(Matrix4x4.Transpose(doorTransform), expectedDoorTransform, 0.000005f);
         }
 
         [TestMethod]
@@ -121,9 +109,9 @@ namespace CgfConverterIntegrationTests.UnitTests
         public void InvertBone0Matrix()
         {
             // Inverting an identiy matrix returns another identity matrix
-            var bone0 = correctBone0Matrix4x4ForVisualScene;
+            var expectedBoneBPM = correctBone0Matrix4x4ForVisualScene;
             Matrix4x4 bone0BPM;
-            Matrix4x4.Invert(bone0, out bone0BPM);
+            Matrix4x4.Invert(expectedBoneBPM, out bone0BPM);
 
             // { 0    0     -1       0.023305}   // Bone 0 World2Bone
             // { 1    0      0      -0       }
@@ -138,7 +126,7 @@ namespace CgfConverterIntegrationTests.UnitTests
 
             Matrix4x4 actual2;
             Matrix4x4.Invert(bone0BPM, out actual2);
-            Assert.AreEqual(bone0, actual2);
+            Assert.AreEqual(expectedBoneBPM, actual2);
         }
 
         [TestMethod]
@@ -164,38 +152,6 @@ namespace CgfConverterIntegrationTests.UnitTests
             // [-0.000089, -0,        -1,        -0.000092]
             // [1,          0.000008, -0.000089, -0]
             // [0.000008,  -1,         0,        -0]]
-
-            // Multiply parent bone by inverse of Bone1 W2B
-            Matrix4x4 bone1W2B = new Matrix4x4(
-                -0.000089f,     -0,           -1,          -0.000092f, 
-                1,              0.000008f,    -0.000089f,  -0, 
-                0.000008f,      -1f,           0,          -0, 
-                0,               0,            0,           1         );
-
-            Matrix4x4 bone0W2B;
-            Matrix4x4.Invert(correctBone0Matrix4x4ForVisualScene, out bone0W2B);
-
-            var result1 = bone0 * bone1BPM;
-            // result
-            // {0.000089        1               -0.000009      -0.0000021}
-            // {0              -0.000009       -1               0}
-            // {-1              0.000089       0               0.046701}
-            // {0               0               0               1}
-
         }
-
-        [TestMethod]
-        public void InvertBone2Matrix()
-        {
-            var bone2 = correctBone2Matrix4x4ForVisualScene;
-            Matrix4x4 actual;
-            Matrix4x4.Invert(bone2, out actual);
-
-            // { 1    0   0  0        }
-            // { 0    1   0  0.033961 }
-            // { 0   -0   1  0.057669 }
-            // { 0    0   0  1        }
-        }
-
     }
 }
