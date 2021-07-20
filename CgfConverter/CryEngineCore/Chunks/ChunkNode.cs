@@ -34,8 +34,8 @@ namespace CgfConverter.CryEngineCore
                 LocalTransform = Transform;
             else
             {
-                var newRotation = Matrix3x3.Transpose(ParentNode.Transform.GetRotation()) * Transform.GetRotation();
-                var newTranslation = ParentNode.Transform.GetRotation() * (Transform.GetTranslation() - ParentNode.Transform.GetTranslation());
+                var newRotation = Matrix3x3.Transpose(ParentNode.LocalTransform.GetRotation()) * Transform.GetRotation();
+                var newTranslation = Transform.GetTranslation() - ParentNode.LocalTransform.GetTranslation();
 
                 LocalTransform = Matrix4x4Extensions.CreateTransformFromParts(newTranslation, newRotation);
             }

@@ -45,27 +45,27 @@ namespace CgfConverterIntegrationTests.UnitTests
         private Matrix4x4 givenBone2B2W = new Matrix4x4(-0.000091f, 1.000000f, 0.000008f, -0.000002f, -0.000000f, 0.000008f, -1.000000f, -0.000000f, -1.000000f, -0.000091f, 0.000000f, -0.026455f, 0, 0, 0, 1);
 
         // SC Avenger rotation tests
-        private Matrix3x3 parentRotation = new(1, 0, 0, 0, 1, 0, 0, 0, 1);      // Nose
-        private Vector3 parentTranslation = new(0, 5.703f, -0.473f);
-        private Matrix4x4 parentTransform = new(1, 0, 0, 0, -0, 1, 0, 0, 0, 0, 1, 0, 0, 5.70299866f, -0.47300030f, 1);
+        private Matrix3x3 parentRotation = new(1, 0, 0, -0, 1, 0, 0, 0, 1);      // Nose
+        private Vector3 parentTranslation = new(0.000007f, 5.70299866f, -0.47300030f);
+        private Matrix4x4 parentTransform = new(1, 0, 0, 0.000007f, -0, 1, 0, 5.70299866f, 0, 0, 1, -0.47300030f, 0, 0, 0, 1);
         
         private Matrix3x3 childRotation = new(1, 0, 0, 0, 0.939693f, -0.342020f, 0, 0.342020f, 0.939693f);
         private Vector3 childTranslation = new(0.3000012f, 0.5124316f, -1.835138f);
-        private Matrix4x4 childTransform = new(1, 0, 0, 0, 0, 0.939693f, -0.342020f, 0, 0, 0.342020f, 0.939693f, 0, 0.300001f, 0.524316f, -1.835138f, 0);
+        private Matrix4x4 childTransform = new(1, 0, 0, 0.300001f, 0, 0.939693f, -0.342020f, 0.524316f, 0, 0.342020f, 0.939693f, -1.835138f, 0, 0, 0, 1);
         
         private Matrix3x3 expectedChildRotation = new(1, 0, 0, 0, -0.938131f, -0.346280f, 0, 0.346280f, -0.938131f);
         private Vector3 expectedChildTranslation = new(-0.300001f, 0.512432f, -1.835138f);
-        private Matrix4x4 expectedTransform = new(1, -0, 0, 0.300001f, 0, 0.939693f, -0.342020f, -5.190567f, 0, 0.342020f, 0.939693f, -1.362138f, 0, 0, 0, 1);
+        private Matrix4x4 expectedTransform = new(1, -0, 0, 0.300001f, 0, -0.938131f, -0.346280f, 0.512432f, 0, 0.346280f, -0.938131f, -1.835138f, 0, 0, 0, 1);  // correct answer
 
         [TestMethod]
         public void SC_Avenger_NodeTransformTests()
         {
             //var actualRotation = parentRotation * childRotation;
-            var actualRotation = Matrix3x3.Transpose(parentRotation) * childRotation;
+            var actualRotation = parentRotation *Matrix3x3.Transpose(childRotation);
             //Assert.AreEqual(expectedChildRotation, actualRotation);
             Matrix4x4 invertedParent;
             Matrix4x4.Invert(parentTransform, out invertedParent);
-            var actualTransform = invertedParent * childTransform;
+            var actualTransform = (invertedParent * childTransform);
 
             Assert.AreEqual(expectedTransform, actualTransform);
         }
