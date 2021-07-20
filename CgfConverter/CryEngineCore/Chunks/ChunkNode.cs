@@ -26,18 +26,11 @@ namespace CgfConverter.CryEngineCore
         public int SclCtrlID { get; internal set; }  // Obsolete
         public string Properties { get; internal set; }
 
-        public Matrix4x4 LocalTransform; // Set after all chunks in model are read.
-
-        public void SetLocalTransform()
+        public Matrix4x4 LocalTransform
         {
-            if (ParentNode == null)
-                LocalTransform = Transform;
-            else
+            get
             {
-                var newRotation = Matrix3x3.Transpose(ParentNode.LocalTransform.GetRotation()) * Transform.GetRotation();
-                var newTranslation = Transform.GetTranslation() - ParentNode.LocalTransform.GetTranslation();
-
-                LocalTransform = Matrix4x4Extensions.CreateTransformFromParts(newTranslation, newRotation);
+                return Matrix4x4.Transpose(Transform);
             }
         }
 

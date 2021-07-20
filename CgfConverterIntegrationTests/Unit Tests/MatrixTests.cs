@@ -53,46 +53,17 @@ namespace CgfConverterIntegrationTests.UnitTests
         private Vector3 childTranslation = new(0.3000012f, 0.5124316f, -1.835138f);
         private Matrix4x4 childTransform = new(1, 0, 0, 0, 0, 0.939693f, -0.342020f, 0, 0, 0.342020f, 0.939693f, 0, 0.300001f, 0.524316f, -1.835138f, 1);
         
-
-
         private Matrix3x3 expectedChildRotation = new(1, 0, 0, 0, -0.938131f, -0.346280f, 0, 0.346280f, -0.938131f);
         private Vector3 expectedChildTranslation = new(-0.300001f, 0.512432f, -1.835138f);
 
         private Matrix4x4 parentTransform2 = new(1, 0, 0, 0, -0, 1, 0, 5.70299866f, 0, 0, 1, -0.47300030f, 0, 0, 0, 1);
-        private Matrix4x4 childTransform2 = new(1, 0, 0, -0.30000120f, 0, -0.938131f, 0.346280f, 0.51243164f, 0, -0.346280f, -0.938131f, -1.83513809f, 0, 0, 0, 1);
-        private Matrix4x4 expectedTransform = new(1, -0, 0, 0.300001f, 0, -0.938131f, -0.346280f, 0.512432f, 0, 0.346280f, -0.938131f, -1.835138f, 0, 0, 0, 1);  // correct answer
+        private Matrix4x4 childTransform2 = new(1, 0, 0, 0, 0, -0.938131f, 0.346280f, 0, 0, -0.346280f, -0.938131f, 0, -0.30000120f, 0.51243164f, -1.83513809f, 1);
+        private Matrix4x4 expectedTransform = new(1, -0, 0, -0.300001f, 0, -0.938131f, -0.346280f, 0.512432f, 0, 0.346280f, -0.938131f, -1.835138f, 0, 0, 0, 1);  // correct answer
 
         [TestMethod]
         public void SC_Avenger_NodeTransformTests()
         {
-            //var actualRotation = parentRotation * childRotation;
-            Matrix4x4 parentinv, childinv;
-            Matrix4x4.Invert(parentTransform, out parentinv);
-            Matrix4x4.Invert(childTransform, out childinv);
-
-            Matrix4x4 childinv2;
-            Matrix4x4 parentinv2;
-            Matrix4x4.Invert(childTransform2, out childinv2);
-            Matrix4x4.Invert(parentTransform2, out parentinv2);
-            var m5 = childinv2 * parentTransform2;  // Rot correct, trans wrong
-            var m6 = parentTransform2 * childinv2;  // Rot correct, trans wrong
-            var m7 = childTransform2 * parentinv2;  // both wrong
-            var m8 = parentinv2 * childTransform2;
-
-
-            //var m1 = childTransform * parentinv;
-            //var m2 = parentinv * childTransform;
-            //var m3 = childinv * parentTransform;
-            //var m4 = parentTransform * childinv;
-
-            var actualRotation = childRotation * parentRotation;
-            var transform = childTransform * parentTransform;
-            //Assert.AreEqual(expectedChildRotation, actualRotation);
-            Matrix4x4 invertedParent;
-            Matrix4x4.Invert(parentTransform, out invertedParent);
-            var actualTransform = (invertedParent * childTransform);
-
-            Assert.AreEqual(expectedTransform, actualTransform);
+            AssertExtensions.AreEqual(Matrix4x4.Transpose(childTransform2), expectedTransform, 0.000005f);
         }
 
         [TestMethod]
