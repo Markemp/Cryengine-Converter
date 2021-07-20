@@ -14,7 +14,7 @@ namespace CgfConverter.Services
                 BaseDirectory = Environment.CurrentDirectory,
             };
 
-            Console.WriteLine("Base Directory is " + Environment.CurrentDirectory);
+            Utils.Log(LogLevelEnum.Info, "Base Directory is " + Environment.CurrentDirectory);
             string[] materialFiles = Directory.GetFiles(Environment.CurrentDirectory, "*.mtl", SearchOption.AllDirectories);
 
             //FileInfo materialFile = new FileInfo(materialFileName);
@@ -22,7 +22,7 @@ namespace CgfConverter.Services
             {
                 foreach (string file in materialFiles)
                 {
-                    Console.WriteLine("Processing " + file);
+                    Utils.Log(LogLevelEnum.Info, "Processing " + file);
                     //Material material = Material.FromFile(new FileInfo(file));
                     CgfConverter.CryEngineCore.Material materials = CgfConverter.CryEngineCore.Material.FromFile(new FileInfo(file));
                     // All the materials in this file are in the materials variable.  For each material in here, create a materiallibraryitem.
@@ -59,7 +59,7 @@ namespace CgfConverter.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine("*** Exception converting XML: ", ex.Message);
+                Utils.Log(LogLevelEnum.Critical, "*** Exception converting XML: ", ex.Message);
             }
             WriteMaterialLibrary(matLibrary);
             Console.WriteLine("Press any key to close.");

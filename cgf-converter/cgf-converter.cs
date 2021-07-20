@@ -3,8 +3,10 @@ using System.Threading;
 using System.Globalization;
 using CgfConverter;
 
+
 namespace CgfConverterConsole
 {
+
     public class Program
     {
         public static int Main(string[] args)
@@ -13,14 +15,6 @@ namespace CgfConverterConsole
             Utils.DebugLevel = LogLevelEnum.Debug;
 
             string oldTitle = Console.Title;
-
-#if DEV_DOLKENSP
-            Utils.LogLevel = LogLevelEnum.None;      // Display NO error logs
-            Utils.DebugLevel = LogLevelEnum.Debug;
-
-            args = new String[] { @"C:\Users\PeterDolkens\Downloads\SOC'n'destroy\socpak\pisces_int.soc", "-objectdir", @"C:\Users\PeterDolkens\Downloads\SOC'n'destroy\socpak", "-obj", "-outdir", @"C:\Users\PeterDolkens\Downloads\SOC'n'destroy\socpak\out" };
-
-#endif
 
 #if DEV_MARKEMP
             Utils.LogLevel = LogLevelEnum.Verbose; // Display ALL error logs in the console
@@ -122,10 +116,8 @@ namespace CgfConverterConsole
 
             Console.Title = oldTitle;
 
-#if (DEV_DOLKENSP || DEV_MARKEMP)
-            Console.WriteLine("Done...");
-            Console.ReadKey();
-#endif
+            Utils.Log(LogLevelEnum.Debug, "Done...");
+            
             return 0;
         }
     }
