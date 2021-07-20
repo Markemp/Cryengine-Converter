@@ -1221,11 +1221,7 @@ namespace CgfConverter
             return tmpNode;
         }
 
-        /// <summary>
-        /// This will be used to make the Collada node element for Node chunks that point to Helper Chunks and MeshPhysics
-        /// </summary>
-        /// <param name="nodeChunk">The node chunk for this Collada Node.</param>
-        /// <returns>Grendgine_Collada_Node for the node chunk</returns>
+        /// <summary>This will be used to make the Collada node element for Node chunks that point to Helper Chunks and MeshPhysics </summary>
         private Grendgine_Collada_Node CreateSimpleNode(ChunkNode nodeChunk)
         {
             // This will be used to make the Collada node element for Node chunks that point to Helper Chunks and MeshPhysics
@@ -1255,11 +1251,7 @@ namespace CgfConverter
             return tmpNode;
         }
 
-        /// <summary>
-        /// Used by CreateNode and CreateSimpleNodes to create all the child nodes for the given node.
-        /// </summary>
-        /// <param name="nodeChunk">Node with children to add.</param>
-        /// <returns>A node with all the children added.</returns>
+        /// <summary>Used by CreateNode and CreateSimpleNodes to create all the child nodes for the given node.</summary>
         private Grendgine_Collada_Node[] CreateChildNodes(ChunkNode nodeChunk)
         {
             if (nodeChunk.__NumChildren != 0)
@@ -1391,12 +1383,7 @@ namespace CgfConverter
             return tmpNode;
         }
 
-        /// <summary>
-        /// Creates the Collada Source element for a given datastream).
-        /// </summary>
-        /// <param name="vertices">The vertices of the source datastream.  This can be position, normals, colors, tangents, etc.</param>
-        /// <param name="nodeChunk">The Node chunk of the datastream.  Need this for names, mesh, and submesh info.</param>
-        /// <returns>Grendgine_Collada_Source object with the source data.</returns>
+        /// <summary>Creates the Collada Source element for a given datastream).</summary>
         private Grendgine_Collada_Source GetMeshSource(ChunkDataStream vertices, ChunkNode nodeChunk)
         {
             Grendgine_Collada_Source source = new Grendgine_Collada_Source();
@@ -1408,11 +1395,7 @@ namespace CgfConverter
             return source;
         }
 
-        /// <summary>
-        /// Retrieves the worldtobone (bind pose matrix) for the bone.
-        /// </summary>
-        /// <param name="compiledBones">List of bones to get the BPM from.</param>
-        /// <returns>The float_array that represents the BPM of all the bones, in order.</returns>
+        /// <summary>Retrieves the worldtobone (bind pose matrix) for the bone.</summary>
         private string GetBindPoseArray(List<CompiledBone> compiledBones)
         {
             StringBuilder value = new StringBuilder();
