@@ -27,14 +27,13 @@ namespace CgfConverter
         public uint parentID;                           // Calculated controllerID of the parent bone put into the Bone Dictionary (the key)
         public List<uint> childIDs = new List<uint>();  // Calculated controllerIDs of the children to this bone.
 
-
         public CompiledBone ParentBone;
 
         public Matrix4x4 LocalTransform
         {
             get 
             { 
-                if (offsetParent == 0) // No parent
+                if ( ParentBone == null || offsetParent == 0) // No parent
                 {
                     return Matrix4x4Extensions.CreateFromMatrix3x4(BoneToWorld);
                 }
@@ -46,6 +45,7 @@ namespace CgfConverter
                 }
             }
         }
+
         public void ReadCompiledBone_800(BinaryReader b)
         {
             // Reads just a single 584 byte entry of a bone.
