@@ -35,7 +35,13 @@ namespace CgfConverter.CryEngineCore
                         if (NumElements % 2 == 1)
                             SkipBytes(b, 2);
                         else
-                            SkipBytes(b, 4);
+                        {
+                            var peek = Convert.ToChar(b.ReadByte()); // Sometimes the next Ivo chunk has a 4 byte filler, sometimes it doesn't.
+                            b.BaseStream.Position -= 1;
+                            if (peek == 0)
+                                SkipBytes(b, 4);
+                        }
+                            
                     }
                     else if (BytesPerElement == 4)
                     {
