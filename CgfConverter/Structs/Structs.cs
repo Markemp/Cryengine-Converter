@@ -124,71 +124,7 @@ namespace CgfConverter
         public Matrix3x3 M;
     }
 
-    /// <summary> WORLDTOBONE is also the Bind Pose Matrix (BPM) </summary>
-    public struct WORLDTOBONE
-    {
-        //public float[,] worldToBone;   //  4x3 structure
-
-        //public WORLDTOBONE(Matrix3x3 worldRotation, Vector3 worldTransform) : this()
-        //{
-        //    worldToBone = new float[3, 4];
-        //    worldToBone[0, 0] = worldRotation.M11;
-        //    worldToBone[0, 1] = worldRotation.M12;
-        //    worldToBone[0, 2] = worldRotation.M13;
-        //    worldToBone[0, 3] = worldTransform.X;
-        //    worldToBone[1, 0] = worldRotation.M21;
-        //    worldToBone[1, 1] = worldRotation.M22;
-        //    worldToBone[1, 2] = worldRotation.M23;
-        //    worldToBone[1, 3] = worldTransform.Y;
-        //    worldToBone[2, 0] = worldRotation.M31;
-        //    worldToBone[2, 1] = worldRotation.M32;
-        //    worldToBone[2, 2] = worldRotation.M33;
-        //    worldToBone[2, 3] = worldTransform.Z;
-        //}
-
-        //public void GetWorldToBone(BinaryReader b)
-        //{
-        //    worldToBone = new float[3, 4];
-        //    for (int i = 0; i < 3; i++)
-        //    {
-        //        for (int j = 0; j < 4; j++)
-        //        {
-        //            worldToBone[i, j] = b.ReadSingle();  // this might have to be switched to [j,i].  Who knows???
-        //        }
-        //    }
-        //    return;
-        //}
-
-        //internal Matrix3x3 GetWorldToBoneRotationMatrix()
-        //{
-        //    Matrix3x3 result = new Matrix3x3
-        //    {
-        //        M11 = worldToBone[0, 0],
-        //        M12 = worldToBone[0, 1],
-        //        M13 = worldToBone[0, 2],
-        //        M21 = worldToBone[1, 0],
-        //        M22 = worldToBone[1, 1],
-        //        M23 = worldToBone[1, 2],
-        //        M31 = worldToBone[2, 0],
-        //        M32 = worldToBone[2, 1],
-        //        M33 = worldToBone[2, 2]
-        //    };
-        //    return result;
-        //}
-
-        //internal Vector3 GetWorldToBoneTranslationVector()
-        //{
-        //    Vector3 result = new Vector3
-        //    {
-        //        X = (float)worldToBone[0, 3],
-        //        Y = (float)worldToBone[1, 3],
-        //        Z = (float)worldToBone[2, 3]
-        //    };
-        //    return result;
-        //}
-    }
-
-       public struct PhysicsGeometry
+    public struct PhysicsGeometry
     {
         public uint physicsGeom;
         public uint flags;              // 0x0C ?
@@ -229,6 +165,7 @@ namespace CgfConverter
 
         public void ReadCompiledPhysicalBone(BinaryReader b)
         {
+            // TODO:  Move this to the BinaryReaderExtensions
             // Reads just a single 584 byte entry of a bone. At the end the seek position will be advanced, so keep that in mind.
             BoneIndex = b.ReadUInt32();                // unique id of bone (generated from bone name)
             ParentOffset = b.ReadUInt32();
