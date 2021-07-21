@@ -77,7 +77,7 @@ namespace CgfConverter
             // TODO:  This may be quaternion and translation vectors. 
             WorldToBone = b.ReadMatrix3x4();
             BindPoseMatrix = WorldToBone.ConvertToTransformMatrix();
-            BoneToWorld = b.ReadMatrix3x4();
+            //BoneToWorld = b.ReadMatrix3x4();
 
             childIDs = new List<uint>();                    // Calculated
         }

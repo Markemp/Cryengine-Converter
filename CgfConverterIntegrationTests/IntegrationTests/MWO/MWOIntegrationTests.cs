@@ -54,7 +54,7 @@ namespace CgfConverterTests.IntegrationTests.MWO
             var daeObject = colladaData.DaeObject;
             colladaData.GenerateDaeObject();
 
-            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
             Assert.AreEqual(11, actualMaterialsCount);
             
             // Visual Scene Check 
