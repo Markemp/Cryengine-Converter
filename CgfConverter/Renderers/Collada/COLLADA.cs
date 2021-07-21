@@ -17,6 +17,7 @@ namespace CgfConverter
     {
         private readonly CultureInfo culture = CultureInfo.CreateSpecificCulture("en-US");
         private const string colladaVersion = "1.4.1";
+        private static readonly string[] MaterialExtensions = {".dds", ".png", ".tif"};
 
         public Grendgine_Collada DaeObject { get; private set; } = new Grendgine_Collada();  // This is the serializable class.
         readonly XmlSerializer mySerializer = new XmlSerializer(typeof(Grendgine_Collada));
@@ -145,33 +146,15 @@ namespace CgfConverter
                         Init_From = new Grendgine_Collada_Init_From()
                     };
                     // Build the URI path to the file as a .dds, clean up the slashes.
-                    StringBuilder builder = new StringBuilder();
-                    if (CryData.Materials[k].Textures[i].File.Contains(@"/") || CryData.Materials[k].Textures[i].File.Contains(@"\"))
-                    {
-                        // if Datadir is default, need a clean name and can only search in the current directory.  If Datadir is provided, then look there.
-                        if (Args.DataDir.ToString() == ".")
-                        {
-                            builder.Append(CleanMtlFileName(CryData.Materials[k].Textures[i].File) + ".dds");
-                            string test = builder.ToString();
-                            if (!File.Exists(test))
-                            {
-                                //TODO:  Check in ./textures subdir for the file as well.
-                            }
-                        }
-                            
-                        else
-                            builder.Append(@"/" + Args.DataDir.FullName + @"/" + CryData.Materials[k].Textures[i].File);
-                    }
-                    else
-                        builder = new StringBuilder(CryData.Materials[k].Textures[i].File);
-
-                    if (!Args.TiffTextures)
-                    {
-                        builder.Replace(".tif", ".dds");
-                        builder.Replace(".TIF", ".dds");
-                    }
-                    else
+                    StringBuilder builder = new StringBuilder(ResolveMtlFile(CryData.Materials[k].Textures[i].File));
+                    
+                    if (Args.PngTextures && File.Exists(builder.ToString().Replace(".dds", ".png")))
+                        builder.Replace(".dds", ".png");
+                    else if (Args.TiffTextures && File.Exists(builder.ToString().Replace(".dds", ".tif")))
                         builder.Replace(".dds", ".tif");
+                    
+                    if (Args.DataDir.ToString() != ".")
+                        builder.Insert(0, "/");  // Path is absolute, preface with a "/"
 
                     builder.Replace(" ", @"%20");
                     // if 1.4.1, use URI.  If 1.5.0, use Ref.
@@ -1442,27 +1425,41 @@ namespace CgfConverter
             CleanNumbers(matrixValues);
             return matrixValues.ToString();
         }
+        
+        /// <summary>Attempts to resovle a material path to the correct file extension, and normalizes the path separators</summary>
+        private string ResolveMtlFile(string mtl)
+        {
+            StringBuilder mtlfile = new StringBuilder();
+            string cleanName = CleanMtlFileName(mtl);
+            if (Args.DataDir.ToString() == ".")
+                mtlfile.Append(CleanMtlFileName(mtl)); // Resolve in current directory
+            else
+                mtlfile.Append($"{Args.DataDir.FullName}/{Path.GetDirectoryName(mtl)}/{cleanName}");
+
+            mtlfile.Replace("\\", "/");
+
+            foreach (string ext in MaterialExtensions)
+            {
+                if (File.Exists($"{mtlfile}{ext}"))
+                    return $"{mtlfile}{ext}".Replace("\\", "/");
+            }
+            
+            // check in textures sub-directory if we didn't find it
+            mtlfile.Replace(cleanName, $"textures/{cleanName}");
+            foreach (string ext in MaterialExtensions)
+            {
+                if (File.Exists($"{mtlfile}{ext}"))
+                    return $"{mtlfile}{ext}".Replace("\\", "/");
+            }
+
+            Utils.Log(LogLevelEnum.Debug, "Could not find extension for material texture \"{0}\". Defaulting to .dds", mtlfile);
+            return $"{mtlfile}.dds".Replace("\\", "/");;
+        }
 
         /// <summary>Takes the Material file name and returns just the file name with no extension</summary>
         private static string CleanMtlFileName(string cleanMe)
         {
-            string[] stringSeparators = new string[] { @"\", @"/" };
-            string[] result;
-
-            if (cleanMe.Contains(@"/") || cleanMe.Contains(@"\"))
-            {
-                // Take out path info
-                result = cleanMe.Split(stringSeparators, StringSplitOptions.None);
-                cleanMe = result[result.Length - 1];
-            }
-            // Check to see if extension is added, and if so strip it out. Look for "."
-            if (cleanMe.Contains(@"."))
-            {
-                string[] periodSep = new string[] { @"." };
-                result = cleanMe.Split(periodSep, StringSplitOptions.None);
-                cleanMe = result[0];
-            }
-            return cleanMe;
+            return Path.GetFileNameWithoutExtension(cleanMe);
         }
 
         private static double safe(double value)

@@ -72,10 +72,14 @@ namespace CgfConverter
 
                         // TODO: More filehandling here
 
-                        if (!this.Args.TiffTextures)
-                            textureFile = textureFile.Replace(".tif", ".dds");
-                        else
+                        if (this.Args.PngTextures)
+                            textureFile = textureFile.Replace(".dds", ".png");
+                        else if (this.Args.TiffTextures)
                             textureFile = textureFile.Replace(".dds", ".tif");
+                        else
+                            // Is this right? exported `tif` files might actually be `tif`s, maybe
+                            // normalize by checking if the file exists first?
+                            textureFile = textureFile.Replace(".tif", ".dds");
 
                         textureFile = textureFile.Replace(@"/", @"\");
 

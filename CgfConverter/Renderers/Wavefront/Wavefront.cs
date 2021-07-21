@@ -46,7 +46,7 @@ namespace CgfConverter
             if (this.Args.GroupMeshes)
                 this.GroupOverride = Path.GetFileNameWithoutExtension(this.OutputFile_Model.Name);
 
-            Console.WriteLine(@"Output file is {0}\...\{1}", outputDir, this.OutputFile_Model.Name);
+            Utils.Log(LogLevelEnum.Info, @"Output file is {0}\...\{1}", outputDir, this.OutputFile_Model.Name);
 
             if (!OutputFile_Model.Directory.Exists)
                 OutputFile_Model.Directory.Create();
