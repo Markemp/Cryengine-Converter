@@ -2,7 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 
-namespace CgfConverterTests.Unit_Tests
+namespace CgfConverterTests.UnitTests
 {
     [TestClass]
     public class CryEngineTests

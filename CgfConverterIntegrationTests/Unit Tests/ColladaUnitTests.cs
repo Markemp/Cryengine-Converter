@@ -1,7 +1,7 @@
 ﻿using CgfConverter.CryEngineCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace CgfConverterTests.Unit_Tests
+namespace CgfConverterTests.UnitTests
 {
     [TestClass]
     public class ColladaUnitTests
