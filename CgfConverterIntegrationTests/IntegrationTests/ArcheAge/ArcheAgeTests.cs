@@ -34,7 +34,32 @@ namespace CgfConverterTests.IntegrationTests.ArcheAge
             cryData.ProcessCryengineFiles();
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            var daeObject = colladaData.DaeObject;
             colladaData.GenerateDaeObject();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
+            Assert.AreEqual(6, actualMaterialsCount);
+
+            // Visual Scene Check 
+            Assert.AreEqual("Scene", daeObject.Scene.Visual_Scene.Name);
+            Assert.AreEqual("#Scene", daeObject.Scene.Visual_Scene.URL);
+            Assert.AreEqual(1, daeObject.Library_Visual_Scene.Visual_Scene.Length);
+            Assert.AreEqual("Scene", daeObject.Library_Visual_Scene.Visual_Scene[0].ID);
+            Assert.AreEqual(2, daeObject.Library_Visual_Scene.Visual_Scene[0].Node.Length);
+
+            // Armature Node check
+            var node = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0];
+            Assert.AreEqual("Armature", node.ID);
+            Assert.AreEqual("Bip01", node.sID);
+            Assert.AreEqual("Bip01", node.Name);
+            Assert.AreEqual("JOINT", node.Type.ToString());
+            Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1", node.Matrix[0].Value_As_String);
+            var pelvisNode = node.node[0];
+            Assert.AreEqual("Armature_Bip01_Pelvis", pelvisNode.ID);
+            Assert.AreEqual("Bip01_Pelvis", pelvisNode.Name);
+            Assert.AreEqual("Bip01_Pelvis", pelvisNode.sID);
+            Assert.AreEqual("JOINT", pelvisNode.Type.ToString());
+            Assert.AreEqual("0 1 0 0 -0 -0 1 -0.000001 1 -0 0 8.346858 0 0 0 1", pelvisNode.Matrix[0].Value_As_String);
+            Assert.AreEqual(3, pelvisNode.node.Length);
         }
     }
 }
