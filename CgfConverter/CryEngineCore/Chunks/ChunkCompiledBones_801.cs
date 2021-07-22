@@ -17,18 +17,17 @@ namespace CgfConverter.CryEngineCore
             {
                 var tempBone = new CompiledBone();
                 tempBone.ReadCompiledBone_801(b);
+
                 if (RootBone == null)  // First bone read is root bone
                     RootBone = tempBone;
 
-                tempBone.ParentBone = GetParentBone(tempBone);
+                if (tempBone.offsetParent != 0)
+                    tempBone.ParentBone = BoneList[i + tempBone.offsetParent];
+
                 if (tempBone.ParentBone != null)
-                {
                     tempBone.parentID = tempBone.ParentBone.ControllerID;
-                }
                 else
-                {
                     tempBone.parentID = 0;
-                }
 
                 BoneList.Add(tempBone);
                 BoneDictionary[i] = tempBone;

@@ -27,7 +27,7 @@ namespace CgfConverter.CryEngineCore
             List<string> boneNames = GetNullSeparatedStrings(NumBones, b);
 
             // Post bone read setup.  Parents, children, etc.
-            // Add the ChildID to the parent bone.  This will help with navigation. Also set up the TransformSoFar
+            // Add the ChildID to the parent bone.  This will help with navigation.
             for (int i = 0; i < NumBones; i++)
             {
                 BoneList[i].boneName = boneNames[i];
@@ -48,12 +48,6 @@ namespace CgfConverter.CryEngineCore
             {
                 bone.parentID = BoneList[bone.offsetParent].ControllerID;
             }
-        }
-
-        public override CompiledBone GetParentBone(CompiledBone bone)
-        {
-            // Should only be one parent.
-            return BoneList.Where(a => a.ControllerID == bone.parentID).FirstOrDefault();
         }
 
         protected List<string> GetNullSeparatedStrings(int numberOfNames, BinaryReader b)
