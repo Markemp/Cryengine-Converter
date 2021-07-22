@@ -63,12 +63,11 @@ namespace CgfConverterTests.IntegrationTests.ArcheAge
             Assert.AreEqual("JOINT", node.Type.ToString());
             Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1", node.Matrix[0].Value_As_String);
             var locatorBone = node.node[0];
-            Assert.AreEqual("Armature_Locator_Locomotions", locatorBone.ID);
-            Assert.AreEqual("Bip01_Pelvis", locatorBone.Name);
-            Assert.AreEqual("Bip01_Pelvis", locatorBone.sID);
+            Assert.AreEqual("Armature_Locator_Locomotion", locatorBone.ID);
+            Assert.AreEqual("Locator_Locomotion", locatorBone.Name);
+            Assert.AreEqual("Locator_Locomotion", locatorBone.sID);
             Assert.AreEqual("JOINT", locatorBone.Type.ToString());
-            Assert.AreEqual("0 1 0 0 -0 -0 1 -0.000001 1 -0 0 8.346858 0 0 0 1", locatorBone.Matrix[0].Value_As_String);
-            Assert.AreEqual(3, locatorBone.node.Length);
+            Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1", locatorBone.Matrix[0].Value_As_String);
         }
     }
 }
