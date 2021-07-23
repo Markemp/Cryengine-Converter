@@ -79,10 +79,12 @@
         BoneBoxesSC = 0x08013004,
         // Star Citizen #ivo file chunks
         MtlNameIvo = 0x8335674E,
-        CompiledBonesIvo = 0xC201973C,
-        CompiledPhysicalBonesIvo = 0x90C687DC,
-        MeshIvo = 0x9293B9D8,
-        IvoSkin = 0xB875B2D9,
+        CompiledBonesIvo = 0xC201973C, // Skeleton
+        CompiledPhysicalBonesIvo = 0x90C687DC,  // Physics  
+        MeshIvo = 0x9293B9D8,           // SkinInfo        
+        IvoSkin = 0xB875B2D9,           // SkinMesh
+        BShapesGPU = 0x57A3BEFD,
+        BShapes = 0x875CCB28,
 
         BinaryXmlDataSC = 0xcccbf004,
     }
