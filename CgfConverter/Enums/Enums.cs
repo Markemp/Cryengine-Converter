@@ -182,7 +182,9 @@
         IVOINDICES = 0xEECDC168,
         IVOTANGENTS = 0xB95E9A1B,
         IVOBONEMAP = 0x677C7B23,
-        IVOVERTSUVS = 0x91329AE9
+        IVOVERTSUVS = 0x91329AE9,
+        IVOUNKNOWN = 0xD9EED421,            // Objects\Characters\Human\male_v7\armor\ccc\m_ccc_vanduul_helmet_01.skinm
+        IVOUNKNOWN2 = 0x6ECA3708            // Objects\Characters\Human\heads\male\npc\male01\male01_t2_head.skinm
     }
 
     public enum PhysicsPrimitiveType : uint
