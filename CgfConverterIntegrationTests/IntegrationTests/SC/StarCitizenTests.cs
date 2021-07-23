@@ -24,6 +24,17 @@ namespace CgfConverterTests.IntegrationTests.SC
         }
 
         [TestMethod]
+        public void M_ccc_vanduul_helmet_01_312IvoSkinFile()
+        {
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\m_ccc_vanduul_helmet_01.skin", "-dds", "-dae" };
+
+            int result = testUtils.argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
+            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
+        }
+
+        [TestMethod]
         public void BehrRifle_312IvoChrFile()
         {
             var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\3.12.0\brfl_fps_behr_p4ar.chr", "-dds", "-dae" };
