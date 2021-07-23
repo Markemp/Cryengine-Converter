@@ -113,8 +113,6 @@ namespace CgfConverter
             }
 
             SkinningInfo = ConsolidateSkinningInfo(Models);
-            // For each node with geometry info, populate that node's Mesh Chunk GeometryInfo with the geometry data.
-            // ConsolidateGeometryInfo();
 
             // Get the material file name
             var allMaterialChunks = Models
@@ -133,10 +131,7 @@ namespace CgfConverter
                     mtlChunk.Name = parts[1];
                 }
 
-                // The Replace part is for SC files that point to a _core material file that doesn't exist. (no longer needed?)
-                // string cleanName = mtlChunk.Name.Replace("_core", "");
                 string cleanName = mtlChunk.Name;
-
                 FileInfo materialFile;
 
                 if (mtlChunk.Name.Contains("default_body"))

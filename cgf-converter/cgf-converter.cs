@@ -17,26 +17,6 @@ namespace CgfConverterConsole
 #if DEV_MARKEMP
             Utils.LogLevel = LogLevelEnum.Verbose; // Display ALL error logs in the console
             Utils.DebugLevel = LogLevelEnum.Debug;  // Send all to the IDE Output window
-
-            //args = new String[] { @"D:\depot\mwo\Objects\mechs\catapult\body\catapult.chr", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
-            //args = new String[] { @"D:\depot\mwo\Objects\environments\frontend\mechlab_a\mechbay_ceilings\mechbay_ceilinga.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
-            //args = new String[] { @"D:\depot\mwo\Objects\environments\industrial\mf_maglev_loader_a.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
-            //args = new String[] { @"D:\depot\MWO\Objects\characters\pilot\pilot_body.chr", "-dds", "-dae", "-objectdir", @"d:\blender projects\mechs\" };
-            //args = new String[] { @"D:\depot\MWO\Objects\environments\city\im_roads_zone_05\im_zone05_block16.cgf", "-objectdir", @"d:\blender projects\mechs", "-dae" };
-            //args = new String[] { @"D:\depot\SC\Data\Objects\animals\fish\Fish_JellyFish_prop_animal_01.cga", "-objectdir", @"d:\depot\sc\data", "-dae" };
-            //args = new String[] { @"D:\depot\SC\Data\Objects\animals\fish\CleanerFish_clean_prop_animal_01.chr", "-objectdir", @"d:\depot\sc\data", "-dae", "-tif" };
-            //args = new String[] { @"d:\depot\SC\Data\Objects\Spaceships\Ships\AEGS\Gladius\AEGS_Gladius.cga", "-objectdir", @"d:\depot\sc\data", "-dae", "-tif" };
-            //args = new String[] { @"d:\depot\SC\Data\Objects\Spaceships\Ships\AEGS\Retaliator\AEGS_retaliator.cga", "-objectdir", @"d:\depot\sc\data", "-dae", "-tif" };
-            //args = new String[] { @"D:\depot\SC\Data\Objects\Spaceships\Ships\AEGS\Redeemer\AEGS_Redeemer.cga", "-objectdir", @"d:\depot\sc\data", "-dae", "-tif" };
-            //args = new String[] { @"D:\depot\SC\Data\Objects\Spaceships\Ships\DRAK\Cutlass\DRAK_Cutlass.cga", "-objectdir", @"d:\depot\sc\data", "-dae", "-tif" };
-            //args = new String[] { @"d:\depot\SC\Data\Objects\buildingsets\human\lowtech\bravo\grimhex\anchor\anchor_gun_a.cgf", "-objectdir", @"d:\depot\sc\data", "-dds", "-dae", "-tif" };
-            //args = new String[] { @"D:\depot\SC\Data\Objects\Characters\Human\heads\male\npc\male09\male09_t1_head.skin", "-objectdir", @"d:\depot\sc\data", "-dae", "-tif" };
-            //args = new String[] { @"D:\depot\SC\Data\Objects\Characters\Human\male_v7\export\bhm_skeleton_v7.chr", "-objectdir", @"d:\depot\sc\data", "-dae", "-tif" };
-            //args = new String[] { @"D:\depot\SC\Data\Objects\buildingsets\human\universal\org\trees\tree_ash_a.cgf", "-objectdir", @"d:\depot\sc\data", "-dae", "-tif" };
-            //args = new String[] { @"D:\depot\SC\Data\Objects\Characters\Human\male_v7\armor\rsi\m_rsi_pilot_flightsuit_01.skin", "-objectdir", @"d:\depot\sc\data", "-dae", "-tif" };
-            //args = new String[] { @"D:\depot\SC\Data\Objects\Characters\Human\male_v7\armor\slaver\m_slaver_medium_armor_01_core.skin", "-objectdir", @"d:\depot\sc\data", "-dae", "-tif" };
-            //args = new String[] { @"d:\temp\prey\dahl_genmalebody01.skin", "-objectdir", @"d:\temp\prey", "-dae", "-dds" };
-            //args = new string[] { @"c:\users\ggerb\source\repos\Cryengine-Converter\cgfconvertertests\resourcefiles\sonicboom\checkpoint.cgf" };
 #endif
 
 

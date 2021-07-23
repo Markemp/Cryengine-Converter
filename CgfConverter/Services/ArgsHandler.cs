@@ -9,87 +9,49 @@ namespace CgfConverter
     public class ArgsHandler
     {
         public bool Verbose { get; set; }
-        /// <summary>
-        /// Files to process
-        /// </summary>
+        /// <summary>Files to process</summary>
         public List<string> InputFiles { get; internal set; }
-        /// <summary>
-        /// Location of the Object Files
-        /// </summary>
+        /// <summary>Location of the Object Files</summary>
         public DirectoryInfo DataDir { get; internal set; } = new DirectoryInfo(".");
-        /// <summary>
-        /// File to render to
-        /// </summary>
+        /// <summary>File to render to</summary>
         public string OutputFile { get; internal set; }
-        /// <summary>
-        /// Directory to render to
-        /// </summary>
+        /// <summary>Directory to render to</summary>
         public string OutputDir { get; internal set; }
-        /// <summary>
-        /// Sets the output log level
-        /// </summary>
+        /// <summary>Sets the output log level</summary>
         public LogLevelEnum LogLevel { get; set; } = LogLevelEnum.Critical;
-        /// <summary>
-        /// Allows naming conflicts for mtl file
-        /// </summary>
+        /// <summary>Allows naming conflicts for mtl file</summary>
         public bool AllowConflicts { get; internal set; }
-        /// <summary>
-        /// For LODs files.  Adds _out onto the output
-        /// </summary>
+        /// <summary>LODs files.  Adds _out onto the output</summary>
         public bool NoConflicts { get; internal set; }
-        /// <summary>
-        /// Name to group all meshes under
-        /// </summary>
+        /// <summary>Name to group all meshes under</summary>
         public bool GroupMeshes { get; internal set; }
-        /// <summary>
-        /// Render CryTek format files
-        /// </summary>
+        /// <summary>Render CryTek format files</summary>
         public bool OutputCryTek { get; internal set; }
-        /// <summary>
-        /// Render Wavefront format files
-        /// </summary>
+        /// <summary>Render Wavefront format files</summary>
         public bool OutputWavefront { get; internal set; }
-        /// <summary>
-        /// Render Blender format files
-        /// </summary>
+        /// <summary>Render Blender format files</summary>
         public bool OutputBlender { get; internal set; }
-        /// <summary>
-        /// Render COLLADA format files
-        /// </summary>
+        /// <summary>Render COLLADA format files</summary>
         public bool OutputCollada { get; internal set; }
-        /// <summary>
-        /// Render FBX
-        /// </summary>
+        /// <summary>Render FBX (not yet implemented)</summary>
         public bool OutputFBX { get; internal set; }
-        /// <summary>
-        /// Smooth Faces
-        /// </summary>
+        /// <summary>Smooth Faces</summary>
         public bool Smooth { get; internal set; }
-        /// <summary>
-        /// Flag used to indicate we should convert texture paths to use TIFF instead of DDS
-        /// </summary>
+        /// <summary>Flag used to indicate we should convert texture paths to use TIFF instead of DDS</summary>
         public bool TiffTextures { get; internal set; }
-        /// <summary>
-        /// Flag used to indicate we should convert texture paths to use PNG instead of DDS
-        /// </summary>
+        /// <summary>Flag used to indicate we should convert texture paths to use PNG instead of DDS</summary>
         public bool PngTextures { get; internal set; }
-        /// <summary>
-        /// Flag used to skip the rendering of nodes containing $shield
-        /// </summary>
+        /// <summary>Flag used to skip the rendering of nodes containing $shield</summary>
         public bool SkipShieldNodes { get; internal set; }
-        /// <summary>
-        /// Flag used to skip the rendering of nodes containing $proxy
-        /// </summary>
+        /// <summary>Flag used to skip the rendering of nodes containing $proxy</summary>
         public bool SkipProxyNodes { get; internal set; }
-        /// <summary>
-        /// Flag used to pass exceptions to installed debuggers
-        /// </summary>
+        /// <summary>Flag used to pass exceptions to installed debuggers</summary>
         public bool Throw { get; internal set; }
         public bool DumpChunkInfo { get; internal set; }
 
         public ArgsHandler()
         {
-            this.InputFiles = new List<string> { };
+            InputFiles = new List<string> { };
         }
 
         /// <summary>
@@ -97,8 +59,6 @@ namespace CgfConverter
         /// 
         /// TODO: Make it understand /**/ format, instead of ONLY supporting FileName wildcards
         /// </summary>
-        /// <param name="filter"></param>
-        /// <returns></returns>
         private static string[] GetFiles(string filter)
         {
             if (File.Exists(filter))
@@ -139,7 +99,7 @@ namespace CgfConverter
                             PrintUsage();
                             return 1;
                         }
-                        this.DataDir = new DirectoryInfo(inputArgs[i].Replace("\"", string.Empty));
+                        DataDir = new DirectoryInfo(inputArgs[i].Replace("\"", string.Empty));
                         break;
                     #endregion
                     #region case "-out" / "-outdir" / "-outputdir"...
@@ -152,7 +112,7 @@ namespace CgfConverter
                             PrintUsage();
                             return 1;
                         }
-                        this.OutputDir = new DirectoryInfo(inputArgs[i]).FullName;
+                        OutputDir = new DirectoryInfo(inputArgs[i]).FullName;
                         break;
                     #endregion
                     #region case "-loglevel"...
@@ -182,13 +142,13 @@ namespace CgfConverter
                     #endregion
                     #region case "-smooth"...
                     case "-smooth":
-                        this.Smooth = true;
+                        Smooth = true;
                         break;
                     #endregion
                     #region case "-blend" / "-blender"...
                     case "-blend":
                     case "-blender":
-                        this.OutputBlender = true;
+                        OutputBlender = true;
                         break;
                     #endregion
                     #region case "-obj" / "-object" / "wavefront"...
@@ -196,35 +156,35 @@ namespace CgfConverter
                     case "-obj":
                     case "-object":
                     case "-wavefront":
-                        this.OutputWavefront = true;
+                        OutputWavefront = true;
                         break;
                     #endregion
                     #region case "-fbx"
                     case "-fbx":
-                        this.OutputFBX = true;
+                        OutputFBX = true;
                         break;
                     #endregion
                     #region case "-dae" / "-collada"...
                     case "-dae":
                     case "-collada":
-                        this.OutputCollada = true;
+                        OutputCollada = true;
                         break;
                     #endregion
                     #region case "-crytek"...
                     case "-cry":
                     case "-crytek":
-                        this.OutputCryTek = true;
+                        OutputCryTek = true;
                         break;
                     #endregion
                     #region case "-tif" / "-tiff"...
                     case "-tif":
                     case "-tiff":
-                        this.TiffTextures = true;
+                        TiffTextures = true;
                         break;
                     #endregion
                     #region case "-png" ...
                     case "-png":
-                        this.PngTextures = true;
+                        PngTextures = true;
                         break;
                     #endregion
                     #region case "-skipshield" / "-skipshields"...
@@ -232,7 +192,7 @@ namespace CgfConverter
                     case "-skipshield":
                     case "-skipshields":
 
-                        this.SkipShieldNodes = true;
+                        SkipShieldNodes = true;
 
                         break;
 
@@ -241,7 +201,7 @@ namespace CgfConverter
 
                     case "-skipproxy":
 
-                        this.SkipProxyNodes = true;
+                        SkipProxyNodes = true;
 
                         break;
 
@@ -249,14 +209,14 @@ namespace CgfConverter
                     #region case "-group"...
 
                     case "-group":
-                        this.GroupMeshes = true;
+                        GroupMeshes = true;
                         break;
 
                     #endregion
                     #region case "-throw"...
 
                     case "-throw":
-                        this.Throw = true;
+                        Throw = true;
 
                         break;
 
@@ -270,7 +230,7 @@ namespace CgfConverter
                             PrintUsage();
                             return 1;
                         }
-                        this.InputFiles.AddRange(GetFiles(inputArgs[i]));
+                        InputFiles.AddRange(GetFiles(inputArgs[i]));
                         break;
 
                     #endregion
@@ -290,7 +250,7 @@ namespace CgfConverter
                     case "-dump":
                     case "-dumpchunk":
                     case "-dumpchunkinfo":
-                        this.DumpChunkInfo = true;
+                        DumpChunkInfo = true;
                         break;
                     #endregion
                     #region default...
@@ -310,38 +270,38 @@ namespace CgfConverter
             }
             
             // Log info now that loglevel has been set
-            if (this.Smooth)
+            if (Smooth)
                 Utils.Log(LogLevelEnum.Info, "Smoothing Faces");
-            if (this.GroupMeshes)
+            if (GroupMeshes)
                 Utils.Log(LogLevelEnum.Info, "Grouping enabled");
-            if (this.OutputBlender)
+            if (OutputBlender)
                 Utils.Log(LogLevelEnum.Info, "Output format set to Blender (.blend)");
-            if (this.OutputCryTek)
+            if (OutputCryTek)
                 Utils.Log(LogLevelEnum.Info, "Output format set to CryTek (.cga/.cgf/.chr/.skin)");
-            if (this.OutputWavefront)
+            if (OutputWavefront)
                 Utils.Log(LogLevelEnum.Info, "Output format set to Wavefront (.obj)");
-            if (this.OutputFBX)
+            if (OutputFBX)
                 Utils.Log(LogLevelEnum.Info, "Output format set to FBX (.fbx)");
-            if (this.OutputCollada)
+            if (OutputCollada)
                 Utils.Log(LogLevelEnum.Info, "Output format set to COLLADA (.dae)");
-            if (this.AllowConflicts)
+            if (AllowConflicts)
                 Utils.Log(LogLevelEnum.Info, "Allow conflicts for mtl files enabled");
-            if (this.NoConflicts)
+            if (NoConflicts)
                 Utils.Log(LogLevelEnum.Info, "Prevent conflicts for mtl files enabled");
-            if (this.DumpChunkInfo)
+            if (DumpChunkInfo)
                 Utils.Log(LogLevelEnum.Info, "Output chunk info for missing or invalid chunks.");
-            if (this.Throw)
+            if (Throw)
                 Utils.Log(LogLevelEnum.Info, "Exceptions thrown to debugger");
-            if (this.DataDir.ToString() != ".")
-                Utils.Log(LogLevelEnum.Info, "Data directory set to {0}", this.DataDir.FullName);
+            if (DataDir.ToString() != ".")
+                Utils.Log(LogLevelEnum.Info, "Data directory set to {0}", DataDir.FullName);
             
             Utils.Log(LogLevelEnum.Info, "Processing input file(s):");
-            foreach (var file in this.InputFiles)
+            foreach (var file in InputFiles)
             {
                 Utils.Log(LogLevelEnum.Info, file);
             }
-            if (this.OutputDir != null)
-                Utils.Log(LogLevelEnum.Info, "Output directory set to {0}", this.OutputDir);
+            if (OutputDir != null)
+                Utils.Log(LogLevelEnum.Info, "Output directory set to {0}", OutputDir);
 
             
             // Default to Collada (.dae) format
