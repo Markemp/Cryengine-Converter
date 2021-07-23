@@ -9,6 +9,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using CgfConverter.CryEngineCore;
+using static Extensions.FileHandlingExtensions;
 using grendgine_collada;
 
 namespace CgfConverter
@@ -17,7 +18,6 @@ namespace CgfConverter
     {
         private readonly CultureInfo culture = CultureInfo.CreateSpecificCulture("en-US");
         private const string colladaVersion = "1.4.1";
-        private static readonly string[] MaterialExtensions = {".dds", ".png", ".tif"};
 
         public Grendgine_Collada DaeObject { get; private set; } = new Grendgine_Collada();  // This is the serializable class.
         readonly XmlSerializer mySerializer = new XmlSerializer(typeof(Grendgine_Collada));
@@ -145,8 +145,8 @@ namespace CgfConverter
                         Name = CryData.Materials[k].Name + "_" + CryData.Materials[k].Textures[i].Map,
                         Init_From = new Grendgine_Collada_Init_From()
                     };
-                    // Build the URI path to the file as a .dds, clean up the slashes.
-                    StringBuilder builder = new StringBuilder(ResolveMtlFile(CryData.Materials[k].Textures[i].File));
+                    // Try to resolve the texture file to a file on disk
+                    StringBuilder builder = new StringBuilder(ResolveTexFile(CryData.Materials[k].Textures[i].File, Args.DataDir));
                     
                     if (Args.PngTextures && File.Exists(builder.ToString().Replace(".dds", ".png")))
                         builder.Replace(".dds", ".png");
@@ -234,7 +234,7 @@ namespace CgfConverter
                 {
                     // Add the Surface node
                     Grendgine_Collada_New_Param texSurface = new Grendgine_Collada_New_Param();
-                    texSurface.sID = CleanMtlFileName(CryData.Materials[i].Textures[j].File) + "-surface";
+                    texSurface.sID = CleanTexFileName(CryData.Materials[i].Textures[j].File) + "-surface";
                     Grendgine_Collada_Surface surface = new Grendgine_Collada_Surface();
                     texSurface.Surface = surface;
                     surface.Init_From = new Grendgine_Collada_Init_From();
@@ -247,7 +247,7 @@ namespace CgfConverter
 
                     // Add the Sampler node
                     Grendgine_Collada_New_Param texSampler = new Grendgine_Collada_New_Param();
-                    texSampler.sID = CleanMtlFileName(CryData.Materials[i].Textures[j].File) + "-sampler";
+                    texSampler.sID = CleanTexFileName(CryData.Materials[i].Textures[j].File) + "-sampler";
                     Grendgine_Collada_Sampler2D sampler2D = new Grendgine_Collada_Sampler2D();
                     texSampler.Sampler2D = sampler2D;
                     //Grendgine_Collada_Source samplerSource = new Grendgine_Collada_Source();
@@ -282,14 +282,14 @@ namespace CgfConverter
                         diffound = true;
                         phong.Diffuse.Texture = new Grendgine_Collada_Texture();
                         // Texcoord is the ID of the UV source in geometries.  Not needed.
-                        phong.Diffuse.Texture.Texture = CleanMtlFileName(texture.File) + "-sampler";
+                        phong.Diffuse.Texture.Texture = CleanTexFileName(texture.File) + "-sampler";
                         phong.Diffuse.Texture.TexCoord = "";
                     }
                     if (texture.Map == CryEngineCore.Material.Texture.MapTypeEnum.Specular)
                     {
                         specfound = true;
                         phong.Specular.Texture = new Grendgine_Collada_Texture();
-                        phong.Specular.Texture.Texture = CleanMtlFileName(texture.File) + "-sampler";
+                        phong.Specular.Texture.Texture = CleanTexFileName(texture.File) + "-sampler";
                         phong.Specular.Texture.TexCoord = "";
 
                     }
@@ -316,7 +316,7 @@ namespace CgfConverter
                         Grendgine_Collada_BumpMap bumpMap = new Grendgine_Collada_BumpMap();
                         bumpMap.Textures = new Grendgine_Collada_Texture[1];
                         bumpMap.Textures[0] = new Grendgine_Collada_Texture();
-                        bumpMap.Textures[0].Texture = CleanMtlFileName(texture.File) + "-sampler";
+                        bumpMap.Textures[0].Texture = CleanTexFileName(texture.File) + "-sampler";
                         extraTechnique.Data = new XmlElement[1];
                         extraTechnique.Data[0] = bumpMap;
                     }
@@ -1426,42 +1426,6 @@ namespace CgfConverter
             return matrixValues.ToString();
         }
         
-        /// <summary>Attempts to resovle a material path to the correct file extension, and normalizes the path separators</summary>
-        private string ResolveMtlFile(string mtl)
-        {
-            StringBuilder mtlfile = new StringBuilder();
-            string cleanName = CleanMtlFileName(mtl);
-            if (Args.DataDir.ToString() == ".")
-                mtlfile.Append(CleanMtlFileName(mtl)); // Resolve in current directory
-            else
-                mtlfile.Append($"{Args.DataDir.FullName}/{Path.GetDirectoryName(mtl)}/{cleanName}");
-
-            mtlfile.Replace("\\", "/");
-
-            foreach (string ext in MaterialExtensions)
-            {
-                if (File.Exists($"{mtlfile}{ext}"))
-                    return $"{mtlfile}{ext}".Replace("\\", "/");
-            }
-            
-            // check in textures sub-directory if we didn't find it
-            mtlfile.Replace(cleanName, $"textures/{cleanName}");
-            foreach (string ext in MaterialExtensions)
-            {
-                if (File.Exists($"{mtlfile}{ext}"))
-                    return $"{mtlfile}{ext}".Replace("\\", "/");
-            }
-
-            Utils.Log(LogLevelEnum.Debug, "Could not find extension for material texture \"{0}\". Defaulting to .dds", mtlfile);
-            return $"{mtlfile}.dds".Replace("\\", "/");;
-        }
-
-        /// <summary>Takes the Material file name and returns just the file name with no extension</summary>
-        private static string CleanMtlFileName(string cleanMe)
-        {
-            return Path.GetFileNameWithoutExtension(cleanMe);
-        }
-
         private static double safe(double value)
         {
             if (value == double.NegativeInfinity)
