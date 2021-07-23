@@ -3,10 +3,8 @@ using System.Threading;
 using System.Globalization;
 using CgfConverter;
 
-
 namespace CgfConverterConsole
 {
-
     public class Program
     {
         public static int Main(string[] args)

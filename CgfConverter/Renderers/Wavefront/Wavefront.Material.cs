@@ -1,5 +1,7 @@
 ﻿using System.IO;
 using System.Reflection;
+using System.Text;
+using static Extensions.FileHandlingExtensions;
 
 namespace CgfConverter
 {
@@ -65,10 +67,7 @@ namespace CgfConverter
 
                     foreach (CryEngineCore.Material.Texture texture in material.Textures)
                     {
-                        string textureFile = texture.File;
-
-                        if (this.Args.DataDir != null)
-                            textureFile = Path.Combine(this.Args.DataDir.FullName, textureFile);
+                        StringBuilder textureFile = new StringBuilder(ResolveTexFile(texture.File, Args.DataDir));
 
                         // TODO: More filehandling here
 
@@ -76,43 +75,37 @@ namespace CgfConverter
                             textureFile = textureFile.Replace(".dds", ".png");
                         else if (this.Args.TiffTextures)
                             textureFile = textureFile.Replace(".dds", ".tif");
-                        else
-                            // Is this right? exported `tif` files might actually be `tif`s, maybe
-                            // normalize by checking if the file exists first?
-                            textureFile = textureFile.Replace(".tif", ".dds");
-
-                        textureFile = textureFile.Replace(@"/", @"\");
 
                         switch (texture.Map)
                         {
                             case CryEngineCore.Material.Texture.MapTypeEnum.Diffuse:
-                                file.WriteLine("map_Kd {0}", textureFile);
+                                file.WriteLine("map_Kd {0}", textureFile.ToString());
                                 break;
 
                             case CryEngineCore.Material.Texture.MapTypeEnum.Specular:
-                                file.WriteLine("map_Ks {0}", textureFile);
-                                file.WriteLine("map_Ns {0}", textureFile);
+                                file.WriteLine("map_Ks {0}", textureFile.ToString());
+                                file.WriteLine("map_Ns {0}", textureFile.ToString());
                                 break;
 
                             case CryEngineCore.Material.Texture.MapTypeEnum.Bumpmap:
                             case CryEngineCore.Material.Texture.MapTypeEnum.Detail:
                                 // <Texture Map="Detail" File="textures/unified_detail/metal/metal_scratches_a_detail.tif" />
-                                file.WriteLine("map_bump {0}", textureFile);
+                                file.WriteLine("map_bump {0}", textureFile.ToString());
                                 break;
 
                             case CryEngineCore.Material.Texture.MapTypeEnum.Heightmap:
                                 // <Texture Map="Heightmap" File="objects/spaceships/ships/aegs/gladius/textures/aegs_switches_buttons_disp.tif"/>
-                                file.WriteLine("disp {0}", textureFile);
+                                file.WriteLine("disp {0}", textureFile.ToString());
                                 break;
 
                             case CryEngineCore.Material.Texture.MapTypeEnum.Decal:
                                 // <Texture Map="Decal" File="objects/spaceships/ships/aegs/textures/interior/metal/aegs_int_metal_alum_bare_diff.tif"/>
-                                file.WriteLine("decal {0}", textureFile);
+                                file.WriteLine("decal {0}", textureFile.ToString());
                                 break;
 
                             case CryEngineCore.Material.Texture.MapTypeEnum.SubSurface:
                                 // <Texture Map="SubSurface" File="objects/spaceships/ships/aegs/textures/interior/atlas/aegs_int_atlas_retaliator_spec.tif"/>
-                                file.WriteLine("map_Ns {0}", textureFile);
+                                file.WriteLine("map_Ns {0}", textureFile.ToString());
                                 break;
 
                             case CryEngineCore.Material.Texture.MapTypeEnum.Custom:
@@ -126,7 +119,7 @@ namespace CgfConverter
 
                             case CryEngineCore.Material.Texture.MapTypeEnum.Opacity:
                                 // <Texture Map="Opacity" File="objects/spaceships/ships/aegs/textures/interior/blend/interior_blnd_a_diff.tif"/>
-                                file.WriteLine("map_d {0}", textureFile);
+                                file.WriteLine("map_d {0}", textureFile.ToString());
                                 break;
 
                             case CryEngineCore.Material.Texture.MapTypeEnum.Environment:

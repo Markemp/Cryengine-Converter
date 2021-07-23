@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 
 namespace CgfConverter
 {
@@ -24,13 +25,12 @@ namespace CgfConverter
         /// Directory to render to
         /// </summary>
         public string OutputDir { get; internal set; }
-
         /// <summary>
-        /// Allows naming conflicts for mtl file
+        /// Sets the output log level
         /// </summary>
         public LogLevelEnum LogLevel { get; set; } = LogLevelEnum.Critical;
         /// <summary>
-        /// Sets the output log level
+        /// Allows naming conflicts for mtl file
         /// </summary>
         public bool AllowConflicts { get; internal set; }
         /// <summary>
@@ -356,7 +356,7 @@ namespace CgfConverter
             Console.WriteLine();
             Console.WriteLine("cgf-converter [-usage] | <.cgf file> [-outputfile <output file>] [-obj] [-blend] [-dae] [-tif/-png] [-group] [-smooth] [-loglevel <LogLevel>] [-throw] [-dump] [-objectdir <ObjectDir>]");
             Console.WriteLine();
-            Console.WriteLine("CryEngine Converter v1.3.0");
+            Console.WriteLine($"CryEngine Converter v{Assembly.GetExecutingAssembly().GetName().Version}");
             Console.WriteLine();
             Console.WriteLine("-usage:           Prints out the usage statement");
             Console.WriteLine();
