@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using CgfConverter.Structs;
+using System.Numerics;
 using A = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 
 namespace CgfConverterIntegrationTests.Extensions
@@ -23,6 +24,19 @@ namespace CgfConverterIntegrationTests.Extensions
             A.AreEqual(expected.M42, actual.M42, delta);
             A.AreEqual(expected.M43, actual.M43, delta);
             A.AreEqual(expected.M44, actual.M44, delta);
+        }
+
+        public static void AreEqual(Matrix3x3 expected, Matrix3x3 actual, double delta)
+        {
+            A.AreEqual(expected.M11, actual.M11, delta);
+            A.AreEqual(expected.M12, actual.M12, delta);
+            A.AreEqual(expected.M13, actual.M13, delta);
+            A.AreEqual(expected.M21, actual.M21, delta);
+            A.AreEqual(expected.M22, actual.M22, delta);
+            A.AreEqual(expected.M23, actual.M23, delta);
+            A.AreEqual(expected.M31, actual.M31, delta);
+            A.AreEqual(expected.M32, actual.M32, delta);
+            A.AreEqual(expected.M33, actual.M33, delta);
         }
     }
 }

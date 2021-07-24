@@ -87,44 +87,47 @@ namespace CgfConverter
             ControllerID = b.ReadUInt32();                 // unique id of bone (generated from bone name)
             limbID = b.ReadInt32();
             offsetParent = b.ReadInt32();
-            Quaternion relativeQuat = new Quaternion
+            Quaternion relativeQuat = new()
             {
                 X = b.ReadSingle(),
                 Y = b.ReadSingle(),
                 Z = b.ReadSingle(),
                 W = b.ReadSingle()
             };
-            Vector3 relativeTransform = new Vector3
+            Vector3 relativeTranslation = new()
             {
                 X = b.ReadSingle(),
                 Y = b.ReadSingle(),
                 Z = b.ReadSingle()
             };
-            Quaternion worldQuat = new Quaternion
+            Quaternion worldQuat = new()
             {
                 X = b.ReadSingle(),
                 Y = b.ReadSingle(),
                 Z = b.ReadSingle(),
                 W = b.ReadSingle()
             };
-            Vector3 worldTransform = new Vector3
+            Vector3 worldTranslation = new()
             {
                 X = b.ReadSingle(),
                 Y = b.ReadSingle(),
                 Z = b.ReadSingle()
             };
-            BindPoseMatrix = Matrix4x4.CreateFromQuaternion(worldQuat);
-            BindPoseMatrix.M14 = worldTransform.X;
-            BindPoseMatrix.M24 = worldTransform.Y;
-            BindPoseMatrix.M34 = worldTransform.Z;
+            //BindPoseMatrix = Matrix4x4.CreateFromQuaternion(worldQuat);
+            BindPoseMatrix = Matrix4x4.CreateFromQuaternion(relativeQuat);
+            BindPoseMatrix.M14 = relativeTranslation.X;
+            BindPoseMatrix.M24 = relativeTranslation.Y;
+            BindPoseMatrix.M34 = relativeTranslation.Z;
+            //BindPoseMatrix.M14 = worldTranslation.X;
+            //BindPoseMatrix.M24 = worldTranslation.Y;
+            //BindPoseMatrix.M34 = worldTranslation.Z;
             BindPoseMatrix.M41 = 0;
             BindPoseMatrix.M42 = 0;
             BindPoseMatrix.M43 = 0;
             BindPoseMatrix.M44 = 1.0f;
 
-            //BindPoseMatrix = Matrix4x4.Transform(Matrix4x4.Identity, worldQuat);
-            //worldToBone = new WORLDTOBONE(worldQuat.ConvertToRotationalMatrix(), worldTransform);
-            //boneToWorld = new BONETOWORLD(relativeQuat.ConvertToRotationalMatrix(), relativeTransform);
+            //BoneToWorld = Matrix3x4.CreateFromParts(relativeQuat, relativeTranslation);
+            BoneToWorld = Matrix3x4.CreateFromParts(worldQuat, worldTranslation);
         }
     }
 }

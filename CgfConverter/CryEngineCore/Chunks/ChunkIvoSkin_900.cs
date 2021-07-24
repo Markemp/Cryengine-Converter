@@ -93,6 +93,7 @@ namespace CgfConverter.CryEngineCore.Chunks
                         break;
                     case DatastreamType.IVONORMALS:
                     case DatastreamType.IVONORMALS2:
+                    case DatastreamType.IVONORMALS3:
                         ChunkDataStream_900 normals = new ChunkDataStream_900((uint)meshChunk.NumVertices);
                         normals._model = _model;
                         normals._header = _header;
