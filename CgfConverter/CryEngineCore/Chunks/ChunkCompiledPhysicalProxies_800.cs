@@ -30,13 +30,11 @@ namespace CgfConverter.CryEngineCore
                 {
                     PhysicalProxies[i].Vertices[j] = b.ReadVector3();
                 }
-                // Read the indices
+                
                 for (int j = 0; j < PhysicalProxies[i].NumIndices; j++)
                 {
                     PhysicalProxies[i].Indices[j] = b.ReadUInt16();
-                    //Utils.Log(LogLevelEnum.Debug, "Indices: {0}", HitBoxes[i].Indices[j]);
                 }
-                // Utils.Log(LogLevelEnum.Debug, "Index 0 is {0}, Index 9 is {1}", HitBoxes[i].Indices[0],HitBoxes[i].Indices[9]);
                 // read the crap at the end so we can move on.
                 for (int j = 0; j < PhysicalProxies[i].Material; j++)
                 {

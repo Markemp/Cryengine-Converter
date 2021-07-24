@@ -9,8 +9,8 @@ namespace CgfConverter.CryEngineCore
         public override void Read(BinaryReader b)
         {
             base.Read(b);
-            NumExtVertices = this.DataSize / sizeof(UInt16);
-            Source = new UInt16[NumExtVertices];
+            NumExtVertices = DataSize / sizeof(ushort);
+            Source = new ushort[NumExtVertices];
             for (int i = 0; i < NumExtVertices; i++)
             {
                 Source[i] = b.ReadUInt16();

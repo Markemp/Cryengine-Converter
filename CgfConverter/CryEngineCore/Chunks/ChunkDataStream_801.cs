@@ -23,7 +23,6 @@ namespace CgfConverter.CryEngineCore
 
             SkipBytes(b, 8);
 
-            // Now do loops to read for each of the different Data Stream Types.  If vertices, need to populate Vector3s for example.
             switch (DataStreamType)
             {
                 case DatastreamType.VERTICES:

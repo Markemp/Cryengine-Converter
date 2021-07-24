@@ -24,6 +24,21 @@ namespace CgfConverterTests.IntegrationTests.SC
         }
 
         [TestMethod]
+        public void AEGS_Vanguard_LandingGear_Front_IvoFile()
+        {
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\new_skin_format\Avenger_Landing_Gear\AEGS_Vanguard_LandingGear_Front.skin", "-dds", "-dae" };
+
+            int result = testUtils.argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
+            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
+
+            var colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            colladaData.GenerateDaeObject();
+            var daeObject = colladaData.DaeObject;
+        }
+
+        [TestMethod]
         public void M_ccc_vanduul_helmet_01_312IvoSkinFile()
         {
             var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\m_ccc_vanduul_helmet_01.skin", "-dds", "-dae" };

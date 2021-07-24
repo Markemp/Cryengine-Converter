@@ -41,7 +41,7 @@ namespace CgfConverter.CryEngineCore
                             if (peek == 0)
                                 SkipBytes(b, 4);
                         }
-                            
+
                     }
                     else if (BytesPerElement == 4)
                     {
@@ -85,6 +85,7 @@ namespace CgfConverter.CryEngineCore
                 #endregion
                 #region IVONORMALS
                 case DatastreamType.IVONORMALS:
+                case DatastreamType.IVONORMALS2:
                     switch (BytesPerElement)
                     {
                         case 4:
@@ -155,11 +156,12 @@ namespace CgfConverter.CryEngineCore
                     }
                     break;
                 #endregion
+                #region IVOBONEMAP
                 case DatastreamType.IVOBONEMAP:
                     SkinningInfo skin = GetSkinningInfo();
                     skin.HasBoneMapDatastream = true;
                     skin.BoneMapping = new List<MeshBoneMapping>();
-                    
+
                     switch (BytesPerElement)
                     {
                         case 12:
@@ -190,6 +192,9 @@ namespace CgfConverter.CryEngineCore
                             break;
                     }
 
+                    break;
+                #endregion
+                case DatastreamType.IVOUNKNOWN2:
                     break;
             }
         }
