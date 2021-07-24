@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Extensions;
+using System;
 using System.Numerics;
 
 namespace CgfConverter.Structs
@@ -55,30 +56,7 @@ namespace CgfConverter.Structs
         /// <returns>The rotation matrix.</returns>
         public static Matrix3x3 CreateFromQuaternion(Quaternion quaternion)
         {
-            Matrix3x3 result;
-
-            float xx = quaternion.X * quaternion.X;
-            float yy = quaternion.Y * quaternion.Y;
-            float zz = quaternion.Z * quaternion.Z;
-
-            float xy = quaternion.X * quaternion.Y;
-            float wz = quaternion.Z * quaternion.W;
-            float xz = quaternion.Z * quaternion.X;
-            float wy = quaternion.Y * quaternion.W;
-            float yz = quaternion.Y * quaternion.Z;
-            float wx = quaternion.X * quaternion.W;
-
-            result.M11 = 1.0f - 2.0f * (yy + zz);
-            result.M12 = 2.0f * (xy + wz);
-            result.M13 = 2.0f * (xz - wy);
-            result.M21 = 2.0f * (xy - wz);
-            result.M22 = 1.0f - 2.0f * (zz + xx);
-            result.M23 = 2.0f * (yz + wx);
-            result.M31 = 2.0f * (xz + wy);
-            result.M32 = 2.0f * (yz - wx);
-            result.M33 = 1.0f - 2.0f * (yy + xx);
-
-            return result;
+            return quaternion.ConvertToRotationMatrix();
         }
 
         /// <summary>

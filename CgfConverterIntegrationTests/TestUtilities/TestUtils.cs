@@ -8,7 +8,7 @@ using System.Xml.Serialization;
 
 namespace CgfConverterTests.TestUtilities
 {
-    class TestUtils
+    public class TestUtils
     {
         private readonly XmlSchemaSet schemaSet = new XmlSchemaSet();
         private readonly XmlReaderSettings settings = new XmlReaderSettings();

@@ -86,6 +86,7 @@ namespace CgfConverter.CryEngineCore
                 #region IVONORMALS
                 case DatastreamType.IVONORMALS:
                 case DatastreamType.IVONORMALS2:
+                case DatastreamType.IVONORMALS3:
                     switch (BytesPerElement)
                     {
                         case 4:

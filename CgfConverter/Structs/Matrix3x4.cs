@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Extensions;
+using System;
 using System.Numerics;
 
 namespace CgfConverter.Structs
@@ -66,31 +67,28 @@ namespace CgfConverter.Structs
         /// <returns>The rotation matrix.</returns>
         public static Matrix3x4 CreateFromQuaternion(Quaternion quaternion)
         {
-            Matrix3x4 result;
+            var rot = quaternion.ConvertToRotationMatrix();
+            return new Matrix3x4()
+            {
+                M11 = rot.M11,
+                M12 = rot.M12,
+                M13 = rot.M13,
+                M14 = 0,
+                M21 = rot.M21,
+                M22 = rot.M22,
+                M23 = rot.M23,
+                M24 = 0,
+                M31 = rot.M31,
+                M32 = rot.M32,
+                M33 = rot.M33,
+                M34 = 0
+            };
+        }
 
-            float xx = quaternion.X * quaternion.X;
-            float yy = quaternion.Y * quaternion.Y;
-            float zz = quaternion.Z * quaternion.Z;
-
-            float xy = quaternion.X * quaternion.Y;
-            float wz = quaternion.Z * quaternion.W;
-            float xz = quaternion.Z * quaternion.X;
-            float wy = quaternion.Y * quaternion.W;
-            float yz = quaternion.Y * quaternion.Z;
-            float wx = quaternion.X * quaternion.W;
-
-            result.M11 = 1.0f - 2.0f * (yy + zz);
-            result.M12 = 2.0f * (xy + wz);
-            result.M13 = 2.0f * (xz - wy);
-            result.M14 = 0.0f;
-            result.M21 = 2.0f * (xy - wz);
-            result.M22 = 1.0f - 2.0f * (zz + xx);
-            result.M23 = 2.0f * (yz + wx);
-            result.M24 = 0.0f;
-            result.M31 = 2.0f * (xz + wy);
-            result.M32 = 2.0f * (yz - wx);
-            result.M33 = 1.0f - 2.0f * (yy + xx);
-            result.M34 = 0.0f;
+        public static Matrix3x4 CreateFromParts(Quaternion quaternion, Vector3 translation)
+        {
+            Matrix3x4 result = CreateFromQuaternion(quaternion);
+            result.Translation = translation;
 
             return result;
         }
