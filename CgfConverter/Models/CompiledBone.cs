@@ -32,8 +32,9 @@ namespace CgfConverter
         public Matrix4x4 LocalTransform
         {
             get 
-            { 
-                if ( ParentBone == null || offsetParent == 0) // No parent
+            {
+                //if (offsetParent == 0) // No parent
+                if (ParentBone == null) // No parent
                 {
                     return Matrix4x4Extensions.CreateFromMatrix3x4(BoneToWorld);
                 }
@@ -113,20 +114,15 @@ namespace CgfConverter
                 Y = b.ReadSingle(),
                 Z = b.ReadSingle()
             };
-            //BindPoseMatrix = Matrix4x4.CreateFromQuaternion(worldQuat);
             BindPoseMatrix = Matrix4x4.CreateFromQuaternion(relativeQuat);
             BindPoseMatrix.M14 = relativeTranslation.X;
             BindPoseMatrix.M24 = relativeTranslation.Y;
             BindPoseMatrix.M34 = relativeTranslation.Z;
-            //BindPoseMatrix.M14 = worldTranslation.X;
-            //BindPoseMatrix.M24 = worldTranslation.Y;
-            //BindPoseMatrix.M34 = worldTranslation.Z;
             BindPoseMatrix.M41 = 0;
             BindPoseMatrix.M42 = 0;
             BindPoseMatrix.M43 = 0;
             BindPoseMatrix.M44 = 1.0f;
 
-            //BoneToWorld = Matrix3x4.CreateFromParts(relativeQuat, relativeTranslation);
             BoneToWorld = Matrix3x4.CreateFromParts(worldQuat, worldTranslation);
         }
     }
