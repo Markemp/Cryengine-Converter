@@ -30,7 +30,6 @@ namespace CgfConverter.CryEngineCore
                     tempBone.parentID = 0;
 
                 BoneList.Add(tempBone);
-                BoneDictionary[i] = tempBone;
             }
 
             // Add the ChildID to the parent bone.  This will help with navigation. Also set up the TransformSoFar

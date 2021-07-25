@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 
 namespace CgfConverter.CryEngineCore
@@ -21,7 +20,6 @@ namespace CgfConverter.CryEngineCore
                     RootBone = tempBone;
 
                 BoneList.Add(tempBone);
-                BoneDictionary[i] = tempBone;
             }
 
             List<string> boneNames = GetNullSeparatedStrings(NumBones, b);
@@ -47,6 +45,7 @@ namespace CgfConverter.CryEngineCore
             if (bone.offsetParent != -1)
             {
                 bone.parentID = BoneList[bone.offsetParent].ControllerID;
+                bone.ParentBone = BoneList[bone.offsetParent];
             }
         }
 

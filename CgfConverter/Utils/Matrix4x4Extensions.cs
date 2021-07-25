@@ -101,7 +101,7 @@ namespace Extensions
 
             var newRot = Matrix3x3.Transpose(parentRot) * childRot;
             var newTranslation = parent.GetRotation() * (childTranslation - parentTranslation);
-            return Matrix4x4Extensions.CreateTransformFromParts(newTranslation, newRot);
+            return CreateTransformFromParts(newTranslation, newRot);
         }
 
         public static Matrix4x4 CreateTransformFromParts(Vector3 translation, Matrix3x3 rotation)

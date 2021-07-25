@@ -20,8 +20,7 @@ namespace CgfConverter.Structs
         public float M32;
         public float M33;
 
-        private static readonly Matrix3x3 _identity = new Matrix3x3
-            (
+        private static readonly Matrix3x3 _identity = new(
                 1f, 0f, 0f,
                 0f, 1f, 0f,
                 0f, 0f, 1f
@@ -94,7 +93,7 @@ namespace CgfConverter.Structs
             m.M31 = (value1.M31 * value2.M11) + (value1.M32 * value2.M21) + (value1.M33 * value2.M31);
             m.M32 = (value1.M31 * value2.M12) + (value1.M32 * value2.M22) + (value1.M33 * value2.M32);
             m.M33 = (value1.M31 * value2.M13) + (value1.M32 * value2.M23) + (value1.M33 * value2.M33);
-            
+
             return m;
         }
 
@@ -119,7 +118,7 @@ namespace CgfConverter.Structs
             return Mult(matrix, vector);
         }
 
-       
+
         public override string ToString()
         {
             return $"[[{M11:F6}, {M12:F6}, {M13:F6}], [{M21:F6}, {M22:F6}, {M23:F6}], [{M31:F6}, {M32:F6}, {M33:F6}]]";
