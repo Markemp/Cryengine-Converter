@@ -5,7 +5,7 @@ using System.Numerics;
 
 namespace CgfConverter.CryEngineCore
 {
-    public class ChunkCompiledPhysicalProxies_800 : ChunkCompiledPhysicalProxies
+    public class ChunkCompiledPhysicalProxies_801 : ChunkCompiledPhysicalProxies
     {
         public override void Read(BinaryReader b)
         {
@@ -14,7 +14,7 @@ namespace CgfConverter.CryEngineCore
 
             NumPhysicalProxies = b.ReadUInt32(); // number of Bones in this chunk.
             PhysicalProxies = new PhysicalProxy[NumPhysicalProxies];    // now have an array of physical proxies
-            
+
             for (int i = 0; i < NumPhysicalProxies; i++)
             {
                 // Start populating the physical proxy array.  This is the Header.
@@ -29,7 +29,7 @@ namespace CgfConverter.CryEngineCore
                 {
                     PhysicalProxies[i].Vertices[j] = b.ReadVector3();
                 }
-                
+
                 for (int j = 0; j < PhysicalProxies[i].NumIndices; j++)
                 {
                     PhysicalProxies[i].Indices[j] = b.ReadUInt16();
