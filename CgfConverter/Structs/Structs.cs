@@ -327,14 +327,14 @@ namespace CgfConverter
 
     public struct PhysicalProxy
     {
-        public uint ID;             // Chunk ID (although not technically a chunk
+        public uint ID;                 // Chunk ID (although not technically a chunk)
         public uint FirstIndex;
         public uint NumIndices;
         public uint FirstVertex;
         public uint NumVertices;
-        public uint Material;     // Size of the weird data at the end of the hitbox structure.
-        public Vector3[] Vertices;    // Array of vertices (x,y,z) length NumVertices
-        public ushort[] Indices;      // Array of indices
+        public uint Material;           // Size of the weird data at the end of the hitbox structure.
+        public Vector3[] Vertices;      // Array of vertices (x,y,z) length NumVertices
+        public ushort[] Indices;        // Array of indices
     }
 
     public struct PhysicalProxyStub

@@ -25,7 +25,7 @@ namespace CgfConverterTests.IntegrationTests.ArcheAge
         }
 
         [TestMethod]
-        public void ArcheAge_ChrFileTest()
+        public void ArcheAge_coupleduckship_foot_ChrFileTest()
         {
             var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\ArcheAge\coupleduckship_foot.chr", "-dds", "-dae" };
             int result = testUtils.argsHandler.ProcessArgs(args);
@@ -68,6 +68,20 @@ namespace CgfConverterTests.IntegrationTests.ArcheAge
             Assert.AreEqual("Locator_Locomotion", locatorBone.sID);
             Assert.AreEqual("JOINT", locatorBone.Type.ToString());
             Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1", locatorBone.Matrix[0].Value_As_String);
+        }
+
+        [TestMethod]
+        public void Porpoise_ChrFileTest()
+        {
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\ArcheAge\porpoise_pink.chr", "-dds", "-dae" };
+            int result = testUtils.argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
+            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
+
+            COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            var daeObject = colladaData.DaeObject;
+            colladaData.GenerateDaeObject();
         }
     }
 }
