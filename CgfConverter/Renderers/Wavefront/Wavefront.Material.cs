@@ -73,6 +73,8 @@ namespace CgfConverter
 
                         if (this.Args.PngTextures)
                             textureFile = textureFile.Replace(".dds", ".png");
+                        else if (this.Args.TgaTextures)
+                            textureFile = textureFile.Replace(".dds", ".tga");
                         else if (this.Args.TiffTextures)
                             textureFile = textureFile.Replace(".dds", ".tif");
 

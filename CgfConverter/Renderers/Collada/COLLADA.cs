@@ -150,6 +150,8 @@ namespace CgfConverter
                     
                     if (Args.PngTextures && File.Exists(builder.ToString().Replace(".dds", ".png")))
                         builder.Replace(".dds", ".png");
+                    else if (Args.TgaTextures && File.Exists(builder.ToString().Replace(".dds", ".tga")))
+                        builder.Replace(".dds", ".tga");
                     else if (Args.TiffTextures && File.Exists(builder.ToString().Replace(".dds", ".tif")))
                         builder.Replace(".dds", ".tif");
                     
