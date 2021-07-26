@@ -41,6 +41,8 @@ namespace CgfConverter
         public bool TiffTextures { get; internal set; }
         /// <summary>Flag used to indicate we should convert texture paths to use PNG instead of DDS</summary>
         public bool PngTextures { get; internal set; }
+        /// <summary>Flag used to indicate we should convert texture paths to use TGA instead of DDS</summary>
+        public bool TgaTextures { get; internal set; }
         /// <summary>Flag used to skip the rendering of nodes containing $shield</summary>
         public bool SkipShieldNodes { get; internal set; }
         /// <summary>Flag used to skip the rendering of nodes containing $proxy</summary>
@@ -185,6 +187,11 @@ namespace CgfConverter
                     #region case "-png" ...
                     case "-png":
                         PngTextures = true;
+                        break;
+                    #endregion
+                    #region case "-tga" ...
+                    case "-tga":
+                        TgaTextures = true;
                         break;
                     #endregion
                     #region case "-skipshield" / "-skipshields"...
@@ -333,6 +340,7 @@ namespace CgfConverter
             Console.WriteLine("-group:           Group meshes into single model.");
             Console.WriteLine("-tif:             Change the materials to look for .tif files instead of .dds.");
             Console.WriteLine("-png:             Change the materials to look for .png files instead of .dds.");
+            Console.WriteLine("-tga:             Change the materials to look for .tga files instead of .dds.");
             Console.WriteLine();
             Console.WriteLine("-loglevel:        Set the output log level (verbose, debug, info, warn, error, critical, none)");
             Console.WriteLine("-throw:           Throw Exceptions to installed debugger.");
