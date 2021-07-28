@@ -28,6 +28,7 @@ namespace CgfConverterTests.IntegrationTests
             testUtils.GetSchemaSet();
         }
 
+
         [TestMethod]
         public void SimpleCubeSchemaValidation()
         {
@@ -40,6 +41,23 @@ namespace CgfConverterTests.IntegrationTests
         {
             testUtils.ValidateXml($@"{userHome}\OneDrive\ResourceFiles\simple_cube_bad.dae");
             Assert.AreEqual(1, testUtils.errors.Count);
+        }
+
+
+        [TestMethod]
+        public void brfl_rifle_NoMtlFilev802_CreatesDummyInstanceMaterial()
+        {
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\brfl_fps_behr_p4ar_body.cgf", "-dds", "-dae" };
+            int result = testUtils.argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
+            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
+
+            COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            colladaData.GenerateDaeObject();
+
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
+            Assert.AreEqual(17, actualMaterialsCount);
         }
 
         [TestMethod]

@@ -119,6 +119,7 @@
         OBSTRUCT = 0x00000002,
         DEFAULTPROXY = 0x000000FF,  // this needs to be checked.  cgf.xml says 256; not sure if hex or dec
         UNKNOWN = 0x00001100,       // collision mesh?
+        UNKNOWN2 = 0x00001000
     }
 
     public enum LightType : uint         //complete

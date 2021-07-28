@@ -231,10 +231,10 @@ namespace CgfConverter
 
             foreach (ChunkMtlName mtlChunk in allMaterialChunks)
             {
-                if (mtlChunk.MatType != MtlNameType.Library)
-                {
-                    Materials.Add(Material.CreateDefaultMaterial(mtlChunk.Name));
-                }
+                //if (mtlChunk.MatType != MtlNameType.Library)
+                //{
+                Materials.Add(Material.CreateDefaultMaterial(mtlChunk.Name));
+                //}
             }
         }
 

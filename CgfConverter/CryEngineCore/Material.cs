@@ -21,11 +21,7 @@ namespace CgfConverter.CryEngineCore
             public double Green;
             public double Blue;
 
-            /// <summary>
-            /// Deserialize a string into a Color object
-            /// </summary>
-            /// <param name="value"></param>
-            /// <returns></returns>
+            /// <summary>Deserialize a string into a Color object</summary>
             public static Color Deserialize(string value)
             {
                 if (string.IsNullOrWhiteSpace(value))
@@ -50,11 +46,7 @@ namespace CgfConverter.CryEngineCore
                 return buffer;
             }
 
-            /// <summary>
-            /// Serialize a Color object into a comma separated string list
-            /// </summary>
-            /// <param name="input"></param>
-            /// <returns></returns>
+            /// <summary>Serialize a Color object into a comma separated string list</summary>
             public static string Serialize(Color input)
             {
                 return (input == null) ? null : string.Format("{0},{1},{2}", input.Red, input.Green, input.Blue);
@@ -66,9 +58,7 @@ namespace CgfConverter.CryEngineCore
             }
         }
 
-        /// <summary>
-        /// The texture object
-        /// </summary>
+        /// <summary>The texture object</summary>
         [XmlRoot(ElementName = "Texture")]
         public class Texture
         {
@@ -113,35 +103,25 @@ namespace CgfConverter.CryEngineCore
                 }
             }
 
-            /// <summary>
-            /// Diffuse, Specular, Bumpmap, Environment, HeightMamp or Custom
-            /// </summary>
+            /// <summary>Diffuse, Specular, Bumpmap, Environment, HeightMamp or Custom</summary>
             [XmlIgnore]
             public MapTypeEnum Map { get; set; }
 
-            /// <summary>
-            /// Location of the texture
-            /// </summary>
+            /// <summary>Location of the texture</summary>
             [XmlAttribute(AttributeName = "File")]
             public string File { get; set; }
 
-            /// <summary>
-            /// The type of the texture
-            /// </summary>
+            /// <summary>The type of the texture</summary>
             [XmlAttribute(AttributeName = "TexType")]
             [DefaultValue(TypeEnum.Default)]
             public TypeEnum TexType;
 
-            /// <summary>
-            /// The modifier to apply to the texture
-            /// </summary>
+            /// <summary>The modifier to apply to the texture</summary>
             [XmlElement(ElementName = "TexMod")]
             public TextureModifier Modifier;
         }
 
-        /// <summary>
-        /// The texture modifier
-        /// </summary>
+        /// <summary>The texture modifier</summary>
         [XmlRoot(ElementName = "TexMod")]
         public class TextureModifier
         {
@@ -178,7 +158,6 @@ namespace CgfConverter.CryEngineCore
         /// <summary>
         /// After the textures
         /// General things that apply to the material
-        /// Not really needed
         /// </summary>
         [XmlRoot(ElementName = "PublicParams")]
         internal class PublicParameters
@@ -296,9 +275,7 @@ namespace CgfConverter.CryEngineCore
         [XmlIgnore]
         internal Color Emissive { get; set; }
 
-        /// <summary>
-        /// Value between 0 and 1 that controls opacity
-        /// </summary>
+        /// <summary>Value between 0 and 1 that controls opacity</summary>
         [XmlAttribute(AttributeName = "Opacity")]
         [DefaultValue(1)]
         public double Opacity { get; set; }
