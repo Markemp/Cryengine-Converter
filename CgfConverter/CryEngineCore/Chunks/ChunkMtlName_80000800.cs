@@ -11,7 +11,7 @@ namespace CgfConverter.CryEngineCore
 
             MatType = (MtlNameType)Utils.SwapUIntEndian(b.ReadUInt32());
             // if 0x01, then material lib.  If 0x12, mat name.  This is actually a bitstruct.
-            SkipBytes(b, 4);               // NFlags2
+            NFlags2 = b.ReadUInt32();               // NFlags2
             Name = b.ReadFString(128);
             PhysicsType = new MtlNamePhysicsType[] { (MtlNamePhysicsType)Utils.SwapUIntEndian(b.ReadUInt32()) };
 

@@ -229,8 +229,34 @@ namespace CgfConverter
 
             Utils.Log(LogLevelEnum.Debug, "Unable to locate any material file.  Creating Default materials.");
 
-            foreach (ChunkMtlName mtlChunk in allMaterialChunks)
+            // Create dummy materials
+            // 0x800:  1 material per mtlname chunk.  If NFlags1 = 1, it's the library. Skip
+            // 0x802:  Mult materials per chunk. Can't get names except in certain types (null separated
+            //         strings at end of mtlname chunk, but can't identify these). create dummy names.
+            // Only use first mtlname chunks from first model.  2nd model has duplicates
+            foreach (ChunkMtlName mtlChunk in Models[0].ChunkMap.Values
+                .Where(c => c.ChunkType == ChunkType.MtlName || c.ChunkType == ChunkType.MtlNameIvo))
             {
+                switch (mtlChunk.Version)
+                {
+                    case 0x744:
+                        break;
+                    case 0x800:
+                    case 0x80000800:
+                        if (mtlChunk.MatType != MtlNameType.Library)
+                        {
+                            Materials.Add(Material.CreateDefaultMaterial(mtlChunk.Name));
+                        }
+                        break;
+                    case 0x802:
+                        for (int i = 0; i < mtlChunk.NumChildren; i++)
+                        {
+                            Materials.Add(Material.CreateDefaultMaterial(mtlChunk.Name + i.ToString()));
+                        }
+                        break;
+                    default:
+                        break;
+                }
                 //if (mtlChunk.MatType != MtlNameType.Library)
                 //{
                 Materials.Add(Material.CreateDefaultMaterial(mtlChunk.Name));

@@ -10,6 +10,7 @@
         /// <summary> Number of Materials in this MtlName (Max: 66) </summary>
         public uint NumChildren { get; internal set; }
         public uint[] ChildIDs { get; internal set; }
+        public uint NFlags2 { get; internal set; }
 
         public override string ToString()
         {

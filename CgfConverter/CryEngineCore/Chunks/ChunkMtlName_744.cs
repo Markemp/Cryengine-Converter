@@ -14,6 +14,7 @@ namespace CgfConverter.CryEngineCore
             NumChildren = b.ReadUInt32();
             PhysicsType = new MtlNamePhysicsType[NumChildren];
             MatType = NumChildren == 0 ? MtlNameType.Single : MtlNameType.Library;
+            NFlags2 = 0;
 
             for (int i = 0; i < NumChildren; i++)
             {
