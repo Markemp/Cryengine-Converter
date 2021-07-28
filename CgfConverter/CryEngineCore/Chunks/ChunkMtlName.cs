@@ -7,7 +7,7 @@
         /// <summary> Name of the Material </summary>
         public string Name { get; set; }
         public MtlNamePhysicsType[] PhysicsType { get; internal set; }
-        /// <summary> Number of Materials in this name (Max: 66) </summary>
+        /// <summary> Number of Materials in this MtlName (Max: 66) </summary>
         public uint NumChildren { get; internal set; }
         public uint[] ChildIDs { get; internal set; }
 
