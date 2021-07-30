@@ -140,6 +140,9 @@ namespace CgfConverter.CryEngineCore.Chunks
                         bonemap.ID = 8;
                         model.ChunkMap.Add(bonemap.ID, bonemap);
                         break;
+                    default:
+                        b.BaseStream.Position = b.BaseStream.Position + 4;
+                        break;
                 }
             }
         }
