@@ -43,6 +43,8 @@ namespace CgfConverter
         public bool PngTextures { get; internal set; }
         /// <summary>Flag used to indicate we should convert texture paths to use TGA instead of DDS</summary>
         public bool TgaTextures { get; internal set; }
+        /// <summary>Flag used to indicate that textures should not be included in the output file</summary>
+        public bool NoTextures { get; internal set; }
         /// <summary>Flag used to skip the rendering of nodes containing $shield</summary>
         public bool SkipShieldNodes { get; internal set; }
         /// <summary>Flag used to skip the rendering of nodes containing $proxy</summary>
@@ -194,6 +196,11 @@ namespace CgfConverter
                         TgaTextures = true;
                         break;
                     #endregion
+                    #region case "-notex" ...
+                    case "-notex":
+                        NoTextures = true;
+                        break;
+                    #endregion
                     #region case "-skipshield" / "-skipshields"...
 
                     case "-skipshield":
@@ -281,6 +288,16 @@ namespace CgfConverter
                 Utils.Log(LogLevelEnum.Info, "Smoothing Faces");
             if (GroupMeshes)
                 Utils.Log(LogLevelEnum.Info, "Grouping enabled");
+            
+            if (NoTextures)
+                Utils.Log(LogLevelEnum.Info, "Skipping texture output");
+            else if (PngTextures)
+                Utils.Log(LogLevelEnum.Info, "Using PNG textures");
+            else if (TiffTextures)
+                Utils.Log(LogLevelEnum.Info, "Using TIF textures");
+            else if (TgaTextures)
+                Utils.Log(LogLevelEnum.Info, "Using TGA textures");
+            
             if (OutputBlender)
                 Utils.Log(LogLevelEnum.Info, "Output format set to Blender (.blend)");
             if (OutputCryTek)
@@ -338,6 +355,8 @@ namespace CgfConverter
             Console.WriteLine("-fbx:             Export FBX format files (Not Implemented).");
             Console.WriteLine("-smooth:          Smooth Faces.");
             Console.WriteLine("-group:           Group meshes into single model.");
+            Console.WriteLine();
+            Console.WriteLine("-notex:           Do not include textures in outputs");
             Console.WriteLine("-tif:             Change the materials to look for .tif files instead of .dds.");
             Console.WriteLine("-png:             Change the materials to look for .png files instead of .dds.");
             Console.WriteLine("-tga:             Change the materials to look for .tga files instead of .dds.");
