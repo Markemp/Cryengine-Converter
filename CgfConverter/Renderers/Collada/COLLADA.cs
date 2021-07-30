@@ -55,7 +55,7 @@ namespace CgfConverter
             
             WriteRootNode(colladaVersion);
             WriteAsset();
-            if (! Args.NoTextures)
+            if (!Args.NoTextures)
                 WriteLibrary_Images();
             WriteScene();
             WriteLibrary_Effects();
