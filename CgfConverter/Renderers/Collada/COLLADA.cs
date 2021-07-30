@@ -577,6 +577,22 @@ namespace CgfConverter
                             floatArrayNormals.Digits = 6;
                             floatArrayNormals.Magnitude = 38;
                             floatArrayNormals.Count = (int)tmpVertsUVs.NumElements * 3;
+                            floatArrayColors.ID = colorSource.ID + "-array";
+                            floatArrayColors.Digits = 6;
+                            floatArrayColors.Magnitude = 38;
+                            if (tmpVertsUVs.Colors != null)
+                            {
+                                floatArrayColors.Count = (int)tmpVertsUVs.Colors.Count() * 4;
+                                for (uint j = 0; j < tmpVertsUVs.Colors.Count(); j++)  // Create Colors string
+                                {
+                                    colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ",
+                                        tmpVertsUVs.Colors[j].r / 255.0,
+                                        tmpVertsUVs.Colors[j].g / 255.0,
+                                        tmpVertsUVs.Colors[j].b / 255.0,
+                                        tmpVertsUVs.Colors[j].a / 255.0);
+                                }
+                            }
+
                             // Create Vertices and normals string
                             for (uint j = 0; j < tmpMeshChunk.NumVertices; j++)
                             {
