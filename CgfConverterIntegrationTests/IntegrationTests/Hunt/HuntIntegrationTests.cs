@@ -39,7 +39,7 @@ namespace CgfConverterTests.IntegrationTests.Hunt
             colladaData.GenerateDaeObject();
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-            Assert.AreEqual(0, actualMaterialsCount);  // Need to figure out material chunks
+            Assert.AreEqual(5, actualMaterialsCount);  // Need to figure out material chunks
 
             // Visual Scene Check
             Assert.AreEqual("Scene", daeObject.Scene.Visual_Scene.Name);
@@ -102,7 +102,7 @@ namespace CgfConverterTests.IntegrationTests.Hunt
             colladaData.GenerateDaeObject();
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-            Assert.AreEqual(0, actualMaterialsCount);   // Need to figure out material chunks
+            Assert.AreEqual(5, actualMaterialsCount);   // Need to figure out material chunks
 
             // Visual Scene Check
             Assert.AreEqual("Scene", daeObject.Scene.Visual_Scene.Name);

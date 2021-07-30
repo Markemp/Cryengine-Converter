@@ -257,10 +257,6 @@ namespace CgfConverter
                     default:
                         break;
                 }
-                //if (mtlChunk.MatType != MtlNameType.Library)
-                //{
-                Materials.Add(Material.CreateDefaultMaterial(mtlChunk.Name));
-                //}
             }
         }
 
