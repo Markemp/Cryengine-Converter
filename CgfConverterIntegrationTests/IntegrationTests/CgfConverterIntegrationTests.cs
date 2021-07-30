@@ -145,7 +145,7 @@ namespace CgfConverterTests.IntegrationTests
             colladaData.GenerateDaeObject();
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-            Assert.AreEqual(0, actualMaterialsCount);
+            Assert.AreEqual(15, actualMaterialsCount);
 
             testUtils.ValidateColladaXml(colladaData);
         }
@@ -163,7 +163,7 @@ namespace CgfConverterTests.IntegrationTests
             colladaData.GenerateDaeObject();
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-            Assert.AreEqual(0, actualMaterialsCount);
+            Assert.AreEqual(2, actualMaterialsCount);
 
             testUtils.ValidateColladaXml(colladaData);
         }
@@ -181,7 +181,7 @@ namespace CgfConverterTests.IntegrationTests
             colladaData.GenerateDaeObject();
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-            Assert.AreEqual(0, actualMaterialsCount);
+            Assert.AreEqual(3, actualMaterialsCount);
 
             testUtils.ValidateColladaXml(colladaData);
         }
@@ -199,7 +199,7 @@ namespace CgfConverterTests.IntegrationTests
             colladaData.GenerateDaeObject();
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-            Assert.AreEqual(0, actualMaterialsCount);
+            Assert.AreEqual(5, actualMaterialsCount);
 
             testUtils.ValidateColladaXml(colladaData);
         }
@@ -226,9 +226,7 @@ namespace CgfConverterTests.IntegrationTests
             colladaData.GenerateDaeObject();
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-            Assert.AreEqual(0, actualMaterialsCount);
-
-            //Assert.AreEqual();
+            Assert.AreEqual(2, actualMaterialsCount);
 
             testUtils.ValidateColladaXml(colladaData);
         }
@@ -246,7 +244,7 @@ namespace CgfConverterTests.IntegrationTests
             colladaData.GenerateDaeObject();
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-            Assert.AreEqual(0, actualMaterialsCount);
+            Assert.AreEqual(1, actualMaterialsCount);
 
             testUtils.ValidateColladaXml(colladaData);
         }
