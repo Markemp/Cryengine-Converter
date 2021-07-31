@@ -170,6 +170,9 @@ namespace CgfConverterTests.IntegrationTests.Hunt
             Assert.AreEqual("#assassin_body-mesh-UV", triangles.Input[2].source);
             Assert.AreEqual(2, triangles.Input[2].Offset);
             Assert.IsTrue(triangles.P.Value_As_String.StartsWith("0 0 0 0 1 1 1 1 2 2 2 2 2 2 2 2 1 1 1 1 3 3 3 3 4 4 4 4 1 1 1 1 0 0 0 0 2 2 2 2 3 3 3 3 5 5 5 5 6 6 6 6 1"));
+            Assert.AreEqual(Grendgine_Collada_Input_Semantic.COLOR, triangles.Input[3].Semantic);
+            Assert.AreEqual("#assassin_body-mesh-color", triangles.Input[3].source);
+            Assert.AreEqual(3, triangles.Input[3].Offset);
 
             // Geometry Source checks
             var vertices = mesh.Source[0];
@@ -187,6 +190,7 @@ namespace CgfConverterTests.IntegrationTests.Hunt
             Assert.AreEqual(18087, vertices.Float_Array.Count);
             Assert.AreEqual("assassin_body-mesh-pos-array", vertices.Float_Array.ID);
             Assert.IsTrue(vertices.Float_Array.Value_As_String.StartsWith("0.050568 0.100037 2.091797 0.048096 0.124878 2.099609 0.059082 0.102295 2.117188 0.049042 0.124695 2.113281 0.016800 0.109009"));
+            Assert.IsTrue(colors.Float_Array.Value_As_String.StartsWith("0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"));
             Assert.AreEqual((uint)6029, vertices.Technique_Common.Accessor.Count);
             Assert.AreEqual((uint)3, vertices.Technique_Common.Accessor.Stride);
             Assert.AreEqual(18087, normals.Float_Array.Count);
@@ -196,6 +200,8 @@ namespace CgfConverterTests.IntegrationTests.Hunt
             Assert.AreEqual((uint)6029, uvs.Technique_Common.Accessor.Count);
             Assert.AreEqual((uint)2, uvs.Technique_Common.Accessor.Stride);
             Assert.AreEqual(24116, colors.Float_Array.Count);
+            Assert.AreEqual((uint)6029, colors.Technique_Common.Accessor.Count);
+            Assert.AreEqual((uint)4, colors.Technique_Common.Accessor.Stride);
 
             testUtils.ValidateColladaXml(colladaData);
         }
