@@ -648,12 +648,19 @@ namespace CgfConverter
 
                         for (uint j = 0; j < tmpMeshSubsets.NumMeshSubset; j++) // Need to make a new Triangles entry for each submesh.
                         {
+                            
                             triangles[j] = new Grendgine_Collada_Triangles();
-
-                            if (Args.SkipProxyMaterials && CryData.Materials[(int) tmpMeshSubsets.MeshSubsets[j].MatID].Name.ToLower() == "proxy")
+                            
+                            if (Args.SkipProxyMaterials)
                             {
-                                Utils.Log(LogLevelEnum.Debug, $"Skipped proxy mesh {tmpGeo.Name}.triangles[{j}]");
-                                continue;
+                                if (CryData.Materials.Count > 0 && tmpMeshSubsets.MeshSubsets[j].MatID < CryData.Materials.Count)
+                                {
+                                    if (CryData.Materials[(int) tmpMeshSubsets.MeshSubsets[j].MatID].Name.ToLower() == "proxy")
+                                    {
+                                        Utils.Log(LogLevelEnum.Debug, $"Skipped proxy mesh {tmpGeo.Name}.triangles[{j}]");
+                                        continue;
+                                    }
+                                }
                             }
                             
                             triangles[j].Count = (int)tmpMeshSubsets.MeshSubsets[j].NumIndices / 3;
