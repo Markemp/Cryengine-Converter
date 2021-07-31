@@ -157,7 +157,7 @@ namespace CgfConverterTests.IntegrationTests.Hunt
             Assert.IsNull(mesh.Trifans);
             var triangles = mesh.Triangles[0];
             Assert.AreEqual(10213, triangles.Count);
-            Assert.AreEqual(3, triangles.Input.Length);
+            Assert.AreEqual(4, triangles.Input.Length);
             Assert.AreEqual(Grendgine_Collada_Input_Semantic.VERTEX, triangles.Input[0].Semantic);
             Assert.AreEqual("#assassin_body-vertices", triangles.Input[0].source);
             Assert.AreEqual(0, triangles.Input[0].Offset);
@@ -169,7 +169,7 @@ namespace CgfConverterTests.IntegrationTests.Hunt
             Assert.AreEqual(Grendgine_Collada_Input_Semantic.TEXCOORD, triangles.Input[2].Semantic);
             Assert.AreEqual("#assassin_body-mesh-UV", triangles.Input[2].source);
             Assert.AreEqual(2, triangles.Input[2].Offset);
-            Assert.IsTrue(triangles.P.Value_As_String.StartsWith("0 0 0 1 1 1 2 2 2 2 2 2 1 1 1 3 3 3 4 4 4 1 1 1 0 0 0 2 2 2"));
+            Assert.IsTrue(triangles.P.Value_As_String.StartsWith("0 0 0 0 1 1 1 1 2 2 2 2 2 2 2 2 1 1 1 1 3 3 3 3 4 4 4 4 1 1 1 1 0 0 0 0 2 2 2 2 3 3 3 3 5 5 5 5 6 6 6 6 1"));
 
             // Geometry Source checks
             var vertices = mesh.Source[0];

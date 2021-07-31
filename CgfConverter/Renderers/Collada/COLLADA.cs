@@ -513,7 +513,7 @@ namespace CgfConverter
                         Grendgine_Collada_Float_Array floatArrayUVs = new Grendgine_Collada_Float_Array();
                         Grendgine_Collada_Float_Array floatArrayColors = new Grendgine_Collada_Float_Array();
                         Grendgine_Collada_Float_Array floatArrayTangents = new Grendgine_Collada_Float_Array();
-                        // Strings for vertices
+
                         StringBuilder vertString = new StringBuilder();
                         StringBuilder normString = new StringBuilder();
                         StringBuilder uvString = new StringBuilder();
@@ -582,7 +582,7 @@ namespace CgfConverter
                             floatArrayColors.Magnitude = 38;
                             if (tmpVertsUVs.Colors != null)
                             {
-                                floatArrayColors.Count = (int)tmpVertsUVs.Colors.Count() * 4;
+                                floatArrayColors.Count = tmpVertsUVs.Colors.Count() * 4;
                                 for (uint j = 0; j < tmpVertsUVs.Colors.Count(); j++)  // Create Colors string
                                 {
                                     colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ",
@@ -634,6 +634,7 @@ namespace CgfConverter
                         CleanNumbers(vertString);
                         CleanNumbers(normString);
                         CleanNumbers(uvString);
+                        CleanNumbers(colorString);
 
                         #region Create the triangles node.
                         Grendgine_Collada_Triangles[] triangles = new Grendgine_Collada_Triangles[tmpMeshSubsets.NumMeshSubset];
@@ -642,7 +643,7 @@ namespace CgfConverter
                         for (uint j = 0; j < tmpMeshSubsets.NumMeshSubset; j++) // Need to make a new Triangles entry for each submesh.
                         {
                             triangles[j] = new Grendgine_Collada_Triangles();
-                            triangles[j].Count = (int)tmpMeshSubsets.MeshSubsets[j].NumIndices / 3;
+                            triangles[j].Count = tmpMeshSubsets.MeshSubsets[j].NumIndices / 3;
 
                             if (CryData.Materials.Count != 0)
                             {
@@ -652,10 +653,10 @@ namespace CgfConverter
                                     // models it's the index - 8 (some Sonic Boom for example)
                                     tmpMeshSubsets.MeshSubsets[j].MatID = 0;  
                                 }
-                                triangles[j].Material = CryData.Materials[(int)tmpMeshSubsets.MeshSubsets[j].MatID].Name + "-material";
+                                triangles[j].Material = CryData.Materials[tmpMeshSubsets.MeshSubsets[j].MatID].Name + "-material";
                             }
                             // Create the 4 inputs.  vertex, normal, texcoord, color
-                            if (tmpColors != null)
+                            if (tmpColors != null || tmpVertsUVs?.Colors != null)
                             {
                                 triangles[j].Input = new Grendgine_Collada_Input_Shared[4];
                                 triangles[j].Input[3] = new Grendgine_Collada_Input_Shared
@@ -696,15 +697,23 @@ namespace CgfConverter
 
                             // Create the P node for the Triangles.
                             StringBuilder p = new StringBuilder();
-                            if (tmpColors == null)
-                            {
-                                for (var k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
-                                {
-                                    p.AppendFormat("{0} {0} {0} {1} {1} {1} {2} {2} {2} ", tmpIndices.Indices[k], tmpIndices.Indices[k + 1], tmpIndices.Indices[k + 2]);
-                                    k += 2;
-                                }
-                            }
-                            else
+                            //if (tmpColors == null && tmpVertsUVs.Colors == null)
+                            //{
+                            //    for (var k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
+                            //    {
+                            //        p.AppendFormat("{0} {0} {0} {1} {1} {1} {2} {2} {2} ", tmpIndices.Indices[k], tmpIndices.Indices[k + 1], tmpIndices.Indices[k + 2]);
+                            //        k += 2;
+                            //    }
+                            //}
+                            //else
+                            //{
+                            //    for (var k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
+                            //    {
+                            //        p.AppendFormat("{0} {0} {0} {0} {1} {1} {1} {1} {2} {2} {2} {2} ", tmpIndices.Indices[k], tmpIndices.Indices[k + 1], tmpIndices.Indices[k + 2]);
+                            //        k += 2;
+                            //    }
+                            //}
+                            if (tmpColors != null || tmpVertsUVs?.Colors != null)
                             {
                                 for (var k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
                                 {
@@ -712,7 +721,14 @@ namespace CgfConverter
                                     k += 2;
                                 }
                             }
-
+                            else
+                            {
+                                for (var k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
+                                {
+                                    p.AppendFormat("{0} {0} {0} {1} {1} {1} {2} {2} {2} ", tmpIndices.Indices[k], tmpIndices.Indices[k + 1], tmpIndices.Indices[k + 2]);
+                                    k += 2;
+                                }
+                            }
                             triangles[j].P = new Grendgine_Collada_Int_Array_String();
                             triangles[j].P.Value_As_String = p.ToString().TrimEnd();
                         }
