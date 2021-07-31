@@ -200,7 +200,7 @@ namespace CgfConverterTests.IntegrationTests.SC
             Assert.AreEqual(37372, uvs.Float_Array.Count);
             Assert.AreEqual((uint)18686, uvs.Technique_Common.Accessor.Count);
             Assert.AreEqual((uint)2, uvs.Technique_Common.Accessor.Stride);
-            Assert.AreEqual(0, colors.Float_Array.Count);  // No color data for this model?
+            Assert.AreEqual(74744, colors.Float_Array.Count);
 
             testUtils.ValidateColladaXml(colladaData);
         }
