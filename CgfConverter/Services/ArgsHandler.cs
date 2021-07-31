@@ -45,10 +45,14 @@ namespace CgfConverter
         public bool TgaTextures { get; internal set; }
         /// <summary>Flag used to indicate that textures should not be included in the output file</summary>
         public bool NoTextures { get; internal set; }
-        /// <summary>Flag used to skip the rendering of nodes containing $shield</summary>
+        /// <summary>Flag used to skip the rendering of nodes starting with $shield</summary>
         public bool SkipShieldNodes { get; internal set; }
-        /// <summary>Flag used to skip the rendering of nodes containing $proxy</summary>
+        /// <summary>Flag used to skip the rendering of nodes starting with proxy</summary>
         public bool SkipProxyNodes { get; internal set; }
+        /// <summary>Flag used to skip the rendering of nodes with the proxy-material</summary>
+        public bool SkipProxyMaterials { get; internal set; }
+        /// <summary>Flag used to skip the rendering of nodes starting with $physics_proxy</summary>
+        public bool SkipPhysicsProxyNodes { get; internal set; }
         /// <summary>Flag used to pass exceptions to installed debuggers</summary>
         public bool Throw { get; internal set; }
         public bool DumpChunkInfo { get; internal set; }
@@ -214,11 +218,32 @@ namespace CgfConverter
                     #region case "-skipproxy"...
 
                     case "-skipproxy":
+                    case "-skipproxies":
 
                         SkipProxyNodes = true;
 
                         break;
 
+                    #endregion
+                    #region case "-skipproxymats"...
+
+                    case "-skipproxymat":
+                    case "-skipproxymats":
+
+                        SkipProxyMaterials = true;
+
+                        break;
+
+                    #endregion
+                    #region case "-skipphysproxy"...
+                    
+                    case "-skipphysproxy":
+                    case "-skipphysproxies":
+                        
+                        SkipPhysicsProxyNodes = true;
+                        
+                        break;
+                    
                     #endregion
                     #region case "-group"...
 
@@ -312,6 +337,14 @@ namespace CgfConverter
                 Utils.Log(LogLevelEnum.Info, "Allow conflicts for mtl files enabled");
             if (NoConflicts)
                 Utils.Log(LogLevelEnum.Info, "Prevent conflicts for mtl files enabled");
+            if (SkipShieldNodes)
+                Utils.Log(LogLevelEnum.Info, "Skipping shield nodes");
+            if (SkipProxyNodes)
+                Utils.Log(LogLevelEnum.Info, "Skipping proxy nodes");
+            if (SkipProxyMaterials)
+                Utils.Log(LogLevelEnum.Info, "Skipping meshes with the proxy material");
+            if (SkipPhysicsProxyNodes)
+                Utils.Log(LogLevelEnum.Info, "Skipping physics proxy nodes");
             if (DumpChunkInfo)
                 Utils.Log(LogLevelEnum.Info, "Output chunk info for missing or invalid chunks.");
             if (Throw)
@@ -338,7 +371,7 @@ namespace CgfConverter
         public static void PrintUsage()
         {
             Console.WriteLine();
-            Console.WriteLine("cgf-converter [-usage] | <.cgf file> [-outputfile <output file>] [-obj] [-blend] [-dae] [-tif/-png] [-group] [-smooth] [-loglevel <LogLevel>] [-throw] [-dump] [-objectdir <ObjectDir>]");
+            Console.WriteLine("cgf-converter [-usage] | <.cgf file> [-outputfile <output file>] [-obj] [-blend] [-dae] [-notex/-png/-tif/-tga] [-group] [-skipshield] [-skipproxy] [-skipproxymat] [-skipphyproxy] [-smooth] [-loglevel <LogLevel>] [-throw] [-dump] [-objectdir <ObjectDir>]");
             Console.WriteLine();
             Console.WriteLine($"CryEngine Converter v{Assembly.GetExecutingAssembly().GetName().Version}");
             Console.WriteLine();
@@ -354,6 +387,11 @@ namespace CgfConverter
             Console.WriteLine("-blend:           Export Blender format files (Not Implemented).");
             Console.WriteLine("-fbx:             Export FBX format files (Not Implemented).");
             Console.WriteLine("-smooth:          Smooth Faces.");
+            Console.WriteLine("-group:           Group meshes into single model.");
+            Console.WriteLine("-skipshield:      Skip the rendering of nodes starting with $shield.");
+            Console.WriteLine("-skipproxy:       Skip the rendering of nodes starting with proxy.");
+            Console.WriteLine("-skipproxymat:    Skip the rendering of meshes with the proxy material.");
+            Console.WriteLine("-skipphysproxy:   Skip the rendering of nodes starting with $pyhsics_proxy.");
             Console.WriteLine("-group:           Group meshes into single model.");
             Console.WriteLine();
             Console.WriteLine("-notex:           Do not include textures in outputs");

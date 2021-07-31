@@ -76,16 +76,23 @@ namespace CgfConverter
                 foreach (CryEngineCore.ChunkNode node in this.CryData.NodeMap.Values)
                 {
                     // Don't render shields
-                    if (this.Args.SkipShieldNodes && node.Name.StartsWith("$shield"))
+                    if (this.Args.SkipShieldNodes && node.Name.ToLower().StartsWith("$shield"))
                     {
                         Utils.Log(LogLevelEnum.Debug, "Skipped shields node {0}", node.Name);
                         continue;
                     }
 
                     // Don't render shields
-                    if (this.Args.SkipProxyNodes && node.Name.StartsWith("proxy"))
+                    if (this.Args.SkipProxyNodes && node.Name.ToLower().StartsWith("proxy"))
                     {
                         Utils.Log(LogLevelEnum.Debug, "Skipped proxy node {0}", node.Name);
+                        continue;
+                    }
+
+                    // Don't render physics proxies
+                    if (this.Args.SkipProxyNodes && node.Name.ToLower().StartsWith("$physics_proxy"))
+                    {
+                        Utils.Log(LogLevelEnum.Debug, "Skipped physics proxy node {0}", node.Name);
                         continue;
                     }
 
