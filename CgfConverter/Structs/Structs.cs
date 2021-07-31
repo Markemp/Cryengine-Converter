@@ -333,6 +333,7 @@ namespace CgfConverter
         public uint FirstVertex;
         public uint NumVertices;
         public uint Material;           // Size of the weird data at the end of the hitbox structure.
+        public uint Unknown2;
         public Vector3[] Vertices;      // Array of vertices (x,y,z) length NumVertices
         public ushort[] Indices;        // Array of indices
     }
