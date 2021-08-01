@@ -47,21 +47,18 @@ namespace CgfConverter
         public bool TgaTextures { get; internal set; }
         /// <summary>Flag used to indicate that textures should not be included in the output file</summary>
         public bool NoTextures { get; internal set; }
-        /// <summary>Flag used to skip the rendering of nodes starting with $shield</summary>
-        public bool SkipShieldNodes { get; internal set; }
-        /// <summary>Flag used to skip the rendering of nodes starting with proxy</summary>
-        public bool SkipProxyNodes { get; internal set; }
-        /// <summary>Flag used to skip the rendering of nodes with the proxy-material</summary>
-        public bool SkipProxyMaterials { get; internal set; }
-        /// <summary>Flag used to skip the rendering of nodes starting with $physics_proxy</summary>
-        public bool SkipPhysicsProxyNodes { get; internal set; }
-        /// <summary>Flag used to pass exceptions to installed debuggers</summary>
+        /// <summary>List of node names to skip when rendering</summary>
+        public List<string> ExcludeNodeNames { get; internal set; }
+        /// <summary>List of material names to skipping the rendering of a mesh that uses the specified material</summary>
+        public List<string> ExcludeMaterialNames { get; internal set; }
         public bool Throw { get; internal set; }
         public bool DumpChunkInfo { get; internal set; }
 
         public ArgsHandler()
         {
             InputFiles = new List<string> { };
+            ExcludeNodeNames = new List<string> { };
+            ExcludeMaterialNames = new List<string> { };
         }
 
         /// <summary>
@@ -207,45 +204,31 @@ namespace CgfConverter
                         NoTextures = true;
                         break;
                     #endregion
-                    #region case "-skipshield" / "-skipshields"...
+                    #region case "-en" / "-excludenode"...
 
-                    case "-skipshield":
-                    case "-skipshields":
-
-                        SkipShieldNodes = true;
-
+                    case "-en":
+                    case "-excludenode":
+                        if (++i > inputArgs.Length)
+                        {
+                            PrintUsage();
+                            return 1;
+                        }
+                        ExcludeNodeNames.Add(inputArgs[i]);
                         break;
 
                     #endregion
-                    #region case "-skipproxy"...
+                    #region case "-em" / "-excludemat"...
 
-                    case "-skipproxy":
-                    case "-skipproxies":
-
-                        SkipProxyNodes = true;
-
+                    case "-em":
+                    case "-excludemat":
+                        if (++i > inputArgs.Length)
+                        {
+                            PrintUsage();
+                            return 1;
+                        }
+                        ExcludeMaterialNames.Add(inputArgs[i]);
                         break;
 
-                    #endregion
-                    #region case "-skipproxymats"...
-
-                    case "-skipproxymat":
-                    case "-skipproxymats":
-
-                        SkipProxyMaterials = true;
-
-                        break;
-
-                    #endregion
-                    #region case "-skipphysproxy"...
-                    
-                    case "-skipphysproxy":
-                    case "-skipphysproxies":
-                        
-                        SkipPhysicsProxyNodes = true;
-                        
-                        break;
-                    
                     #endregion
                     #region case "-group"...
 
@@ -347,16 +330,12 @@ namespace CgfConverter
                 Utils.Log(LogLevelEnum.Info, "Allow conflicts for mtl files enabled");
             if (NoConflicts)
                 Utils.Log(LogLevelEnum.Info, "Prevent conflicts for mtl files enabled");
-            if (SkipShieldNodes)
-                Utils.Log(LogLevelEnum.Info, "Skipping shield nodes");
-            if (SkipProxyNodes)
-                Utils.Log(LogLevelEnum.Info, "Skipping proxy nodes");
-            if (SkipProxyMaterials)
-                Utils.Log(LogLevelEnum.Info, "Skipping meshes with the proxy material");
-            if (SkipPhysicsProxyNodes)
-                Utils.Log(LogLevelEnum.Info, "Skipping physics proxy nodes");
             if (PrefixMaterialNames)
                 Utils.Log(LogLevelEnum.Info, "Prefix material names with the source material's filename");
+            if (ExcludeNodeNames.Any())
+                Utils.Log(LogLevelEnum.Info, $"Skipping nodes starting with any of these names: {String.Join(", ", ExcludeNodeNames)}");
+            if (ExcludeMaterialNames.Any())
+                Utils.Log(LogLevelEnum.Info, $"Skipping meshes using materials named: {String.Join(", ", ExcludeMaterialNames)}");
             if (DumpChunkInfo)
                 Utils.Log(LogLevelEnum.Info, "Output chunk info for missing or invalid chunks.");
             if (Throw)
@@ -400,12 +379,11 @@ namespace CgfConverter
             Console.WriteLine("-fbx:             Export FBX format files (Not Implemented).");
             Console.WriteLine("-smooth:          Smooth Faces.");
             Console.WriteLine("-group:           Group meshes into single model.");
-            Console.WriteLine("-skipshield:      Skip the rendering of nodes starting with $shield.");
-            Console.WriteLine("-skipproxy:       Skip the rendering of nodes starting with proxy.");
-            Console.WriteLine("-skipproxymat:    Skip the rendering of meshes with the proxy material.");
-            Console.WriteLine("-skipphysproxy:   Skip the rendering of nodes starting with $pyhsics_proxy.");
-            Console.WriteLine("-group:           Group meshes into single model.");
             Console.WriteLine("-prefixmatnames:  Prefixes material names with the filename of the source mtl file.");
+            Console.WriteLine("-excludenode <nodename>:");
+            Console.WriteLine("                  Exclude nodes starting with <nodename> from rendering. Can be listed multiple times.");
+            Console.WriteLine("-excludemat <material_name>:");
+            Console.WriteLine("                  Exclude meshes with the material <material_name> from rendering. Can be listed multiple times.");
             Console.WriteLine();
             Console.WriteLine("-notex:           Do not include textures in outputs");
             Console.WriteLine("-tif:             Change the materials to look for .tif files instead of .dds.");

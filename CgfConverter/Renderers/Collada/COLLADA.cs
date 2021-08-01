@@ -430,24 +430,9 @@ namespace CgfConverter
                 ChunkDataStream tmpColors = null;
                 ChunkDataStream tmpTangents = null;
 
-                // Don't render shields if skip flag enabled
-                if (Args.SkipShieldNodes && nodeChunk.Name.ToLower().StartsWith("$shield"))
+                if (IsNodeNameExcluded(nodeChunk.Name))
                 {
-                    Utils.Log(LogLevelEnum.Debug, "Skipped shields node {0}", nodeChunk.Name);
-                    continue;
-                }
-
-                // Don't render proxies if skip flag enabled
-                if (Args.SkipProxyNodes && nodeChunk.Name.ToLower().StartsWith("proxy"))
-                {
-                    Utils.Log(LogLevelEnum.Debug, "Skipped proxy node {0}", nodeChunk.Name);
-                    continue;
-                }
-                
-                // Don't render SC physicss proxies if skip flag enabled
-                if (Args.SkipPhysicsProxyNodes && nodeChunk.Name.ToLower().StartsWith("$physics_proxy"))
-                {
-                    Utils.Log(LogLevelEnum.Debug, "Skipped physics proxy node {0}", nodeChunk.Name);
+                    Utils.Log(LogLevelEnum.Debug, $"Excluding node {nodeChunk.Name}");
                     continue;
                 }
 
@@ -690,18 +675,6 @@ namespace CgfConverter
                                 Count = tmpMeshSubsets.MeshSubsets[j].NumIndices / 3
                             };
                             
-                            if (Args.SkipProxyMaterials)
-                            {
-                                if (CryData.Materials.Count > 0 && tmpMeshSubsets.MeshSubsets[j].MatID < CryData.Materials.Count)
-                                {
-                                    if (CryData.Materials[(int) tmpMeshSubsets.MeshSubsets[j].MatID].Name.ToLower() == "proxy")
-                                    {
-                                        Utils.Log(LogLevelEnum.Debug, $"Skipped proxy mesh {tmpGeo.Name}.triangles[{j}]");
-                                        continue;
-                                    }
-                                }
-                            }
-                            
                             if (CryData.Materials.Count != 0)
                             {
                                 if (tmpMeshSubsets.MeshSubsets[j].MatID > CryData.Materials.Count - 1)
@@ -711,6 +684,12 @@ namespace CgfConverter
                                     tmpMeshSubsets.MeshSubsets[j].MatID = 0;  
                                 }
                                 string MatName = CryData.Materials[tmpMeshSubsets.MeshSubsets[j].MatID].Name;
+                                if (IsMeshMaterialExcluded(MatName))
+                                {
+                                    Utils.Log(LogLevelEnum.Debug, $"Excluding mesh {tmpGeo.Name}.triangles[{j}] with material {MatName}");
+                                    continue;
+                                }
+                                
                                 if (Args.PrefixMaterialNames)
                                     MatName = CryData.Materials[tmpMeshSubsets.MeshSubsets[j].MatID].SourceFileName + "_" + MatName;
 
@@ -1385,8 +1364,9 @@ namespace CgfConverter
                 List<Grendgine_Collada_Node> childNodes = new List<Grendgine_Collada_Node>();
                 foreach (ChunkNode childNodeChunk in nodeChunk.AllChildNodes.ToList())
                 {
-                    if (Args.SkipPhysicsProxyNodes && childNodeChunk.Name.ToLower().StartsWith("$physics_proxy"))
+                    if (IsNodeNameExcluded(childNodeChunk.Name))
                     {
+                        Utils.Log(LogLevelEnum.Debug, $"Excluding child node {childNodeChunk.Name}");
                         continue;
                     }
 
