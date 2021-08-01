@@ -362,7 +362,7 @@ namespace CgfConverter
         public static void PrintUsage()
         {
             Console.WriteLine();
-            Console.WriteLine("cgf-converter [-usage] | <.cgf file> [-outputfile <output file>] [-obj] [-blend] [-dae] [-notex/-png/-tif/-tga] [-group] [-skipshield] [-skipproxy] [-skipproxymat] [-skipphyproxy] [-smooth] [-loglevel <LogLevel>] [-throw] [-dump] [-objectdir <ObjectDir>]");
+            Console.WriteLine("cgf-converter [-usage] | <.cgf file> [-outputfile <output file>] [-dae] [-obj] [-notex/-png/-tif/-tga] [-group] [-excludenode <nodename>] [-excludemat <matname>] [-loglevel <LogLevel>] [-throw] [-dump] [-objectdir <ObjectDir>]");
             Console.WriteLine();
             Console.WriteLine($"CryEngine Converter v{Assembly.GetExecutingAssembly().GetName().Version}");
             Console.WriteLine();
@@ -370,13 +370,13 @@ namespace CgfConverter
             Console.WriteLine();
             Console.WriteLine("<.cgf file>:      The name of the .cgf, .cga or .skin file to process.");
             Console.WriteLine("-outputfile:      The name of the file to write the output.  Default is [root].dae");
-            Console.WriteLine("-noconflict:      Use non-conflicting naming scheme (<cgf File>_out.obj)");
-            Console.WriteLine("-allowconflict:   Allows conflicts in .mtl file name. (obj exports only, as not an issue in dae.)");
             Console.WriteLine("-objectdir:       The name where the base Objects directory is located.  Used to read mtl file.");
             Console.WriteLine("                  Defaults to current directory.");
             Console.WriteLine("-dae:             Export Collada format files (Default).");
+            Console.WriteLine("-obj:             Export Wavefront format files (Not supported).");
             Console.WriteLine("-blend:           Export Blender format files (Not Implemented).");
             Console.WriteLine("-fbx:             Export FBX format files (Not Implemented).");
+            Console.WriteLine();
             Console.WriteLine("-smooth:          Smooth Faces.");
             Console.WriteLine("-group:           Group meshes into single model.");
             Console.WriteLine("-prefixmatnames:  Prefixes material names with the filename of the source mtl file.");
@@ -384,6 +384,8 @@ namespace CgfConverter
             Console.WriteLine("                  Exclude nodes starting with <nodename> from rendering. Can be listed multiple times.");
             Console.WriteLine("-excludemat <material_name>:");
             Console.WriteLine("                  Exclude meshes with the material <material_name> from rendering. Can be listed multiple times.");
+            Console.WriteLine("-noconflict:      Use non-conflicting naming scheme (<cgf File>_out.obj)");
+            Console.WriteLine("-allowconflict:   Allows conflicts in .mtl file name. (obj exports only, as not an issue in dae.)");
             Console.WriteLine();
             Console.WriteLine("-notex:           Do not include textures in outputs");
             Console.WriteLine("-tif:             Change the materials to look for .tif files instead of .dds.");
