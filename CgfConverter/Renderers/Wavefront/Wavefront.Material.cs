@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Reflection;
 using System.Text;
 using static Extensions.FileHandlingExtensions;
@@ -24,11 +25,13 @@ namespace CgfConverter
                 file.WriteLine("#");
                 foreach (CryEngineCore.Material material in cryEngine.Materials)
                 {
+                    string MatName = material.Name;
+                    if (Args.PrefixMaterialNames)
+                        MatName = material.SourceFileName + "_" + MatName;
 #if DUMP_JSON
-                    File.WriteAllText(String.Format("_material-{0}.json", material.Name.Replace(@"/", "").Replace(@"\", "")), material.ToJSON());
+                    File.WriteAllText(String.Format("_material-{0}.json", MatName.Replace(@"/", "").Replace(@"\", "")), material.ToJSON());
 #endif
-
-                    file.WriteLine("newmtl {0}", material.Name);
+                    file.WriteLine("newmtl {0}", MatName);
                     if (material.Diffuse != null)
                     {
                         file.WriteLine("Ka {0:F6} {1:F6} {2:F6}", material.Diffuse.Red, material.Diffuse.Green, material.Diffuse.Blue);    // Ambient
@@ -36,7 +39,7 @@ namespace CgfConverter
                     }
                     else
                     {
-                        Utils.Log(LogLevelEnum.Debug, "Skipping Diffuse for {0}", material.Name);
+                        Utils.Log(LogLevelEnum.Debug, "Skipping Diffuse for {0}", MatName);
                     }
                     if (material.Specular != null)
                     {
@@ -45,7 +48,7 @@ namespace CgfConverter
                     }
                     else
                     {
-                        Utils.Log(LogLevelEnum.Debug, "Skipping Specular for {0}", material.Name);
+                        Utils.Log(LogLevelEnum.Debug, "Skipping Specular for {0}", MatName);
                     }
                     file.WriteLine("d {0:F6}", material.Opacity);                                                                          // Dissolve
 

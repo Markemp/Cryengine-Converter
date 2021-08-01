@@ -37,6 +37,8 @@ namespace CgfConverter
         public bool OutputFBX { get; internal set; }
         /// <summary>Smooth Faces</summary>
         public bool Smooth { get; internal set; }
+        /// <summary>Flag used to toggle if we should prefix exported material names with the material file name</summary>
+        public bool PrefixMaterialNames { get; internal set; }
         /// <summary>Flag used to indicate we should convert texture paths to use TIFF instead of DDS</summary>
         public bool TiffTextures { get; internal set; }
         /// <summary>Flag used to indicate we should convert texture paths to use PNG instead of DDS</summary>
@@ -292,6 +294,14 @@ namespace CgfConverter
                         DumpChunkInfo = true;
                         break;
                     #endregion
+                    #region case "-prefixmatnames"...
+                    case "-prefixmatnames":
+                    case "-prefixmaterialnames":
+                    case "-pmatnames":
+                    case "-pmn":
+                        PrefixMaterialNames = true;
+                        break;
+                    #endregion
                     #region default...
 
                     default:
@@ -345,6 +355,8 @@ namespace CgfConverter
                 Utils.Log(LogLevelEnum.Info, "Skipping meshes with the proxy material");
             if (SkipPhysicsProxyNodes)
                 Utils.Log(LogLevelEnum.Info, "Skipping physics proxy nodes");
+            if (PrefixMaterialNames)
+                Utils.Log(LogLevelEnum.Info, "Prefix material names with the source material's filename");
             if (DumpChunkInfo)
                 Utils.Log(LogLevelEnum.Info, "Output chunk info for missing or invalid chunks.");
             if (Throw)
@@ -393,6 +405,7 @@ namespace CgfConverter
             Console.WriteLine("-skipproxymat:    Skip the rendering of meshes with the proxy material.");
             Console.WriteLine("-skipphysproxy:   Skip the rendering of nodes starting with $pyhsics_proxy.");
             Console.WriteLine("-group:           Group meshes into single model.");
+            Console.WriteLine("-prefixmatnames:  Prefixes material names with the filename of the source mtl file.");
             Console.WriteLine();
             Console.WriteLine("-notex:           Do not include textures in outputs");
             Console.WriteLine("-tif:             Change the materials to look for .tif files instead of .dds.");
