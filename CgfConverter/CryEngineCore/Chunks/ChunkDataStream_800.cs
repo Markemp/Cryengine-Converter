@@ -232,23 +232,7 @@ namespace CgfConverter.CryEngineCore
                                     SkipBytes(b, 2);
                                     //Vertices[i].W = b.ReadCryHalf();
 
-                                    // Read a Quat, convert it to vector3
-                                    //Vector4 quat = new Vector4();
-                                    //quat.X = b.ReadSByte() / 127.5f;
-                                    //quat.Y = b.ReadSByte() / 127.5f;
-                                    //quat.Z = b.ReadSByte() / 127.5f;
-                                    //quat.W = b.ReadSByte() / 127.5f;
-                                    //Normals[i].X = (2 * (quat.X * quat.Z + quat.Y * quat.W));
-                                    //Normals[i].Y = (2 * (quat.Y * quat.Z - quat.X * quat.W));
-                                    //Normals[i].Z = (2 * (quat.Z * quat.Z + quat.W * quat.W)) - 1;
-
-                                    IRGBA color = new IRGBA();
-                                    color.r = b.ReadByte();
-                                    color.g = b.ReadByte();
-                                    color.b = b.ReadByte();
-                                    color.a = b.ReadByte();
-
-                                    Colors[i] = color;
+                                    Colors[i] = b.ReadColor();
 
                                     // UVs ABSOLUTELY should use the Half structures.
                                     UVs[i].U = b.ReadHalf();
