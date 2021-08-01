@@ -284,7 +284,10 @@ namespace CgfConverter
 
                 if (material.SubMaterials != null)
                     foreach (var subMaterial in material.SubMaterials.SelectMany(m => FlattenMaterials(m)))
+                    {
+                        subMaterial.SourceFileName = material.SourceFileName;
                         yield return subMaterial;
+                    }
             }
         }
 
