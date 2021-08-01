@@ -322,7 +322,11 @@ namespace CgfConverter
 
                 if (this.CryData.Materials.Count > meshSubset.MatID)
                 {
-                    f.WriteLine("usemtl {0}", this.CryData.Materials[(int)meshSubset.MatID].Name);
+                    string MatName = this.CryData.Materials[(int)meshSubset.MatID].Name;
+                    if (Args.PrefixMaterialNames)
+                        MatName = this.CryData.Materials[(int)meshSubset.MatID].SourceFileName + "_" + MatName;
+
+                    f.WriteLine("usemtl {0}", MatName);
                 }
                 else
                 {

@@ -197,9 +197,13 @@ namespace CgfConverter
                 }
                 else
                 {
-                    tmpMaterial.Name = CryData.Materials[i].Name;
-                    tmpMaterial.ID = CryData.Materials[i].Name + "-material";          // this is the order the materials appear in the .mtl file.  Needed for geometries.
-                    tmpMaterial.Instance_Effect.URL = "#" + CryData.Materials[i].Name + "-effect";
+                    string MatName = CryData.Materials[i].Name;
+                    if (Args.PrefixMaterialNames)
+                        MatName = CryData.Materials[i].SourceFileName + "_" + MatName;
+
+                    tmpMaterial.Name = MatName;
+                    tmpMaterial.ID = MatName + "-material";          // this is the order the materials appear in the .mtl file.  Needed for geometries.
+                    tmpMaterial.Instance_Effect.URL = "#" + MatName + "-effect";
                 }
 
                 materials[i] = tmpMaterial;
@@ -216,11 +220,15 @@ namespace CgfConverter
             Grendgine_Collada_Effect[] effects = new Grendgine_Collada_Effect[numEffects];
             for (int i = 0; i < numEffects; i++)
             {
+                string MatName = CryData.Materials[i].Name;
+                if (Args.PrefixMaterialNames)
+                    MatName = CryData.Materials[i].SourceFileName + "_" + MatName;
+
                 Grendgine_Collada_Effect tmpEffect = new Grendgine_Collada_Effect
                 {
                     //tmpEffect.Name = CryData.Materials[i].Name;
-                    ID = CryData.Materials[i].Name + "-effect",
-                    Name = CryData.Materials[i].Name
+                    ID = MatName + "-effect",
+                    Name = MatName
                 };
                 effects[i] = tmpEffect;
 
@@ -675,7 +683,11 @@ namespace CgfConverter
                                     // models it's the index - 8 (some Sonic Boom for example)
                                     tmpMeshSubsets.MeshSubsets[j].MatID = 0;  
                                 }
-                                triangles[j].Material = CryData.Materials[tmpMeshSubsets.MeshSubsets[j].MatID].Name + "-material";
+                                string MatName = CryData.Materials[tmpMeshSubsets.MeshSubsets[j].MatID].Name;
+                                if (Args.PrefixMaterialNames)
+                                    MatName = CryData.Materials[tmpMeshSubsets.MeshSubsets[j].MatID].SourceFileName + "_" + MatName;
+
+                                triangles[j].Material = MatName + "-material";
                             }
                             // Create the 4 inputs.  vertex, normal, texcoord, color
                             if (tmpColors != null || tmpVertsUVs?.Colors != null)
@@ -1201,13 +1213,17 @@ namespace CgfConverter
             // node chunk are stored in meshsubsets, so for each subset we need to grab the mat, get the target (id), and make an instance_material for it.
             for (int i = 0; i < CryData.Materials.Count; i++)
             {
+                string MatName = CryData.Materials[i].Name;
+                if (Args.PrefixMaterialNames)
+                    MatName = CryData.Materials[i].SourceFileName + "_" + MatName;
+
                 // For each mesh subset, we want to create an instance material and add it to instanceMaterials list.
                 Grendgine_Collada_Instance_Material_Geometry tmpInstanceMat = new Grendgine_Collada_Instance_Material_Geometry
                 {
                     //tmpInstanceMat.Target = "#" + tmpMeshSubsets.MeshSubsets[i].MatID;
-                    Target = "#" + CryData.Materials[i].Name + "-material",
+                    Target = "#" + MatName + "-material",
                     //tmpInstanceMat.Symbol = CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name;
-                    Symbol = CryData.Materials[i].Name + "-material"
+                    Symbol = MatName + "-material"
                 };
                 instanceMaterials.Add(tmpInstanceMat);
             }
@@ -1448,9 +1464,13 @@ namespace CgfConverter
                 //tmpInstanceMat.Target = "#" + tmpMeshSubsets.MeshSubsets[i].MatID;
                 if (CryData.Materials.Count > 0)
                 {
-                    tmpInstanceMat.Target = "#" + CryData.Materials[(int)tmpMeshSubsets.MeshSubsets[i].MatID].Name + "-material";
-                    //tmpInstanceMat.Symbol = CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name;
-                    tmpInstanceMat.Symbol = CryData.Materials[(int)tmpMeshSubsets.MeshSubsets[i].MatID].Name + "-material";
+                    string MatName = CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name;
+                    if (Args.PrefixMaterialNames)
+                        MatName = CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].SourceFileName + "_" + MatName;
+
+                    tmpInstanceMat.Target = "#" + MatName + "-material";
+                    //tmpInstanceMat.Symbol = MatName;
+                    tmpInstanceMat.Symbol = MatName + "-material";
                 }
 
                 instanceMaterials.Add(tmpInstanceMat);

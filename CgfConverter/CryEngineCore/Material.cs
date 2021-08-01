@@ -210,6 +210,9 @@ namespace CgfConverter.CryEngineCore
 
         #region Attributes
 
+        [XmlIgnore]
+        internal string SourceFileName { get; set; }
+
         [XmlAttribute(AttributeName = "Name")]
         [DefaultValue("")]
         public string Name { get; set; }
@@ -325,7 +328,9 @@ namespace CgfConverter.CryEngineCore
             {
                 using (Stream fileStream = materialfile.OpenRead())
                 {
-                    return HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<Material>(fileStream);
+                    Material fileData = HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<Material>(fileStream);
+                    fileData.SourceFileName = materialfile.Name.Replace('.', '_');
+                    return fileData;
                 }
             }
             catch (Exception ex)
