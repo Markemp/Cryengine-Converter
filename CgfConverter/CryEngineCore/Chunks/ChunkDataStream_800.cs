@@ -125,15 +125,15 @@ namespace CgfConverter.CryEngineCore
                         {
                             case 0x10:
                                 // These have to be divided by 32767 to be used properly (value between 0 and 1)
-                                Tangents[i, 0].x = b.ReadInt16();
-                                Tangents[i, 0].y = b.ReadInt16();
-                                Tangents[i, 0].z = b.ReadInt16();
-                                Tangents[i, 0].w = b.ReadInt16();
+                                Tangents[i, 0].x = b.ReadInt16() / 32767.0f;
+                                Tangents[i, 0].y = b.ReadInt16() / 32767.0f;
+                                Tangents[i, 0].z = b.ReadInt16() / 32767.0f;
+                                Tangents[i, 0].w = b.ReadInt16() / 32767.0f;
 
-                                Tangents[i, 1].x = b.ReadInt16();
-                                Tangents[i, 1].y = b.ReadInt16();
-                                Tangents[i, 1].z = b.ReadInt16();
-                                Tangents[i, 1].w = b.ReadInt16();
+                                Tangents[i, 1].x = b.ReadInt16() / 32767.0f;
+                                Tangents[i, 1].y = b.ReadInt16() / 32767.0f;
+                                Tangents[i, 1].z = b.ReadInt16() / 32767.0f;
+                                Tangents[i, 1].w = b.ReadInt16() / 32767.0f;
 
                                 break;
                             case 0x08:
@@ -151,9 +151,10 @@ namespace CgfConverter.CryEngineCore
                                 Tangents[i, 1].z = b.ReadSByte() / 127.5f;
 
                                 // Calculate the normal based on the cross product of the tangents.
-                                Normals[i].X = (Tangents[i,0].y * Tangents[i,1].z - Tangents[i,0].z * Tangents[i,1].y);
-                                Normals[i].Y = 0 - (Tangents[i,0].x * Tangents[i,1].z - Tangents[i,0].z * Tangents[i,1].x); 
-                                Normals[i].Z = (Tangents[i,0].x * Tangents[i,1].y - Tangents[i,0].y * Tangents[i,1].x);
+                                Vector3 tan = new Vector3(Tangents[i, 0].x, Tangents[i, 0].y, Tangents[i, 0].z);
+                                Vector3 bitan = new Vector3(Tangents[i, 1].x, Tangents[i, 1].y, Tangents[i, 1].z);
+                                var weight = Tangents[i, 0].z > 0 ? 1 : -1;
+                                Normals[i] = Vector3.Cross(tan, bitan) * weight;
                                 break;
                             default:
                                 throw new Exception("Need to add new Tangent Size");
@@ -329,7 +330,7 @@ namespace CgfConverter.CryEngineCore
                         Normals[i] = QTangents[i].GetNormal();
                     }
                     break;
-                #endregion // Prey normals?
+                #endregion
                 #region default:
 
                 default:

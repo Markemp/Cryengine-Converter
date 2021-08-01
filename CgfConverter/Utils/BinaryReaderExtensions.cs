@@ -84,6 +84,15 @@ namespace Extensions
                         W = r.ReadHalf()
                     };
                     break;
+                case InputType.CryHalf:
+                    q = new Quaternion()
+                    {
+                        X = r.ReadCryHalf(),
+                        Y = r.ReadCryHalf(),
+                        Z = r.ReadCryHalf(),
+                        W = r.ReadCryHalf()
+                    };
+                    break;
                 case InputType.Byte:
                     q = new Quaternion()
                     {

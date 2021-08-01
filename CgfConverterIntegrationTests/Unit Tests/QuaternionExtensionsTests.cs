@@ -16,8 +16,10 @@ namespace CgfConverterIntegrationTests.UnitTests
         private byte[] buffer2 = new byte[] { 0x5B, 0xEF, 0x12, 0xC1, 0xCA, 0x65, 0xC2, 0xD5 };  // m_ccc_heavy_armor_helmet_01.skinm 2nd tangent
         private byte[] archeAgeQTangent1 = new byte[] { 0x6A, 0x03, 0x66, 0x54, 0x92, 0xA1, 0xD5, 0xED };
         private byte[] archeAgeQTangent2 = new byte[] { 0xEA, 0x1D, 0x82, 0x31, 0xD5, 0x92, 0x8E, 0xDE };
+        byte[] avengerTangent = { 0xFE, 0xBF, 0x00, 0x80, 0xFF, 0x3F, 0xB8, 0xDF };
+        byte[] avengerBitangent = { 0xFE, 0xBF, 0x00, 0x80, 0xFF, 0x3F, 0xB8, 0xDF };
 
-        [TestMethod]
+    [TestMethod]
         public void GetNormal_NormalizedQuaternion1()
         {
             var expected = new Vector3(1.1086464E-05f, 0.9344362f, -0.35585153f);
@@ -69,6 +71,22 @@ namespace CgfConverterIntegrationTests.UnitTests
             var quat = reader.ReadQuaternion(InputType.Int16);
 
             var normal = quat.GetNormal();
+
+            Assert.AreEqual(expected, normal);
+        }
+
+        [TestMethod]
+        public void GetNormal_NormalizedQuaternion5()
+        {
+            var expected = new Vector3(-0.004364252f, 1.2522434f, 0.37281585f);
+
+            using var source = new MemoryStream(avengerTangent);
+            using var reader = new BinaryReader(source);
+            var quat = reader.ReadQuaternion(InputType.Int16);
+            var normalizedQuat = Quaternion.Normalize(quat);  // Should be close to input
+
+            var normal = quat.GetNormal();
+            var normalizedNormal = normalizedQuat.GetNormal();
 
             Assert.AreEqual(expected, normal);
         }
