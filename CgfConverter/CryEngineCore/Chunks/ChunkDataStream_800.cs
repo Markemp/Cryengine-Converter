@@ -151,9 +151,9 @@ namespace CgfConverter.CryEngineCore
                                 Tangents[i, 1].z = b.ReadSByte() / 127;
 
                                 // Calculate the normal based on the cross product of the tangents.
-                                //Normals[i].x = (Tangents[i,0].y * Tangents[i,1].z - Tangents[i,0].z * Tangents[i,1].y);
-                                //Normals[i].y = 0 - (Tangents[i,0].x * Tangents[i,1].z - Tangents[i,0].z * Tangents[i,1].x); 
-                                //Normals[i].z = (Tangents[i,0].x * Tangents[i,1].y - Tangents[i,0].y * Tangents[i,1].x);
+                                Normals[i].X = (Tangents[i,0].y * Tangents[i,1].z - Tangents[i,0].z * Tangents[i,1].y);
+                                Normals[i].Y = 0 - (Tangents[i,0].x * Tangents[i,1].z - Tangents[i,0].z * Tangents[i,1].x); 
+                                Normals[i].Z = (Tangents[i,0].x * Tangents[i,1].y - Tangents[i,0].y * Tangents[i,1].x);
                                 break;
                             default:
                                 throw new Exception("Need to add new Tangent Size");
@@ -201,12 +201,12 @@ namespace CgfConverter.CryEngineCore
 
                 case DatastreamType.VERTSUVS:
                     Vertices = new Vector3[NumElements];
-                    Normals = new Vector3[NumElements];
                     Colors = new IRGBA[NumElements];
                     UVs = new UV[NumElements];
                     switch (BytesPerElement)  // new Star Citizen files
                     {
                         case 20:  // Dymek's code.  3 floats for vertex position, 4 bytes for normals, 2 halfs for UVs.  Normals are calculated from Tangents
+                            Normals = new Vector3[NumElements];
                             for (int i = 0; i < NumElements; i++)
                             {
                                 Vertices[i] = b.ReadVector3(); // For some reason, skins are an extra 1 meter in the z direction.
@@ -257,6 +257,7 @@ namespace CgfConverter.CryEngineCore
                             }
                             else
                             {
+                                Normals = new Vector3[NumElements];
                                 // Legacy version using Halfs (Also Hunt models)
                                 for (int i = 0; i < NumElements; i++)
                                 {

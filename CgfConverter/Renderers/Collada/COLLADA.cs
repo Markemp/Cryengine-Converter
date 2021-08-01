@@ -588,7 +588,7 @@ namespace CgfConverter
                             {
                                 Vector3 vertex = (tmpVertices.Vertices[j]);
                                 vertString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", vertex.X, vertex.Y, vertex.Z);
-                                Vector3 normal = tmpNormals?.Normals[j] ?? new Vector3(0.0f, 0.0f, 0.0f);
+                                Vector3 normal = tmpNormals?.Normals[j] ?? tmpTangents?.Normals[j] ?? new Vector3(0.0f, 0.0f, 0.0f);
                                 normString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", safe(normal.X), safe(normal.Y), safe(normal.Z));
                             }
                             for (uint j = 0; j < tmpUVs.NumElements; j++)     // Create UV string
@@ -650,7 +650,14 @@ namespace CgfConverter
                                 // TODO:  This isn't right?  VertsUvs may always have color as the 3rd element.
                                 // Normals depend on the data size.  16 byte structures have the normals in the Tangents.  20 byte structures are in the VertsUV.
                                 Vector3 normal = new(); 
-                                normal = tmpVertsUVs.Normals[j];
+                                if (tmpVertsUVs.Normals != null)
+                                {
+                                    normal = tmpVertsUVs.Normals[j];
+                                }
+                                else if (tmpTangents != null && tmpTangents.Normals != null)
+                                {
+                                    normal = tmpTangents.Normals[j];
+                                }
                                 normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", safe(normal.X), safe(normal.Y), safe(normal.Z));
                             }
                             // Create UV string
@@ -689,21 +696,13 @@ namespace CgfConverter
 
                                 triangles[j].Material = MatName + "-material";
                             }
-                            // Create the 4 inputs.  vertex, normal, texcoord, color
+                            // Create the inputs.  vertex, normal, texcoord, color
+                            int inputCount = 3;
                             if (tmpColors != null || tmpVertsUVs?.Colors != null)
                             {
-                                triangles[j].Input = new Grendgine_Collada_Input_Shared[4];
-                                triangles[j].Input[3] = new Grendgine_Collada_Input_Shared
-                                {
-                                    Semantic = Grendgine_Collada_Input_Semantic.COLOR,
-                                    Offset = 3,
-                                    source = "#" + colorSource.ID
-                                };
+                                inputCount++;
                             }
-                            else
-                            {
-                                triangles[j].Input = new Grendgine_Collada_Input_Shared[3];
-                            }
+                            triangles[j].Input = new Grendgine_Collada_Input_Shared[inputCount];
 
                             triangles[j].Input[0] = new Grendgine_Collada_Input_Shared
                             {
@@ -724,34 +723,55 @@ namespace CgfConverter
                                 Offset = 2,
                                 source = "#" + uvSource.ID
                             };
+
+                            int nextInputID = 3;
+                            if (tmpColors != null || tmpVertsUVs?.Colors != null)
+                            {
+                                triangles[j].Input[nextInputID] = new Grendgine_Collada_Input_Shared
+                                {
+                                    Semantic = Grendgine_Collada_Input_Semantic.COLOR,
+                                    Offset = nextInputID,
+                                    source = "#" + colorSource.ID
+                                };
+                                nextInputID++;
+                            }
+
                             // Create the vcount list.  All triangles, so the subset number of indices.
                             StringBuilder vc = new StringBuilder();
                             for (var k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
                             {
-                                if (tmpColors == null)
-                                    vc.AppendFormat(culture, "3 ");
-                                else
-                                    vc.AppendFormat(culture, "4 ");
+                                int ccount = 3;
+
+                                if (tmpColors != null || tmpVertsUVs?.Colors != null)
+                                    ccount++;
+
+                                vc.AppendFormat(culture, String.Format("{0} ", ccount));
                                 k += 2;
                             }
 
                             // Create the P node for the Triangles.
                             StringBuilder p = new StringBuilder();
-                            if (tmpColors != null || tmpVertsUVs?.Colors != null)
+                            for (var k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
                             {
-                                for (var k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
+                                int values = 0;
+                                if (tmpColors != null || tmpVertsUVs?.Colors != null)
                                 {
-                                    p.AppendFormat("{0} {0} {0} {0} {1} {1} {1} {1} {2} {2} {2} {2} ", tmpIndices.Indices[k], tmpIndices.Indices[k + 1], tmpIndices.Indices[k + 2]);
-                                    k += 2;
+                                    values++;
                                 }
-                            }
-                            else
-                            {
-                                for (var k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
+
+                                List<string> formatlist = new List<string>();
+                                formatlist.Add("{0} {0} {0} ");
+                                formatlist.Add("{1} {1} {1} ");
+                                formatlist.Add("{2} {2} {2} ");
+                                for (var valuecount = 0; valuecount < values; valuecount++)
                                 {
-                                    p.AppendFormat("{0} {0} {0} {1} {1} {1} {2} {2} {2} ", tmpIndices.Indices[k], tmpIndices.Indices[k + 1], tmpIndices.Indices[k + 2]);
-                                    k += 2;
+                                    formatlist[0] += "{0} ";
+                                    formatlist[1] += "{1} ";
+                                    formatlist[2] += "{2} ";
                                 }
+                                string finalformat = String.Join("",formatlist);
+                                p.AppendFormat(finalformat, tmpIndices.Indices[k], tmpIndices.Indices[k + 1], tmpIndices.Indices[k + 2]);
+                                k += 2;
                             }
                             triangles[j].P = new Grendgine_Collada_Int_Array_String
                             {
