@@ -379,14 +379,14 @@ namespace CgfConverter
             Console.WriteLine();
             Console.WriteLine("-smooth:          Smooth Faces.");
             Console.WriteLine("-group:           Group meshes into single model.");
-            Console.WriteLine("-prefixmatnames:  Prefixes material names with the filename of the source mtl file.");
-            Console.WriteLine("-excludenode <nodename>:");
+            Console.WriteLine("-en/-excludenode <nodename>:");
             Console.WriteLine("                  Exclude nodes starting with <nodename> from rendering. Can be listed multiple times.");
-            Console.WriteLine("-excludemat <material_name>:");
+            Console.WriteLine("-em/-excludemat <material_name>:");
             Console.WriteLine("                  Exclude meshes with the material <material_name> from rendering. Can be listed multiple times.");
             Console.WriteLine("-noconflict:      Use non-conflicting naming scheme (<cgf File>_out.obj)");
             Console.WriteLine("-allowconflict:   Allows conflicts in .mtl file name. (obj exports only, as not an issue in dae.)");
             Console.WriteLine();
+            Console.WriteLine("-prefixmatnames:  Prefixes material names with the filename of the source mtl file.");
             Console.WriteLine("-notex:           Do not include textures in outputs");
             Console.WriteLine("-tif:             Change the materials to look for .tif files instead of .dds.");
             Console.WriteLine("-png:             Change the materials to look for .png files instead of .dds.");
