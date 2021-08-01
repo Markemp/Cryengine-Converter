@@ -47,6 +47,25 @@ namespace CgfConverterTests.IntegrationTests.SC
             Assert.AreEqual(0, result);
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
+
+            var colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            colladaData.GenerateDaeObject();
+            var daeObject = colladaData.DaeObject;
+        }
+
+        [TestMethod]
+        public void M_ccc_heavy_armor_helmet_01Skin_Colors2()
+        {
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\m_ccc_heavy_armor_helmet_01.skin", "-dds", "-dae" };
+
+            int result = testUtils.argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
+            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
+
+            var colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            colladaData.GenerateDaeObject();
+            var daeObject = colladaData.DaeObject;
         }
 
         [TestMethod]

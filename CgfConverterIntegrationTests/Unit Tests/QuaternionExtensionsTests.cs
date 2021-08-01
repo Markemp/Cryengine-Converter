@@ -2,13 +2,77 @@
 using CgfConverterIntegrationTests.Extensions;
 using Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.IO;
 using System.Numerics;
+using static Extensions.BinaryReaderExtensions;
 
 namespace CgfConverterIntegrationTests.UnitTests
 {
     [TestClass]
     public class QuaternionExtensionsTests
     {
+        // Sample QTangents
+        private byte[] buffer1 = new byte[] { 0x02, 0xe5, 0x92, 0xbc, 0xd7, 0x61, 0xd6, 0xd8 };   // m_ccc_heavy_armor_helmet_01.skinm 1st tangent
+        private byte[] buffer2 = new byte[] { 0x5B, 0xEF, 0x12, 0xC1, 0xCA, 0x65, 0xC2, 0xD5 };  // m_ccc_heavy_armor_helmet_01.skinm 2nd tangent
+        private byte[] archeAgeQTangent1 = new byte[] { 0x6A, 0x03, 0x66, 0x54, 0x92, 0xA1, 0xD5, 0xED };
+        private byte[] archeAgeQTangent2 = new byte[] { 0xEA, 0x1D, 0x82, 0x31, 0xD5, 0x92, 0x8E, 0xDE };
+
+        [TestMethod]
+        public void GetNormal_NormalizedQuaternion1()
+        {
+            var expected = new Vector3(1.1086464E-05f, 0.9344362f, -0.35585153f);
+
+            using var source = new MemoryStream(buffer1);
+            using var reader = new BinaryReader(source);
+            var quat = reader.ReadQuaternion(InputType.Int16);
+                      
+            var normal = quat.GetNormal();
+
+            Assert.AreEqual(expected, normal);
+        }
+
+        [TestMethod]
+        public void GetNormal_NormalizedQuaternion2()
+        {
+            var expected = new Vector3(-0.11768986f, 0.8678087f, -0.4826852f);
+
+            using var source = new MemoryStream(buffer2);
+            using var reader = new BinaryReader(source);
+            var quat = reader.ReadQuaternion(InputType.Int16);
+
+            var normal = quat.GetNormal();
+
+            Assert.AreEqual(expected, normal);
+        }
+
+        [TestMethod]
+        public void GetNormal_NormalizedQuaternion3()
+        {
+            var expected = new Vector3(0.22654425f, 0.96535337f, -0.12885821f);
+
+            using var source = new MemoryStream(archeAgeQTangent1);
+            using var reader = new BinaryReader(source);
+            var quat = reader.ReadQuaternion(InputType.Int16);
+
+            var normal = quat.GetNormal();
+
+            Assert.AreEqual(expected, normal);
+        }
+
+        [TestMethod]
+        public void GetNormal_NormalizedQuaternion4()
+        {
+            var expected = new Vector3(0.60080105f, 0.5376527f, -0.59143436f);
+
+            using var source = new MemoryStream(archeAgeQTangent2);
+            using var reader = new BinaryReader(source);
+            var quat = reader.ReadQuaternion(InputType.Int16);
+
+            var normal = quat.GetNormal();
+
+            Assert.AreEqual(expected, normal);
+        }
+
         [TestMethod]
         public void ConvertToRotationMatrix_Identity()
         {

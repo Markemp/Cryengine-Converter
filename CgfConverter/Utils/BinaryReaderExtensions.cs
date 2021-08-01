@@ -44,6 +44,15 @@ namespace Extensions
                         Z = r.ReadHalf()
                     };
                     break;
+                case InputType.Byte:
+                    v = new()
+                    {
+                        X = (r.ReadByte() - 128.0f) / 127.5f,
+                        Y = (r.ReadByte() - 128.0f) / 127.5f,
+                        Z = (r.ReadByte() - 128.0f) / 127.5f,
+                    };
+                    r.ReadSByte(); // Skip?
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -73,6 +82,24 @@ namespace Extensions
                         Y = r.ReadHalf(),
                         Z = r.ReadHalf(),
                         W = r.ReadHalf()
+                    };
+                    break;
+                case InputType.Byte:
+                    q = new Quaternion()
+                    {
+                        X = (r.ReadByte() / 255f) * 2 - 1,
+                        Y = (r.ReadByte() / 255f) * 2 - 1,
+                        Z = (r.ReadByte() / 255f) * 2 - 1,
+                        W = (r.ReadByte() / 255f) * 2 - 1,
+                    };
+                    break;
+                case InputType.Int16:
+                    q = new Quaternion()
+                    {
+                        X = r.ReadInt16() / 32767.0f,
+                        Y = r.ReadInt16() / 32767.0f,
+                        Z = r.ReadInt16() / 32767.0f,
+                        W = r.ReadInt16() / 32767.0f
                     };
                     break;
                 default:
@@ -145,7 +172,9 @@ namespace Extensions
             Half,
             CryHalf,
             Single,
-            Double
+            Double,
+            Byte,
+            Int16
         }
 
         static float Byte4HexToFloat(string hexString)

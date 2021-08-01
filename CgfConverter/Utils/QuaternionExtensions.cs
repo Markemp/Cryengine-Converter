@@ -36,6 +36,16 @@ namespace Extensions
 
             return rotationalMatrix;
         }
+
+        public static Vector3 GetNormal(this Quaternion q)
+        {
+            return GetColumn2(q) * (q.W < 0.0f ? -1.0f : +1.0f);
+        }
+
+        private static Vector3 GetColumn2(this Quaternion q)
+        {
+            return new Vector3(2 * (q.X * q.Z + q.Y * q.W), 2 * (q.Y * q.Z - q.X * q.W), 2 * (q.Z * q.Z + q.W * q.W) - 1);
+        }
     }
 }
 

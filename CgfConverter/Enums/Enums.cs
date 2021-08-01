@@ -168,20 +168,20 @@
         COLORS2,
         INDICES,    // 0x05
         TANGENTS,
-        SHCOEFFS,
-        SHAPEDEFORMATION,
+        SHCOEFFS,   // Obsolete
+        SHAPEDEFORMATION,   // Obsolete
         BONEMAP,    // 0x09
         FACEMAP,
         VERTMATS,
         QTANGENTS,   // Prey Normals?
-        UNKNOWN2,
-        UNKNOWN3,
+        SKINDATA,
+        DUMMY2,     // Obsolete console stream type
         VERTSUVS,   // 0x0F
-        UNKNOWN5,
+        NUMTYPES,
         UNKNOWN6,
         IVONORMALS = 0x9CF3F615,
         IVONORMALS2 = 0x38A581FE,           // ResourceFiles\SC\ivo\new_skin_format\Avenger_Landing_Gear\AEGS_Vanguard_LandingGear_Front.skinm
-        IVONORMALS3 = 0xD9EED421,           // Objects\Characters\Human\male_v7\armor\ccc\m_ccc_vanduul_helmet_01.skinm
+        IVOCOLORS2 = 0xD9EED421,           // Objects\Characters\Human\male_v7\armor\ccc\m_ccc_vanduul_helmet_01.skinm
         IVOINDICES = 0xEECDC168,
         IVOTANGENTS = 0xB95E9A1B,
         IVOBONEMAP = 0x677C7B23,

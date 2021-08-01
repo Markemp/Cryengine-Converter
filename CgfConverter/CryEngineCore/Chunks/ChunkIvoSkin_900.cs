@@ -11,11 +11,12 @@ namespace CgfConverter.CryEngineCore.Chunks
          * 2: MeshChunk
          * 3: MeshSubsets
          * 4: Indices
-         * 5: VertsUVs (contains vertices, UVs and colors)
+         * 5: VertsUVs (Contains vertices, UVs and colors)
          * 6: Normals
          * 7: Tangents
-         * 8: Bonemap  (assume all #ivo files have armatures)
+         * 8: Bonemap  (Assume all #ivo files have armatures)
          * 9: Colors
+         * 10: Colors2  (Probably won't use these in the Collada exporter)
          */
         private bool hasNormalsChunk = false;  // If Flags2 of the meshchunk is 5, there is a separate normals chunk
 
@@ -26,9 +27,11 @@ namespace CgfConverter.CryEngineCore.Chunks
             base.Read(b);
             SkipBytes(b, 4);
 
-            ChunkMesh_900 meshChunk = new ChunkMesh_900();
-            meshChunk._model = _model;
-            meshChunk._header = _header;
+            ChunkMesh_900 meshChunk = new()
+            {
+                _model = _model,
+                _header = _header
+            };
             meshChunk._header.Offset = (uint)b.BaseStream.Position;
             meshChunk.ChunkType = ChunkType.Mesh;
             meshChunk.Read(b);
@@ -41,10 +44,12 @@ namespace CgfConverter.CryEngineCore.Chunks
 
             SkipBytes(b, 120);  // Unknown data.  All 0x00
 
-            ChunkMeshSubsets_900 subsetsChunk = new ChunkMeshSubsets_900(meshChunk.NumVertSubsets);
-            // Create dummy header info here (ChunkType, version, size, offset)
-            subsetsChunk._model = _model;
-            subsetsChunk._header = _header;
+            ChunkMeshSubsets_900 subsetsChunk = new(meshChunk.NumVertSubsets)
+            {
+                // Create dummy header info here (ChunkType, version, size, offset)
+                _model = _model,
+                _header = _header
+            };
             subsetsChunk._header.Offset = (uint)b.BaseStream.Position; 
             subsetsChunk.Read(b);
             subsetsChunk.ChunkType = ChunkType.MeshSubsets;
@@ -59,9 +64,11 @@ namespace CgfConverter.CryEngineCore.Chunks
                 {
                     case DatastreamType.IVOINDICES:
                         // Indices datastream
-                        ChunkDataStream_900 indicesDatastreamChunk = new ChunkDataStream_900((uint)meshChunk.NumIndices);
-                        indicesDatastreamChunk._model = _model;
-                        indicesDatastreamChunk._header = _header;
+                        ChunkDataStream_900 indicesDatastreamChunk = new((uint)meshChunk.NumIndices)
+                        {
+                            _model = _model,
+                            _header = _header
+                        };
                         indicesDatastreamChunk._header.Offset = (uint)b.BaseStream.Position;
                         indicesDatastreamChunk.Read(b);
                         indicesDatastreamChunk.DataStreamType = DatastreamType.INDICES;
@@ -70,44 +77,64 @@ namespace CgfConverter.CryEngineCore.Chunks
                         model.ChunkMap.Add(indicesDatastreamChunk.ID, indicesDatastreamChunk);
                         break;
                     case DatastreamType.IVOVERTSUVS:
-                        ChunkDataStream_900 vertsUvsDatastreamChunk = new ChunkDataStream_900((uint)meshChunk.NumVertices);
-                        vertsUvsDatastreamChunk._model = _model;
-                        vertsUvsDatastreamChunk._header = _header;
+                        ChunkDataStream_900 vertsUvsDatastreamChunk = new((uint)meshChunk.NumVertices)
+                        {
+                            _model = _model,
+                            _header = _header
+                        };
                         vertsUvsDatastreamChunk._header.Offset = (uint)b.BaseStream.Position; 
                         vertsUvsDatastreamChunk.Read(b);
                         vertsUvsDatastreamChunk.DataStreamType = DatastreamType.VERTSUVS;
                         vertsUvsDatastreamChunk.ChunkType = ChunkType.DataStream;
                         vertsUvsDatastreamChunk.ID = 5;
                         model.ChunkMap.Add(vertsUvsDatastreamChunk.ID, vertsUvsDatastreamChunk);
-                        
+
                         // Create colors chunk
-                        ChunkDataStream_900 c = new ChunkDataStream_900((uint)meshChunk.NumVertices);
-                        c._model = _model;
-                        c._header = _header;
-                        c.ChunkType = ChunkType.DataStream;
-                        c.BytesPerElement = 4;
-                        c.DataStreamType = DatastreamType.COLORS;
-                        c.Colors = vertsUvsDatastreamChunk.Colors;
-                        c.ID = 9;
+                        ChunkDataStream_900 c = new((uint)meshChunk.NumVertices)
+                        {
+                            _model = _model,
+                            _header = _header,
+                            ChunkType = ChunkType.DataStream,
+                            BytesPerElement = 4,
+                            DataStreamType = DatastreamType.COLORS,
+                            Colors = vertsUvsDatastreamChunk.Colors,
+                            ID = 9
+                        };
                         model.ChunkMap.Add(c.ID, c);
                         break;
                     case DatastreamType.IVONORMALS:
                     case DatastreamType.IVONORMALS2:
-                    case DatastreamType.IVONORMALS3:
-                        ChunkDataStream_900 normals = new ChunkDataStream_900((uint)meshChunk.NumVertices);
-                        normals._model = _model;
-                        normals._header = _header;
-                        normals._header.Offset = (uint)b.BaseStream.Position; 
+                        ChunkDataStream_900 normals = new((uint)meshChunk.NumVertices)
+                        {
+                            _model = _model,
+                            _header = _header
+                        };
+                        normals._header.Offset = (uint)b.BaseStream.Position;
                         normals.Read(b);
-                        normals.DataStreamType = DatastreamType.NORMALS;
+                        normals.DataStreamType = DatastreamType.IVOCOLORS2;
                         normals.ChunkType = ChunkType.DataStream;
                         normals.ID = 6;
                         model.ChunkMap.Add(normals.ID, normals);
                         break;
+                    case DatastreamType.IVOCOLORS2:
+                        ChunkDataStream_900 colors2 = new((uint)meshChunk.NumVertices)
+                        {
+                            _model = _model,
+                            _header = _header
+                        };
+                        colors2._header.Offset = (uint)b.BaseStream.Position; 
+                        colors2.Read(b);
+                        colors2.DataStreamType = DatastreamType.IVOCOLORS2;
+                        colors2.ChunkType = ChunkType.DataStream;
+                        colors2.ID = 10;
+                        model.ChunkMap.Add(colors2.ID, colors2);
+                        break;
                     case DatastreamType.IVOTANGENTS:
-                        ChunkDataStream_900 tangents = new ChunkDataStream_900((uint)meshChunk.NumVertices);
-                        tangents._model = _model;
-                        tangents._header = _header;
+                        ChunkDataStream_900 tangents = new((uint)meshChunk.NumVertices)
+                        {
+                            _model = _model,
+                            _header = _header
+                        };
                         tangents._header.Offset = (uint)b.BaseStream.Position; 
                         tangents.Read(b);
                         tangents.DataStreamType = DatastreamType.TANGENTS;
@@ -117,22 +144,26 @@ namespace CgfConverter.CryEngineCore.Chunks
                         if (!hasNormalsChunk)
                         {
                             // Create a normals chunk from Tangents data
-                            ChunkDataStream_900 norms = new ChunkDataStream_900((uint)meshChunk.NumVertices);
-                            norms._model = _model;
-                            norms._header = _header;
-                            //norms._header.Offset = (uint)b.BaseStream.Position;
-                            norms.ChunkType = ChunkType.DataStream;
-                            norms.BytesPerElement = 4;
-                            norms.DataStreamType = DatastreamType.NORMALS;
-                            norms.Normals = tangents.Normals;
-                            norms.ID = 6;
+                            ChunkDataStream_900 norms = new((uint)meshChunk.NumVertices)
+                            {
+                                _model = _model,
+                                _header = _header,
+                                //norms._header.Offset = (uint)b.BaseStream.Position;
+                                ChunkType = ChunkType.DataStream,
+                                BytesPerElement = 4,
+                                DataStreamType = DatastreamType.NORMALS,
+                                Normals = tangents.Normals,
+                                ID = 6
+                            };
                             model.ChunkMap.Add(norms.ID, norms);
                         }
                         break;
                     case DatastreamType.IVOBONEMAP:
-                        ChunkDataStream_900 bonemap = new ChunkDataStream_900((uint)meshChunk.NumVertices);
-                        bonemap._model = _model;
-                        bonemap._header = _header;
+                        ChunkDataStream_900 bonemap = new((uint)meshChunk.NumVertices)
+                        {
+                            _model = _model,
+                            _header = _header
+                        };
                         bonemap._header.Offset = (uint)b.BaseStream.Position; 
                         bonemap.Read(b);
                         bonemap.DataStreamType = DatastreamType.BONEMAP;

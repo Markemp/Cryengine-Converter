@@ -74,7 +74,7 @@ namespace CgfConverterIntegrationTests.UnitTests
         }
 
         [TestMethod]
-        public void ReadVector3()
+        public void ReadVector3_SingleType()
         {
             var buffer = new byte[] {
                 0xA3, 0x1F, 0xD2, 0x3D,

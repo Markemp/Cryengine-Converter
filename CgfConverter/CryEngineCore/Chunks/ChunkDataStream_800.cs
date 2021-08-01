@@ -139,16 +139,16 @@ namespace CgfConverter.CryEngineCore
                             case 0x08:
                                 // These have to be divided by 127 to be used properly (value between 0 and 1)
                                 // Tangent
-                                Tangents[i, 0].w = b.ReadSByte() / 127;
-                                Tangents[i, 0].x = b.ReadSByte() / 127;
-                                Tangents[i, 0].y = b.ReadSByte() / 127;
-                                Tangents[i, 0].z = b.ReadSByte() / 127;
+                                Tangents[i, 0].w = b.ReadSByte() / 127.5f;
+                                Tangents[i, 0].x = b.ReadSByte() / 127.5f;
+                                Tangents[i, 0].y = b.ReadSByte() / 127.5f;
+                                Tangents[i, 0].z = b.ReadSByte() / 127.5f;
 
-                                // Binormal
-                                Tangents[i, 1].w = b.ReadSByte() / 127;
-                                Tangents[i, 1].x = b.ReadSByte() / 127;
-                                Tangents[i, 1].y = b.ReadSByte() / 127;
-                                Tangents[i, 1].z = b.ReadSByte() / 127;
+                                // Bitangent
+                                Tangents[i, 1].w = b.ReadSByte() / 127.5f;
+                                Tangents[i, 1].x = b.ReadSByte() / 127.5f;
+                                Tangents[i, 1].y = b.ReadSByte() / 127.5f;
+                                Tangents[i, 1].z = b.ReadSByte() / 127.5f;
 
                                 // Calculate the normal based on the cross product of the tangents.
                                 Normals[i].X = (Tangents[i,0].y * Tangents[i,1].z - Tangents[i,0].z * Tangents[i,1].y);
@@ -211,7 +211,7 @@ namespace CgfConverter.CryEngineCore
                             {
                                 Vertices[i] = b.ReadVector3(); // For some reason, skins are an extra 1 meter in the z direction.
 
-                                // Normals are stored in a signed byte, prob div by 127.
+                                // TODO:  Refactor.  These are colors, not Normals.
                                 Normals[i].X = (float)b.ReadSByte() / 127;
                                 Normals[i].Y = (float)b.ReadSByte() / 127;
                                 Normals[i].Z = (float)b.ReadSByte() / 127;
@@ -246,7 +246,9 @@ namespace CgfConverter.CryEngineCore
                                 for (int i = 0; i < NumElements; i++)
                                 {
                                     Vertices[i] = b.ReadVector3(InputType.Half);
+                                    // TODO:  Refactor.  These are colors, not Normals
                                     Normals[i] = b.ReadVector3(InputType.Half);
+
                                     UVs[i].U = b.ReadHalf();
                                     UVs[i].V = b.ReadHalf();
                                 }
@@ -254,7 +256,7 @@ namespace CgfConverter.CryEngineCore
                             break;
                         default:
                             Utils.Log("Unknown VertUV structure");
-                            for (Int32 i = 0; i < NumElements; i++)
+                            for (int i = 0; i < NumElements; i++)
                             {
                                 SkipBytes(b, BytesPerElement);
                             }
@@ -319,25 +321,12 @@ namespace CgfConverter.CryEngineCore
                 #endregion
                 #region case DataStreamTypeEnum.QTangents
                 case DatastreamType.QTANGENTS:
-                    Tangents = new Tangent[NumElements, 2];
+                    QTangents = new Quaternion[NumElements];
                     Normals = new Vector3[NumElements];
                     for (int i = 0; i < NumElements; i++)
                     {
-                        Tangents[i, 0].w = b.ReadSByte() / 127;
-                        Tangents[i, 0].x = b.ReadSByte() / 127;
-                        Tangents[i, 0].y = b.ReadSByte() / 127;
-                        Tangents[i, 0].z = b.ReadSByte() / 127;
-
-                        // Binormal
-                        Tangents[i, 1].w = b.ReadSByte() / 127;
-                        Tangents[i, 1].x = b.ReadSByte() / 127;
-                        Tangents[i, 1].y = b.ReadSByte() / 127;
-                        Tangents[i, 1].z = b.ReadSByte() / 127;
-
-                        // Calculate the normal based on the cross product of the tangents.
-                        Normals[i].X = (Tangents[i, 0].y * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].y);
-                        Normals[i].Y = 0 - (Tangents[i, 0].x * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].x);
-                        Normals[i].Z = (Tangents[i, 0].x * Tangents[i, 1].y - Tangents[i, 0].y * Tangents[i, 1].x);
+                        QTangents[i] = b.ReadQuaternion(InputType.Int16);
+                        Normals[i] = QTangents[i].GetNormal();
                     }
                     break;
                 #endregion // Prey normals?

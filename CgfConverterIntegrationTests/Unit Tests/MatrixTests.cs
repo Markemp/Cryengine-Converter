@@ -124,8 +124,7 @@ namespace CgfConverterIntegrationTests.UnitTests
             Assert.AreEqual(1, bone0BPM.M21);
             Assert.AreEqual(-1, bone0BPM.M32);
 
-            Matrix4x4 actual2;
-            Matrix4x4.Invert(bone0BPM, out actual2);
+            Matrix4x4.Invert(bone0BPM, out Matrix4x4 actual2);
             Assert.AreEqual(expectedBoneBPM, actual2);
         }
 

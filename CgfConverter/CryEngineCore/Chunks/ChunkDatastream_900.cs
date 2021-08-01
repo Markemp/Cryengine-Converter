@@ -114,8 +114,22 @@ namespace CgfConverter.CryEngineCore
                             break;
                     }
                     break;
-                case DatastreamType.IVONORMALS3:
-                    // Skip for now...
+                #endregion
+                #region COLORS2
+                case DatastreamType.IVOCOLORS2:
+                    switch (BytesPerElement)
+                    {
+                        case 4:
+                            for (int i = 0; i < NumElements; i++)
+                            {
+                                SkipBytes(b, 4);        // TODO:  If colors2 data is needed, capture here.
+                            }
+                            if (NumElements % 2 == 1)
+                            {
+                                SkipBytes(b, 4);
+                            }
+                            break;
+                    }
                     break;
                 #endregion
                 #region IVOTANGENTS

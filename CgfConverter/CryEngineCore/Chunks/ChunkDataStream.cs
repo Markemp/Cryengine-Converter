@@ -20,7 +20,8 @@ namespace CgfConverter.CryEngineCore
         public IRGBA[] Colors;
 
         // For Tangents on down, this may be a 2 element array.  See line 846+ in cgf.xml
-        public Tangent[,] Tangents;  // for dataStreamType of 6, length is NumElements, 2.  
+        public Tangent[,] Tangents;  // for dataStreamType of 6, length is NumElements, 2.
+        public Quaternion[] QTangents;  // datasteram type of 12.
         public byte[,] ShCoeffs;     // for dataStreamType of 7, length is NumElement,BytesPerElements.
         public byte[,] ShapeDeformation; // for dataStreamType of 8, length is NumElements,BytesPerElement.
         public byte[,] BoneMap;      // for dataStreamType of 9, length is NumElements,BytesPerElement, 2.

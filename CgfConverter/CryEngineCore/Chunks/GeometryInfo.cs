@@ -13,8 +13,8 @@ namespace CgfConverter.CryEngineCore
         public Vector3[] Normals { get; set; }
         public UV[] UVs { get; set; }
         public IRGBA[] Colors { get; set; }
+        public IRGBA[] Colors2 { get; set; }
         public uint[] Indices { get; set; }
-        // For Tangents on down, this may be a 2 element array.  See line 846+ in cgf.xml
         public Tangent[,] Tangents { get; set; }
         public byte[,] ShCoeffs { get; set; }
         public byte[,] ShapeDeformation { get; set; }
