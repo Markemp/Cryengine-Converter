@@ -23,11 +23,14 @@ namespace CgfConverter.CryEngineCore
             Colors2Data = b.ReadInt32();
             IndicesData = b.ReadInt32();
             TangentsData = b.ReadInt32();
-            SkipBytes(b, 16);
-            for (int i = 0; i < 4; i++)
-            {
-                PhysicsData[i] = b.ReadInt32();
-            }
+            ShCoeffsData = b.ReadInt32();
+            ShapeDeformationData = b.ReadInt32();
+            BoneMapData = b.ReadInt32();
+            FaceMapData = b.ReadInt32();
+            b.ReadInt32();                          // VertsMat
+            b.ReadInt32();                          // QTangents
+            b.ReadInt32();                          // Skin Data
+            b.ReadInt32();                          // Dummy2 (obsolete console data)
             VertsUVsData = b.ReadInt32();          // This should be a vertsUV Chunk ID.
             ShCoeffsData = b.ReadInt32();
             ShapeDeformationData = b.ReadInt32();

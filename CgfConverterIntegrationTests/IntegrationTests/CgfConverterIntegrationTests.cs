@@ -99,42 +99,6 @@ namespace CgfConverterTests.IntegrationTests
         }
 
         [TestMethod]
-        public void Prey_Dahl_GenMaleBody01_MaterialFileFound()
-        {
-            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Prey\Dahl_GenMaleBody01.skin", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\Prey\" };
-            int result = testUtils.argsHandler.ProcessArgs(args);
-            Assert.AreEqual(0, result);
-            CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
-            cryData.ProcessCryengineFiles();
-
-            COLLADA colladaData = new(testUtils.argsHandler, cryData);
-            colladaData.GenerateDaeObject();
-
-            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-            Assert.AreEqual(1, actualMaterialsCount);
-
-            testUtils.ValidateColladaXml(colladaData);
-        }
-
-        [TestMethod]
-        public void Prey_Dahl_GenMaleBody01_MaterialFileNotAvailable()
-        {
-            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Prey\Dahl_GenMaleBody01.skin" };
-            int result = testUtils.argsHandler.ProcessArgs(args);
-            Assert.AreEqual(0, result);
-            CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
-            cryData.ProcessCryengineFiles();
-
-            COLLADA colladaData = new(testUtils.argsHandler, cryData);
-            colladaData.GenerateDaeObject();
-
-            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-            Assert.AreEqual(1, actualMaterialsCount);
-
-            testUtils.ValidateColladaXml(colladaData);
-        }
-
-        [TestMethod]
         public void Evolve_griffin_skin_NoMaterialFile()
         {
             var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Evolve\griffin.skin" };

@@ -94,11 +94,30 @@ namespace CgfConverter.CryEngineCore
 
                 case DatastreamType.NORMALS:
                     Normals = new Vector3[NumElements];
-                    for (int i = 0; i < NumElements; i++)
+                    switch (BytesPerElement)
                     {
-                        Normals[i] = b.ReadVector3();
+                        case 12:
+                            for (int i = 0; i < NumElements; i++)
+                            {
+                                Normals[i] = b.ReadVector3();
+                            }
+                            break;
+                        case 4:
+                            for (int i = 0; i < NumElements; i++)
+                            {
+                                Normals[i].X = (float)((b.ReadByte() - 128.0) / 127.5f);
+                                Normals[i].Y = (float)((b.ReadByte() - 128.0) / 127.5f);
+                                Normals[i].Z = (float)((b.ReadByte() - 128.0) / 127.5f);
+                                b.ReadByte();
+                            }
+                            break;
+                        default:
+                            break;
                     }
                     break;
+
+                    
+                    
 
                 #endregion
                 #region case DataStreamTypeEnum.UVS:
@@ -206,53 +225,36 @@ namespace CgfConverter.CryEngineCore
                     UVs = new UV[NumElements];
                     switch (BytesPerElement)  // new Star Citizen files
                     {
-                        case 20:  // Dymek's code.  3 floats for vertex position, 4 bytes for normals, 2 halfs for UVs.  Normals are calculated from Tangents
+                        case 20:  // 3 floats for vertex position, 4 bytes for colors, 2 halfs for UVs.  Normals are calculated from Tangents
                             Normals = new Vector3[NumElements];
                             for (int i = 0; i < NumElements; i++)
                             {
                                 Vertices[i] = b.ReadVector3(); // For some reason, skins are an extra 1 meter in the z direction.
 
-                                // TODO:  Refactor.  These are colors, not Normals.
-                                Normals[i].X = (float)b.ReadSByte() / 127;
-                                Normals[i].Y = (float)b.ReadSByte() / 127;
-                                Normals[i].Z = (float)b.ReadSByte() / 127;
-                                b.ReadSByte(); // Should be FF.
+                                Colors[i] = b.ReadColor();
 
                                 UVs[i].U = b.ReadHalf();
                                 UVs[i].V = b.ReadHalf();
                             }
                             break;
-                        case 16:   // Dymek updated
-                            if (starCitizenFlag == 257)
+                        case 16:
+                            for (int i = 0; i < NumElements; i++)
                             {
-                                for (int i = 0; i < NumElements; i++)
+                                if (starCitizenFlag == 257)
                                 {
-                                    Vertices[i].X = b.ReadCryHalf();
-                                    Vertices[i].Y = b.ReadCryHalf();
-                                    Vertices[i].Z = b.ReadCryHalf();
+                                    Vertices[i] = b.ReadVector3(InputType.CryHalf);
                                     SkipBytes(b, 2);
-                                    //Vertices[i].W = b.ReadCryHalf();
-
-                                    Colors[i] = b.ReadColor();
-
-                                    // UVs ABSOLUTELY should use the Half structures.
-                                    UVs[i].U = b.ReadHalf();
-                                    UVs[i].V = b.ReadHalf();
                                 }
-                            }
-                            else
-                            {
-                                Normals = new Vector3[NumElements];
-                                // Legacy version using Halfs (Also Hunt models)
-                                for (int i = 0; i < NumElements; i++)
+                                else
                                 {
                                     Vertices[i] = b.ReadVector3(InputType.Half);
-                                    // TODO:  Refactor.  These are colors, not Normals
-                                    Normals[i] = b.ReadVector3(InputType.Half);
-
-                                    UVs[i].U = b.ReadHalf();
-                                    UVs[i].V = b.ReadHalf();
+                                    SkipBytes(b, 2);
                                 }
+
+                                Colors[i] = b.ReadColor();
+
+                                UVs[i].U = b.ReadHalf();
+                                UVs[i].V = b.ReadHalf();
                             }
                             break;
                         default:

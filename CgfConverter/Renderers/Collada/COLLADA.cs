@@ -647,14 +647,12 @@ namespace CgfConverter
                                 Vector3 vertex = tmpVertsUVs.Vertices[j];
                                 vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", vertex.X, vertex.Y, vertex.Z);
 
-                                // TODO:  This isn't right?  VertsUvs may always have color as the 3rd element.
-                                // Normals depend on the data size.  16 byte structures have the normals in the Tangents.  20 byte structures are in the VertsUV.
                                 Vector3 normal = new(); 
-                                if (tmpVertsUVs.Normals != null)
+                                if (tmpNormals != null)
                                 {
-                                    normal = tmpVertsUVs.Normals[j];
+                                    normal = tmpNormals.Normals[j];
                                 }
-                                else if (tmpTangents != null && tmpTangents.Normals != null)
+                                else
                                 {
                                     normal = tmpTangents.Normals[j];
                                 }

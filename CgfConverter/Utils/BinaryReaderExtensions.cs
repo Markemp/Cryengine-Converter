@@ -44,14 +44,13 @@ namespace Extensions
                         Z = r.ReadHalf()
                     };
                     break;
-                case InputType.Byte:
+                case InputType.CryHalf:
                     v = new()
                     {
-                        X = (r.ReadByte() - 128.0f) / 127.5f,
-                        Y = (r.ReadByte() - 128.0f) / 127.5f,
-                        Z = (r.ReadByte() - 128.0f) / 127.5f,
+                        X = r.ReadCryHalf(),
+                        Y = r.ReadCryHalf(),
+                        Z = r.ReadCryHalf()
                     };
-                    r.ReadSByte(); // Skip?
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -102,7 +101,7 @@ namespace Extensions
                         W = (r.ReadByte() / 255f) * 2 - 1,
                     };
                     break;
-                case InputType.Int16:
+                case InputType.Int16:           // Only for QTangents
                     q = new Quaternion()
                     {
                         X = r.ReadInt16() / 32767.0f,
