@@ -1,12 +1,13 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 
 namespace CgfConverter.CryEngineCore.Chunks
 {
     class ChunkIvoSkin_900 : ChunkIvoSkin
     {
         /*
-         * Node IDs for Ivo models
+         * Node (Chunk) IDs for Ivo models
          * 1: NodeChunk
          * 2: MeshChunk
          * 3: MeshSubsets
@@ -38,6 +39,9 @@ namespace CgfConverter.CryEngineCore.Chunks
             meshChunk.ID = 2;
             meshChunk.MeshSubsetsData = 3;
             model.ChunkMap.Add(meshChunk.ID, meshChunk);
+
+            // If chunk has a NORMALS or NORMALS2 chunk, don't calculate normals from Tangents
+            var normalChunk = model.ChunkMap.Values.Where(a => a.ID == 6);
 
             if (meshChunk.Flags2 == 5)
                 hasNormalsChunk = true;
@@ -141,7 +145,8 @@ namespace CgfConverter.CryEngineCore.Chunks
                         tangents.ChunkType = ChunkType.DataStream;
                         tangents.ID = 7;
                         model.ChunkMap.Add(tangents.ID, tangents);
-                        if (!hasNormalsChunk)
+                        var existingNormalChunk = model.ChunkMap.Values.Where(a => a.ID == 6).Count();
+                        if (existingNormalChunk == 0)
                         {
                             // Create a normals chunk from Tangents data
                             ChunkDataStream_900 norms = new((uint)meshChunk.NumVertices)
