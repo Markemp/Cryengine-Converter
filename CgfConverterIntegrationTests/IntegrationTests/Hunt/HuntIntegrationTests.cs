@@ -38,7 +38,7 @@ namespace CgfConverterTests.IntegrationTests.Hunt
             var daeObject = colladaData.DaeObject;
             colladaData.GenerateDaeObject();
 
-            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
             Assert.AreEqual(5, actualMaterialsCount);  // Need to figure out material chunks
 
             // Visual Scene Check
@@ -80,8 +80,62 @@ namespace CgfConverterTests.IntegrationTests.Hunt
             Assert.AreEqual(91, controllerJoints.Name_Array.Count);
             Assert.AreEqual("Controller-joints-array", controllerJoints.Name_Array.ID);
             var nameArray = controllerJoints.Name_Array.Value();
-            Assert.AreEqual(91, nameArray.Count());
+            Assert.AreEqual(91, nameArray.Length);
             Assert.IsTrue(nameArray.Contains("L_leg_spiral_01"));
+
+            // Geometry Library check
+            var geometry = daeObject.Library_Geometries.Geometry;
+            Assert.AreEqual("assassin_christmas_body-mesh", geometry[0].ID);
+            Assert.AreEqual("assassin_christmas_body", geometry[0].Name);
+            var mesh = geometry[0].Mesh;
+            var sources = mesh.Source;
+            Assert.AreEqual(4, sources.Length);
+            Assert.IsNotNull(mesh.Vertices);
+            Assert.IsNull(mesh.Trifans);
+            var triangles = mesh.Triangles[0];
+            Assert.AreEqual(9481, triangles.Count);
+            Assert.AreEqual(3, triangles.Input.Length);
+            Assert.AreEqual(Grendgine_Collada_Input_Semantic.VERTEX, triangles.Input[0].Semantic);
+            Assert.AreEqual("#assassin_christmas_body-vertices", triangles.Input[0].source);
+            Assert.AreEqual(0, triangles.Input[0].Offset);
+            Assert.AreEqual(0, triangles.Input[0].Set);
+            Assert.AreEqual(Grendgine_Collada_Input_Semantic.NORMAL, triangles.Input[1].Semantic);
+            Assert.AreEqual("#assassin_christmas_body-mesh-norm", triangles.Input[1].source);
+            Assert.AreEqual(1, triangles.Input[1].Offset);
+            Assert.AreEqual(0, triangles.Input[1].Set);
+            Assert.AreEqual(Grendgine_Collada_Input_Semantic.TEXCOORD, triangles.Input[2].Semantic);
+            Assert.AreEqual("#assassin_christmas_body-mesh-UV", triangles.Input[2].source);
+            Assert.AreEqual(2, triangles.Input[2].Offset);
+            Assert.IsTrue(triangles.P.Value_As_String.StartsWith("0 0 0 1 1 1 2 2 2 2 2 2 1 1 1 3 3 3 4 4 4 5 5 5 6 6 6 6 6 6 5 5 5 7"));
+
+            // Geometry Source checks
+            var vertices = mesh.Source[0];
+            var normals = mesh.Source[1];
+            var uvs = mesh.Source[2];
+            var colors = mesh.Source[3];
+
+            Assert.AreEqual("assassin_christmas_body-mesh-pos", vertices.ID);
+            Assert.AreEqual("assassin_christmas_body-pos", vertices.Name);
+            Assert.AreEqual("assassin_christmas_body-mesh-norm", normals.ID);
+            Assert.AreEqual("assassin_christmas_body-norm", normals.Name);
+            Assert.AreEqual("assassin_christmas_body-mesh-UV", uvs.ID);
+            Assert.AreEqual("assassin_christmas_body-UV", uvs.Name);
+            Assert.AreEqual("assassin_christmas_body-mesh-color", colors.ID);
+            Assert.AreEqual("assassin_christmas_body-color", colors.Name);
+            Assert.AreEqual(16773, vertices.Float_Array.Count);
+            Assert.AreEqual("assassin_christmas_body-mesh-pos-array", vertices.Float_Array.ID);
+            Assert.IsTrue(vertices.Float_Array.Value_As_String.StartsWith("0.050568 0.100037 2.091797 0.048096 0.124878 2.099609 0.059082 0.102295 2.117188"));
+            Assert.IsTrue(normals.Float_Array.Value_As_String.StartsWith("0.937621 0.285583 -0.198119 0.936078 0.280857 -0.211475 0.936635 0.282288 -0.207055 0.934067 0.276564 -0.225759"));
+            Assert.IsTrue(uvs.Float_Array.Value_As_String.StartsWith("0.109355 0.945530 0.115990 0.952536 0.105439 0.957339 0.114411 0.958222 0.114411"));
+            Assert.AreEqual((uint)5591, vertices.Technique_Common.Accessor.Count);
+            Assert.AreEqual((uint)3, vertices.Technique_Common.Accessor.Stride);
+            Assert.AreEqual(16773, normals.Float_Array.Count);
+            Assert.AreEqual((uint)5591, normals.Technique_Common.Accessor.Count);
+            Assert.AreEqual((uint)3, normals.Technique_Common.Accessor.Stride);
+            Assert.AreEqual(11182, uvs.Float_Array.Count);
+            Assert.AreEqual((uint)5591, uvs.Technique_Common.Accessor.Count);
+            Assert.AreEqual((uint)2, uvs.Technique_Common.Accessor.Stride);
+            Assert.AreEqual(0, colors.Float_Array.Count);
 
             testUtils.ValidateColladaXml(colladaData);
         }
@@ -101,7 +155,7 @@ namespace CgfConverterTests.IntegrationTests.Hunt
             var daeObject = colladaData.DaeObject;
             colladaData.GenerateDaeObject();
 
-            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
             Assert.AreEqual(5, actualMaterialsCount);   // Need to figure out material chunks
 
             // Visual Scene Check
@@ -143,7 +197,7 @@ namespace CgfConverterTests.IntegrationTests.Hunt
             Assert.AreEqual(91, controllerJoints.Name_Array.Count);
             Assert.AreEqual("Controller-joints-array", controllerJoints.Name_Array.ID);
             var nameArray = controllerJoints.Name_Array.Value();
-            Assert.AreEqual(91, nameArray.Count());
+            Assert.AreEqual(91, nameArray.Length);
             Assert.IsTrue(nameArray.Contains("L_leg_spiral_01"));
 
             // Geometry Library check

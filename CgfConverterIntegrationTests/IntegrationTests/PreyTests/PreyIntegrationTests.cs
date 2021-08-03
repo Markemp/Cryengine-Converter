@@ -39,7 +39,7 @@ namespace CgfConverterTests.IntegrationTests.Prey
             COLLADA colladaData = new(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
-            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
             Assert.AreEqual(1, actualMaterialsCount);
 
             testUtils.ValidateColladaXml(colladaData);
@@ -57,7 +57,7 @@ namespace CgfConverterTests.IntegrationTests.Prey
             COLLADA colladaData = new(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
-            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
             Assert.AreEqual(1, actualMaterialsCount);
 
             testUtils.ValidateColladaXml(colladaData);

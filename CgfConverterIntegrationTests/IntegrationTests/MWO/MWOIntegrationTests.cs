@@ -36,7 +36,7 @@ namespace CgfConverterTests.IntegrationTests.MWO
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
-            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
             Assert.AreEqual(3, actualMaterialsCount);
             testUtils.ValidateColladaXml(colladaData);
         }
@@ -54,7 +54,7 @@ namespace CgfConverterTests.IntegrationTests.MWO
             var daeObject = colladaData.DaeObject;
             colladaData.GenerateDaeObject();
 
-            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
             Assert.AreEqual(11, actualMaterialsCount);
             
             // Visual Scene Check 
@@ -110,7 +110,7 @@ namespace CgfConverterTests.IntegrationTests.MWO
             Assert.AreEqual(64, controllerJoints.Name_Array.Count);
             Assert.AreEqual("Controller-joints-array", controllerJoints.Name_Array.ID);
             var nameArray = controllerJoints.Name_Array.Value();
-            Assert.AreEqual(64, nameArray.Count());
+            Assert.AreEqual(64, nameArray.Length);
             Assert.IsTrue(nameArray.Contains("Bip01"));
             Assert.IsTrue(nameArray.Contains("Bip01_L_Thigh"));
             Assert.IsTrue(nameArray.Contains("Bip01_R_Toe0Nub"));
@@ -154,7 +154,7 @@ namespace CgfConverterTests.IntegrationTests.MWO
             var bindPoseArrayNegZeros = "-0 -0 -1 0.023305 1 -0 -0 -0 -0 -1 0 -0 0 0 0 1 -0.000089 -0 -1 -0.000092 1 0.000008 -0.000089 -0 0.000008 -1 0 -0 0 0 0 1 -0.000091 -0 -1 -0.026455 1 0.000008";
             Assert.AreEqual(128, controllerBindPose.Float_Array.Count);
             Assert.IsTrue(controllerBindPose.Float_Array.Value_As_String.StartsWith(bindPoseArray) || controllerBindPose.Float_Array.Value_As_String.StartsWith(bindPoseArrayNegZeros));
-            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
             Assert.AreEqual(2, actualMaterialsCount);
 
             // VisualScene
@@ -186,7 +186,7 @@ namespace CgfConverterTests.IntegrationTests.MWO
 
             COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
-            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
             Assert.AreEqual(21, actualMaterialsCount);
             testUtils.ValidateColladaXml(colladaData);
         }
@@ -238,7 +238,7 @@ namespace CgfConverterTests.IntegrationTests.MWO
             Assert.AreEqual("hellbringer_body-material", node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
             Assert.AreEqual("#hellbringer_body-material", node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
             // library_materials Check
-            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
             var materials = colladaData.DaeObject.Library_Materials;
             Assert.AreEqual(5, actualMaterialsCount);
             Assert.AreEqual("hellbringer_body-material", materials.Material[0].ID);

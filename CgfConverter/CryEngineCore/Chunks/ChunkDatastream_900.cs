@@ -55,7 +55,6 @@ namespace CgfConverter.CryEngineCore
                 #region IVOVERTSUVS
                 case DatastreamType.IVOVERTSUVS:
                     Vertices = new Vector3[NumElements];
-                    Normals = new Vector3[NumElements];
                     Colors = new IRGBA[NumElements];
                     UVs = new UV[NumElements];
                     switch (BytesPerElement)  // new Star Citizen files
@@ -150,26 +149,10 @@ namespace CgfConverter.CryEngineCore
                         Tangents[i, 1].z = b.ReadSByte() / 127f;
 
                         // Calculate the normal based on the cross product of the tangents.
-                        Normals[i].X = (Tangents[i, 0].y * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].y);
-                        Normals[i].Y = 0 - (Tangents[i, 0].x * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].x);
-                        Normals[i].Z = (Tangents[i, 0].x * Tangents[i, 1].y - Tangents[i, 0].y * Tangents[i, 1].x);
-
-                        //// These have to be divided by 32767 to be used properly (value between -1 and 1)
-                        //// Tangent
-                        //Tangents[i, 0].x = b.ReadInt16() / 32767;
-                        //Tangents[i, 0].y = b.ReadInt16() / 32767;
-                        //Tangents[i, 0].z = b.ReadInt16() / 32767;
-                        //Tangents[i, 0].w = b.ReadInt16() / 32767;
-
-                        //Normals[i].x = (2.0 * (Tangents[i, 0].x * Tangents[i, 0].z + Tangents[i, 0].y * Tangents[i, 0].w));
-                        //Normals[i].y = (2.0 * (Tangents[i, 0].y * Tangents[i, 0].z - Tangents[i, 0].x * Tangents[i, 0].w));
-                        //Normals[i].z = (2.0 * (Tangents[i, 0].z * Tangents[i, 0].z + Tangents[i, 0].w * Tangents[i, 0].w)) - 1.0;
-
-                        //// Binormal
-                        ////Tangents[i, 1].x = b.ReadSByte() / 127;
-                        ////Tangents[i, 1].y = b.ReadSByte() / 127;
-                        ////Tangents[i, 1].z = b.ReadSByte() / 127;
-                        ////Tangents[i, 1].w = b.ReadSByte() / 127;
+                        Vector3 tan = new(Tangents[i, 0].x, Tangents[i, 0].y, Tangents[i, 0].z);
+                        Vector3 bitan = new(Tangents[i, 1].x, Tangents[i, 1].y, Tangents[i, 1].z);
+                        var weight = Tangents[i, 0].z > 0 ? 1 : -1;
+                        Normals[i] = Vector3.Cross(tan, bitan) * weight;
                     }
                     break;
                 #endregion

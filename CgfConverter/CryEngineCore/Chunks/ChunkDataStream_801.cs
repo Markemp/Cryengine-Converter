@@ -117,9 +117,10 @@ namespace CgfConverter.CryEngineCore
                                 Tangents[i, 1].z = b.ReadSByte() / 127;
 
                                 // Calculate the normal based on the cross product of the tangents.
-                                //this.Normals[i].x = (Tangents[i,0].y * Tangents[i,1].z - Tangents[i,0].z * Tangents[i,1].y);
-                                //this.Normals[i].y = 0 - (Tangents[i,0].x * Tangents[i,1].z - Tangents[i,0].z * Tangents[i,1].x); 
-                                //this.Normals[i].z = (Tangents[i,0].x * Tangents[i,1].y - Tangents[i,0].y * Tangents[i,1].x);
+                                Vector3 tan = new(Tangents[i, 0].x, Tangents[i, 0].y, Tangents[i, 0].z);
+                                Vector3 bitan = new(Tangents[i, 1].x, Tangents[i, 1].y, Tangents[i, 1].z);
+                                var weight = Tangents[i, 0].z > 0 ? 1 : -1;
+                                Normals[i] = Vector3.Cross(tan, bitan) * weight;
                                 break;
                             default:
                                 throw new Exception("Need to add new Tangent Size");

@@ -116,16 +116,16 @@ namespace CgfConverter.CryEngineCore
                             case 0x08:
                                 // These have to be divided by 127 to be used properly (value between 0 and 1)
                                 // Tangent
-                                this.Tangents[i, 0].w = b.ReadSByte() / 127;
-                                this.Tangents[i, 0].x = b.ReadSByte() / 127;
-                                this.Tangents[i, 0].y = b.ReadSByte() / 127;
-                                this.Tangents[i, 0].z = b.ReadSByte() / 127;
+                                Tangents[i, 0].w = b.ReadSByte() / 127;
+                                Tangents[i, 0].x = b.ReadSByte() / 127;
+                                Tangents[i, 0].y = b.ReadSByte() / 127;
+                                Tangents[i, 0].z = b.ReadSByte() / 127;
 
                                 // Binormal
-                                this.Tangents[i, 1].w = b.ReadSByte() / 127;
-                                this.Tangents[i, 1].x = b.ReadSByte() / 127;
-                                this.Tangents[i, 1].y = b.ReadSByte() / 127;
-                                this.Tangents[i, 1].z = b.ReadSByte() / 127;
+                                Tangents[i, 1].w = b.ReadSByte() / 127;
+                                Tangents[i, 1].x = b.ReadSByte() / 127;
+                                Tangents[i, 1].y = b.ReadSByte() / 127;
+                                Tangents[i, 1].z = b.ReadSByte() / 127;
 
                                break;
                             default:
@@ -237,9 +237,10 @@ namespace CgfConverter.CryEngineCore
                         Tangents[i, 1].z = b.ReadSByte() / 127;
 
                         // Calculate the normal based on the cross product of the tangents.
-                        Normals[i].X = (Tangents[i, 0].y * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].y);
-                        Normals[i].Y = 0 - (Tangents[i, 0].x * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].x);
-                        Normals[i].Z = (Tangents[i, 0].x * Tangents[i, 1].y - Tangents[i, 0].y * Tangents[i, 1].x);
+                        Vector3 tan = new(Tangents[i, 0].x, Tangents[i, 0].y, Tangents[i, 0].z);
+                        Vector3 bitan = new(Tangents[i, 1].x, Tangents[i, 1].y, Tangents[i, 1].z);
+                        var weight = Tangents[i, 0].z > 0 ? 1 : -1;
+                        Normals[i] = Vector3.Cross(tan, bitan) * weight;
                     }
                     break;
                 #endregion // Prey normals?

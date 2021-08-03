@@ -129,7 +129,6 @@ namespace CgfConverter.CryEngineCore
                         UVs[i].U = b.ReadSingle();
                         UVs[i].V = b.ReadSingle();
                     }
-                    //Utils.Log(LogLevelEnum.Debug, "Offset is {0:X}", b.BaseStream.Position);
                     break;
 
                 #endregion
@@ -170,8 +169,8 @@ namespace CgfConverter.CryEngineCore
                                 Tangents[i, 1].z = b.ReadSByte() / 127.5f;
 
                                 // Calculate the normal based on the cross product of the tangents.
-                                Vector3 tan = new Vector3(Tangents[i, 0].x, Tangents[i, 0].y, Tangents[i, 0].z);
-                                Vector3 bitan = new Vector3(Tangents[i, 1].x, Tangents[i, 1].y, Tangents[i, 1].z);
+                                Vector3 tan = new(Tangents[i, 0].x, Tangents[i, 0].y, Tangents[i, 0].z);
+                                Vector3 bitan = new(Tangents[i, 1].x, Tangents[i, 1].y, Tangents[i, 1].z);
                                 var weight = Tangents[i, 0].z > 0 ? 1 : -1;
                                 Normals[i] = Vector3.Cross(tan, bitan) * weight;
                                 break;
@@ -179,7 +178,6 @@ namespace CgfConverter.CryEngineCore
                                 throw new Exception("Need to add new Tangent Size");
                         }
                     }
-                    // Utils.Log(LogLevelEnum.Debug, "Offset is {0:X}", b.BaseStream.Position);
                     break;
 
                 #endregion

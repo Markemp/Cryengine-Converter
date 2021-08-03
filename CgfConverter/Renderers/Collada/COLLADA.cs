@@ -569,8 +569,7 @@ namespace CgfConverter
                             floatArrayNormals.ID = normSource.ID + "-array";
                             floatArrayNormals.Digits = 6;
                             floatArrayNormals.Magnitude = 38;
-                            if (tmpNormals != null)
-                                floatArrayNormals.Count = (int)tmpNormals.NumElements * 3;
+                            floatArrayNormals.Count = (int)tmpVertices.NumElements * 3;  // Should be same number of vertices as normals
                             floatArrayColors.ID = colorSource.ID + "-array";
                             floatArrayColors.Digits = 6;
                             floatArrayColors.Magnitude = 38;
@@ -592,8 +591,23 @@ namespace CgfConverter
                             {
                                 Vector3 vertex = (tmpVertices.Vertices[j]);
                                 vertString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", vertex.X, vertex.Y, vertex.Z);
-                                Vector3 normal = tmpNormals?.Normals[j] ?? tmpTangents?.Normals[j] ?? new Vector3(0.0f, 0.0f, 0.0f);
-                                normString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", safe(normal.X), safe(normal.Y), safe(normal.Z));
+                                // Check for normals in a Normals chunk. Then in QTangents, then Tangents
+                                Vector3 normal = new();
+                                if (tmpNormals != null)
+                                {
+                                    normal = tmpNormals.Normals[j];
+                                }
+                                else if (tmpQTangents != null)
+                                {
+                                    normal = tmpQTangents.Normals[j];
+                                }
+                                else if (tmpTangents != null)
+                                {
+                                    normal = tmpTangents.Normals[j];
+                                }
+                                normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", safe(normal.X), safe(normal.Y), safe(normal.Z));
+                                //Vector3 normal = tmpNormals?.Normals[j] ?? tmpTangents?.Normals[j] ?? new Vector3(0.0f, 0.0f, 0.0f);
+                                //normString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", safe(normal.X), safe(normal.Y), safe(normal.Z));
                             }
                             for (uint j = 0; j < tmpUVs.NumElements; j++)     // Create UV string
                             {
