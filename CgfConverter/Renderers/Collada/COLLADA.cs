@@ -429,6 +429,7 @@ namespace CgfConverter
                 ChunkDataStream tmpIndices = null;
                 ChunkDataStream tmpColors = null;
                 ChunkDataStream tmpTangents = null;
+                ChunkDataStream tmpQTangents = null;
 
                 // Don't render shields if skip flag enabled
                 if (Args.SkipShieldNodes && nodeChunk.Name.StartsWith("$shield"))
@@ -655,6 +656,10 @@ namespace CgfConverter
                                 if (tmpNormals != null)
                                 {
                                     normal = tmpNormals.Normals[j];
+                                }
+                                else if (tmpQTangents != null)
+                                {
+                                    normal = tmpQTangents.Normals[j];
                                 }
                                 else if (tmpTangents != null)
                                 {

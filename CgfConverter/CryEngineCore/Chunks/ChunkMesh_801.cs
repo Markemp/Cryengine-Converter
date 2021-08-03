@@ -28,10 +28,10 @@ namespace CgfConverter.CryEngineCore
             BoneMapData = b.ReadInt32();
             FaceMapData = b.ReadInt32();
             b.ReadInt32();                          // VertsMat
-            b.ReadInt32();                          // QTangents
+            QTangentsData = b.ReadInt32();          // QTangents
             b.ReadInt32();                          // Skin Data
             b.ReadInt32();                          // Dummy2 (obsolete console data)
-            VertsUVsData = b.ReadInt32();          // This should be a vertsUV Chunk ID.
+            VertsUVsData = b.ReadInt32();           // This should be a vertsUV Chunk ID.
             ShCoeffsData = b.ReadInt32();
             ShapeDeformationData = b.ReadInt32();
             BoneMapData = b.ReadInt32();

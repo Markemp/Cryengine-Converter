@@ -191,6 +191,8 @@ namespace CgfConverterTests.IntegrationTests.Hunt
             Assert.AreEqual("assassin_body-mesh-pos-array", vertices.Float_Array.ID);
             Assert.IsTrue(vertices.Float_Array.Value_As_String.StartsWith("0.050568 0.100037 2.091797 0.048096 0.124878 2.099609 0.059082 0.102295 2.117188 0.049042 0.124695 2.113281 0.016800 0.109009"));
             Assert.IsTrue(colors.Float_Array.Value_As_String.StartsWith("0.003922 0.003922 0.003922 0.003922 0.003922 0.003922 0.003922 0.003922 0.003922 0.003922"));
+            Assert.IsTrue(normals.Float_Array.Value_As_String.StartsWith("0.226544 0.965353 -0.128858 0.600801 0.537653 -0.591434 0.249651 0.951700 -0.178177 0.677285 0.735326 -0.022122 0.052506 0.826273 -0.560670"));
+            Assert.IsTrue(uvs.Float_Array.Value_As_String.StartsWith("0.109375 0.945526 0.115967 0.952545 0.105469 0.957336 0.114441 0.958221 0.125122 0.941010 0.106201"));
             Assert.AreEqual((uint)6029, vertices.Technique_Common.Accessor.Count);
             Assert.AreEqual((uint)3, vertices.Technique_Common.Accessor.Stride);
             Assert.AreEqual(18087, normals.Float_Array.Count);
