@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace CgfConverter
 {
@@ -47,6 +48,33 @@ namespace CgfConverter
             }
 
             return outputFile;
+        }
+
+        public bool IsNodeNameExcluded(String nodeName)
+        {
+            foreach (var excname in Args.ExcludeNodeNames)
+            {
+                if (nodeName.ToLower().StartsWith(excname.ToLower()))
+                {
+                    Utils.Log(LogLevelEnum.Debug, $"Node matched excludename '{excname}'");
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public bool IsMeshMaterialExcluded(String materialName)
+        {
+            foreach (var excname in Args.ExcludeMaterialNames)
+            {
+                if (materialName.ToLower().StartsWith(excname.ToLower()))
+                {
+                    Utils.Log(LogLevelEnum.Debug, $"Material name matched excludemat '{excname}'");
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

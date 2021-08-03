@@ -430,17 +430,9 @@ namespace CgfConverter
                 ChunkDataStream tmpColors = null;
                 ChunkDataStream tmpTangents = null;
 
-                // Don't render shields if skip flag enabled
-                if (Args.SkipShieldNodes && nodeChunk.Name.StartsWith("$shield"))
+                if (IsNodeNameExcluded(nodeChunk.Name))
                 {
-                    Utils.Log(LogLevelEnum.Debug, "Skipped shields node {0}", nodeChunk.Name);
-                    continue;
-                }
-
-                // Don't render proxies if skip flag enabled
-                if (Args.SkipProxyNodes && nodeChunk.Name.StartsWith("proxy"))
-                {
-                    Utils.Log(LogLevelEnum.Debug, "Skipped proxy node {0}", nodeChunk.Name);
+                    Utils.Log(LogLevelEnum.Debug, $"Excluding node {nodeChunk.Name}");
                     continue;
                 }
 
@@ -677,11 +669,12 @@ namespace CgfConverter
 
                         for (uint j = 0; j < tmpMeshSubsets.NumMeshSubset; j++) // Need to make a new Triangles entry for each submesh.
                         {
+                            
                             triangles[j] = new Grendgine_Collada_Triangles
                             {
                                 Count = tmpMeshSubsets.MeshSubsets[j].NumIndices / 3
                             };
-
+                            
                             if (CryData.Materials.Count != 0)
                             {
                                 if (tmpMeshSubsets.MeshSubsets[j].MatID > CryData.Materials.Count - 1)
@@ -691,6 +684,12 @@ namespace CgfConverter
                                     tmpMeshSubsets.MeshSubsets[j].MatID = 0;  
                                 }
                                 string MatName = CryData.Materials[tmpMeshSubsets.MeshSubsets[j].MatID].Name;
+                                if (IsMeshMaterialExcluded(MatName))
+                                {
+                                    Utils.Log(LogLevelEnum.Debug, $"Excluding mesh {tmpGeo.Name}.triangles[{j}] with material {MatName}");
+                                    continue;
+                                }
+                                
                                 if (Args.PrefixMaterialNames)
                                     MatName = CryData.Materials[tmpMeshSubsets.MeshSubsets[j].MatID].SourceFileName + "_" + MatName;
 
@@ -1365,6 +1364,12 @@ namespace CgfConverter
                 List<Grendgine_Collada_Node> childNodes = new List<Grendgine_Collada_Node>();
                 foreach (ChunkNode childNodeChunk in nodeChunk.AllChildNodes.ToList())
                 {
+                    if (IsNodeNameExcluded(childNodeChunk.Name))
+                    {
+                        Utils.Log(LogLevelEnum.Debug, $"Excluding child node {childNodeChunk.Name}");
+                        continue;
+                    }
+
                     Grendgine_Collada_Node childNode = CreateNode(childNodeChunk); ;
                     childNodes.Add(childNode);
                 }

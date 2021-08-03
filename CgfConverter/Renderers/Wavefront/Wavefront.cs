@@ -75,17 +75,9 @@ namespace CgfConverter
 
                 foreach (CryEngineCore.ChunkNode node in this.CryData.NodeMap.Values)
                 {
-                    // Don't render shields
-                    if (this.Args.SkipShieldNodes && node.Name.StartsWith("$shield"))
+                    if (IsNodeNameExcluded(node.Name))
                     {
-                        Utils.Log(LogLevelEnum.Debug, "Skipped shields node {0}", node.Name);
-                        continue;
-                    }
-
-                    // Don't render shields
-                    if (this.Args.SkipProxyNodes && node.Name.StartsWith("proxy"))
-                    {
-                        Utils.Log(LogLevelEnum.Debug, "Skipped proxy node {0}", node.Name);
+                        Utils.Log(LogLevelEnum.Debug, $"Excluding node {node.Name}");
                         continue;
                     }
 
