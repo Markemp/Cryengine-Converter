@@ -37,6 +37,7 @@ namespace CgfConverter.CryEngineCore
         public int Colors2Data { get; set; }
         public int IndicesData { get; set; }
         public int TangentsData { get; set; }
+        public int QTangentsData { get; set; }
         public int ShCoeffsData { get; set; }
         public int ShapeDeformationData { get; set; }
         public int BoneMapData { get; set; }

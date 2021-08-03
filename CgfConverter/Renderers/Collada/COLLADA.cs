@@ -484,6 +484,9 @@ namespace CgfConverter
                         if (tmpMeshChunk.TangentsData != 0)
                             tmpTangents = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.TangentsData];
 
+                        if (tmpMeshChunk.QTangentsData != 0)
+                            tmpQTangents = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.QTangentsData];
+
                         if (tmpVertices == null && tmpVertsUVs == null) // There is no vertex data for this node.  Skip.
                             continue;
 
@@ -647,12 +650,13 @@ namespace CgfConverter
                                 Vector3 vertex = tmpVertsUVs.Vertices[j];
                                 vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", vertex.X, vertex.Y, vertex.Z);
 
+                                // Check for normals in a Normals chunk. Then in QTangents, then Tangents
                                 Vector3 normal = new(); 
                                 if (tmpNormals != null)
                                 {
                                     normal = tmpNormals.Normals[j];
                                 }
-                                else
+                                else if (tmpTangents != null)
                                 {
                                     normal = tmpTangents.Normals[j];
                                 }
