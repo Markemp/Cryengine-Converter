@@ -232,7 +232,14 @@ namespace CgfConverter.CryEngineCore
                                     SkipBytes(b, 2);
                                     //Vertices[i].W = b.ReadCryHalf();
 
-                                    Colors[i] = b.ReadColor();
+                                    Colors[i] = b.ReadColorBGRA();
+
+                                    // Hack to export Alpha to G channel, as Blender doesn't support vertex alphas, and in
+                                    // Star Citizen, the Alpha (wear map) is more important than the Green (Damage Glow map).
+                                    byte alpha = Colors[i].a;
+                                    byte green = Colors[i].g;
+                                    Colors[i].a = green;
+                                    Colors[i].g = alpha;
 
                                     // UVs ABSOLUTELY should use the Half structures.
                                     UVs[i].U = b.ReadHalf();

@@ -94,6 +94,18 @@ namespace Extensions
             return c;
         }
 
+        public static IRGBA ReadColorBGRA(this BinaryReader r)
+        {
+            var c = new IRGBA()
+            {
+                b = r.ReadByte(),
+                g = r.ReadByte(),
+                r = r.ReadByte(),
+                a = r.ReadByte()
+            };
+            return c;
+        }
+
         public static Matrix3x3 ReadMatrix3x3(this BinaryReader reader)
         {
             // Reads a Matrix33 structure
