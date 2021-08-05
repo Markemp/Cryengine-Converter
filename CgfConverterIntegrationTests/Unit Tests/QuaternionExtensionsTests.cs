@@ -148,5 +148,16 @@ namespace CgfConverterIntegrationTests.UnitTests
 
             AssertExtensions.AreEqual(expectedMatrix, actualMatrix, 0.000001);
         }
+
+        [TestMethod]
+        public void ConvertToRotationMatrix_TestQuaternion4()
+        {
+            var q = new Quaternion(0, -0.707f, 0, 0.707f);
+            var expectedMatrix = new Matrix3x3(0, 0, -1, 0, 1, 0, 1, 0, 0);
+
+            var actualMatrix = q.ConvertToRotationMatrix();
+
+            AssertExtensions.AreEqual(expectedMatrix, actualMatrix, 0.00001);
+        }
     }
 }

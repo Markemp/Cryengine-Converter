@@ -21,7 +21,7 @@ namespace CgfConverter
         public uint numChildren;                   // Number of children to this bone
 
         public Matrix4x4 BindPoseMatrix;           // This is the WorldToBone matrix for library_controllers
-        
+
         public long offset;                        // Calculated position in the file where this bone started.
         
         public uint parentID;                           // Calculated controllerID of the parent bone put into the Bone Dictionary (the key)
@@ -33,7 +33,6 @@ namespace CgfConverter
         {
             get 
             {
-                //if (offsetParent == 0) // No parent
                 if (ParentBone == null) // No parent
                 {
                     return Matrix4x4Extensions.CreateFromMatrix3x4(BoneToWorld);
@@ -114,14 +113,51 @@ namespace CgfConverter
                 Y = b.ReadSingle(),
                 Z = b.ReadSingle()
             };
-            BindPoseMatrix = Matrix4x4.CreateFromQuaternion(relativeQuat);
-            BindPoseMatrix.M14 = relativeTranslation.X;
-            BindPoseMatrix.M24 = relativeTranslation.Y;
-            BindPoseMatrix.M34 = relativeTranslation.Z;
-            BindPoseMatrix.M41 = 0;
-            BindPoseMatrix.M42 = 0;
-            BindPoseMatrix.M43 = 0;
-            BindPoseMatrix.M44 = 1.0f;
+            WorldToBone = Matrix3x4.CreateFromParts(relativeQuat, relativeTranslation);
+            var invertedBpm = Matrix4x4.CreateFromQuaternion(relativeQuat);
+            invertedBpm.M14 = relativeTranslation.X;
+            invertedBpm.M24 = relativeTranslation.Y;
+            invertedBpm.M34 = relativeTranslation.Z;
+            invertedBpm.M41 = 0;
+            invertedBpm.M42 = 0;
+            invertedBpm.M43 = 0;
+            invertedBpm.M44 = 1.0f;
+            Matrix4x4.Invert(invertedBpm, out BindPoseMatrix);
+            // Close.  Skel rotated 90 degrees.
+
+            //var invertedBpm = Matrix4x4.CreateFromQuaternion(relativeQuat);
+            //invertedBpm.M41 = relativeTranslation.X;
+            //invertedBpm.M42 = relativeTranslation.Y;
+            //invertedBpm.M43 = relativeTranslation.Z;
+            //invertedBpm.M14 = 0;
+            //invertedBpm.M24 = 0;
+            //invertedBpm.M34 = 0;
+            //invertedBpm.M44 = 1.0f;
+            //Matrix4x4.Invert(invertedBpm, out BindPoseMatrix);
+            // No, all bones at origin
+
+            //var invertedBpm = Matrix4x4.CreateFromQuaternion(relativeQuat);
+            //invertedBpm.M14 = relativeTranslation.X;
+            //invertedBpm.M24 = relativeTranslation.Y;
+            //invertedBpm.M34 = relativeTranslation.Z;
+            //invertedBpm.M41 = 0;
+            //invertedBpm.M42 = 0;
+            //invertedBpm.M43 = 0;
+            //invertedBpm.M44 = 1.0f;
+            //BindPoseMatrix = Matrix4x4.Transpose(invertedBpm);
+            // Result  all at origin
+
+            // Try transpose with translation at bottom of transform matrix
+            //var invertedBpm = Matrix4x4.CreateFromQuaternion(relativeQuat);
+            //invertedBpm.M41 = relativeTranslation.X;
+            //invertedBpm.M42 = relativeTranslation.Y;
+            //invertedBpm.M43 = relativeTranslation.Z;
+            //invertedBpm.M14 = 0;
+            //invertedBpm.M24 = 0;
+            //invertedBpm.M34 = 0;
+            //invertedBpm.M44 = 1.0f;
+            //BindPoseMatrix = Matrix4x4.Transpose(invertedBpm);
+            // Still wrong.  most bones at origin, some got moved
 
             BoneToWorld = Matrix3x4.CreateFromParts(worldQuat, worldTranslation);
         }
