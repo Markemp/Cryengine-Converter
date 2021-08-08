@@ -1280,7 +1280,8 @@ namespace CgfConverter
                 else
                 {
                     ChunkNode geometryNode = CryData.Models[1].NodeMap.Values.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
-                    if (geometryNode == null)
+                    Grendgine_Collada_Geometry geometryLibraryObject = DaeObject.Library_Geometries.Geometry.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
+                    if (geometryNode == null || geometryLibraryObject == null)
                     {
                         tmpNode = CreateSimpleNode(nodeChunk);  // Can't find geometry for given node.
                     }
