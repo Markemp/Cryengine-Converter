@@ -766,7 +766,7 @@ namespace Dolkens.Framework.Extensions
             catch (Exception ex)
             {
                 if (!isNullable && (@default == null))
-                    throw ex;
+                    throw;
 
                 return @default;
             }
