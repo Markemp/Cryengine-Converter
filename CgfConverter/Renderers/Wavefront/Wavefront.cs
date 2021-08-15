@@ -217,6 +217,13 @@ namespace CgfConverter
                 {
                     #region Write Vertices Out (v, vt)
 
+                    // Dymek's code.  Scales the object by the bounding box.
+                    var multiplerVector = Vector3.Abs((tmpMesh.MinBound - tmpMesh.MaxBound) / 2f);
+                    if (multiplerVector.X < 1) { multiplerVector.X = 1; }
+                    if (multiplerVector.Y < 1) { multiplerVector.Y = 1; }
+                    if (multiplerVector.Z < 1) { multiplerVector.Z = 1; }
+                    var boundaryBoxCenter = (tmpMesh.MinBound + tmpMesh.MaxBound) / 2f;
+
                     // Probably using VertsUVs (3.7+).  Write those vertices out. Do UVs at same time.
                     for (int j = meshSubset.FirstVertex;
                         j < meshSubset.NumVertices + meshSubset.FirstVertex;
@@ -224,16 +231,7 @@ namespace CgfConverter
                     {
                         // Let's try this using this node chunk's rotation matrix, and the transform is the sum of all the transforms.
                         // Get the transform.
-                        // Dymek's code.  Scales the object by the bounding box.
-                        float multiplerX = Math.Abs(tmpMesh.MinBound.X - tmpMesh.MaxBound.X) / 2f;
-                        float multiplerY = Math.Abs(tmpMesh.MinBound.Y - tmpMesh.MaxBound.Y) / 2f;
-                        float multiplerZ = Math.Abs(tmpMesh.MinBound.Z - tmpMesh.MaxBound.Z) / 2f;
-                        if (multiplerX < 1) { multiplerX = 1; }
-                        if (multiplerY < 1) { multiplerY = 1; }
-                        if (multiplerZ < 1) { multiplerZ = 1; }
-                        tmpVertsUVs.Vertices[j].X = tmpVertsUVs.Vertices[j].X * multiplerX + (tmpMesh.MaxBound.X + tmpMesh.MinBound.X) / 2;
-                        tmpVertsUVs.Vertices[j].Y = tmpVertsUVs.Vertices[j].Y * multiplerY + (tmpMesh.MaxBound.Y + tmpMesh.MinBound.Y) / 2;
-                        tmpVertsUVs.Vertices[j].Z = tmpVertsUVs.Vertices[j].Z * multiplerZ + (tmpMesh.MaxBound.Z + tmpMesh.MinBound.Z) / 2;
+                        tmpVertsUVs.Vertices[j] = (tmpVertsUVs.Vertices[j] * multiplerVector) + boundaryBoxCenter;
 
                         // Use matrix operations for the maximum performance
                         Vector3 vertex = Vector3.Transform(tmpVertsUVs.Vertices[j],transformSoFar);

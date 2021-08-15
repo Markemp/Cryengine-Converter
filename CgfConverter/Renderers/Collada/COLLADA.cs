@@ -618,26 +618,24 @@ namespace CgfConverter
                                 }
                             }
 
+                            // Dymek's code to rescale by bounding box.  Only apply to geometry (cga or cgf), and not skin or chr objects.
+                            var multiplerVector = Vector3.Abs((tmpMeshChunk.MinBound - tmpMeshChunk.MaxBound) / 2f);
+                            if (multiplerVector.X < 1) { multiplerVector.X = 1; }
+                            if (multiplerVector.Y < 1) { multiplerVector.Y = 1; }
+                            if (multiplerVector.Z < 1) { multiplerVector.Z = 1; }
+                            var boundaryBoxCenter = (tmpMeshChunk.MinBound + tmpMeshChunk.MaxBound) / 2f;
+
                             // Create Vertices, normals and colors string
                             for (uint j = 0; j < tmpMeshChunk.NumVertices; j++)
                             {
                                 // Rotate/translate the vertex
-                                // Dymek's code to rescale by bounding box.  Only apply to geometry (cga or cgf), and not skin or chr objects.
                                 if (!CryData.InputFile.EndsWith("skin") && !CryData.InputFile.EndsWith("chr"))
                                 {
-                                    float multiplerX = Math.Abs(tmpMeshChunk.MinBound.X - tmpMeshChunk.MaxBound.X) / 2f;
-                                    float multiplerY = Math.Abs(tmpMeshChunk.MinBound.Y - tmpMeshChunk.MaxBound.Y) / 2f;
-                                    float multiplerZ = Math.Abs(tmpMeshChunk.MinBound.Z - tmpMeshChunk.MaxBound.Z) / 2f;
-                                    if (multiplerX < 1) { multiplerX = 1; }
-                                    if (multiplerY < 1) { multiplerY = 1; }
-                                    if (multiplerZ < 1) { multiplerZ = 1; }
-                                    tmpVertsUVs.Vertices[j].X = tmpVertsUVs.Vertices[j].X * multiplerX + (tmpMeshChunk.MaxBound.X + tmpMeshChunk.MinBound.X) / 2;
-                                    tmpVertsUVs.Vertices[j].Y = tmpVertsUVs.Vertices[j].Y * multiplerY + (tmpMeshChunk.MaxBound.Y + tmpMeshChunk.MinBound.Y) / 2;
-                                    tmpVertsUVs.Vertices[j].Z = tmpVertsUVs.Vertices[j].Z * multiplerZ + (tmpMeshChunk.MaxBound.Z + tmpMeshChunk.MinBound.Z) / 2;
+                                    tmpVertsUVs.Vertices[j] = (tmpVertsUVs.Vertices[j] * multiplerVector) + boundaryBoxCenter;
                                 }
 
                                 Vector3 vertex = tmpVertsUVs.Vertices[j];
-                                vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", vertex.X, vertex.Y, vertex.Z);
+                                vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", safe(vertex.X), safe(vertex.Y), safe(vertex.Z));
 
                                 // TODO:  This isn't right?  VertsUvs may always have color as the 3rd element.
                                 // Normals depend on the data size.  16 byte structures have the normals in the Tangents.  20 byte structures are in the VertsUV.
