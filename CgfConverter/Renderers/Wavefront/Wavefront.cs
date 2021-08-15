@@ -136,18 +136,31 @@ namespace CgfConverter
             }  // End of writing the output file
         }
 
-        public Double safe(Double value)
+        public float safe(float value)
         {
-            if (value == Double.NegativeInfinity)
-                return Double.MinValue;
+            if (value == float.NegativeInfinity)
+                return float.MinValue;
 
-            if (value == Double.PositiveInfinity)
-                return Double.MaxValue;
+            if (value == float.PositiveInfinity)
+                return float.MaxValue;
 
-            if (value == Double.NaN)
+            if (value == float.NaN)
                 return 0;
 
             return value;
+        }
+
+        private Matrix4x4 GetNestedTransformations(CryEngineCore.ChunkNode node)
+        {
+            if (node.ParentNode != null)
+            {
+                return node.Transform * GetNestedTransformations(node.ParentNode);
+            }
+            else
+            {
+                // TODO: What should this be?
+                return node.Transform;
+            }
         }
 
         public void WriteObjNode(StreamWriter f, CryEngineCore.ChunkNode chunkNode)  // Pass a node to this to have it write to the Stream
@@ -193,7 +206,7 @@ namespace CgfConverter
 
             var tempVertexPosition = CurrentVertexPosition;
             var tempIndicesPosition = CurrentIndicesPosition;
-            var localTransform = chunkNode.LocalTransform;
+            var transformSoFar = GetNestedTransformations(chunkNode);
 
             foreach (var meshSubset in tmpMeshSubsets.MeshSubsets)
             {
@@ -222,12 +235,8 @@ namespace CgfConverter
                         tmpVertsUVs.Vertices[j].Y = tmpVertsUVs.Vertices[j].Y * multiplerY + (tmpMesh.MaxBound.Y + tmpMesh.MinBound.Y) / 2;
                         tmpVertsUVs.Vertices[j].Z = tmpVertsUVs.Vertices[j].Z * multiplerZ + (tmpMesh.MaxBound.Z + tmpMesh.MinBound.Z) / 2;
 
-                        Vector3 scale;
-                        Quaternion rotation;
-                        Vector3 translation;
-                        Matrix4x4.Decompose(localTransform, out scale, out rotation, out translation);
-                        Matrix3x3 rotMatrix = rotation.ConvertToRotationMatrix();
-                        Vector3 vertex = rotMatrix * tmpVertsUVs.Vertices[j];
+                        // Use matrix operations for the maximum performance
+                        Vector3 vertex = Vector3.Transform(tmpVertsUVs.Vertices[j],transformSoFar);
 
                         f.WriteLine("v {0:F7} {1:F7} {2:F7}", safe(vertex.X), safe(vertex.Y), safe(vertex.Z));
                     }
@@ -254,12 +263,8 @@ namespace CgfConverter
                         if (tmpVertices != null)
                         {
                             // Rotate/translate the vertex
-                            Vector3 scale;
-                            Quaternion rotation;
-                            Vector3 translation;
-                            Matrix4x4.Decompose(localTransform, out scale, out rotation, out translation);
-                            Matrix3x3 rotMatrix = rotation.ConvertToRotationMatrix();
-                            Vector3 vertex = rotMatrix * tmpVertices.Vertices[j];
+                            // Use matrix operations for the maximum performance
+                            Vector3 vertex = Vector3.Transform(tmpVertices.Vertices[j], transformSoFar);
 
                             f.WriteLine("v {0:F7} {1:F7} {2:F7}", safe(vertex.X), safe(vertex.Y), safe(vertex.Z));
                         }

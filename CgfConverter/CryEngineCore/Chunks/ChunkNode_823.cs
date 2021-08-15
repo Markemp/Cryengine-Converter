@@ -21,7 +21,7 @@ namespace CgfConverter.CryEngineCore
             SkipBytes(b, 4);
 
             // Read the 4x4 transform matrix.
-            Transform = new Matrix4x4
+            var transform = new Matrix4x4
             {
                 M11 = b.ReadSingle(),
                 M12 = b.ReadSingle(),
@@ -40,6 +40,11 @@ namespace CgfConverter.CryEngineCore
                 M43 = b.ReadSingle() * VERTEX_SCALE,
                 M44 = b.ReadSingle(),
             };
+
+            //original transform matrix is 3x4 stored as 4x4.
+            transform.M14 = transform.M24 = transform.M34 = 0f;
+            transform.M44 = 1f;
+            Transform = transform;
 
             Pos = b.ReadVector3() * VERTEX_SCALE;
             Rot = b.ReadQuaternion();
