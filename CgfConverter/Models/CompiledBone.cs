@@ -97,9 +97,9 @@ namespace CgfConverter
             };
             Vector3 relativeTranslation = new()
             {
-                X = b.ReadSingle(),
+                Z = b.ReadSingle(),
                 Y = b.ReadSingle(),
-                Z = b.ReadSingle()
+                X = -b.ReadSingle()
             };
             Quaternion worldQuat = new()
             {
@@ -110,9 +110,9 @@ namespace CgfConverter
             };
             Vector3 worldTranslation = new()
             {
-                X = b.ReadSingle(),
+                Z = b.ReadSingle(), 
                 Y = b.ReadSingle(),
-                Z = b.ReadSingle()
+                X = -b.ReadSingle()
             };
             BindPoseMatrix = Matrix4x4.CreateFromQuaternion(relativeQuat);
             BindPoseMatrix.M14 = relativeTranslation.X;

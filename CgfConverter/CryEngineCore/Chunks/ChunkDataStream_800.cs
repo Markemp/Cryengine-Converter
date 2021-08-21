@@ -234,8 +234,9 @@ namespace CgfConverter.CryEngineCore
 
                                     Colors[i] = b.ReadColorBGRA();
 
-                                    // Hack to export Alpha to G channel, as Blender doesn't support vertex alphas, and in
-                                    // Star Citizen, the Alpha (wear map) is more important than the Green (Damage Glow map).
+                                    // Inelegant hack for Blender, as it's Collada importer doesn't support Alpha channels,
+                                    // and some materials need the alpha channel more than the green channel.
+                                    // This is complicated, as some materials need the green channel more.
                                     byte alpha = Colors[i].a;
                                     byte green = Colors[i].g;
                                     Colors[i].a = green;
