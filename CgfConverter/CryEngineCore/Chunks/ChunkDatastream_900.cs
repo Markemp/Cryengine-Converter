@@ -65,7 +65,15 @@ namespace CgfConverter.CryEngineCore
                             {
                                 Vertices[i] = b.ReadVector3(); // For some reason, skins are an extra 1 meter in the z direction.
 
-                                Colors[i] = b.ReadColor();
+                                Colors[i] = b.ReadColorBGRA();
+
+                                // Inelegant hack for Blender, as it's Collada importer doesn't support Alpha channels,
+                                // and some materials need the alpha channel more than the green channel.
+                                // This is complicated, as some materials need the green channel more.
+                                byte alpha = Colors[i].a; 
+                                byte green = Colors[i].g;
+                                Colors[i].a = green;
+                                Colors[i].g = alpha;
 
                                 Half uvu = new Half();
                                 uvu.bits = b.ReadUInt16();
