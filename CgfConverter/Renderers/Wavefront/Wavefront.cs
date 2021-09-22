@@ -100,8 +100,7 @@ namespace CgfConverter
                             }
 
                             // TODO: Transform Root Nodes here?
-
-                            file.WriteLine("o {0}", node.Name);
+                            //file.WriteLine("o {0}", node.Name);
                             // Grab the mesh and process that.
                             this.WriteObjNode(file, node);
                             break;
@@ -210,8 +209,28 @@ namespace CgfConverter
 
             foreach (var meshSubset in tmpMeshSubsets.MeshSubsets)
             {
+                #region Write Material Block (usemtl)
+                string MatName;
+                if (this.CryData.Materials.Count > meshSubset.MatID)
+                {
+                    MatName = this.CryData.Materials[meshSubset.MatID].Name;
+                    if (Args.PrefixMaterialNames)
+                        MatName = this.CryData.Materials[meshSubset.MatID].SourceFileName + "_" + MatName;
+                }
+                else
+                {
+                    if (this.CryData.Materials.Count > 0)
+                    {
+                        Utils.Log(LogLevelEnum.Debug, "Missing Material {0}", meshSubset.MatID);
+                    }
+
+                    MatName = string.Format("{0}_{1}", this.CryData.RootNode.Name, meshSubset.MatID);
+                    // The material file doesn't have any elements with the Name of the material.  Use the object name.                    
+                }
+                #endregion
                 // Write vertices data for each MeshSubSet (v)
-                f.WriteLine("g {0}", this.GroupOverride ?? chunkNode.Name);
+                f.WriteLine("g {0}({1})", this.GroupOverride ?? chunkNode.Name, MatName);
+                f.WriteLine("usemtl {0}", MatName);
 
                 if (tmpMesh.VerticesData == 0)
                 {
@@ -311,30 +330,7 @@ namespace CgfConverter
                 if (this.Args.Smooth)
                 {
                     f.WriteLine("s {0}", this.FaceIndex++);
-                }
-
-                #region Write Material Block (usemtl)
-
-                if (this.CryData.Materials.Count > meshSubset.MatID)
-                {
-                    string MatName = this.CryData.Materials[(int)meshSubset.MatID].Name;
-                    if (Args.PrefixMaterialNames)
-                        MatName = this.CryData.Materials[(int)meshSubset.MatID].SourceFileName + "_" + MatName;
-
-                    f.WriteLine("usemtl {0}", MatName);
-                }
-                else
-                {
-                    if (this.CryData.Materials.Count > 0)
-                    {
-                        Utils.Log(LogLevelEnum.Debug, "Missing Material {0}", meshSubset.MatID);
-                    }
-
-                    // The material file doesn't have any elements with the Name of the material.  Use the object name.
-                    f.WriteLine("usemtl {0}_{1}", this.CryData.RootNode.Name, meshSubset.MatID);
-                }
-
-                #endregion
+                }               
 
                 // Now write out the faces info based on the MtlName
                 for (int j = meshSubset.FirstIndex;
