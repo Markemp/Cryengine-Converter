@@ -231,10 +231,10 @@ namespace CgfConverter
                     {
                         // Let's try this using this node chunk's rotation matrix, and the transform is the sum of all the transforms.
                         // Get the transform.
-                        tmpVertsUVs.Vertices[j] = (tmpVertsUVs.Vertices[j] * multiplerVector) + boundaryBoxCenter;
+                        Vector3 vertex = (tmpVertsUVs.Vertices[j] * multiplerVector) + boundaryBoxCenter;
 
                         // Use matrix operations for the maximum performance
-                        Vector3 vertex = Vector3.Transform(tmpVertsUVs.Vertices[j],transformSoFar);
+                        vertex = Vector3.Transform(vertex, transformSoFar);
 
                         f.WriteLine("v {0:F7} {1:F7} {2:F7}", safe(vertex.X), safe(vertex.Y), safe(vertex.Z));
                     }

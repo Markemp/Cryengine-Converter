@@ -147,14 +147,14 @@ namespace CgfConverter
                     };
                     // Try to resolve the texture file to a file on disk
                     StringBuilder builder = new(ResolveTexFile(CryData.Materials[k].Textures[i].File, Args.DataDir));
-                    
+
                     if (Args.PngTextures && File.Exists(builder.ToString().Replace(".dds", ".png")))
                         builder.Replace(".dds", ".png");
                     else if (Args.TgaTextures && File.Exists(builder.ToString().Replace(".dds", ".tga")))
                         builder.Replace(".dds", ".tga");
                     else if (Args.TiffTextures && File.Exists(builder.ToString().Replace(".dds", ".tif")))
                         builder.Replace(".dds", ".tif");
-                    
+
                     if (Args.DataDir.ToString() != ".")
                         builder.Insert(0, "/");  // Path is absolute, preface with a "/"
 
@@ -458,15 +458,18 @@ namespace CgfConverter
                         if (tmpMeshChunk.VerticesData != 0)
                             tmpVertices = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.VerticesData];
 
+                        if (tmpMeshChunk.VertsUVsData != 0)
+                            tmpVertsUVs = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.VertsUVsData];
+
+                        if (tmpVertices == null && tmpVertsUVs == null) // There is no vertex data for this node.  Skip.
+                            continue;
+
                         if (tmpMeshChunk.NormalsData != 0)
                             tmpNormals = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.NormalsData];
 
                         if (tmpMeshChunk.UVsData != 0)
                             tmpUVs = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.UVsData];
-
-                        if (tmpMeshChunk.VertsUVsData != 0)
-                            tmpVertsUVs = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.VertsUVsData];
-
+                        
                         if (tmpMeshChunk.IndicesData != 0)
                             tmpIndices = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.IndicesData];
 
@@ -475,10 +478,7 @@ namespace CgfConverter
 
                         if (tmpMeshChunk.TangentsData != 0)
                             tmpTangents = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.TangentsData];
-
-                        if (tmpVertices == null && tmpVertsUVs == null) // There is no vertex data for this node.  Skip.
-                            continue;
-
+                        
                         // tmpGeo is a Geometry object for each meshsubset.  Name will be "Nodechunk name_matID".  Hopefully there is only one matID used per submesh
                         Grendgine_Collada_Geometry tmpGeo = new()
                         {
@@ -578,7 +578,7 @@ namespace CgfConverter
                             // Create Vertices and normals string
                             for (uint j = 0; j < tmpMeshChunk.NumVertices; j++)
                             {
-                                Vector3 vertex = (tmpVertices.Vertices[j]);
+                                Vector3 vertex = tmpVertices.Vertices[j];
                                 vertString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", vertex.X, vertex.Y, vertex.Z);
                                 Vector3 normal = tmpNormals?.Normals[j] ?? tmpTangents?.Normals[j] ?? new Vector3(0.0f, 0.0f, 0.0f);
                                 normString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", safe(normal.X), safe(normal.Y), safe(normal.Z));
@@ -624,17 +624,17 @@ namespace CgfConverter
                             if (multiplerVector.Y < 1) { multiplerVector.Y = 1; }
                             if (multiplerVector.Z < 1) { multiplerVector.Z = 1; }
                             var boundaryBoxCenter = (tmpMeshChunk.MinBound + tmpMeshChunk.MaxBound) / 2f;
-
+                            
                             // Create Vertices, normals and colors string
                             for (uint j = 0; j < tmpMeshChunk.NumVertices; j++)
                             {
+                                Vector3 vertex = tmpVertsUVs.Vertices[j];
                                 // Rotate/translate the vertex
                                 if (!CryData.InputFile.EndsWith("skin") && !CryData.InputFile.EndsWith("chr"))
                                 {
-                                    tmpVertsUVs.Vertices[j] = (tmpVertsUVs.Vertices[j] * multiplerVector) + boundaryBoxCenter;
+                                    vertex = (vertex * multiplerVector) + boundaryBoxCenter;
                                 }
 
-                                Vector3 vertex = tmpVertsUVs.Vertices[j];
                                 vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", safe(vertex.X), safe(vertex.Y), safe(vertex.Z));
 
                                 // TODO:  This isn't right?  VertsUvs may always have color as the 3rd element.
@@ -1338,14 +1338,8 @@ namespace CgfConverter
             List<Grendgine_Collada_Matrix> matrices = new List<Grendgine_Collada_Matrix>();
 
             Grendgine_Collada_Matrix matrix = new Grendgine_Collada_Matrix();
-            StringBuilder matrixString = new StringBuilder();
-            matrixString.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} {12:F6} {13:F6} {14:F6} {15:F6}",
-                nodeChunk.LocalTransform.M11, nodeChunk.LocalTransform.M12, nodeChunk.LocalTransform.M13, nodeChunk.LocalTransform.M14,
-                nodeChunk.LocalTransform.M21, nodeChunk.LocalTransform.M22, nodeChunk.LocalTransform.M23, nodeChunk.LocalTransform.M24,
-                nodeChunk.LocalTransform.M31, nodeChunk.LocalTransform.M32, nodeChunk.LocalTransform.M33, nodeChunk.LocalTransform.M34,
-                nodeChunk.LocalTransform.M41, nodeChunk.LocalTransform.M42, nodeChunk.LocalTransform.M43, nodeChunk.LocalTransform.M44);
 
-            matrix.Value_As_String = matrixString.ToString();
+            matrix.Value_As_String = CreateStringFromMatrix4x4(nodeChunk.LocalTransform);
             matrix.sID = "transform";
             matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
             tmpNode.Matrix = matrices.ToArray();
@@ -1407,6 +1401,12 @@ namespace CgfConverter
                 localTransform.M21, localTransform.M22, localTransform.M23, localTransform.M24,
                 localTransform.M31, localTransform.M32, localTransform.M33, localTransform.M34);
 
+            //matrixValues.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} {12:F6} {13:F6} {14:F6} {15:F6}",
+            //   bone.LocalTransform.M11, bone.LocalTransform.M12, bone.LocalTransform.M13, bone.LocalTransform.M14,
+            //   bone.LocalTransform.M21, bone.LocalTransform.M22, bone.LocalTransform.M23, bone.LocalTransform.M24,
+            //   bone.LocalTransform.M31, bone.LocalTransform.M32, bone.LocalTransform.M33, bone.LocalTransform.M34,
+            //   bone.LocalTransform.M41, bone.LocalTransform.M42, bone.LocalTransform.M43, bone.LocalTransform.M44);
+
             CleanNumbers(matrixValues);
             matrix.Value_As_String = matrixValues.ToString();
             matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
@@ -1445,16 +1445,9 @@ namespace CgfConverter
             List<Grendgine_Collada_Instance_Material_Geometry> instanceMaterials = new List<Grendgine_Collada_Instance_Material_Geometry>();
 
             Grendgine_Collada_Matrix matrix = new Grendgine_Collada_Matrix();
-            StringBuilder matrixString = new StringBuilder();
-
             // matrixString might have to be an identity matrix, since GetTransform is applying the transform to all the vertices.
             // Use same principle as CreateJointNode.  The Transform matrix (Matrix44) is the world transform matrix.
-            matrixString.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} {12:F6} {13:F6} {14:F6} {15:F6}",
-                nodeChunk.LocalTransform.M11, nodeChunk.LocalTransform.M12, nodeChunk.LocalTransform.M13, nodeChunk.LocalTransform.M14,
-                nodeChunk.LocalTransform.M21, nodeChunk.LocalTransform.M22, nodeChunk.LocalTransform.M23, nodeChunk.LocalTransform.M24,
-                nodeChunk.LocalTransform.M31, nodeChunk.LocalTransform.M32, nodeChunk.LocalTransform.M33, nodeChunk.LocalTransform.M34,
-                nodeChunk.LocalTransform.M41, nodeChunk.LocalTransform.M42, nodeChunk.LocalTransform.M43, nodeChunk.LocalTransform.M44);
-            matrix.Value_As_String = matrixString.ToString();
+            matrix.Value_As_String = CreateStringFromMatrix4x4(nodeChunk.LocalTransform);
             matrix.sID = "transform";
             matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
             tmpNode.Matrix = matrices.ToArray();
