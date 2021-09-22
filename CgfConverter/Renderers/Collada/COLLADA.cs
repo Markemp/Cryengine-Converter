@@ -636,7 +636,6 @@ namespace CgfConverter
                                     vertex = (vertex * multiplerVector) + boundaryBoxCenter;
                                 }
 
-                                Vector3 vertex = tmpVertsUVs.Vertices[j];
                                 vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(vertex.X), Safe(vertex.Y), Safe(vertex.Z));
 
                                 // TODO:  This isn't right?  VertsUvs may always have color as the 3rd element.
