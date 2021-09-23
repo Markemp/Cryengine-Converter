@@ -10,7 +10,7 @@ namespace CgfConverter.CryEngineCore
             base.Read(b);
 
             uint tmpExportFlag = b.ReadUInt32();
-            ChunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), tmpExportFlag);
+            ChunkType = (ChunkType)tmpExportFlag;
             Version = b.ReadUInt32();
             ChunkOffset = b.ReadUInt32();
             ID = b.ReadInt32();

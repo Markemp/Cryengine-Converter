@@ -15,7 +15,7 @@ namespace CgfConverter.CryEngineCore
 
             Flags2 = b.ReadUInt32(); // another filler
             uint datastreamType = b.ReadUInt32();
-            DataStreamType = (DatastreamType)Enum.ToObject(typeof(DatastreamType), datastreamType);
+            DataStreamType = (DatastreamType)datastreamType;
             SkipBytes(b, 4);
             NumElements = b.ReadUInt32(); // number of elements in this chunk
 

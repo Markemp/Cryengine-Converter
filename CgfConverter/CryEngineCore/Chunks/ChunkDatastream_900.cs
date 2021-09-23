@@ -18,7 +18,7 @@ namespace CgfConverter.CryEngineCore
             base.Read(b);
 
             uint dataStreamType = b.ReadUInt32();
-            DataStreamType = (DatastreamType)Enum.ToObject(typeof(DatastreamType), dataStreamType);
+            DataStreamType = (DatastreamType)dataStreamType;
             BytesPerElement = b.ReadUInt32();
 
             switch (DataStreamType)
