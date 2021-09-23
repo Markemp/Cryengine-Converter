@@ -229,6 +229,7 @@ namespace CgfConverter
                 }
                 #endregion
                 // Write vertices data for each MeshSubSet (v)
+                f.WriteLine("o {0}({1})", this.GroupOverride ?? chunkNode.Name, MatName);
                 f.WriteLine("g {0}({1})", this.GroupOverride ?? chunkNode.Name, MatName);
                 f.WriteLine("usemtl {0}", MatName);
 
