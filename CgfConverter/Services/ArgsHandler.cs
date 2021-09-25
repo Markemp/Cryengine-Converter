@@ -31,7 +31,7 @@ namespace CgfConverter
         public bool OutputWavefront { get; internal set; }
         /// <summary>Render Blender format files</summary>
         public bool OutputBlender { get; internal set; }
-        /// <summary>Render COLLADA format files</summary>
+        /// <summary>Render Collada format files</summary>
         public bool OutputCollada { get; internal set; }
         /// <summary>Render FBX (not yet implemented)</summary>
         public bool OutputFBX { get; internal set; }

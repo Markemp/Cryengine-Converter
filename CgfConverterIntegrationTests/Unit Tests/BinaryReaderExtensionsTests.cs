@@ -5,7 +5,7 @@ using System.IO;
 using static Extensions.BinaryReaderExtensions;
 using System.Numerics;
 
-namespace CgfConverterIntegrationTests.UnitTests
+namespace CgfConverterTests.UnitTests
 {
     [TestClass]
     public class BinaryReaderExtensionsTests

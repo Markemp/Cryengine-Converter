@@ -62,7 +62,7 @@ namespace CgfConverterConsole
 
                             if (argsHandler.OutputCollada == true)
                             {
-                                COLLADA daeFile = new COLLADA(argsHandler, cryData);
+                                Collada daeFile = new Collada(argsHandler, cryData);
 
                                 daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
                             }

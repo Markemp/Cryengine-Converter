@@ -33,7 +33,7 @@ namespace CgfConverterTests.IntegrationTests.SC
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
 
-            var colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            var colladaData = new Collada(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
             var daeObject = colladaData.DaeObject;
         }
@@ -58,7 +58,7 @@ namespace CgfConverterTests.IntegrationTests.SC
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
 
-            var colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            var colladaData = new Collada(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject(); 
             var daeObject = colladaData.DaeObject;
 
@@ -76,7 +76,7 @@ namespace CgfConverterTests.IntegrationTests.SC
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
 
-            var colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            var colladaData = new Collada(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
             var daeObject = colladaData.DaeObject;
 
@@ -92,7 +92,7 @@ namespace CgfConverterTests.IntegrationTests.SC
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
 
-            var colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            var colladaData = new Collada(testUtils.argsHandler, cryData);
             var daeObject = colladaData.DaeObject;
             colladaData.GenerateDaeObject();
             // Make sure Rotations are still right
@@ -114,7 +114,7 @@ namespace CgfConverterTests.IntegrationTests.SC
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
 
-            COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
             var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
@@ -134,7 +134,7 @@ namespace CgfConverterTests.IntegrationTests.SC
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
 
-            COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
             var controllers = colladaData.DaeObject.Library_Controllers.Controller;
@@ -163,7 +163,7 @@ namespace CgfConverterTests.IntegrationTests.SC
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
 
-            COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
             // Geometry Library checks
@@ -216,7 +216,7 @@ namespace CgfConverterTests.IntegrationTests.SC
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
 
-            COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
             // Geometry Library checks
@@ -235,7 +235,7 @@ namespace CgfConverterTests.IntegrationTests.SC
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
 
-            COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
             // Geometry Library checks

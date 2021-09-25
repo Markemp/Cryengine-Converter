@@ -4,34 +4,34 @@ using Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Numerics;
 
-namespace CgfConverterIntegrationTests.UnitTests
+namespace CgfConverterTests.UnitTests
 {
     [TestClass]
     public class MatrixTests
     {
         // Joint node values in VisualScenes
-        private Matrix4x4 correctBone0Matrix4x4ForVisualScene = new Matrix4x4(
+        private Matrix4x4 correctBone0Matrix4x4ForVisualScene = new(
             0,          1,          0,          0,
             0,          0,          -1,         0,
             -1,         0,          0,          0.023305f,
             0,          0,          0,          1);
 
-        private Matrix4x4 correctBone1Matrix4x4ForVisualScene = new Matrix4x4(
-            1,          0.000089f,  0,          0.023396f,
-            -0.000089f, 1,          0.000009f,  0,
-            0,          -0.000009f, 1,          0,
+        private Matrix4x4 correctBone1Matrix4x4ForVisualScene = new(
+            0,          0.000008f,  -1,         0,
+            1,          0.000089f,  0,          0.000092f,
+            0.000089f,  -1,         -0.000008f, 0.023305f,
             0,          0,          0,          1);
 
-        private Matrix4x4 correctBone2Matrix4x4ForVisualScene = new Matrix4x4(
-           1,           0.000002f,  0,          0.026363f,
-           -0.000002f,  1,          0,          0,
-           0,           0,          1,          0,
+        private Matrix4x4 correctBone2Matrix4x4ForVisualScene = new(
+           -0.000008f,  -0.000081f, -1,         0,
+           1,           0.000091f,  -0.000008f, 0.026455f,
+           0.000091f,   -1,         0.000081f,  -0.00009f,
            0,           0,          0,          1);
 
         // BPM matrix should come straight from W2B
-        private Matrix4x4 correctBone0BPMMatrix = new Matrix4x4(0, 0, -1, 0.023305f, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 1);
-        private Matrix4x4 correctBone1BPMMatrix = new Matrix4x4(-0.000089f, 0, -1, -0.000092f, 1, 0.000008f, -0.000089f, 0, 0.000008f, -1, 0, 0, 0, 0, 0, 1);
-        private Matrix4x4 correctBone2BPMMatrix = new Matrix4x4(-0.000091f, 0, -1, -0.026455f, 1, 0.000008f, -0.000091f, 0, 0.000008f, -1, 0, 0, 0, 0, 0, 1);
+        private Matrix4x4 correctBone0BPMMatrix = new(0, 0, -1, 0.023305f, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 1);
+        private Matrix4x4 correctBone1BPMMatrix = new(-0.000089f, 0, -1, -0.000092f, 1, 0.000008f, -0.000089f, 0, 0.000008f, -1, 0, 0, 0, 0, 0, 1);
+        private Matrix4x4 correctBone2BPMMatrix = new(-0.000091f, 0, -1, -0.026455f, 1, 0.000008f, -0.000091f, 0, 0.000008f, -1, 0, 0, 0, 0, 0, 1);
 
         // For BPM
         private Matrix4x4 givenBone0W2B = new Matrix4x4(-0.000000f, -0.000000f, -1.000000f, 0.023305f, 1.000000f, -0.000000f, -0.000000f, -0.000000f, -0.000000f, -1.000000f, 0.000000f, -0.000000f, 0, 0, 0, 1);
@@ -97,12 +97,6 @@ namespace CgfConverterIntegrationTests.UnitTests
             Assert.AreEqual(0, actual.M12, TestUtils.delta);
             Assert.AreEqual(2.0, actual.M14, TestUtils.delta);
             Assert.AreEqual(1, actual.M22, TestUtils.delta);
-        }
-
-        [TestMethod]
-        public void MultiplyBone0W2BandBone1W2B()
-        {
-            var result = givenBone0W2B * givenBone1W2B;
         }
 
         [TestMethod]

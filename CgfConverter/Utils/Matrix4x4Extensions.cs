@@ -93,15 +93,16 @@ namespace Extensions
 
         public static Matrix4x4 CreateLocalTransformFromB2W(Matrix4x4 parent, Matrix4x4 child)
         {
-            var parentRot = parent.GetRotation();
-            var parentTranslation = parent.GetTranslation();
+            return parent * child;
+            //var parentRot = parent.GetRotation();
+            //var parentTranslation = parent.GetTranslation();
 
-            var childRot = child.GetRotation();
-            var childTranslation = child.GetTranslation();
+            //var childRot = child.GetRotation();
+            //var childTranslation = child.GetTranslation();
 
-            var newRot = Matrix3x3.Transpose(parentRot) * childRot;
-            var newTranslation = parent.GetRotation() * (childTranslation - parentTranslation);
-            return CreateTransformFromParts(newTranslation, newRot);
+            //var newRot = Matrix3x3.Transpose(parentRot) * childRot;
+            //var newTranslation = parent.GetRotation() * (childTranslation - parentTranslation);
+            //return CreateTransformFromParts(newTranslation, newRot);
         }
 
         public static Matrix4x4 CreateTransformFromParts(Vector3 translation, Matrix3x3 rotation)

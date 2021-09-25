@@ -14,7 +14,7 @@ using grendgine_collada;
 
 namespace CgfConverter
 {
-    public class COLLADA : BaseRenderer // class to export to .dae format (COLLADA)
+    public class Collada : BaseRenderer // class to export to .dae format (Collada)
     {
         private readonly CultureInfo culture = CultureInfo.CreateSpecificCulture("en-US");
         private const string colladaVersion = "1.4.1";
@@ -22,7 +22,7 @@ namespace CgfConverter
         public Grendgine_Collada DaeObject { get; private set; } = new Grendgine_Collada();  // This is the serializable class.
         readonly XmlSerializer mySerializer = new XmlSerializer(typeof(Grendgine_Collada));
 
-        public COLLADA(ArgsHandler argsHandler, CryEngine cryEngine) : base(argsHandler, cryEngine) { }
+        public Collada(ArgsHandler argsHandler, CryEngine cryEngine) : base(argsHandler, cryEngine) { }
 
         public override void Render(string outputDir = null, bool preservePath = true)
         {
