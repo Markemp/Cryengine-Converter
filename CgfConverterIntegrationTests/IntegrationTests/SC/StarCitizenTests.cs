@@ -96,7 +96,7 @@ namespace CgfConverterTests.IntegrationTests.SC
             var daeObject = colladaData.DaeObject;
             colladaData.GenerateDaeObject();
             // Make sure Rotations are still right
-            const string frontLGDoorLeftMatrix = "1.000000 0.000000 0.000000 -0.300001 0.000000 -0.938131 -0.346280 0.512432 0.000000 0.346280 -0.938131 -1.835138 0.000000 0.000000 0.000000 1.000000";
+            const string frontLGDoorLeftMatrix = "1 0 0 -0.300001 0 -0.938131 -0.346280 0.512432 0 0.346280 -0.938131 -1.835138 0 0 0 1";
             var noseNode = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].node[0];
             Assert.AreEqual("Nose", noseNode.ID);
             Assert.AreEqual("Front_LG_Door_Left", noseNode.node[28].ID);

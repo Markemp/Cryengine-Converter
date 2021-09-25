@@ -222,12 +222,12 @@ namespace CgfConverterTests.IntegrationTests.MWO
             Assert.AreEqual("hbr_right_torso_case", node.node[0].Name);
             Assert.AreEqual("hbr_right_torso_fx", node.node[1].Name);
             Assert.AreEqual(Grendgine_Collada_Node_Type.NODE, node.node[0].Type);
-            const string caseMatrix = "-1.000000 -0.000005 0.000008 1.830486 0.000001 -0.866025 -0.500000 -2.444341 0.000009 -0.500000 0.866025 -1.542505 0.000000 0.000000 0.000000 1.000000";
-            const string fxMatrix = "1.000000 0.000000 0.000009 1.950168 -0.000000 1.000000 -0.000000 0.630385 -0.000009 0.000000 1.000000 -0.312732 0.000000 0.000000 0.000000 1.000000";
+            const string caseMatrix = "-1 -0.000005 0.000008 1.830486 0.000001 -0.866025 -0.500000 -2.444341 0.000009 -0.500000 0.866025 -1.542505 0 0 0 1";
+            const string fxMatrix = "1 0 0.000009 1.950168 -0 1 -0 0.630385 -0.000009 0 1 -0.312732 0 0 0 1";
             Assert.AreEqual(caseMatrix, node.node[0].Matrix[0].Value_As_String);
             Assert.AreEqual(fxMatrix, node.node[1].Matrix[0].Value_As_String);
             // Node Matrix check
-            const string matrix = "1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.000000 0.000000 0.000000 1.000000";
+            const string matrix = "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1";
             Assert.AreEqual(matrix, node.Matrix[0].Value_As_String);
             Assert.AreEqual("transform", node.Matrix[0].sID);
             // Instance Geometry check
