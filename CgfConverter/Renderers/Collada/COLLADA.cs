@@ -148,14 +148,14 @@ namespace CgfConverter
                     };
                     // Try to resolve the texture file to a file on disk
                     StringBuilder builder = new(ResolveTexFile(CryData.Materials[k].Textures[i].File, Args.DataDir));
-                    
+
                     if (Args.PngTextures && File.Exists(builder.ToString().Replace(".dds", ".png")))
                         builder.Replace(".dds", ".png");
                     else if (Args.TgaTextures && File.Exists(builder.ToString().Replace(".dds", ".tga")))
                         builder.Replace(".dds", ".tga");
                     else if (Args.TiffTextures && File.Exists(builder.ToString().Replace(".dds", ".tif")))
                         builder.Replace(".dds", ".tif");
-                    
+
                     if (Args.DataDir.ToString() != ".")
                         builder.Insert(0, "/");  // Path is absolute, preface with a "/"
 
@@ -459,15 +459,18 @@ namespace CgfConverter
                         if (tmpMeshChunk.VerticesData != 0)
                             tmpVertices = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.VerticesData];
 
+                        if (tmpMeshChunk.VertsUVsData != 0)
+                            tmpVertsUVs = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.VertsUVsData];
+
+                        if (tmpVertices == null && tmpVertsUVs == null) // There is no vertex data for this node.  Skip.
+                            continue;
+
                         if (tmpMeshChunk.NormalsData != 0)
                             tmpNormals = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.NormalsData];
 
                         if (tmpMeshChunk.UVsData != 0)
                             tmpUVs = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.UVsData];
-
-                        if (tmpMeshChunk.VertsUVsData != 0)
-                            tmpVertsUVs = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.VertsUVsData];
-
+                        
                         if (tmpMeshChunk.IndicesData != 0)
                             tmpIndices = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.IndicesData];
 
@@ -476,10 +479,7 @@ namespace CgfConverter
 
                         if (tmpMeshChunk.TangentsData != 0)
                             tmpTangents = (ChunkDataStream)nodeChunk._model.ChunkMap[tmpMeshChunk.TangentsData];
-
-                        if (tmpVertices == null && tmpVertsUVs == null) // There is no vertex data for this node.  Skip.
-                            continue;
-
+                        
                         // tmpGeo is a Geometry object for each meshsubset.  Name will be "Nodechunk name_matID".  Hopefully there is only one matID used per submesh
                         Grendgine_Collada_Geometry tmpGeo = new()
                         {
@@ -579,7 +579,7 @@ namespace CgfConverter
                             // Create Vertices and normals string
                             for (uint j = 0; j < tmpMeshChunk.NumVertices; j++)
                             {
-                                Vector3 vertex = (tmpVertices.Vertices[j]);
+                                Vector3 vertex = tmpVertices.Vertices[j];
                                 vertString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", vertex.X, vertex.Y, vertex.Z);
                                 Vector3 normal = tmpNormals?.Normals[j] ?? tmpTangents?.Normals[j] ?? new Vector3(0.0f, 0.0f, 0.0f);
                                 normString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", Safe(normal.X), Safe(normal.Y), Safe(normal.Z));
@@ -625,14 +625,15 @@ namespace CgfConverter
                             if (multiplerVector.Y < 1) { multiplerVector.Y = 1; }
                             if (multiplerVector.Z < 1) { multiplerVector.Z = 1; }
                             var boundaryBoxCenter = (tmpMeshChunk.MinBound + tmpMeshChunk.MaxBound) / 2f;
-
+                            
                             // Create Vertices, normals and colors string
                             for (uint j = 0; j < tmpMeshChunk.NumVertices; j++)
                             {
+                                Vector3 vertex = tmpVertsUVs.Vertices[j];
                                 // Rotate/translate the vertex
                                 if (!CryData.InputFile.EndsWith("skin") && !CryData.InputFile.EndsWith("chr"))
                                 {
-                                    tmpVertsUVs.Vertices[j] = (tmpVertsUVs.Vertices[j] * multiplerVector) + boundaryBoxCenter;
+                                    vertex = (vertex * multiplerVector) + boundaryBoxCenter;
                                 }
 
                                 Vector3 vertex = tmpVertsUVs.Vertices[j];
@@ -1398,6 +1399,7 @@ namespace CgfConverter
             Grendgine_Collada_Matrix matrix = new();
             List<Grendgine_Collada_Matrix> matrices = new();
             matrix.Value_As_String = CreateStringFromMatrix4x4(bone.LocalTransform);
+
             matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
             tmpNode.Matrix = matrices.ToArray();
 
@@ -1438,6 +1440,7 @@ namespace CgfConverter
                 Value_As_String = CreateStringFromMatrix4x4(nodeChunk.LocalTransform),
                 sID = "transform"
             };
+
             matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
             tmpNode.Matrix = matrices.ToArray();
 
