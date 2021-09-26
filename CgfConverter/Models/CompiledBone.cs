@@ -24,8 +24,8 @@ namespace CgfConverter
         
         public long offset;                        // Calculated position in the file where this bone started.
         
-        public uint parentID;                           // Calculated controllerID of the parent bone put into the Bone Dictionary (the key)
-        public List<uint> childIDs = new List<uint>();  // Calculated controllerIDs of the children to this bone.
+        public uint parentID;                      // Calculated controllerID of the parent bone put into the Bone Dictionary (the key)
+        public List<uint> childIDs = new();        // Calculated controllerIDs of the children to this bone.
 
         public CompiledBone ParentBone;
 
@@ -33,17 +33,10 @@ namespace CgfConverter
         {
             get 
             {
-                //if (offsetParent == 0) // No parent
                 if (ParentBone == null) // No parent
-                {
                     return Matrix4x4Extensions.CreateFromMatrix3x4(BoneToWorld);
-                }
                 else 
-                {
-                    return Matrix4x4Extensions.CreateLocalTransformFromB2W(
-                        Matrix4x4Extensions.CreateFromMatrix3x4(ParentBone.BoneToWorld),
-                        Matrix4x4Extensions.CreateFromMatrix3x4(BoneToWorld));
-                }
+                    return Matrix4x4Extensions.CreateFromMatrix3x4(ParentBone.BoneToWorld) * Matrix4x4Extensions.CreateFromMatrix3x4(BoneToWorld);
             }
         }
 
@@ -88,26 +81,14 @@ namespace CgfConverter
             ControllerID = b.ReadUInt32();                 // unique id of bone (generated from bone name)
             limbID = b.ReadInt32();
             offsetParent = b.ReadInt32();
-            Quaternion relativeQuat = new()
-            {
-                X = b.ReadSingle(),
-                Y = b.ReadSingle(),
-                Z = b.ReadSingle(),
-                W = b.ReadSingle()
-            };
+            Quaternion relativeQuat = b.ReadQuaternion();
             Vector3 relativeTranslation = new()
             {
                 Z = b.ReadSingle(),
                 Y = b.ReadSingle(),
                 X = -b.ReadSingle()
             };
-            Quaternion worldQuat = new()
-            {
-                X = b.ReadSingle(),
-                Y = b.ReadSingle(),
-                Z = b.ReadSingle(),
-                W = b.ReadSingle()
-            };
+            Quaternion worldQuat = b.ReadQuaternion();
             Vector3 worldTranslation = new()
             {
                 Z = b.ReadSingle(), 

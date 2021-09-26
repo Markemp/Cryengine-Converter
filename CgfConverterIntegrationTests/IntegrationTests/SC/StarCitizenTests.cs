@@ -106,6 +106,22 @@ namespace CgfConverterTests.IntegrationTests.SC
         }
 
         [TestMethod]
+        public void AEGS_GladiusLandingGearFront_CHR()
+        {
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\AEGS_Gladius_LandingGear_Front_CHR.chr", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\SC\" };
+            int result = testUtils.argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
+            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
+
+            var colladaData = new Collada(testUtils.argsHandler, cryData);
+            var daeObject = colladaData.DaeObject;
+            colladaData.GenerateDaeObject();
+
+            Assert.IsFalse(cryData.Models[0].HasGeometry);
+        }
+
+        [TestMethod]
         public void SC_hangar_asteroid_controlroom_fan()
         {
             var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\hangar_asteroid_controlroom_fan.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };

@@ -61,6 +61,7 @@ namespace CgfConverter
             WriteLibrary_Effects();
             WriteLibrary_Materials();
             WriteLibrary_Geometries();
+
             // If there is Skinning info, create the controller library and set up visual scene to refer to it.  Otherwise just write the Visual Scene
             if (CryData.SkinningInfo.HasSkinningInfo)
             {
@@ -1186,6 +1187,7 @@ namespace CgfConverter
 
             // There can be multiple visual scenes.  Will just have one (World) for now.  All node chunks go under Nodes for that visual scene
             List<Grendgine_Collada_Visual_Scene> visualScenes = new();
+            Grendgine_Collada_Visual_Scene visualScene = new();
             List<Grendgine_Collada_Node> nodes = new();
 
             // Check to see if there is a CompiledBones chunk.  If so, add a Node.  
@@ -1197,56 +1199,57 @@ namespace CgfConverter
                 boneNode = CreateJointNode(CryData.Bones.RootBone);
                 nodes.Add(boneNode);
             }
+            
 
-            // Geometry visual Scene.
-            Grendgine_Collada_Visual_Scene visualScene = new();
-            Grendgine_Collada_Node rootNode = new()
+            if (CryData.Models[0].HasGeometry)
             {
-                ID = CryData.Models[0].FileName,
-                Name = CryData.Models[0].FileName,
-                Type = Grendgine_Collada_Node_Type.NODE,
-                Matrix = new Grendgine_Collada_Matrix[1]
-            };
-            rootNode.Matrix[0] = new Grendgine_Collada_Matrix
-            {
-                Value_As_String = CreateStringFromMatrix4x4(Matrix4x4.Identity)
-            };
-            rootNode.Instance_Controller = new Grendgine_Collada_Instance_Controller[1];
-            rootNode.Instance_Controller[0] = new Grendgine_Collada_Instance_Controller
-            {
-                URL = "#Controller",
-                Skeleton = new Grendgine_Collada_Skeleton[1]
-            };
-            Grendgine_Collada_Skeleton skeleton = rootNode.Instance_Controller[0].Skeleton[0] = new Grendgine_Collada_Skeleton();
-            skeleton.Value = "#Armature";
-            rootNode.Instance_Controller[0].Bind_Material = new Grendgine_Collada_Bind_Material[1];
-            Grendgine_Collada_Bind_Material bindMaterial = rootNode.Instance_Controller[0].Bind_Material[0] = new Grendgine_Collada_Bind_Material();
-
-            // Create an Instance_Material for each material
-            bindMaterial.Technique_Common = new Grendgine_Collada_Technique_Common_Bind_Material();
-            List<Grendgine_Collada_Instance_Material_Geometry> instanceMaterials = new();
-            bindMaterial.Technique_Common.Instance_Material = new Grendgine_Collada_Instance_Material_Geometry[CryData.Materials.Count];
-            // This gets complicated.  We need to make one instance_material for each material used in this node chunk.  The mat IDs used in this
-            // node chunk are stored in meshsubsets, so for each subset we need to grab the mat, get the target (id), and make an instance_material for it.
-            for (int i = 0; i < CryData.Materials.Count; i++)
-            {
-                string MatName = CryData.Materials[i].Name;
-                if (Args.PrefixMaterialNames)
-                    MatName = CryData.Materials[i].SourceFileName + "_" + MatName;
-
-                // For each mesh subset, we want to create an instance material and add it to instanceMaterials list.
-                Grendgine_Collada_Instance_Material_Geometry tmpInstanceMat = new()
+                Grendgine_Collada_Node rootNode = new()
                 {
-                    //tmpInstanceMat.Target = "#" + tmpMeshSubsets.MeshSubsets[i].MatID;
-                    Target = "#" + MatName + "-material",
-                    //tmpInstanceMat.Symbol = CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name;
-                    Symbol = MatName + "-material"
+                    ID = CryData.Models[0].FileName,
+                    Name = CryData.Models[0].FileName,
+                    Type = Grendgine_Collada_Node_Type.NODE,
+                    Matrix = new Grendgine_Collada_Matrix[1]
                 };
-                instanceMaterials.Add(tmpInstanceMat);
-            }
-            rootNode.Instance_Controller[0].Bind_Material[0].Technique_Common.Instance_Material = instanceMaterials.ToArray();
+                rootNode.Matrix[0] = new Grendgine_Collada_Matrix
+                {
+                    Value_As_String = CreateStringFromMatrix4x4(Matrix4x4.Identity)
+                };
+                rootNode.Instance_Controller = new Grendgine_Collada_Instance_Controller[1];
+                rootNode.Instance_Controller[0] = new Grendgine_Collada_Instance_Controller
+                {
+                    URL = "#Controller",
+                    Skeleton = new Grendgine_Collada_Skeleton[1]
+                };
+                Grendgine_Collada_Skeleton skeleton = rootNode.Instance_Controller[0].Skeleton[0] = new Grendgine_Collada_Skeleton();
+                skeleton.Value = "#Armature";
+                rootNode.Instance_Controller[0].Bind_Material = new Grendgine_Collada_Bind_Material[1];
+                Grendgine_Collada_Bind_Material bindMaterial = rootNode.Instance_Controller[0].Bind_Material[0] = new Grendgine_Collada_Bind_Material();
 
-            nodes.Add(rootNode);
+                // Create an Instance_Material for each material
+                bindMaterial.Technique_Common = new Grendgine_Collada_Technique_Common_Bind_Material();
+                List<Grendgine_Collada_Instance_Material_Geometry> instanceMaterials = new();
+                bindMaterial.Technique_Common.Instance_Material = new Grendgine_Collada_Instance_Material_Geometry[CryData.Materials.Count];
+                // This gets complicated.  We need to make one instance_material for each material used in this node chunk.  The mat IDs used in this
+                // node chunk are stored in meshsubsets, so for each subset we need to grab the mat, get the target (id), and make an instance_material for it.
+                for (int i = 0; i < CryData.Materials.Count; i++)
+                {
+                    string MatName = CryData.Materials[i].Name;
+                    if (Args.PrefixMaterialNames)
+                        MatName = CryData.Materials[i].SourceFileName + "_" + MatName;
+
+                    // For each mesh subset, we want to create an instance material and add it to instanceMaterials list.
+                    Grendgine_Collada_Instance_Material_Geometry tmpInstanceMat = new()
+                    {
+                        Target = "#" + MatName + "-material",
+                        Symbol = MatName + "-material"
+                    };
+                    instanceMaterials.Add(tmpInstanceMat);
+                }
+                rootNode.Instance_Controller[0].Bind_Material[0].Technique_Common.Instance_Material = instanceMaterials.ToArray();
+
+                nodes.Add(rootNode);
+            }
+
             visualScene.Node = nodes.ToArray();
             visualScene.ID = "Scene";
             visualScenes.Add(visualScene);
