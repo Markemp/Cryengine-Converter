@@ -10,7 +10,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cgf-converter", "cgf-conver
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CgfConverter", "CgfConverter\CgfConverter.csproj", "{7E42B72A-C90C-4AAF-A344-8BD124866BDB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CgfConverterIntegrationTests", "CgfConverterIntegrationTests\CgfConverterIntegrationTests.csproj", "{2E40A418-2553-44B7-80EE-031FC94FA4EC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CgfConverterTests", "CgfConverterIntegrationTests\CgfConverterTests.csproj", "{2E40A418-2553-44B7-80EE-031FC94FA4EC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -14,15 +14,15 @@ using grendgine_collada;
 
 namespace CgfConverter
 {
-    public class COLLADA : BaseRenderer // class to export to .dae format (COLLADA)
+    public class Collada : BaseRenderer // class to export to .dae format (Collada)
     {
         private readonly CultureInfo culture = CultureInfo.CreateSpecificCulture("en-US");
         private const string colladaVersion = "1.4.1";
 
         public Grendgine_Collada DaeObject { get; private set; } = new Grendgine_Collada();  // This is the serializable class.
-        readonly XmlSerializer mySerializer = new XmlSerializer(typeof(Grendgine_Collada));
+        readonly XmlSerializer mySerializer = new(typeof(Grendgine_Collada));
 
-        public COLLADA(ArgsHandler argsHandler, CryEngine cryEngine) : base(argsHandler, cryEngine) { }
+        public Collada(ArgsHandler argsHandler, CryEngine cryEngine) : base(argsHandler, cryEngine) { }
 
         public override void Render(string outputDir = null, bool preservePath = true)
         {
@@ -61,6 +61,7 @@ namespace CgfConverter
             WriteLibrary_Effects();
             WriteLibrary_Materials();
             WriteLibrary_Geometries();
+
             // If there is Skinning info, create the controller library and set up visual scene to refer to it.  Otherwise just write the Visual Scene
             if (CryData.SkinningInfo.HasSkinningInfo)
             {
@@ -85,7 +86,7 @@ namespace CgfConverter
             // Writes the Asset element in a Collada XML doc
             DateTime fileCreated = DateTime.Now;
             DateTime fileModified = DateTime.Now;           // since this only creates, both times should be the same
-            Grendgine_Collada_Asset asset = new Grendgine_Collada_Asset
+            Grendgine_Collada_Asset asset = new()
             {
                 Revision = Assembly.GetExecutingAssembly().GetName().Version.ToString()
             };
@@ -129,7 +130,7 @@ namespace CgfConverter
         protected void WriteLibrary_Images()
         {
             // List of all the images used by the asset.
-            Grendgine_Collada_Library_Images libraryImages = new Grendgine_Collada_Library_Images();
+            Grendgine_Collada_Library_Images libraryImages = new();
             DaeObject.Library_Images = libraryImages;
             List<Grendgine_Collada_Image> imageList = new();
             
@@ -174,7 +175,7 @@ namespace CgfConverter
         {
             // Create the list of materials used in this object
             // There is just one .mtl file we need to worry about.
-            Grendgine_Collada_Library_Materials libraryMaterials = new Grendgine_Collada_Library_Materials();
+            Grendgine_Collada_Library_Materials libraryMaterials = new();
             // We have our top level.
             DaeObject.Library_Materials = libraryMaterials;
             int numMaterials = CryData.Materials.Count;
@@ -183,7 +184,7 @@ namespace CgfConverter
             Grendgine_Collada_Material[] materials = new Grendgine_Collada_Material[numMaterials];
             for (int i = 0; i < numMaterials; i++)
             {
-                Grendgine_Collada_Material tmpMaterial = new Grendgine_Collada_Material
+                Grendgine_Collada_Material tmpMaterial = new()
                 {
                     Instance_Effect = new Grendgine_Collada_Instance_Effect()
                 };
@@ -214,7 +215,7 @@ namespace CgfConverter
         public void WriteLibrary_Effects()
         {
             // The Effects library.  This is actual material stuff.
-            Grendgine_Collada_Library_Effects libraryEffects = new Grendgine_Collada_Library_Effects();
+            Grendgine_Collada_Library_Effects libraryEffects = new();
             // Like materials.  We will need one effect for each material.
             int numEffects = CryData.Materials.Count;
             Grendgine_Collada_Effect[] effects = new Grendgine_Collada_Effect[numEffects];
@@ -224,7 +225,7 @@ namespace CgfConverter
                 if (Args.PrefixMaterialNames)
                     MatName = CryData.Materials[i].SourceFileName + "_" + MatName;
 
-                Grendgine_Collada_Effect tmpEffect = new Grendgine_Collada_Effect
+                Grendgine_Collada_Effect tmpEffect = new()
                 {
                     //tmpEffect.Name = CryData.Materials[i].Name;
                     ID = MatName + "-effect",
@@ -233,22 +234,22 @@ namespace CgfConverter
                 effects[i] = tmpEffect;
 
                 // create the profile_common for the effect
-                List<Grendgine_Collada_Profile_COMMON> profiles = new List<Grendgine_Collada_Profile_COMMON>();
-                Grendgine_Collada_Profile_COMMON profile = new Grendgine_Collada_Profile_COMMON();
+                List<Grendgine_Collada_Profile_COMMON> profiles = new();
+                Grendgine_Collada_Profile_COMMON profile = new();
                 profiles.Add(profile);
 
                 // Create a list for the new_params
-                List<Grendgine_Collada_New_Param> newparams = new List<Grendgine_Collada_New_Param>();
+                List<Grendgine_Collada_New_Param> newparams = new();
                 #region set up the sampler and surface for the materials. 
                 // Check to see if the texture exists, and if so make a sampler and surface.
                 for (int j = 0; j < CryData.Materials[i].Textures.Length; j++)
                 {
                     // Add the Surface node
-                    Grendgine_Collada_New_Param texSurface = new Grendgine_Collada_New_Param
+                    Grendgine_Collada_New_Param texSurface = new()
                     {
                         sID = CleanTexFileName(CryData.Materials[i].Textures[j].File) + "-surface"
                     };
-                    Grendgine_Collada_Surface surface = new Grendgine_Collada_Surface();
+                    Grendgine_Collada_Surface surface = new();
                     texSurface.Surface = surface;
                     surface.Init_From = new Grendgine_Collada_Init_From();
                     //Grendgine_Collada_Surface surface2D = new Grendgine_Collada_Surface();
@@ -261,11 +262,11 @@ namespace CgfConverter
                     };
 
                     // Add the Sampler node
-                    Grendgine_Collada_New_Param texSampler = new Grendgine_Collada_New_Param
+                    Grendgine_Collada_New_Param texSampler = new()
                     {
                         sID = CleanTexFileName(CryData.Materials[i].Textures[j].File) + "-sampler"
                     };
-                    Grendgine_Collada_Sampler2D sampler2D = new Grendgine_Collada_Sampler2D();
+                    Grendgine_Collada_Sampler2D sampler2D = new();
                     texSampler.Sampler2D = sampler2D;
                     //Grendgine_Collada_Source samplerSource = new Grendgine_Collada_Source();
                     texSampler.Sampler2D.Source = texSurface.sID;
@@ -277,8 +278,8 @@ namespace CgfConverter
 
                 #region Create the Technique
                 // Make the techniques for the profile
-                Grendgine_Collada_Effect_Technique_COMMON technique = new Grendgine_Collada_Effect_Technique_COMMON();
-                Grendgine_Collada_Phong phong = new Grendgine_Collada_Phong();
+                Grendgine_Collada_Effect_Technique_COMMON technique = new();
+                Grendgine_Collada_Phong phong = new();
                 technique.Phong = phong;
                 technique.sID = "common";
                 profile.Technique = technique;
@@ -319,7 +320,7 @@ namespace CgfConverter
                         // Bump maps go in an extra node.
                         // bump maps are added to an extra node.
                         Grendgine_Collada_Extra[] extras = new Grendgine_Collada_Extra[1];
-                        Grendgine_Collada_Extra extra = new Grendgine_Collada_Extra();
+                        Grendgine_Collada_Extra extra = new();
                         extras[0] = extra;
 
                         technique.Extra = extras;
@@ -327,14 +328,14 @@ namespace CgfConverter
                         // Create the technique for the extra
 
                         Grendgine_Collada_Technique[] extraTechniques = new Grendgine_Collada_Technique[1];
-                        Grendgine_Collada_Technique extraTechnique = new Grendgine_Collada_Technique();
+                        Grendgine_Collada_Technique extraTechnique = new();
                         extra.Technique = extraTechniques;
                         //extraTechnique.Data[0] = new XmlElement();
 
                         extraTechniques[0] = extraTechnique;
                         extraTechnique.profile = "FCOLLADA";
 
-                        Grendgine_Collada_BumpMap bumpMap = new Grendgine_Collada_BumpMap
+                        Grendgine_Collada_BumpMap bumpMap = new()
                         {
                             Textures = new Grendgine_Collada_Texture[1]
                         };
@@ -407,11 +408,11 @@ namespace CgfConverter
         /// <summary> Write the Library_Geometries element.  These won't be instantiated except through the visual scene or controllers. </summary>
         public void WriteLibrary_Geometries()
         {
-            Grendgine_Collada_Library_Geometries libraryGeometries = new Grendgine_Collada_Library_Geometries();
+            Grendgine_Collada_Library_Geometries libraryGeometries = new();
 
             // Make a list for all the geometries objects we will need. Will convert to array at end.  Define the array here as well
             // We have to define a Geometry for EACH meshsubset in the meshsubsets, since the mesh can contain multiple materials
-            List<Grendgine_Collada_Geometry> geometryList = new List<Grendgine_Collada_Geometry>();
+            List<Grendgine_Collada_Geometry> geometryList = new();
 
             // For each of the nodes, we need to write the geometry.
             // Use a foreach statement to get all the node chunks.  This will get us the meshes, which will contain the vertex, UV and normal info.
@@ -581,11 +582,11 @@ namespace CgfConverter
                                 Vector3 vertex = tmpVertices.Vertices[j];
                                 vertString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", vertex.X, vertex.Y, vertex.Z);
                                 Vector3 normal = tmpNormals?.Normals[j] ?? tmpTangents?.Normals[j] ?? new Vector3(0.0f, 0.0f, 0.0f);
-                                normString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", safe(normal.X), safe(normal.Y), safe(normal.Z));
+                                normString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", Safe(normal.X), Safe(normal.Y), Safe(normal.Z));
                             }
                             for (uint j = 0; j < tmpUVs.NumElements; j++)     // Create UV string
                             {
-                                uvString.AppendFormat(culture, "{0:F6} {1:F6} ", safe(tmpUVs.UVs[j].U), 1 - safe(tmpUVs.UVs[j].V));
+                                uvString.AppendFormat(culture, "{0:F6} {1:F6} ", Safe(tmpUVs.UVs[j].U), 1 - Safe(tmpUVs.UVs[j].V));
                             }
                         }
                         else                // VertsUV structure.  Pull out verts and UVs from tmpVertsUVs.
@@ -635,7 +636,8 @@ namespace CgfConverter
                                     vertex = (vertex * multiplerVector) + boundaryBoxCenter;
                                 }
 
-                                vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", safe(vertex.X), safe(vertex.Y), safe(vertex.Z));
+                                Vector3 vertex = tmpVertsUVs.Vertices[j];
+                                vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(vertex.X), Safe(vertex.Y), Safe(vertex.Z));
 
                                 // TODO:  This isn't right?  VertsUvs may always have color as the 3rd element.
                                 // Normals depend on the data size.  16 byte structures have the normals in the Tangents.  20 byte structures are in the VertsUV.
@@ -648,12 +650,12 @@ namespace CgfConverter
                                 {
                                     normal = tmpTangents.Normals[j];
                                 }
-                                normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", safe(normal.X), safe(normal.Y), safe(normal.Z));
+                                normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(normal.X), Safe(normal.Y), Safe(normal.Z));
                             }
                             // Create UV string
                             for (uint j = 0; j < tmpVertsUVs.NumElements; j++)
                             {
-                                uvString.AppendFormat("{0:F6} {1:F6} ", safe(tmpVertsUVs.UVs[j].U), safe(1 - tmpVertsUVs.UVs[j].V));
+                                uvString.AppendFormat("{0:F6} {1:F6} ", Safe(tmpVertsUVs.UVs[j].U), Safe(1 - tmpVertsUVs.UVs[j].V));
                             }
                         }
                         CleanNumbers(vertString);
@@ -734,7 +736,7 @@ namespace CgfConverter
                             }
 
                             // Create the vcount list.  All triangles, so the subset number of indices.
-                            StringBuilder vc = new StringBuilder();
+                            StringBuilder vc = new();
                             for (var k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
                             {
                                 int ccount = 3;
@@ -747,7 +749,7 @@ namespace CgfConverter
                             }
 
                             // Create the P node for the Triangles.
-                            StringBuilder p = new StringBuilder();
+                            StringBuilder p = new();
                             for (var k = tmpMeshSubsets.MeshSubsets[j].FirstIndex; k < (tmpMeshSubsets.MeshSubsets[j].FirstIndex + tmpMeshSubsets.MeshSubsets[j].NumIndices); k++)
                             {
                                 int values = 0;
@@ -756,7 +758,7 @@ namespace CgfConverter
                                     values++;
                                 }
 
-                                List<string> formatlist = new List<string>();
+                                List<string> formatlist = new();
                                 formatlist.Add("{0} {0} {0} ");
                                 formatlist.Add("{1} {1} {1} ");
                                 formatlist.Add("{2} {2} {2} ");
@@ -902,16 +904,16 @@ namespace CgfConverter
             if (DaeObject.Library_Geometries.Geometry.Length != 0)
             {
                 // Set up the controller library.
-                Grendgine_Collada_Library_Controllers libraryController = new Grendgine_Collada_Library_Controllers();
+                Grendgine_Collada_Library_Controllers libraryController = new();
 
                 // There can be multiple controllers in the controller library.  But for Cryengine files, there is only one rig.
                 // So if a rig exists, make that the controller.  This applies mostly to .chr files, which will have a rig and may have geometry.
-                Grendgine_Collada_Controller controller = new Grendgine_Collada_Controller
+                Grendgine_Collada_Controller controller = new()
                 {
                     ID = "Controller"
                 };          // just need the one.
                 // Create the skin object and assign to the controller
-                Grendgine_Collada_Skin skin = new Grendgine_Collada_Skin
+                Grendgine_Collada_Skin skin = new()
                 {
                     source = "#" + DaeObject.Library_Geometries.Geometry[0].ID,
                     Bind_Shape_Matrix = new Grendgine_Collada_Float_Array_String()
@@ -923,7 +925,7 @@ namespace CgfConverter
                 // Populate the data.
                 // Need to map the exterior vertices (geometry) to the int vertices.  Or use the Bone Map datastream if it exists (check HasBoneMapDatastream).
                 #region Joints Source
-                Grendgine_Collada_Source jointsSource = new Grendgine_Collada_Source()
+                Grendgine_Collada_Source jointsSource = new()
                 {
                     ID = "Controller-joints"
                 };
@@ -932,7 +934,7 @@ namespace CgfConverter
                     ID = "Controller-joints-array",
                     Count = CryData.SkinningInfo.CompiledBones.Count,
                 };
-                StringBuilder boneNames = new StringBuilder();
+                StringBuilder boneNames = new();
                 for (int i = 0; i < CryData.SkinningInfo.CompiledBones.Count; i++)
                 {
                     boneNames.Append(CryData.SkinningInfo.CompiledBones[i].boneName.Replace(' ', '_') + " ");
@@ -951,7 +953,7 @@ namespace CgfConverter
                 #endregion
 
                 #region Bind Pose Array Source
-                Grendgine_Collada_Source bindPoseArraySource = new Grendgine_Collada_Source()
+                Grendgine_Collada_Source bindPoseArraySource = new()
                 {
                     ID = "Controller-bind_poses"
                 };
@@ -980,7 +982,7 @@ namespace CgfConverter
                 #endregion
 
                 #region Weights Source
-                Grendgine_Collada_Source weightArraySource = new Grendgine_Collada_Source()
+                Grendgine_Collada_Source weightArraySource = new()
                 {
                     ID = "Controller-weights"
                 };
@@ -991,7 +993,7 @@ namespace CgfConverter
                 {
                     ID = "Controller-weights-array",
                 };
-                StringBuilder weights = new StringBuilder();
+                StringBuilder weights = new();
 
                 if (CryData.SkinningInfo.IntVertices == null)       // This is a case where there are bones, and only Bone Mapping data from a datastream chunk.  Skin files.
                 {
@@ -1063,7 +1065,7 @@ namespace CgfConverter
                 weightSemantic.Semantic = Grendgine_Collada_Input_Semantic.WEIGHT;
                 weightSemantic.source = "#Controller-weights";
                 weightSemantic.Offset = 1;
-                StringBuilder vCount = new StringBuilder();
+                StringBuilder vCount = new();
                 //for (int i = 0; i < CryData.Models[0].SkinningInfo.IntVertices.Count; i++)
                 for (int i = 0; i < CryData.SkinningInfo.BoneMapping.Count; i++)
                 {
@@ -1073,7 +1075,7 @@ namespace CgfConverter
                 {
                     Value_As_String = vCount.ToString().TrimEnd()
                 };
-                StringBuilder vertices = new StringBuilder();
+                StringBuilder vertices = new();
                 //for (int i = 0; i < CryData.Models[0].SkinningInfo.IntVertices.Count * 4; i++)
                 int index = 0;
                 if (!CryData.Models[0].SkinningInfo.HasIntToExtMapping)
@@ -1132,32 +1134,32 @@ namespace CgfConverter
         public void WriteLibrary_VisualScenes()
         {
             // Set up the library
-            Grendgine_Collada_Library_Visual_Scenes libraryVisualScenes = new Grendgine_Collada_Library_Visual_Scenes();
+            Grendgine_Collada_Library_Visual_Scenes libraryVisualScenes = new();
 
             // There can be multiple visual scenes.  Will just have one (World) for now.  All node chunks go under Nodes for that visual scene
-            List<Grendgine_Collada_Visual_Scene> visualScenes = new List<Grendgine_Collada_Visual_Scene>();
-            List<Grendgine_Collada_Node> nodes = new List<Grendgine_Collada_Node>();
+            List<Grendgine_Collada_Visual_Scene> visualScenes = new();
+            List<Grendgine_Collada_Node> nodes = new();
 
             // Check to see if there is a CompiledBones chunk.  If so, add a Node.
             if (CryData.Chunks.Any(a => a.ChunkType == ChunkType.CompiledBones || 
                 a.ChunkType == ChunkType.CompiledBonesSC ||
                 a.ChunkType == ChunkType.CompiledBonesIvo))
             {
-                Grendgine_Collada_Node boneNode = new Grendgine_Collada_Node();
+                Grendgine_Collada_Node boneNode = new();
                 boneNode = CreateJointNode(CryData.Bones.RootBone);
                 nodes.Add(boneNode);
             }
 
             // Geometry visual Scene.
-            Grendgine_Collada_Visual_Scene visualScene = new Grendgine_Collada_Visual_Scene();
-            Grendgine_Collada_Node rootNode = new Grendgine_Collada_Node();
+            Grendgine_Collada_Visual_Scene visualScene = new();
+            Grendgine_Collada_Node rootNode = new();
 
             if (CryData.Models.Count > 1) // Star Citizen model with .cga/.cgam pair.
             {
                 // First model file (.cga or .cgf) will contain the main Root Node, along with all non geometry Node chunks (placeholders).
                 // Second one will have all the datastreams, but needs to be tied to the RootNode of the first model.
                 // THERE CAN BE MULTIPLE ROOT NODES IN EACH FILE!  Check to see if the parentnodeid ~0 and be sure to add a node for it.
-                List<Grendgine_Collada_Node> positionNodes = new List<Grendgine_Collada_Node>();        // For SC files, these are the nodes in the .cga/.cgf files.
+                List<Grendgine_Collada_Node> positionNodes = new();        // For SC files, these are the nodes in the .cga/.cgf files.
                 List<ChunkNode> positionRoots = CryData.Models[0].NodeMap.Values.Where(a => a.ParentNodeID == ~0).ToList();
                 foreach (ChunkNode root in positionRoots)
                 {
@@ -1182,71 +1184,73 @@ namespace CgfConverter
         public void WriteLibrary_VisualScenesWithSkeleton()
         {
             // Set up the library
-            Grendgine_Collada_Library_Visual_Scenes libraryVisualScenes = new Grendgine_Collada_Library_Visual_Scenes();
+            Grendgine_Collada_Library_Visual_Scenes libraryVisualScenes = new();
 
             // There can be multiple visual scenes.  Will just have one (World) for now.  All node chunks go under Nodes for that visual scene
-            List<Grendgine_Collada_Visual_Scene> visualScenes = new List<Grendgine_Collada_Visual_Scene>();
-            List<Grendgine_Collada_Node> nodes = new List<Grendgine_Collada_Node>();
+            List<Grendgine_Collada_Visual_Scene> visualScenes = new();
+            Grendgine_Collada_Visual_Scene visualScene = new();
+            List<Grendgine_Collada_Node> nodes = new();
 
             // Check to see if there is a CompiledBones chunk.  If so, add a Node.  
             if (CryData.Chunks.Any(a => a.ChunkType == ChunkType.CompiledBones || 
                 a.ChunkType == ChunkType.CompiledBonesSC ||
                 a.ChunkType == ChunkType.CompiledBonesIvo))
             {
-                Grendgine_Collada_Node boneNode = new Grendgine_Collada_Node();
+                Grendgine_Collada_Node boneNode = new();
                 boneNode = CreateJointNode(CryData.Bones.RootBone);
                 nodes.Add(boneNode);
             }
+            
 
-            // Geometry visual Scene.
-            Grendgine_Collada_Visual_Scene visualScene = new Grendgine_Collada_Visual_Scene();
-            Grendgine_Collada_Node rootNode = new Grendgine_Collada_Node
+            if (CryData.Models[0].HasGeometry)
             {
-                ID = CryData.Models[0].FileName,
-                Name = CryData.Models[0].FileName,
-                Type = Grendgine_Collada_Node_Type.NODE,
-                Matrix = new Grendgine_Collada_Matrix[1]
-            };
-            rootNode.Matrix[0] = new Grendgine_Collada_Matrix
-            {
-                Value_As_String = CreateStringFromMatrix4x4(Matrix4x4.Identity)
-            };
-            rootNode.Instance_Controller = new Grendgine_Collada_Instance_Controller[1];
-            rootNode.Instance_Controller[0] = new Grendgine_Collada_Instance_Controller
-            {
-                URL = "#Controller",
-                Skeleton = new Grendgine_Collada_Skeleton[1]
-            };
-            Grendgine_Collada_Skeleton skeleton = rootNode.Instance_Controller[0].Skeleton[0] = new Grendgine_Collada_Skeleton();
-            skeleton.Value = "#Armature";
-            rootNode.Instance_Controller[0].Bind_Material = new Grendgine_Collada_Bind_Material[1];
-            Grendgine_Collada_Bind_Material bindMaterial = rootNode.Instance_Controller[0].Bind_Material[0] = new Grendgine_Collada_Bind_Material();
-
-            // Create an Instance_Material for each material
-            bindMaterial.Technique_Common = new Grendgine_Collada_Technique_Common_Bind_Material();
-            List<Grendgine_Collada_Instance_Material_Geometry> instanceMaterials = new List<Grendgine_Collada_Instance_Material_Geometry>();
-            bindMaterial.Technique_Common.Instance_Material = new Grendgine_Collada_Instance_Material_Geometry[CryData.Materials.Count];
-            // This gets complicated.  We need to make one instance_material for each material used in this node chunk.  The mat IDs used in this
-            // node chunk are stored in meshsubsets, so for each subset we need to grab the mat, get the target (id), and make an instance_material for it.
-            for (int i = 0; i < CryData.Materials.Count; i++)
-            {
-                string MatName = CryData.Materials[i].Name;
-                if (Args.PrefixMaterialNames)
-                    MatName = CryData.Materials[i].SourceFileName + "_" + MatName;
-
-                // For each mesh subset, we want to create an instance material and add it to instanceMaterials list.
-                Grendgine_Collada_Instance_Material_Geometry tmpInstanceMat = new Grendgine_Collada_Instance_Material_Geometry
+                Grendgine_Collada_Node rootNode = new()
                 {
-                    //tmpInstanceMat.Target = "#" + tmpMeshSubsets.MeshSubsets[i].MatID;
-                    Target = "#" + MatName + "-material",
-                    //tmpInstanceMat.Symbol = CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name;
-                    Symbol = MatName + "-material"
+                    ID = CryData.Models[0].FileName,
+                    Name = CryData.Models[0].FileName,
+                    Type = Grendgine_Collada_Node_Type.NODE,
+                    Matrix = new Grendgine_Collada_Matrix[1]
                 };
-                instanceMaterials.Add(tmpInstanceMat);
-            }
-            rootNode.Instance_Controller[0].Bind_Material[0].Technique_Common.Instance_Material = instanceMaterials.ToArray();
+                rootNode.Matrix[0] = new Grendgine_Collada_Matrix
+                {
+                    Value_As_String = CreateStringFromMatrix4x4(Matrix4x4.Identity)
+                };
+                rootNode.Instance_Controller = new Grendgine_Collada_Instance_Controller[1];
+                rootNode.Instance_Controller[0] = new Grendgine_Collada_Instance_Controller
+                {
+                    URL = "#Controller",
+                    Skeleton = new Grendgine_Collada_Skeleton[1]
+                };
+                Grendgine_Collada_Skeleton skeleton = rootNode.Instance_Controller[0].Skeleton[0] = new Grendgine_Collada_Skeleton();
+                skeleton.Value = "#Armature";
+                rootNode.Instance_Controller[0].Bind_Material = new Grendgine_Collada_Bind_Material[1];
+                Grendgine_Collada_Bind_Material bindMaterial = rootNode.Instance_Controller[0].Bind_Material[0] = new Grendgine_Collada_Bind_Material();
 
-            nodes.Add(rootNode);
+                // Create an Instance_Material for each material
+                bindMaterial.Technique_Common = new Grendgine_Collada_Technique_Common_Bind_Material();
+                List<Grendgine_Collada_Instance_Material_Geometry> instanceMaterials = new();
+                bindMaterial.Technique_Common.Instance_Material = new Grendgine_Collada_Instance_Material_Geometry[CryData.Materials.Count];
+                // This gets complicated.  We need to make one instance_material for each material used in this node chunk.  The mat IDs used in this
+                // node chunk are stored in meshsubsets, so for each subset we need to grab the mat, get the target (id), and make an instance_material for it.
+                for (int i = 0; i < CryData.Materials.Count; i++)
+                {
+                    string MatName = CryData.Materials[i].Name;
+                    if (Args.PrefixMaterialNames)
+                        MatName = CryData.Materials[i].SourceFileName + "_" + MatName;
+
+                    // For each mesh subset, we want to create an instance material and add it to instanceMaterials list.
+                    Grendgine_Collada_Instance_Material_Geometry tmpInstanceMat = new()
+                    {
+                        Target = "#" + MatName + "-material",
+                        Symbol = MatName + "-material"
+                    };
+                    instanceMaterials.Add(tmpInstanceMat);
+                }
+                rootNode.Instance_Controller[0].Bind_Material[0].Technique_Common.Instance_Material = instanceMaterials.ToArray();
+
+                nodes.Add(rootNode);
+            }
+
             visualScene.Node = nodes.ToArray();
             visualScene.ID = "Scene";
             visualScenes.Add(visualScene);
@@ -1259,10 +1263,10 @@ namespace CgfConverter
         private Grendgine_Collada_Node CreateNode(ChunkNode nodeChunk)
         {
             // This will be used recursively to create a node object and return it to WriteLibrary_VisualScenes
-            List<Grendgine_Collada_Node> childNodes = new List<Grendgine_Collada_Node>();
+            List<Grendgine_Collada_Node> childNodes = new();
 
             #region Create the node element for this nodeChunk
-            Grendgine_Collada_Node tmpNode = new Grendgine_Collada_Node();
+            Grendgine_Collada_Node tmpNode = new();
             // Check to see if there is a second model file, and if the mesh chunk is actually there.
             if (CryData.Models.Count > 1)
             {
@@ -1328,19 +1332,20 @@ namespace CgfConverter
         {
             // This will be used to make the Collada node element for Node chunks that point to Helper Chunks and MeshPhysics
             Grendgine_Collada_Node_Type nodeType = Grendgine_Collada_Node_Type.NODE;
-            Grendgine_Collada_Node tmpNode = new Grendgine_Collada_Node
+            Grendgine_Collada_Node tmpNode = new()
             {
                 Type = nodeType,
                 Name = nodeChunk.Name,
                 ID = nodeChunk.Name
             };
             // Make the lists necessary for this Node.
-            List<Grendgine_Collada_Matrix> matrices = new List<Grendgine_Collada_Matrix>();
+            List<Grendgine_Collada_Matrix> matrices = new();
 
-            Grendgine_Collada_Matrix matrix = new Grendgine_Collada_Matrix();
-
-            matrix.Value_As_String = CreateStringFromMatrix4x4(nodeChunk.LocalTransform);
-            matrix.sID = "transform";
+            Grendgine_Collada_Matrix matrix = new()
+            {
+                Value_As_String = CreateStringFromMatrix4x4(nodeChunk.LocalTransform),
+                sID = "transform"
+            };
             matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
             tmpNode.Matrix = matrices.ToArray();
 
@@ -1354,7 +1359,7 @@ namespace CgfConverter
         {
             if (nodeChunk.__NumChildren != 0)
             {
-                List<Grendgine_Collada_Node> childNodes = new List<Grendgine_Collada_Node>();
+                List<Grendgine_Collada_Node> childNodes = new();
                 foreach (ChunkNode childNodeChunk in nodeChunk.AllChildNodes.ToList())
                 {
                     if (IsNodeNameExcluded(childNodeChunk.Name))
@@ -1383,7 +1388,7 @@ namespace CgfConverter
             {
                 id += "_" + bone.boneName.Replace(' ', '_');
             }
-            Grendgine_Collada_Node tmpNode = new Grendgine_Collada_Node()
+            Grendgine_Collada_Node tmpNode = new()
             {
                 ID = id,
                 Name = bone.boneName.Replace(' ', '_'),
@@ -1391,24 +1396,10 @@ namespace CgfConverter
                 Type = Grendgine_Collada_Node_Type.JOINT
             };
 
-            Grendgine_Collada_Matrix matrix = new Grendgine_Collada_Matrix();
-            List<Grendgine_Collada_Matrix> matrices = new List<Grendgine_Collada_Matrix>();
-            // Populate the matrix.  This is based on the BONETOWORLD data in this bone.
-            StringBuilder matrixValues = new StringBuilder();
-            var localTransform = bone.LocalTransform;
-            matrixValues.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} 0 0 0 1",
-                localTransform.M11, localTransform.M12, localTransform.M13, localTransform.M14,
-                localTransform.M21, localTransform.M22, localTransform.M23, localTransform.M24,
-                localTransform.M31, localTransform.M32, localTransform.M33, localTransform.M34);
+            Grendgine_Collada_Matrix matrix = new();
+            List<Grendgine_Collada_Matrix> matrices = new();
+            matrix.Value_As_String = CreateStringFromMatrix4x4(bone.LocalTransform);
 
-            //matrixValues.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} {12:F6} {13:F6} {14:F6} {15:F6}",
-            //   bone.LocalTransform.M11, bone.LocalTransform.M12, bone.LocalTransform.M13, bone.LocalTransform.M14,
-            //   bone.LocalTransform.M21, bone.LocalTransform.M22, bone.LocalTransform.M23, bone.LocalTransform.M24,
-            //   bone.LocalTransform.M31, bone.LocalTransform.M32, bone.LocalTransform.M33, bone.LocalTransform.M34,
-            //   bone.LocalTransform.M41, bone.LocalTransform.M42, bone.LocalTransform.M43, bone.LocalTransform.M44);
-
-            CleanNumbers(matrixValues);
-            matrix.Value_As_String = matrixValues.ToString();
             matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
             tmpNode.Matrix = matrices.ToArray();
 
@@ -1420,7 +1411,7 @@ namespace CgfConverter
 
                 foreach (CompiledBone childBone in CryData.Bones.GetAllChildBones(bone))
                 {
-                    Grendgine_Collada_Node childNode = new Grendgine_Collada_Node();
+                    Grendgine_Collada_Node childNode = new();
                     childNode = CreateJointNode(childBone);
                     childNodes[counter] = childNode;
                     counter++;
@@ -1432,34 +1423,35 @@ namespace CgfConverter
 
         private Grendgine_Collada_Node CreateGeometryNode(ChunkNode nodeChunk, ChunkMesh tmpMeshChunk)
         {
-            Grendgine_Collada_Node tmpNode = new Grendgine_Collada_Node();
+            Grendgine_Collada_Node tmpNode = new();
             ChunkMeshSubsets tmpMeshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsetsData];  // Listed as Object ID for the Node
             Grendgine_Collada_Node_Type nodeType = Grendgine_Collada_Node_Type.NODE; 
             tmpNode.Type = nodeType;
             tmpNode.Name = nodeChunk.Name;
             tmpNode.ID = nodeChunk.Name;
             // Make the lists necessary for this Node.
-            List<Grendgine_Collada_Matrix> matrices = new List<Grendgine_Collada_Matrix>();
-            List<Grendgine_Collada_Instance_Geometry> instanceGeometries = new List<Grendgine_Collada_Instance_Geometry>();
-            List<Grendgine_Collada_Bind_Material> bindMaterials = new List<Grendgine_Collada_Bind_Material>();
-            List<Grendgine_Collada_Instance_Material_Geometry> instanceMaterials = new List<Grendgine_Collada_Instance_Material_Geometry>();
+            List<Grendgine_Collada_Matrix> matrices = new();
+            List<Grendgine_Collada_Instance_Geometry> instanceGeometries = new();
+            List<Grendgine_Collada_Bind_Material> bindMaterials = new();
+            List<Grendgine_Collada_Instance_Material_Geometry> instanceMaterials = new();
 
-            Grendgine_Collada_Matrix matrix = new Grendgine_Collada_Matrix();
-            // matrixString might have to be an identity matrix, since GetTransform is applying the transform to all the vertices.
-            // Use same principle as CreateJointNode.  The Transform matrix (Matrix44) is the world transform matrix.
-            matrix.Value_As_String = CreateStringFromMatrix4x4(nodeChunk.LocalTransform);
-            matrix.sID = "transform";
+            Grendgine_Collada_Matrix matrix = new()
+            {
+                Value_As_String = CreateStringFromMatrix4x4(nodeChunk.LocalTransform),
+                sID = "transform"
+            };
+
             matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
             tmpNode.Matrix = matrices.ToArray();
 
             // Each node will have one instance geometry, although it could be a list.
-            Grendgine_Collada_Instance_Geometry instanceGeometry = new Grendgine_Collada_Instance_Geometry
+            Grendgine_Collada_Instance_Geometry instanceGeometry = new()
             {
                 Name = nodeChunk.Name,
                 URL = "#" + nodeChunk.Name + "-mesh"  // this is the ID of the geometry.
             };
 
-            Grendgine_Collada_Bind_Material bindMaterial = new Grendgine_Collada_Bind_Material
+            Grendgine_Collada_Bind_Material bindMaterial = new()
             {
                 Technique_Common = new Grendgine_Collada_Technique_Common_Bind_Material
                 {
@@ -1477,8 +1469,8 @@ namespace CgfConverter
             for (int i = 0; i < tmpMeshSubsets.NumMeshSubset; i++)
             {
                 // For each mesh subset, we want to create an instance material and add it to instanceMaterials list.
-                Grendgine_Collada_Instance_Material_Geometry tmpInstanceMat = new Grendgine_Collada_Instance_Material_Geometry();
-                //tmpInstanceMat.Target = "#" + tmpMeshSubsets.MeshSubsets[i].MatID;
+                Grendgine_Collada_Instance_Material_Geometry tmpInstanceMat = new();
+
                 if (CryData.Materials.Count > 0)
                 {
                     string MatName = CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name;
@@ -1486,7 +1478,6 @@ namespace CgfConverter
                         MatName = CryData.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].SourceFileName + "_" + MatName;
 
                     tmpInstanceMat.Target = "#" + MatName + "-material";
-                    //tmpInstanceMat.Symbol = MatName;
                     tmpInstanceMat.Symbol = MatName + "-material";
                 }
 
@@ -1499,7 +1490,7 @@ namespace CgfConverter
         /// <summary>Creates the Collada Source element for a given datastream).</summary>
         private Grendgine_Collada_Source GetMeshSource(ChunkDataStream vertices, ChunkNode nodeChunk)
         {
-            Grendgine_Collada_Source source = new Grendgine_Collada_Source
+            Grendgine_Collada_Source source = new()
             {
                 ID = nodeChunk.Name + "-mesh-pos",
                 Name = nodeChunk.Name + "-pos"
@@ -1513,7 +1504,7 @@ namespace CgfConverter
         /// <summary>Retrieves the worldtobone (bind pose matrix) for the bone.</summary>
         private string GetBindPoseArray(List<CompiledBone> compiledBones)
         {
-            StringBuilder value = new StringBuilder();
+            StringBuilder value = new();
             for (int i = 0; i < compiledBones.Count; i++)
             {
                 value.Append(CreateStringFromMatrix4x4(compiledBones[i].BindPoseMatrix) + " ");
@@ -1524,8 +1515,8 @@ namespace CgfConverter
         /// <summary> Adds the scene element to the Collada document. </summary>
         private void WriteScene()
         {
-            Grendgine_Collada_Scene scene = new Grendgine_Collada_Scene();
-            Grendgine_Collada_Instance_Visual_Scene visualScene = new Grendgine_Collada_Instance_Visual_Scene
+            Grendgine_Collada_Scene scene = new();
+            Grendgine_Collada_Instance_Visual_Scene visualScene = new()
             {
                 URL = "#Scene",
                 Name = "Scene"
@@ -1537,7 +1528,7 @@ namespace CgfConverter
 
         private static string CreateStringFromMatrix4x4(Matrix4x4 matrix)
         {
-            StringBuilder matrixValues = new StringBuilder();
+            StringBuilder matrixValues = new();
             matrixValues.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} {12:F6} {13:F6} {14:F6} {15:F6}",
                 matrix.M11,
                 matrix.M12,
@@ -1560,7 +1551,7 @@ namespace CgfConverter
             return matrixValues.ToString();
         }
         
-        private static double safe(double value)
+        private static double Safe(double value)
         {
             if (value == double.NegativeInfinity)
                 return double.MinValue;

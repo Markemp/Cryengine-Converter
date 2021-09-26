@@ -5,7 +5,7 @@ using Extensions;
 using CgfConverterTests.TestUtilities;
 using System.IO;
 
-namespace CgfConverterIntegrationTests.UnitTests
+namespace CgfConverterTests.UnitTests
 {
     [TestClass]
     public class Matrix4x4Tests

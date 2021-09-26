@@ -3,7 +3,7 @@ using CgfConverter.Structs;
 using System.Numerics;
 using CgfConverterIntegrationTests.Extensions;
 
-namespace CgfConverterIntegrationTests.UnitTests
+namespace CgfConverterTests.UnitTests
 {
     [TestClass]
     public class Matrix3x4Tests

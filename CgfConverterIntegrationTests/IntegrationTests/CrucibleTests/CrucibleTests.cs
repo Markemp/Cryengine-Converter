@@ -45,7 +45,7 @@ namespace CgfConverterTests.IntegrationTests.Crucible
             Assert.AreEqual(1.9326171875, datastream.Vertices[0].Y, TestUtils.delta);
             Assert.AreEqual(1.9189453125, datastream.Vertices[0].Z, TestUtils.delta);
 
-            COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
             Assert.AreEqual(0, actualMaterialsCount);

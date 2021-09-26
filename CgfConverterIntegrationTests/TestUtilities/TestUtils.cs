@@ -27,7 +27,7 @@ namespace CgfConverterTests.TestUtilities
             settings.ValidationEventHandler += ValidationEventHandler;
         }
 
-        internal void ValidateColladaXml(COLLADA colladaData)
+        internal void ValidateColladaXml(Collada colladaData)
         {
             using (var stringWriter = new System.IO.StringWriter())
             {

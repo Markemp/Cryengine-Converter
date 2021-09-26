@@ -33,7 +33,7 @@ namespace CgfConverterTests.IntegrationTests.SC
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
 
-            var colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            var colladaData = new Collada(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
             var daeObject = colladaData.DaeObject;
         }
@@ -58,7 +58,7 @@ namespace CgfConverterTests.IntegrationTests.SC
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
 
-            var colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            var colladaData = new Collada(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject(); 
             var daeObject = colladaData.DaeObject;
 
@@ -76,7 +76,7 @@ namespace CgfConverterTests.IntegrationTests.SC
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
 
-            var colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            var colladaData = new Collada(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
             var daeObject = colladaData.DaeObject;
 
@@ -92,17 +92,33 @@ namespace CgfConverterTests.IntegrationTests.SC
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
 
-            var colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            var colladaData = new Collada(testUtils.argsHandler, cryData);
             var daeObject = colladaData.DaeObject;
             colladaData.GenerateDaeObject();
             // Make sure Rotations are still right
-            const string frontLGDoorLeftMatrix = "1.000000 0.000000 0.000000 -0.300001 0.000000 -0.938131 -0.346280 0.512432 0.000000 0.346280 -0.938131 -1.835138 0.000000 0.000000 0.000000 1.000000";
+            const string frontLGDoorLeftMatrix = "1 0 0 -0.300001 0 -0.938131 -0.346280 0.512432 0 0.346280 -0.938131 -1.835138 0 0 0 1";
             var noseNode = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].node[0];
             Assert.AreEqual("Nose", noseNode.ID);
             Assert.AreEqual("Front_LG_Door_Left", noseNode.node[28].ID);
             Assert.AreEqual(frontLGDoorLeftMatrix, noseNode.node[28].Matrix[0].Value_As_String);
 
             testUtils.ValidateColladaXml(colladaData);
+        }
+
+        [TestMethod]
+        public void AEGS_GladiusLandingGearFront_CHR()
+        {
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\AEGS_Gladius_LandingGear_Front_CHR.chr", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\SC\" };
+            int result = testUtils.argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
+            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
+
+            var colladaData = new Collada(testUtils.argsHandler, cryData);
+            var daeObject = colladaData.DaeObject;
+            colladaData.GenerateDaeObject();
+
+            Assert.IsFalse(cryData.Models[0].HasGeometry);
         }
 
         [TestMethod]
@@ -114,7 +130,7 @@ namespace CgfConverterTests.IntegrationTests.SC
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
 
-            COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
             var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
@@ -134,7 +150,7 @@ namespace CgfConverterTests.IntegrationTests.SC
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
 
-            COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
             var controllers = colladaData.DaeObject.Library_Controllers.Controller;
@@ -163,7 +179,7 @@ namespace CgfConverterTests.IntegrationTests.SC
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
 
-            COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
             // Geometry Library checks
@@ -216,7 +232,7 @@ namespace CgfConverterTests.IntegrationTests.SC
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
 
-            COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
             // Geometry Library checks
@@ -235,7 +251,7 @@ namespace CgfConverterTests.IntegrationTests.SC
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
 
-            COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
             // Geometry Library checks

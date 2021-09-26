@@ -4,7 +4,7 @@ using Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Numerics;
 
-namespace CgfConverterIntegrationTests.UnitTests
+namespace CgfConverterTests.UnitTests
 {
     [TestClass]
     public class QuaternionExtensionsTests

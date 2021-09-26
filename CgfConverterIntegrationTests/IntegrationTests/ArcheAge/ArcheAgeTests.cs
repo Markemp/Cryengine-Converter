@@ -33,7 +33,7 @@ namespace CgfConverterTests.IntegrationTests.ArcheAge
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
 
-            COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
             var daeObject = colladaData.DaeObject;
             colladaData.GenerateDaeObject();
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
