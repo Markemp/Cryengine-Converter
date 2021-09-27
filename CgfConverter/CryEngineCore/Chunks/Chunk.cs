@@ -9,7 +9,7 @@ namespace CgfConverter.CryEngineCore
     public abstract class Chunk : IBinaryChunk
     {
         protected static Random rnd = new Random();
-        protected static List<int> alreadyPickedRandoms = new List<int>();
+        protected static HashSet<int> alreadyPickedRandoms = new HashSet<int>();
 
         private readonly static Dictionary<Type, Dictionary<uint, Func<dynamic>>> _chunkFactoryCache = new Dictionary<Type, Dictionary<uint, Func<dynamic>>> { };
 
@@ -121,13 +121,13 @@ namespace CgfConverter.CryEngineCore
 
             if (!versionMap.TryGetValue(version, out factory))
             {
-                var targetType = (from type in Assembly.GetExecutingAssembly().GetTypes()
-                                  where !type.IsAbstract
-                                  where type.IsClass
-                                  where !type.IsGenericType
-                                  where typeof(T).IsAssignableFrom(type)
-                                  where type.Name == String.Format("{0}_{1:X}", typeof(T).Name, version)
-                                  select type).FirstOrDefault();
+                var targetType = typeof(T).Assembly.GetTypes()
+                    .FirstOrDefault(type =>
+                                  !type.IsAbstract
+                                  && type.IsClass
+                                  && !type.IsGenericType
+                                  && typeof(T).IsAssignableFrom(type)
+                                  && type.Name == String.Format("{0}_{1:X}", typeof(T).Name, version));
 
                 if (targetType != null)
                 {
@@ -183,12 +183,12 @@ namespace CgfConverter.CryEngineCore
             Size = _header.Size;
             DataSize = Size;          // For SC files, there is no header in chunks.  But need Datasize to calculate things.
 
-            reader.BaseStream.Seek(_header.Offset, 0);
+            reader.BaseStream.Seek(_header.Offset, SeekOrigin.Begin);
 
             // Star Citizen files don't have the type, version, offset and ID at the start of a chunk, so don't read them.
             if (_model.FileVersion == FileVersion.CryTek_3_4 || _model.FileVersion == FileVersion.CryTek_3_5)
             {
-                ChunkType = (ChunkType)Enum.ToObject(typeof(ChunkType), reader.ReadUInt32());
+                ChunkType = (ChunkType)reader.ReadUInt32();
                 Version = reader.ReadUInt32();
                 Offset = reader.ReadUInt32();
                 ID = reader.ReadInt32();

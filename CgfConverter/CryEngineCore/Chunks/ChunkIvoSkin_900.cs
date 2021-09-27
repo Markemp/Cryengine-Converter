@@ -53,7 +53,7 @@ namespace CgfConverter.CryEngineCore.Chunks
 
             while (b.BaseStream.Position != b.BaseStream.Length)
             {
-                var chunkType = (DatastreamType)Enum.ToObject(typeof(DatastreamType), b.ReadUInt32());
+                var chunkType = (DatastreamType)b.ReadUInt32();
                 b.BaseStream.Position = b.BaseStream.Position - 4;
                 switch (chunkType)
                 {

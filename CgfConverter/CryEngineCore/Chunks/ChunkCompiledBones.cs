@@ -28,7 +28,7 @@ namespace CgfConverter.CryEngineCore
         {
             if (bone.parentID != 0)
             {
-                CompiledBone parent = BoneList.Where(a => a.ControllerID == bone.parentID).FirstOrDefault();  // Should only be one parent.
+                CompiledBone parent = BoneList.FirstOrDefault(a => a.ControllerID == bone.parentID);  // Should only be one parent.
                 parent.childIDs.Add(bone.ControllerID);
             }
         }
