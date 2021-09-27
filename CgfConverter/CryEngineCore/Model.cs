@@ -1,5 +1,4 @@
-﻿using Extensions;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,11 +11,8 @@ namespace CgfConverter.CryEngineCore
         /// <summary> The Root of the loaded object </summary>
         public ChunkNode RootNode { get; internal set; }
 
-        /// <summary> Collection of all loaded Chunks </summary>
-        public List<ChunkHeader> ChunkHeaders { get; internal set; } = new List<ChunkHeader> { };
-
         /// <summary> Lookup Table for Chunks, indexed by ChunkID </summary>
-        public Dictionary<int, Chunk> ChunkMap { get; internal set; } = new Dictionary<int, Chunk> { };
+        public Dictionary<int, Chunk> ChunkMap { get; internal set; } = new();
 
         /// <summary> The name of the currently processed file </summary>
         public string FileName { get; internal set; }
@@ -33,7 +29,7 @@ namespace CgfConverter.CryEngineCore
         public int ChunkTableOffset { get; internal set; }
 
         /// <summary>Contains all the information about bones and skinning them.  This a reference to the Cryengine object, since multiple Models can exist for a single object).</summary>
-        public SkinningInfo SkinningInfo { get; set; } = new SkinningInfo();
+        public SkinningInfo SkinningInfo { get; set; } = new();
 
         /// <summary> The Bones in the model.  The CompiledBones chunk will have a unique RootBone. </summary>
         public ChunkCompiledBones Bones { get; internal set; }
@@ -43,13 +39,10 @@ namespace CgfConverter.CryEngineCore
         private Dictionary<int, ChunkNode> nodeMap { get; set; }
 
         #region Private Fields
-
-        public List<ChunkHeader> chunkHeaders = new List<ChunkHeader> { };
-
+        public List<ChunkHeader> chunkHeaders = new();
         #endregion
 
         #region Calculated Properties
-
         /// <summary> All NodeChunks for this model in a dictionary by chunk Id. </summary>
         public Dictionary<int, ChunkNode> NodeMap
         {
@@ -81,9 +74,20 @@ namespace CgfConverter.CryEngineCore
             }
         }
 
-        public int NodeCount { get { return ChunkMap.Values.Count(c => c.ChunkType == ChunkType.Node); } }
+        public bool HasBones => Bones != null;
 
-        public int BoneCount { get { return ChunkMap.Values.Count(c => c.ChunkType == ChunkType.CompiledBones); } }
+        public bool HasGeometry
+        {
+            get
+            {
+                var types = ChunkMap.Select(n => n.Value.ChunkType);
+                if (ChunkMap.Select(n => n.Value.ChunkType).Contains(ChunkType.Mesh) || ChunkMap.Select(n => n.Value.ChunkType).Contains(ChunkType.MeshIvo))
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
 
         #endregion
 
@@ -158,15 +162,17 @@ namespace CgfConverter.CryEngineCore
 
         private void CreateDummyRootNode()
         {
-            ChunkNode rootNode = new ChunkNode_823();
-            rootNode.Name = FileName;
-            rootNode.ObjectNodeID = 2;      // No node IDs in #ivo files
-            rootNode.ParentNodeID = ~0;     // No parent
-            rootNode.__NumChildren = 0;     // Single object
-            rootNode.MatID = 0;
-            rootNode.Transform = Matrix4x4Extensions.CreateDefaultRootNodeMatrix();
-            rootNode.ChunkType = ChunkType.Node;
-            rootNode.ID = 1;
+            ChunkNode rootNode = new ChunkNode_823
+            {
+                Name = FileName,
+                ObjectNodeID = 2,      // No node IDs in #ivo files
+                ParentNodeID = ~0,     // No parent
+                __NumChildren = 0,     // Single object
+                MatID = 0,
+                Transform = Matrix4x4.Identity,
+                ChunkType = ChunkType.Node,
+                ID = 1
+            };
             RootNode = rootNode;
             rootNode._model = this;
             ChunkMap.Add(1, rootNode);
@@ -208,7 +214,6 @@ namespace CgfConverter.CryEngineCore
                     chunkHeaderItem.ChunkType == ChunkType.CompiledBonesIvo)
                 {
                     Bones = chunk as ChunkCompiledBones;
-                    SkinningInfo.HasSkinningInfo = true;
                 }
             }
         }

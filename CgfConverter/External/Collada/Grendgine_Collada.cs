@@ -11,8 +11,8 @@ namespace grendgine_collada
     [System.Diagnostics.DebuggerStepThrough()]
     [System.ComponentModel.DesignerCategory("code")]
     [XmlType(AnonymousType = true)]
-    //[System.Xml.Serialization.XmlRootAttribute(ElementName = "COLLADA", Namespace = "https://www.khronos.org/files/collada_schema_1_5", IsNullable = false)]
-    //[System.Xml.Serialization.XmlRootAttribute(ElementName = "COLLADA", Namespace = "http://www.khronos.org/files/collada_schema_1_4", IsNullable = false)]
+    //[System.Xml.Serialization.XmlRootAttribute(ElementName = "Collada", Namespace = "https://www.khronos.org/files/collada_schema_1_5", IsNullable = false)]
+    //[System.Xml.Serialization.XmlRootAttribute(ElementName = "Collada", Namespace = "http://www.khronos.org/files/collada_schema_1_4", IsNullable = false)]
     [System.Xml.Serialization.XmlRootAttribute(ElementName = "COLLADA", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = false)]
     public partial class Grendgine_Collada
     {

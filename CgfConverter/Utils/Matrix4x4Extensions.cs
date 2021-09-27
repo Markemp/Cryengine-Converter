@@ -88,15 +88,7 @@ namespace Extensions
 
         public static Matrix4x4 CreateLocalTransformFromB2W(Matrix4x4 parent, Matrix4x4 child)
         {
-            var parentRot = parent.GetRotation();
-            var parentTranslation = parent.GetTranslation();
-
-            var childRot = child.GetRotation();
-            var childTranslation = child.GetTranslation();
-
-            var newRot = Matrix3x3.Transpose(parentRot) * childRot;
-            var newTranslation = parent.GetRotation() * (childTranslation - parentTranslation);
-            return CreateTransformFromParts(newTranslation, newRot);
+            return parent * child;
         }
 
         public static Matrix4x4 CreateTransformFromParts(Vector3 translation, Matrix3x3 rotation)
@@ -114,28 +106,6 @@ namespace Extensions
                 m32: rotation.M32,
                 m33: rotation.M33,
                 m34: translation.Z,
-                m41: 0.0f,
-                m42: 0.0f,
-                m43: 0.0f,
-                m44: 1.0f
-            );
-        }
-
-        public static Matrix4x4 CreateDefaultRootNodeMatrix()
-        {
-            return new Matrix4x4(
-                m11: 1.0f,
-                m12: 0.0f,
-                m13: 0.0f,
-                m14: 1.0f,
-                m21: 0.0f,
-                m22: 1.0f,
-                m23: 0.0f,
-                m24: 1.0f,
-                m31: 0.0f,
-                m32: 0.0f,
-                m33: 1.0f,
-                m34: 1.0f,
                 m41: 0.0f,
                 m42: 0.0f,
                 m43: 0.0f,

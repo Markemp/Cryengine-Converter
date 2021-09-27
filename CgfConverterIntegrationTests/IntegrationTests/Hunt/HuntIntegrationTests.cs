@@ -34,7 +34,7 @@ namespace CgfConverterTests.IntegrationTests.Hunt
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
             cryData.ProcessCryengineFiles();
 
-            COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
             var daeObject = colladaData.DaeObject;
             colladaData.GenerateDaeObject();
 
@@ -97,7 +97,7 @@ namespace CgfConverterTests.IntegrationTests.Hunt
 
             Assert.AreEqual(1.00000f, cryData.Models[1].RootNode.LocalTransform.M11, TestUtils.delta);
 
-            COLLADA colladaData = new COLLADA(testUtils.argsHandler, cryData);
+            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
             var daeObject = colladaData.DaeObject;
             colladaData.GenerateDaeObject();
 
