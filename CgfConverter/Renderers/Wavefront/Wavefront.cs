@@ -99,8 +99,6 @@ namespace CgfConverter
                                 Utils.Log(LogLevelEnum.Debug, "Rendering {0} to parent {1}", node.Name, node.ParentNode.Name);
                             }
 
-                            // TODO: Transform Root Nodes here?
-                            //file.WriteLine("o {0}", node.Name);
                             // Grab the mesh and process that.
                             this.WriteObjNode(file, node);
                             break;
