@@ -14,7 +14,7 @@ namespace CgfConverter.CryEngineCore
             this.ID = this._header.ID;
             this.Size = this._header.Size;
 
-            reader.BaseStream.Seek(this._header.Offset, 0);
+            reader.BaseStream.Seek(this._header.Offset, SeekOrigin.Begin);
 
             uint peek = reader.ReadUInt32();
 

@@ -54,12 +54,12 @@ namespace CgfConverter.CryEngineCore
                     ChunkNode rootNode = null;
                     RootNode = rootNode = (rootNode ?? RootNode);  // Each model will have it's own rootnode.
 
-                    foreach (ChunkNode node in ChunkMap.Values.Where(c => c.ChunkType == ChunkType.Node).Select(c => c as ChunkNode))
+                    foreach (ChunkNode node in ChunkMap.Values.Where(c => c.ChunkType == ChunkType.Node).OrderBy(ob=>ob.ID))
                     {
                         // Preserve existing parents
-                        if (nodeMap.ContainsKey(node.ID))
+                        if (nodeMap.TryGetValue(node.ID, out ChunkNode knownNode))
                         {
-                            ChunkNode parentNode = nodeMap[node.ID].ParentNode;
+                            ChunkNode parentNode = knownNode.ParentNode;
 
                             if (parentNode != null)
                                 parentNode = nodeMap[parentNode.ID];
@@ -112,20 +112,19 @@ namespace CgfConverter.CryEngineCore
             if (!inputFile.Exists)
                 throw new FileNotFoundException();
 
-            BinaryReader reader = new BinaryReader(File.Open(fileName, FileMode.Open));
+            using FileStream fs = new(fileName, FileMode.Open);
+            using BinaryReader reader = new(fs);
             // Get the header.  This isn't essential for .cgam files, but we need this info to find the version and offset to the chunk table
             ReadFileHeader(reader);
             ReadChunkHeaders(reader);
             ReadChunks(reader);
-
-            reader.Dispose();
         }
 
         #endregion
 
         private void ReadFileHeader(BinaryReader b)
         {
-            b.BaseStream.Seek(0, 0);
+            b.BaseStream.Seek(0, SeekOrigin.Begin);
             FileSignature = b.ReadFString(4);
 
             if (FileSignature == "CrCh")           // file signature v3.6+
@@ -135,7 +134,7 @@ namespace CgfConverter.CryEngineCore
                 ChunkTableOffset = b.ReadInt32(); // location of the chunk table
 
                 return;
-            } 
+            }
             else if (FileSignature == "#ivo")
             {
                 FileVersion = (FileVersion)b.ReadUInt32();  // 0x0900
@@ -145,7 +144,7 @@ namespace CgfConverter.CryEngineCore
                 return;
             }
 
-            b.BaseStream.Seek(0, 0);
+            b.BaseStream.Seek(0, SeekOrigin.Begin);
             FileSignature = b.ReadFString(8);
 
             if (FileSignature == "CryTek")         // file signature v3.5-
@@ -195,17 +194,18 @@ namespace CgfConverter.CryEngineCore
         {
             foreach (ChunkHeader chunkHeaderItem in chunkHeaders)
             {
-                ChunkMap[chunkHeaderItem.ID] = Chunk.New(chunkHeaderItem.ChunkType, chunkHeaderItem.Version);
-                ChunkMap[chunkHeaderItem.ID].Load(this, chunkHeaderItem);
-                ChunkMap[chunkHeaderItem.ID].Read(reader);
+                var chunk = Chunk.New(chunkHeaderItem.ChunkType, chunkHeaderItem.Version);
+                ChunkMap[chunkHeaderItem.ID] = chunk;
 
+                chunk.Load(this, chunkHeaderItem);
+                chunk.Read(reader);
                 // Ensure we read to end of structure
-                ChunkMap[chunkHeaderItem.ID].SkipBytes(reader);
+                chunk.SkipBytes(reader);
 
                 // Assume first node read in Model[0] is root node.  This may be bad if they aren't in order!
                 if (chunkHeaderItem.ChunkType == ChunkType.Node && RootNode == null)
                 {
-                    RootNode = ChunkMap[chunkHeaderItem.ID] as ChunkNode;
+                    RootNode = chunk as ChunkNode;
                 }
 
                 // Add Bones to the model.  We are assuming there is only one CompiledBones chunk per file.
@@ -213,7 +213,7 @@ namespace CgfConverter.CryEngineCore
                     chunkHeaderItem.ChunkType == ChunkType.CompiledBonesSC ||
                     chunkHeaderItem.ChunkType == ChunkType.CompiledBonesIvo)
                 {
-                    Bones = ChunkMap[chunkHeaderItem.ID] as ChunkCompiledBones;
+                    Bones = chunk as ChunkCompiledBones;
                 }
             }
         }

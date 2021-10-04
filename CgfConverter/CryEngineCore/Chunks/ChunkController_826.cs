@@ -11,7 +11,7 @@ namespace CgfConverter.CryEngineCore
             base.Read(b);
 
             //Utils.Log(LogLevelEnum.Debug, "ID is:  {0}", id);
-            ControllerType = (CtrlType)Enum.ToObject(typeof(CtrlType), b.ReadUInt32());
+            ControllerType = (CtrlType)b.ReadUInt32();
             NumKeys = b.ReadUInt32();
             ControllerFlags = b.ReadUInt32();
             ControllerID = b.ReadUInt32();

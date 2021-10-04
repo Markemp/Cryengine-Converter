@@ -46,8 +46,8 @@ namespace CgfConverter.CryEngineCore
 
                 if (_parentNode == null)
                 {
-                    if (_model.ChunkMap.ContainsKey(ParentNodeID))
-                        _parentNode = _model.ChunkMap[ParentNodeID] as ChunkNode;
+                    if (_model.ChunkMap.TryGetValue(ParentNodeID, out Chunk node))
+                        _parentNode = node as ChunkNode;
                     else
                         _parentNode = _model.RootNode;
                 }
@@ -67,11 +67,9 @@ namespace CgfConverter.CryEngineCore
         {
             get
             {
-                if ((_objectChunk == null) && _model.ChunkMap.ContainsKey(ObjectNodeID))
-                {
-                    _objectChunk = _model.ChunkMap[ObjectNodeID];
-                }
-
+                if (_objectChunk == null)
+                    _model.ChunkMap.TryGetValue(ObjectNodeID, out _objectChunk);
+                
                 return _objectChunk;
             }
             set { _objectChunk = value; }

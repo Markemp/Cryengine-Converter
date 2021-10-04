@@ -18,7 +18,7 @@ namespace CgfConverter.CryEngineCore
 
             for (int i = 0; i < NumChildren; i++)
             {
-                PhysicsType[i] = (MtlNamePhysicsType)Enum.ToObject(typeof(MtlNamePhysicsType), b.ReadUInt32());
+                PhysicsType[i] = (MtlNamePhysicsType)b.ReadUInt32();
             }
         }
     }
