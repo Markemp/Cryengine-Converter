@@ -39,9 +39,9 @@ namespace Extensions
                 case InputType.Half:
                     v = new()
                     {
-                        X = r.ReadHalf(),
-                        Y = r.ReadHalf(),
-                        Z = r.ReadHalf()
+                        X = (float)r.ReadHalf(),
+                        Y = (float)r.ReadHalf(),
+                        Z = (float)r.ReadHalf()
                     };
                     break;
                 default:
@@ -69,10 +69,10 @@ namespace Extensions
                 case InputType.Half:
                     q = new Quaternion()
                     {
-                        X = r.ReadHalf(),
-                        Y = r.ReadHalf(),
-                        Z = r.ReadHalf(),
-                        W = r.ReadHalf()
+                        X = (float)r.ReadHalf(),
+                        Y = (float)r.ReadHalf(),
+                        Z = (float)r.ReadHalf(),
+                        W = (float)r.ReadHalf()
                     };
                     break;
                 default:

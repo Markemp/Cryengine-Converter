@@ -180,8 +180,8 @@ namespace CgfConverter.CryEngineCore
                                 Normals[i].Z = b.ReadSByte() / 127.0f;
                                 b.ReadSByte();
 
-                                UVs[i].U = b.ReadHalf();
-                                UVs[i].V = b.ReadHalf();
+                                UVs[i].U = (float)b.ReadHalf();
+                                UVs[i].V = (float)b.ReadHalf();
                             }
                             break;
                         case 16:   // Dymek updated this.
@@ -211,8 +211,8 @@ namespace CgfConverter.CryEngineCore
                                 Normals[i].Y = (2f * (quat.Y * quat.Z - quat.X * quat.W));
                                 Normals[i].Z = (2f * (quat.Z * quat.Z + quat.W * quat.W)) - 1f;
 
-                                UVs[i].U = b.ReadHalf();
-                                UVs[i].V = b.ReadHalf();
+                                UVs[i].U = (float)b.ReadHalf();
+                                UVs[i].V = (float)b.ReadHalf();
                                 #region Legacy version using Halfs
                                 //Half xshort = new Half();
                                 //xshort.bits = b.ReadUInt16();
