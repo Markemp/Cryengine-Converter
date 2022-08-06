@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using CgfConverter.Models;
-using Newtonsoft.Json;
 
 namespace CgfConverter.Services;
 
@@ -29,7 +28,7 @@ public class MaterialLibraryCreator
                 if (materials.Name != null)
                 {
                     // Simple material format, with no submats.  This is the only material.
-                    MaterialLibraryItem item = new MaterialLibraryItem()
+                    var item = new MaterialLibraryItem()
                     {
                         Material = materials,
                         Guid = new Guid(),
@@ -68,15 +67,6 @@ public class MaterialLibraryCreator
 
     public static void WriteMaterialLibrary(MaterialLibrary library)
     {
-        using (StreamWriter file = new StreamWriter(Environment.CurrentDirectory + @"material_library.json"))
-        //using (StreamWriter file = new StreamWriter(@"d:\depot\mwo\material_library.json"))
-        {
-            JsonSerializer serializer = new JsonSerializer();
-            serializer.Serialize(file, library);
-        }
-
-
+        using var file = new StreamWriter(Environment.CurrentDirectory + @"material_library.json");
     }
-
-
 }

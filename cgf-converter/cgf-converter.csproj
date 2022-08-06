@@ -7,27 +7,8 @@
 	<PublishSingleFile>true</PublishSingleFile>
 	<SelfContained>true</SelfContained>
 	<PublishReadyToRun>true</PublishReadyToRun>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
 	<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <PublishUrl>publish\</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Disk</InstallFrom>
-    <UpdateEnabled>false</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <SupportUrl>https://github.com/Markemp/Cryengine-Converter/</SupportUrl>
-    <ProductName>Cryengine Converter</ProductName>
-    <PublisherName>Heffay Presents</PublisherName>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.1.%2a</ApplicationVersion>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <PublishWizardCompleted>true</PublishWizardCompleted>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>x64</PlatformTarget>
@@ -53,43 +34,20 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>9278A6B709680CC0CFE4AF00CF82C2F6C26C8971</ManifestCertificateThumbprint>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ManifestKeyFile>
-    </ManifestKeyFile>
-  </PropertyGroup>
-  <PropertyGroup>
-    <GenerateManifests>true</GenerateManifests>
-  </PropertyGroup>
-  <PropertyGroup>
-    <SignManifests>false</SignManifests>
-  </PropertyGroup>
-  <PropertyGroup>
-    <TargetZone>LocalIntranet</TargetZone>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
-  </PropertyGroup>
-  <PropertyGroup>
     <ApplicationIcon>logo-50px-prod.ico</ApplicationIcon>
-    <Authors>Geoff Gerber</Authors>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ProductName>Cryengine Converter</ProductName>
+	<Title>Cryengine Converter</Title>
+    <PublisherName>Heffay Presents</PublisherName>
+    <FileVersion>1.4.0.0</FileVersion>
+    <AssemblyVersion>1.4.0</AssemblyVersion>
+    <Description>Converts Cryengine game files to commonly supported 3D formats.</Description>
+	<Copyright>©2015-2022</Copyright>
+	<SupportUrl>https://github.com/Markemp/Cryengine-Converter/</SupportUrl>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Update="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Update="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="logo-50px-prod.ico" />
+     <Content Include="logo-50px-prod.ico" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CgfConverter\CgfConverter.csproj" />
@@ -98,5 +56,4 @@
     <PackageReference Include="Microsoft.NETCore.Platforms" Version="6.0.5" />
     <PackageReference Include="NETStandard.Library" Version="2.0.3" />
   </ItemGroup>
-  <Import Project="..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets" Condition="Exists('..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets')" />
 </Project>

@@ -35,28 +35,28 @@ public class Program
 
                         if (argsHandler.OutputBlender == true)
                         {
-                            Blender blendFile = new Blender(argsHandler, cryData);
+                            Blender blendFile = new(argsHandler, cryData);
 
                             blendFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
                         }
 
                         if (argsHandler.OutputWavefront == true)
                         {
-                            Wavefront objFile = new Wavefront(argsHandler, cryData);
+                            Wavefront objFile = new(argsHandler, cryData);
 
                             objFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
                         }
 
                         if (argsHandler.OutputCryTek == true)
                         {
-                            CryRender cryFile = new CryRender(argsHandler, cryData);
+                            CryRender cryFile = new(argsHandler, cryData);
 
                             cryFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
                         }
 
                         if (argsHandler.OutputCollada == true)
                         {
-                            Collada daeFile = new Collada(argsHandler, cryData);
+                            Collada daeFile = new(argsHandler, cryData);
 
                             daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
                         }
