@@ -1,10 +1,9 @@
 ﻿using System.IO;
 
-namespace CgfConverter.CryEngineCore
+namespace CgfConverter.CryEngineCore;
+
+public interface IBinaryChunk
 {
-    public interface IBinaryChunk
-    {
-        void Read(BinaryReader reader);
-        void Write(BinaryWriter writer);
-    }
+    void Read(BinaryReader reader);
+    void Write(BinaryWriter writer);
 }

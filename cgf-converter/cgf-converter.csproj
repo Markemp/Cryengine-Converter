@@ -4,7 +4,11 @@
     <OutputType>Exe</OutputType>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <RootNamespace>CgfConverter</RootNamespace>
+	<PublishSingleFile>true</PublishSingleFile>
+	<SelfContained>true</SelfContained>
+	<PublishReadyToRun>true</PublishReadyToRun>
     <IsWebBootstrapper>false</IsWebBootstrapper>
+	<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -91,7 +95,7 @@
     <ProjectReference Include="..\CgfConverter\CgfConverter.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.NETCore.Platforms" Version="5.0.2" />
+    <PackageReference Include="Microsoft.NETCore.Platforms" Version="6.0.5" />
     <PackageReference Include="NETStandard.Library" Version="2.0.3" />
   </ItemGroup>
   <Import Project="..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets" Condition="Exists('..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets')" />
