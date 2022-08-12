@@ -204,9 +204,7 @@ public class Model
 
             // Assume first node read in Model[0] is root node.  This may be bad if they aren't in order!
             if (chunkHeaderItem.ChunkType == ChunkType.Node && RootNode == null)
-            {
                 RootNode = chunk as ChunkNode;
-            }
 
             // Add Bones to the model.  We are assuming there is only one CompiledBones chunk per file.
             if (chunkHeaderItem.ChunkType == ChunkType.CompiledBones || 

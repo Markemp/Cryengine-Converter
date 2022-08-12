@@ -45,15 +45,9 @@ public class Material
         }
 
         /// <summary>Serialize a Color object into a comma separated string list</summary>
-        public static string Serialize(Color input)
-        {
-            return (input == null) ? null : string.Format("{0},{1},{2}", input.Red, input.Green, input.Blue);
-        }
+        public static string Serialize(Color input) => (input == null) ? null : string.Format("{0},{1},{2}", input.Red, input.Green, input.Blue);
 
-        public override string ToString()
-        {
-            return $@"R: {Red}, G: {Green}, B: {Blue}";
-        }
+        public override string ToString() => $@"R: {Red}, G: {Green}, B: {Blue}";
     }
 
     /// <summary>The texture object</summary>

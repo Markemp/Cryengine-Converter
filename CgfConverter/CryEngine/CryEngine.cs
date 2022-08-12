@@ -8,11 +8,11 @@ namespace CgfConverter;
 
 public partial class CryEngine
 {
-    public string MtlFile { get; private set; }
+    public string MtlFile { get; private set; }  // TODO: A model can support multiple material files.
 
     private const string invalidExtensionErrorMessage = "Warning: Unsupported file extension - please use a cga, cgf, chr or skin file.";
 
-    private static readonly HashSet<string> validExtensions = new HashSet<string>
+    private static readonly HashSet<string> validExtensions = new()
     {
         ".cgf",
         ".cga",
@@ -49,7 +49,7 @@ public partial class CryEngine
 
                 ChunkNode rootNode = null;
 
-                Utils.Log(LogLevelEnum.Info, "Mapping Nodes");
+                Utils.Log(LogLevelEnum.Debug, "Mapping Nodes");
 
                 foreach (Model model in Models)
                 {
@@ -112,6 +112,8 @@ public partial class CryEngine
         }
 
         SkinningInfo = ConsolidateSkinningInfo(Models);
+
+        ProcessAllMaterials();
 
         // Get the material file name
         var allMaterialChunks = Models

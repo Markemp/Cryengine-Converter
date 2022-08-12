@@ -10,7 +10,7 @@ public abstract class Chunk : IBinaryChunk
     protected static Random rnd = new();
     protected static HashSet<int> alreadyPickedRandoms = new();
 
-    private readonly static Dictionary<Type, Dictionary<uint, Func<dynamic>>> _chunkFactoryCache = new Dictionary<Type, Dictionary<uint, Func<dynamic>>> { };
+    private readonly static Dictionary<Type, Dictionary<uint, Func<dynamic>>> _chunkFactoryCache = new() { };
 
     internal ChunkHeader _header;
     internal Model _model;
@@ -92,17 +92,13 @@ public abstract class Chunk : IBinaryChunk
                               && type.Name == String.Format("{0}_{1:X}", typeof(T).Name, version));
 
             if (targetType != null)
-            {
                 factory = () => { return Activator.CreateInstance(targetType) as T; };
-            }
 
             _chunkFactoryCache[typeof(T)][version] = factory;
         }
 
         if (factory != null)
-        {
             return factory.Invoke() as T;
-        }
 
         throw new NotSupportedException(string.Format("Version {0:X} of {1} is not supported", version, typeof(T).Name));
     }
@@ -170,18 +166,14 @@ public abstract class Chunk : IBinaryChunk
     public SkinningInfo GetSkinningInfo()
     {
         if (_model.SkinningInfo == null)
-        {
             _model.SkinningInfo = new SkinningInfo();
-        }
+        
         return _model.SkinningInfo;
     }
 
     public virtual void Write(BinaryWriter writer) { throw new NotImplementedException(); }
 
-    public override string ToString()
-    {
-        return $@"Chunk Type: {ChunkType}, Ver: {Version:X}, Offset: {Offset:X}, ID: {ID:X}, Size: {Size}";
-    }
+    public override string ToString() => $@"Chunk Type: {ChunkType}, Ver: {Version:X}, Offset: {Offset:X}, ID: {ID:X}, Size: {Size}";
 
     public static int GetNextRandom()
     {
