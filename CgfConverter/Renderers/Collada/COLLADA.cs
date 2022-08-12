@@ -180,7 +180,7 @@ public class Collada : BaseRenderer // class to export to .dae format (Collada)
         DaeObject.Library_Materials = libraryMaterials;
         int numMaterials = CryData.Materials.Count;
         // Now create a material for each material in the object
-        Utils.Log(LogLevelEnum.Info, "Number of materials: {0}", numMaterials);
+        Utils.Log(LogLevelEnum.Debug, "Number of materials: {0}", numMaterials);
         Grendgine_Collada_Material[] materials = new Grendgine_Collada_Material[numMaterials];
         for (int i = 0; i < numMaterials; i++)
         {

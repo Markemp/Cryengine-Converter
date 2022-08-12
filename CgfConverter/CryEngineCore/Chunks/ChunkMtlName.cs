@@ -6,7 +6,7 @@ public abstract class ChunkMtlName : Chunk
     public MtlNameType MatType { get; internal set; }
 
     /// <summary> Name of the Material </summary>
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     
     public MtlNamePhysicsType[] PhysicsType { get; internal set; }
     
@@ -16,6 +16,9 @@ public abstract class ChunkMtlName : Chunk
     public uint[] ChildIDs { get; internal set; }
     
     public uint NFlags2 { get; internal set; }
+
+    /// <summary>The actual Material for this chunk.  Created from the .mtl file, unless it's a library in which case it is null.</summary>
+    public Material? Material { get; set; }
 
     public override string ToString() =>
         $@"Chunk Type: {ChunkType}, ID: {ID:X}, Material Name: {Name}, Number of Children: {NumChildren}, Material Type: {MatType}";

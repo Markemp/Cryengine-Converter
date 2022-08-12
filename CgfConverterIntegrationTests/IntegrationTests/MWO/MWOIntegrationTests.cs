@@ -1,4 +1,5 @@
 ﻿using CgfConverter;
+using CgfConverter.CryEngineCore;
 using CgfConverterTests.TestUtilities;
 using grendgine_collada;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -36,8 +37,12 @@ public class MWOIntegrationTests
 
         Assert.AreEqual(1, cryData.Materials.Count);
         Assert.AreEqual("clanbanner_a", cryData.Materials[0].Name);
-        
+        var mtlChunks = cryData.Chunks.Where(a => a.ChunkType == ChunkType.MtlName);
+        Assert.AreEqual(1, (mtlChunks as ChunkMtlName).MatType == MtlNameType.Library);
+
+
         var colladaData = new Collada(testUtils.argsHandler, cryData);
+        colladaData.Render();
     }
 
     [TestMethod]
@@ -74,6 +79,23 @@ public class MWOIntegrationTests
 
         var colladaData = new Collada(testUtils.argsHandler, cryData);
         
+    }
+
+    [TestMethod]
+    public void Uav_VerifyMaterials()
+    {
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\uav.cga", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        cryData.ProcessCryengineFiles();
+
+        Assert.AreEqual(1, cryData.Materials.Count);
+        Assert.AreEqual("50calnecklace_a", cryData.Materials[0].Name);
+
+        var colladaData = new Collada(testUtils.argsHandler, cryData);
+
     }
 
     [TestMethod]

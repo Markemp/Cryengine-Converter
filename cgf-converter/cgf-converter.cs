@@ -9,7 +9,7 @@ public class Program
 {
     public static int Main(string[] args)
     {
-        Utils.LogLevel = LogLevelEnum.Warning;
+        Utils.LogLevel = LogLevelEnum.Info;
         Utils.DebugLevel = LogLevelEnum.Debug;
 
         string oldTitle = Console.Title;
@@ -18,7 +18,7 @@ public class Program
         customCulture.NumberFormat.NumberDecimalSeparator = ".";
 
         Thread.CurrentThread.CurrentCulture = customCulture;
-        ArgsHandler argsHandler = new ArgsHandler();
+        var argsHandler = new ArgsHandler();
 #if !DEBUG
         try
         {
@@ -33,28 +33,28 @@ public class Program
                         var cryData = new CryEngine(inputFile, argsHandler.DataDir.FullName);
                         cryData.ProcessCryengineFiles();
 
-                        if (argsHandler.OutputBlender == true)
+                        if (argsHandler.OutputBlender)
                         {
                             Blender blendFile = new(argsHandler, cryData);
 
                             blendFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
                         }
 
-                        if (argsHandler.OutputWavefront == true)
+                        if (argsHandler.OutputWavefront)
                         {
                             Wavefront objFile = new(argsHandler, cryData);
 
                             objFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
                         }
 
-                        if (argsHandler.OutputCryTek == true)
+                        if (argsHandler.OutputCryTek)
                         {
                             CryRender cryFile = new(argsHandler, cryData);
 
                             cryFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
                         }
 
-                        if (argsHandler.OutputCollada == true)
+                        if (argsHandler.OutputCollada)
                         {
                             Collada daeFile = new(argsHandler, cryData);
 

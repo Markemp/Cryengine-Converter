@@ -42,15 +42,15 @@ public static class Utils
         @"yyyy-MM-dd\THHmm", // 2010-12-31T2359
     };
 
-    public static Double Safe(Double value)
+    public static double Safe(double value)
     {
-        if (value == Double.NegativeInfinity)
-            return Double.MinValue;
+        if (value == double.NegativeInfinity)
+            return double.MinValue;
 
-        if (value == Double.PositiveInfinity)
-            return Double.MaxValue;
+        if (value == double.PositiveInfinity)
+            return double.MaxValue;
 
-        if (value == Double.NaN)
+        if (value == double.NaN)
             return 0;
 
         return value;
