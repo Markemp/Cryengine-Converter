@@ -7,5 +7,5 @@ namespace CgfConverter.Materials;
 public record Textures
 {
     [XmlElement(ElementName = "Texture")]
-    readonly List<Texture> Texture = new ();
+    public readonly List<Texture> Texture = new ();
 }

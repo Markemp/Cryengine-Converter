@@ -22,13 +22,14 @@ public partial class CryEngine
         ".soc"
     };
 
-    public List<Model> Models { get; internal set; } = new List<Model>();
-    public List<Material> Materials { get; internal set; } = new List<Material>();
+    public List<Model> Models { get; internal set; } = new ();
+    public List<Material> Materials { get; internal set; } = new ();
     public ChunkNode RootNode { get; internal set; }
     public ChunkCompiledBones Bones { get; internal set; }
     public SkinningInfo SkinningInfo { get; set; }
     public string InputFile { get; internal set; }
     public string DataDir { get; internal set; }
+    
     public List<Chunk> Chunks
     {
         get
@@ -39,6 +40,7 @@ public partial class CryEngine
             return _chunks;
         }
     }
+
     public Dictionary<string, ChunkNode> NodeMap  // Cannot use the Node name for the key.  Across a couple files, you may have multiple nodes with same name.
     {
         get
@@ -113,7 +115,8 @@ public partial class CryEngine
 
         SkinningInfo = ConsolidateSkinningInfo(Models);
 
-        ProcessAllMaterials();
+        // Create materials
+        CreateMaterials();
 
         // Get the material file name
         var allMaterialChunks = Models
@@ -126,103 +129,7 @@ public partial class CryEngine
             if (mtlChunk.MatType == MtlNameType.Child || mtlChunk.MatType == MtlNameType.Unknown1)
                 continue;
 
-            if (mtlChunk.Name.Contains(':'))
-            {
-                string[] parts = mtlChunk.Name.Split(':');
-                mtlChunk.Name = parts[1];
-            }
-
-            string cleanName = mtlChunk.Name;
-            FileInfo materialFile;
-
-            if (mtlChunk.Name.Contains("default_body"))
-            {
-                // New MWO models for some crazy reason don't put the actual mtl file name in the library mtlchunk.  They just have /objects/mechs/default_body
-                // have to assume that it's /objects/mechs/<mechname>/body/<mechname>_body.mtl.  There is also a <mechname>.mtl that contains mtl 
-                // info for hitboxes, but not needed.
-                // TODO:  This isn't right.  Fix it.
-                var charsToClean = cleanName.ToCharArray().Intersect(Path.GetInvalidFileNameChars()).ToArray();
-                if (charsToClean.Length > 0)
-                {
-                    foreach (char character in charsToClean)
-                    {
-                        cleanName = cleanName.Replace(character.ToString(), "");
-                    }
-                }
-                materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(InputFile), cleanName));
-            }
-            else if (mtlChunk.Name.Contains('/') || mtlChunk.Name.Contains('\\'))
-            {
-                // The mtlname has a path.  Most likely starts at the Objects directory.
-                var stringSeparators = new string[] { @"\", @"/" };
-                string[] result;
-
-                // if objectdir is provided, check objectdir + mtlchunk.name
-                if (DataDir != null)
-                    materialFile = new FileInfo(Path.Combine(DataDir, mtlChunk.Name));
-                else
-                {
-                    // object dir not provided, but we have a path.  Just grab the last part of the name and check the dir of the cga file
-                    result = mtlChunk.Name.Split(stringSeparators, StringSplitOptions.None);
-                    materialFile = new FileInfo(result[result.Length - 1]);
-                }
-            }
-            else
-            {
-                var charsToClean = cleanName.ToCharArray().Intersect(Path.GetInvalidFileNameChars()).ToArray();
-                if (charsToClean.Length > 0)
-                {
-                    foreach (char character in charsToClean)
-                    {
-                        cleanName = cleanName.Replace(character.ToString(), "");
-                    }
-                }
-                materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(InputFile), cleanName));
-            }
-
-            // First try relative to file being processed
-            if (materialFile.Extension != ".mtl")
-                materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
-
-            // Then try just the last part of the chunk, relative to the file being processed
-            if (!materialFile.Exists)
-                materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(InputFile), Path.GetFileName(cleanName)));
-            if (materialFile.Extension != ".mtl")
-                materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
-
-            // Then try relative to the ObjectDir
-            if (!materialFile.Exists && DataDir != null)
-                materialFile = new FileInfo(Path.Combine(DataDir, cleanName));
-            if (materialFile.Extension != ".mtl")
-                materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
-
-            // Then try just the fileName.mtl
-            if (!materialFile.Exists)
-                materialFile = new FileInfo(InputFile);
-            if (materialFile.Extension != ".mtl")
-                materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
-
-            if (materialFile.Extension == ".mtl")
-                MtlFile = materialFile.Name;
-
-            Material material = Material.FromFile(materialFile);
-
-            if (material != null)
-            {
-                Utils.Log(LogLevelEnum.Debug, "Located material file {0}", materialFile.Name);
-
-                Materials = FlattenMaterials(material).Where(m => m.Textures != null).ToList();
-
-                if (Materials.Count == 1 && Materials[0].Name is null)
-                    Materials[0].Name = RootNode.Name;
-
-                // Early return - we have the material map
-                return;
-            }
-            else
-            {
-                Utils.Log(LogLevelEnum.Debug, "Unable to locate material file {0}.mtl", mtlChunk.Name);
-            }
+            
         }
 
         Utils.Log(LogLevelEnum.Debug, "Unable to locate any material file.  Creating Default materials.");
@@ -256,9 +163,9 @@ public partial class CryEngine
         }
     }
 
-    private void AutoDetectMFile(string filename, FileInfo inputFile, List<FileInfo> inputFiles)
+    private static void AutoDetectMFile(string filename, FileInfo inputFile, List<FileInfo> inputFiles)
     {
-        FileInfo mFile = new FileInfo(Path.ChangeExtension(filename, string.Format("{0}m", inputFile.Extension)));
+        FileInfo mFile = new(Path.ChangeExtension(filename, string.Format("{0}m", inputFile.Extension)));
 
         if (mFile.Exists)
         {
@@ -267,27 +174,9 @@ public partial class CryEngine
         }
     }
 
-    /// <summary>Flatten all child materials into a one dimensional list</summary>
-    /// <param name="material"></param>
-    /// <returns></returns>
-    private IEnumerable<Material> FlattenMaterials(Material material)
+    private static SkinningInfo ConsolidateSkinningInfo(List<Model> models)
     {
-        if (material != null)
-        {
-            yield return material;
-
-            if (material.SubMaterials != null)
-                foreach (var subMaterial in material.SubMaterials.SelectMany(m => FlattenMaterials(m)))
-                {
-                    subMaterial.SourceFileName = material.SourceFileName;
-                    yield return subMaterial;
-                }
-        }
-    }
-
-    private SkinningInfo ConsolidateSkinningInfo(List<Model> models)
-    {
-        SkinningInfo skin = new SkinningInfo
+        SkinningInfo skin = new()
         {
             HasSkinningInfo = models.Any(a => a.SkinningInfo.HasSkinningInfo == true),
             HasBoneMapDatastream = models.Any(a => a.SkinningInfo.HasBoneMapDatastream == true)
@@ -327,5 +216,93 @@ public partial class CryEngine
         }
 
         return skin;
+    }
+
+    private void CreateMaterials()
+    {
+        // Do this by Node chunk.  Won't have to process materials that aren't used in the model.
+        foreach (ChunkNode nodeChunk in Chunks.Where(c => c.ChunkType == ChunkType.Node))
+        {
+            if (Chunks.FirstOrDefault(c => c.ID == nodeChunk.MatID) is not ChunkMtlName matChunk)
+            {
+                Utils.Log(LogLevelEnum.Debug, $"Unable to find material chunk {nodeChunk.MatID} for node {nodeChunk.ID}");
+                continue;
+            }
+
+            if (matChunk.MatType != MtlNameType.Child)
+            {
+                // The material has just a single mat with no submaterials.  Mat file is in same directory?
+                FileInfo matfile = GetMaterialFile(matChunk.Name);
+            }
+
+        }
+    }
+
+    // Gets the material file for Basic, Single and Library types.  Child materials are created from the library.
+    private FileInfo? GetMaterialFile(string name)
+    {
+        if (name.Contains(':'))  // Need an example and test for this case
+            name = name.Split(':')[1];
+
+        FileInfo materialFile;
+
+        if (name.Contains("mechDefault.mtl"))
+        {
+            // For MWO models with a material called "Material #0", which is a default mat used on lots of mwo mechs.
+            // TODO: Figure out what the default material actually is and manually create that material.
+            materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(InputFile), name));
+        }
+
+        if (name.Contains('/') || name.Contains('\\'))
+        {
+            // The mtlname has a path.  Most likely starts at the Objects directory.
+            var stringSeparators = new string[] { @"\", @"/" };
+            string[] result;
+
+            var path = Path.Combine(DataDir, name);
+            
+            // if objectdir is provided, check objectdir + mtlchunk.name
+            if (DataDir != null)
+                materialFile = new FileInfo(Path.Combine(DataDir, name));
+            else
+            {
+                // object dir not provided, but we have a path. Append to current model directory
+                result = name.Split(stringSeparators, StringSplitOptions.None);
+                materialFile = new FileInfo(Path.Combine(InputFile, name));
+            }
+        }
+        else
+        {
+            var charsToClean = name.ToCharArray().Intersect(Path.GetInvalidFileNameChars()).ToArray();
+            if (charsToClean.Length > 0)
+            {
+                foreach (char character in charsToClean)
+                {
+                    name = name.Replace(character.ToString(), "");
+                }
+            }
+            materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(InputFile), name));
+        }
+
+        materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
+
+        return materialFile;
+        //Material material = Material.FromFile(materialFile);
+
+        //if (material != null)
+        //{
+        //    Utils.Log(LogLevelEnum.Debug, "Located material file {0}", materialFile.Name);
+
+        //    if (Materials.Count == 1 && Materials[0].Name is null)
+        //        Materials[0].Name = RootNode.Name;
+
+        //    // Early return - we have the material map
+        //    return null;
+        //}
+        //else
+        //{
+        //    Utils.Log(LogLevelEnum.Debug, "Unable to locate material file {0}.mtl", name);
+        //    return null;
+        //}
     }
 }
