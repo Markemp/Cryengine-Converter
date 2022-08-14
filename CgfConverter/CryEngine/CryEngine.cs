@@ -231,7 +231,6 @@ public partial class CryEngine
 
             if (matChunk.MatType != MtlNameType.Child)
             {
-                // The material has just a single mat with no submaterials.  Mat file is in same directory?
                 FileInfo matfile = GetMaterialFile(matChunk.Name);
             }
 
@@ -244,6 +243,9 @@ public partial class CryEngine
         if (name.Contains(':'))  // Need an example and test for this case
             name = name.Split(':')[1];
 
+        if (!name.EndsWith(".mtl"))
+            name += ".mtl";
+
         FileInfo materialFile;
 
         if (name.Contains("mechDefault.mtl"))
@@ -252,12 +254,17 @@ public partial class CryEngine
             // TODO: Figure out what the default material actually is and manually create that material.
             materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(InputFile), name));
         }
-
-        if (name.Contains('/') || name.Contains('\\'))
+        else
         {
-            // The mtlname has a path.  Most likely starts at the Objects directory.
-            var stringSeparators = new string[] { @"\", @"/" };
-            string[] result;
+            var inputFile = new FileInfo(InputFile);
+            //InputFile
+            // Check if material file relative to object directory
+            var objectFileDir = Path.Combine(DataDir, name);
+
+            // Check if material file relative to input file
+
+            // Check if material file is in current directory
+
 
             var path = Path.Combine(DataDir, name);
             
@@ -267,21 +274,11 @@ public partial class CryEngine
             else
             {
                 // object dir not provided, but we have a path. Append to current model directory
-                result = name.Split(stringSeparators, StringSplitOptions.None);
                 materialFile = new FileInfo(Path.Combine(InputFile, name));
             }
-        }
-        else
-        {
-            var charsToClean = name.ToCharArray().Intersect(Path.GetInvalidFileNameChars()).ToArray();
-            if (charsToClean.Length > 0)
-            {
-                foreach (char character in charsToClean)
-                {
-                    name = name.Replace(character.ToString(), "");
-                }
-            }
+        
             materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(InputFile), name));
+        
         }
 
         materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
