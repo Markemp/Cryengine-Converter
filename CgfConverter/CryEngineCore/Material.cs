@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -314,12 +315,13 @@ public class Material
 
     #endregion
 
-    public static Material FromFile(FileInfo materialfile)
+    public static Material? FromFile(FileInfo materialfile)
     {
         try
         {
             using Stream fileStream = materialfile.OpenRead();
-            Material fileData = HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<Material>(fileStream);
+            var fileData = HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<Material>(fileStream);
+            
             fileData.SourceFileName = materialfile.Name.Replace('.', '_');
 
             return fileData;

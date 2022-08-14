@@ -22,14 +22,14 @@ public partial class CryEngine
         ".soc"
     };
 
-    public List<Model> Models { get; internal set; } = new ();
-    public List<Material> Materials { get; internal set; } = new ();
+    public List<Model> Models { get; internal set; } = new();
+    public List<Material> Materials { get; internal set; } = new();
     public ChunkNode RootNode { get; internal set; }
     public ChunkCompiledBones Bones { get; internal set; }
     public SkinningInfo SkinningInfo { get; set; }
     public string InputFile { get; internal set; }
     public string DataDir { get; internal set; }
-    
+
     public List<Chunk> Chunks
     {
         get
@@ -115,22 +115,8 @@ public partial class CryEngine
 
         SkinningInfo = ConsolidateSkinningInfo(Models);
 
-        // Create materials
+        // Create materials and assign to the appropriate mtlname chunk
         CreateMaterials();
-
-        // Get the material file name
-        var allMaterialChunks = Models
-            .SelectMany(a => a.ChunkMap.Values)
-            .Where(c => c.ChunkType == ChunkType.MtlName || c.ChunkType == ChunkType.MtlNameIvo);
-
-        foreach (ChunkMtlName mtlChunk in allMaterialChunks)
-        {
-            // Don't process child or collision materials for now
-            if (mtlChunk.MatType == MtlNameType.Child || mtlChunk.MatType == MtlNameType.Unknown1)
-                continue;
-
-            
-        }
 
         Utils.Log(LogLevelEnum.Debug, "Unable to locate any material file.  Creating Default materials.");
 
@@ -232,9 +218,26 @@ public partial class CryEngine
             if (matChunk.MatType != MtlNameType.Child)
             {
                 FileInfo matfile = GetMaterialFile(matChunk.Name);
+                if (matfile != null)
+                {
+                    var mats = CreateMaterialsFromMatFile(matfile);
+                    if (matChunk.MatType == MtlNameType.Basic)
+                    {
+                        mats.Name = matChunk.Name;
+                        matChunk.Material = mats;
+                    }
+                        
+                }
+                    
             }
 
         }
+    }
+
+    private static Material CreateMaterialsFromMatFile(FileInfo matfile)
+    {
+        var materials = Material.FromFile(matfile);
+        return materials;
     }
 
     // Gets the material file for Basic, Single and Library types.  Child materials are created from the library.
@@ -247,59 +250,29 @@ public partial class CryEngine
             name += ".mtl";
 
         FileInfo materialFile;
+        var inputFileInfo = new FileInfo(InputFile);
 
         if (name.Contains("mechDefault.mtl"))
         {
             // For MWO models with a material called "Material #0", which is a default mat used on lots of mwo mechs.
             // TODO: Figure out what the default material actually is and manually create that material.
-            materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(InputFile), name));
+            // Check objects/mechs/generic/body/
+            materialFile = new FileInfo(Path.Combine(inputFileInfo.Directory.FullName, name));
         }
         else
         {
-            var inputFile = new FileInfo(InputFile);
-            //InputFile
+            // Check if material file is in or relative to current directory
+            materialFile = new FileInfo(Path.Combine(inputFileInfo.Directory.FullName, name));
+            if (materialFile.Exists)
+                return materialFile;
+
             // Check if material file relative to object directory
-            var objectFileDir = Path.Combine(DataDir, name);
-
-            // Check if material file relative to input file
-
-            // Check if material file is in current directory
-
-
-            var path = Path.Combine(DataDir, name);
-            
-            // if objectdir is provided, check objectdir + mtlchunk.name
-            if (DataDir != null)
-                materialFile = new FileInfo(Path.Combine(DataDir, name));
-            else
-            {
-                // object dir not provided, but we have a path. Append to current model directory
-                materialFile = new FileInfo(Path.Combine(InputFile, name));
-            }
-        
-            materialFile = new FileInfo(Path.Combine(Path.GetDirectoryName(InputFile), name));
-        
+            materialFile = new FileInfo(Path.Combine(DataDir, name));
+            if (materialFile.Exists)
+                return materialFile;
         }
 
-        materialFile = new FileInfo(Path.ChangeExtension(materialFile.FullName, "mtl"));
-
-        return materialFile;
-        //Material material = Material.FromFile(materialFile);
-
-        //if (material != null)
-        //{
-        //    Utils.Log(LogLevelEnum.Debug, "Located material file {0}", materialFile.Name);
-
-        //    if (Materials.Count == 1 && Materials[0].Name is null)
-        //        Materials[0].Name = RootNode.Name;
-
-        //    // Early return - we have the material map
-        //    return null;
-        //}
-        //else
-        //{
-        //    Utils.Log(LogLevelEnum.Debug, "Unable to locate material file {0}.mtl", name);
-        //    return null;
-        //}
+        Utils.Log(LogLevelEnum.Info, $"Unable to find material file for {name}");
+        return null;
     }
 }
