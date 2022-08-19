@@ -10,20 +10,20 @@ namespace HoloXPLOR.DataForge;
 public static class CryXmlSerializer
 {
 
-    public static XmlDocument ReadFile(String inFile, Boolean writeLog = false)
+    public static XmlDocument ReadFile(string inFile, bool writeLog = false)
     {
-        return CryXmlSerializer.ReadStream(File.OpenRead(inFile), writeLog);
+        return ReadStream(File.OpenRead(inFile), writeLog);
     }
 
-    public static XmlDocument ReadStream(Stream inStream, Boolean writeLog = false)
+    public static XmlDocument ReadStream(Stream inStream, bool writeLog = false)
     {
         using var br = new BinaryReader(inStream);
-        var peek = br.PeekChar();
+        var peek = (char)br.PeekChar();
 
         if (peek == '<')
         {
             // File is already XML, so return the XML.
-            XmlDocument xml = new XmlDocument();
+            var xml = new XmlDocument();
             xml.Load(inStream);
             return xml; // File is already XML
         }
@@ -217,16 +217,16 @@ public static class CryXmlSerializer
 
     public static TObject Deserialize<TObject>(Stream inStream) where TObject : class
     {
-        using MemoryStream ms = new MemoryStream();
-        XmlSerializer xs = new XmlSerializer(typeof(TObject));
-        var xmlDoc = CryXmlSerializer.ReadStream(inStream);
+        using MemoryStream ms = new();
+        var xs = new XmlSerializer(typeof(TObject));
+        var xmlDoc = ReadStream(inStream);
 
         xmlDoc.Save(ms);
         ms.Seek(0, SeekOrigin.Begin);
         return xs.Deserialize(ms) as TObject;
     }
 
-    public static TObject Deserialize<TObject>(String inFile) where TObject : class
+    public static TObject Deserialize<TObject>(string inFile) where TObject : class
     {
         using MemoryStream ms = new MemoryStream();
         var xmlDoc = CryXmlSerializer.ReadFile(inFile);

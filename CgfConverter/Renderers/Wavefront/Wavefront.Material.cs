@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Reflection;
 using System.Text;
 using static Extensions.FileHandlingExtensions;
@@ -23,7 +22,7 @@ namespace CgfConverter
             {
                 file.WriteLine("# cgf-converter .mtl export version {0}", Assembly.GetExecutingAssembly().GetName().Version.ToString());
                 file.WriteLine("#");
-                foreach (CryEngineCore.Material material in cryEngine.Materials)
+                foreach (var material in cryEngine.Materials)
                 {
                     string MatName = material.Name;
                     if (Args.PrefixMaterialNames)
@@ -34,8 +33,8 @@ namespace CgfConverter
                     file.WriteLine("newmtl {0}", MatName);
                     if (material.Diffuse != null)
                     {
-                        file.WriteLine("Ka {0:F6} {1:F6} {2:F6}", material.Diffuse.Red, material.Diffuse.Green, material.Diffuse.Blue);    // Ambient
-                        file.WriteLine("Kd {0:F6} {1:F6} {2:F6}", material.Diffuse.Red, material.Diffuse.Green, material.Diffuse.Blue);    // Diffuse
+                        file.WriteLine($"Ka {material.Diffuse}");    // Ambient
+                        file.WriteLine($"Kd {material.Diffuse}");    // Diffuse
                     }
                     else
                     {
@@ -43,7 +42,7 @@ namespace CgfConverter
                     }
                     if (material.Specular != null)
                     {
-                        file.WriteLine("Ks {0:F6} {1:F6} {2:F6}", material.Specular.Red, material.Specular.Green, material.Specular.Blue); // Specular
+                        file.WriteLine($"Ks {material.Specular.Replace(',', ' ')}"); // Specular
                         file.WriteLine("Ns {0:F6}", material.Shininess / 255D);                                                            // Specular Exponent
                     }
                     else
@@ -70,7 +69,7 @@ namespace CgfConverter
 
                     if (!Args.NoTextures)
                     {
-                        foreach (CryEngineCore.Material.Texture texture in material.Textures)
+                        foreach (Texture texture in material.Textures)
                         {
                             StringBuilder textureFile = new StringBuilder(ResolveTexFile(texture.File, Args.DataDir));
 
@@ -85,39 +84,39 @@ namespace CgfConverter
 
                             switch (texture.Map)
                             {
-                                case CryEngineCore.Material.Texture.MapTypeEnum.Diffuse:
+                                case Texture.MapTypeEnum.Diffuse:
                                     file.WriteLine("map_Kd {0}", textureFile.ToString());
                                     break;
 
-                                case CryEngineCore.Material.Texture.MapTypeEnum.Specular:
+                                case Texture.MapTypeEnum.Specular:
                                     file.WriteLine("map_Ks {0}", textureFile.ToString());
                                     file.WriteLine("map_Ns {0}", textureFile.ToString());
                                     break;
 
-                                case CryEngineCore.Material.Texture.MapTypeEnum.Bumpmap:
-                                case CryEngineCore.Material.Texture.MapTypeEnum.Detail:
+                                case Texture.MapTypeEnum.Bumpmap:
+                                case Texture.MapTypeEnum.Detail:
                                     file.WriteLine("map_bump {0}", textureFile.ToString());
                                     break;
 
-                                case CryEngineCore.Material.Texture.MapTypeEnum.Heightmap:
+                                case Texture.MapTypeEnum.Heightmap:
                                     file.WriteLine("disp {0}", textureFile.ToString());
                                     break;
 
-                                case CryEngineCore.Material.Texture.MapTypeEnum.Decal:
+                                case Texture.MapTypeEnum.Decal:
                                     file.WriteLine("decal {0}", textureFile.ToString());
                                     break;
 
-                                case CryEngineCore.Material.Texture.MapTypeEnum.SubSurface:
+                                case Texture.MapTypeEnum.SubSurface:
                                     file.WriteLine("map_Ns {0}", textureFile.ToString());
                                     break;
 
-                                case CryEngineCore.Material.Texture.MapTypeEnum.Opacity:
+                                case Texture.MapTypeEnum.Opacity:
                                     file.WriteLine("map_d {0}", textureFile.ToString());
                                     break;
 
-                                case CryEngineCore.Material.Texture.MapTypeEnum.Custom:
-                                case CryEngineCore.Material.Texture.MapTypeEnum.BlendDetail:
-                                case CryEngineCore.Material.Texture.MapTypeEnum.Environment:
+                                case Texture.MapTypeEnum.Custom:
+                                case Texture.MapTypeEnum.BlendDetail:
+                                case Texture.MapTypeEnum.Environment:
                                 default:
                                     break;
                             }

@@ -252,22 +252,22 @@ namespace CgfConverterTests.IntegrationTests
         }
 
         // Model appears to be broken.  Assigns 3 materials, but only 2 materials in mtlname chunks
-        //[TestMethod]
-        //public void Cnylgt_marauder_NoMaterialFile()
-        //{
-        //    var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\cnylgt_marauder.cga" };
-        //    int result = argsHandler.ProcessArgs(args);
-        //    Assert.AreEqual(0, result);
-        //    CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
+        [TestMethod]
+        public void Cnylgt_marauder_NoMaterialFile()
+        {
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\cnylgt_marauder.cga" };
+            int result = testUtils.argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
+            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
 
-        //    Collada colladaData = new Collada(argsHandler, cryData);
-        //    colladaData.GenerateDaeObject();
+            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
+            colladaData.GenerateDaeObject();
 
-        //    int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-        //    Assert.AreEqual(3, actualMaterialsCount);
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
+            Assert.AreEqual(3, actualMaterialsCount);
 
-        //    ValidateColladaXml(colladaData);
-        //}
+        }
 
         [TestMethod]
         public void Green_fern_bush_a_MaterialFileExists()

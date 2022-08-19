@@ -1,8 +1,10 @@
 ﻿using CgfConverter.CryEngineCore;
+using CgfConverter.Materials;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Material = CgfConverter.Materials.Material;
 
 namespace CgfConverter;
 
@@ -135,12 +137,12 @@ public partial class CryEngine
                 case 0x800:
                 case 0x80000800:
                     if (mtlChunk.MatType != MtlNameType.Library)
-                        Materials.Add(Material.CreateDefaultMaterial(mtlChunk.Name));
+                        Materials.Add(MaterialUtilities.CreateDefaultMaterial(mtlChunk.Name));
                     break;
                 case 0x802:
                     for (int i = 0; i < mtlChunk.NumChildren; i++)
                     {
-                        Materials.Add(Material.CreateDefaultMaterial(mtlChunk.Name + i.ToString()));
+                        Materials.Add(MaterialUtilities.CreateDefaultMaterial(mtlChunk.Name + i.ToString()));
                     }
                     break;
                 default:
@@ -226,24 +228,25 @@ public partial class CryEngine
                         mats.Name = matChunk.Name;
                         matChunk.Material = mats;
                     }
-                        
-                }
-                    
-            }
+                    else if (matChunk.MatType == MtlNameType.Single)
+                    {
 
+                    }
+                }
+            }
         }
     }
 
     private static Material CreateMaterialsFromMatFile(FileInfo matfile)
     {
-        var materials = Material.FromFile(matfile);
+        var materials = MaterialUtilities.FromFile(matfile.FullName);
         return materials;
     }
 
     // Gets the material file for Basic, Single and Library types.  Child materials are created from the library.
     private FileInfo? GetMaterialFile(string name)
     {
-        if (name.Contains(':'))  // Need an example and test for this case
+        if (name.Contains(':'))  // Need an example and test for this case.  Probably a child material?
             name = name.Split(':')[1];
 
         if (!name.EndsWith(".mtl"))
@@ -255,8 +258,8 @@ public partial class CryEngine
         if (name.Contains("mechDefault.mtl"))
         {
             // For MWO models with a material called "Material #0", which is a default mat used on lots of mwo mechs.
-            // TODO: Figure out what the default material actually is and manually create that material.
-            // Check objects/mechs/generic/body/
+            // The actual material file is in objects\mechs\generic\body\generic_body.mtl
+            name = "objects\\mechs\\generic\\body\\generic_body.mtl";
             materialFile = new FileInfo(Path.Combine(inputFileInfo.Directory.FullName, name));
         }
         else
@@ -273,6 +276,6 @@ public partial class CryEngine
         }
 
         Utils.Log(LogLevelEnum.Info, $"Unable to find material file for {name}");
-        return null;
+        return materialFile;
     }
 }

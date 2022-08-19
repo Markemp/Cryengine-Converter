@@ -1,20 +1,21 @@
 ﻿using System.Diagnostics;
 using System.IO;
 using System;
+using HoloXPLOR.DataForge;
 
 namespace CgfConverter.Materials;
 
-internal static class MaterialUtilities
+public static class MaterialUtilities
 {
-    public static Material FromFile(FileInfo materialfile)
+    public static Material? FromFile(string materialfile)
     {
-        if (!materialfile.Exists)
+        if (!File.Exists(materialfile))
             return null;
 
         try
         {
-            using Stream fileStream = materialfile.OpenRead();
-            return HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<Material>(fileStream);
+            using Stream fileStream = File.OpenRead(materialfile);
+            return CryXmlSerializer.Deserialize<Material>(fileStream);
         }
         catch (Exception ex)
         {
@@ -23,4 +24,15 @@ internal static class MaterialUtilities
 
         return null;
     }
+
+    public static Material CreateDefaultMaterial(string materialName) =>
+        new()
+        {
+            Name = materialName,
+            Diffuse = "0.5,0.5,0.8",
+            Specular = "1.0,1.0,1.0",
+            Shininess = 0.2,
+            Opacity = "1.0",
+            Textures = Array.Empty<Texture>()
+        };
 }

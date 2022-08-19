@@ -1,12 +1,18 @@
-﻿using System.Xml.Serialization;
+﻿using System.ComponentModel;
+using System.Xml.Serialization;
 
 namespace CgfConverter.Materials;
 
 [XmlRoot(ElementName = "Material")]
 public class Material
 {
-    [XmlElement(ElementName = "PublicParams")]
-    public PublicParams? PublicParams { get; set; }
+    private Color? diffuse;
+    private Color? specular;
+    private Color? emissive;
+    private double? opacity;
+
+    [XmlIgnore]
+    internal string? SourceFileName { get; set; }
 
     [XmlAttribute(AttributeName = "Name")]
     public string? Name { get; set; } = string.Empty;
@@ -30,25 +36,57 @@ public class Material
     public string? MatTemplate { get; set; }
 
     [XmlAttribute(AttributeName = "Diffuse")]
-    public string? Diffuse { get; set; }
+    public string? Diffuse 
+    { 
+        get { return Color.Serialize(diffuse); }
+        set { diffuse = Color.Deserialize(value); }
+    }
 
     [XmlAttribute(AttributeName = "Specular")]
-    public string? Specular { get; set; }
+    public string? Specular 
+    {
+        get { return Color.Serialize(specular); }
+        set { specular = Color.Deserialize(value); } 
+    }
 
     [XmlAttribute(AttributeName = "Emissive")]
-    public string? Emissive { get; set; }
+    public string? Emissive
+    {
+        get { return Color.Serialize(emissive);    ; }
+        set { emissive = Color.Deserialize(value); }
+    }
 
     [XmlAttribute(AttributeName = "Shininess")]
-    public string? Shininess { get; set; }
+    public double Shininess { get; set; }
 
     [XmlAttribute(AttributeName = "Opacity")]
-    public string? Opacity { get; set; }
+    public string? Opacity 
+    { 
+        get { return opacity.ToString(); }
+        set { opacity = double.Parse(value ?? "1"); }
+    }
 
-    [XmlElement(ElementName = "Textures")]
-    public Textures? Textures { get; set; }
+    [XmlAttribute(AttributeName = "Glossiness")]
+    public double Glossiness { get; set; }
+
+    [XmlAttribute(AttributeName = "GlowAmount")]
+    public double GlowAmount { get; set; }
 
     [XmlAttribute(AttributeName = "AlphaTest")]
-    public string? AlphaTest { get; set; }
+    public double AlphaTest { get; set; }
+
+    [XmlArray(ElementName = "SubMaterials")]
+    [XmlArrayItem(ElementName = "Material")]
+    public Material[] SubMaterials { get; set; }
+
+    [XmlElement(ElementName = "PublicParams")]
+    internal PublicParams PublicParams { get; set; }
+
+    // TODO: TimeOfDay Support
+
+    [XmlArray(ElementName = "Textures")]
+    [XmlArrayItem(ElementName = "Texture")]
+    public Texture[] Textures { get; set; }
 }
 
 [XmlRoot(ElementName = "xml")]
@@ -57,5 +95,3 @@ public class Xml
     [XmlElement(ElementName = "Material")]
     public Material? Material { get; set; }
 }
-
-

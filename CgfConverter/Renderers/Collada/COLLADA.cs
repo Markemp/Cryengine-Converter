@@ -11,6 +11,7 @@ using System.Xml.Serialization;
 using CgfConverter.CryEngineCore;
 using static Extensions.FileHandlingExtensions;
 using grendgine_collada;
+using CgfConverter.Materials;
 
 namespace CgfConverter;
 
@@ -289,15 +290,14 @@ public class Collada : BaseRenderer // class to export to .dae format (Collada)
 
             // Add all the emissive, etc features to the phong
             // Need to check if a texture exists.  If so, refer to the sampler.  Should be a <Texture Map="Diffuse" line if there is a map.
-            bool diffound = false;
-            bool specfound = false;
+            bool diffuseFound = false;
+            bool specularFound = false;
 
             foreach (var texture in CryData.Materials[i].Textures)
-            //for (int j=0; j < CryData.Materials[i].Textures.Length; j++)
             {
-                if (texture.Map == CryEngineCore.Material.Texture.MapTypeEnum.Diffuse)
+                if (texture.Map == Texture.MapTypeEnum.Diffuse)
                 {
-                    diffound = true;
+                    diffuseFound = true;
                     phong.Diffuse.Texture = new Grendgine_Collada_Texture
                     {
                         // Texcoord is the ID of the UV source in geometries.  Not needed.
@@ -305,9 +305,9 @@ public class Collada : BaseRenderer // class to export to .dae format (Collada)
                         TexCoord = ""
                     };
                 }
-                if (texture.Map == CryEngineCore.Material.Texture.MapTypeEnum.Specular)
+                if (texture.Map == Texture.MapTypeEnum.Specular)
                 {
-                    specfound = true;
+                    specularFound = true;
                     phong.Specular.Texture = new Grendgine_Collada_Texture
                     {
                         Texture = CleanTexFileName(texture.File) + "-sampler",
@@ -315,7 +315,7 @@ public class Collada : BaseRenderer // class to export to .dae format (Collada)
                     };
 
                 }
-                if (texture.Map == CryEngineCore.Material.Texture.MapTypeEnum.Bumpmap)
+                if (texture.Map == Texture.MapTypeEnum.Bumpmap)
                 {
                     // Bump maps go in an extra node.
                     // bump maps are added to an extra node.
@@ -347,22 +347,19 @@ public class Collada : BaseRenderer // class to export to .dae format (Collada)
                     extraTechnique.Data[0] = bumpMap;
                 }
             }
-            if (diffound == false)
+            if (diffuseFound == false)
             {
                 phong.Diffuse.Color = new Grendgine_Collada_Color
                 {
-                    Value_As_String = CryData.Materials[i].__Diffuse?.Replace(",", " ") ?? string.Empty,
+                    Value_As_String = CryData.Materials[i].Diffuse?.ToString() ?? string.Empty,
                     sID = "diffuse"
                 };
             }
-            if (specfound == false)
+            if (specularFound == false)
             {
-                phong.Specular.Color = new Grendgine_Collada_Color
-                {
-                    sID = "specular"
-                };
-                if (CryData.Materials[i].__Specular != null)
-                    phong.Specular.Color.Value_As_String = CryData.Materials[i].__Specular?.Replace(",", " ") ?? string.Empty;
+                phong.Specular.Color = new Grendgine_Collada_Color { sID = "specular" };
+                if (CryData.Materials[i].Specular != null)
+                    phong.Specular.Color.Value_As_String = CryData.Materials[i].Specular ?? string.Empty;
                 else
                     phong.Specular.Color.Value_As_String = "1 1 1";
             }
@@ -372,26 +369,20 @@ public class Collada : BaseRenderer // class to export to .dae format (Collada)
                 Color = new Grendgine_Collada_Color
                 {
                     sID = "emission",
-                    Value_As_String = CryData.Materials[i].__Emissive?.Replace(",", " ") ?? string.Empty
+                    Value_As_String = CryData.Materials[i].Emissive ?? string.Empty
                 }
             };
-            phong.Shininess = new Grendgine_Collada_FX_Common_Float_Or_Param_Type
-            {
-                Float = new Grendgine_Collada_SID_Float()
-            };
+            phong.Shininess = new Grendgine_Collada_FX_Common_Float_Or_Param_Type { Float = new Grendgine_Collada_SID_Float() };
             phong.Shininess.Float.sID = "shininess";
             phong.Shininess.Float.Value = (float)CryData.Materials[i].Shininess;
-            phong.Index_Of_Refraction = new Grendgine_Collada_FX_Common_Float_Or_Param_Type
-            {
-                Float = new Grendgine_Collada_SID_Float()
-            };
+            phong.Index_Of_Refraction = new Grendgine_Collada_FX_Common_Float_Or_Param_Type { Float = new Grendgine_Collada_SID_Float() };
 
             phong.Transparent = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type
             {
                 Color = new Grendgine_Collada_Color(),
                 Opaque = new Grendgine_Collada_FX_Opaque_Channel()
             };
-            phong.Transparent.Color.Value_As_String = (1 - CryData.Materials[i].Opacity).ToString();  // Subtract from 1 for proper value.
+            phong.Transparent.Color.Value_As_String = (1 - double.Parse(CryData.Materials[i].Opacity ?? "1")).ToString();  // Subtract from 1 for proper value.
 
             #endregion
 

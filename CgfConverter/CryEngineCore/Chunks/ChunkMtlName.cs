@@ -1,4 +1,6 @@
-﻿namespace CgfConverter.CryEngineCore;
+﻿using CgfConverter.Materials;
+
+namespace CgfConverter.CryEngineCore;
 
 public abstract class ChunkMtlName : Chunk  
 {

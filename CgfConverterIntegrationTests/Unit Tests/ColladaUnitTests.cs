@@ -1,17 +1,14 @@
-﻿using CgfConverter.CryEngineCore;
+﻿using CgfConverter.Materials;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace CgfConverterTests.UnitTests
+namespace CgfConverterTests.UnitTests;
+
+[TestClass]
+public class ColladaUnitTests
 {
-    [TestClass]
-    public class ColladaUnitTests
+    [TestMethod]
+    public void FlattenMaterials_HappyPath()
     {
-        [TestMethod]
-        public void FlattenMaterials_HappyPath()
-        {
-            Material mat = new Material();
-
-
-        }
+        var mat = new Material();
     }
 }
