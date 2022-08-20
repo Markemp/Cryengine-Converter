@@ -10,8 +10,6 @@ namespace CgfConverter;
 
 public partial class CryEngine
 {
-    public string MtlFile { get; private set; }  // TODO: A model can support multiple material files.
-
     private const string invalidExtensionErrorMessage = "Warning: Unsupported file extension - please use a cga, cgf, chr or skin file.";
 
     private static readonly HashSet<string> validExtensions = new()
@@ -25,7 +23,7 @@ public partial class CryEngine
     };
 
     public List<Model> Models { get; internal set; } = new();
-    public List<Material> Materials { get; internal set; } = new();
+    //public List<Material> Materials { get; internal set; } = new();
     public ChunkNode RootNode { get; internal set; }
     public ChunkCompiledBones Bones { get; internal set; }
     public SkinningInfo SkinningInfo { get; set; }
@@ -36,7 +34,7 @@ public partial class CryEngine
     {
         get
         {
-            if (_chunks == null)
+            if (_chunks is null)
                 _chunks = Models.SelectMany(m => m.ChunkMap.Values).ToList();
 
             return _chunks;
@@ -47,7 +45,7 @@ public partial class CryEngine
     {
         get
         {
-            if (_nodeMap == null)
+            if (_nodeMap is null)
             {
                 _nodeMap = new Dictionary<string, ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
 
@@ -72,7 +70,7 @@ public partial class CryEngine
                             node.ParentNode = parentNode;
                         }
 
-                        _nodeMap[node.Name] = node;    // TODO:  fix this.  The node name can conflict.
+                        _nodeMap[node.Name] = node;    // TODO:  fix this.  The node name can conflict. (example?)
                     }
                 }
             }
@@ -117,38 +115,37 @@ public partial class CryEngine
 
         SkinningInfo = ConsolidateSkinningInfo(Models);
 
-        // Create materials and assign to the appropriate mtlname chunk
         CreateMaterials();
 
-        Utils.Log(LogLevelEnum.Debug, "Unable to locate any material file.  Creating Default materials.");
+        //Utils.Log(LogLevelEnum.Debug, "Unable to locate any material file.  Creating Default materials.");
 
-        // Create dummy materials
-        // 0x800:  1 material per mtlname chunk.  If NFlags1 = 1, it's the library. Skip
-        // 0x802:  Mult materials per chunk. Can't get names except in certain types (null separated
-        //         strings at end of mtlname chunk, but can't identify these). create dummy names.
-        // Only use first mtlname chunks from first model.  2nd model has duplicates
-        foreach (ChunkMtlName mtlChunk in Models[0].ChunkMap.Values
-            .Where(c => c.ChunkType == ChunkType.MtlName || c.ChunkType == ChunkType.MtlNameIvo))
-        {
-            switch (mtlChunk.Version)
-            {
-                case 0x744:
-                    break;
-                case 0x800:
-                case 0x80000800:
-                    if (mtlChunk.MatType != MtlNameType.Library)
-                        Materials.Add(MaterialUtilities.CreateDefaultMaterial(mtlChunk.Name));
-                    break;
-                case 0x802:
-                    for (int i = 0; i < mtlChunk.NumChildren; i++)
-                    {
-                        Materials.Add(MaterialUtilities.CreateDefaultMaterial(mtlChunk.Name + i.ToString()));
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
+        //// Create dummy materials
+        //// 0x800:  1 material per mtlname chunk.  If NFlags1 = 1, it's the library. Skip
+        //// 0x802:  Mult materials per chunk. Can't get names except in certain types (null separated
+        ////         strings at end of mtlname chunk, but can't identify these). create dummy names.
+        //// Only use first mtlname chunks from first model.  2nd model has duplicates
+        //foreach (ChunkMtlName mtlChunk in Models[0].ChunkMap.Values
+        //    .Where(c => c.ChunkType == ChunkType.MtlName || c.ChunkType == ChunkType.MtlNameIvo))
+        //{
+        //    switch (mtlChunk.Version)
+        //    {
+        //        case 0x744:
+        //            break;
+        //        case 0x800:
+        //        case 0x80000800:
+        //            if (mtlChunk.MatType != MtlNameType.Library)
+        //                Materials.Add(MaterialUtilities.CreateDefaultMaterial(mtlChunk.Name));
+        //            break;
+        //        case 0x802:
+        //            for (int i = 0; i < mtlChunk.NumChildren; i++)
+        //            {
+        //                Materials.Add(MaterialUtilities.CreateDefaultMaterial(mtlChunk.Name + i.ToString()));
+        //            }
+        //            break;
+        //        default:
+        //            break;
+        //    }
+        //}
     }
 
     private static void AutoDetectMFile(string filename, FileInfo inputFile, List<FileInfo> inputFiles)
@@ -217,27 +214,16 @@ public partial class CryEngine
                 continue;
             }
 
-            if (matChunk.MatType != MtlNameType.Child)
+            var matfile = GetMaterialFile(matChunk.Name);
+            if (matfile is not null)
             {
-                FileInfo matfile = GetMaterialFile(matChunk.Name);
-                if (matfile != null)
-                {
-                    var mats = CreateMaterialsFromMatFile(matfile);
-                    if (matChunk.MatType == MtlNameType.Basic)
-                    {
-                        mats.Name = matChunk.Name;
-                        matChunk.Material = mats;
-                    }
-                    else if (matChunk.MatType == MtlNameType.Single)
-                    {
-
-                    }
-                }
-            }
+                var mats = CreateMaterialsFromMatFile(matfile);
+                nodeChunk.Materials = mats;
+            } // Default mats if material file cannot be found.
         }
     }
 
-    private static Material CreateMaterialsFromMatFile(FileInfo matfile)
+    private static Material? CreateMaterialsFromMatFile(FileInfo matfile)
     {
         var materials = MaterialUtilities.FromFile(matfile.FullName);
         return materials;
@@ -261,6 +247,8 @@ public partial class CryEngine
             // The actual material file is in objects\mechs\generic\body\generic_body.mtl
             name = "objects\\mechs\\generic\\body\\generic_body.mtl";
             materialFile = new FileInfo(Path.Combine(inputFileInfo.Directory.FullName, name));
+            if (materialFile.Exists)
+                return materialFile;
         }
         else
         {
@@ -276,6 +264,6 @@ public partial class CryEngine
         }
 
         Utils.Log(LogLevelEnum.Info, $"Unable to find material file for {name}");
-        return materialFile;
+        return null;
     }
 }

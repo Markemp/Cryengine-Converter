@@ -1,5 +1,4 @@
-﻿using CgfConverter.Structs;
-using Extensions;
+﻿using CgfConverter.Materials;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -26,12 +25,12 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
     public int SclCtrlID { get; internal set; }  // Obsolete
     public string Properties { get; internal set; }
 
+    // Computed from material file. Not set for helper nodes, etc.
+    public Material? Materials { get; internal set; }
+
     public Matrix4x4 LocalTransform
     {
-        get
-        {
-            return Matrix4x4.Transpose(Transform);
-        }
+        get { return Matrix4x4.Transpose(Transform); }
     }
 
     #region Calculated Properties

@@ -114,15 +114,6 @@ public class Collada : BaseRenderer // class to export to .dae format (Collada)
             Meter = 1.0,
             Name = "meter"
         };
-        asset.Extra = new Grendgine_Collada_Extra[]
-        {
-            new Grendgine_Collada_Extra()
-            {
-                Name = CryData.MtlFile ?? "",
-                ID = "material_file_name",
-                Type = "mtl_file"
-            }
-        };
         asset.Title = CryData.RootNode.Name;
         DaeObject.Asset = asset;
         DaeObject.Asset.Contributor = contributors;

@@ -1,80 +1,79 @@
 ﻿using System;
 using System.IO;
 
-namespace CgfConverter
+namespace CgfConverter;
+
+public abstract class BaseRenderer
 {
-    public abstract class BaseRenderer
+    public ArgsHandler Args { get; internal set; }
+    public CryEngine CryData { get; internal set; }
+
+    public BaseRenderer(ArgsHandler argsHandler, CryEngine cryEngine)
     {
-        public ArgsHandler Args { get; internal set; }
-        public CryEngine CryData { get; internal set; }
+        Args = argsHandler;
+        CryData = cryEngine;
+    }
 
-        public BaseRenderer(ArgsHandler argsHandler, CryEngine cryEngine)
+    public abstract void Render(string outputDir = null, bool preservePath = true);
+
+    internal string GetOutputFile(string extension, string outputDir = null, bool preservePath = true)
+    {
+        string outputFile = string.Format("temp.{0}", extension);
+
+        if (string.IsNullOrWhiteSpace(outputDir))
         {
-            Args = argsHandler;
-            CryData = cryEngine;
-        }
-
-        public abstract void Render(string outputDir = null, bool preservePath = true);
-
-        internal string GetOutputFile(string extension, string outputDir = null, bool preservePath = true)
-        {
-            string outputFile = string.Format("temp.{0}", extension);
-
-            if (string.IsNullOrWhiteSpace(outputDir))
+            // Empty output directory means place alongside original models
+            // If you want relative path, use "."
+            if (Args.NoConflicts)
             {
-                // Empty output directory means place alongside original models
-                // If you want relative path, use "."
-                if (Args.NoConflicts)
-                {
-                    outputFile = Path.Combine(new FileInfo(CryData.InputFile).DirectoryName, string.Format("{0}_out.{1}", Path.GetFileNameWithoutExtension(CryData.InputFile), extension));
-                }
-                else
-                {
-                    outputFile = Path.Combine(new FileInfo(CryData.InputFile).DirectoryName, string.Format("{0}.{1}", Path.GetFileNameWithoutExtension(CryData.InputFile), extension));
-                }
+                outputFile = Path.Combine(new FileInfo(CryData.InputFile).DirectoryName, string.Format("{0}_out.{1}", Path.GetFileNameWithoutExtension(CryData.InputFile), extension));
             }
             else
             {
-                // If we have an output directory
-                string preserveDir = preservePath ? Path.GetDirectoryName(CryData.InputFile) : "";
-
-                // Remove drive letter if necessary
-                if (!string.IsNullOrWhiteSpace(preserveDir) && !string.IsNullOrWhiteSpace(Path.GetPathRoot(preserveDir)))
-                {
-                    preserveDir = preserveDir.Replace(Path.GetPathRoot(preserveDir), "");
-                }
-
-                outputFile = Path.Combine(outputDir, preserveDir, Path.ChangeExtension(Path.GetFileNameWithoutExtension(CryData.InputFile), extension));
+                outputFile = Path.Combine(new FileInfo(CryData.InputFile).DirectoryName, string.Format("{0}.{1}", Path.GetFileNameWithoutExtension(CryData.InputFile), extension));
             }
-
-            return outputFile;
         }
-
-        public bool IsNodeNameExcluded(String nodeName)
+        else
         {
-            foreach (var excname in Args.ExcludeNodeNames)
+            // If we have an output directory
+            string preserveDir = preservePath ? Path.GetDirectoryName(CryData.InputFile) : "";
+
+            // Remove drive letter if necessary
+            if (!string.IsNullOrWhiteSpace(preserveDir) && !string.IsNullOrWhiteSpace(Path.GetPathRoot(preserveDir)))
             {
-                if (nodeName.ToLower().StartsWith(excname.ToLower()))
-                {
-                    Utils.Log(LogLevelEnum.Debug, $"Node matched excludename '{excname}'");
-                    return true;
-                }
+                preserveDir = preserveDir.Replace(Path.GetPathRoot(preserveDir), "");
             }
 
-            return false;
+            outputFile = Path.Combine(outputDir, preserveDir, Path.ChangeExtension(Path.GetFileNameWithoutExtension(CryData.InputFile), extension));
         }
 
-        public bool IsMeshMaterialExcluded(String materialName)
+        return outputFile;
+    }
+
+    public bool IsNodeNameExcluded(String nodeName)
+    {
+        foreach (var excname in Args.ExcludeNodeNames)
         {
-            foreach (var excname in Args.ExcludeMaterialNames)
+            if (nodeName.ToLower().StartsWith(excname.ToLower()))
             {
-                if (materialName.ToLower().StartsWith(excname.ToLower()))
-                {
-                    Utils.Log(LogLevelEnum.Debug, $"Material name matched excludemat '{excname}'");
-                    return true;
-                }
+                Utils.Log(LogLevelEnum.Debug, $"Node matched excludename '{excname}'");
+                return true;
             }
-            return false;
         }
+
+        return false;
+    }
+
+    public bool IsMeshMaterialExcluded(String materialName)
+    {
+        foreach (var excname in Args.ExcludeMaterialNames)
+        {
+            if (materialName.ToLower().StartsWith(excname.ToLower()))
+            {
+                Utils.Log(LogLevelEnum.Debug, $"Material name matched excludemat '{excname}'");
+                return true;
+            }
+        }
+        return false;
     }
 }

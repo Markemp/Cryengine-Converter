@@ -15,13 +15,13 @@ public enum FileType : uint
 
 public enum MtlNameType : uint
 {
-    // Also a 0x0B type now as well.
+    // This is a bitwise struct. 
     Basic = 0x00,
     Library = 0x01,
     MwoChild = 0x02,
     Single = 0x10,
     Child = 0x12,
-    Unknown1 = 0x0B,        // Collision materials?  In MWO, these are the torsos, arms, legs from body/<mech>.mtl
+    Unknown1 = 0x0B,   // Collision materials?  In MWO, these are the torsos, arms, legs from body/<mech>.mtl
     Unknown2 = 0x04
 }
 

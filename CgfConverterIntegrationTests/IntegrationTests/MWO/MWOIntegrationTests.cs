@@ -35,8 +35,6 @@ public class MWOIntegrationTests
         var cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
         cryData.ProcessCryengineFiles();
 
-        Assert.AreEqual(1, cryData.Materials.Count);
-        Assert.AreEqual("clanbanner_a", cryData.Materials[0].Name);
         var mtlChunks = cryData.Chunks.Where(a => a.ChunkType == ChunkType.MtlName);
         Assert.AreEqual(1, (mtlChunks as ChunkMtlName).MatType == MtlNameType.Library);
 
@@ -55,12 +53,6 @@ public class MWOIntegrationTests
         var cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
         cryData.ProcessCryengineFiles();
 
-        Assert.AreEqual(4, cryData.Materials.Count);
-        Assert.AreEqual("atlas_body", cryData.Materials[0].Name);
-        Assert.AreEqual("decals", cryData.Materials[1].Name);
-        Assert.AreEqual("atlas_variant", cryData.Materials[2].Name);
-        Assert.AreEqual("atlas_eyes", cryData.Materials[3].Name);
-
         var colladaData = new Collada(testUtils.argsHandler, cryData);
     }
 
@@ -73,9 +65,6 @@ public class MWOIntegrationTests
         
         var cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
         cryData.ProcessCryengineFiles();
-
-        Assert.AreEqual(1, cryData.Materials.Count);
-        Assert.AreEqual("50calnecklace_a", cryData.Materials[0].Name);
 
         var colladaData = new Collada(testUtils.argsHandler, cryData);
         
@@ -90,9 +79,6 @@ public class MWOIntegrationTests
 
         var cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
         cryData.ProcessCryengineFiles();
-
-        Assert.AreEqual(1, cryData.Materials.Count);
-        Assert.AreEqual("50calnecklace_a", cryData.Materials[0].Name);
 
         var colladaData = new Collada(testUtils.argsHandler, cryData);
 
