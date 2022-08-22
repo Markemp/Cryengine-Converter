@@ -392,413 +392,413 @@ public class Collada : BaseRenderer
                 var meshChunk = (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID];
 
                 // Check to see if the Mesh points to a PhysicsData mesh.  Don't want to write these.
-                if (meshChunk.MeshPhysicsData != 0)
-                    // TODO:  Implement this chunk
+                //if (meshChunk.MeshPhysicsData != 0)
+                // TODO:  Implement this chunk
 
-                    if (meshChunk.MeshSubsetsData != 0)   // For the SC files, you can have Mesh chunks with no Mesh Subset.  Need to skip these.  They are in the .cga file and contain no geometry.
+                if (meshChunk.MeshSubsetsData != 0)   // For the SC files, you can have Mesh chunks with no Mesh Subset.  Need to skip these.  They are in the .cga file and contain no geometry.
+                {
+                    var meshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[meshChunk.MeshSubsetsData];  // Listed as Object ID for the Node
+
+                    if (meshChunk.VerticesData != 0)
+                        tmpVertices = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.VerticesData];
+
+                    if (meshChunk.VertsUVsData != 0)
+                        vertsUvs = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.VertsUVsData];
+
+                    if (tmpVertices is null && vertsUvs is null) // There is no vertex data for this node.  Skip.
+                        continue;
+
+                    if (meshChunk.NormalsData != 0)
+                        normals = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.NormalsData];
+
+                    if (meshChunk.UVsData != 0)
+                        uvs = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.UVsData];
+
+                    if (meshChunk.IndicesData != 0)
+                        indices = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.IndicesData];
+
+                    if (meshChunk.ColorsData != 0)
+                        colors = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.ColorsData];
+
+                    if (meshChunk.TangentsData != 0)
+                        tangents = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.TangentsData];
+
+                    // tmpGeo is a Geometry object for each meshsubset.  Name will be "Nodechunk name_matID".
+                    Grendgine_Collada_Geometry geometry = new()
                     {
-                        var meshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[meshChunk.MeshSubsetsData];  // Listed as Object ID for the Node
+                        Name = nodeChunk.Name,
+                        ID = nodeChunk.Name + "-mesh"
+                    };
+                    Grendgine_Collada_Mesh tmpMesh = new();
+                    geometry.Mesh = tmpMesh;
 
-                        if (meshChunk.VerticesData != 0)
-                            tmpVertices = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.VerticesData];
+                    // TODO:  Move the source creation to a separate function.  Too much retyping.
+                    Grendgine_Collada_Source[] source = new Grendgine_Collada_Source[4];   // 4 possible source types.
+                    Grendgine_Collada_Source posSource = new();
+                    Grendgine_Collada_Source normSource = new();
+                    Grendgine_Collada_Source uvSource = new();
+                    Grendgine_Collada_Source colorSource = new();
+                    source[0] = posSource;
+                    source[1] = normSource;
+                    source[2] = uvSource;
+                    source[3] = colorSource;
+                    posSource.ID = nodeChunk.Name + "-mesh-pos";
+                    posSource.Name = nodeChunk.Name + "-pos";
+                    normSource.ID = nodeChunk.Name + "-mesh-norm";
+                    normSource.Name = nodeChunk.Name + "-norm";
+                    uvSource.ID = nodeChunk.Name + "-mesh-UV";
+                    uvSource.Name = nodeChunk.Name + "-UV";
+                    colorSource.ID = nodeChunk.Name + "-mesh-color";
+                    colorSource.Name = nodeChunk.Name + "-color";
 
-                        if (meshChunk.VertsUVsData != 0)
-                            vertsUvs = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.VertsUVsData];
+                    Grendgine_Collada_Vertices vertices = new() { ID = nodeChunk.Name + "-vertices" };
+                    geometry.Mesh.Vertices = vertices;
+                    Grendgine_Collada_Input_Unshared[] inputshared = new Grendgine_Collada_Input_Unshared[4];
+                    Grendgine_Collada_Input_Unshared posInput = new() { Semantic = Grendgine_Collada_Input_Semantic.POSITION };
+                    vertices.Input = inputshared;
 
-                        if (tmpVertices is null && vertsUvs is null) // There is no vertex data for this node.  Skip.
-                            continue;
+                    Grendgine_Collada_Input_Unshared normInput = new() { Semantic = Grendgine_Collada_Input_Semantic.NORMAL };
+                    Grendgine_Collada_Input_Unshared uvInput = new() { Semantic = Grendgine_Collada_Input_Semantic.TEXCOORD };
+                    Grendgine_Collada_Input_Unshared colorInput = new() { Semantic = Grendgine_Collada_Input_Semantic.COLOR };
 
-                        if (meshChunk.NormalsData != 0)
-                            normals = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.NormalsData];
+                    posInput.source = "#" + posSource.ID;
+                    normInput.source = "#" + normSource.ID;
+                    uvInput.source = "#" + uvSource.ID;
+                    colorInput.source = "#" + colorSource.ID;
+                    inputshared[0] = posInput;
 
-                        if (meshChunk.UVsData != 0)
-                            uvs = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.UVsData];
+                    Grendgine_Collada_Float_Array floatArrayVerts = new();
+                    Grendgine_Collada_Float_Array floatArrayNormals = new();
+                    Grendgine_Collada_Float_Array floatArrayUVs = new();
+                    Grendgine_Collada_Float_Array floatArrayColors = new();
+                    Grendgine_Collada_Float_Array floatArrayTangents = new();
 
-                        if (meshChunk.IndicesData != 0)
-                            indices = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.IndicesData];
+                    StringBuilder vertString = new();
+                    StringBuilder normString = new();
+                    StringBuilder uvString = new();
+                    StringBuilder colorString = new();
 
-                        if (meshChunk.ColorsData != 0)
-                            colors = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.ColorsData];
-
-                        if (meshChunk.TangentsData != 0)
-                            tangents = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.TangentsData];
-
-                        // tmpGeo is a Geometry object for each meshsubset.  Name will be "Nodechunk name_matID".
-                        Grendgine_Collada_Geometry geometry = new()
+                    if (tmpVertices is not null)  // Will be null if it's using VertsUVs.
+                    {
+                        floatArrayVerts.ID = posSource.ID + "-array";
+                        floatArrayVerts.Digits = 6;
+                        floatArrayVerts.Magnitude = 38;
+                        floatArrayVerts.Count = (int)tmpVertices.NumElements * 3;
+                        floatArrayUVs.ID = uvSource.ID + "-array";
+                        floatArrayUVs.Digits = 6;
+                        floatArrayUVs.Magnitude = 38;
+                        floatArrayUVs.Count = (int)uvs.NumElements * 2;
+                        floatArrayNormals.ID = normSource.ID + "-array";
+                        floatArrayNormals.Digits = 6;
+                        floatArrayNormals.Magnitude = 38;
+                        if (normals is not null)
+                            floatArrayNormals.Count = (int)normals.NumElements * 3;
+                        floatArrayColors.ID = colorSource.ID + "-array";
+                        floatArrayColors.Digits = 6;
+                        floatArrayColors.Magnitude = 38;
+                        if (colors is not null)
                         {
-                            Name = nodeChunk.Name,
-                            ID = nodeChunk.Name + "-mesh"
+                            floatArrayColors.Count = (int)colors.NumElements * 4;
+                            for (uint j = 0; j < colors.NumElements; j++)  // Create Colors string
+                            {
+                                colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ",
+                                    colors.Colors[j].r / 255.0,
+                                    colors.Colors[j].g / 255.0,
+                                    colors.Colors[j].b / 255.0,
+                                    colors.Colors[j].a / 255.0);
+                            }
+                        }
+
+                        // Create Vertices and normals string
+                        for (uint j = 0; j < meshChunk.NumVertices; j++)
+                        {
+                            Vector3 vertex = tmpVertices.Vertices[j];
+                            vertString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", vertex.X, vertex.Y, vertex.Z);
+                            Vector3 normal = normals?.Normals[j] ?? tangents?.Normals[j] ?? new Vector3(0.0f, 0.0f, 0.0f);
+                            normString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", Safe(normal.X), Safe(normal.Y), Safe(normal.Z));
+                        }
+                        for (uint j = 0; j < uvs.NumElements; j++)     // Create UV string
+                        {
+                            uvString.AppendFormat(culture, "{0:F6} {1:F6} ", Safe(uvs.UVs[j].U), 1 - Safe(uvs.UVs[j].V));
+                        }
+                    }
+                    else                // VertsUV structure.  Pull out verts and UVs from tmpVertsUVs.
+                    {
+                        floatArrayVerts.ID = posSource.ID + "-array";
+                        floatArrayVerts.Digits = 6;
+                        floatArrayVerts.Magnitude = 38;
+                        floatArrayVerts.Count = (int)vertsUvs.NumElements * 3;
+                        floatArrayUVs.ID = uvSource.ID + "-array";
+                        floatArrayUVs.Digits = 6;
+                        floatArrayUVs.Magnitude = 38;
+                        floatArrayUVs.Count = (int)vertsUvs.NumElements * 2;
+                        floatArrayNormals.ID = normSource.ID + "-array";
+                        floatArrayNormals.Digits = 6;
+                        floatArrayNormals.Magnitude = 38;
+                        floatArrayNormals.Count = (int)vertsUvs.NumElements * 3;
+                        floatArrayColors.ID = colorSource.ID + "-array";
+                        floatArrayColors.Digits = 6;
+                        floatArrayColors.Magnitude = 38;
+                        if (vertsUvs.Colors != null)
+                        {
+                            floatArrayColors.Count = vertsUvs.Colors.Length * 4;
+                            for (uint j = 0; j < vertsUvs.Colors.Length; j++)  // Create Colors string
+                            {
+                                colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ",
+                                    vertsUvs.Colors[j].r / 255.0,
+                                    vertsUvs.Colors[j].g / 255.0,
+                                    vertsUvs.Colors[j].b / 255.0,
+                                    vertsUvs.Colors[j].a / 255.0);
+                            }
+                        }
+
+                        // Dymek's code to rescale by bounding box.  Only apply to geometry (cga or cgf), and not skin or chr objects.
+                        var multiplerVector = Vector3.Abs((meshChunk.MinBound - meshChunk.MaxBound) / 2f);
+                        if (multiplerVector.X < 1) { multiplerVector.X = 1; }
+                        if (multiplerVector.Y < 1) { multiplerVector.Y = 1; }
+                        if (multiplerVector.Z < 1) { multiplerVector.Z = 1; }
+                        var boundaryBoxCenter = (meshChunk.MinBound + meshChunk.MaxBound) / 2f;
+
+                        // Create Vertices, normals and colors string
+                        for (uint j = 0; j < meshChunk.NumVertices; j++)
+                        {
+                            Vector3 vertex = vertsUvs.Vertices[j];
+                            // Rotate/translate the vertex
+                            if (!CryData.InputFile.EndsWith("skin") && !CryData.InputFile.EndsWith("chr"))
+                                vertex = (vertex * multiplerVector) + boundaryBoxCenter;
+
+                            vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(vertex.X), Safe(vertex.Y), Safe(vertex.Z));
+
+                            // TODO:  This isn't right?  VertsUvs may always have color as the 3rd element.
+                            // Normals depend on the data size.  16 byte structures have the normals in the Tangents.  20 byte structures are in the VertsUV.
+                            Vector3 normal = new();
+                            if (vertsUvs.Normals != null)
+                                normal = vertsUvs.Normals[j];
+                            else if (tangents != null && tangents.Normals != null)
+                                normal = tangents.Normals[j];
+
+                            normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(normal.X), Safe(normal.Y), Safe(normal.Z));
+                        }
+                        // Create UV string
+                        for (uint j = 0; j < vertsUvs.NumElements; j++)
+                        {
+                            uvString.AppendFormat("{0:F6} {1:F6} ", Safe(vertsUvs.UVs[j].U), Safe(1 - vertsUvs.UVs[j].V));
+                        }
+                    }
+                    CleanNumbers(vertString);
+                    CleanNumbers(normString);
+                    CleanNumbers(uvString);
+                    CleanNumbers(colorString);
+
+                    #region Create the triangles node.
+                    var triangles = new Grendgine_Collada_Triangles[meshSubsets.NumMeshSubset];
+                    geometry.Mesh.Triangles = triangles;
+
+                    for (uint j = 0; j < meshSubsets.NumMeshSubset; j++) // Need to make a new Triangles entry for each submesh.
+                    {
+                        triangles[j] = new Grendgine_Collada_Triangles
+                        {
+                            Count = meshSubsets.MeshSubsets[j].NumIndices / 3,
+                            Material = GetMaterialName(nodeChunk, meshSubsets, (int)j)
                         };
-                        Grendgine_Collada_Mesh tmpMesh = new();
-                        geometry.Mesh = tmpMesh;
 
-                        // TODO:  Move the source creation to a separate function.  Too much retyping.
-                        Grendgine_Collada_Source[] source = new Grendgine_Collada_Source[4];   // 4 possible source types.
-                        Grendgine_Collada_Source posSource = new();
-                        Grendgine_Collada_Source normSource = new();
-                        Grendgine_Collada_Source uvSource = new();
-                        Grendgine_Collada_Source colorSource = new();
-                        source[0] = posSource;
-                        source[1] = normSource;
-                        source[2] = uvSource;
-                        source[3] = colorSource;
-                        posSource.ID = nodeChunk.Name + "-mesh-pos";
-                        posSource.Name = nodeChunk.Name + "-pos";
-                        normSource.ID = nodeChunk.Name + "-mesh-norm";
-                        normSource.Name = nodeChunk.Name + "-norm";
-                        uvSource.ID = nodeChunk.Name + "-mesh-UV";
-                        uvSource.Name = nodeChunk.Name + "-UV";
-                        colorSource.ID = nodeChunk.Name + "-mesh-color";
-                        colorSource.Name = nodeChunk.Name + "-color";
-
-                        Grendgine_Collada_Vertices vertices = new() { ID = nodeChunk.Name + "-vertices" };
-                        geometry.Mesh.Vertices = vertices;
-                        Grendgine_Collada_Input_Unshared[] inputshared = new Grendgine_Collada_Input_Unshared[4];
-                        Grendgine_Collada_Input_Unshared posInput = new() { Semantic = Grendgine_Collada_Input_Semantic.POSITION };
-                        vertices.Input = inputshared;
-
-                        Grendgine_Collada_Input_Unshared normInput = new() { Semantic = Grendgine_Collada_Input_Semantic.NORMAL };
-                        Grendgine_Collada_Input_Unshared uvInput = new() { Semantic = Grendgine_Collada_Input_Semantic.TEXCOORD };
-                        Grendgine_Collada_Input_Unshared colorInput = new() { Semantic = Grendgine_Collada_Input_Semantic.COLOR };
-
-                        posInput.source = "#" + posSource.ID;
-                        normInput.source = "#" + normSource.ID;
-                        uvInput.source = "#" + uvSource.ID;
-                        colorInput.source = "#" + colorSource.ID;
-                        inputshared[0] = posInput;
-
-                        Grendgine_Collada_Float_Array floatArrayVerts = new();
-                        Grendgine_Collada_Float_Array floatArrayNormals = new();
-                        Grendgine_Collada_Float_Array floatArrayUVs = new();
-                        Grendgine_Collada_Float_Array floatArrayColors = new();
-                        Grendgine_Collada_Float_Array floatArrayTangents = new();
-
-                        StringBuilder vertString = new();
-                        StringBuilder normString = new();
-                        StringBuilder uvString = new();
-                        StringBuilder colorString = new();
-
-                        if (tmpVertices is not null)  // Will be null if it's using VertsUVs.
+                        // Create the inputs.  vertex, normal, texcoord, color
+                        int inputCount = 3;
+                        if (colors != null || vertsUvs?.Colors != null)
                         {
-                            floatArrayVerts.ID = posSource.ID + "-array";
-                            floatArrayVerts.Digits = 6;
-                            floatArrayVerts.Magnitude = 38;
-                            floatArrayVerts.Count = (int)tmpVertices.NumElements * 3;
-                            floatArrayUVs.ID = uvSource.ID + "-array";
-                            floatArrayUVs.Digits = 6;
-                            floatArrayUVs.Magnitude = 38;
-                            floatArrayUVs.Count = (int)uvs.NumElements * 2;
-                            floatArrayNormals.ID = normSource.ID + "-array";
-                            floatArrayNormals.Digits = 6;
-                            floatArrayNormals.Magnitude = 38;
-                            if (normals != null)
-                                floatArrayNormals.Count = (int)normals.NumElements * 3;
-                            floatArrayColors.ID = colorSource.ID + "-array";
-                            floatArrayColors.Digits = 6;
-                            floatArrayColors.Magnitude = 38;
-                            if (colors != null)
-                            {
-                                floatArrayColors.Count = (int)colors.NumElements * 4;
-                                for (uint j = 0; j < colors.NumElements; j++)  // Create Colors string
-                                {
-                                    colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ",
-                                        colors.Colors[j].r / 255.0,
-                                        colors.Colors[j].g / 255.0,
-                                        colors.Colors[j].b / 255.0,
-                                        colors.Colors[j].a / 255.0);
-                                }
-                            }
-
-                            // Create Vertices and normals string
-                            for (uint j = 0; j < meshChunk.NumVertices; j++)
-                            {
-                                Vector3 vertex = tmpVertices.Vertices[j];
-                                vertString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", vertex.X, vertex.Y, vertex.Z);
-                                Vector3 normal = normals?.Normals[j] ?? tangents?.Normals[j] ?? new Vector3(0.0f, 0.0f, 0.0f);
-                                normString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", Safe(normal.X), Safe(normal.Y), Safe(normal.Z));
-                            }
-                            for (uint j = 0; j < uvs.NumElements; j++)     // Create UV string
-                            {
-                                uvString.AppendFormat(culture, "{0:F6} {1:F6} ", Safe(uvs.UVs[j].U), 1 - Safe(uvs.UVs[j].V));
-                            }
+                            inputCount++;
                         }
-                        else                // VertsUV structure.  Pull out verts and UVs from tmpVertsUVs.
+                        triangles[j].Input = new Grendgine_Collada_Input_Shared[inputCount];
+
+                        triangles[j].Input[0] = new Grendgine_Collada_Input_Shared
                         {
-                            floatArrayVerts.ID = posSource.ID + "-array";
-                            floatArrayVerts.Digits = 6;
-                            floatArrayVerts.Magnitude = 38;
-                            floatArrayVerts.Count = (int)vertsUvs.NumElements * 3;
-                            floatArrayUVs.ID = uvSource.ID + "-array";
-                            floatArrayUVs.Digits = 6;
-                            floatArrayUVs.Magnitude = 38;
-                            floatArrayUVs.Count = (int)vertsUvs.NumElements * 2;
-                            floatArrayNormals.ID = normSource.ID + "-array";
-                            floatArrayNormals.Digits = 6;
-                            floatArrayNormals.Magnitude = 38;
-                            floatArrayNormals.Count = (int)vertsUvs.NumElements * 3;
-                            floatArrayColors.ID = colorSource.ID + "-array";
-                            floatArrayColors.Digits = 6;
-                            floatArrayColors.Magnitude = 38;
-                            if (vertsUvs.Colors != null)
-                            {
-                                floatArrayColors.Count = vertsUvs.Colors.Length * 4;
-                                for (uint j = 0; j < vertsUvs.Colors.Length; j++)  // Create Colors string
-                                {
-                                    colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ",
-                                        vertsUvs.Colors[j].r / 255.0,
-                                        vertsUvs.Colors[j].g / 255.0,
-                                        vertsUvs.Colors[j].b / 255.0,
-                                        vertsUvs.Colors[j].a / 255.0);
-                                }
-                            }
-
-                            // Dymek's code to rescale by bounding box.  Only apply to geometry (cga or cgf), and not skin or chr objects.
-                            var multiplerVector = Vector3.Abs((meshChunk.MinBound - meshChunk.MaxBound) / 2f);
-                            if (multiplerVector.X < 1) { multiplerVector.X = 1; }
-                            if (multiplerVector.Y < 1) { multiplerVector.Y = 1; }
-                            if (multiplerVector.Z < 1) { multiplerVector.Z = 1; }
-                            var boundaryBoxCenter = (meshChunk.MinBound + meshChunk.MaxBound) / 2f;
-
-                            // Create Vertices, normals and colors string
-                            for (uint j = 0; j < meshChunk.NumVertices; j++)
-                            {
-                                Vector3 vertex = vertsUvs.Vertices[j];
-                                // Rotate/translate the vertex
-                                if (!CryData.InputFile.EndsWith("skin") && !CryData.InputFile.EndsWith("chr"))
-                                    vertex = (vertex * multiplerVector) + boundaryBoxCenter;
-
-                                vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(vertex.X), Safe(vertex.Y), Safe(vertex.Z));
-
-                                // TODO:  This isn't right?  VertsUvs may always have color as the 3rd element.
-                                // Normals depend on the data size.  16 byte structures have the normals in the Tangents.  20 byte structures are in the VertsUV.
-                                Vector3 normal = new();
-                                if (vertsUvs.Normals != null)
-                                    normal = vertsUvs.Normals[j];
-                                else if (tangents != null && tangents.Normals != null)
-                                    normal = tangents.Normals[j];
-
-                                normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(normal.X), Safe(normal.Y), Safe(normal.Z));
-                            }
-                            // Create UV string
-                            for (uint j = 0; j < vertsUvs.NumElements; j++)
-                            {
-                                uvString.AppendFormat("{0:F6} {1:F6} ", Safe(vertsUvs.UVs[j].U), Safe(1 - vertsUvs.UVs[j].V));
-                            }
-                        }
-                        CleanNumbers(vertString);
-                        CleanNumbers(normString);
-                        CleanNumbers(uvString);
-                        CleanNumbers(colorString);
-
-                        #region Create the triangles node.
-                        var triangles = new Grendgine_Collada_Triangles[meshSubsets.NumMeshSubset];
-                        geometry.Mesh.Triangles = triangles;
-
-                        for (uint j = 0; j < meshSubsets.NumMeshSubset; j++) // Need to make a new Triangles entry for each submesh.
+                            Semantic = new Grendgine_Collada_Input_Semantic()
+                        };
+                        triangles[j].Input[0].Semantic = Grendgine_Collada_Input_Semantic.VERTEX;
+                        triangles[j].Input[0].Offset = 0;
+                        triangles[j].Input[0].source = "#" + vertices.ID;
+                        triangles[j].Input[1] = new Grendgine_Collada_Input_Shared
                         {
-                            triangles[j] = new Grendgine_Collada_Triangles
+                            Semantic = Grendgine_Collada_Input_Semantic.NORMAL,
+                            Offset = 1,
+                            source = "#" + normSource.ID
+                        };
+                        triangles[j].Input[2] = new Grendgine_Collada_Input_Shared
+                        {
+                            Semantic = Grendgine_Collada_Input_Semantic.TEXCOORD,
+                            Offset = 2,
+                            source = "#" + uvSource.ID
+                        };
+
+                        int nextInputID = 3;
+                        if (colors != null || vertsUvs?.Colors != null)
+                        {
+                            triangles[j].Input[nextInputID] = new Grendgine_Collada_Input_Shared
                             {
-                                Count = meshSubsets.MeshSubsets[j].NumIndices / 3,
-                                Material = GetMaterialName(nodeChunk, meshSubsets, (int)j)
+                                Semantic = Grendgine_Collada_Input_Semantic.COLOR,
+                                Offset = nextInputID,
+                                source = "#" + colorSource.ID
                             };
+                            nextInputID++;
+                        }
 
-                            // Create the inputs.  vertex, normal, texcoord, color
-                            int inputCount = 3;
+                        // Create the vcount list.  All triangles, so the subset number of indices.
+                        StringBuilder vc = new();
+                        for (var k = meshSubsets.MeshSubsets[j].FirstIndex; k < (meshSubsets.MeshSubsets[j].FirstIndex + meshSubsets.MeshSubsets[j].NumIndices); k++)
+                        {
+                            int ccount = 3;
+
+                            if (colors != null || vertsUvs?.Colors != null)
+                                ccount++;
+
+                            vc.AppendFormat(culture, String.Format("{0} ", ccount));
+                            k += 2;
+                        }
+
+                        // Create the P node for the Triangles.
+                        StringBuilder p = new();
+                        for (var k = meshSubsets.MeshSubsets[j].FirstIndex; k < (meshSubsets.MeshSubsets[j].FirstIndex + meshSubsets.MeshSubsets[j].NumIndices); k++)
+                        {
+                            int values = 0;
                             if (colors != null || vertsUvs?.Colors != null)
                             {
-                                inputCount++;
-                            }
-                            triangles[j].Input = new Grendgine_Collada_Input_Shared[inputCount];
-
-                            triangles[j].Input[0] = new Grendgine_Collada_Input_Shared
-                            {
-                                Semantic = new Grendgine_Collada_Input_Semantic()
-                            };
-                            triangles[j].Input[0].Semantic = Grendgine_Collada_Input_Semantic.VERTEX;
-                            triangles[j].Input[0].Offset = 0;
-                            triangles[j].Input[0].source = "#" + vertices.ID;
-                            triangles[j].Input[1] = new Grendgine_Collada_Input_Shared
-                            {
-                                Semantic = Grendgine_Collada_Input_Semantic.NORMAL,
-                                Offset = 1,
-                                source = "#" + normSource.ID
-                            };
-                            triangles[j].Input[2] = new Grendgine_Collada_Input_Shared
-                            {
-                                Semantic = Grendgine_Collada_Input_Semantic.TEXCOORD,
-                                Offset = 2,
-                                source = "#" + uvSource.ID
-                            };
-
-                            int nextInputID = 3;
-                            if (colors != null || vertsUvs?.Colors != null)
-                            {
-                                triangles[j].Input[nextInputID] = new Grendgine_Collada_Input_Shared
-                                {
-                                    Semantic = Grendgine_Collada_Input_Semantic.COLOR,
-                                    Offset = nextInputID,
-                                    source = "#" + colorSource.ID
-                                };
-                                nextInputID++;
+                                values++;
                             }
 
-                            // Create the vcount list.  All triangles, so the subset number of indices.
-                            StringBuilder vc = new();
-                            for (var k = meshSubsets.MeshSubsets[j].FirstIndex; k < (meshSubsets.MeshSubsets[j].FirstIndex + meshSubsets.MeshSubsets[j].NumIndices); k++)
+                            List<string> formatlist = new();
+                            formatlist.Add("{0} {0} {0} ");
+                            formatlist.Add("{1} {1} {1} ");
+                            formatlist.Add("{2} {2} {2} ");
+                            for (var valuecount = 0; valuecount < values; valuecount++)
                             {
-                                int ccount = 3;
-
-                                if (colors != null || vertsUvs?.Colors != null)
-                                    ccount++;
-
-                                vc.AppendFormat(culture, String.Format("{0} ", ccount));
-                                k += 2;
+                                formatlist[0] += "{0} ";
+                                formatlist[1] += "{1} ";
+                                formatlist[2] += "{2} ";
                             }
-
-                            // Create the P node for the Triangles.
-                            StringBuilder p = new();
-                            for (var k = meshSubsets.MeshSubsets[j].FirstIndex; k < (meshSubsets.MeshSubsets[j].FirstIndex + meshSubsets.MeshSubsets[j].NumIndices); k++)
-                            {
-                                int values = 0;
-                                if (colors != null || vertsUvs?.Colors != null)
-                                {
-                                    values++;
-                                }
-
-                                List<string> formatlist = new();
-                                formatlist.Add("{0} {0} {0} ");
-                                formatlist.Add("{1} {1} {1} ");
-                                formatlist.Add("{2} {2} {2} ");
-                                for (var valuecount = 0; valuecount < values; valuecount++)
-                                {
-                                    formatlist[0] += "{0} ";
-                                    formatlist[1] += "{1} ";
-                                    formatlist[2] += "{2} ";
-                                }
-                                string finalformat = String.Join("", formatlist);
-                                p.AppendFormat(finalformat, indices.Indices[k], indices.Indices[k + 1], indices.Indices[k + 2]);
-                                k += 2;
-                            }
-                            triangles[j].P = new Grendgine_Collada_Int_Array_String
-                            {
-                                Value_As_String = p.ToString().TrimEnd()
-                            };
+                            string finalformat = String.Join("", formatlist);
+                            p.AppendFormat(finalformat, indices.Indices[k], indices.Indices[k + 1], indices.Indices[k + 2]);
+                            k += 2;
                         }
+                        triangles[j].P = new Grendgine_Collada_Int_Array_String
+                        {
+                            Value_As_String = p.ToString().TrimEnd()
+                        };
+                    }
 
-                        #endregion
+                    #endregion
 
-                        #region Create the source float_array nodes.  Vertex, normal, UV.  May need color as well.
+                    #region Create the source float_array nodes.  Vertex, normal, UV.  May need color as well.
 
-                        floatArrayVerts.Value_As_String = vertString.ToString().TrimEnd();
-                        floatArrayNormals.Value_As_String = normString.ToString().TrimEnd();
-                        floatArrayUVs.Value_As_String = uvString.ToString().TrimEnd();
-                        floatArrayColors.Value_As_String = colorString.ToString();
+                    floatArrayVerts.Value_As_String = vertString.ToString().TrimEnd();
+                    floatArrayNormals.Value_As_String = normString.ToString().TrimEnd();
+                    floatArrayUVs.Value_As_String = uvString.ToString().TrimEnd();
+                    floatArrayColors.Value_As_String = colorString.ToString();
 
-                        source[0].Float_Array = floatArrayVerts;
-                        source[1].Float_Array = floatArrayNormals;
-                        source[2].Float_Array = floatArrayUVs;
-                        source[3].Float_Array = floatArrayColors;
-                        geometry.Mesh.Source = source;
+                    source[0].Float_Array = floatArrayVerts;
+                    source[1].Float_Array = floatArrayNormals;
+                    source[2].Float_Array = floatArrayUVs;
+                    source[3].Float_Array = floatArrayColors;
+                    geometry.Mesh.Source = source;
 
-                        // create the technique_common for each of these
-                        posSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
+                    // create the technique_common for each of these
+                    posSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
+                    {
+                        Accessor = new Grendgine_Collada_Accessor()
+                    };
+                    posSource.Technique_Common.Accessor.Source = "#" + floatArrayVerts.ID;
+                    posSource.Technique_Common.Accessor.Stride = 3;
+                    posSource.Technique_Common.Accessor.Count = (uint)meshChunk.NumVertices;
+                    Grendgine_Collada_Param[] paramPos = new Grendgine_Collada_Param[3];
+                    paramPos[0] = new Grendgine_Collada_Param();
+                    paramPos[1] = new Grendgine_Collada_Param();
+                    paramPos[2] = new Grendgine_Collada_Param();
+                    paramPos[0].Name = "X";
+                    paramPos[0].Type = "float";
+                    paramPos[1].Name = "Y";
+                    paramPos[1].Type = "float";
+                    paramPos[2].Name = "Z";
+                    paramPos[2].Type = "float";
+                    posSource.Technique_Common.Accessor.Param = paramPos;
+
+                    normSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
+                    {
+                        Accessor = new Grendgine_Collada_Accessor
+                        {
+                            Source = "#" + floatArrayNormals.ID,
+                            Stride = 3,
+                            Count = (uint)meshChunk.NumVertices
+                        }
+                    };
+                    Grendgine_Collada_Param[] paramNorm = new Grendgine_Collada_Param[3];
+                    paramNorm[0] = new Grendgine_Collada_Param();
+                    paramNorm[1] = new Grendgine_Collada_Param();
+                    paramNorm[2] = new Grendgine_Collada_Param();
+                    paramNorm[0].Name = "X";
+                    paramNorm[0].Type = "float";
+                    paramNorm[1].Name = "Y";
+                    paramNorm[1].Type = "float";
+                    paramNorm[2].Name = "Z";
+                    paramNorm[2].Type = "float";
+                    normSource.Technique_Common.Accessor.Param = paramNorm;
+
+                    uvSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
+                    {
+                        Accessor = new Grendgine_Collada_Accessor
+                        {
+                            Source = "#" + floatArrayUVs.ID,
+                            Stride = 2
+                        }
+                    };
+
+                    if (tmpVertices != null)
+                        uvSource.Technique_Common.Accessor.Count = uvs.NumElements;
+                    else
+                        uvSource.Technique_Common.Accessor.Count = vertsUvs.NumElements;
+
+                    Grendgine_Collada_Param[] paramUV = new Grendgine_Collada_Param[2];
+                    paramUV[0] = new Grendgine_Collada_Param();
+                    paramUV[1] = new Grendgine_Collada_Param();
+                    paramUV[0].Name = "S";
+                    paramUV[0].Type = "float";
+                    paramUV[1].Name = "T";
+                    paramUV[1].Type = "float";
+                    uvSource.Technique_Common.Accessor.Param = paramUV;
+
+                    if (colors != null || vertsUvs?.Colors != null)
+                    {
+                        uint numberOfElements;
+                        if (colors != null)
+                            numberOfElements = colors.NumElements;
+                        else
+                            numberOfElements = (uint)vertsUvs.Colors.Length;
+
+                        colorSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
                         {
                             Accessor = new Grendgine_Collada_Accessor()
                         };
-                        posSource.Technique_Common.Accessor.Source = "#" + floatArrayVerts.ID;
-                        posSource.Technique_Common.Accessor.Stride = 3;
-                        posSource.Technique_Common.Accessor.Count = (uint)meshChunk.NumVertices;
-                        Grendgine_Collada_Param[] paramPos = new Grendgine_Collada_Param[3];
-                        paramPos[0] = new Grendgine_Collada_Param();
-                        paramPos[1] = new Grendgine_Collada_Param();
-                        paramPos[2] = new Grendgine_Collada_Param();
-                        paramPos[0].Name = "X";
-                        paramPos[0].Type = "float";
-                        paramPos[1].Name = "Y";
-                        paramPos[1].Type = "float";
-                        paramPos[2].Name = "Z";
-                        paramPos[2].Type = "float";
-                        posSource.Technique_Common.Accessor.Param = paramPos;
-
-                        normSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
-                        {
-                            Accessor = new Grendgine_Collada_Accessor
-                            {
-                                Source = "#" + floatArrayNormals.ID,
-                                Stride = 3,
-                                Count = (uint)meshChunk.NumVertices
-                            }
-                        };
-                        Grendgine_Collada_Param[] paramNorm = new Grendgine_Collada_Param[3];
-                        paramNorm[0] = new Grendgine_Collada_Param();
-                        paramNorm[1] = new Grendgine_Collada_Param();
-                        paramNorm[2] = new Grendgine_Collada_Param();
-                        paramNorm[0].Name = "X";
-                        paramNorm[0].Type = "float";
-                        paramNorm[1].Name = "Y";
-                        paramNorm[1].Type = "float";
-                        paramNorm[2].Name = "Z";
-                        paramNorm[2].Type = "float";
-                        normSource.Technique_Common.Accessor.Param = paramNorm;
-
-                        uvSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
-                        {
-                            Accessor = new Grendgine_Collada_Accessor
-                            {
-                                Source = "#" + floatArrayUVs.ID,
-                                Stride = 2
-                            }
-                        };
-
-                        if (tmpVertices != null)
-                            uvSource.Technique_Common.Accessor.Count = uvs.NumElements;
-                        else
-                            uvSource.Technique_Common.Accessor.Count = vertsUvs.NumElements;
-
-                        Grendgine_Collada_Param[] paramUV = new Grendgine_Collada_Param[2];
-                        paramUV[0] = new Grendgine_Collada_Param();
-                        paramUV[1] = new Grendgine_Collada_Param();
-                        paramUV[0].Name = "S";
-                        paramUV[0].Type = "float";
-                        paramUV[1].Name = "T";
-                        paramUV[1].Type = "float";
-                        uvSource.Technique_Common.Accessor.Param = paramUV;
-
-                        if (colors != null || vertsUvs?.Colors != null)
-                        {
-                            uint numberOfElements;
-                            if (colors != null)
-                                numberOfElements = colors.NumElements;
-                            else
-                                numberOfElements = (uint)vertsUvs.Colors.Length;
-
-                            colorSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
-                            {
-                                Accessor = new Grendgine_Collada_Accessor()
-                            };
-                            colorSource.Technique_Common.Accessor.Source = "#" + floatArrayColors.ID;
-                            colorSource.Technique_Common.Accessor.Stride = 4;
-                            colorSource.Technique_Common.Accessor.Count = numberOfElements;
-                            Grendgine_Collada_Param[] paramColor = new Grendgine_Collada_Param[4];
-                            paramColor[0] = new Grendgine_Collada_Param();
-                            paramColor[1] = new Grendgine_Collada_Param();
-                            paramColor[2] = new Grendgine_Collada_Param();
-                            paramColor[3] = new Grendgine_Collada_Param();
-                            paramColor[0].Name = "R";
-                            paramColor[0].Type = "float";
-                            paramColor[1].Name = "G";
-                            paramColor[1].Type = "float";
-                            paramColor[2].Name = "B";
-                            paramColor[2].Type = "float";
-                            paramColor[3].Name = "A";
-                            paramColor[3].Type = "float";
-                            colorSource.Technique_Common.Accessor.Param = paramColor;
-                        }
-
-                        geometryList.Add(geometry);
-
-                        #endregion
+                        colorSource.Technique_Common.Accessor.Source = "#" + floatArrayColors.ID;
+                        colorSource.Technique_Common.Accessor.Stride = 4;
+                        colorSource.Technique_Common.Accessor.Count = numberOfElements;
+                        Grendgine_Collada_Param[] paramColor = new Grendgine_Collada_Param[4];
+                        paramColor[0] = new Grendgine_Collada_Param();
+                        paramColor[1] = new Grendgine_Collada_Param();
+                        paramColor[2] = new Grendgine_Collada_Param();
+                        paramColor[3] = new Grendgine_Collada_Param();
+                        paramColor[0].Name = "R";
+                        paramColor[0].Type = "float";
+                        paramColor[1].Name = "G";
+                        paramColor[1].Type = "float";
+                        paramColor[2].Name = "B";
+                        paramColor[2].Type = "float";
+                        paramColor[3].Name = "A";
+                        paramColor[3].Type = "float";
+                        colorSource.Technique_Common.Accessor.Param = paramColor;
                     }
+
+                    geometryList.Add(geometry);
+
+                    #endregion
+                }
             }
             // There is no geometry for a helper or controller node.  Can skip the rest.
         }
@@ -812,11 +812,12 @@ public class Collada : BaseRenderer
     /// <returns>Material name with '-material' appended</returns>
     private string GetMaterialName(ChunkNode nodeChunk, ChunkMeshSubsets meshSubsets, int index)
     {
-        var materialLibraryChunk = (ChunkMtlName)CryData.Chunks[nodeChunk.MatID];
+        var materialLibraryChunk = (ChunkMtlName)CryData.Chunks.Where(c => c.ID == nodeChunk.MatID).FirstOrDefault();
         var materialLibraryIndex = meshSubsets.MeshSubsets[index].MatID;
-        var materialChunk = (ChunkMtlName)CryData.Chunks[(int)materialLibraryChunk.ChildIDs[materialLibraryIndex]];
 
-        return materialChunk.Name + "-material";
+        var matChunk = (ChunkMtlName)CryData.Chunks.Where(c => c.ID == materialLibraryChunk.ChildIDs[materialLibraryIndex]).FirstOrDefault();
+
+        return matChunk.Name + "-material";
     }
 
     private void CreateMaterialsFromNodeChunk(ChunkNode nodeChunk)
@@ -824,7 +825,7 @@ public class Collada : BaseRenderer
         List<Grendgine_Collada_Material> colladaMaterials = new();
 
         var matChunkForNode = (ChunkMtlName)CryData.Chunks.Where(c => c.ID == nodeChunk.MatID).FirstOrDefault();
-        
+
         if (matChunkForNode.MatType == MtlNameType.Library || matChunkForNode.MatType == MtlNameType.Single)
         {
             // Create a material in DaeObject for each Submaterial.
@@ -1254,7 +1255,7 @@ public class Collada : BaseRenderer
                 }
 
                 nodes.Add(colladaNode);
-                
+
             }
         }
 
