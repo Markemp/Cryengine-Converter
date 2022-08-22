@@ -185,13 +185,65 @@ public class MWOIntegrationTests
     [TestMethod]
     public void MWO_candycane_a_MaterialFileNotAvailable()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\candycane_a.chr", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\candycane_a.chr", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
         cryData.ProcessCryengineFiles();
 
         Collada colladaData = new Collada(testUtils.argsHandler, cryData);
+        var daeObject = colladaData.DaeObject;
+        colladaData.GenerateDaeObject();
+
+        // Controller check
+        var controller = daeObject.Library_Controllers.Controller[0];
+        Assert.AreEqual("Controller", controller.ID);
+        var skin = controller.Skin;
+        Assert.AreEqual("#candycane_a-mesh", skin.source);
+        Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1", skin.Bind_Shape_Matrix.Value_As_String);
+        Assert.AreEqual(3, skin.Source.Length);
+        var controllerJoints = skin.Source.Where(a => a.ID == "Controller-joints").First();
+        var controllerBindPose = skin.Source.Where(a => a.ID == "Controller-bind_poses").First();
+        var controllerWeights = skin.Source.Where(a => a.ID == "Controller-weights").First();
+        var joints = skin.Joints;
+        Assert.AreEqual(8, controllerJoints.Name_Array.Count);
+        Assert.AreEqual("Controller-joints-array", controllerJoints.Name_Array.ID);
+
+        var bindPoseArray = "0 0 -1 0.023305 1 0 0 0 0 -1 0 0 0 0 0 1 -0.000089 0 -1 -0.000092 1 0.000008 -0.000089 0 0.000008 -1 0 0 0 0 0 1 -0.000091 0 -1 -0.026455 1 0.000008 -0.000091 0 0.000008";
+        var bindPoseArrayNegZeros = "-0 -0 -1 0.023305 1 -0 -0 -0 -0 -1 0 -0 0 0 0 1 -0.000089 -0 -1 -0.000092 1 0.000008 -0.000089 -0 0.000008 -1 0 -0 0 0 0 1 -0.000091 -0 -1 -0.026455 1 0.000008";
+        Assert.AreEqual(128, controllerBindPose.Float_Array.Count);
+        Assert.IsTrue(controllerBindPose.Float_Array.Value_As_String.StartsWith(bindPoseArray) || controllerBindPose.Float_Array.Value_As_String.StartsWith(bindPoseArrayNegZeros));
+        int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
+        Assert.AreEqual(2, actualMaterialsCount);
+
+        // VisualScene
+        var scene = daeObject.Library_Visual_Scene.Visual_Scene[0];
+        Assert.AreEqual(2, scene.Node.Length);
+        var armature = scene.Node[0];
+        var instance = scene.Node[1];
+        Assert.AreEqual("Armature", armature.ID);
+        Assert.AreEqual("Bip01", armature.Name);
+        Assert.AreEqual("-0 1 -0 0 -0 -0 -1 -0 -1 -0 0 0.023305 0 0 0 1", armature.Matrix[0].Value_As_String);
+        Assert.AreEqual("Armature_hang_seg1", armature.node[0].ID);
+        Assert.AreEqual("hang_seg1", armature.node[0].Name);
+        Assert.AreEqual("-0 0.000008 -1 -0 1 0.000088 -0 0.000092 0.000088 -1 -0.000008 0.023305 0 0 0 1", armature.node[0].Matrix[0].Value_As_String);
+        Assert.AreEqual("Armature_hang_seg2", armature.node[0].node[0].ID);
+        Assert.AreEqual("hang_seg2", armature.node[0].node[0].Name);
+        Assert.AreEqual("-0.000009 -0.000080 -1 -0 1 0.000091 -0.000009 0.026455 0.000091 -1 0.000080 -0.000089 0 0 0 1", armature.node[0].node[0].Matrix[0].Value_As_String);
+
+        testUtils.ValidateColladaXml(colladaData);
+    }
+
+    [TestMethod]
+    public void MWO_candycane_a_WithMaterialFile()
+    {
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\candycane_a.chr", "-dds", "-dae", "-objectdir", @"d:\depot\mwo" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new Collada(testUtils.argsHandler, cryData);
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
 

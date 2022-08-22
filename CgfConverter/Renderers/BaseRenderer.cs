@@ -18,7 +18,7 @@ public abstract class BaseRenderer
 
     internal string GetOutputFile(string extension, string outputDir = null, bool preservePath = true)
     {
-        string outputFile = string.Format("temp.{0}", extension);
+        var outputFile = string.Format("temp.{0}", extension);
 
         if (string.IsNullOrWhiteSpace(outputDir))
         {
@@ -36,7 +36,7 @@ public abstract class BaseRenderer
         else
         {
             // If we have an output directory
-            string preserveDir = preservePath ? Path.GetDirectoryName(CryData.InputFile) : "";
+            var preserveDir = preservePath ? Path.GetDirectoryName(CryData.InputFile) : "";
 
             // Remove drive letter if necessary
             if (!string.IsNullOrWhiteSpace(preserveDir) && !string.IsNullOrWhiteSpace(Path.GetPathRoot(preserveDir)))
@@ -50,7 +50,7 @@ public abstract class BaseRenderer
         return outputFile;
     }
 
-    public bool IsNodeNameExcluded(String nodeName)
+    public bool IsNodeNameExcluded(string nodeName)
     {
         foreach (var excname in Args.ExcludeNodeNames)
         {
@@ -64,7 +64,7 @@ public abstract class BaseRenderer
         return false;
     }
 
-    public bool IsMeshMaterialExcluded(String materialName)
+    public bool IsMeshMaterialExcluded(string materialName)
     {
         foreach (var excname in Args.ExcludeMaterialNames)
         {

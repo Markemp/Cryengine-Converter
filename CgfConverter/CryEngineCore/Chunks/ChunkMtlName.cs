@@ -19,7 +19,7 @@ public abstract class ChunkMtlName : Chunk
     
     public uint NFlags2 { get; internal set; }
 
-    /// <summary>The actual Material for this chunk.</summary>
+    /// <summary>The actual Material from the mtl file for this chunk.</summary>
     public Material? Material { get; set; }
 
     public override string ToString() =>

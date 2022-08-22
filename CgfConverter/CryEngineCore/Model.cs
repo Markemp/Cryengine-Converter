@@ -38,11 +38,8 @@ public class Model
 
     private Dictionary<int, ChunkNode> nodeMap { get; set; }
 
-    #region Private Fields
     public List<ChunkHeader> chunkHeaders = new();
-    #endregion
 
-    #region Calculated Properties
     /// <summary> All NodeChunks for this model in a dictionary by chunk Id. </summary>
     public Dictionary<int, ChunkNode> NodeMap
     {
@@ -82,16 +79,11 @@ public class Model
         {
             var types = ChunkMap.Select(n => n.Value.ChunkType);
             if (ChunkMap.Select(n => n.Value.ChunkType).Contains(ChunkType.Mesh) || ChunkMap.Select(n => n.Value.ChunkType).Contains(ChunkType.MeshIvo))
-            {
                 return true;
-            }
+            
             return false;
         }
     }
-
-    #endregion
-
-    #region Public Methods
 
     /// <summary> Load the specified file as a Model</summary>
     public static Model FromFile(string fileName)
@@ -119,8 +111,6 @@ public class Model
         ReadChunkHeaders(reader);
         ReadChunks(reader);
     }
-
-    #endregion
 
     private void ReadFileHeader(BinaryReader b)
     {

@@ -37,8 +37,6 @@ namespace CgfConverter
         public bool OutputFBX { get; internal set; }
         /// <summary>Smooth Faces</summary>
         public bool Smooth { get; internal set; }
-        /// <summary>Flag used to toggle if we should prefix exported material names with the material file name</summary>
-        public bool PrefixMaterialNames { get; internal set; }
         /// <summary>Flag used to indicate we should convert texture paths to use TIFF instead of DDS</summary>
         public bool TiffTextures { get; internal set; }
         /// <summary>Flag used to indicate we should convert texture paths to use PNG instead of DDS</summary>
@@ -277,14 +275,6 @@ namespace CgfConverter
                         DumpChunkInfo = true;
                         break;
                     #endregion
-                    #region case "-prefixmatnames"...
-                    case "-prefixmatnames":
-                    case "-prefixmaterialnames":
-                    case "-pmatnames":
-                    case "-pmn":
-                        PrefixMaterialNames = true;
-                        break;
-                    #endregion
                     #region default...
 
                     default:
@@ -330,8 +320,6 @@ namespace CgfConverter
                 Utils.Log(LogLevelEnum.Info, "Allow conflicts for mtl files enabled");
             if (NoConflicts)
                 Utils.Log(LogLevelEnum.Info, "Prevent conflicts for mtl files enabled");
-            if (PrefixMaterialNames)
-                Utils.Log(LogLevelEnum.Info, "Prefix material names with the source material's filename");
             if (ExcludeNodeNames.Any())
                 Utils.Log(LogLevelEnum.Info, $"Skipping nodes starting with any of these names: {String.Join(", ", ExcludeNodeNames)}");
             if (ExcludeMaterialNames.Any())

@@ -33,7 +33,6 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
         get { return Matrix4x4.Transpose(Transform); }
     }
 
-    #region Calculated Properties
     private ChunkNode _parentNode;
 
     public ChunkNode ParentNode
@@ -74,7 +73,7 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
         set { _objectChunk = value; }
     }
 
-    public List<ChunkNode> AllChildNodes
+    public List<ChunkNode>? AllChildNodes
     {
         get
         {
@@ -89,7 +88,6 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
             }
         }
     }
-    #endregion
 
     public override string ToString() => $@"Chunk Type: {ChunkType}, ID: {ID:X}, Version: {Version}, Name: {Name}, Object Node ID: {ObjectNodeID:X}, Parent Node ID: {ParentNodeID:X}";
 }
