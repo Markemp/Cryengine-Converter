@@ -34,9 +34,7 @@ public partial class CryEngine
     {
         get
         {
-            if (_chunks is null)
-                _chunks = Models.SelectMany(m => m.ChunkMap.Values).ToList();
-
+            _chunks ??= Models.SelectMany(m => m.ChunkMap.Values).ToList();
             return _chunks;
         }
     }
@@ -116,36 +114,6 @@ public partial class CryEngine
         SkinningInfo = ConsolidateSkinningInfo(Models);
 
         CreateMaterials();
-
-        //Utils.Log(LogLevelEnum.Debug, "Unable to locate any material file.  Creating Default materials.");
-
-        //// Create dummy materials
-        //// 0x800:  1 material per mtlname chunk.  If NFlags1 = 1, it's the library. Skip
-        //// 0x802:  Mult materials per chunk. Can't get names except in certain types (null separated
-        ////         strings at end of mtlname chunk, but can't identify these). create dummy names.
-        //// Only use first mtlname chunks from first model.  2nd model has duplicates
-        //foreach (ChunkMtlName mtlChunk in Models[0].ChunkMap.Values
-        //    .Where(c => c.ChunkType == ChunkType.MtlName || c.ChunkType == ChunkType.MtlNameIvo))
-        //{
-        //    switch (mtlChunk.Version)
-        //    {
-        //        case 0x744:
-        //            break;
-        //        case 0x800:
-        //        case 0x80000800:
-        //            if (mtlChunk.MatType != MtlNameType.Library)
-        //                Materials.Add(MaterialUtilities.CreateDefaultMaterial(mtlChunk.Name));
-        //            break;
-        //        case 0x802:
-        //            for (int i = 0; i < mtlChunk.NumChildren; i++)
-        //            {
-        //                Materials.Add(MaterialUtilities.CreateDefaultMaterial(mtlChunk.Name + i.ToString()));
-        //            }
-        //            break;
-        //        default:
-        //            break;
-        //    }
-        //}
     }
 
     private static void AutoDetectMFile(string filename, FileInfo inputFile, List<FileInfo> inputFiles)
@@ -215,20 +183,45 @@ public partial class CryEngine
             }
 
             var matfile = GetMaterialFile(matChunk.Name);
+
             if (matfile is not null)
-            {
-                var mats = CreateMaterialsFromMatFile(matfile);
-                nodeChunk.Materials = mats;
-            } // Default mats if material file cannot be found.
+                nodeChunk.Materials = CreateMaterialsFromMatFile(matfile);
+            else
+                nodeChunk.Materials = CreateDefaultMaterials(nodeChunk);
         }
     }
 
-    private static Material? CreateMaterialsFromMatFile(FileInfo matfile)
+    private static Material? CreateMaterialsFromMatFile(FileInfo matfile) => MaterialUtilities.FromFile(matfile.FullName);
+    
+    private Material? CreateDefaultMaterials(ChunkNode nodeChunk)
     {
-        var materials = MaterialUtilities.FromFile(matfile.FullName);
-        return materials;
-    }
+        // For each child of this node chunk's material file, create a default material.
+        var mtlNameChunk = (ChunkMtlName)Chunks.Where(c => c.ID == nodeChunk.MatID).FirstOrDefault();
+        if (mtlNameChunk is not null)
+        {
+            if (mtlNameChunk.MatType == MtlNameType.Basic)
+            {
+                return MaterialUtilities.CreateDefaultMaterial(nodeChunk.Name);
+            }
+            else if (mtlNameChunk.MatType == MtlNameType.Library || mtlNameChunk.MatType == MtlNameType.Single)
+            {
+                var material = new Material { SubMaterials = new Material[mtlNameChunk.NumChildren] };
+                for (int i = 0; i < mtlNameChunk.NumChildren; i++)
+                {
+                    var childMaterial = (ChunkMtlName)Chunks.Where(c => c.ID == mtlNameChunk.ChildIDs[i]).FirstOrDefault();
 
+                    var mat = MaterialUtilities.CreateDefaultMaterial(childMaterial.Name, $"{i / (float)mtlNameChunk.NumChildren},0.5,0.5");
+                    material.SubMaterials[i] = mat;
+                }
+
+                return material;
+            }
+            else
+                Utils.Log(LogLevelEnum.Info, $"Found MtlName chunk {mtlNameChunk.ID} with unhandled MtlNameType {mtlNameChunk.MatType}.");
+        }
+        return null;
+    }
+    
     // Gets the material file for Basic, Single and Library types.  Child materials are created from the library.
     private FileInfo? GetMaterialFile(string name)
     {
@@ -246,7 +239,7 @@ public partial class CryEngine
             // For MWO models with a material called "Material #0", which is a default mat used on lots of mwo mechs.
             // The actual material file is in objects\mechs\generic\body\generic_body.mtl
             name = "objects\\mechs\\generic\\body\\generic_body.mtl";
-            materialFile = new FileInfo(Path.Combine(inputFileInfo.Directory.FullName, name));
+            materialFile = new FileInfo(Path.Combine(DataDir, name));
             if (materialFile.Exists)
                 return materialFile;
         }

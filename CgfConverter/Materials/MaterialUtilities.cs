@@ -25,11 +25,11 @@ public static class MaterialUtilities
         return null;
     }
 
-    public static Material CreateDefaultMaterial(string materialName) =>
+    public static Material CreateDefaultMaterial(string materialName, string diffuse = "0.5,0.5,0.5") =>
         new()
         {
             Name = materialName,
-            Diffuse = "0.5,0.5,0.8",
+            Diffuse = diffuse,
             Specular = "1.0,1.0,1.0",
             Shininess = 0.2,
             Opacity = "1.0",
