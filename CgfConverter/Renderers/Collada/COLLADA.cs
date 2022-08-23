@@ -11,7 +11,7 @@ using CgfConverter.CryEngineCore;
 using static Extensions.FileHandlingExtensions;
 using grendgine_collada;
 using CgfConverter.Materials;
-using static System.Net.Mime.MediaTypeNames;
+using System.Xml;
 
 namespace CgfConverter;
 
@@ -54,7 +54,7 @@ public class Collada : BaseRenderer
             Utils.Log(LogLevelEnum.Debug, "\tNumber of nodes in model: {0}", CryData.Models[i].NodeMap.Count);
         }
 
-        WriteRootNode(colladaVersion);
+        WriteColladaRoot(colladaVersion);
         WriteAsset();
         WriteScene();
 
@@ -78,7 +78,7 @@ public class Collada : BaseRenderer
             WriteLibrary_VisualScenes();
     }
 
-    protected void WriteRootNode(string version)
+    protected void WriteColladaRoot(string version)
     {
         // Blender doesn't like 1.5. :(
         if (version == "1.4.1")
@@ -89,9 +89,8 @@ public class Collada : BaseRenderer
 
     protected void WriteAsset()
     {
-        // Writes the Asset element in a Collada XML doc
-        DateTime fileCreated = DateTime.Now;
-        DateTime fileModified = DateTime.Now;           // since this only creates, both times should be the same
+        var fileCreated = DateTime.Now;
+        var fileModified = DateTime.Now;
         Grendgine_Collada_Asset asset = new()
         {
             Revision = Assembly.GetExecutingAssembly().GetName().Version.ToString()
@@ -106,10 +105,10 @@ public class Collada : BaseRenderer
         };
         // Get the actual file creators from the Source Chunk
         contributors[1] = new Grendgine_Collada_Asset_Contributor();
-        foreach (ChunkSourceInfo tmpSource in CryData.Chunks.Where(a => a.ChunkType == ChunkType.SourceInfo))
+        foreach (ChunkSourceInfo sourceInfo in CryData.Chunks.Where(a => a.ChunkType == ChunkType.SourceInfo))
         {
-            contributors[1].Author = tmpSource.Author;
-            contributors[1].Source_Data = tmpSource.SourceFile;
+            contributors[1].Author = sourceInfo.Author;
+            contributors[1].Source_Data = sourceInfo.SourceFile;
         }
         asset.Created = fileCreated;
         asset.Modified = fileModified;
@@ -124,225 +123,167 @@ public class Collada : BaseRenderer
         DaeObject.Asset.Contributor = contributors;
     }
 
-    public void WriteLibrary_Materials()
+    public Grendgine_Collada_Effect CreateColladaEffect(Material material)
     {
-        // Create the list of materials used in this object
+        Grendgine_Collada_Effect colladaEffect = new()
+        {
+            ID = material.Name + "-effect",
+            Name = material.Name
+        };
 
+        // create the profile_common for the effect
+        List<Grendgine_Collada_Profile_COMMON> profiles = new();
+        Grendgine_Collada_Profile_COMMON profile = new();
+        profile.Technique = new() { sID = material.Name + "-technique" };
+        profiles.Add(profile);
+        
+        // Create a list for the new_params
+        List<Grendgine_Collada_New_Param> newparams = new();
+        for (int j = 0; j < material.Textures.Length; j++)
+        {
+            // Add the Surface node
+            Grendgine_Collada_New_Param texSurface = new()
+            {
+                sID = material.Name + "_" + material.Textures[j].Map + "-surface" // CleanTextureFileName(material.Textures[j].File) + "-surface"
+            };
+            Grendgine_Collada_Surface surface = new();
+            texSurface.Surface = surface;
+            surface.Init_From = new Grendgine_Collada_Init_From();
+            texSurface.Surface.Type = "2D";
+            texSurface.Surface.Init_From = new Grendgine_Collada_Init_From
+            {
+                Uri = material.Name + "_" + material.Textures[j].Map
+            };
 
-        //int numMaterials = CryData.Materials.Count;
-        //// Now create a material for each material in the object
-        //Utils.Log(LogLevelEnum.Debug, "Number of materials: {0}", numMaterials);
-        //Grendgine_Collada_Material[] materials = new Grendgine_Collada_Material[numMaterials];
-        //for (int i = 0; i < numMaterials; i++)
-        //{
-        //    Grendgine_Collada_Material tmpMaterial = new()
-        //    {
-        //        Instance_Effect = new Grendgine_Collada_Instance_Effect()
-        //    };
-        //    // Name is blank if it's a material file with no submats.  Set to file name.
-        //    // Need material ID here, so the meshes can reference it.  Use the chunk ID.
-        //    if (CryData.Materials[i].Name == null)
-        //    {
-        //        tmpMaterial.Name = CryData.RootNode.Name;
-        //        tmpMaterial.ID = CryData.RootNode.Name;
-        //        tmpMaterial.Instance_Effect.URL = "#" + CryData.RootNode.Name + "-effect";
-        //    }
-        //    else
-        //    {
-        //        var MatName = CryData.Materials[i].Name;
-        //        if (Args.PrefixMaterialNames)
-        //            MatName = CryData.Materials[i].SourceFileName + "_" + MatName;
+            // Add the Sampler node
+            Grendgine_Collada_New_Param texSampler = new()
+            {
+                sID = material.Name + "_" + material.Textures[j].Map + "-sampler" // CleanTextureFileName(material.Textures[j].File) + "-sampler"
+            };
+            Grendgine_Collada_Sampler2D sampler2D = new();
+            texSampler.Sampler2D = sampler2D;
+            texSampler.Sampler2D.Source = texSurface.sID;
 
-        //        tmpMaterial.Name = MatName;
-        //        tmpMaterial.ID = MatName + "-material";          // this is the order the materials appear in the .mtl file.  Needed for geometries.
-        //        tmpMaterial.Instance_Effect.URL = "#" + MatName + "-effect";
-        //    }
+            newparams.Add(texSurface);
+            newparams.Add(texSampler);
+        }
 
-        //    materials[i] = tmpMaterial;
-        //}
-        //libraryMaterials.Material = materials;
-    }
+        #region Create the Technique
+        // Make the techniques for the profile
+        Grendgine_Collada_Effect_Technique_COMMON technique = new();
+        Grendgine_Collada_Phong phong = new();
+        technique.Phong = phong;
+        technique.sID = material.Name + "-technique";
+        profile.Technique = technique;
 
-    public void WriteLibrary_Effects()
-    {
-        // The Effects library.  This is actual material stuff.
+        phong.Diffuse = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type();
+        phong.Specular = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type();
 
+        // Add all the emissive, etc features to the phong
+        // Need to check if a texture exists.  If so, refer to the sampler.  Should be a <Texture Map="Diffuse" line if there is a map.
+        bool diffuseFound = false;
+        bool specularFound = false;
 
-        //int numEffects = CryData.Materials.Count;
-        //Grendgine_Collada_Effect[] effects = new Grendgine_Collada_Effect[numEffects];
-        //for (int i = 0; i < numEffects; i++)
-        //{
-        //    string MatName = CryData.Materials[i].Name;
-        //    if (Args.PrefixMaterialNames)
-        //        MatName = CryData.Materials[i].SourceFileName + "_" + MatName;
+        foreach (var texture in material.Textures)
+        {
+            if (texture.Map == Texture.MapTypeEnum.Diffuse)
+            {
+                diffuseFound = true;
+                phong.Diffuse.Texture = new Grendgine_Collada_Texture
+                {
+                    // Texcoord is the ID of the UV source in geometries.  Not needed.
+                    Texture = material.Name + "_" + texture.Map + "-sampler",
+                    TexCoord = ""
+                };
+            }
 
-        //    Grendgine_Collada_Effect tmpEffect = new()
-        //    {
-        //        //tmpEffect.Name = CryData.Materials[i].Name;
-        //        ID = MatName + "-effect",
-        //        Name = MatName
-        //    };
-        //    effects[i] = tmpEffect;
+            if (texture.Map == Texture.MapTypeEnum.Specular)
+            {
+                specularFound = true;
+                phong.Specular.Texture = new Grendgine_Collada_Texture
+                {
+                    Texture = material.Name + "_" + texture.Map + "-sampler",
+                    TexCoord = ""
+                };
+            }
 
-        //    // create the profile_common for the effect
-        //    List<Grendgine_Collada_Profile_COMMON> profiles = new();
-        //    Grendgine_Collada_Profile_COMMON profile = new();
-        //    profiles.Add(profile);
+            if (texture.Map == Texture.MapTypeEnum.Bumpmap)
+            {
+                // Bump maps go in an extra node.
+                // bump maps are added to an extra node.
+                Grendgine_Collada_Extra[] extras = new Grendgine_Collada_Extra[1];
+                Grendgine_Collada_Extra extra = new();
+                extras[0] = extra;
 
-        //    // Create a list for the new_params
-        //    List<Grendgine_Collada_New_Param> newparams = new();
-        //    #region set up the sampler and surface for the materials. 
-        //    // Check to see if the texture exists, and if so make a sampler and surface.
-        //    for (int j = 0; j < CryData.Materials[i].Textures.Length; j++)
-        //    {
-        //        // Add the Surface node
-        //        Grendgine_Collada_New_Param texSurface = new()
-        //        {
-        //            sID = CleanTexFileName(CryData.Materials[i].Textures[j].File) + "-surface"
-        //        };
-        //        Grendgine_Collada_Surface surface = new();
-        //        texSurface.Surface = surface;
-        //        surface.Init_From = new Grendgine_Collada_Init_From();
-        //        //Grendgine_Collada_Surface surface2D = new Grendgine_Collada_Surface();
-        //        //texSurface.sID = CleanName(CryData.Materials[i].Textures[j].File) + CryData.Materials[i].Textures[j].Map + "-surface";
-        //        texSurface.Surface.Type = "2D";
-        //        texSurface.Surface.Init_From = new Grendgine_Collada_Init_From
-        //        {
-        //            //texSurface.Surface.Init_From.Uri = CleanName(texture.File);
-        //            Uri = CryData.Materials[i].Name + "_" + CryData.Materials[i].Textures[j].Map
-        //        };
+                technique.Extra = extras;
 
-        //        // Add the Sampler node
-        //        Grendgine_Collada_New_Param texSampler = new()
-        //        {
-        //            sID = CleanTexFileName(CryData.Materials[i].Textures[j].File) + "-sampler"
-        //        };
-        //        Grendgine_Collada_Sampler2D sampler2D = new();
-        //        texSampler.Sampler2D = sampler2D;
-        //        //Grendgine_Collada_Source samplerSource = new Grendgine_Collada_Source();
-        //        texSampler.Sampler2D.Source = texSurface.sID;
+                // Create the technique for the extra
 
-        //        newparams.Add(texSurface);
-        //        newparams.Add(texSampler);
-        //    }
-        //    #endregion
+                Grendgine_Collada_Technique[] extraTechniques = new Grendgine_Collada_Technique[1];
+                Grendgine_Collada_Technique extraTechnique = new();
+                extra.Technique = extraTechniques;
+                //extraTechnique.Data[0] = new XmlElement();
 
-        //    #region Create the Technique
-        //    // Make the techniques for the profile
-        //    Grendgine_Collada_Effect_Technique_COMMON technique = new();
-        //    Grendgine_Collada_Phong phong = new();
-        //    technique.Phong = phong;
-        //    technique.sID = "common";
-        //    profile.Technique = technique;
+                extraTechniques[0] = extraTechnique;
+                extraTechnique.profile = "FCOLLADA";
 
-        //    phong.Diffuse = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type();
-        //    phong.Specular = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type();
+                Grendgine_Collada_BumpMap bumpMap = new()
+                {
+                    Textures = new Grendgine_Collada_Texture[1]
+                };
+                bumpMap.Textures[0] = new Grendgine_Collada_Texture
+                {
+                    Texture = material.Name + "_" + texture.Map + "-sampler"
+                };
+                extraTechnique.Data = new XmlElement[1];
+                extraTechnique.Data[0] = bumpMap;
+            }
+        }
 
-        //    // Add all the emissive, etc features to the phong
-        //    // Need to check if a texture exists.  If so, refer to the sampler.  Should be a <Texture Map="Diffuse" line if there is a map.
-        //    bool diffuseFound = false;
-        //    bool specularFound = false;
+        if (diffuseFound == false)
+        {
+            phong.Diffuse.Color = new Grendgine_Collada_Color
+            {
+                Value_As_String = material.Diffuse ?? string.Empty,
+                sID = "diffuse"
+            };
+        }
+        if (specularFound == false)
+        {
+            phong.Specular.Color = new Grendgine_Collada_Color { sID = "specular" };
+            if (material.Specular != null)
+                phong.Specular.Color.Value_As_String = material.Specular ?? string.Empty;
+            else
+                phong.Specular.Color.Value_As_String = "1 1 1";
+        }
 
-        //    foreach (var texture in CryData.Materials[i].Textures)
-        //    {
-        //        if (texture.Map == Texture.MapTypeEnum.Diffuse)
-        //        {
-        //            diffuseFound = true;
-        //            phong.Diffuse.Texture = new Grendgine_Collada_Texture
-        //            {
-        //                // Texcoord is the ID of the UV source in geometries.  Not needed.
-        //                Texture = CleanTexFileName(texture.File) + "-sampler",
-        //                TexCoord = ""
-        //            };
-        //        }
-        //        if (texture.Map == Texture.MapTypeEnum.Specular)
-        //        {
-        //            specularFound = true;
-        //            phong.Specular.Texture = new Grendgine_Collada_Texture
-        //            {
-        //                Texture = CleanTexFileName(texture.File) + "-sampler",
-        //                TexCoord = ""
-        //            };
+        phong.Emission = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type
+        {
+            Color = new Grendgine_Collada_Color
+            {
+                sID = "emission",
+                Value_As_String = material.Emissive ?? string.Empty
+            }
+        };
+        phong.Shininess = new Grendgine_Collada_FX_Common_Float_Or_Param_Type { Float = new Grendgine_Collada_SID_Float() };
+        phong.Shininess.Float.sID = "shininess";
+        phong.Shininess.Float.Value = (float)material.Shininess;
+        phong.Index_Of_Refraction = new Grendgine_Collada_FX_Common_Float_Or_Param_Type { Float = new Grendgine_Collada_SID_Float() };
 
-        //        }
-        //        if (texture.Map == Texture.MapTypeEnum.Bumpmap)
-        //        {
-        //            // Bump maps go in an extra node.
-        //            // bump maps are added to an extra node.
-        //            Grendgine_Collada_Extra[] extras = new Grendgine_Collada_Extra[1];
-        //            Grendgine_Collada_Extra extra = new();
-        //            extras[0] = extra;
+        phong.Transparent = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type
+        {
+            Color = new Grendgine_Collada_Color(),
+            Opaque = new Grendgine_Collada_FX_Opaque_Channel()
+        };
+        phong.Transparent.Color.Value_As_String = (1 - double.Parse(material.Opacity ?? "1")).ToString();  // Subtract from 1 for proper value.
 
-        //            technique.Extra = extras;
+        #endregion
 
-        //            // Create the technique for the extra
+        colladaEffect.Profile_COMMON = profiles.ToArray();
+        profile.New_Param = new Grendgine_Collada_New_Param[newparams.Count];
+        profile.New_Param = newparams.ToArray();
 
-        //            Grendgine_Collada_Technique[] extraTechniques = new Grendgine_Collada_Technique[1];
-        //            Grendgine_Collada_Technique extraTechnique = new();
-        //            extra.Technique = extraTechniques;
-        //            //extraTechnique.Data[0] = new XmlElement();
-
-        //            extraTechniques[0] = extraTechnique;
-        //            extraTechnique.profile = "FCOLLADA";
-
-        //            Grendgine_Collada_BumpMap bumpMap = new()
-        //            {
-        //                Textures = new Grendgine_Collada_Texture[1]
-        //            };
-        //            bumpMap.Textures[0] = new Grendgine_Collada_Texture
-        //            {
-        //                Texture = CleanTexFileName(texture.File) + "-sampler"
-        //            };
-        //            extraTechnique.Data = new XmlElement[1];
-        //            extraTechnique.Data[0] = bumpMap;
-        //        }
-        //    }
-        //    if (diffuseFound == false)
-        //    {
-        //        phong.Diffuse.Color = new Grendgine_Collada_Color
-        //        {
-        //            Value_As_String = CryData.Materials[i].Diffuse?.ToString() ?? string.Empty,
-        //            sID = "diffuse"
-        //        };
-        //    }
-        //    if (specularFound == false)
-        //    {
-        //        phong.Specular.Color = new Grendgine_Collada_Color { sID = "specular" };
-        //        if (CryData.Materials[i].Specular != null)
-        //            phong.Specular.Color.Value_As_String = CryData.Materials[i].Specular ?? string.Empty;
-        //        else
-        //            phong.Specular.Color.Value_As_String = "1 1 1";
-        //    }
-
-        //    phong.Emission = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type
-        //    {
-        //        Color = new Grendgine_Collada_Color
-        //        {
-        //            sID = "emission",
-        //            Value_As_String = CryData.Materials[i].Emissive ?? string.Empty
-        //        }
-        //    };
-        //    phong.Shininess = new Grendgine_Collada_FX_Common_Float_Or_Param_Type { Float = new Grendgine_Collada_SID_Float() };
-        //    phong.Shininess.Float.sID = "shininess";
-        //    phong.Shininess.Float.Value = (float)CryData.Materials[i].Shininess;
-        //    phong.Index_Of_Refraction = new Grendgine_Collada_FX_Common_Float_Or_Param_Type { Float = new Grendgine_Collada_SID_Float() };
-
-        //    phong.Transparent = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type
-        //    {
-        //        Color = new Grendgine_Collada_Color(),
-        //        Opaque = new Grendgine_Collada_FX_Opaque_Channel()
-        //    };
-        //    phong.Transparent.Color.Value_As_String = (1 - double.Parse(CryData.Materials[i].Opacity ?? "1")).ToString();  // Subtract from 1 for proper value.
-
-        //    #endregion
-
-        //    tmpEffect.Profile_COMMON = profiles.ToArray();
-        //    profile.New_Param = new Grendgine_Collada_New_Param[newparams.Count];
-        //    profile.New_Param = newparams.ToArray();
-        //}
-
-        //libraryEffects.Effect = effects;
-
+        return colladaEffect;
     }
 
     /// <summary> Write the Library_Geometries element.  These won't be instantiated except through the visual scene or controllers. </summary>
@@ -385,8 +326,9 @@ public class Collada : BaseRenderer
             if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkType.Mesh)
             {
                 // Create materials collection for this node. Index of collection in meshSubSets determines which mat to use.
-                // What do we do if multiple nodes access the same material file?
-                CreateMaterialsFromNodeChunk(nodeChunk);
+                // Only create materials from a parent node chunk
+                if (nodeChunk.ParentNodeID == ~0)
+                    CreateMaterialsFromNodeChunk(nodeChunk);
 
                 // Get the mesh chunk and submesh chunk for this node.
                 var meshChunk = (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID];
@@ -423,14 +365,14 @@ public class Collada : BaseRenderer
                     if (meshChunk.TangentsData != 0)
                         tangents = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.TangentsData];
 
-                    // tmpGeo is a Geometry object for each meshsubset.  Name will be "Nodechunk name_matID".
+                    // geometry is a Geometry object for each meshsubset.  Name will be "Nodechunk name_matID".
                     Grendgine_Collada_Geometry geometry = new()
                     {
                         Name = nodeChunk.Name,
                         ID = nodeChunk.Name + "-mesh"
                     };
-                    Grendgine_Collada_Mesh tmpMesh = new();
-                    geometry.Mesh = tmpMesh;
+                    Grendgine_Collada_Mesh colladaMesh = new();
+                    geometry.Mesh = colladaMesh;
 
                     // TODO:  Move the source creation to a separate function.  Too much retyping.
                     Grendgine_Collada_Source[] source = new Grendgine_Collada_Source[4];   // 4 possible source types.
@@ -823,19 +765,23 @@ public class Collada : BaseRenderer
     private void CreateMaterialsFromNodeChunk(ChunkNode nodeChunk)
     {
         List<Grendgine_Collada_Material> colladaMaterials = new();
+        List<Grendgine_Collada_Effect> colladaEffects = new();
 
         var matChunkForNode = (ChunkMtlName)CryData.Chunks.Where(c => c.ID == nodeChunk.MatID).FirstOrDefault();
 
         if (matChunkForNode.MatType == MtlNameType.Library || matChunkForNode.MatType == MtlNameType.Single)
         {
-            // Create a material in DaeObject for each Submaterial.
             foreach (var mat in nodeChunk.Materials.SubMaterials)
             {
                 colladaMaterials.Add(AddMaterialToMaterialLibrary(mat));
+                colladaEffects.Add(CreateColladaEffect(mat));
             }
         }
         else if (matChunkForNode.MatType == MtlNameType.Basic)
+        {
             colladaMaterials.Add(AddMaterialToMaterialLibrary(nodeChunk.Materials));
+            colladaEffects.Add(CreateColladaEffect(nodeChunk.Materials));
+        }
 
         if (DaeObject.Library_Materials.Material is null)
             DaeObject.Library_Materials.Material = colladaMaterials.ToArray();
@@ -846,12 +792,14 @@ public class Collada : BaseRenderer
             colladaMaterials.CopyTo(DaeObject.Library_Materials.Material, arraySize);
         }
 
-        //AddEffectsToEffectsLibrary(nodeChunk);
-    }
-
-    private void AddEffectsToEffectsLibrary(ChunkNode nodeChunk)
-    {
-        throw new NotImplementedException();
+        if (DaeObject.Library_Effects.Effect is null)
+            DaeObject.Library_Effects.Effect = colladaEffects.ToArray();
+        else
+        {
+            int arraySize = DaeObject.Library_Effects.Effect.Length;
+            Array.Resize(ref DaeObject.Library_Effects.Effect, DaeObject.Library_Effects.Effect.Length + colladaEffects.Count);
+            colladaEffects.CopyTo(DaeObject.Library_Effects.Effect, arraySize);
+        }
     }
 
     private Grendgine_Collada_Material AddMaterialToMaterialLibrary(Material mat)
@@ -965,21 +913,21 @@ public class Collada : BaseRenderer
             #region Bind Pose Array Source
             Grendgine_Collada_Source bindPoseArraySource = new()
             {
-                ID = "Controller-bind_poses"
-            };
-            bindPoseArraySource.Float_Array = new Grendgine_Collada_Float_Array()
-            {
-                ID = "Controller-bind_poses-array",
-                Count = CryData.SkinningInfo.CompiledBones.Count * 16,
-            };
-            bindPoseArraySource.Float_Array.Value_As_String = GetBindPoseArray(CryData.SkinningInfo.CompiledBones);
-            bindPoseArraySource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
-            {
-                Accessor = new Grendgine_Collada_Accessor
+                ID = "Controller-bind_poses",
+                Float_Array = new()
                 {
-                    Source = "#Controller-bind_poses-array",
-                    Count = (uint)CryData.SkinningInfo.CompiledBones.Count,
-                    Stride = 16,
+                    ID = "Controller-bind_poses-array",
+                    Count = CryData.SkinningInfo.CompiledBones.Count * 16,
+                    Value_As_String = GetBindPoseArray(CryData.SkinningInfo.CompiledBones)
+                },
+                Technique_Common = new Grendgine_Collada_Technique_Common_Source
+                {
+                    Accessor = new Grendgine_Collada_Accessor
+                    {
+                        Source = "#Controller-bind_poses-array",
+                        Count = (uint)CryData.SkinningInfo.CompiledBones.Count,
+                        Stride = 16,
+                    }
                 }
             };
             bindPoseArraySource.Technique_Common.Accessor.Param = new Grendgine_Collada_Param[1];
@@ -994,9 +942,9 @@ public class Collada : BaseRenderer
             #region Weights Source
             Grendgine_Collada_Source weightArraySource = new()
             {
-                ID = "Controller-weights"
+                ID = "Controller-weights",
+                Technique_Common = new Grendgine_Collada_Technique_Common_Source()
             };
-            weightArraySource.Technique_Common = new Grendgine_Collada_Technique_Common_Source();
             Grendgine_Collada_Accessor accessor = weightArraySource.Technique_Common.Accessor = new Grendgine_Collada_Accessor();
 
             weightArraySource.Float_Array = new Grendgine_Collada_Float_Array()
@@ -1131,7 +1079,6 @@ public class Collada : BaseRenderer
                 UserProperties = "SkinController"
             };
 
-
             // Add the parts to their parents
             controller.Skin = skin;
             libraryController.Controller = new Grendgine_Collada_Controller[1];
@@ -1148,16 +1095,6 @@ public class Collada : BaseRenderer
         List<Grendgine_Collada_Visual_Scene> visualScenes = new();
         Grendgine_Collada_Visual_Scene visualScene = new();
         List<Grendgine_Collada_Node> nodes = new();
-
-        // Check to see if there is a CompiledBones chunk.  If so, add a Node.
-        if (CryData.Chunks.Any(a => a.ChunkType == ChunkType.CompiledBones ||
-            a.ChunkType == ChunkType.CompiledBonesSC ||
-            a.ChunkType == ChunkType.CompiledBonesIvo))
-        {
-            Grendgine_Collada_Node boneNode = new();
-            boneNode = CreateJointNode(CryData.Bones.RootBone);
-            nodes.Add(boneNode);
-        }
 
         // THERE CAN BE MULTIPLE ROOT NODES IN EACH FILE!  Check to see if the parentnodeid ~0 and be sure to add a node for it.
         List<Grendgine_Collada_Node> positionNodes = new();
@@ -1225,26 +1162,6 @@ public class Collada : BaseRenderer
                 bindMaterial.Technique_Common = new Grendgine_Collada_Technique_Common_Bind_Material();
                 List<Grendgine_Collada_Instance_Material_Geometry> instanceMaterials = new();
 
-                // The material library has all the materials in the model. The node
-
-
-                //bindMaterial.Technique_Common.Instance_Material = new Grendgine_Collada_Instance_Material_Geometry[CryData.Materials.Count];
-                //// This gets complicated.  We need to make one instance_material for each material used in this node chunk.  The mat IDs used in this
-                //// node chunk are stored in meshsubsets, so for each subset we need to grab the mat, get the target (id), and make an instance_material for it.
-
-                //for (int i = 0; i < CryData.Materials.Count; i++)
-                //{
-                //    string MatName = CryData.Materials[i].Name;
-
-                //    // For each mesh subset, we want to create an instance material and add it to instanceMaterials list.
-                //    Grendgine_Collada_Instance_Material_Geometry tmpInstanceMat = new()
-                //    {
-                //        Target = "#" + MatName + "-material",
-                //        Symbol = MatName + "-material"
-                //    };
-                //    instanceMaterials.Add(tmpInstanceMat);
-                //}
-
                 colladaNode.Instance_Controller[0].Bind_Material[0].Technique_Common.Instance_Material = instanceMaterials.ToArray();
                 if (node.AllChildNodes is not null)
                 {
@@ -1255,7 +1172,6 @@ public class Collada : BaseRenderer
                 }
 
                 nodes.Add(colladaNode);
-
             }
         }
 
@@ -1314,7 +1230,6 @@ public class Collada : BaseRenderer
                 colladaNode = CreateSimpleNode(nodeChunk);
         }
 
-        // Add childnodes
         colladaNode.node = CreateChildNodes(nodeChunk);
         return colladaNode;
     }
@@ -1348,7 +1263,7 @@ public class Collada : BaseRenderer
     /// <summary>Used by CreateNode and CreateSimpleNodes to create all the child nodes for the given node.</summary>
     private Grendgine_Collada_Node[]? CreateChildNodes(ChunkNode nodeChunk)
     {
-        if (nodeChunk.__NumChildren != 0)
+        if (nodeChunk.AllChildNodes is not null)
         {
             List<Grendgine_Collada_Node> childNodes = new();
             foreach (var childNodeChunk in nodeChunk.AllChildNodes.ToList())
@@ -1410,12 +1325,12 @@ public class Collada : BaseRenderer
 
     private Grendgine_Collada_Node CreateGeometryNode(ChunkNode nodeChunk, ChunkMesh tmpMeshChunk)
     {
-        Grendgine_Collada_Node tmpNode = new();
+        Grendgine_Collada_Node colladaNode = new();
         var meshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsetsData];
         var nodeType = Grendgine_Collada_Node_Type.NODE;
-        tmpNode.Type = nodeType;
-        tmpNode.Name = nodeChunk.Name;
-        tmpNode.ID = nodeChunk.Name;
+        colladaNode.Type = nodeType;
+        colladaNode.Name = nodeChunk.Name;
+        colladaNode.ID = nodeChunk.Name;
         // Make the lists necessary for this Node.
         List<Grendgine_Collada_Matrix> matrices = new();
         List<Grendgine_Collada_Instance_Geometry> instanceGeometries = new();
@@ -1429,7 +1344,7 @@ public class Collada : BaseRenderer
         };
 
         matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
-        tmpNode.Matrix = matrices.ToArray();
+        colladaNode.Matrix = matrices.ToArray();
 
         // Each node will have one instance geometry, although it could be a list.
         Grendgine_Collada_Instance_Geometry instanceGeometry = new()
@@ -1449,22 +1364,19 @@ public class Collada : BaseRenderer
         instanceGeometry.Bind_Material = bindMaterials.ToArray();
         instanceGeometries.Add(instanceGeometry);
 
-        tmpNode.Instance_Geometry = instanceGeometries.ToArray();
+        colladaNode.Instance_Geometry = instanceGeometries.ToArray();
 
-        // This gets complicated.  We need to make one instance_material for each material used in this node chunk.  The mat IDs used in this
-        // node chunk are stored in meshsubsets, so for each subset we need to grab the mat, get the target (id), and make an instance_material for it.
         for (int i = 0; i < meshSubsets.NumMeshSubset; i++)
         {
-            // For each mesh subset, we want to create an instance material and add it to instanceMaterials list.
             Grendgine_Collada_Instance_Material_Geometry instanceMaterial = new();
             string matName = GetMaterialName(nodeChunk, meshSubsets, i);
-            instanceMaterial.Target = "#" + matName + "-material";
-            instanceMaterial.Symbol = matName + "-material";
+            instanceMaterial.Target = "#" + matName;
+            instanceMaterial.Symbol = matName;
 
             instanceMaterials.Add(instanceMaterial);
         }
-        tmpNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material = instanceMaterials.ToArray();
-        return tmpNode;
+        colladaNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material = instanceMaterials.ToArray();
+        return colladaNode;
     }
 
     /// <summary>Retrieves the worldtobone (bind pose matrix) for the bone.</summary>

@@ -78,9 +78,7 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
         get
         {
             if (__NumChildren == 0)
-            {
                 return null;
-            }
             else
             {
                 var node = _model.NodeMap.Values.Where(a => a.ParentNodeID == ID).ToList();
