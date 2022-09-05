@@ -35,12 +35,24 @@ public class MWOIntegrationTests
         var cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
         cryData.ProcessCryengineFiles();
 
-        var mtlChunks = cryData.Chunks.Where(a => a.ChunkType == ChunkType.MtlName);
-        Assert.AreEqual(1, (mtlChunks as ChunkMtlName).MatType == MtlNameType.Library);
-
+        var mtlChunks = cryData.Chunks.Where(a => a.ChunkType == ChunkType.MtlName).ToList();
+        Assert.AreEqual(1, (int)((ChunkMtlName)mtlChunks[0]).NumChildren);
+        Assert.AreEqual(MtlNameType.Library, ((ChunkMtlName)mtlChunks[0]).MatType);
+        Assert.AreEqual(MtlNameType.Child, ((ChunkMtlName)mtlChunks[1]).MatType);
 
         var colladaData = new Collada(testUtils.argsHandler, cryData);
         colladaData.Render();
+        var daeObject = colladaData.DaeObject;
+        Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(1, daeObject.Library_Effects.Effect.Length);
+        Assert.AreEqual(2, daeObject.Library_Images.Image.Length);
+        Assert.AreEqual("clanbanner_a", daeObject.Library_Materials.Material[0].Name);
+        Assert.AreEqual("clanbanner_a-material", daeObject.Library_Materials.Material[0].ID);
+        Assert.AreEqual("#clanbanner_a-effect", daeObject.Library_Materials.Material[0].Instance_Effect.URL);
+        Assert.AreEqual("clanbanner_a_Diffuse", daeObject.Library_Images.Image[0].Name);
+        Assert.AreEqual("clanbanner_a_Diffuse", daeObject.Library_Images.Image[0].ID);
+        Assert.AreEqual("clanbanner_a_Bumpmap", daeObject.Library_Images.Image[1].Name);
+        Assert.AreEqual("clanbanner_a_Bumpmap", daeObject.Library_Images.Image[1].ID);
     }
 
     [TestMethod]
@@ -54,6 +66,33 @@ public class MWOIntegrationTests
         cryData.ProcessCryengineFiles();
 
         var colladaData = new Collada(testUtils.argsHandler, cryData);
+        colladaData.Render();
+        var daeObject = colladaData.DaeObject;
+        Assert.AreEqual(4, daeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(4, daeObject.Library_Effects.Effect.Length);
+        Assert.AreEqual(19, daeObject.Library_Images.Image.Length);
+        Assert.AreEqual("generic_body", daeObject.Library_Materials.Material[0].Name);
+        Assert.AreEqual("generic_body-material", daeObject.Library_Materials.Material[0].ID);
+        Assert.AreEqual("#generic_body-effect", daeObject.Library_Materials.Material[0].Instance_Effect.URL);
+        Assert.AreEqual("generic_body_Diffuse", daeObject.Library_Images.Image[0].Name);
+        Assert.AreEqual("generic_body_Diffuse", daeObject.Library_Images.Image[0].ID);
+        Assert.AreEqual("generic_body_Specular", daeObject.Library_Images.Image[1].Name);
+        Assert.AreEqual("generic_body_Specular", daeObject.Library_Images.Image[1].ID);
+    }
+
+    [TestMethod]
+    public void adr_right_torso_uac20_bh1()
+    {
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\adr_right_torso_uac20_bh1.cga", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        cryData.ProcessCryengineFiles();
+        var matNameChunks = cryData.Chunks.Where(c => c.ChunkType == ChunkType.MtlName).ToList();
+
+        var colladaData = new Collada(testUtils.argsHandler, cryData);
+        colladaData.Render();
     }
 
     [TestMethod]

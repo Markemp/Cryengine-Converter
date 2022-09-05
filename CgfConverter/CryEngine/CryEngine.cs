@@ -185,13 +185,13 @@ public partial class CryEngine
             var matfile = GetMaterialFile(matChunk.Name);
 
             if (matfile is not null)
-                nodeChunk.Materials = CreateMaterialsFromMatFile(matfile);
+                nodeChunk.Materials = CreateMaterialsFromMatFile(matfile, nodeChunk.Name);
             else
                 nodeChunk.Materials = CreateDefaultMaterials(nodeChunk);
         }
     }
 
-    private static Material? CreateMaterialsFromMatFile(FileInfo matfile) => MaterialUtilities.FromFile(matfile.FullName);
+    private static Material? CreateMaterialsFromMatFile(FileInfo matfile, string matName) => MaterialUtilities.FromFile(matfile.FullName, matName);
     
     private Material? CreateDefaultMaterials(ChunkNode nodeChunk)
     {
@@ -200,18 +200,20 @@ public partial class CryEngine
         if (mtlNameChunk is not null)
         {
             if (mtlNameChunk.MatType == MtlNameType.Basic)
-            {
                 return MaterialUtilities.CreateDefaultMaterial(nodeChunk.Name);
-            }
             else if (mtlNameChunk.MatType == MtlNameType.Library || mtlNameChunk.MatType == MtlNameType.Single)
             {
                 var material = new Material { SubMaterials = new Material[mtlNameChunk.NumChildren] };
                 for (int i = 0; i < mtlNameChunk.NumChildren; i++)
                 {
-                    var childMaterial = (ChunkMtlName)Chunks.Where(c => c.ID == mtlNameChunk.ChildIDs[i]).FirstOrDefault();
-
-                    var mat = MaterialUtilities.CreateDefaultMaterial(childMaterial.Name, $"{i / (float)mtlNameChunk.NumChildren},0.5,0.5");
-                    material.SubMaterials[i] = mat;
+                    if (mtlNameChunk.ChildIDs is not null)
+                    {
+                        var childMaterial = (ChunkMtlName)Chunks.Where(c => c.ID == mtlNameChunk.ChildIDs[i]).FirstOrDefault();
+                        var mat = MaterialUtilities.CreateDefaultMaterial(childMaterial.Name, $"{i / (float)mtlNameChunk.NumChildren},0.5,0.5");
+                        material.SubMaterials[i] = mat;
+                    }
+                    else   // TODO: For SC, there are no more mtlname chunks. Use node name?
+                        material.SubMaterials[i] = MaterialUtilities.CreateDefaultMaterial($"Material-{i}", $"{i / (float)mtlNameChunk.NumChildren},0.5,0.5");
                 }
 
                 return material;

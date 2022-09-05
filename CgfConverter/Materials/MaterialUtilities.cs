@@ -7,7 +7,7 @@ namespace CgfConverter.Materials;
 
 public static class MaterialUtilities
 {
-    public static Material? FromFile(string materialfile)
+    public static Material? FromFile(string materialfile, string? materialName)
     {
         if (!File.Exists(materialfile))
             return null;
@@ -15,7 +15,16 @@ public static class MaterialUtilities
         try
         {
             using Stream fileStream = File.OpenRead(materialfile);
-            return CryXmlSerializer.Deserialize<Material>(fileStream);
+            var material = CryXmlSerializer.Deserialize<Material>(fileStream);
+
+            // For basic materials, add the material to submaterials so that all materials are consistent.
+            if (material.SubMaterials is null)
+            {
+                material.Name = materialName;
+                material.SubMaterials = new Material[1];
+                material.SubMaterials[0] = material;
+            }
+            return material;
         }
         catch (Exception ex)
         {

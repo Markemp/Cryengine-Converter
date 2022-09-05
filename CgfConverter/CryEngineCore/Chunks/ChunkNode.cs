@@ -23,9 +23,9 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
     public int PosCtrlID { get; internal set; }  // Obsolete
     public int RotCtrlID { get; internal set; }  // Obsolete
     public int SclCtrlID { get; internal set; }  // Obsolete
-    public string Properties { get; internal set; }
+    public string Properties { get; internal set; } = string.Empty;
 
-    // Computed from material file. Not set for helper nodes, etc.
+    // <summary>Computed from material file. Not set for helper nodes, etc.  Flattened with all mats under Submaterial</summary>
     public Material? Materials { get; internal set; }
 
     public Matrix4x4 LocalTransform
@@ -70,7 +70,11 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
             
             return _objectChunk;
         }
-        set { _objectChunk = value; }
+    }
+
+    public ChunkMtlName? MaterialLibraryChunk
+    {
+        get => (ChunkMtlName)_model.ChunkMap.Values.Where(c => c.ID == MatID).First();
     }
 
     public List<ChunkNode>? AllChildNodes
@@ -87,5 +91,5 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
         }
     }
 
-    public override string ToString() => $@"Chunk Type: {ChunkType}, ID: {ID:X}, Version: {Version}, Name: {Name}, Object Node ID: {ObjectNodeID:X}, Parent Node ID: {ParentNodeID:X}";
+    public override string ToString() => $@"Chunk Type: {ChunkType}, ID: {ID:X}, Version: {Version}, Name: {Name}, Object Node ID: {ObjectNodeID:X}, Parent Node ID: {ParentNodeID:X}, Mat: {MatID:X}";
 }

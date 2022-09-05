@@ -17,11 +17,12 @@ namespace CgfConverter;
 
 public class Collada : BaseRenderer
 {
+    public Grendgine_Collada DaeObject { get; private set; } = new Grendgine_Collada();  // This is the serializable class.
+
     private readonly CultureInfo culture = CultureInfo.CreateSpecificCulture("en-US");
     private const string colladaVersion = "1.4.1";
-
-    public Grendgine_Collada DaeObject { get; private set; } = new Grendgine_Collada();  // This is the serializable class.
-    readonly XmlSerializer mySerializer = new(typeof(Grendgine_Collada));
+    readonly XmlSerializer serializer = new(typeof(Grendgine_Collada));
+    private readonly Dictionary<string, Material> createdMaterialLibraries = new();
 
     public Collada(ArgsHandler argsHandler, CryEngine cryEngine) : base(argsHandler, cryEngine) { }
 
@@ -40,7 +41,7 @@ public class Collada : BaseRenderer
         if (!daeOutputFile.Directory.Exists)
             daeOutputFile.Directory.Create();
         TextWriter writer = new StreamWriter(daeOutputFile.FullName);   // Makes the Textwriter object for the output
-        mySerializer.Serialize(writer, DaeObject);                      // Serializes the daeObject and writes to the writer
+        serializer.Serialize(writer, DaeObject);                      // Serializes the daeObject and writes to the writer
 
         writer.Close();
         Utils.Log(LogLevelEnum.Debug, "End of Write Collada.  Export complete.");
@@ -65,6 +66,8 @@ public class Collada : BaseRenderer
         DaeObject.Library_Images = libraryImages;
         Grendgine_Collada_Library_Effects libraryEffects = new();
         DaeObject.Library_Effects = libraryEffects;
+
+        WriteMaterialsLibrary();
 
         WriteLibrary_Geometries();
 
@@ -326,9 +329,7 @@ public class Collada : BaseRenderer
             if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkType.Mesh)
             {
                 // Create materials collection for this node. Index of collection in meshSubSets determines which mat to use.
-                // Only create materials from a parent node chunk
-                if (nodeChunk.ParentNodeID == ~0)
-                    CreateMaterialsFromNodeChunk(nodeChunk);
+                CreateMaterialsFromNodeChunk(nodeChunk);
 
                 // Get the mesh chunk and submesh chunk for this node.
                 var meshChunk = (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID];
@@ -748,40 +749,33 @@ public class Collada : BaseRenderer
         DaeObject.Library_Geometries = libraryGeometries;
     }
 
-    /// <summary>Get the material name for a given submesh.</summary>
-    /// <param name="nodeChunk">The node chunk with the material</param>
-    /// <param name="meshSubsets"></param>
-    /// <returns>Material name with '-material' appended</returns>
-    private string GetMaterialName(ChunkNode nodeChunk, ChunkMeshSubsets meshSubsets, int index)
+    private void WriteMaterialsLibrary()
     {
-        var materialLibraryChunk = (ChunkMtlName)CryData.Chunks.Where(c => c.ID == nodeChunk.MatID).FirstOrDefault();
-        var materialLibraryIndex = meshSubsets.MeshSubsets[index].MatID;
+        // Material library of all mats used in this model.  Done to avoid duplicate materials.
 
-        var matChunk = (ChunkMtlName)CryData.Chunks.Where(c => c.ID == materialLibraryChunk.ChildIDs[materialLibraryIndex]).FirstOrDefault();
-
-        return matChunk.Name + "-material";
+        // Go through all nodes.  Create an entry in material library if one doesn't already exist.
+        foreach (var nodeChunk in CryData.NodeMap.Values)
+        {
+            if (nodeChunk.ObjectChunk.ChunkType == ChunkType.Mesh)
+            {
+                var materialLibraryChunk = CryData.Chunks.Where(c => c.ID == nodeChunk.MatID).FirstOrDefault();
+                createdMaterialLibraries.Add(nodeChunk.Name, nodeChunk.Materials);
+            }
+        }
     }
 
     private void CreateMaterialsFromNodeChunk(ChunkNode nodeChunk)
     {
         List<Grendgine_Collada_Material> colladaMaterials = new();
         List<Grendgine_Collada_Effect> colladaEffects = new();
-
-        var matChunkForNode = (ChunkMtlName)CryData.Chunks.Where(c => c.ID == nodeChunk.MatID).FirstOrDefault();
-
-        if (matChunkForNode.MatType == MtlNameType.Library || matChunkForNode.MatType == MtlNameType.Single)
+        
+        foreach (var mat in nodeChunk.Materials.SubMaterials)
         {
-            foreach (var mat in nodeChunk.Materials.SubMaterials)
-            {
-                colladaMaterials.Add(AddMaterialToMaterialLibrary(mat));
-                colladaEffects.Add(CreateColladaEffect(mat));
-            }
+            colladaMaterials.Add(AddMaterialToMaterialLibrary(mat));
+            colladaEffects.Add(CreateColladaEffect(mat));
         }
-        else if (matChunkForNode.MatType == MtlNameType.Basic)
-        {
-            colladaMaterials.Add(AddMaterialToMaterialLibrary(nodeChunk.Materials));
-            colladaEffects.Add(CreateColladaEffect(nodeChunk.Materials));
-        }
+
+        
 
         if (DaeObject.Library_Materials.Material is null)
             DaeObject.Library_Materials.Material = colladaMaterials.ToArray();
@@ -1402,6 +1396,27 @@ public class Collada : BaseRenderer
         scene.Visual_Scene = visualScene;
         DaeObject.Scene = scene;
 
+    }
+    
+    /// <summary>Get the material name for a given submesh.</summary>
+    private static string? GetMaterialName(ChunkNode nodeChunk, ChunkMeshSubsets meshSubsets, int index)
+    {
+        // TODO: Fix this for SC names (use name in mtl file instead)
+        //var materialLibraryChunk = (ChunkMtlName)CryData.Chunks.Where(c => c.ID == nodeChunk.MatID).FirstOrDefault();
+
+        var materialLibraryIndex = meshSubsets.MeshSubsets[index].MatID;
+
+        var materials = nodeChunk.Materials?.SubMaterials;
+
+        if (materials is not null)
+        {
+            var material = materials[materialLibraryIndex];
+            return material.Name + "-material";
+        }
+        else
+            Utils.Log(LogLevelEnum.Debug, $"Unable to find submaterials for node chunk ${nodeChunk.Name}");
+
+        return null;
     }
 
     private static string CreateStringFromMatrix4x4(Matrix4x4 matrix)
