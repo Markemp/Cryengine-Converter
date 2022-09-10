@@ -25,7 +25,7 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
     public int SclCtrlID { get; internal set; }  // Obsolete
     public string Properties { get; internal set; } = string.Empty;
 
-    // <summary>Computed from material file. Not set for helper nodes, etc.  Flattened with all mats under Submaterial</summary>
+    /// <summary>Computed from material file. Not set for helper nodes, etc.  Flattened with all mats under Submaterial</summary>
     public Material? Materials { get; internal set; }
 
     public Matrix4x4 LocalTransform

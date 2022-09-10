@@ -1,4 +1,7 @@
-﻿using System;
+﻿using CgfConverter.CryEngineCore;
+using CgfConverter.Materials;
+using grendgine_collada;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -6,18 +9,15 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Text;
-using System.Xml.Serialization;
-using CgfConverter.CryEngineCore;
-using static Extensions.FileHandlingExtensions;
-using grendgine_collada;
-using CgfConverter.Materials;
 using System.Xml;
+using System.Xml.Serialization;
+using static Extensions.FileHandlingExtensions;
 
 namespace CgfConverter;
 
 public class Collada : BaseRenderer
 {
-    public Grendgine_Collada DaeObject { get; private set; } = new Grendgine_Collada();  // This is the serializable class.
+    public Grendgine_Collada DaeObject { get; private set; } = new();
 
     private readonly CultureInfo culture = CultureInfo.CreateSpecificCulture("en-US");
     private const string colladaVersion = "1.4.1";
@@ -40,8 +40,9 @@ public class Collada : BaseRenderer
 
         if (!daeOutputFile.Directory.Exists)
             daeOutputFile.Directory.Create();
-        TextWriter writer = new StreamWriter(daeOutputFile.FullName);   // Makes the Textwriter object for the output
-        serializer.Serialize(writer, DaeObject);                      // Serializes the daeObject and writes to the writer
+
+        TextWriter writer = new StreamWriter(daeOutputFile.FullName);
+        serializer.Serialize(writer, DaeObject);
 
         writer.Close();
         Utils.Log(LogLevelEnum.Debug, "End of Write Collada.  Export complete.");
@@ -139,7 +140,7 @@ public class Collada : BaseRenderer
         Grendgine_Collada_Profile_COMMON profile = new();
         profile.Technique = new() { sID = material.Name + "-technique" };
         profiles.Add(profile);
-        
+
         // Create a list for the new_params
         List<Grendgine_Collada_New_Param> newparams = new();
         for (int j = 0; j < material.Textures.Length; j++)
@@ -548,9 +549,8 @@ public class Collada : BaseRenderer
                         // Create the inputs.  vertex, normal, texcoord, color
                         int inputCount = 3;
                         if (colors != null || vertsUvs?.Colors != null)
-                        {
                             inputCount++;
-                        }
+                        
                         triangles[j].Input = new Grendgine_Collada_Input_Shared[inputCount];
 
                         triangles[j].Input[0] = new Grendgine_Collada_Input_Shared
@@ -768,14 +768,14 @@ public class Collada : BaseRenderer
     {
         List<Grendgine_Collada_Material> colladaMaterials = new();
         List<Grendgine_Collada_Effect> colladaEffects = new();
-        
+
         foreach (var mat in nodeChunk.Materials.SubMaterials)
         {
             colladaMaterials.Add(AddMaterialToMaterialLibrary(mat));
             colladaEffects.Add(CreateColladaEffect(mat));
         }
 
-        
+
 
         if (DaeObject.Library_Materials.Material is null)
             DaeObject.Library_Materials.Material = colladaMaterials.ToArray();
@@ -1154,9 +1154,8 @@ public class Collada : BaseRenderer
 
                 // Create an Instance_Material for each material
                 bindMaterial.Technique_Common = new Grendgine_Collada_Technique_Common_Bind_Material();
-                List<Grendgine_Collada_Instance_Material_Geometry> instanceMaterials = new();
-
-                colladaNode.Instance_Controller[0].Bind_Material[0].Technique_Common.Instance_Material = instanceMaterials.ToArray();
+                colladaNode.Instance_Controller[0].Bind_Material[0].Technique_Common.Instance_Material = CreateInstanceMaterials(node);
+                
                 if (node.AllChildNodes is not null)
                 {
                     foreach (var child in node.AllChildNodes)
@@ -1175,6 +1174,37 @@ public class Collada : BaseRenderer
 
         libraryVisualScenes.Visual_Scene = visualScenes.ToArray();
         DaeObject.Library_Visual_Scene = libraryVisualScenes;
+    }
+
+    private Grendgine_Collada_Instance_Material_Geometry[] CreateInstanceMaterials(ChunkNode node)
+    {
+        // For each mesh subset, we want to create an instance material and add it to instanceMaterials list.
+        List<Grendgine_Collada_Instance_Material_Geometry> instanceMaterials = new();
+        ChunkMesh meshNode;
+        ChunkMeshSubsets submeshNode;
+
+        if (CryData.Models.Count > 1)
+        {
+            meshNode = (ChunkMesh)CryData.Models[1].ChunkMap[node.ObjectNodeID];
+            submeshNode = (ChunkMeshSubsets)CryData.Models[1].ChunkMap[meshNode.MeshSubsetsData];
+        }
+        else
+        {
+            meshNode = (ChunkMesh)CryData.Models[0].ChunkMap[node.ObjectNodeID];
+            submeshNode = (ChunkMeshSubsets)CryData.Models[0].ChunkMap[meshNode.MeshSubsetsData];
+        }
+
+        for (int i = 0; i < submeshNode.MeshSubsets.Length; i++)
+        {
+            var matName = GetMaterialName(node, submeshNode, i);
+
+            Grendgine_Collada_Instance_Material_Geometry instanceMaterial = new();
+            instanceMaterial.Target = $"#{matName}";
+            instanceMaterial.Symbol = matName;
+            instanceMaterials.Add(instanceMaterial);
+        }
+
+        return instanceMaterials.ToArray();
     }
 
     private Grendgine_Collada_Node CreateNode(ChunkNode nodeChunk)
@@ -1337,7 +1367,7 @@ public class Collada : BaseRenderer
             sID = "transform"
         };
 
-        matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
+        matrices.Add(matrix);          // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
         colladaNode.Matrix = matrices.ToArray();
 
         // Each node will have one instance geometry, although it could be a list.
@@ -1359,22 +1389,13 @@ public class Collada : BaseRenderer
         instanceGeometries.Add(instanceGeometry);
 
         colladaNode.Instance_Geometry = instanceGeometries.ToArray();
+        colladaNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material = CreateInstanceMaterials(nodeChunk);
 
-        for (int i = 0; i < meshSubsets.NumMeshSubset; i++)
-        {
-            Grendgine_Collada_Instance_Material_Geometry instanceMaterial = new();
-            string matName = GetMaterialName(nodeChunk, meshSubsets, i);
-            instanceMaterial.Target = "#" + matName;
-            instanceMaterial.Symbol = matName;
-
-            instanceMaterials.Add(instanceMaterial);
-        }
-        colladaNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material = instanceMaterials.ToArray();
         return colladaNode;
     }
 
     /// <summary>Retrieves the worldtobone (bind pose matrix) for the bone.</summary>
-    private string GetBindPoseArray(List<CompiledBone> compiledBones)
+    private static string GetBindPoseArray(List<CompiledBone> compiledBones)
     {
         StringBuilder value = new();
         for (int i = 0; i < compiledBones.Count; i++)
@@ -1397,13 +1418,10 @@ public class Collada : BaseRenderer
         DaeObject.Scene = scene;
 
     }
-    
-    /// <summary>Get the material name for a given submesh.</summary>
-    private static string? GetMaterialName(ChunkNode nodeChunk, ChunkMeshSubsets meshSubsets, int index)
-    {
-        // TODO: Fix this for SC names (use name in mtl file instead)
-        //var materialLibraryChunk = (ChunkMtlName)CryData.Chunks.Where(c => c.ID == nodeChunk.MatID).FirstOrDefault();
 
+    /// <summary>Get the material name for a given submesh.</summary>
+    private string? GetMaterialName(ChunkNode nodeChunk, ChunkMeshSubsets meshSubsets, int index)
+    {
         var materialLibraryIndex = meshSubsets.MeshSubsets[index].MatID;
 
         var materials = nodeChunk.Materials?.SubMaterials;

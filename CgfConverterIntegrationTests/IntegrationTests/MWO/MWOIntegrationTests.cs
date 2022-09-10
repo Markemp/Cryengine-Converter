@@ -83,6 +83,7 @@ public class MWOIntegrationTests
     [TestMethod]
     public void adr_right_torso_uac20_bh1()
     {
+        // This model has 4 mtl files, all variations of mechdefault.
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\adr_right_torso_uac20_bh1.cga", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
@@ -217,7 +218,7 @@ public class MWOIntegrationTests
         Assert.IsTrue(controllerBindPose.Float_Array.Value_As_String.StartsWith(bindPoseArray));
         Assert.AreEqual(1024, controllerBindPose.Float_Array.Count);
         Assert.IsTrue(controllerBindPose.Float_Array.Value_As_String.StartsWith(bindPoseArray)); ;
-        
+
         testUtils.ValidateColladaXml(colladaData);
     }
 
@@ -270,6 +271,8 @@ public class MWOIntegrationTests
         Assert.AreEqual("hang_seg2", armature.node[0].node[0].Name);
         Assert.AreEqual("-0.000009 -0.000080 -1 -0 1 0.000091 -0.000009 0.026455 0.000091 -1 0.000080 -0.000089 0 0 0 1", armature.node[0].node[0].Matrix[0].Value_As_String);
 
+        Assert.AreEqual(2, instance.Instance_Controller[0].Bind_Material[0].Technique_Common.Instance_Material.Length);
+
         testUtils.ValidateColladaXml(colladaData);
     }
 
@@ -321,6 +324,8 @@ public class MWOIntegrationTests
         Assert.AreEqual("Armature_hang_seg2", armature.node[0].node[0].ID);
         Assert.AreEqual("hang_seg2", armature.node[0].node[0].Name);
         Assert.AreEqual("-0.000009 -0.000080 -1 -0 1 0.000091 -0.000009 0.026455 0.000091 -1 0.000080 -0.000089 0 0 0 1", armature.node[0].node[0].Matrix[0].Value_As_String);
+
+        Assert.AreEqual(2, instance.Instance_Controller[0].Bind_Material[0].Technique_Common.Instance_Material.Length);
 
         testUtils.ValidateColladaXml(colladaData);
     }
