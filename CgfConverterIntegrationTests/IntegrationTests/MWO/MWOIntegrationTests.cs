@@ -146,14 +146,14 @@ public class MWOIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\timberwolf.chr", "-dds", "-dae", "-objectdir", @"d:\depot\lol\" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
         cryData.ProcessCryengineFiles();
 
         Collada colladaData = new Collada(testUtils.argsHandler, cryData);
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
 
-        int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
+        int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
         Assert.AreEqual(11, actualMaterialsCount);
         
         // Visual Scene Check 
@@ -188,8 +188,8 @@ public class MWOIntegrationTests
         
         // Geometry Node check
         node = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[1];
-        Assert.AreEqual("timberwolf.chr", node.ID);
-        Assert.AreEqual("timberwolf.chr", node.Name);
+        Assert.AreEqual("timberwolf", node.ID);
+        Assert.AreEqual("timberwolf", node.Name);
         Assert.AreEqual("NODE", node.Type.ToString());
         Assert.IsNull(node.Instance_Geometry);
         Assert.AreEqual(1, node.Instance_Controller.Length);
@@ -342,7 +342,8 @@ public class MWOIntegrationTests
         Collada colladaData = new(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-        Assert.AreEqual(21, actualMaterialsCount);
+        Assert.AreEqual(16, actualMaterialsCount);
+
         testUtils.ValidateColladaXml(colladaData);
     }
 

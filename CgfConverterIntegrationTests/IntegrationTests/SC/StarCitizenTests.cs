@@ -84,7 +84,7 @@ public class StarCitizenTests
     }
 
     [TestMethod]
-    public void AEGS_Avenger()
+    public void AEGS_Avenger_NoMaterialFile()
     {
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\AEGS_Avenger.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\SC\" };
         int result = testUtils.argsHandler.ProcessArgs(args);
@@ -102,6 +102,8 @@ public class StarCitizenTests
         Assert.AreEqual("Front_LG_Door_Left", noseNode.node[28].ID);
         Assert.AreEqual(frontLGDoorLeftMatrix, noseNode.node[28].Matrix[0].Value_As_String);
 
+        Assert.AreEqual(26, colladaData.DaeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(0, colladaData.DaeObject.Library_Images.Image.Length);
         testUtils.ValidateColladaXml(colladaData);
     }
 

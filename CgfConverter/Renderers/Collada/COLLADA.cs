@@ -22,6 +22,8 @@ public class Collada : BaseRenderer
     private readonly CultureInfo culture = CultureInfo.CreateSpecificCulture("en-US");
     private const string colladaVersion = "1.4.1";
     readonly XmlSerializer serializer = new(typeof(Grendgine_Collada));
+
+    /// <summary>Dictionary of all material libraries in the model, with the key being the library from mtlname chunk.</summary>
     private readonly Dictionary<string, Material> createdMaterialLibraries = new();
 
     public Collada(ArgsHandler argsHandler, CryEngine cryEngine) : base(argsHandler, cryEngine) { }
@@ -751,9 +753,6 @@ public class Collada : BaseRenderer
 
     private void WriteMaterialsLibrary()
     {
-        // Material library of all mats used in this model.  Done to avoid duplicate materials.
-
-        // Go through all nodes.  Create an entry in material library if one doesn't already exist.
         foreach (var nodeChunk in CryData.NodeMap.Values)
         {
             if (nodeChunk.ObjectChunk.ChunkType == ChunkType.Mesh)
@@ -768,31 +767,32 @@ public class Collada : BaseRenderer
     {
         List<Grendgine_Collada_Material> colladaMaterials = new();
         List<Grendgine_Collada_Effect> colladaEffects = new();
+        if (DaeObject.Library_Materials.Material is null)
+            DaeObject.Library_Materials.Material = Array.Empty<Grendgine_Collada_Material>();
 
         foreach (var mat in nodeChunk.Materials.SubMaterials)
         {
-            colladaMaterials.Add(AddMaterialToMaterialLibrary(mat));
-            colladaEffects.Add(CreateColladaEffect(mat));
+            // Check to see if the collada object already has a material with this name.  If not, add.
+
+            var matNames = DaeObject.Library_Materials.Material.Select(c => c.Name);
+            if (!matNames.Contains(mat.Name))
+            {
+                colladaMaterials.Add(AddMaterialToMaterialLibrary(mat));
+                colladaEffects.Add(CreateColladaEffect(mat));
+            }
         }
 
-
-
-        if (DaeObject.Library_Materials.Material is null)
-            DaeObject.Library_Materials.Material = colladaMaterials.ToArray();
-        else
-        {
-            int arraySize = DaeObject.Library_Materials.Material.Length;
-            Array.Resize(ref DaeObject.Library_Materials.Material, DaeObject.Library_Materials.Material.Length + colladaMaterials.Count);
-            colladaMaterials.CopyTo(DaeObject.Library_Materials.Material, arraySize);
-        }
+        int arraySize = DaeObject.Library_Materials.Material.Length;
+        Array.Resize(ref DaeObject.Library_Materials.Material, DaeObject.Library_Materials.Material.Length + colladaMaterials.Count);
+        colladaMaterials.CopyTo(DaeObject.Library_Materials.Material, arraySize);
 
         if (DaeObject.Library_Effects.Effect is null)
             DaeObject.Library_Effects.Effect = colladaEffects.ToArray();
         else
         {
-            int arraySize = DaeObject.Library_Effects.Effect.Length;
+            int effectsArraySize = DaeObject.Library_Effects.Effect.Length;
             Array.Resize(ref DaeObject.Library_Effects.Effect, DaeObject.Library_Effects.Effect.Length + colladaEffects.Count);
-            colladaEffects.CopyTo(DaeObject.Library_Effects.Effect, arraySize);
+            colladaEffects.CopyTo(DaeObject.Library_Effects.Effect, effectsArraySize);
         }
     }
 

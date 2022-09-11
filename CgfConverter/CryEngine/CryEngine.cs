@@ -182,6 +182,9 @@ public partial class CryEngine
                 continue;
             }
 
+            if (matChunk.Name.Contains("mechDefault.mtl") && matChunk.NumChildren == 11)  // Edge case for MWO models
+                matChunk.Name = "Objects/mechs/_mech_templates/body/mecha.mtl";
+
             var matfile = GetMaterialFile(matChunk.Name);
 
             if (matfile is not null)
@@ -242,6 +245,7 @@ public partial class CryEngine
             // The actual material file is in objects\mechs\generic\body\generic_body.mtl
             name = "objects\\mechs\\generic\\body\\generic_body.mtl";
             materialFile = new FileInfo(Path.Combine(DataDir, name));
+
             if (materialFile.Exists)
                 return materialFile;
         }
