@@ -68,9 +68,9 @@ public class MWOIntegrationTests
         var colladaData = new Collada(testUtils.argsHandler, cryData);
         colladaData.Render();
         var daeObject = colladaData.DaeObject;
-        Assert.AreEqual(4, daeObject.Library_Materials.Material.Length);
-        Assert.AreEqual(4, daeObject.Library_Effects.Effect.Length);
-        Assert.AreEqual(19, daeObject.Library_Images.Image.Length);
+        Assert.AreEqual(5, daeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(5, daeObject.Library_Effects.Effect.Length);
+        Assert.AreEqual(27, daeObject.Library_Images.Image.Length);
         Assert.AreEqual("generic_body", daeObject.Library_Materials.Material[0].Name);
         Assert.AreEqual("generic_body-material", daeObject.Library_Materials.Material[0].ID);
         Assert.AreEqual("#generic_body-effect", daeObject.Library_Materials.Material[0].Instance_Effect.URL);
@@ -342,7 +342,7 @@ public class MWOIntegrationTests
         Collada colladaData = new(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-        Assert.AreEqual(16, actualMaterialsCount);
+        Assert.AreEqual(17, actualMaterialsCount);
 
         testUtils.ValidateColladaXml(colladaData);
     }
@@ -401,12 +401,12 @@ public class MWOIntegrationTests
         Assert.AreEqual("decals-material", materials.Material[1].ID);
         Assert.AreEqual("hellbringer_variant-material", materials.Material[2].ID);
         Assert.AreEqual("hellbringer_window-material", materials.Material[3].ID);
-        Assert.AreEqual("Material #0-material", materials.Material[4].ID);
+        Assert.AreEqual("hellbringer_variant-material", materials.Material[4].ID);
         Assert.AreEqual("#hellbringer_body-effect", materials.Material[0].Instance_Effect.URL);
         Assert.AreEqual("#decals-effect", materials.Material[1].Instance_Effect.URL);
         Assert.AreEqual("#hellbringer_variant-effect", materials.Material[2].Instance_Effect.URL);
         Assert.AreEqual("#hellbringer_window-effect", materials.Material[3].Instance_Effect.URL);
-        Assert.AreEqual("#Material #0-effect", materials.Material[4].Instance_Effect.URL);
+        Assert.AreEqual("#hellbringer_variant-effect", materials.Material[4].Instance_Effect.URL);
 
         // library_geometries check
         Assert.AreEqual(1, colladaData.DaeObject.Library_Geometries.Geometry.Length);

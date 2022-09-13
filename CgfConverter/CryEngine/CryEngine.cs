@@ -173,7 +173,6 @@ public partial class CryEngine
 
     private void CreateMaterials()
     {
-        // Do this by Node chunk.  Won't have to process materials that aren't used in the model.
         foreach (ChunkNode nodeChunk in Chunks.Where(c => c.ChunkType == ChunkType.Node))
         {
             if (Chunks.FirstOrDefault(c => c.ID == nodeChunk.MatID) is not ChunkMtlName matChunk)
@@ -182,8 +181,14 @@ public partial class CryEngine
                 continue;
             }
 
+            if (matChunk.Name.Contains("mechDefault.mtl") && (matChunk.NumChildren == 5 || matChunk.NumChildren == 4))  // Edge case for MWO models
+                matChunk.Name = "Objects/mechs/generic/body/generic_body.mtl";
+
             if (matChunk.Name.Contains("mechDefault.mtl") && matChunk.NumChildren == 11)  // Edge case for MWO models
                 matChunk.Name = "Objects/mechs/_mech_templates/body/mecha.mtl";
+
+            if (matChunk.Name.Contains("05 - Default") && matChunk.NumChildren == 5)  // Edge case for MWO models
+                matChunk.Name = "Objects/mechs/generic/body/generic_body.mtl";
 
             var matfile = GetMaterialFile(matChunk.Name);
 
@@ -191,6 +196,18 @@ public partial class CryEngine
                 nodeChunk.Materials = CreateMaterialsFromMatFile(matfile, nodeChunk.Name);
             else
                 nodeChunk.Materials = CreateDefaultMaterials(nodeChunk);
+
+            // create dummy 5th material (generic_variant) for MWO mechDefault.mtls
+            if (matChunk.Name.Equals("Objects/mechs/generic/body/generic_body.mtl"))
+            {
+                var source = nodeChunk.Materials.SubMaterials;
+                var newMats = new Material[5];
+                
+                Array.Copy(source, newMats, source.Length);
+                newMats[4] = nodeChunk.Materials.SubMaterials[2];
+                nodeChunk.Materials.SubMaterials = newMats;
+            }
+            
         }
     }
 
