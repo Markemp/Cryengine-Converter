@@ -4,7 +4,7 @@ using System.IO;
 namespace CgfConverter.CryEngineCore;
 
 // cccc0014:  provides material name as used in the .mtl file
-public class ChunkMtlName_744 : ChunkMtlName
+internal sealed class ChunkMtlName_744 : ChunkMtlName
 {
     public override void Read(BinaryReader b)
     {

@@ -7,7 +7,7 @@ using static Extensions.BinaryReaderExtensions;
 
 namespace CgfConverter.CryEngineCore;
 
-public class ChunkDataStream_800 : ChunkDataStream
+internal sealed class ChunkDataStream_800 : ChunkDataStream
 {
     private short starCitizenFlag = 0;
 

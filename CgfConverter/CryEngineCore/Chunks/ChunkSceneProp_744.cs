@@ -3,7 +3,7 @@ using System.IO;
 
 namespace CgfConverter.CryEngineCore;
 
-public class ChunkSceneProp_744 : ChunkSceneProp
+internal sealed class ChunkSceneProp_744 : ChunkSceneProp
 {
     public override void Read(BinaryReader b)
     {

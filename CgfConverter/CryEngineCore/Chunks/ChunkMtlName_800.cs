@@ -3,7 +3,7 @@ using System.IO;
 
 namespace CgfConverter.CryEngineCore;
 
-public class ChunkMtlName_800 : ChunkMtlName
+internal sealed class ChunkMtlName_800 : ChunkMtlName
 {
     public override void Read(BinaryReader b)
     {

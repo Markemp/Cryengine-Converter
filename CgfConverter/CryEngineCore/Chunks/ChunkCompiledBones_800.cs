@@ -3,7 +3,7 @@ using System.IO;
 
 namespace CgfConverter.CryEngineCore;
 
-public class ChunkCompiledBones_800 : ChunkCompiledBones
+internal sealed class ChunkCompiledBones_800 : ChunkCompiledBones
 {
     public override void Read(BinaryReader b)
     {

@@ -7,7 +7,7 @@ using static Extensions.BinaryReaderExtensions;
 
 namespace CgfConverter.CryEngineCore;
 
-public class ChunkDataStream_801 : ChunkDataStream
+internal sealed class ChunkDataStream_801 : ChunkDataStream
 {
     public override void Read(BinaryReader b)
     {

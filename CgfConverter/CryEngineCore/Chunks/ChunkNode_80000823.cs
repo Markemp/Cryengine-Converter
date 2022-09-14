@@ -4,7 +4,7 @@ using System.Numerics;
 
 namespace CgfConverter.CryEngineCore;
 
-public class ChunkNode_80000823 : ChunkNode
+internal sealed class ChunkNode_80000823 : ChunkNode
 {
     public override void Read(BinaryReader b)
     {

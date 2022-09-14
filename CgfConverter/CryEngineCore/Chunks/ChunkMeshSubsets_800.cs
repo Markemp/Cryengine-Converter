@@ -3,7 +3,7 @@ using System.IO;
 
 namespace CgfConverter.CryEngineCore;
 
-public class ChunkMeshSubsets_800 : ChunkMeshSubsets
+internal sealed class ChunkMeshSubsets_800 : ChunkMeshSubsets
 {
     public override void Read(BinaryReader b)
     {

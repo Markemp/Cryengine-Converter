@@ -1,18 +1,16 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 
-namespace CgfConverter.CryEngineCore
+namespace CgfConverter.CryEngineCore;
+
+internal sealed class ChunkHeader_744 : ChunkHeader
 {
-    public class ChunkHeader_744 : ChunkHeader
+    public override void Read(BinaryReader reader)
     {
-        public override void Read(BinaryReader reader)
-        {
-            uint headerType = reader.ReadUInt32();
-            ChunkType = (ChunkType)headerType;
-            Version = reader.ReadUInt32();
-            Offset = reader.ReadUInt32();
-            ID = reader.ReadInt32();
-            Size = 0; // TODO: Figure out how to return a size - postprocess header table maybe?
-        }
+        uint headerType = reader.ReadUInt32();
+        ChunkType = (ChunkType)headerType;
+        Version = reader.ReadUInt32();
+        Offset = reader.ReadUInt32();
+        ID = reader.ReadInt32();
+        Size = 0; // TODO: Figure out how to return a size - postprocess header table maybe?
     }
 }

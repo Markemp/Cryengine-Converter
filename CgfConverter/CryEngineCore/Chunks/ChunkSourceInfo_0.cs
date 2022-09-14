@@ -3,7 +3,7 @@ using System.IO;
 
 namespace CgfConverter.CryEngineCore;
 
-public class ChunkSourceInfo_0 : ChunkSourceInfo
+internal sealed class ChunkSourceInfo_0 : ChunkSourceInfo
 {
     public override void Read(BinaryReader reader)
     {
