@@ -281,7 +281,7 @@ public class Collada : BaseRenderer
             Color = new Grendgine_Collada_Color(),
             Opaque = new Grendgine_Collada_FX_Opaque_Channel()
         };
-        phong.Transparent.Color.Value_As_String = (1 - double.Parse(material.Opacity ?? "1")).ToString();  // Subtract from 1 for proper value.
+        phong.Transparent.Color.Value_As_String = (1 - double.Parse((material.Opacity == string.Empty ? "1" : material.Opacity) ?? "1")).ToString();  // Subtract from 1 for proper value.
 
         #endregion
 

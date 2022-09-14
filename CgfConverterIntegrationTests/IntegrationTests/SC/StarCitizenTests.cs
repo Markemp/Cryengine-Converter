@@ -84,9 +84,9 @@ public class StarCitizenTests
     }
 
     [TestMethod]
-    public void AEGS_Avenger_NoMaterialFile()
+    public void AEGS_Avenger()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\AEGS_Avenger.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\SC\" };
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\AEGS_Avenger.cga", "-dds", "-dae" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         var cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
@@ -102,8 +102,8 @@ public class StarCitizenTests
         Assert.AreEqual("Front_LG_Door_Left", noseNode.node[28].ID);
         Assert.AreEqual(frontLGDoorLeftMatrix, noseNode.node[28].Matrix[0].Value_As_String);
 
-        Assert.AreEqual(26, colladaData.DaeObject.Library_Materials.Material.Length);
-        Assert.AreEqual(0, colladaData.DaeObject.Library_Images.Image.Length);
+        Assert.AreEqual(29, colladaData.DaeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(88, colladaData.DaeObject.Library_Images.Image.Length);
         testUtils.ValidateColladaXml(colladaData);
     }
 

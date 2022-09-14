@@ -217,7 +217,7 @@ namespace CgfConverterTests.IntegrationTests
 
             Assert.AreEqual((uint)41, cryData.Models[0].NumChunks);
             Assert.AreEqual(ChunkType.Node, cryData.Models[0].ChunkMap[47].ChunkType);
-            var datastream = cryData.Models[0].ChunkMap[40] as ChunkDataStream_801;
+            var datastream = cryData.Models[0].ChunkMap[40] as ChunkDataStream;
             Assert.AreEqual((uint)12, datastream.BytesPerElement);
             Assert.AreEqual((uint)22252, datastream.NumElements);
             Assert.AreEqual(0.29570183, datastream.Vertices[0].X, TestUtils.delta);

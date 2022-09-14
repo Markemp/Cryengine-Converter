@@ -38,7 +38,7 @@ namespace CgfConverterTests.IntegrationTests.Crucible
 
             Assert.AreEqual((uint)11, cryData.Models[0].NumChunks);
             Assert.AreEqual(ChunkType.Node, cryData.Models[0].ChunkMap[22].ChunkType);
-            var datastream = cryData.Models[0].ChunkMap[16] as ChunkDataStream_801;
+            var datastream = cryData.Models[0].ChunkMap[16] as ChunkDataStream;
             Assert.AreEqual((uint)8, datastream.BytesPerElement);
             Assert.AreEqual((uint)96, datastream.NumElements);
             Assert.AreEqual(-1.390625, datastream.Vertices[0].X, TestUtils.delta);
