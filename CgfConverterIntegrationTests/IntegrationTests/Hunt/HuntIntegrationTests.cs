@@ -58,8 +58,8 @@ namespace CgfConverterTests.IntegrationTests.Hunt
 
             // Geometry Node check
             node = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[1];
-            Assert.AreEqual("assassin_christmas_body.skin", node.ID);
-            Assert.AreEqual("assassin_christmas_body.skin", node.Name);
+            Assert.AreEqual("assassin_christmas_body", node.ID);
+            Assert.AreEqual("assassin_christmas_body", node.Name);
             Assert.AreEqual("NODE", node.Type.ToString());
             Assert.IsNull(node.Instance_Geometry);
             Assert.AreEqual(1, node.Instance_Controller.Length);
@@ -121,8 +121,8 @@ namespace CgfConverterTests.IntegrationTests.Hunt
 
             // Geometry Node check
             node = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[1];
-            Assert.AreEqual("assassin_body.skin", node.ID);
-            Assert.AreEqual("assassin_body.skin", node.Name);
+            Assert.AreEqual("assassin_body", node.ID);
+            Assert.AreEqual("assassin_body", node.Name);
             Assert.AreEqual("NODE", node.Type.ToString());
             Assert.IsNull(node.Instance_Geometry);
             Assert.AreEqual(1, node.Instance_Controller.Length);

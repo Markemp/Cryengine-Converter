@@ -1,5 +1,6 @@
 ﻿using CgfConverter.CryEngineCore;
 using CgfConverter.Materials;
+using grendgine_collada;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -175,6 +176,19 @@ public partial class CryEngine
     {
         foreach (ChunkNode nodeChunk in Chunks.Where(c => c.ChunkType == ChunkType.Node))
         {
+            // If Ivo file, just a single material node chunk with a library.
+            if (nodeChunk._model.IsIvoFile)
+            {
+                var ivoMatChunk = (ChunkMtlName)Chunks.Where(c => c.ChunkType == ChunkType.MtlNameIvo).FirstOrDefault();
+                //var ivoMatChunk = (ChunkMtlName)nodeChunk._model.ChunkMap.Values.Where(m => m.ChunkType == ChunkType.MtlNameIvo).FirstOrDefault();
+                var ivoMatFile = GetMaterialFile(ivoMatChunk.Name);
+                if (ivoMatFile is not null)
+                    nodeChunk.Materials = CreateMaterialsFromMatFile(ivoMatFile, nodeChunk.Name);
+                else
+                    nodeChunk.Materials = CreateDefaultMaterials(nodeChunk);
+                continue;
+            }
+                
             if (Chunks.FirstOrDefault(c => c.ID == nodeChunk.MatID) is not ChunkMtlName matChunk)
             {
                 Utils.Log(LogLevelEnum.Debug, $"Unable to find material chunk {nodeChunk.MatID} for node {nodeChunk.ID}");
@@ -219,9 +233,15 @@ public partial class CryEngine
         var mtlNameChunk = (ChunkMtlName)Chunks.Where(c => c.ID == nodeChunk.MatID).FirstOrDefault();
         if (mtlNameChunk is not null)
         {
-            if (mtlNameChunk.MatType == MtlNameType.Basic)
-                return MaterialUtilities.CreateDefaultMaterial(nodeChunk.Name);
-            else if (mtlNameChunk.MatType == MtlNameType.Library || mtlNameChunk.MatType == MtlNameType.Single)
+            if (mtlNameChunk.MatType == MtlNameType.Basic || mtlNameChunk.MatType == MtlNameType.Single)
+            {
+                var material = new Material() { Name = nodeChunk.Name };
+                Material[] submats = new Material[1];
+                submats[0] = MaterialUtilities.CreateDefaultMaterial(nodeChunk.Name);
+                material.SubMaterials = submats;
+                return material;
+            }
+            else if (mtlNameChunk.MatType == MtlNameType.Library)
             {
                 var material = new Material { SubMaterials = new Material[mtlNameChunk.NumChildren] };
                 for (int i = 0; i < mtlNameChunk.NumChildren; i++)

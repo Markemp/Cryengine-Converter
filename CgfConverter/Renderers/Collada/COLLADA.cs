@@ -70,8 +70,6 @@ public class Collada : BaseRenderer
         Grendgine_Collada_Library_Effects libraryEffects = new();
         DaeObject.Library_Effects = libraryEffects;
 
-        WriteMaterialsLibrary();
-
         WriteLibrary_Geometries();
 
         // If there is Skinning info, create the controller library and set up visual scene to refer to it.  Otherwise just write the Visual Scene
@@ -751,18 +749,6 @@ public class Collada : BaseRenderer
         DaeObject.Library_Geometries = libraryGeometries;
     }
 
-    private void WriteMaterialsLibrary()
-    {
-        foreach (var nodeChunk in CryData.NodeMap.Values)
-        {
-            if (nodeChunk.ObjectChunk.ChunkType == ChunkType.Mesh)
-            {
-                var materialLibraryChunk = CryData.Chunks.Where(c => c.ID == nodeChunk.MatID).FirstOrDefault();
-                createdMaterialLibraries.Add(nodeChunk.Name, nodeChunk.Materials);
-            }
-        }
-    }
-
     private void CreateMaterialsFromNodeChunk(ChunkNode nodeChunk)
     {
         List<Grendgine_Collada_Material> colladaMaterials = new();
@@ -855,7 +841,7 @@ public class Collada : BaseRenderer
         }
     }
 
-    public void WriteLibrary_Controllers()
+    private void WriteLibrary_Controllers()
     {
         if (DaeObject.Library_Geometries.Geometry.Length != 0)
         {
@@ -1126,7 +1112,13 @@ public class Collada : BaseRenderer
             nodes.Add(boneNode);
         }
 
-        if (CryData.Models[0].HasGeometry)
+        var hasGeometry = false;
+        if (CryData.Models.Count == 2)
+            hasGeometry = CryData.Models[1].HasGeometry;
+        else
+            hasGeometry = CryData.Models[0].HasGeometry;
+
+        if (hasGeometry)
         {
             var allParentNodes = CryData.NodeMap.Values.Where(n => n.ParentNodeID != ~1);
 
@@ -1428,6 +1420,11 @@ public class Collada : BaseRenderer
 
         if (materials is not null)
         {
+            if (index >= materials.Length || materialLibraryIndex >= materials.Length)
+            {
+                Utils.Log(LogLevelEnum.Warning, $"Attempting to assign material beyond the list of given materials for node ${nodeChunk.Name} with id {nodeChunk.ID}.  Assigning first material.\nCheck if material file is missing.");
+                return materials[0].Name + "-material";
+            }
             var material = materials[materialLibraryIndex];
             return material.Name + "-material";
         }

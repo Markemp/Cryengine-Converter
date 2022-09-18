@@ -265,8 +265,7 @@ namespace CgfConverterTests.IntegrationTests
             colladaData.GenerateDaeObject();
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-            Assert.AreEqual(3, actualMaterialsCount);
-
+            Assert.AreEqual(2, actualMaterialsCount);
         }
 
         [TestMethod]

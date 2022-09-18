@@ -86,6 +86,8 @@ public class Material
     [XmlArray(ElementName = "Textures")]
     [XmlArrayItem(ElementName = "Texture")]
     public Texture[] Textures { get; set; }
+
+    public override string ToString() => $"Name: {Name}, Shader: {Shader}, Submaterials: {SubMaterials?.Length ?? 0}";
 }
 
 [XmlRoot(ElementName = "xml")]

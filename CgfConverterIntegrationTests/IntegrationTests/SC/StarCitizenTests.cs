@@ -26,7 +26,7 @@ public class StarCitizenTests
     [TestMethod]
     public void AEGS_Vanguard_LandingGear_Front_IvoFile()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\new_skin_format\Avenger_Landing_Gear\AEGS_Vanguard_LandingGear_Front.skin", "-dds", "-dae" };
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\AEGS_Vanguard_LandingGear_Front.skin", "-dds", "-dae" };
 
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
@@ -110,10 +110,10 @@ public class StarCitizenTests
     [TestMethod]
     public void AEGS_GladiusLandingGearFront_CHR()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\AEGS_Gladius_LandingGear_Front_CHR.chr", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\SC\" };
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\AEGS_Gladius_LandingGear_Front_CHR.chr", "-dds", "-dae", "-objectdir", @"d:\depot\sc2\data" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new Collada(testUtils.argsHandler, cryData);
@@ -227,7 +227,7 @@ public class StarCitizenTests
     public void DRAK_Buccaneer_Landing_Gear_Front_Skin()
     {
         var args = new string[] {
-            $@"{userHome}\OneDrive\ResourceFiles\SC\DRAK_Buccaneer_Landing_Gear_Front_Skin.skin",
+            $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\DRAK_Buccaneer_Landing_Gear_Front_Skin.skin",
             "-dds", "-dae" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
@@ -240,6 +240,10 @@ public class StarCitizenTests
         // Geometry Library checks
         var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
         Assert.AreEqual(1, geometries.Length);
+
+        // Materials check
+        var materials = colladaData.DaeObject.Library_Materials.Material;
+        Assert.AreEqual(25, materials.Length);
     }
 
     [TestMethod]

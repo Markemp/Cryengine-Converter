@@ -3,7 +3,6 @@ using CgfConverter.CryEngineCore;
 using CgfConverterTests.TestUtilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -48,7 +47,7 @@ namespace CgfConverterTests.IntegrationTests.Crucible
             Collada colladaData = new Collada(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-            Assert.AreEqual(0, actualMaterialsCount);
+            Assert.AreEqual(1, actualMaterialsCount);
             testUtils.ValidateColladaXml(colladaData);
         }
     }

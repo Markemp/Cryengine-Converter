@@ -93,6 +93,8 @@ public class Model
         return buffer;
     }
 
+    public bool IsIvoFile => FileSignature.Equals("#ivo");
+
     private void Load(string fileName)
     {
         var inputFile = new FileInfo(fileName);
