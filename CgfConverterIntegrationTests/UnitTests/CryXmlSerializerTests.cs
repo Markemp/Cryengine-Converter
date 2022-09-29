@@ -41,4 +41,14 @@ public class CryXmlSerializerTests
         Assert.IsNotNull(material.SubMaterials);
         Assert.AreEqual(2, material.SubMaterials.Length);
     }
+
+    [TestMethod]
+    public void Pbxml_DeserializeFile()
+    {
+        var filename = @"..\..\..\TestData\pbxml.mtl";
+        var material = MaterialUtilities.FromFile(filename, null);
+
+        Assert.IsNotNull(material.SubMaterials);
+        Assert.AreEqual(2, material.SubMaterials.Length);
+    }
 }

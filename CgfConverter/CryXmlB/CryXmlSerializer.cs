@@ -9,29 +9,65 @@ namespace HoloXPLOR.DataForge;
 
 public static class CryXmlSerializer
 {
-
-    public static XmlDocument ReadFile(string inFile, bool writeLog = false)
-    {
-        return ReadStream(File.OpenRead(inFile), writeLog);
-    }
+    public static XmlDocument ReadFile(string inFile, bool writeLog = false) => ReadStream(File.OpenRead(inFile), writeLog);
 
     public static XmlDocument ReadStream(Stream inStream, bool writeLog = false)
     {
         using var br = new BinaryReader(inStream);
         var peek = (char)br.PeekChar();
 
-        if (peek == '<')
+        if (peek == '<')    // XML
         {
-            // File is already XML, so return the XML.
             var xml = new XmlDocument();
             xml.Load(inStream);
-            return xml; // File is already XML
+            return xml;     // File is already XML
         }
-        else if (peek != 'C')
+        else if (peek == 'p')  // pbxml, for Sonic Boom {
+            return LoadPbxmlFile(writeLog, br);
+        else if (peek == 'C')  // Binary Cryengine XML (CryXmlB)
+            return LoadScXmlFile(writeLog, br);
+
+        throw new Exception("Unknown File Format"); // Unknown file format
+    }
+
+    private static XmlDocument LoadPbxmlFile(bool writeLog, BinaryReader br)
+    {
+        string header = br.ReadCString();
+
+        if (header != "pbxml")
+            throw new Exception("Unknown File Format");
+        XmlDocument doc = new();
+
+        CreateNewElement(br, doc);
+
+        return doc;
+    }
+
+    private static void CreateNewElement(BinaryReader br, XmlDocument doc)
+    {
+        int numberOfChildren = br.ReadByte();
+        int numberOfAttributes = br.ReadByte();
+
+        var nodeName = br.ReadCString();
+
+        var element = doc.CreateElement(nodeName);
+        doc.AppendChild(element);
+
+        for (int i = 0; i < numberOfAttributes; i++)
         {
-            throw new Exception("Unknown File Format"); // Unknown file format
+            var key = br.ReadCString();
+            var value = br.ReadCString();
+            element.SetAttribute(key, value);
+        }
+        for (int i = 0; i < numberOfChildren; i++)
+        {
+
         }
 
+    }
+
+    private static XmlDocument LoadScXmlFile(bool writeLog, BinaryReader br)
+    {
         string header = br.ReadCString();
 
         if (header != "CryXmlB")
@@ -110,10 +146,7 @@ public static class CryXmlSerializer
         }
 
         if (writeLog)
-        {
-            Console.WriteLine("");
-            Console.WriteLine("Reference Table");
-        }
+            Console.WriteLine("\nReference Table");
 
         var attributeTable = new List<CryXmlReference>();
         br.BaseStream.Seek(referenceTableOffset, SeekOrigin.Begin);
@@ -133,10 +166,7 @@ public static class CryXmlSerializer
                 Console.WriteLine("0x{0:X6}: {1:X8} {2:X8}", position, value.NameOffset, value.ValueOffset);
         }
         if (writeLog)
-        {
-            Console.WriteLine("");
-            Console.WriteLine("Order Table");
-        }
+            Console.WriteLine("\nOrder Table");
 
         var table3 = new List<int>();
         br.BaseStream.Seek(offset3, SeekOrigin.Begin);
@@ -146,16 +176,13 @@ public static class CryXmlSerializer
             var value = br.ReadInt32();
 
             table3.Add(value);
-         
+
             if (writeLog)
                 Console.WriteLine("0x{0:X6}: {1:X8}", position, value);
         }
 
         if (writeLog)
-        {
-            Console.WriteLine("");
-            Console.WriteLine("Dynamic Dictionary");
-        }
+            Console.WriteLine("\nDynamic Dictionary");
 
         var dataTable = new List<CryXmlValue>();
         br.BaseStream.Seek(contentOffset, SeekOrigin.Begin);
@@ -193,9 +220,7 @@ public static class CryXmlSerializer
             for (int i = 0, j = node.AttributeCount; i < j; i++)
             {
                 if (dataMap.ContainsKey(attributeTable[attributeIndex].ValueOffset))
-                {
                     element.SetAttribute(dataMap[attributeTable[attributeIndex].NameOffset], dataMap[attributeTable[attributeIndex].ValueOffset]);
-                }
                 else
                 {
                     bugged = true;
@@ -213,7 +238,6 @@ public static class CryXmlSerializer
 
         return xmlDoc;
     }
-
 
     public static TObject Deserialize<TObject>(Stream inStream) where TObject : class
     {

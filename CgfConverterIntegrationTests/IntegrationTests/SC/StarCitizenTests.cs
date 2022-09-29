@@ -1,4 +1,5 @@
 ﻿using CgfConverter;
+using CgfConverter.Materials;
 using CgfConverterTests.TestUtilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -263,6 +264,9 @@ public class StarCitizenTests
         // Geometry Library checks
         var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
         Assert.AreEqual(1, geometries.Length);
-
+        
+        // Materials check
+        var materials = colladaData.DaeObject.Library_Materials.Material;
+        Assert.AreEqual(5, materials.Length);
     }
 }
