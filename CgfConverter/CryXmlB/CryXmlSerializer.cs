@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 
 namespace HoloXPLOR.DataForge;
@@ -36,14 +37,15 @@ public static class CryXmlSerializer
 
         if (header != "pbxml")
             throw new Exception("Unknown File Format");
+
         XmlDocument doc = new();
 
-        CreateNewElement(br, doc);
-
+        var element = CreateNewElement(br, doc);
+        doc.AppendChild(element);
         return doc;
     }
 
-    private static void CreateNewElement(BinaryReader br, XmlDocument doc)
+    private static XmlElement CreateNewElement(BinaryReader br, XmlDocument doc)
     {
         int numberOfChildren = br.ReadByte();
         int numberOfAttributes = br.ReadByte();
@@ -51,7 +53,6 @@ public static class CryXmlSerializer
         var nodeName = br.ReadCString();
 
         var element = doc.CreateElement(nodeName);
-        doc.AppendChild(element);
 
         for (int i = 0; i < numberOfAttributes; i++)
         {
@@ -61,9 +62,15 @@ public static class CryXmlSerializer
         }
         for (int i = 0; i < numberOfChildren; i++)
         {
+            br.ReadByte();
+            var flag = br.ReadByte();
+            if (flag != 0x00)
+                br.ReadByte();
 
+            element.AppendChild(CreateNewElement(br, doc));
         }
 
+        return element;
     }
 
     private static XmlDocument LoadScXmlFile(bool writeLog, BinaryReader br)
