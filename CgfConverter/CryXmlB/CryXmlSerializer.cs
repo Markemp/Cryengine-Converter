@@ -64,7 +64,7 @@ public static class CryXmlSerializer
         {
             br.ReadByte();
             var flag = br.ReadByte();
-            if (flag != 0x00)
+            if (flag != 0x00 && flag != 0x4B && flag != 0x4D)
                 br.ReadByte();
 
             element.AppendChild(CreateNewElement(br, doc));
