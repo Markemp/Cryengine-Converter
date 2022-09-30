@@ -50,5 +50,6 @@ public class CryXmlSerializerTests
 
         Assert.IsNotNull(material.SubMaterials);
         Assert.AreEqual(2, material.SubMaterials.Length);
+        Assert.AreEqual("524544", material.MtlFlags);
     }
 }

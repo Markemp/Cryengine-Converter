@@ -63,8 +63,8 @@ public static class CryXmlSerializer
         for (int i = 0; i < numberOfChildren; i++)
         {
             br.ReadByte();
-            var flag = br.ReadByte();
-            if (flag != 0x00 && flag != 0x4B && flag != 0x4D)
+            var flag = br.ReadSByte(); 
+            if (flag < 0)  // if 10000000 or more, read extra byte
                 br.ReadByte();
 
             element.AppendChild(CreateNewElement(br, doc));
