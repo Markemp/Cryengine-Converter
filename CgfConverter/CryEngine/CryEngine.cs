@@ -48,13 +48,14 @@ public partial class CryEngine
             {
                 _nodeMap = new Dictionary<string, ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
 
-                ChunkNode rootNode = null;
+                ChunkNode? rootNode = null;
 
                 Utils.Log(LogLevelEnum.Debug, "Mapping Nodes");
 
                 foreach (Model model in Models)
                 {
-                    model.RootNode = rootNode = (rootNode ?? model.RootNode);  // Each model will have it's own rootnode.
+                    // TODO: Refactor. Not sure every model has just 1 root node. Find where parent id = ~0.
+                    model.RootNode = rootNode = (rootNode ?? model.RootNode);  // ?? Each model will have it's own rootnode.
 
                     foreach (ChunkNode node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkType.Node).Select(c => c as ChunkNode))
                     {
@@ -63,7 +64,7 @@ public partial class CryEngine
                         {
                             ChunkNode parentNode = _nodeMap[node.Name].ParentNode;
 
-                            if (parentNode != null)
+                            if (parentNode is not null)
                                 parentNode = _nodeMap[parentNode.Name];
 
                             node.ParentNode = parentNode;
@@ -138,34 +139,34 @@ public partial class CryEngine
 
         foreach (Model model in models)
         {
-            if (model.SkinningInfo.IntFaces != null)
+            if (model.SkinningInfo.IntFaces is not null)
                 skin.IntFaces = model.SkinningInfo.IntFaces;
 
-            if (model.SkinningInfo.IntVertices != null)
+            if (model.SkinningInfo.IntVertices is not null)
                 skin.IntVertices = model.SkinningInfo.IntVertices;
 
-            if (model.SkinningInfo.LookDirectionBlends != null)
+            if (model.SkinningInfo.LookDirectionBlends is not null)
                 skin.LookDirectionBlends = model.SkinningInfo.LookDirectionBlends;
 
-            if (model.SkinningInfo.MorphTargets != null)
+            if (model.SkinningInfo.MorphTargets is not null)
                 skin.MorphTargets = model.SkinningInfo.MorphTargets;
 
-            if (model.SkinningInfo.PhysicalBoneMeshes != null)
+            if (model.SkinningInfo.PhysicalBoneMeshes is not null)
                 skin.PhysicalBoneMeshes = model.SkinningInfo.PhysicalBoneMeshes;
 
-            if (model.SkinningInfo.BoneEntities != null)
+            if (model.SkinningInfo.BoneEntities is not null)
                 skin.BoneEntities = model.SkinningInfo.BoneEntities;
 
-            if (model.SkinningInfo.BoneMapping != null)
+            if (model.SkinningInfo.BoneMapping is not null)
                 skin.BoneMapping = model.SkinningInfo.BoneMapping;
 
-            if (model.SkinningInfo.Collisions != null)
+            if (model.SkinningInfo.Collisions is not null)
                 skin.Collisions = model.SkinningInfo.Collisions;
 
-            if (model.SkinningInfo.CompiledBones != null)
+            if (model.SkinningInfo.CompiledBones is not null)
                 skin.CompiledBones = model.SkinningInfo.CompiledBones;
 
-            if (model.SkinningInfo.Ext2IntMap != null)
+            if (model.SkinningInfo.Ext2IntMap is not null)
                 skin.Ext2IntMap = model.SkinningInfo.Ext2IntMap;
         }
 
@@ -180,10 +181,10 @@ public partial class CryEngine
             if (nodeChunk._model.IsIvoFile)
             {
                 var ivoMatChunk = (ChunkMtlName)Chunks.Where(c => c.ChunkType == ChunkType.MtlNameIvo).FirstOrDefault();
-                //var ivoMatChunk = (ChunkMtlName)nodeChunk._model.ChunkMap.Values.Where(m => m.ChunkType == ChunkType.MtlNameIvo).FirstOrDefault();
                 var ivoMatFile = GetMaterialFile(ivoMatChunk.Name);
+                
                 if (ivoMatFile is not null)
-                    nodeChunk.Materials = CreateMaterialsFromMatFile(ivoMatFile, nodeChunk.Name);
+                    nodeChunk.Materials = GetMaterialFromMatFile(ivoMatFile, nodeChunk.Name);
                 else
                     nodeChunk.Materials = CreateDefaultMaterials(nodeChunk);
                 continue;
@@ -207,7 +208,7 @@ public partial class CryEngine
             var matfile = GetMaterialFile(matChunk.Name);
 
             if (matfile is not null)
-                nodeChunk.Materials = CreateMaterialsFromMatFile(matfile, nodeChunk.Name);
+                nodeChunk.Materials = GetMaterialFromMatFile(matfile, nodeChunk.Name);
             else
                 nodeChunk.Materials = CreateDefaultMaterials(nodeChunk);
 
@@ -221,11 +222,10 @@ public partial class CryEngine
                 newMats[4] = nodeChunk.Materials.SubMaterials[2];
                 nodeChunk.Materials.SubMaterials = newMats;
             }
-            
         }
     }
 
-    private static Material? CreateMaterialsFromMatFile(FileInfo matfile, string matName) => MaterialUtilities.FromFile(matfile.FullName, matName);
+    private static Material? GetMaterialFromMatFile(FileInfo matfile, string matName) => MaterialUtilities.FromFile(matfile.FullName, matName);
     
     private Material? CreateDefaultMaterials(ChunkNode nodeChunk)
     {
