@@ -16,13 +16,6 @@ public static class BinaryReaderExtensions
         return Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
     }
 
-    public static float ReadHalf(this BinaryReader r)
-    {
-        CgfConverter.Half xshort = new CgfConverter.Half();
-        xshort.bits = r.ReadUInt16();
-        return xshort.ToSingle();
-    }
-
     public static Vector3 ReadVector3(this BinaryReader r, InputType inputType = InputType.Single)
     {
         Vector3 v;

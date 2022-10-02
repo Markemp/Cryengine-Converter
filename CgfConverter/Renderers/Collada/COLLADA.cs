@@ -12,6 +12,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using static Extensions.FileHandlingExtensions;
+using static CgfConverter.Utils;
 
 namespace CgfConverter;
 
@@ -1456,27 +1457,5 @@ public class Collada : BaseRenderer
             matrix.M44);
         CleanNumbers(matrixValues);
         return matrixValues.ToString();
-    }
-
-    private static double Safe(double value)
-    {
-        if (value == double.NegativeInfinity)
-            return double.MinValue;
-
-        if (value == double.PositiveInfinity)
-            return double.MaxValue;
-
-        if (double.IsNaN(value))
-            return 0;
-
-        return value;
-    }
-
-    private static void CleanNumbers(StringBuilder sb)
-    {
-        sb.Replace("0.000000", "0");
-        sb.Replace("-0.000000", "0");
-        sb.Replace("1.000000", "1");
-        sb.Replace("-1.000000", "-1");
     }
 }

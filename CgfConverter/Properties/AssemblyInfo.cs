@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Heffay Presents")]
 [assembly: AssemblyProduct("CgfConverter")]
-[assembly: AssemblyCopyright("Copyright ©  2018-2022    ")]
+[assembly: AssemblyCopyright("Copyright ©  2018-2022")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

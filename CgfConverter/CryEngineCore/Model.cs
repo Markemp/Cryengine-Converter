@@ -149,7 +149,7 @@ public class Model
             return;
         }
 
-        throw new NotSupportedException(string.Format("Unsupported FileSignature {0}", FileSignature));
+        throw new NotSupportedException($"Unsupported FileS ignature {FileSignature}");
     }
 
     private void CreateDummyRootNode()

@@ -71,7 +71,7 @@ public class SonicBoomTests
         Collada colladaData = new(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
-        Assert.AreEqual(12, actualMaterialsCount);
+        Assert.AreEqual(20, actualMaterialsCount);
         testUtils.ValidateColladaXml(colladaData);
     }
 
@@ -96,7 +96,7 @@ public class SonicBoomTests
         Collada colladaData = new(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
-        Assert.AreEqual(18, actualMaterialsCount);
+        Assert.AreEqual(20, actualMaterialsCount);
         testUtils.ValidateColladaXml(colladaData);
     }
 }

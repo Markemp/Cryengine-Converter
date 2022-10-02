@@ -49,10 +49,10 @@ internal sealed class ChunkCompiledBones_900 : ChunkCompiledBones
         }
     }
 
-    protected List<string> GetNullSeparatedStrings(int numberOfNames, BinaryReader b)
+    internal List<string> GetNullSeparatedStrings(int numberOfNames, BinaryReader b)
     {
-        List<string> names = new List<string>();
-        StringBuilder builder = new StringBuilder();
+        List<string> names = new();
+        StringBuilder builder = new();
 
         for (int i = 0; i < numberOfNames; i++)
         {    

@@ -12,8 +12,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Properties\**" />
     <Compile Remove="ResourceFiles\**" />
+    <EmbeddedResource Remove="Properties\**" />
     <EmbeddedResource Remove="ResourceFiles\**" />
+    <None Remove="Properties\**" />
     <None Remove="ResourceFiles\**" />
   </ItemGroup>
 
@@ -43,10 +46,6 @@
     <None Update="Schemas\XMLSchema.xsd">
       <SubType>Designer</SubType>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Properties\" />
   </ItemGroup>
 
 </Project>

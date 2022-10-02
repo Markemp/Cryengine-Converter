@@ -75,13 +75,8 @@ internal sealed class ChunkDataStream_900 : ChunkDataStream
                             Colors[i].a = green;
                             Colors[i].g = alpha;
 
-                            Half uvu = new Half();
-                            uvu.bits = b.ReadUInt16();
-                            UVs[i].U = uvu.ToSingle();
-
-                            Half uvv = new Half();
-                            uvv.bits = b.ReadUInt16();
-                            UVs[i].V = uvv.ToSingle();
+                            UVs[i].U = (float)b.ReadHalf();
+                            UVs[i].V = (float)b.ReadHalf();
                         }
                         if (NumElements % 2 == 1)
                         {

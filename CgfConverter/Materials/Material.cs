@@ -76,23 +76,23 @@ public class Material
 
     [XmlArray(ElementName = "SubMaterials")]
     [XmlArrayItem(ElementName = "Material")]
-    public Material[] SubMaterials { get; set; }
+    public Material[]? SubMaterials { get; set; }
 
     [XmlElement(ElementName = "PublicParams")]
-    internal PublicParams PublicParams { get; set; }
+    internal PublicParams? PublicParams { get; set; }
 
     // TODO: TimeOfDay Support
 
     [XmlArray(ElementName = "Textures")]
     [XmlArrayItem(ElementName = "Texture")]
-    public Texture[] Textures { get; set; }
+    public Texture[]? Textures { get; set; }
 
     public override string ToString() => $"Name: {Name}, Shader: {Shader}, Submaterials: {SubMaterials?.Length ?? 0}";
 }
 
-[XmlRoot(ElementName = "xml")]
-public class Xml
-{
-    [XmlElement(ElementName = "Material")]
-    public Material? Material { get; set; }
-}
+//[XmlRoot(ElementName = "xml")]
+//public class Xml
+//{
+//    [XmlElement(ElementName = "Material")]
+//    public Material? Material { get; set; }
+//}
