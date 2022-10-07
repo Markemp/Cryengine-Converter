@@ -1,5 +1,4 @@
 ﻿using CgfConverter;
-using CgfConverter.Materials;
 using CgfConverterTests.TestUtilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -11,7 +10,7 @@ namespace CgfConverterTests.IntegrationTests.SC;
 [TestClass]
 public class StarCitizenTests
 {
-    private readonly TestUtils testUtils = new TestUtils();
+    private readonly TestUtils testUtils = new();
     string userHome;
 
     [TestInitialize]
@@ -22,6 +21,20 @@ public class StarCitizenTests
         Thread.CurrentThread.CurrentCulture = customCulture;
         userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         testUtils.GetSchemaSet();
+    }
+
+    [TestMethod]
+    public void CutlassRed_312_NonIvo()
+    {
+        var args = new string[] { $@"D:\depot\SC2\Data\objects\Spaceships\Ships\DRAK\Cutlass\Cutlass_Red\DRAK_Cutlass_Red.cga", "-dds", "-dae", "-objectdir", @"d:\depot\sc2\data" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new Collada(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
     }
 
     [TestMethod]
@@ -172,7 +185,7 @@ public class StarCitizenTests
     }
 
     [TestMethod]
-    public void BehrRifle_312_NonIVO()
+    public void BehrRifle_312_NonIvo()
     {
         var args = new string[] {
             $@"{userHome}\OneDrive\ResourceFiles\SC\3.12.0\brfl_fps_behr_p4ar_body.cgf",

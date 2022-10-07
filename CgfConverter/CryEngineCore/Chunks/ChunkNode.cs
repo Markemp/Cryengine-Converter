@@ -33,9 +33,9 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
         get { return Matrix4x4.Transpose(Transform); }
     }
 
-    private ChunkNode _parentNode;
+    private ChunkNode? _parentNode;
 
-    public ChunkNode ParentNode
+    public ChunkNode? ParentNode
     {
         get
         {
@@ -44,7 +44,7 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
 
             if (_parentNode == null)
             {
-                if (_model.ChunkMap.TryGetValue(ParentNodeID, out Chunk node))
+                if (_model.ChunkMap.TryGetValue(ParentNodeID, out Chunk? node))
                     _parentNode = node as ChunkNode;
                 else
                     _parentNode = _model.RootNode;
@@ -59,9 +59,9 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
         }
     }
 
-    private Chunk _objectChunk;
+    private Chunk? _objectChunk;
     
-    public Chunk ObjectChunk
+    public Chunk? ObjectChunk
     {
         get
         {
@@ -74,7 +74,7 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
 
     public ChunkMtlName? MaterialLibraryChunk
     {
-        get => (ChunkMtlName)_model.ChunkMap.Values.Where(c => c.ID == MatID).First();
+        get => (ChunkMtlName)_model.ChunkMap.Values.Where(c => c.ID == MatID).FirstOrDefault();
     }
 
     public List<ChunkNode>? AllChildNodes

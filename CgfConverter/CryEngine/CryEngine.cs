@@ -105,7 +105,8 @@ public partial class CryEngine
             // Each file (.cga and .cgam if applicable) will have its own RootNode.  
             // This can cause problems.  .cga files with a .cgam files won't have geometry for the one root node.
             Model model = Model.FromFile(file.FullName);
-            if (RootNode == null)
+
+            if (RootNode is null)
                 RootNode = model.RootNode;  // This makes the assumption that we read the .cga file before the .cgam file.
 
             Bones = Bones ?? model.Bones;
@@ -114,7 +115,10 @@ public partial class CryEngine
 
         SkinningInfo = ConsolidateSkinningInfo(Models);
 
-        CreateMaterials();
+        foreach (var model in Models)
+        {
+            CreateMaterialsFor(model);
+        }
     }
 
     private static void AutoDetectMFile(string filename, FileInfo inputFile, List<FileInfo> inputFiles)
@@ -172,24 +176,24 @@ public partial class CryEngine
         return skin;
     }
 
-    private void CreateMaterials()
+    private void CreateMaterialsFor(Model model)
     {
-        foreach (ChunkNode nodeChunk in Chunks.Where(c => c.ChunkType == ChunkType.Node))
+        foreach (ChunkNode nodeChunk in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkType.Node))
         {
             // If Ivo file, just a single material node chunk with a library.
             if (nodeChunk._model.IsIvoFile)
             {
                 var ivoMatChunk = (ChunkMtlName)Chunks.Where(c => c.ChunkType == ChunkType.MtlNameIvo).FirstOrDefault();
                 var ivoMatFile = GetMaterialFile(ivoMatChunk.Name);
-                
+
                 if (ivoMatFile is not null)
                     nodeChunk.Materials = GetMaterialFromMatFile(ivoMatFile, nodeChunk.Name);
                 else
                     nodeChunk.Materials = CreateDefaultMaterials(nodeChunk);
                 continue;
             }
-                
-            if (Chunks.FirstOrDefault(c => c.ID == nodeChunk.MatID) is not ChunkMtlName matChunk)
+
+            if (model.ChunkMap.Values.FirstOrDefault(c => c.ID == nodeChunk.MatID) is not ChunkMtlName matChunk)
             {
                 Utils.Log(LogLevelEnum.Debug, $"Unable to find material chunk {nodeChunk.MatID} for node {nodeChunk.ID}");
                 continue;
@@ -216,7 +220,7 @@ public partial class CryEngine
             {
                 var source = nodeChunk.Materials.SubMaterials;
                 var newMats = new Material[5];
-                
+
                 Array.Copy(source, newMats, source.Length);
                 newMats[4] = nodeChunk.Materials.SubMaterials[2];
                 nodeChunk.Materials.SubMaterials = newMats;

@@ -71,6 +71,7 @@ public class Collada : BaseRenderer
         Grendgine_Collada_Library_Effects libraryEffects = new();
         DaeObject.Library_Effects = libraryEffects;
 
+        //WriteLibrary_Geometries();
         WriteLibrary_Geometries();
 
         // If there is Skinning info, create the controller library and set up visual scene to refer to it.  Otherwise just write the Visual Scene
@@ -291,8 +292,15 @@ public class Collada : BaseRenderer
         return colladaEffect;
     }
 
-    /// <summary> Write the Library_Geometries element.  These won't be instantiated except through the visual scene or controllers. </summary>
     public void WriteLibrary_Geometries()
+    {
+        if (CryData.Models.Count == 1)  // Single file model
+            WriteGeometries(CryData.Models[0]);
+        else
+            WriteGeometries(CryData.Models[1]);
+    }
+
+    public void WriteGeometries(Model model)
     {
         Grendgine_Collada_Library_Geometries libraryGeometries = new();
 
@@ -301,20 +309,20 @@ public class Collada : BaseRenderer
         List<Grendgine_Collada_Geometry> geometryList = new();
 
         // For each of the nodes, we need to write the geometry.
-        foreach (ChunkNode nodeChunk in CryData.Chunks.Where(a => a.ChunkType == ChunkType.Node))
+        foreach (ChunkNode nodeChunk in model.ChunkMap.Values.Where(a => a.ChunkType == ChunkType.Node))
         {
             // Create a geometry object.  Use the chunk ID for the geometry ID
             // Create all the materials used by this chunk.
             // Will have to be careful with this, since with .cga/.cgam pairs will need to match by Name.
             // Make the mesh object.  This will have 3 or 4 sources, 1 vertices, and 1 or more Triangles (with material ID)
             // If the Object ID of Node chunk points to a Helper or a Controller though, place an empty.
-            ChunkDataStream normals = null;
-            ChunkDataStream uvs = null;
-            ChunkDataStream tmpVertices = null;
-            ChunkDataStream vertsUvs = null;
-            ChunkDataStream indices = null;
-            ChunkDataStream colors = null;
-            ChunkDataStream tangents = null;
+            ChunkDataStream? normals = null;
+            ChunkDataStream? uvs = null;
+            ChunkDataStream? tmpVertices = null;
+            ChunkDataStream? vertsUvs = null;
+            ChunkDataStream? indices = null;
+            ChunkDataStream? colors = null;
+            ChunkDataStream? tangents = null;
 
             if (IsNodeNameExcluded(nodeChunk.Name))
             {
@@ -551,7 +559,7 @@ public class Collada : BaseRenderer
                         int inputCount = 3;
                         if (colors != null || vertsUvs?.Colors != null)
                             inputCount++;
-                        
+
                         triangles[j].Input = new Grendgine_Collada_Input_Shared[inputCount];
 
                         triangles[j].Input[0] = new Grendgine_Collada_Input_Shared
@@ -1148,7 +1156,7 @@ public class Collada : BaseRenderer
                 // Create an Instance_Material for each material
                 bindMaterial.Technique_Common = new Grendgine_Collada_Technique_Common_Bind_Material();
                 colladaNode.Instance_Controller[0].Bind_Material[0].Technique_Common.Instance_Material = CreateInstanceMaterials(node);
-                
+
                 if (node.AllChildNodes is not null)
                 {
                     foreach (var child in node.AllChildNodes)

@@ -9,16 +9,16 @@ namespace CgfConverter.CryEngineCore;
 public class Model
 {
     /// <summary> The Root of the loaded object </summary>
-    public ChunkNode RootNode { get; internal set; }
+    public ChunkNode? RootNode { get; internal set; }
 
     /// <summary> Lookup Table for Chunks, indexed by ChunkID </summary>
     public Dictionary<int, Chunk> ChunkMap { get; internal set; } = new();
 
     /// <summary> The name of the currently processed file </summary>
-    public string FileName { get; internal set; }
+    public string? FileName { get; internal set; }
 
     /// <summary> The File Signature - CryTek for 3.5 and lower. CrCh for 3.6 and higher. #ivo for some SC files. </summary>
-    public string FileSignature { get; internal set; }
+    public string? FileSignature { get; internal set; }
 
     /// <summary> The type of file (geometry or animation) </summary>
     public FileType FileType { get; internal set; }
@@ -32,13 +32,13 @@ public class Model
     public SkinningInfo SkinningInfo { get; set; } = new();
 
     /// <summary> The Bones in the model.  The CompiledBones chunk will have a unique RootBone. </summary>
-    public ChunkCompiledBones Bones { get; internal set; }
+    public ChunkCompiledBones? Bones { get; internal set; }
 
     public uint NumChunks { get; internal set; }
 
-    private Dictionary<int, ChunkNode> nodeMap { get; set; }
-
     public List<ChunkHeader> chunkHeaders = new();
+
+    private Dictionary<int, ChunkNode> nodeMap { get; set; }
 
     /// <summary> All NodeChunks for this model in a dictionary by chunk Id. </summary>
     public Dictionary<int, ChunkNode> NodeMap
@@ -48,7 +48,7 @@ public class Model
             if (nodeMap == null)
             {
                 nodeMap = new Dictionary<int, ChunkNode>() { };
-                ChunkNode rootNode = null;
+                ChunkNode? rootNode = null;
                 RootNode = rootNode = (rootNode ?? RootNode);  // Each model will have it's own rootnode.
 
                 foreach (ChunkNode node in ChunkMap.Values.Where(c => c.ChunkType == ChunkType.Node).OrderBy(ob=>ob.ID))
@@ -58,7 +58,7 @@ public class Model
                     {
                         ChunkNode parentNode = knownNode.ParentNode;
 
-                        if (parentNode != null)
+                        if (parentNode is not null)
                             parentNode = nodeMap[parentNode.ID];
 
                         node.ParentNode = parentNode;
@@ -93,13 +93,13 @@ public class Model
         return buffer;
     }
 
-    public bool IsIvoFile => FileSignature.Equals("#ivo");
+    public bool IsIvoFile => FileSignature?.Equals("#ivo") ?? false;
 
     private void Load(string fileName)
     {
         var inputFile = new FileInfo(fileName);
 
-        Console.Title = string.Format("Processing {0}...", inputFile.Name);
+        Console.Title = $"Processing {inputFile.Name}...";
 
         FileName = inputFile.Name;
 
@@ -157,7 +157,7 @@ public class Model
         ChunkNode rootNode = new ChunkNode_823
         {
             Name = FileName,
-            ObjectNodeID = 2,      // No node IDs in #ivo files
+            ObjectNodeID = 2,      // No node IDs in #ivo files.  The actual mesh is the only node in the m file.
             ParentNodeID = ~0,     // No parent
             __NumChildren = 0,     // Single object
             MatID = 0,

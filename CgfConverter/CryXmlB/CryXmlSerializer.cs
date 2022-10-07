@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml;
-using System.Xml.Linq;
 using System.Xml.Serialization;
 
 namespace HoloXPLOR.DataForge;
@@ -24,14 +23,14 @@ public static class CryXmlSerializer
             return xml;     // File is already XML
         }
         else if (peek == 'p')  // pbxml, for Sonic Boom {
-            return LoadPbxmlFile(writeLog, br);
+            return LoadPbxmlFile(br);
         else if (peek == 'C')  // Binary Cryengine XML (CryXmlB)
             return LoadScXmlFile(writeLog, br);
 
         throw new Exception("Unknown File Format"); // Unknown file format
     }
 
-    private static XmlDocument LoadPbxmlFile(bool writeLog, BinaryReader br)
+    private static XmlDocument LoadPbxmlFile(BinaryReader br)
     {
         string header = br.ReadCString();
 
