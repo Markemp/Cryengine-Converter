@@ -282,4 +282,28 @@ public class StarCitizenTests
         var materials = colladaData.DaeObject.Library_Materials.Material;
         Assert.AreEqual(5, materials.Length);
     }
+
+    [TestMethod]
+    public void Glaive()
+    {
+        var args = new string[] {
+            $@"{userHome}\OneDrive\ResourceFiles\SC\3.12.0\VNCL_Glaive.cga",
+            "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        cryData.ProcessCryengineFiles();
+
+        Collada colladaData = new Collada(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+
+        // Geometry Library checks
+        var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
+        Assert.AreEqual(96, geometries.Length);
+
+        // Materials check
+        var materials = colladaData.DaeObject.Library_Materials.Material;
+        Assert.AreEqual(20, materials.Length);
+    }
 }
