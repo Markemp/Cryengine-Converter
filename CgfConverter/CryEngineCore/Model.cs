@@ -106,11 +106,11 @@ public class Model
         if (!inputFile.Exists)
             throw new FileNotFoundException();
 
-        using FileStream fs = new(fileName, FileMode.Open);
+        using FileStream fs = new(fileName, FileMode.Open, FileAccess.Read);
         using BinaryReader reader = new(fs);
         // Get the header.  This isn't essential for .cgam files, but we need this info to find the version and offset to the chunk table
         ReadFileHeader(reader);
-        ReadChunkHeaders(reader);
+        ReadChunkTable(reader);
         ReadChunks(reader);
     }
 
@@ -170,7 +170,7 @@ public class Model
         ChunkMap.Add(1, rootNode);
     }
 
-    private void ReadChunkHeaders(BinaryReader b)
+    private void ReadChunkTable(BinaryReader b)
     {
         b.BaseStream.Seek(ChunkTableOffset, SeekOrigin.Begin);
 
@@ -178,7 +178,15 @@ public class Model
         {
             ChunkHeader header = Chunk.New<ChunkHeader>((uint)FileVersion);
             header.Read(b);
+
             chunkHeaders.Add(header);
+        }
+
+        // Set sizes for versions that don't have sizes
+        for (int i = 0; i < NumChunks; i++)
+        {
+            if (FileVersion == FileVersion.CryTek1And2 &&  i < NumChunks - 2)
+                chunkHeaders[i].Size = chunkHeaders[i + 1].Offset - chunkHeaders[i].Offset;
         }
     }
 

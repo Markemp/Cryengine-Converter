@@ -2,8 +2,8 @@
 
 public enum FileVersion : uint
 {
-    CryTek_3_4 = 0x744,
-    CryTek_3_5 = 0x745,
+    CryTek1And2 = 0x744,
+    CryTek3 = 0x745,
     CryTek_3_6 = 0x746,
 }
 

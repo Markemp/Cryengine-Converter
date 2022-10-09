@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace CgfConverter;
 
-public class ArgsHandler
+public sealed class ArgsHandler
 {
     public bool Verbose { get; set; }
     /// <summary>Files to process</summary>
@@ -14,9 +14,9 @@ public class ArgsHandler
     /// <summary>Location of the Object Files</summary>
     public DirectoryInfo DataDir { get; internal set; } = new DirectoryInfo(".");
     /// <summary>File to render to</summary>
-    public string OutputFile { get; internal set; }
+    public string? OutputFile { get; internal set; }
     /// <summary>Directory to render to</summary>
-    public string OutputDir { get; internal set; }
+    public string? OutputDir { get; internal set; }
     /// <summary>Sets the output log level</summary>
     public LogLevelEnum LogLevel { get; set; } = LogLevelEnum.Critical;
     /// <summary>Allows naming conflicts for mtl file</summary>
@@ -59,11 +59,7 @@ public class ArgsHandler
         ExcludeMaterialNames = new List<string> { };
     }
 
-    /// <summary>
-    /// Take a string, and expand it into a list of files if it is a file filter
-    /// 
-    /// TODO: Make it understand /**/ format, instead of ONLY supporting FileName wildcards
-    /// </summary>
+    // TODO: Make it understand /**/ format, instead of ONLY supporting FileName wildcards
     private static string[] GetFiles(string filter)
     {
         if (File.Exists(filter))

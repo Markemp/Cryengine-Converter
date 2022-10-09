@@ -12,19 +12,21 @@ internal sealed class ChunkCompiledBones_800 : ChunkCompiledBones
 
         //  Read the first bone with ReadCompiledBone, then recursively grab all the children for each bone you find.
         //  Each bone structure is 584 bytes, so will need to seek childOffset * 584 each time, and go back.
+        
         NumBones = (int)((Size - 32) / 584);
+
         for (int i = 0; i < NumBones; i++)
         {
             CompiledBone tempBone = new CompiledBone();
             tempBone.ReadCompiledBone_800(b);
 
-            if (RootBone == null)  // First bone read is root bone
+            if (RootBone is null)  // First bone read is root bone
                 RootBone = tempBone;
 
             if (tempBone.offsetParent != 0)
                 tempBone.ParentBone = BoneList[i + tempBone.offsetParent];
             
-            if (tempBone.ParentBone != null)
+            if (tempBone.ParentBone is not null)
                 tempBone.parentID = tempBone.ParentBone.ControllerID;
             else
                 tempBone.parentID = 0;

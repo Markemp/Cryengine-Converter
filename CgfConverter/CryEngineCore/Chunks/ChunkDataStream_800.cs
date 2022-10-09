@@ -20,7 +20,7 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
         DataStreamType = (DatastreamType)dataStreamType;
         NumElements = b.ReadUInt32(); // number of elements in this chunk
 
-        if (_model.FileVersion == FileVersion.CryTek_3_5 || _model.FileVersion == FileVersion.CryTek_3_4)
+        if (_model.FileVersion == FileVersion.CryTek3 || _model.FileVersion == FileVersion.CryTek1And2)
         {
             BytesPerElement = b.ReadUInt32();
         }

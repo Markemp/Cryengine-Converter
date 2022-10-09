@@ -144,7 +144,7 @@ public abstract class Chunk : IBinaryChunk
         reader.BaseStream.Seek(_header.Offset, SeekOrigin.Begin);
 
         // Star Citizen files don't have the type, version, offset and ID at the start of a chunk, so don't read them.
-        if (_model.FileVersion == FileVersion.CryTek_3_4 || _model.FileVersion == FileVersion.CryTek_3_5)
+        if (_model.FileVersion == FileVersion.CryTek1And2 || _model.FileVersion == FileVersion.CryTek3)
         {
             ChunkType = (ChunkType)reader.ReadUInt32();
             Version = reader.ReadUInt32();
