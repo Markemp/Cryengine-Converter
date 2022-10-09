@@ -1,17 +1,14 @@
-﻿using System;
+﻿namespace HoloXPLOR.DataForge;
 
-namespace HoloXPLOR.DataForge
+public sealed record CryXmlNode
 {
-    public class CryXmlNode
-    {
-        public Int32 NodeID { get; set; }
-        public Int32 NodeNameOffset { get; set; }
-        public Int32 ItemType { get; set; }
-        public Int16 AttributeCount { get; set; }
-        public Int16 ChildCount { get; set; }
-        public Int32 ParentNodeID { get; set; }
-        public Int32 FirstAttributeIndex { get; set; }
-        public Int32 FirstChildIndex { get; set; }
-        public Int32 Reserved { get; set; }
-    }
+    public int NodeID { get; init; }
+    public int NodeNameOffset { get; init; }
+    public int ItemType { get; init; }
+    public short AttributeCount { get; init; }
+    public short ChildCount { get; init; }
+    public int ParentNodeID { get; init; }
+    public int FirstAttributeIndex { get; init; }
+    public int FirstChildIndex { get; init; }
+    public int Reserved { get; init; }
 }

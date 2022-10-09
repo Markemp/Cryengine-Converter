@@ -1,13 +1,12 @@
 ﻿using System.IO;
 
-namespace CgfConverter.CryEngineCore
+namespace CgfConverter.CryEngineCore;
+
+internal sealed class ChunkMeshPhysicsData_80000800 : ChunkMeshPhysicsData
 {
-    class ChunkMeshPhysicsData_80000800 : ChunkMeshPhysicsData
+    // TODO:  Implement ChunkMeshPhysicsData ver 0x800.
+    public override void Read(BinaryReader b)
     {
-        // TODO:  Implement ChunkMeshPhysicsData ver 0x800.
-        public override void Read(BinaryReader b)
-        {
-            base.Read(b);
-        }
+        base.Read(b);
     }
 }

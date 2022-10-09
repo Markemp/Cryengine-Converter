@@ -3,24 +3,23 @@ using System;
 using System.IO;
 using System.Xml;
 
-namespace CgfConverter.CryEngineCore
+namespace CgfConverter.CryEngineCore;
+
+internal sealed class ChunkBinaryXmlData_3 : ChunkBinaryXmlData     //  0xCCCBF004:  Binary XML Data
 {
-    public class ChunkBinaryXmlData_3 : ChunkBinaryXmlData     //  0xCCCBF004:  Binary XML Data
+    public XmlDocument Data { get; private set; }
+
+    public override void Read(BinaryReader b)
     {
-        public XmlDocument Data { get; private set; }
+        base.Read(b);
 
-        public override void Read(BinaryReader b)
+        var bytesToRead = (Int32)(this.Size - Math.Max(b.BaseStream.Position - this.Offset, 0));
+
+        var buffer = b.ReadBytes(bytesToRead);
+
+        using (var memoryStream = new MemoryStream(buffer))
         {
-            base.Read(b);
-
-            var bytesToRead = (Int32)(this.Size - Math.Max(b.BaseStream.Position - this.Offset, 0));
-
-            var buffer = b.ReadBytes(bytesToRead);
-
-            using (var memoryStream = new MemoryStream(buffer))
-            {
-                this.Data = CryXmlSerializer.ReadStream(memoryStream);
-            }
+            this.Data = CryXmlSerializer.ReadStream(memoryStream);
         }
     }
 }

@@ -5,259 +5,305 @@ using System;
 using System.Globalization;
 using System.Threading;
 
-namespace CgfConverterTests.IntegrationTests.SC
+namespace CgfConverterTests.IntegrationTests.SC;
+
+[TestClass]
+public class StarCitizenTests
 {
-    [TestClass]
-    public class StarCitizenTests
+    private readonly TestUtils testUtils = new();
+    string userHome;
+
+    [TestInitialize]
+    public void Initialize()
     {
-        private readonly TestUtils testUtils = new TestUtils();
-        string userHome;
+        CultureInfo customCulture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
+        customCulture.NumberFormat.NumberDecimalSeparator = ".";
+        Thread.CurrentThread.CurrentCulture = customCulture;
+        userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        testUtils.GetSchemaSet();
+    }
 
-        [TestInitialize]
-        public void Initialize()
-        {
-            CultureInfo customCulture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
-            customCulture.NumberFormat.NumberDecimalSeparator = ".";
-            Thread.CurrentThread.CurrentCulture = customCulture;
-            userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            testUtils.GetSchemaSet();
-        }
+    [TestMethod]
+    public void CutlassRed_312_NonIvo()
+    {
+        var args = new string[] { $@"D:\depot\SC2\Data\objects\Spaceships\Ships\DRAK\Cutlass\Cutlass_Red\DRAK_Cutlass_Red.cga", "-dds", "-dae", "-objectdir", @"d:\depot\sc2\data" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
+        cryData.ProcessCryengineFiles();
 
-        [TestMethod]
-        public void AEGS_Vanguard_LandingGear_Front_IvoFile()
-        {
-            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\new_skin_format\Avenger_Landing_Gear\AEGS_Vanguard_LandingGear_Front.skin", "-dds", "-dae" };
+        var colladaData = new Collada(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+    }
 
-            int result = testUtils.argsHandler.ProcessArgs(args);
-            Assert.AreEqual(0, result);
-            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
-            cryData.ProcessCryengineFiles();
+    [TestMethod]
+    public void AEGS_Vanguard_LandingGear_Front_IvoFile()
+    {
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\AEGS_Vanguard_LandingGear_Front.skin", "-dds", "-dae" };
 
-            var colladaData = new Collada(testUtils.argsHandler, cryData);
-            colladaData.GenerateDaeObject();
-            var daeObject = colladaData.DaeObject;
-        }
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        cryData.ProcessCryengineFiles();
 
-        [TestMethod]
-        public void M_ccc_vanduul_helmet_01_312IvoSkinFile()
-        {
-            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\m_ccc_vanduul_helmet_01.skin", "-dds", "-dae" };
+        var colladaData = new Collada(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+    }
 
-            int result = testUtils.argsHandler.ProcessArgs(args);
-            Assert.AreEqual(0, result);
-            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
-            cryData.ProcessCryengineFiles();
-        }
+    [TestMethod]
+    public void M_ccc_vanduul_helmet_01_312IvoSkinFile()
+    {
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\m_ccc_vanduul_helmet_01.skin", "-dds", "-dae" };
 
-        [TestMethod]
-        public void BehrRifle_312IvoChrFile()
-        {
-            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\3.12.0\brfl_fps_behr_p4ar.chr", "-dds", "-dae" };
-            int result = testUtils.argsHandler.ProcessArgs(args);
-            Assert.AreEqual(0, result);
-            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
-            cryData.ProcessCryengineFiles();
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        cryData.ProcessCryengineFiles();
+    }
 
-            var colladaData = new Collada(testUtils.argsHandler, cryData);
-            colladaData.GenerateDaeObject(); 
-            var daeObject = colladaData.DaeObject;
+    [TestMethod]
+    public void BehrRifle_312IvoChrFile()
+    {
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\3.12.0\brfl_fps_behr_p4ar.chr", "-dds", "-dae" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        cryData.ProcessCryengineFiles();
 
-            Assert.AreEqual(17, cryData.Materials.Count);
+        var colladaData = new Collada(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject(); 
+        var daeObject = colladaData.DaeObject;
 
-            testUtils.ValidateColladaXml(colladaData);
-        }
+        //Assert.AreEqual(17, cryData.Materials.Count);
 
-        [TestMethod]
-        public void BehrRifle_312IvoSkinFile()
-        {
-            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\3.12.0\brfl_fps_behr_p4ar_parts.skin", "-dds", "-dae" };
-            int result = testUtils.argsHandler.ProcessArgs(args);
-            Assert.AreEqual(0, result);
-            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
-            cryData.ProcessCryengineFiles();
+        testUtils.ValidateColladaXml(colladaData);
+    }
 
-            var colladaData = new Collada(testUtils.argsHandler, cryData);
-            colladaData.GenerateDaeObject();
-            var daeObject = colladaData.DaeObject;
+    [TestMethod]
+    public void BehrRifle_312IvoSkinFile()
+    {
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\3.12.0\brfl_fps_behr_p4ar_parts.skin", "-dds", "-dae" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        cryData.ProcessCryengineFiles();
 
-            testUtils.ValidateColladaXml(colladaData);
-        }
+        var colladaData = new Collada(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
 
-        [TestMethod]
-        public void AEGS_Avenger()
-        {
-            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\AEGS_Avenger.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\SC\" };
-            int result = testUtils.argsHandler.ProcessArgs(args);
-            Assert.AreEqual(0, result);
-            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
-            cryData.ProcessCryengineFiles();
+        testUtils.ValidateColladaXml(colladaData);
+    }
 
-            var colladaData = new Collada(testUtils.argsHandler, cryData);
-            var daeObject = colladaData.DaeObject;
-            colladaData.GenerateDaeObject();
-            // Make sure Rotations are still right
-            const string frontLGDoorLeftMatrix = "1 0 0 -0.300001 0 -0.938131 -0.346280 0.512432 0 0.346280 -0.938131 -1.835138 0 0 0 1";
-            var noseNode = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].node[0];
-            Assert.AreEqual("Nose", noseNode.ID);
-            Assert.AreEqual("Front_LG_Door_Left", noseNode.node[28].ID);
-            Assert.AreEqual(frontLGDoorLeftMatrix, noseNode.node[28].Matrix[0].Value_As_String);
+    [TestMethod]
+    public void AEGS_Avenger()
+    {
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\AEGS_Avenger.cga", "-dds", "-dae" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        cryData.ProcessCryengineFiles();
 
-            testUtils.ValidateColladaXml(colladaData);
-        }
+        var colladaData = new Collada(testUtils.argsHandler, cryData);
+        var daeObject = colladaData.DaeObject;
+        colladaData.GenerateDaeObject();
+        // Make sure Rotations are still right
+        const string frontLGDoorLeftMatrix = "1 0 0 -0.300001 0 -0.938131 -0.346280 0.512432 0 0.346280 -0.938131 -1.835138 0 0 0 1";
+        var noseNode = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].node[0];
+        Assert.AreEqual("Nose", noseNode.ID);
+        Assert.AreEqual("Front_LG_Door_Left", noseNode.node[28].ID);
+        Assert.AreEqual(frontLGDoorLeftMatrix, noseNode.node[28].Matrix[0].Value_As_String);
 
-        [TestMethod]
-        public void AEGS_GladiusLandingGearFront_CHR()
-        {
-            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\AEGS_Gladius_LandingGear_Front_CHR.chr", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\SC\" };
-            int result = testUtils.argsHandler.ProcessArgs(args);
-            Assert.AreEqual(0, result);
-            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
-            cryData.ProcessCryengineFiles();
+        Assert.AreEqual(29, colladaData.DaeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(88, colladaData.DaeObject.Library_Images.Image.Length);
+        testUtils.ValidateColladaXml(colladaData);
+    }
 
-            var colladaData = new Collada(testUtils.argsHandler, cryData);
-            var daeObject = colladaData.DaeObject;
-            colladaData.GenerateDaeObject();
+    [TestMethod]
+    public void AEGS_GladiusLandingGearFront_CHR()
+    {
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\AEGS_Gladius_LandingGear_Front_CHR.chr", "-dds", "-dae", "-objectdir", @"d:\depot\sc2\data" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
+        cryData.ProcessCryengineFiles();
 
-            Assert.IsFalse(cryData.Models[0].HasGeometry);
-        }
+        var colladaData = new Collada(testUtils.argsHandler, cryData);
+        var daeObject = colladaData.DaeObject;
+        colladaData.GenerateDaeObject();
 
-        [TestMethod]
-        public void SC_hangar_asteroid_controlroom_fan()
-        {
-            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\hangar_asteroid_controlroom_fan.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
-            int result = testUtils.argsHandler.ProcessArgs(args);
-            Assert.AreEqual(0, result);
-            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
-            cryData.ProcessCryengineFiles();
+        Assert.IsFalse(cryData.Models[0].HasGeometry);
+    }
 
-            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
-            colladaData.GenerateDaeObject();
+    [TestMethod]
+    public void SC_hangar_asteroid_controlroom_fan()
+    {
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\hangar_asteroid_controlroom_fan.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        cryData.ProcessCryengineFiles();
 
-            var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
-            Assert.AreEqual(3, geometries.Length);
+        Collada colladaData = new Collada(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
 
-            testUtils.ValidateColladaXml(colladaData);
-        }
+        var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
+        Assert.AreEqual(3, geometries.Length);
 
-        [TestMethod]
-        public void SC_BehrRifle_34()
-        {
-            var args = new string[] { 
-                $@"{userHome}\OneDrive\ResourceFiles\SC\brfl_fps_behr_p4ar_parts_3.4.skin", 
-                "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
-            int result = testUtils.argsHandler.ProcessArgs(args);
-            Assert.AreEqual(0, result);
-            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
-            cryData.ProcessCryengineFiles();
+        testUtils.ValidateColladaXml(colladaData);
+    }
 
-            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
-            colladaData.GenerateDaeObject();
+    [TestMethod]
+    public void SC_BehrRifle_34()
+    {
+        var args = new string[] { 
+            $@"{userHome}\OneDrive\ResourceFiles\SC\brfl_fps_behr_p4ar_parts_3.4.skin", 
+            "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        cryData.ProcessCryengineFiles();
 
-            var controllers = colladaData.DaeObject.Library_Controllers.Controller;
-            var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
-            Assert.AreEqual(1, controllers.Length);
-            Assert.AreEqual(1, geometries.Length);
+        Collada colladaData = new Collada(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
 
-            var mesh = geometries[0].Mesh;
-            Assert.AreEqual(4, mesh.Source.Length);
-            Assert.AreEqual("brfl_fps_behr_p4ar_parts-vertices", mesh.Vertices.ID);
-            Assert.AreEqual(9, mesh.Triangles.Length);
-            Assert.AreEqual(78, mesh.Triangles[0].Count);
-            Assert.AreEqual(134, mesh.Triangles[8].Count);
+        var controllers = colladaData.DaeObject.Library_Controllers.Controller;
+        var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
+        Assert.AreEqual(1, controllers.Length);
+        Assert.AreEqual(1, geometries.Length);
 
-            testUtils.ValidateColladaXml(colladaData);
-        }
+        var mesh = geometries[0].Mesh;
+        Assert.AreEqual(4, mesh.Source.Length);
+        Assert.AreEqual("brfl_fps_behr_p4ar_parts-vertices", mesh.Vertices.ID);
+        Assert.AreEqual(9, mesh.Triangles.Length);
+        Assert.AreEqual(78, mesh.Triangles[0].Count);
+        Assert.AreEqual(134, mesh.Triangles[8].Count);
 
-        [TestMethod]
-        public void BehrRifle_312_NonIVO()
-        {
-            var args = new string[] {
-                $@"{userHome}\OneDrive\ResourceFiles\SC\3.12.0\brfl_fps_behr_p4ar_body.cgf",
-                "-dds", "-dae" };
-            int result = testUtils.argsHandler.ProcessArgs(args);
-            Assert.AreEqual(0, result);
-            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
-            cryData.ProcessCryengineFiles();
+        testUtils.ValidateColladaXml(colladaData);
+    }
 
-            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
-            colladaData.GenerateDaeObject();
+    [TestMethod]
+    public void BehrRifle_312_NonIvo()
+    {
+        var args = new string[] {
+            $@"{userHome}\OneDrive\ResourceFiles\SC\3.12.0\brfl_fps_behr_p4ar_body.cgf",
+            "-dds", "-dae" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        cryData.ProcessCryengineFiles();
 
-            // Geometry Library checks
-            var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
-            Assert.AreEqual(1, geometries.Length);
+        Collada colladaData = new Collada(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
 
-            var mesh = geometries[0].Mesh;
-            Assert.AreEqual(4, mesh.Source.Length);
-            Assert.AreEqual("brfl_fps_behr_p4ar_body-vertices", mesh.Vertices.ID);
-            Assert.AreEqual(13, mesh.Triangles.Length);
-            Assert.AreEqual(84, mesh.Triangles[0].Count);
-            Assert.AreEqual(1460, mesh.Triangles[8].Count);
+        // Geometry Library checks
+        var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
+        Assert.AreEqual(1, geometries.Length);
 
-            var vertices = mesh.Source[0];
-            var normals = mesh.Source[1];
-            var uvs = mesh.Source[2];
-            var colors = mesh.Source[3];
-            Assert.AreEqual("brfl_fps_behr_p4ar_body-mesh-pos", vertices.ID);
-            Assert.AreEqual("brfl_fps_behr_p4ar_body-pos", vertices.Name);
-            Assert.AreEqual("brfl_fps_behr_p4ar_body-mesh-norm", normals.ID);
-            Assert.AreEqual("brfl_fps_behr_p4ar_body-norm", normals.Name);
-            Assert.AreEqual("brfl_fps_behr_p4ar_body-mesh-UV", uvs.ID);
-            Assert.AreEqual("brfl_fps_behr_p4ar_body-UV", uvs.Name);
-            Assert.AreEqual("brfl_fps_behr_p4ar_body-mesh-color", colors.ID);
-            Assert.AreEqual("brfl_fps_behr_p4ar_body-color", colors.Name);
-            Assert.AreEqual(56058, vertices.Float_Array.Count);
-            Assert.AreEqual("brfl_fps_behr_p4ar_body-mesh-pos-array", vertices.Float_Array.ID);
-            Assert.IsTrue(vertices.Float_Array.Value_As_String.StartsWith("-0.020622 0.180945 0.097055 -0.020622 0.178238 0.092718 -0.020622 0.175470 0.097055 -0.020622 0.175408 0.105175 -0.020622"));
-            Assert.AreEqual((uint)18686, vertices.Technique_Common.Accessor.Count);
-            Assert.AreEqual((uint)3, vertices.Technique_Common.Accessor.Stride);
-            Assert.AreEqual(56058, normals.Float_Array.Count);
-            Assert.AreEqual((uint)18686, normals.Technique_Common.Accessor.Count);
-            Assert.AreEqual((uint)3, normals.Technique_Common.Accessor.Stride);
-            Assert.AreEqual(37372, uvs.Float_Array.Count);
-            Assert.AreEqual((uint)18686, uvs.Technique_Common.Accessor.Count);
-            Assert.AreEqual((uint)2, uvs.Technique_Common.Accessor.Stride);
-            Assert.AreEqual(74744, colors.Float_Array.Count);
+        var mesh = geometries[0].Mesh;
+        Assert.AreEqual(4, mesh.Source.Length);
+        Assert.AreEqual("brfl_fps_behr_p4ar_body-vertices", mesh.Vertices.ID);
+        Assert.AreEqual(13, mesh.Triangles.Length);
+        Assert.AreEqual(84, mesh.Triangles[0].Count);
+        Assert.AreEqual(1460, mesh.Triangles[8].Count);
 
-            testUtils.ValidateColladaXml(colladaData);
-        }
+        var vertices = mesh.Source[0];
+        var normals = mesh.Source[1];
+        var uvs = mesh.Source[2];
+        var colors = mesh.Source[3];
+        Assert.AreEqual("brfl_fps_behr_p4ar_body-mesh-pos", vertices.ID);
+        Assert.AreEqual("brfl_fps_behr_p4ar_body-pos", vertices.Name);
+        Assert.AreEqual("brfl_fps_behr_p4ar_body-mesh-norm", normals.ID);
+        Assert.AreEqual("brfl_fps_behr_p4ar_body-norm", normals.Name);
+        Assert.AreEqual("brfl_fps_behr_p4ar_body-mesh-UV", uvs.ID);
+        Assert.AreEqual("brfl_fps_behr_p4ar_body-UV", uvs.Name);
+        Assert.AreEqual("brfl_fps_behr_p4ar_body-mesh-color", colors.ID);
+        Assert.AreEqual("brfl_fps_behr_p4ar_body-color", colors.Name);
+        Assert.AreEqual(56058, vertices.Float_Array.Count);
+        Assert.AreEqual("brfl_fps_behr_p4ar_body-mesh-pos-array", vertices.Float_Array.ID);
+        Assert.IsTrue(vertices.Float_Array.Value_As_String.StartsWith("-0.020622 0.180945 0.097055 -0.020622 0.178238 0.092718 -0.020622 0.175470 0.097055 -0.020622 0.175408 0.105175 -0.020622"));
+        Assert.AreEqual((uint)18686, vertices.Technique_Common.Accessor.Count);
+        Assert.AreEqual((uint)3, vertices.Technique_Common.Accessor.Stride);
+        Assert.AreEqual(56058, normals.Float_Array.Count);
+        Assert.AreEqual((uint)18686, normals.Technique_Common.Accessor.Count);
+        Assert.AreEqual((uint)3, normals.Technique_Common.Accessor.Stride);
+        Assert.AreEqual(37372, uvs.Float_Array.Count);
+        Assert.AreEqual((uint)18686, uvs.Technique_Common.Accessor.Count);
+        Assert.AreEqual((uint)2, uvs.Technique_Common.Accessor.Stride);
+        Assert.AreEqual(74744, colors.Float_Array.Count);
 
-        [TestMethod]
-        public void DRAK_Buccaneer_Landing_Gear_Front_Skin()
-        {
-            var args = new string[] {
-                $@"{userHome}\OneDrive\ResourceFiles\SC\DRAK_Buccaneer_Landing_Gear_Front_Skin.skin",
-                "-dds", "-dae" };
-            int result = testUtils.argsHandler.ProcessArgs(args);
-            Assert.AreEqual(0, result);
-            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
-            cryData.ProcessCryengineFiles();
+        testUtils.ValidateColladaXml(colladaData);
+    }
 
-            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
-            colladaData.GenerateDaeObject();
+    [TestMethod]
+    public void DRAK_Buccaneer_Landing_Gear_Front_Skin()
+    {
+        var args = new string[] {
+            $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\DRAK_Buccaneer_Landing_Gear_Front_Skin.skin",
+            "-dds", "-dae" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        cryData.ProcessCryengineFiles();
 
-            // Geometry Library checks
-            var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
-            Assert.AreEqual(1, geometries.Length);
-        }
+        Collada colladaData = new Collada(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
 
-        [TestMethod]
-        public void Mobiglass()
-        {
-            var args = new string[] {
-                $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\f_mobiglas_civilian_01.skin",
-                "-dds", "-dae" };
-            int result = testUtils.argsHandler.ProcessArgs(args);
-            Assert.AreEqual(0, result);
-            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
-            cryData.ProcessCryengineFiles();
+        // Geometry Library checks
+        var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
+        Assert.AreEqual(1, geometries.Length);
 
-            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
-            colladaData.GenerateDaeObject();
+        // Materials check
+        var materials = colladaData.DaeObject.Library_Materials.Material;
+        Assert.AreEqual(25, materials.Length);
+    }
 
-            // Geometry Library checks
-            var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
-            Assert.AreEqual(1, geometries.Length);
+    [TestMethod]
+    public void Mobiglass()
+    {
+        var args = new string[] {
+            $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\f_mobiglas_civilian_01.skin",
+            "-dds", "-dae" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        cryData.ProcessCryengineFiles();
 
-        }
+        Collada colladaData = new Collada(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+
+        // Geometry Library checks
+        var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
+        Assert.AreEqual(1, geometries.Length);
+        
+        // Materials check
+        var materials = colladaData.DaeObject.Library_Materials.Material;
+        Assert.AreEqual(5, materials.Length);
+    }
+
+    [TestMethod]
+    public void Glaive()
+    {
+        var args = new string[] {
+            $@"{userHome}\OneDrive\ResourceFiles\SC\3.12.0\VNCL_Glaive.cga",
+            "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        cryData.ProcessCryengineFiles();
+
+        Collada colladaData = new Collada(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+
+        // Geometry Library checks
+        var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
+        Assert.AreEqual(96, geometries.Length);
+
+        // Materials check
+        var materials = colladaData.DaeObject.Library_Materials.Material;
+        Assert.AreEqual(20, materials.Length);
     }
 }

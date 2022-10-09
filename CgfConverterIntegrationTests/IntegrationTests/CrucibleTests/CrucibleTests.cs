@@ -3,7 +3,6 @@ using CgfConverter.CryEngineCore;
 using CgfConverterTests.TestUtilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -38,7 +37,7 @@ namespace CgfConverterTests.IntegrationTests.Crucible
 
             Assert.AreEqual((uint)11, cryData.Models[0].NumChunks);
             Assert.AreEqual(ChunkType.Node, cryData.Models[0].ChunkMap[22].ChunkType);
-            var datastream = cryData.Models[0].ChunkMap[16] as ChunkDataStream_801;
+            var datastream = cryData.Models[0].ChunkMap[16] as ChunkDataStream;
             Assert.AreEqual((uint)8, datastream.BytesPerElement);
             Assert.AreEqual((uint)96, datastream.NumElements);
             Assert.AreEqual(-1.390625, datastream.Vertices[0].X, TestUtils.delta);
@@ -48,7 +47,7 @@ namespace CgfConverterTests.IntegrationTests.Crucible
             Collada colladaData = new Collada(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-            Assert.AreEqual(0, actualMaterialsCount);
+            Assert.AreEqual(1, actualMaterialsCount);
             testUtils.ValidateColladaXml(colladaData);
         }
     }

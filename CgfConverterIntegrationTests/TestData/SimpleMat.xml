@@ -1,0 +1,9 @@
+<Material MtlFlags="524288" Shader="Shader" GenMask="80000" StringGenMask="%GLOSS_MAP" SurfaceType="" MatTemplate="" Diffuse="0.073827766,0.073827766,0.073827766" Specular="3.2,3.2,3.2" Emissive="0,0,0" Shininess="95" Opacity="1">
+ <Textures>
+  <Texture Map="Diffuse" File="objects/diffuse.tif"/>
+  <Texture Map="Specular" File="objects/specular.tif"/>
+  <Texture Map="Bumpmap" File="objects/bumpmap.tif"/>
+  <Texture Map="Environment" File="environmentprobe.tif"/>
+ </Textures>
+ <PublicParams SpecMapChannelB="0" SpecMapChannelR="0" FresnelPower="4" GlossMapChannelB="0" SpecMapChannelG="0" FresnelScale="1" FresnelBias="1" IndirectColor="0.25,0.25,0.25"/>
+</Material>

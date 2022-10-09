@@ -1,10 +1,7 @@
-﻿using System;
+﻿namespace HoloXPLOR.DataForge;
 
-namespace HoloXPLOR.DataForge
+public sealed record CryXmlReference
 {
-    public class CryXmlReference
-    {
-        public Int32 NameOffset { get; set; }
-        public Int32 ValueOffset { get; set; }
-    }
+    public int NameOffset { get; init; }
+    public int ValueOffset { get; init; }
 }

@@ -1,0 +1,57 @@
+<Material MtlFlags="524544">
+ <SubMaterials>
+  <Material Name="body" MtlFlags="524416" Shader="Robot" GenMask="180080320" StringGenMask="%BLENDLAYER%CUSTOMIZEDSKIN%DAMAGEGLOW%GLOSS_MAP%SPECULARPOW_GLOSSALPHA%TESSELLATION" SurfaceType="" MatTemplate="" Diffuse="1,1,1" Specular="0.46474114,0.46474114,0.46474114" Emissive="0,0,0" Shininess="255" Opacity="1" GlowAmount="0.75">
+   <Textures>
+    <Texture Map="Diffuse" File="objects/body_dif.tif"/>
+    <Texture Map="Specular" File="objects/body_spc.tif"/>
+    <Texture Map="Bumpmap" File="objects/body_ddn.tif"/>
+    <Texture Map="Opacity" File="textures/opacmap_dif.tif"/>
+    <Texture Map="Decal" File="textures/decalmap_dif.tif"/>
+    <Texture Map="SubSurface" File="objects/body_rgb.tif"/>
+    <Texture Map="Custom" File="textures/damage_gdf.tif"/>
+    <Texture Map="[1] Custom" File="textures/damage_ddn.tif"/>
+   </Textures>
+   <PublicParams SpecMapChannelB="0" BlendFalloff="32" SpecMapChannelR="0" SkinColorPrimary="0.13609855,0.15415226,0.078056589" FresnelPower="4" SkinColorTertiary="0.13609855,0.15415226,0.078056589" BlendLayer2Tiling="4" GlossMapChannelB="0" BlendMaskRotation="0" SpecMapChannelG="0" FresnelScale="3" FresnelBias="1" BlendFactor="8" SkinColorSecondary="0.13609855,0.15415226,0.078056589" IndirectColor="0.24680044,0.24680044,0.24680044"/>
+  </Material>
+  <Material Name="decals" MtlFlags="524416" Shader="Illum" GenMask="100000000" StringGenMask="%TESSELLATION" SurfaceType="" MatTemplate="" Diffuse="1,1,1" Specular="0.46474114,0.46474114,0.46474114" Emissive="0,0,0" Shininess="255" Opacity="1">
+   <Textures />
+   <PublicParams FresnelPower="4" GlossFromDiffuseContrast="1" FresnelScale="1" GlossFromDiffuseOffset="0" FresnelBias="1" GlossFromDiffuseAmount="0" GlossFromDiffuseBrightness="0.333" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="variant" MtlFlags="524416" Shader="Robot" GenMask="180080320" StringGenMask="%BLENDLAYER%CUSTOMIZEDSKIN%DAMAGEGLOW%GLOSS_MAP%SPECULARPOW_GLOSSALPHA%TESSELLATION" SurfaceType="" MatTemplate="" Diffuse="1,1,1" Specular="0.46474114,0.46474114,0.46474114" Emissive="0,0,0" Shininess="255" Opacity="1" GlowAmount="0.75">
+   <Textures>
+    <Texture Map="Diffuse" File="objects/variant_dif.tif"/>
+    <Texture Map="Specular" File="objects/variant_spc.tif"/>
+    <Texture Map="Bumpmap" File="objects/variant_ddn.tif"/>
+    <Texture Map="Opacity" File="textures/opacmap_dif.tif"/>
+    <Texture Map="Decal" File="textures/decalmap_dif.tif"/>
+    <Texture Map="SubSurface" File="objects/variant_rgb.tif"/>
+    <Texture Map="Custom" File="textures/damage_gdf.tif"/>
+    <Texture Map="[1] Custom" File="textures/damage_ddn.tif"/>
+   </Textures>
+   <PublicParams SpecMapChannelB="0" BlendFalloff="32" SpecMapChannelR="0" SkinColorPrimary="0.13609855,0.15415226,0.078056589" FresnelPower="4" SkinColorTertiary="0.13609855,0.15415226,0.078056589" BlendLayer2Tiling="4" GlossMapChannelB="0" BlendMaskRotation="0" SpecMapChannelG="0" FresnelScale="3" FresnelBias="1" BlendFactor="8" SkinColorSecondary="0.13609855,0.15415226,0.078056589" IndirectColor="0.24680044,0.24680044,0.24680044"/>
+  </Material>
+  <Material Name="window" MtlFlags="524416" Shader="Illum" GenMask="180080000" StringGenMask="%GLOSS_MAP%SPECULARPOW_GLOSSALPHA%TESSELLATION" SurfaceType="" MatTemplate="" Diffuse="1,1,1" Specular="0.46474114,0.46474114,0.46474114" Emissive="0,0,0" Shininess="255" Opacity="1">
+   <Textures>
+    <Texture Map="Diffuse" File="objects/window_dif.tif"/>
+    <Texture Map="Specular" File="objects/window_spc.tif"/>
+    <Texture Map="Bumpmap" File="objects/window_ddn.tif"/>
+   </Textures>
+   <PublicParams SpecMapChannelB="0" SpecMapChannelR="0" FresnelPower="3.5" GlossMapChannelB="0" SpecMapChannelG="0" FresnelScale="32" FresnelBias="0.80000001" IndirectColor="0.25,0.25,0.25"/>
+  </Material>
+  <Material Name="generic" MtlFlags="524416" Shader="Robot" GenMask="18008A324" StringGenMask="%ALPHAMASK_DETAILMAP%BLENDLAYER%CUSTOMIZEDSKIN%DAMAGEGLOW%DETAIL_BUMP_MAPPING%DETAIL_TEXTURE_IS_SET%GLOSS_MAP%SPECULARPOW_GLOSSALPHA%TESSELLATION" SurfaceType="" MatTemplate="" Diffuse="1,1,1" Specular="0.46474114,0.46474114,0.46474114" Emissive="0,0,0" Shininess="255" Opacity="1" GlowAmount="0.75">
+   <Textures>
+    <Texture Map="Diffuse" File="objects/variant_dif.tif"/>
+    <Texture Map="Specular" File="objects/variant_spc.tif"/>
+    <Texture Map="Bumpmap" File="objects/variant_ddn.tif"/>
+    <Texture Map="Detail" File="textures/detail/detail_metal_d_ddn.tif"/>
+    <Texture Map="Opacity" File="textures/opacmap_dif.tif"/>
+    <Texture Map="Decal" File="textures/decalmap_dif.tif"/>
+    <Texture Map="SubSurface" File="objects/variant_rgb.tif"/>
+    <Texture Map="Custom" File="textures/damage_gdf.tif"/>
+    <Texture Map="[1] Custom" File="textures/damage_ddn.tif"/>
+   </Textures>
+  <PublicParams SpecMapChannelB="0" BlendFalloff="32" SpecMapChannelR="0" SkinColorPrimary="1.000000, 0.000000, 0.000000" FresnelPower="4" SkinColorTertiary="0.000000, 0.000000, 1.000000" DetailBumpTillingU="15" BlendLayer2Tiling="4" GlossMapChannelB="0" BlendMaskRotation="0" SpecMapChannelG="0" FresnelScale="1" DetailDiffuseScale="0" FresnelBias="1" DetailBumpScale="0.80000001" BlendFactor="8" DetailGlossScale="0" SkinColorSecondary="0.000000, 1.000000, 0.000000" IndirectColor="0.24680044,0.24680044,0.24680044"/>
+  </Material>
+ </SubMaterials>
+ <PublicParams FresnelPower="4" GlossFromDiffuseContrast="1" FresnelScale="1" GlossFromDiffuseOffset="0" FresnelBias="1" GlossFromDiffuseAmount="0" GlossFromDiffuseBrightness="0.333" IndirectColor="0.25,0.25,0.25"/>
+</Material>

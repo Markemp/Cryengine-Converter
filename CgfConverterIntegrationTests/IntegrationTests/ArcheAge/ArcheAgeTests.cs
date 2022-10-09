@@ -5,69 +5,68 @@ using System;
 using System.Globalization;
 using System.Threading;
 
-namespace CgfConverterTests.IntegrationTests.ArcheAge
+namespace CgfConverterTests.IntegrationTests.ArcheAge;
+
+[TestClass]
+public class ArcheAgeTests
 {
-    [TestClass]
-    public class ArcheAgeTests
+    private readonly TestUtils testUtils = new TestUtils();
+    string userHome; 
+
+    [TestInitialize]
+    public void Initialize()
     {
-        private readonly TestUtils testUtils = new TestUtils();
-        string userHome; 
+        CultureInfo customCulture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
+        customCulture.NumberFormat.NumberDecimalSeparator = ".";
+        Thread.CurrentThread.CurrentCulture = customCulture;
+        userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
-        [TestInitialize]
-        public void Initialize()
-        {
-            CultureInfo customCulture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
-            customCulture.NumberFormat.NumberDecimalSeparator = ".";
-            Thread.CurrentThread.CurrentCulture = customCulture;
-            userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        testUtils.GetSchemaSet();
+    }
 
-            testUtils.GetSchemaSet();
-        }
+    [TestMethod]
+    public void ArcheAge_ChrFileTest()
+    {
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\ArcheAge\coupleduckship_foot.chr", "-dds", "-dae" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        cryData.ProcessCryengineFiles();
 
-        [TestMethod]
-        public void ArcheAge_ChrFileTest()
-        {
-            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\ArcheAge\coupleduckship_foot.chr", "-dds", "-dae" };
-            int result = testUtils.argsHandler.ProcessArgs(args);
-            Assert.AreEqual(0, result);
-            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
-            cryData.ProcessCryengineFiles();
+        var colladaData = new Collada(testUtils.argsHandler, cryData);
+        var daeObject = colladaData.DaeObject;
+        colladaData.GenerateDaeObject();
+        int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
+        Assert.AreEqual(6, actualMaterialsCount);
 
-            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
-            var daeObject = colladaData.DaeObject;
-            colladaData.GenerateDaeObject();
-            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
-            Assert.AreEqual(6, actualMaterialsCount);
+        // Controller check
+        var controller = daeObject.Library_Controllers.Controller;
+        var expectedBones = "Bip01 Locator_Locomotion bone_coupleduckship_fix bone_coupleduckship_pedal_r_01_FirstBone";
+        Assert.IsTrue(controller[0].Skin.Source[0].Name_Array.Value_Pre_Parse.StartsWith(expectedBones));
+        var expectedBpm = "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 1 0 -0 0 -0 1 0 0 0 0 1 0 0 0 0 1 1 0 0 0 0 1 0 " +
+            "0 0 0 1 0 0 0 0 1 0.116992 -0.048410 0.991952 0.418401 -0.916581 0.379274 0.126612 -2.546408";
+        Assert.IsTrue(controller[0].Skin.Source[1].Float_Array.Value_As_String.StartsWith(expectedBpm));
+        Assert.AreEqual(368, controller[0].Skin.Source[1].Float_Array.Count);
 
-            // Controller check
-            var controller = daeObject.Library_Controllers.Controller;
-            var expectedBones = "Bip01 Locator_Locomotion bone_coupleduckship_fix bone_coupleduckship_pedal_r_01_FirstBone";
-            Assert.IsTrue(controller[0].Skin.Source[0].Name_Array.Value_Pre_Parse.StartsWith(expectedBones));
-            var expectedBpm = "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 1 0 -0 0 -0 1 0 0 0 0 1 0 0 0 0 1 1 0 0 0 0 1 0 " +
-                "0 0 0 1 0 0 0 0 1 0.116992 -0.048410 0.991952 0.418401 -0.916581 0.379274 0.126612 -2.546408";
-            Assert.IsTrue(controller[0].Skin.Source[1].Float_Array.Value_As_String.StartsWith(expectedBpm));
-            Assert.AreEqual(368, controller[0].Skin.Source[1].Float_Array.Count);
+        // Visual Scene Check 
+        Assert.AreEqual("Scene", daeObject.Scene.Visual_Scene.Name);
+        Assert.AreEqual("#Scene", daeObject.Scene.Visual_Scene.URL);
+        Assert.AreEqual(1, daeObject.Library_Visual_Scene.Visual_Scene.Length);
+        Assert.AreEqual("Scene", daeObject.Library_Visual_Scene.Visual_Scene[0].ID);
+        Assert.AreEqual(2, daeObject.Library_Visual_Scene.Visual_Scene[0].Node.Length);
 
-            // Visual Scene Check 
-            Assert.AreEqual("Scene", daeObject.Scene.Visual_Scene.Name);
-            Assert.AreEqual("#Scene", daeObject.Scene.Visual_Scene.URL);
-            Assert.AreEqual(1, daeObject.Library_Visual_Scene.Visual_Scene.Length);
-            Assert.AreEqual("Scene", daeObject.Library_Visual_Scene.Visual_Scene[0].ID);
-            Assert.AreEqual(2, daeObject.Library_Visual_Scene.Visual_Scene[0].Node.Length);
-
-            // Armature Node check 
-            var node = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0];
-            Assert.AreEqual("Armature", node.ID);
-            Assert.AreEqual("Bip01", node.sID);
-            Assert.AreEqual("Bip01", node.Name);
-            Assert.AreEqual("JOINT", node.Type.ToString());
-            Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1", node.Matrix[0].Value_As_String);
-            var locatorBone = node.node[0];
-            Assert.AreEqual("Armature_Locator_Locomotion", locatorBone.ID);
-            Assert.AreEqual("Locator_Locomotion", locatorBone.Name);
-            Assert.AreEqual("Locator_Locomotion", locatorBone.sID);
-            Assert.AreEqual("JOINT", locatorBone.Type.ToString());
-            Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1", locatorBone.Matrix[0].Value_As_String);
-        }
+        // Armature Node check 
+        var node = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0];
+        Assert.AreEqual("Armature", node.ID);
+        Assert.AreEqual("Bip01", node.sID);
+        Assert.AreEqual("Bip01", node.Name);
+        Assert.AreEqual("JOINT", node.Type.ToString());
+        Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1", node.Matrix[0].Value_As_String);
+        var locatorBone = node.node[0];
+        Assert.AreEqual("Armature_Locator_Locomotion", locatorBone.ID);
+        Assert.AreEqual("Locator_Locomotion", locatorBone.Name);
+        Assert.AreEqual("Locator_Locomotion", locatorBone.sID);
+        Assert.AreEqual("JOINT", locatorBone.Type.ToString());
+        Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1", locatorBone.Matrix[0].Value_As_String);
     }
 }

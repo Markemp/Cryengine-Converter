@@ -217,7 +217,7 @@ namespace CgfConverterTests.IntegrationTests
 
             Assert.AreEqual((uint)41, cryData.Models[0].NumChunks);
             Assert.AreEqual(ChunkType.Node, cryData.Models[0].ChunkMap[47].ChunkType);
-            var datastream = cryData.Models[0].ChunkMap[40] as ChunkDataStream_801;
+            var datastream = cryData.Models[0].ChunkMap[40] as ChunkDataStream;
             Assert.AreEqual((uint)12, datastream.BytesPerElement);
             Assert.AreEqual((uint)22252, datastream.NumElements);
             Assert.AreEqual(0.29570183, datastream.Vertices[0].X, TestUtils.delta);
@@ -252,22 +252,21 @@ namespace CgfConverterTests.IntegrationTests
         }
 
         // Model appears to be broken.  Assigns 3 materials, but only 2 materials in mtlname chunks
-        //[TestMethod]
-        //public void Cnylgt_marauder_NoMaterialFile()
-        //{
-        //    var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\cnylgt_marauder.cga" };
-        //    int result = argsHandler.ProcessArgs(args);
-        //    Assert.AreEqual(0, result);
-        //    CryEngine cryData = new CryEngine(args[0], argsHandler.DataDir.FullName);
+        [TestMethod]
+        public void Cnylgt_marauder_NoMaterialFile()
+        {
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\cnylgt_marauder.cga" };
+            int result = testUtils.argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
+            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            cryData.ProcessCryengineFiles();
 
-        //    Collada colladaData = new Collada(argsHandler, cryData);
-        //    colladaData.GenerateDaeObject();
+            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
+            colladaData.GenerateDaeObject();
 
-        //    int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-        //    Assert.AreEqual(3, actualMaterialsCount);
-
-        //    ValidateColladaXml(colladaData);
-        //}
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
+            Assert.AreEqual(2, actualMaterialsCount);
+        }
 
         [TestMethod]
         public void Green_fern_bush_a_MaterialFileExists()

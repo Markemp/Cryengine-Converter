@@ -1,0 +1,52 @@
+﻿using CgfConverter;
+using CgfConverterTests.TestUtilities;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using System.Globalization;
+using System.Threading;
+
+namespace CgfConverterTests.IntegrationTests.Crysis;
+
+[TestClass]
+public class CrysisIntegrationTests
+{
+    private readonly TestUtils testUtils = new();
+    private readonly string userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+    [TestInitialize]
+    public void Initialize()
+    {
+        CultureInfo customCulture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
+        customCulture.NumberFormat.NumberDecimalSeparator = ".";
+        Thread.CurrentThread.CurrentCulture = customCulture;
+        testUtils.GetSchemaSet();
+    }
+
+    [TestMethod]
+    public void AlienBase()
+    {
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Crysis\alienbase.cgf", "-dds", "-dae" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new Collada(testUtils.argsHandler, cryData);
+        colladaData.Render();
+    }
+
+    [TestMethod]
+    public void FemaleArcheologist()
+    {
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Crysis\Archaeologist_female_01.chr", "-dds", "-dae" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new Collada(testUtils.argsHandler, cryData);
+        colladaData.Render();
+    }
+}
