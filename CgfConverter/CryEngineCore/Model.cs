@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using CgfConverter.Services;
 
 namespace CgfConverter.CryEngineCore;
 
@@ -107,7 +108,7 @@ public class Model
             throw new FileNotFoundException();
 
         using FileStream fs = new(fileName, FileMode.Open, FileAccess.Read);
-        using BinaryReader reader = new(fs);
+        using EndiannessChangeableBinaryReader reader = new(fs);
         // Get the header.  This isn't essential for .cgam files, but we need this info to find the version and offset to the chunk table
         ReadFileHeader(reader);
         ReadChunkTable(reader);

@@ -11,7 +11,7 @@ internal sealed class ChunkExportFlags_1 : ChunkExportFlags
 
         uint tmpExportFlag = b.ReadUInt32();
         ChunkType = (ChunkType)tmpExportFlag;
-        Version = b.ReadUInt32();
+        VersionRaw = b.ReadUInt32();
         ChunkOffset = b.ReadUInt32();
         ID = b.ReadInt32();
 
