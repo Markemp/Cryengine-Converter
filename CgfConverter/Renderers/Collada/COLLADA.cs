@@ -1429,7 +1429,7 @@ public class Collada : BaseRenderer
 
         if (materials is not null)
         {
-            if (index >= materials.Length || materialLibraryIndex >= materials.Length)
+            if (materialLibraryIndex >= materials.Length)
             {
                 Utils.Log(LogLevelEnum.Warning, $"Attempting to assign material beyond the list of given materials for node ${nodeChunk.Name} with id {nodeChunk.ID}.  Assigning first material.\nCheck if material file is missing.");
                 return materials[0].Name + "-material";
