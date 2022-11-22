@@ -8,7 +8,7 @@ internal sealed class ChunkHeader_746 : ChunkHeader
     {
         uint headerType = reader.ReadUInt16() + 0xCCCBF000;
         ChunkType = (ChunkType)headerType;
-        Version = reader.ReadUInt16();
+        VersionRaw = reader.ReadUInt16();
         ID = reader.ReadInt32();
         Size = reader.ReadUInt32();
         Offset = reader.ReadUInt32();

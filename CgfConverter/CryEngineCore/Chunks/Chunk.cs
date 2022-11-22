@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using CgfConverter.Services;
 
 namespace CgfConverter.CryEngineCore;
 
@@ -17,7 +18,9 @@ public abstract class Chunk : IBinaryChunk
 
     public uint Offset { get; internal set; }
     public ChunkType ChunkType { get; internal set; }
-    internal uint Version;
+    internal uint VersionRaw;
+    internal bool IsBigEndian => (VersionRaw & 0x80000000u) != 0;
+    internal uint Version => VersionRaw & 0x7fffffffu;
     internal int ID;
     internal uint Size;
     public uint DataSize { get; set; }
@@ -81,6 +84,7 @@ public abstract class Chunk : IBinaryChunk
             _chunkFactoryCache[typeof(T)] = versionMap;
         }
 
+        version &= 0x7fffffff;
         if (!versionMap.TryGetValue(version, out factory))
         {
             var targetType = typeof(T).Assembly.GetTypes()
@@ -135,7 +139,7 @@ public abstract class Chunk : IBinaryChunk
             throw new ArgumentNullException(nameof(reader));
 
         ChunkType = _header.ChunkType;
-        Version = _header.Version;
+        VersionRaw = _header.VersionRaw;
         Offset = _header.Offset;
         ID = _header.ID;
         Size = _header.Size;
@@ -143,22 +147,36 @@ public abstract class Chunk : IBinaryChunk
 
         reader.BaseStream.Seek(_header.Offset, SeekOrigin.Begin);
 
+        var swappableReader = (EndiannessChangeableBinaryReader)reader;
+
         // Star Citizen files don't have the type, version, offset and ID at the start of a chunk, so don't read them.
         if (_model.FileVersion == FileVersion.CryTek1And2 || _model.FileVersion == FileVersion.CryTek3)
         {
+            // This part is always in little endian.
+            swappableReader.IsBigEndian = false;
+            
             ChunkType = (ChunkType)reader.ReadUInt32();
-            Version = reader.ReadUInt32();
+            VersionRaw = reader.ReadUInt32();
             Offset = reader.ReadUInt32();
             ID = reader.ReadInt32();
             DataSize = Size - 16;
         }
 
-        if (Offset != _header.Offset || Size != _header.Size)
+        if (ChunkType != _header.ChunkType ||
+            VersionRaw != _header.VersionRaw ||
+            Offset != _header.Offset ||
+            ID != _header.ID)
         {
             Utils.Log(LogLevelEnum.Debug, "Conflict in chunk definition");
-            Utils.Log(LogLevelEnum.Debug, "{0:X}+{1:X}", _header.Offset, _header.Size);
-            Utils.Log(LogLevelEnum.Debug, "{0:X}+{1:X}", Offset, Size);
+            Utils.Log(LogLevelEnum.Debug, "ChunkType=header({0:X}) vs header2({1:X})", (uint)_header.ChunkType, (uint)ChunkType);
+            Utils.Log(LogLevelEnum.Debug, "VersionRaw=VersionRaw({0:X}) vs header2({1:X})", _header.VersionRaw, VersionRaw);
+            Utils.Log(LogLevelEnum.Debug, "Offset=header({0:X}) vs header2({1:X})", _header.Offset, Offset);
+            Utils.Log(LogLevelEnum.Debug, "ID=header({0:X}) vs header2({1:X})", _header.ID, ID);
+            Utils.Log(LogLevelEnum.Debug, "ChunkType=header({0:X}) vs header2({1:X})", _header.ChunkType, ChunkType);
         }
+
+        // Remainder of the chunk is in whichever endianness specified from version.
+        swappableReader.IsBigEndian = IsBigEndian;
     }
 
     /// <summary>Gets a link to the SkinningInfo model.</summary>

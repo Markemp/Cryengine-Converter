@@ -8,7 +8,7 @@ internal sealed class ChunkSourceInfo_0 : ChunkSourceInfo
     public override void Read(BinaryReader reader)
     {
         ChunkType = _header.ChunkType;
-        Version = _header.Version;
+        VersionRaw = _header.Version;
         Offset = _header.Offset;
         ID = _header.ID;
         Size = _header.Size;
