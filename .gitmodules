@@ -1,0 +1,3 @@
+[submodule "usd-unity-sdk"]
+	path = usd-unity-sdk
+	url = https://github.com/Unity-Technologies/usd-unity-sdk.git

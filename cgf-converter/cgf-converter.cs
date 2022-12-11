@@ -34,28 +34,21 @@ public class Program
 
                         cryData.ProcessCryengineFiles();
 
-                        if (argsHandler.OutputBlender)
-                        {
-                            Blender blendFile = new(argsHandler, cryData);
-                            blendFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
-                        }
-
                         if (argsHandler.OutputWavefront)
                         {
                             Wavefront objFile = new(argsHandler, cryData);
                             objFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
                         }
 
-                        if (argsHandler.OutputCryTek)
-                        {
-                            CryRender cryFile = new(argsHandler, cryData);
-                            cryFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
-                        }
-
                         if (argsHandler.OutputCollada)
                         {
                             Collada daeFile = new(argsHandler, cryData);
                             daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+                        }
+
+                        if (argsHandler.OutputUsd)
+                        {
+
                         }
                     }
                     catch (Exception ex)

@@ -25,16 +25,12 @@ public sealed class ArgsHandler
     public bool NoConflicts { get; internal set; }
     /// <summary>Name to group all meshes under</summary>
     public bool GroupMeshes { get; internal set; }
-    /// <summary>Render CryTek format files</summary>
-    public bool OutputCryTek { get; internal set; }
     /// <summary>Render Wavefront format files</summary>
     public bool OutputWavefront { get; internal set; }
-    /// <summary>Render Blender format files</summary>
-    public bool OutputBlender { get; internal set; }
     /// <summary>Render Collada format files</summary>
     public bool OutputCollada { get; internal set; }
-    /// <summary>Render FBX (not yet implemented)</summary>
-    public bool OutputFBX { get; internal set; }
+    /// <summary>Render to Pixar's Universal Scene Description format</summary>
+    public bool OutputUsd { get; internal set; }
     /// <summary>Smooth Faces</summary>
     public bool Smooth { get; internal set; }
     /// <summary>Flag used to indicate we should convert texture paths to use TIFF instead of DDS</summary>
@@ -146,12 +142,6 @@ public sealed class ArgsHandler
                     Smooth = true;
                     break;
                 #endregion
-                #region case "-blend" / "-blender"...
-                case "-blend":
-                case "-blender":
-                    OutputBlender = true;
-                    break;
-                #endregion
                 #region case "-obj" / "-object" / "wavefront"...
 
                 case "-obj":
@@ -160,21 +150,10 @@ public sealed class ArgsHandler
                     OutputWavefront = true;
                     break;
                 #endregion
-                #region case "-fbx"
-                case "-fbx":
-                    OutputFBX = true;
-                    break;
-                #endregion
                 #region case "-dae" / "-collada"...
                 case "-dae":
                 case "-collada":
                     OutputCollada = true;
-                    break;
-                #endregion
-                #region case "-crytek"...
-                case "-cry":
-                case "-crytek":
-                    OutputCryTek = true;
                     break;
                 #endregion
                 #region case "-tif" / "-tiff"...
@@ -302,16 +281,12 @@ public sealed class ArgsHandler
         else if (TgaTextures)
             Utils.Log(LogLevelEnum.Info, "Using TGA textures");
         
-        if (OutputBlender)
-            Utils.Log(LogLevelEnum.Info, "Output format set to Blender (.blend)");
-        if (OutputCryTek)
-            Utils.Log(LogLevelEnum.Info, "Output format set to CryTek (.cga/.cgf/.chr/.skin)");
         if (OutputWavefront)
             Utils.Log(LogLevelEnum.Info, "Output format set to Wavefront (.obj)");
-        if (OutputFBX)
-            Utils.Log(LogLevelEnum.Info, "Output format set to FBX (.fbx)");
         if (OutputCollada)
             Utils.Log(LogLevelEnum.Info, "Output format set to COLLADA (.dae)");
+        if (OutputUsd)
+            Utils.Log(LogLevelEnum.Info, "Output format set to USD (.usda)");
         if (AllowConflicts)
             Utils.Log(LogLevelEnum.Info, "Allow conflicts for mtl files enabled");
         if (NoConflicts)
@@ -336,7 +311,7 @@ public sealed class ArgsHandler
             Utils.Log(LogLevelEnum.Info, "Output directory set to {0}", OutputDir);
         
         // Default to Collada (.dae) format
-        if (!OutputBlender && !OutputCollada && !OutputWavefront && !OutputFBX)
+        if (!OutputUsd && !OutputCollada && !OutputWavefront)
             OutputCollada = true;
 
         return 0;
