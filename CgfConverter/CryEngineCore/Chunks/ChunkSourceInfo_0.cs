@@ -25,9 +25,9 @@ internal sealed class ChunkSourceInfo_0 : ChunkSourceInfo
 
         if (Offset != _header.Offset || Size != _header.Size)
         {
-            Utils.Log(LogLevelEnum.Debug, "Conflict in chunk definition:  SourceInfo chunk");
-            Utils.Log(LogLevelEnum.Debug, "{0:X}+{1:X}", _header.Offset, _header.Size);
-            Utils.Log(LogLevelEnum.Debug, "{0:X}+{1:X}", Offset, Size);
+            Utilities.Log(LogLevelEnum.Debug, "Conflict in chunk definition:  SourceInfo chunk");
+            Utilities.Log(LogLevelEnum.Debug, "{0:X}+{1:X}", _header.Offset, _header.Size);
+            Utilities.Log(LogLevelEnum.Debug, "{0:X}+{1:X}", Offset, Size);
         }
 
         ChunkType = ChunkType.SourceInfo; // this chunk doesn't actually have the chunktype header.

@@ -12,7 +12,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using static Extensions.FileHandlingExtensions;
-using static CgfConverter.Utils;
+using static CgfConverter.Utilities;
 
 namespace CgfConverter;
 
@@ -34,9 +34,9 @@ public class Collada : BaseRenderer
         GenerateDaeObject();
 
         // At this point, we should have a cryData.Asset object, fully populated.
-        Utils.Log(LogLevelEnum.Debug);
-        Utils.Log(LogLevelEnum.Debug, "*** Starting WriteCOLLADA() ***");
-        Utils.Log(LogLevelEnum.Debug);
+        Utilities.Log(LogLevelEnum.Debug);
+        Utilities.Log(LogLevelEnum.Debug, "*** Starting WriteCOLLADA() ***");
+        Utilities.Log(LogLevelEnum.Debug);
 
         // File name will be "<object name>.dae"
         var daeOutputFile = new FileInfo(GetOutputFile("dae", outputDir, preservePath));
@@ -48,15 +48,15 @@ public class Collada : BaseRenderer
         serializer.Serialize(writer, DaeObject);
 
         writer.Close();
-        Utils.Log(LogLevelEnum.Debug, "End of Write Collada.  Export complete.");
+        Utilities.Log(LogLevelEnum.Debug, "End of Write Collada.  Export complete.");
     }
 
     public void GenerateDaeObject()
     {
-        Utils.Log(LogLevelEnum.Debug, "Number of models: {0}", CryData.Models.Count);
+        Utilities.Log(LogLevelEnum.Debug, "Number of models: {0}", CryData.Models.Count);
         for (int i = 0; i < CryData.Models.Count; i++)
         {
-            Utils.Log(LogLevelEnum.Debug, "\tNumber of nodes in model: {0}", CryData.Models[i].NodeMap.Count);
+            Utilities.Log(LogLevelEnum.Debug, "\tNumber of nodes in model: {0}", CryData.Models[i].NodeMap.Count);
         }
 
         WriteColladaRoot(colladaVersion);
@@ -326,13 +326,13 @@ public class Collada : BaseRenderer
 
             if (IsNodeNameExcluded(nodeChunk.Name))
             {
-                Utils.Log(LogLevelEnum.Debug, $"Excluding node {nodeChunk.Name}");
+                Utilities.Log(LogLevelEnum.Debug, $"Excluding node {nodeChunk.Name}");
                 continue;
             }
 
             if (nodeChunk.ObjectChunk is null)
             {
-                Utils.Log(LogLevelEnum.Warning, "Skipped node with missing Object {0}", nodeChunk.Name);
+                Utilities.Log(LogLevelEnum.Warning, "Skipped node with missing Object {0}", nodeChunk.Name);
                 continue;
             }
 
@@ -1295,7 +1295,7 @@ public class Collada : BaseRenderer
             {
                 if (IsNodeNameExcluded(childNodeChunk.Name))
                 {
-                    Utils.Log(LogLevelEnum.Debug, $"Excluding child node {childNodeChunk.Name}");
+                    Utilities.Log(LogLevelEnum.Debug, $"Excluding child node {childNodeChunk.Name}");
                     continue;
                 }
 
@@ -1431,14 +1431,14 @@ public class Collada : BaseRenderer
         {
             if (materialLibraryIndex >= materials.Length)
             {
-                Utils.Log(LogLevelEnum.Warning, $"Attempting to assign material beyond the list of given materials for node ${nodeChunk.Name} with id {nodeChunk.ID}.  Assigning first material.\nCheck if material file is missing.");
+                Utilities.Log(LogLevelEnum.Warning, $"Attempting to assign material beyond the list of given materials for node ${nodeChunk.Name} with id {nodeChunk.ID}.  Assigning first material.\nCheck if material file is missing.");
                 return materials[0].Name + "-material";
             }
             var material = materials[materialLibraryIndex];
             return material.Name + "-material";
         }
         else
-            Utils.Log(LogLevelEnum.Debug, $"Unable to find submaterials for node chunk ${nodeChunk.Name}");
+            Utilities.Log(LogLevelEnum.Debug, $"Unable to find submaterials for node chunk ${nodeChunk.Name}");
 
         return null;
     }

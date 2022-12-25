@@ -13,9 +13,9 @@ namespace CgfConverter
         {
             // The root of the functions to write Blend files
             // At this point, we should have a CgfData object, fully populated.
-            Utils.Log(LogLevelEnum.Debug);
-            Utils.Log(LogLevelEnum.Debug, "*** Starting WriteBlend() ***");
-            Utils.Log(LogLevelEnum.Debug);
+            Utilities.Log(LogLevelEnum.Debug);
+            Utilities.Log(LogLevelEnum.Debug, "*** Starting WriteBlend() ***");
+            Utilities.Log(LogLevelEnum.Debug);
 
             // File name will be "object name.blend"
             blendOutputFile = new FileInfo(this.GetOutputFile("blend", outputDir, preservePath));

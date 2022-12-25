@@ -56,7 +56,7 @@ public abstract class BaseRenderer
         {
             if (nodeName.ToLower().StartsWith(excname.ToLower()))
             {
-                Utils.Log(LogLevelEnum.Debug, $"Node matched excludename '{excname}'");
+                Utilities.Log(LogLevelEnum.Debug, $"Node matched excludename '{excname}'");
                 return true;
             }
         }
@@ -70,7 +70,7 @@ public abstract class BaseRenderer
         {
             if (materialName.ToLower().StartsWith(excname.ToLower()))
             {
-                Utils.Log(LogLevelEnum.Debug, $"Material name matched excludemat '{excname}'");
+                Utilities.Log(LogLevelEnum.Debug, $"Material name matched excludemat '{excname}'");
                 return true;
             }
         }

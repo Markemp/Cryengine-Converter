@@ -9,8 +9,8 @@ public class Program
 {
     public static int Main(string[] args)
     {
-        Utils.LogLevel = LogLevelEnum.Info;
-        Utils.DebugLevel = LogLevelEnum.Debug;
+        Utilities.LogLevel = LogLevelEnum.Info;
+        Utilities.DebugLevel = LogLevelEnum.Debug;
 
         string oldTitle = Console.Title;
 
@@ -60,15 +60,15 @@ public class Program
                     }
                     catch (Exception ex)
                     {
-                        Utils.Log(LogLevelEnum.Critical);
-                        Utils.Log(LogLevelEnum.Critical, "********************************************************************************");
-                        Utils.Log(LogLevelEnum.Critical, "There was an error rendering {0}", inputFile);
-                        Utils.Log(LogLevelEnum.Critical);
-                        Utils.Log(LogLevelEnum.Critical, ex.Message);
-                        Utils.Log(LogLevelEnum.Critical);
-                        Utils.Log(LogLevelEnum.Critical, ex.StackTrace);
-                        Utils.Log(LogLevelEnum.Critical, "********************************************************************************");
-                        Utils.Log(LogLevelEnum.Critical);
+                        Utilities.Log(LogLevelEnum.Critical);
+                        Utilities.Log(LogLevelEnum.Critical, "********************************************************************************");
+                        Utilities.Log(LogLevelEnum.Critical, "There was an error rendering {0}", inputFile);
+                        Utilities.Log(LogLevelEnum.Critical);
+                        Utilities.Log(LogLevelEnum.Critical, ex.Message);
+                        Utilities.Log(LogLevelEnum.Critical);
+                        Utilities.Log(LogLevelEnum.Critical, ex.StackTrace);
+                        Utilities.Log(LogLevelEnum.Critical, "********************************************************************************");
+                        Utilities.Log(LogLevelEnum.Critical);
                         return 1;
                     }
                 }
@@ -85,7 +85,7 @@ public class Program
 
         Console.Title = oldTitle;
 
-        Utils.Log(LogLevelEnum.Debug, "Done...");
+        Utilities.Log(LogLevelEnum.Debug, "Done...");
         
         return 0;
     }

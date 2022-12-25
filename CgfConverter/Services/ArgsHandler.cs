@@ -127,12 +127,12 @@ public sealed class ArgsHandler
                     LogLevelEnum level; 
                     if (LogLevelEnum.TryParse(inputArgs[i], true, out level))
                     {
-                        Utils.LogLevel = level;
+                        Utilities.LogLevel = level;
                     }
                     else
                     {
                         Console.WriteLine("Invalid log level {0}, defaulting to warn", inputArgs[i]);
-                        Utils.LogLevel = LogLevelEnum.Warning;
+                        Utilities.LogLevel = LogLevelEnum.Warning;
                     }
                     break;
                 #endregion
@@ -289,51 +289,51 @@ public sealed class ArgsHandler
         
         // Log info now that loglevel has been set
         if (Smooth)
-            Utils.Log(LogLevelEnum.Info, "Smoothing Faces");
+            Utilities.Log(LogLevelEnum.Info, "Smoothing Faces");
         if (GroupMeshes)
-            Utils.Log(LogLevelEnum.Info, "Grouping enabled");
+            Utilities.Log(LogLevelEnum.Info, "Grouping enabled");
         
         if (NoTextures)
-            Utils.Log(LogLevelEnum.Info, "Skipping texture output");
+            Utilities.Log(LogLevelEnum.Info, "Skipping texture output");
         else if (PngTextures)
-            Utils.Log(LogLevelEnum.Info, "Using PNG textures");
+            Utilities.Log(LogLevelEnum.Info, "Using PNG textures");
         else if (TiffTextures)
-            Utils.Log(LogLevelEnum.Info, "Using TIF textures");
+            Utilities.Log(LogLevelEnum.Info, "Using TIF textures");
         else if (TgaTextures)
-            Utils.Log(LogLevelEnum.Info, "Using TGA textures");
+            Utilities.Log(LogLevelEnum.Info, "Using TGA textures");
         
         if (OutputBlender)
-            Utils.Log(LogLevelEnum.Info, "Output format set to Blender (.blend)");
+            Utilities.Log(LogLevelEnum.Info, "Output format set to Blender (.blend)");
         if (OutputCryTek)
-            Utils.Log(LogLevelEnum.Info, "Output format set to CryTek (.cga/.cgf/.chr/.skin)");
+            Utilities.Log(LogLevelEnum.Info, "Output format set to CryTek (.cga/.cgf/.chr/.skin)");
         if (OutputWavefront)
-            Utils.Log(LogLevelEnum.Info, "Output format set to Wavefront (.obj)");
+            Utilities.Log(LogLevelEnum.Info, "Output format set to Wavefront (.obj)");
         if (OutputFBX)
-            Utils.Log(LogLevelEnum.Info, "Output format set to FBX (.fbx)");
+            Utilities.Log(LogLevelEnum.Info, "Output format set to FBX (.fbx)");
         if (OutputCollada)
-            Utils.Log(LogLevelEnum.Info, "Output format set to COLLADA (.dae)");
+            Utilities.Log(LogLevelEnum.Info, "Output format set to COLLADA (.dae)");
         if (AllowConflicts)
-            Utils.Log(LogLevelEnum.Info, "Allow conflicts for mtl files enabled");
+            Utilities.Log(LogLevelEnum.Info, "Allow conflicts for mtl files enabled");
         if (NoConflicts)
-            Utils.Log(LogLevelEnum.Info, "Prevent conflicts for mtl files enabled");
+            Utilities.Log(LogLevelEnum.Info, "Prevent conflicts for mtl files enabled");
         if (ExcludeNodeNames.Any())
-            Utils.Log(LogLevelEnum.Info, $"Skipping nodes starting with any of these names: {String.Join(", ", ExcludeNodeNames)}");
+            Utilities.Log(LogLevelEnum.Info, $"Skipping nodes starting with any of these names: {String.Join(", ", ExcludeNodeNames)}");
         if (ExcludeMaterialNames.Any())
-            Utils.Log(LogLevelEnum.Info, $"Skipping meshes using materials named: {String.Join(", ", ExcludeMaterialNames)}");
+            Utilities.Log(LogLevelEnum.Info, $"Skipping meshes using materials named: {String.Join(", ", ExcludeMaterialNames)}");
         if (DumpChunkInfo)
-            Utils.Log(LogLevelEnum.Info, "Output chunk info for missing or invalid chunks.");
+            Utilities.Log(LogLevelEnum.Info, "Output chunk info for missing or invalid chunks.");
         if (Throw)
-            Utils.Log(LogLevelEnum.Info, "Exceptions thrown to debugger");
+            Utilities.Log(LogLevelEnum.Info, "Exceptions thrown to debugger");
         if (DataDir.ToString() != ".")
-            Utils.Log(LogLevelEnum.Info, "Data directory set to {0}", DataDir.FullName);
+            Utilities.Log(LogLevelEnum.Info, "Data directory set to {0}", DataDir.FullName);
         
-        Utils.Log(LogLevelEnum.Info, "Processing input file(s):");
+        Utilities.Log(LogLevelEnum.Info, "Processing input file(s):");
         foreach (var file in InputFiles)
         {
-            Utils.Log(LogLevelEnum.Info, file);
+            Utilities.Log(LogLevelEnum.Info, file);
         }
         if (OutputDir != null)
-            Utils.Log(LogLevelEnum.Info, "Output directory set to {0}", OutputDir);
+            Utilities.Log(LogLevelEnum.Info, "Output directory set to {0}", OutputDir);
         
         // Default to Collada (.dae) format
         if (!OutputBlender && !OutputCollada && !OutputWavefront && !OutputFBX)

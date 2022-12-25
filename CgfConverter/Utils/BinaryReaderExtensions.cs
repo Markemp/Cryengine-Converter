@@ -12,8 +12,77 @@ public static class BinaryReaderExtensions
     public static float ReadCryHalf(this BinaryReader r)
     {
         // https://docs.microsoft.com/en-us/windows/win32/direct3d11/floating-point-rules#16-bit-floating-point-rules
+        // Actually, see CryHalf.inl in the Lumberyard project.  Stored as uint16.
         var bver = r.ReadUInt16();
+
+        var result = CryConvertHalfToFloat(bver);
+
         return Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
+    }
+
+    private static object CryConvertHalfToFloat(ushort value)
+    {
+        /*
+         *      __forceinline float CryConvertHalfToFloat(const CryHalf Value)
+                {
+                #if defined(LINUX) || defined(MAC)
+                    asm volatile("" ::: "memory");
+                #endif
+                    unsigned int Mantissa;
+                    unsigned int Exponent;
+                    unsigned int Result;
+
+                    Mantissa = (unsigned int)(Value & 0x03FF);
+
+                    if ((Value & 0x7C00) != 0)  // The value is normalized
+                    {
+                        Exponent = (unsigned int)((Value >> 10) & 0x1F);
+                    }
+                    else if (Mantissa != 0)     // The value is denormalized
+                    {
+                        // Normalize the value in the resulting float
+                        Exponent = 1;
+
+                        do
+                        {
+                            Exponent--;
+                            Mantissa <<= 1;
+                        } while ((Mantissa & 0x0400) == 0);
+
+                        Mantissa &= 0x03FF;
+                    }
+                    else                        // The value is zero
+                    {
+                        Exponent = (unsigned int)-112;
+                    }
+
+                    Result = ((Value & 0x8000) << 16) | // Sign
+                        ((Exponent + 112) << 23) | // Exponent
+                        (Mantissa << 13);          // Mantissa
+
+                    return *(float*)&Result;
+                }
+        */
+        uint mantissa;
+        uint exponent;
+        uint result;
+        mantissa = (uint)(value & 0x03FF);
+        if ((value & 0x7C00) != 0)
+            exponent = (uint)((value >> 10) & 0x1F);
+        else if (mantissa != 0)
+        {
+            exponent = 1;
+            do
+            {
+                exponent--;
+                mantissa <<= 1;
+            } while ((mantissa & 0x0400) == 0);
+            mantissa &= 0x03FF;
+        }
+        else
+            exponent = unchecked((uint)-112);
+        result = ((value & (uint)0x8000) << 16) | ((exponent + 112) << 23) | (mantissa << 13);
+        return (float)result;
     }
 
     public static Vector3 ReadVector3(this BinaryReader r, InputType inputType = InputType.Single)

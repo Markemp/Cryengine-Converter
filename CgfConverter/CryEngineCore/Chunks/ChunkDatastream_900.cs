@@ -18,13 +18,14 @@ internal sealed class ChunkDataStream_900 : ChunkDataStream
         base.Read(b);
 
         uint dataStreamType = b.ReadUInt32();
-        DataStreamType = (DatastreamType)dataStreamType;
+        var ivoDataStreamType = (IvoDatastreamType)dataStreamType;
+        
         BytesPerElement = b.ReadUInt32();
 
-        switch (DataStreamType)
+        switch (ivoDataStreamType)
         {
             #region IVOINDICES
-            case DatastreamType.IVOINDICES:
+            case IvoDatastreamType.IVOINDICES:
                 Indices = new uint[NumElements];
                 if (BytesPerElement == 2)
                 {
@@ -53,7 +54,7 @@ internal sealed class ChunkDataStream_900 : ChunkDataStream
                 break;
             #endregion
             #region IVOVERTSUVS
-            case DatastreamType.IVOVERTSUVS:
+            case IvoDatastreamType.IVOVERTSUVS:
                 Vertices = new Vector3[NumElements];
                 Normals = new Vector3[NumElements];
                 Colors = new IRGBA[NumElements];
@@ -79,16 +80,15 @@ internal sealed class ChunkDataStream_900 : ChunkDataStream
                             UVs[i].V = (float)b.ReadHalf();
                         }
                         if (NumElements % 2 == 1)
-                        {
                             SkipBytes(b, 4);
-                        }
+                        
                         break;
                 }
                 break;
             #endregion
             #region IVONORMALS
-            case DatastreamType.IVONORMALS:
-            case DatastreamType.IVONORMALS2:
+            case IvoDatastreamType.IVONORMALS:
+            case IvoDatastreamType.IVONORMALS2:
                 switch (BytesPerElement)
                 {
                     case 4:
@@ -109,7 +109,7 @@ internal sealed class ChunkDataStream_900 : ChunkDataStream
                         }
                         break;
                     default:
-                        Utils.Log("Unknown Normals Format");
+                        Utilities.Log("Unknown Normals Format");
                         for (int i = 0; i < NumElements; i++)
                         {
                             SkipBytes(b, BytesPerElement);
@@ -117,12 +117,16 @@ internal sealed class ChunkDataStream_900 : ChunkDataStream
                         break;
                 }
                 break;
-            case DatastreamType.IVONORMALS3:
-                // Skip for now...
+            case IvoDatastreamType.IVOCOLORS2:
+                Colors2 = new IRGBA[NumElements];
+                for (int i = 0; i < NumElements; i++)
+                {
+
+                }
                 break;
             #endregion
             #region IVOTANGENTS
-            case DatastreamType.IVOTANGENTS:
+            case IvoDatastreamType.IVOTANGENTS:
                 Tangents = new Tangent[NumElements, 2];
                 Normals = new Vector3[NumElements];
                 for (int i = 0; i < NumElements; i++)
@@ -163,7 +167,7 @@ internal sealed class ChunkDataStream_900 : ChunkDataStream
                 break;
             #endregion
             #region IVOBONEMAP
-            case DatastreamType.IVOBONEMAP:
+            case IvoDatastreamType.IVOBONEMAP:
                 SkinningInfo skin = GetSkinningInfo();
                 skin.HasBoneMapDatastream = true;
                 skin.BoneMapping = new List<MeshBoneMapping>();
@@ -194,13 +198,13 @@ internal sealed class ChunkDataStream_900 : ChunkDataStream
                         }
                         break;
                     default:
-                        Utils.Log("Unknown BoneMapping structure");
+                        Utilities.Log("Unknown BoneMapping structure");
                         break;
                 }
 
                 break;
             #endregion
-            case DatastreamType.IVOUNKNOWN2:
+            case IvoDatastreamType.IVOUNKNOWN2:
                 break;
         }
     }

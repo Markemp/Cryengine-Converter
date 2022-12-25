@@ -18,9 +18,9 @@ namespace grendgine_collada
             }
             catch (Exception e)
             {
-                Utils.Log(LogLevelEnum.Error, e.ToString());
-                Utils.Log(LogLevelEnum.Error);
-                Utils.Log(LogLevelEnum.Error, int_array);
+                Utilities.Log(LogLevelEnum.Error, e.ToString());
+                Utilities.Log(LogLevelEnum.Error);
+                Utilities.Log(LogLevelEnum.Error, int_array);
             }
             return array;
         }
@@ -38,9 +38,9 @@ namespace grendgine_collada
             }
             catch (Exception e)
             {
-                Utils.Log(LogLevelEnum.Error, e.ToString());
-                Utils.Log(LogLevelEnum.Error);
-                Utils.Log(LogLevelEnum.Error, float_array);
+                Utilities.Log(LogLevelEnum.Error, e.ToString());
+                Utilities.Log(LogLevelEnum.Error);
+                Utilities.Log(LogLevelEnum.Error, float_array);
             }
             return array;
         }
@@ -58,9 +58,9 @@ namespace grendgine_collada
             }
             catch (Exception e)
             {
-                Utils.Log(LogLevelEnum.Error, e.ToString());
-                Utils.Log(LogLevelEnum.Error);
-                Utils.Log(LogLevelEnum.Error, bool_array);
+                Utilities.Log(LogLevelEnum.Error, e.ToString());
+                Utilities.Log(LogLevelEnum.Error);
+                Utilities.Log(LogLevelEnum.Error, bool_array);
             }
             return array;
         }

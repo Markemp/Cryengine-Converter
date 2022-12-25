@@ -22,13 +22,13 @@
 
         public void WriteChunk()
         {
-            Utils.Log(LogLevelEnum.Debug, "*** START MeshPhysicsData Chunk ***");
-            Utils.Log(LogLevelEnum.Debug, "    ChunkType:           {0}", ChunkType);
-            Utils.Log(LogLevelEnum.Debug, "    Node ID:             {0:X}", ID);
-            Utils.Log(LogLevelEnum.Debug, "    Node ID:             {0:X}", PhysicsDataSize);
-            Utils.Log(LogLevelEnum.Debug, "    Node ID:             {0:X}", TetrahedraDataSize);
-            Utils.Log(LogLevelEnum.Debug, "    Node ID:             {0:X}", TetrahedraID);
-            Utils.Log(LogLevelEnum.Debug, "    Node ID:             {0:X}", ID);
+            Utilities.Log(LogLevelEnum.Debug, "*** START MeshPhysicsData Chunk ***");
+            Utilities.Log(LogLevelEnum.Debug, "    ChunkType:           {0}", ChunkType);
+            Utilities.Log(LogLevelEnum.Debug, "    Node ID:             {0:X}", ID);
+            Utilities.Log(LogLevelEnum.Debug, "    Node ID:             {0:X}", PhysicsDataSize);
+            Utilities.Log(LogLevelEnum.Debug, "    Node ID:             {0:X}", TetrahedraDataSize);
+            Utilities.Log(LogLevelEnum.Debug, "    Node ID:             {0:X}", TetrahedraID);
+            Utilities.Log(LogLevelEnum.Debug, "    Node ID:             {0:X}", ID);
         }
     }
 }

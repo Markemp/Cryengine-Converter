@@ -128,7 +128,7 @@ namespace grendgine_collada
             }
             catch (Exception ex)
             {
-                Utils.Log(LogLevelEnum.Error, ex.ToString());
+                Utilities.Log(LogLevelEnum.Error, ex.ToString());
                 Console.ReadLine();
                 return null;
             }

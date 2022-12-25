@@ -178,10 +178,14 @@ public enum DatastreamType : uint
     UNKNOWN3,
     VERTSUVS,   // 0x0F
     UNKNOWN5,
-    UNKNOWN6,
+    UNKNOWN6
+}
+
+public enum IvoDatastreamType : uint
+{
     IVONORMALS = 0x9CF3F615,
     IVONORMALS2 = 0x38A581FE,           // ResourceFiles\SC\ivo\new_skin_format\Avenger_Landing_Gear\AEGS_Vanguard_LandingGear_Front.skinm
-    IVONORMALS3 = 0xD9EED421,           // Objects\Characters\Human\male_v7\armor\ccc\m_ccc_vanduul_helmet_01.skinm
+    IVOCOLORS2 = 0xD9EED421,           // Objects\Characters\Human\male_v7\armor\ccc\m_ccc_vanduul_helmet_01.skinm
     IVOINDICES = 0xEECDC168,
     IVOTANGENTS = 0xB95E9A1B,
     IVOBONEMAP = 0x677C7B23,
