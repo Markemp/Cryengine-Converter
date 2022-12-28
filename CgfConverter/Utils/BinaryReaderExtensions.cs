@@ -138,7 +138,7 @@ public static class BinaryReaderExtensions
                 };
                 break;
             default:
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException("Unable to read Qauternion.");
         }
 
         return q;

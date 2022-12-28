@@ -942,7 +942,7 @@ public class Collada : BaseRenderer
             };
             StringBuilder weights = new();
 
-            if (CryData.SkinningInfo.IntVertices == null)       // This is a case where there are bones, and only Bone Mapping data from a datastream chunk.  Skin files.
+            if (CryData.SkinningInfo.IntVertices is null)       // This is a case where there are bones, and only Bone Mapping data from a datastream chunk.  Skin files.
             {
                 weightArraySource.Float_Array.Count = CryData.SkinningInfo.BoneMapping.Count;
                 for (int i = 0; i < CryData.SkinningInfo.BoneMapping.Count; i++)

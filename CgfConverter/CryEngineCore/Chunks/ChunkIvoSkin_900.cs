@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 
 namespace CgfConverter.CryEngineCore.Chunks;
 
@@ -51,10 +50,6 @@ internal sealed class ChunkIvoSkin_900 : ChunkIvoSkin
         while (b.BaseStream.Position != b.BaseStream.Length)
         {
             var datastreamType = b.ReadUInt32();
-            //while (!Enum.IsDefined(typeof(IvoDatastreamType), datastreamType))
-            //{
-            //    datastreamType = b.ReadUInt32();
-            //}
             var ivoDataStreamType = (IvoDatastreamType)datastreamType;
             b.BaseStream.Position = b.BaseStream.Position - 4;
 
@@ -134,6 +129,7 @@ internal sealed class ChunkIvoSkin_900 : ChunkIvoSkin
                         model.ChunkMap.Add(norms.ID, norms);
                     }
                     break;
+                case IvoDatastreamType.IVOBONEMAP32:
                 case IvoDatastreamType.IVOBONEMAP:
                     ChunkDataStream_900 bonemap = new((uint)meshChunk.NumVertices)
                     {
@@ -142,6 +138,7 @@ internal sealed class ChunkIvoSkin_900 : ChunkIvoSkin
                     };
                     bonemap._header.Offset = (uint)b.BaseStream.Position;
                     bonemap.Read(b);
+                    
                     bonemap.DataStreamType = DatastreamType.BONEMAP;
                     bonemap.ChunkType = ChunkType.DataStream;
                     bonemap.ID = 8;

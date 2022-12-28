@@ -167,6 +167,7 @@ internal sealed class ChunkDataStream_900 : ChunkDataStream
                 break;
             #endregion
             #region IVOBONEMAP
+            case IvoDatastreamType.IVOBONEMAP32:
             case IvoDatastreamType.IVOBONEMAP:
                 SkinningInfo skin = GetSkinningInfo();
                 skin.HasBoneMapDatastream = true;
@@ -177,7 +178,7 @@ internal sealed class ChunkDataStream_900 : ChunkDataStream
                     case 12:
                         for (int i = 0; i < NumElements; i++)
                         {
-                            MeshBoneMapping tmpMap = new MeshBoneMapping();
+                            MeshBoneMapping tmpMap = new();
                             tmpMap.BoneIndex = new int[4];
                             tmpMap.Weight = new int[4];
 
@@ -193,9 +194,27 @@ internal sealed class ChunkDataStream_900 : ChunkDataStream
                             skin.BoneMapping.Add(tmpMap);
                         }
                         if (NumElements % 2 == 1)
-                        {
                             SkipBytes(b, 4);
+                        break;
+                    case 24:
+                        for (int i = 0; i < NumElements; i++)
+                        {
+                            MeshBoneMapping tmpMap = new();
+                            tmpMap.BoneIndex = new int[4];
+                            tmpMap.Weight = new int[4];
+
+                            for (int j = 0; j < 4; j++)         // read the 4 bone indexes first
+                            {
+                                tmpMap.BoneIndex[j] = (int)b.ReadInt32();
+                            }
+                            for (int j = 0; j < 4; j++)           // read the weights.
+                            {
+                                tmpMap.Weight[j] = b.ReadUInt16();
+                            }
+                            skin.BoneMapping.Add(tmpMap);
                         }
+                        if (NumElements % 2 == 1)
+                            SkipBytes(b, 4);
                         break;
                     default:
                         Utilities.Log("Unknown BoneMapping structure");
@@ -204,8 +223,6 @@ internal sealed class ChunkDataStream_900 : ChunkDataStream
 
                 break;
             #endregion
-            case IvoDatastreamType.IVOUNKNOWN2:
-                break;
         }
     }
 }

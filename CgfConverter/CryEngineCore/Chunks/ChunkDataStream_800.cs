@@ -281,7 +281,7 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                     case 8:
                         for (int i = 0; i < NumElements; i++)
                         {
-                            MeshBoneMapping tmpMap = new MeshBoneMapping();
+                            MeshBoneMapping tmpMap = new();
                             tmpMap.BoneIndex = new int[4];
                             tmpMap.Weight = new int[4];
 

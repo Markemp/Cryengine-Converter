@@ -37,7 +37,6 @@ public class StarCitizenTests
         var daeObject = colladaData.DaeObject;
     }
 
-
     [TestMethod]
     public void CutlassRed_312_NonIvo()
     {

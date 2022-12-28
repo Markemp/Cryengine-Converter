@@ -115,7 +115,7 @@ public abstract class Chunk : IBinaryChunk
 
     public void SkipBytes(BinaryReader reader, long? bytesToSkip = null)
     {
-        if (reader == null)
+        if (reader is null)
             return;
 
         if ((reader.BaseStream.Position > Offset + Size) && (Size > 0))

@@ -17,7 +17,7 @@ internal sealed class ChunkCompiledBones_800 : ChunkCompiledBones
 
         for (int i = 0; i < NumBones; i++)
         {
-            CompiledBone tempBone = new CompiledBone();
+            CompiledBone tempBone = new();
             tempBone.ReadCompiledBone_800(b);
 
             if (RootBone is null)  // First bone read is root bone
