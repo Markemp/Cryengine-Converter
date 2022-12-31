@@ -26,30 +26,6 @@ public static class BinaryReaderExtensions
         return CryHalf.ConvertDymekHalfToFloat(bver);
     }
 
-    private static object CryConvertHalfToFloat(ushort value)
-    {
-        uint mantissa;
-        uint exponent;
-        uint result;
-        mantissa = (uint)(value & 0x03FF);
-        if ((value & 0x7C00) != 0)
-            exponent = (uint)((value >> 10) & 0x1F);
-        else if (mantissa != 0)
-        {
-            exponent = 1;
-            do
-            {
-                exponent--;
-                mantissa <<= 1;
-            } while ((mantissa & 0x0400) == 0);
-            mantissa &= 0x03FF;
-        }
-        else
-            exponent = unchecked((uint)-112);
-        result = ((value & (uint)0x8000) << 16) | ((exponent + 112) << 23) | (mantissa << 13);
-        return (float)result;
-    }
-
     public static Vector3 ReadVector3(this BinaryReader r, InputType inputType = InputType.Single)
     {
         Vector3 v;
@@ -185,41 +161,5 @@ public static class BinaryReaderExtensions
         CryHalf,
         Single,
         Double
-    }
-
-    static float Byte4HexToFloat(string hexString)
-    {
-        uint num = uint.Parse(hexString, System.Globalization.NumberStyles.AllowHexSpecifier);
-        var bytes = BitConverter.GetBytes(num);
-        return BitConverter.ToSingle(bytes, 0);
-    }
-
-    static float Byte2HexIntFracToFloat2(string hexString)
-    {
-        string sintPart = hexString.Substring(0, 2);
-        string sfracPart = hexString.Substring(2, 2);
-
-        int intPart = Byte1HexToIntType2(sintPart);
-
-        short num = short.Parse(sfracPart, System.Globalization.NumberStyles.AllowHexSpecifier);
-        var bytes = BitConverter.GetBytes(num);
-        string binary = Convert.ToString(bytes[0], 2).PadLeft(8, '0');
-        string binaryFracPart = binary;
-
-        //convert Fractional Part
-        float dec = 0;
-        for (int i = 0; i < binaryFracPart.Length; i++)
-        {
-            if (binaryFracPart[i] == '0') continue;
-            dec += (float)Math.Pow(2, (i + 1) * (-1));
-        }
-        float number = (float)intPart + dec;
-        return number;
-    }
-
-    static int Byte1HexToIntType2(string hexString)
-    {
-        int value = Convert.ToSByte(hexString, 16);
-        return value;
     }
 }
