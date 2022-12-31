@@ -226,11 +226,10 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                         {
                             for (int i = 0; i < NumElements; i++)
                             {
-                                Vertices[i].X = b.ReadCryHalf();
-                                Vertices[i].Y = b.ReadCryHalf();
-                                Vertices[i].Z = b.ReadCryHalf();
+                                Vertices[i].X = b.ReadDymekHalf();
+                                Vertices[i].Y = b.ReadDymekHalf();
+                                Vertices[i].Z = b.ReadDymekHalf();
                                 SkipBytes(b, 2);
-                                //Vertices[i].W = b.ReadCryHalf();
 
                                 Colors[i] = b.ReadColorBGRA();
 

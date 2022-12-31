@@ -73,7 +73,7 @@ public class StarCitizenTests
 
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
         cryData.ProcessCryengineFiles();
     }
 
@@ -83,7 +83,7 @@ public class StarCitizenTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\3.12.0\brfl_fps_behr_p4ar.chr", "-dds", "-dae" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new Collada(testUtils.argsHandler, cryData);
@@ -101,7 +101,23 @@ public class StarCitizenTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\3.12.0\brfl_fps_behr_p4ar_parts.skin", "-dds", "-dae" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new Collada(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+
+        testUtils.ValidateColladaXml(colladaData);
+    }
+
+    [TestMethod]
+    public void BehrRifleParts_34_ChCrSkinFile()
+    {
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\brfl_fps_behr_p4ar_parts_3.4.skin", "-dds", "-dae" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new Collada(testUtils.argsHandler, cryData);

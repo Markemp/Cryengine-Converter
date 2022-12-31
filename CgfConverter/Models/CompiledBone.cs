@@ -85,17 +85,17 @@ public class CompiledBone
         Vector3 relativeTranslation = b.ReadVector3();
         Quaternion worldQuat = b.ReadQuaternion();
         Vector3 worldTranslation = b.ReadVector3();
-        
+        WorldToBone = Matrix3x4.CreateFromParts(relativeQuat, relativeTranslation);
+        BoneToWorld = Matrix3x4.CreateFromParts(worldQuat, worldTranslation);
         // BPM is the parent bone BPM * this bone's BPM
+        // To get the translation, subtract this bone's translation from the parent's translation
         //BindPoseMatrix = Matrix4x4.CreateFromQuaternion(relativeQuat);
-        //BindPoseMatrix.M14 = relativeTranslation.X;
-        //BindPoseMatrix.M24 = relativeTranslation.Y;
-        //BindPoseMatrix.M34 = relativeTranslation.Z;
+        //BindPoseMatrix.M14 = worldTranslation.X;
+        //BindPoseMatrix.M24 = worldTranslation.Y;
+        //BindPoseMatrix.M34 = worldTranslation.Z;
         //BindPoseMatrix.M41 = 0;
         //BindPoseMatrix.M42 = 0;
         //BindPoseMatrix.M43 = 0;
         //BindPoseMatrix.M44 = 1.0f;
-
-        BoneToWorld = Matrix3x4.CreateFromParts(worldQuat, worldTranslation);
     }
 }
