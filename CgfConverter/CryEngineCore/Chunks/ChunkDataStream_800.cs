@@ -21,9 +21,8 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
         NumElements = b.ReadUInt32(); // number of elements in this chunk
 
         if (_model.FileVersion == FileVersion.CryTek3 || _model.FileVersion == FileVersion.CryTek1And2)
-        {
             BytesPerElement = b.ReadUInt32();
-        }
+        
         if (_model.FileVersion == FileVersion.CryTek_3_6)
         {
             BytesPerElement = (uint)b.ReadInt16();  // Star Citizen 2.0 is using an int16 here now.
@@ -211,7 +210,7 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                         {
                             Vertices[i] = b.ReadVector3(); // For some reason, skins are an extra 1 meter in the z direction.
 
-                            // Normals are stored in a signed byte, prob div by 127.
+                            // Probably not normals
                             Normals[i].X = b.ReadSByte() / 127f;
                             Normals[i].Y = b.ReadSByte() / 127f;
                             Normals[i].Z = b.ReadSByte() / 127f;
@@ -253,7 +252,7 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                             for (int i = 0; i < NumElements; i++)
                             {
                                 Vertices[i] = b.ReadVector3(InputType.Half);
-                                Normals[i] = b.ReadVector3(InputType.Half);
+                                Normals[i] = b.ReadVector3(InputType.Half);  // prob not normals
                                 UVs[i].U = (float)b.ReadHalf();
                                 UVs[i].V = (float)b.ReadHalf();
                             }
@@ -261,7 +260,7 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                         break;
                     default:
                         Utilities.Log("Unknown VertUV structure");
-                        for (Int32 i = 0; i < NumElements; i++)
+                        for (int i = 0; i < NumElements; i++)
                         {
                             SkipBytes(b, BytesPerElement);
                         }

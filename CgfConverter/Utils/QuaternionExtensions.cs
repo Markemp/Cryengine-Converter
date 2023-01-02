@@ -36,39 +36,4 @@ public static class QuaternionExtensions
 
         return rotationalMatrix;
     }
-
-    public static Vector3 RotateVectorByQuaternion(this Quaternion q, Vector3 v)
-    {
-        // https://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/transforms/index.htm
-        // q*v*q^-1
-        var qv = new Quaternion(v.X, v.Y, v.Z, 0);
-        var qvq = q * qv * Quaternion.Conjugate(q);
-        return new Vector3(qvq.X, qvq.Y, qvq.Z);
-    }
-
-    public static Vector3 FastRotateVectorByQuaternion(this Quaternion q, Vector3 v)
-    {
-        Vector3 result;
-        float x2 = q.X * 2.0f;
-        float y2 = q.Y * 2.0f;
-        float z2 = q.Z * 2.0f;
-        float xx2 = q.X * x2;
-        float yy2 = q.Y * y2;
-        float zz2 = q.Z * z2;
-        float xy2 = q.X * y2;
-        float xz2 = q.X * z2;
-        float yz2 = q.Y * z2;
-        float wx2 = q.W * x2;
-        float wy2 = q.W * y2;
-        float wz2 = q.W * z2;
-
-        result.X = (1.0f - (yy2 + zz2)) * v.X + (xy2 - wz2) * v.Y + (xz2 + wy2) * v.Z;
-        result.Y = (xy2 + wz2) * v.X + (1.0f - (xx2 + zz2)) * v.Y + (yz2 - wx2) * v.Z;
-        result.Z = (xz2 - wy2) * v.X + (yz2 + wx2) * v.Y + (1.0f - (xx2 + yy2)) * v.Z;
-
-        return result;
-    }
-
-    
 }
-

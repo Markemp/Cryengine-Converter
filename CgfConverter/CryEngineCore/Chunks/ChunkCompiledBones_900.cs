@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Numerics;
 using System.Text;
 
 namespace CgfConverter.CryEngineCore;
@@ -23,8 +22,6 @@ internal sealed class ChunkCompiledBones_900 : ChunkCompiledBones
             BoneList.Add(tempBone);
         }
 
-        
-
         List<string> boneNames = GetNullSeparatedStrings(NumBones, b);
 
         // Post bone read setup.  Parents, children, etc.
@@ -35,8 +32,6 @@ internal sealed class ChunkCompiledBones_900 : ChunkCompiledBones
             SetParentBone(BoneList[i]);
             AddChildIDToParent(BoneList[i]);
         }
-
-        CalculateBindPoseMatrix();
 
         SkinningInfo skin = GetSkinningInfo();
         skin.CompiledBones = new List<CompiledBone>();
@@ -51,23 +46,6 @@ internal sealed class ChunkCompiledBones_900 : ChunkCompiledBones
         {
             bone.parentID = BoneList[bone.offsetParent].ControllerID;
             bone.ParentBone = BoneList[bone.offsetParent];
-        }
-    }
-
-    private void CalculateBindPoseMatrix()
-    {
-        // For each bone, the BPM is the parent's world pose matrix * this world pose matrix (?)
-        for (int i = 0; i < NumBones; i++)
-        {
-            if (i == 0) // root bone.  Identity * world pose matrix.
-                BoneList[i].BindPoseMatrix = Matrix4x4.Identity * BoneList[i].WorldToBone.ConvertToTransformMatrix();
-            else
-            {
-                BoneList[i].BindPoseMatrix = BoneList[i].ParentBone.BindPoseMatrix * BoneList[i].WorldToBone.ConvertToTransformMatrix();
-                BoneList[i].BindPoseMatrix.M14 = BoneList[i].ParentBone.BindPoseMatrix.M14 - BoneList[i].WorldToBone.M14;
-                BoneList[i].BindPoseMatrix.M24 = BoneList[i].ParentBone.BindPoseMatrix.M24 - BoneList[i].WorldToBone.M24;
-                BoneList[i].BindPoseMatrix.M34 = BoneList[i].ParentBone.BindPoseMatrix.M34 - BoneList[i].WorldToBone.M34;
-            }
         }
     }
 

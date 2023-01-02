@@ -58,9 +58,7 @@ public struct Matrix3x3 : IEquatable<Matrix3x3>
         return quaternion.ConvertToRotationMatrix();
     }
 
-    /// <summary>
-    /// Transposes the rows and columns of a matrix.
-    /// </summary>
+    /// <summary>Transposes the rows and columns of a matrix.</summary>
     /// <param name="matrix">The source matrix.</param>
     /// <returns>The transposed matrix.</returns>
     public static Matrix3x3 Transpose(Matrix3x3 matrix)

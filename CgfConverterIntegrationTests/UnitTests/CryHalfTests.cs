@@ -7,6 +7,10 @@ namespace CgfConverterTests.UnitTests;
 [TestFixture]
 public class CryHalfTests
 {
+    // CryHalf Max value: 131008, min value: -130944
+    // Dymek Half max value: 1.0078433, min value: -1.007874
+    // Half max value: 65500, min value: -65500
+    
     [Test]
     public void CryHalfToFloat_0x4de2_ReturnsCorrectValue()
     {

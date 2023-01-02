@@ -12,8 +12,7 @@ public static class BinaryReaderExtensions
 {
     public static float ReadCryHalf(this BinaryReader r)
     {
-        // https://docs.microsoft.com/en-us/windows/win32/direct3d11/floating-point-rules#16-bit-floating-point-rules
-        // Actually, see CryHalf.inl in the Lumberyard project.  Stored as uint16.
+        // See CryHalf.inl in the Lumberyard project.  Stored as uint16.
         var bver = r.ReadUInt16();
 
         return CryHalf.ConvertCryHalfToFloat(bver);
@@ -79,7 +78,7 @@ public static class BinaryReaderExtensions
                 };
                 break;
             default:
-                throw new ArgumentOutOfRangeException("Unable to read Qauternion.");
+                throw new ArgumentOutOfRangeException("Unable to read Quaternion.");
         }
 
         return q;

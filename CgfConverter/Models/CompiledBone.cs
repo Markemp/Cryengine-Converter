@@ -12,8 +12,8 @@ public class CompiledBone
     public uint ControllerID { get; set; }
     public PhysicsGeometry[] physicsGeometry;  // 2 of these.  One for live objects, other for dead (ragdoll?)
     public double mass;                        // 0xD8 ?
-    public Matrix3x4 WorldToBone;              // 4x3 matrix   WORLDTOBONE is also the Bind Pose Matrix (BPM)
-    public Matrix3x4 BoneToWorld;              // 4x3 matrix of world translations/rotations of the bones.
+    public Matrix3x4 LocalTransformMatrix;     // WORLDTOBONE is also the Bind Pose Matrix (BPM) in Collada
+    public Matrix3x4 WorldTransformMatrix;
     public string boneName;                    // String256 in old terms; convert to a real null terminated string.
     public uint limbID;                         // ID of this limb... usually just 0xFFFFFFFF
     public int offsetParent;                   // offset to the parent in number of CompiledBone structs (584 bytes)
@@ -34,9 +34,9 @@ public class CompiledBone
         get 
         {
             if (ParentBone is null) // No parent
-                return Matrix4x4Extensions.CreateFromMatrix3x4(BoneToWorld);
+                return Matrix4x4Extensions.CreateFromMatrix3x4(WorldTransformMatrix);
             else 
-                return Matrix4x4Extensions.CreateFromMatrix3x4(ParentBone.BoneToWorld) * Matrix4x4Extensions.CreateFromMatrix3x4(BoneToWorld);
+                return Matrix4x4Extensions.CreateFromMatrix3x4(ParentBone.WorldTransformMatrix) * Matrix4x4Extensions.CreateFromMatrix3x4(WorldTransformMatrix);
         }
     }
 
@@ -48,9 +48,9 @@ public class CompiledBone
         physicsGeometry[0].ReadPhysicsGeometry(b);     // LOD 0 is the physics of alive body, 
         physicsGeometry[1].ReadPhysicsGeometry(b);     // LOD 1 is the physics of a dead body
         mass = b.ReadSingle();
-        WorldToBone = b.ReadMatrix3x4();
-        BindPoseMatrix = WorldToBone.ConvertToTransformMatrix();
-        BoneToWorld = b.ReadMatrix3x4();
+        LocalTransformMatrix = b.ReadMatrix3x4();
+        BindPoseMatrix = LocalTransformMatrix.ConvertToTransformMatrix();
+        WorldTransformMatrix = b.ReadMatrix3x4();
         boneName = b.ReadFString(256);
         limbID = b.ReadUInt32();
         offsetParent = b.ReadInt32();
@@ -69,9 +69,9 @@ public class CompiledBone
         numChildren = b.ReadUInt32();
         offsetChild = b.ReadInt32();
         // TODO:  This may be quaternion and translation vectors. 
-        WorldToBone = b.ReadMatrix3x4();
-        BindPoseMatrix = WorldToBone.ConvertToTransformMatrix();
-        BoneToWorld = new(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0);
+        LocalTransformMatrix = b.ReadMatrix3x4();
+        BindPoseMatrix = LocalTransformMatrix.ConvertToTransformMatrix();
+        WorldTransformMatrix = new(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0);
 
         childIDs = new List<uint>();                    // Calculated
     }
@@ -85,17 +85,13 @@ public class CompiledBone
         Vector3 relativeTranslation = b.ReadVector3();
         Quaternion worldQuat = b.ReadQuaternion();
         Vector3 worldTranslation = b.ReadVector3();
-        WorldToBone = Matrix3x4.CreateFromParts(relativeQuat, relativeTranslation);
-        BoneToWorld = Matrix3x4.CreateFromParts(worldQuat, worldTranslation);
-        // BPM is the parent bone BPM * this bone's BPM
-        // To get the translation, subtract this bone's translation from the parent's translation
-        //BindPoseMatrix = Matrix4x4.CreateFromQuaternion(relativeQuat);
-        //BindPoseMatrix.M14 = worldTranslation.X;
-        //BindPoseMatrix.M24 = worldTranslation.Y;
-        //BindPoseMatrix.M34 = worldTranslation.Z;
-        //BindPoseMatrix.M41 = 0;
-        //BindPoseMatrix.M42 = 0;
-        //BindPoseMatrix.M43 = 0;
-        //BindPoseMatrix.M44 = 1.0f;
+        LocalTransformMatrix = Matrix3x4.CreateFromParts(relativeQuat, relativeTranslation);
+        WorldTransformMatrix = Matrix3x4.CreateFromParts(worldQuat, worldTranslation);
+        
+        var m = Matrix4x4.CreateFromQuaternion(worldQuat);
+        m.M14 = worldTranslation.X;
+        m.M24 = worldTranslation.Y;
+        m.M34 = worldTranslation.Z;
+        Matrix4x4.Invert(m, out BindPoseMatrix);
     }
 }
