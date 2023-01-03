@@ -24,7 +24,7 @@ public class StarCitizenTests
     }
 
     [TestMethod]
-    public void NavyPIlotFlightSuit_Ivo()
+    public void NavyPilotFlightSuit_Ivo()
     {
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\pilot_flightsuit\m_nvy_pilot_light_helmet_01.skin", "-dds", "-dae", "-objectdir", @"d:\depot\sc2\data" };
         int result = testUtils.argsHandler.ProcessArgs(args);
