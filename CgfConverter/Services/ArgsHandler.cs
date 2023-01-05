@@ -25,16 +25,10 @@ public sealed class ArgsHandler
     public bool NoConflicts { get; internal set; }
     /// <summary>Name to group all meshes under</summary>
     public bool GroupMeshes { get; internal set; }
-    /// <summary>Render CryTek format files</summary>
-    public bool OutputCryTek { get; internal set; }
     /// <summary>Render Wavefront format files</summary>
     public bool OutputWavefront { get; internal set; }
-    /// <summary>Render Blender format files</summary>
-    public bool OutputBlender { get; internal set; }
     /// <summary>Render Collada format files</summary>
     public bool OutputCollada { get; internal set; }
-    /// <summary>Render FBX (not yet implemented)</summary>
-    public bool OutputFBX { get; internal set; }
     /// <summary>Smooth Faces</summary>
     public bool Smooth { get; internal set; }
     /// <summary>Flag used to indicate we should convert texture paths to use TIFF instead of DDS</summary>
@@ -146,12 +140,6 @@ public sealed class ArgsHandler
                     Smooth = true;
                     break;
                 #endregion
-                #region case "-blend" / "-blender"...
-                case "-blend":
-                case "-blender":
-                    OutputBlender = true;
-                    break;
-                #endregion
                 #region case "-obj" / "-object" / "wavefront"...
 
                 case "-obj":
@@ -160,21 +148,10 @@ public sealed class ArgsHandler
                     OutputWavefront = true;
                     break;
                 #endregion
-                #region case "-fbx"
-                case "-fbx":
-                    OutputFBX = true;
-                    break;
-                #endregion
                 #region case "-dae" / "-collada"...
                 case "-dae":
                 case "-collada":
                     OutputCollada = true;
-                    break;
-                #endregion
-                #region case "-crytek"...
-                case "-cry":
-                case "-crytek":
-                    OutputCryTek = true;
                     break;
                 #endregion
                 #region case "-tif" / "-tiff"...
@@ -301,15 +278,8 @@ public sealed class ArgsHandler
             Utilities.Log(LogLevelEnum.Info, "Using TIF textures");
         else if (TgaTextures)
             Utilities.Log(LogLevelEnum.Info, "Using TGA textures");
-        
-        if (OutputBlender)
-            Utilities.Log(LogLevelEnum.Info, "Output format set to Blender (.blend)");
-        if (OutputCryTek)
-            Utilities.Log(LogLevelEnum.Info, "Output format set to CryTek (.cga/.cgf/.chr/.skin)");
         if (OutputWavefront)
             Utilities.Log(LogLevelEnum.Info, "Output format set to Wavefront (.obj)");
-        if (OutputFBX)
-            Utilities.Log(LogLevelEnum.Info, "Output format set to FBX (.fbx)");
         if (OutputCollada)
             Utilities.Log(LogLevelEnum.Info, "Output format set to COLLADA (.dae)");
         if (AllowConflicts)
@@ -336,7 +306,7 @@ public sealed class ArgsHandler
             Utilities.Log(LogLevelEnum.Info, "Output directory set to {0}", OutputDir);
         
         // Default to Collada (.dae) format
-        if (!OutputBlender && !OutputCollada && !OutputWavefront && !OutputFBX)
+        if (!OutputCollada && !OutputWavefront)
             OutputCollada = true;
 
         return 0;
@@ -357,8 +327,6 @@ public sealed class ArgsHandler
         Console.WriteLine("                  Defaults to current directory.");
         Console.WriteLine("-dae:             Export Collada format files (Default).");
         Console.WriteLine("-obj:             Export Wavefront format files (Not supported).");
-        Console.WriteLine("-blend:           Export Blender format files (Not Implemented).");
-        Console.WriteLine("-fbx:             Export FBX format files (Not Implemented).");
         Console.WriteLine();
         Console.WriteLine("-smooth:          Smooth Faces.");
         Console.WriteLine("-group:           Group meshes into single model.");

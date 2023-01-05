@@ -75,6 +75,10 @@ public class StarCitizenTests
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
         cryData.ProcessCryengineFiles();
+
+        var colladaData = new Collada(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
     }
 
     [TestMethod]

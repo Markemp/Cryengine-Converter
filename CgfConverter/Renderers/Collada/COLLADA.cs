@@ -1129,7 +1129,8 @@ public class Collada : BaseRenderer
 
         if (hasGeometry)
         {
-            var allParentNodes = CryData.NodeMap.Values.Where(n => n.ParentNodeID != ~1);
+            // TODO:  If there are 2 models, only want parent nodes from geometry model.  Also, node names for Ivo files have the file extension on them and needs cleanup
+            var allParentNodes = CryData.Models[CryData.Models.Count == 2 ? 1 : 0].NodeMap.Values.Where(n => n.ParentNodeID != ~1);
 
             foreach (var node in allParentNodes)
             {
@@ -1417,7 +1418,6 @@ public class Collada : BaseRenderer
         };
         scene.Visual_Scene = visualScene;
         DaeObject.Scene = scene;
-
     }
 
     /// <summary>Get the material name for a given submesh.</summary>
