@@ -21,9 +21,8 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
         NumElements = b.ReadUInt32(); // number of elements in this chunk
 
         if (_model.FileVersion == FileVersion.CryTek3 || _model.FileVersion == FileVersion.CryTek1And2)
-        {
             BytesPerElement = b.ReadUInt32();
-        }
+        
         if (_model.FileVersion == FileVersion.CryTek_3_6)
         {
             BytesPerElement = (uint)b.ReadInt16();  // Star Citizen 2.0 is using an int16 here now.
@@ -187,7 +186,7 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                         }
                         break;
                     default:
-                        Utils.Log("Unknown Color Depth");
+                        Utilities.Log("Unknown Color Depth");
                         for (int i = 0; i < NumElements; i++)
                         {
                             SkipBytes(b, BytesPerElement);
@@ -211,7 +210,7 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                         {
                             Vertices[i] = b.ReadVector3(); // For some reason, skins are an extra 1 meter in the z direction.
 
-                            // Normals are stored in a signed byte, prob div by 127.
+                            // Probably not normals
                             Normals[i].X = b.ReadSByte() / 127f;
                             Normals[i].Y = b.ReadSByte() / 127f;
                             Normals[i].Z = b.ReadSByte() / 127f;
@@ -226,11 +225,10 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                         {
                             for (int i = 0; i < NumElements; i++)
                             {
-                                Vertices[i].X = b.ReadCryHalf();
-                                Vertices[i].Y = b.ReadCryHalf();
-                                Vertices[i].Z = b.ReadCryHalf();
+                                Vertices[i].X = b.ReadDymekHalf();
+                                Vertices[i].Y = b.ReadDymekHalf();
+                                Vertices[i].Z = b.ReadDymekHalf();
                                 SkipBytes(b, 2);
-                                //Vertices[i].W = b.ReadCryHalf();
 
                                 Colors[i] = b.ReadColorBGRA();
 
@@ -254,15 +252,15 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                             for (int i = 0; i < NumElements; i++)
                             {
                                 Vertices[i] = b.ReadVector3(InputType.Half);
-                                Normals[i] = b.ReadVector3(InputType.Half);
+                                Normals[i] = b.ReadVector3(InputType.Half);  // prob not normals
                                 UVs[i].U = (float)b.ReadHalf();
                                 UVs[i].V = (float)b.ReadHalf();
                             }
                         }
                         break;
                     default:
-                        Utils.Log("Unknown VertUV structure");
-                        for (Int32 i = 0; i < NumElements; i++)
+                        Utilities.Log("Unknown VertUV structure");
+                        for (int i = 0; i < NumElements; i++)
                         {
                             SkipBytes(b, BytesPerElement);
                         }
@@ -281,7 +279,7 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                     case 8:
                         for (int i = 0; i < NumElements; i++)
                         {
-                            MeshBoneMapping tmpMap = new MeshBoneMapping();
+                            MeshBoneMapping tmpMap = new();
                             tmpMap.BoneIndex = new int[4];
                             tmpMap.Weight = new int[4];
 
@@ -318,7 +316,7 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                         break;
 
                     default:
-                        Utils.Log("Unknown BoneMapping structure");
+                        Utilities.Log("Unknown BoneMapping structure");
                         break;
                 }
 
@@ -352,7 +350,7 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
             #region default:
 
             default:
-                Utils.Log(LogLevelEnum.Debug, "***** Unknown DataStream Type *****");
+                Utilities.Log(LogLevelEnum.Debug, "***** Unknown DataStream Type *****");
                 break;
 
                 #endregion

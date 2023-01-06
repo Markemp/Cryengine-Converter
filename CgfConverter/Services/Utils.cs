@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace CgfConverter;
@@ -32,7 +29,7 @@ public enum LogLevelEnum
     None = 0xFF,
 }
 
-public static class Utils
+public static class Utilities
 {
     public static LogLevelEnum LogLevel { get; set; }
     public static LogLevelEnum DebugLevel { get; set; }
@@ -134,10 +131,10 @@ public static class Utils
 
     public static void Log(LogLevelEnum logLevel, string format = null, params Object[] args)
     {
-        if (Utils.LogLevel <= logLevel)
+        if (Utilities.LogLevel <= logLevel)
             Console.WriteLine(format ?? string.Empty, args);
 
-        if (Utils.DebugLevel <= logLevel)
+        if (Utilities.DebugLevel <= logLevel)
             Debug.WriteLine(format ?? string.Empty, args);
     }
 

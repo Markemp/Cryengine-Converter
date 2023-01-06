@@ -1,5 +1,6 @@
 ﻿using CgfConverter;
 using CgfConverter.Structs;
+using CgfConverter.Utililities;
 using System;
 using System.IO;
 using System.Numerics;
@@ -11,9 +12,17 @@ public static class BinaryReaderExtensions
 {
     public static float ReadCryHalf(this BinaryReader r)
     {
-        // https://docs.microsoft.com/en-us/windows/win32/direct3d11/floating-point-rules#16-bit-floating-point-rules
+        // See CryHalf.inl in the Lumberyard project.  Stored as uint16.
         var bver = r.ReadUInt16();
-        return Byte2HexIntFracToFloat2(bver.ToString("X4")) / 127;
+
+        return CryHalf.ConvertCryHalfToFloat(bver);
+    }
+
+    public static float ReadDymekHalf(this BinaryReader r)
+    {
+        var bver = r.ReadUInt16();
+
+        return CryHalf.ConvertDymekHalfToFloat(bver);
     }
 
     public static Vector3 ReadVector3(this BinaryReader r, InputType inputType = InputType.Single)
@@ -69,7 +78,7 @@ public static class BinaryReaderExtensions
                 };
                 break;
             default:
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException("Unable to read Quaternion.");
         }
 
         return q;
@@ -151,41 +160,5 @@ public static class BinaryReaderExtensions
         CryHalf,
         Single,
         Double
-    }
-
-    static float Byte4HexToFloat(string hexString)
-    {
-        uint num = uint.Parse(hexString, System.Globalization.NumberStyles.AllowHexSpecifier);
-        var bytes = BitConverter.GetBytes(num);
-        return BitConverter.ToSingle(bytes, 0);
-    }
-
-    static int Byte1HexToIntType2(string hexString)
-    {
-        int value = Convert.ToSByte(hexString, 16);
-        return value;
-    }
-
-    static float Byte2HexIntFracToFloat2(string hexString)
-    {
-        string sintPart = hexString.Substring(0, 2);
-        string sfracPart = hexString.Substring(2, 2);
-
-        int intPart = Byte1HexToIntType2(sintPart);
-
-        short num = short.Parse(sfracPart, System.Globalization.NumberStyles.AllowHexSpecifier);
-        var bytes = BitConverter.GetBytes(num);
-        string binary = Convert.ToString(bytes[0], 2).PadLeft(8, '0');
-        string binaryFracPart = binary;
-
-        //convert Fractional Part
-        float dec = 0;
-        for (int i = 0; i < binaryFracPart.Length; i++)
-        {
-            if (binaryFracPart[i] == '0') continue;
-            dec += (float)Math.Pow(2, (i + 1) * (-1));
-        }
-        float number = (float)intPart + dec;
-        return number;
     }
 }

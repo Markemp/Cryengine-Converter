@@ -25,16 +25,10 @@ public sealed class ArgsHandler
     public bool NoConflicts { get; internal set; }
     /// <summary>Name to group all meshes under</summary>
     public bool GroupMeshes { get; internal set; }
-    /// <summary>Render CryTek format files</summary>
-    public bool OutputCryTek { get; internal set; }
     /// <summary>Render Wavefront format files</summary>
     public bool OutputWavefront { get; internal set; }
-    /// <summary>Render Blender format files</summary>
-    public bool OutputBlender { get; internal set; }
     /// <summary>Render Collada format files</summary>
     public bool OutputCollada { get; internal set; }
-    /// <summary>Render FBX (not yet implemented)</summary>
-    public bool OutputFBX { get; internal set; }
     /// <summary>Smooth Faces</summary>
     public bool Smooth { get; internal set; }
     /// <summary>Flag used to indicate we should convert texture paths to use TIFF instead of DDS</summary>
@@ -127,12 +121,12 @@ public sealed class ArgsHandler
                     LogLevelEnum level; 
                     if (LogLevelEnum.TryParse(inputArgs[i], true, out level))
                     {
-                        Utils.LogLevel = level;
+                        Utilities.LogLevel = level;
                     }
                     else
                     {
                         Console.WriteLine("Invalid log level {0}, defaulting to warn", inputArgs[i]);
-                        Utils.LogLevel = LogLevelEnum.Warning;
+                        Utilities.LogLevel = LogLevelEnum.Warning;
                     }
                     break;
                 #endregion
@@ -146,12 +140,6 @@ public sealed class ArgsHandler
                     Smooth = true;
                     break;
                 #endregion
-                #region case "-blend" / "-blender"...
-                case "-blend":
-                case "-blender":
-                    OutputBlender = true;
-                    break;
-                #endregion
                 #region case "-obj" / "-object" / "wavefront"...
 
                 case "-obj":
@@ -160,21 +148,10 @@ public sealed class ArgsHandler
                     OutputWavefront = true;
                     break;
                 #endregion
-                #region case "-fbx"
-                case "-fbx":
-                    OutputFBX = true;
-                    break;
-                #endregion
                 #region case "-dae" / "-collada"...
                 case "-dae":
                 case "-collada":
                     OutputCollada = true;
-                    break;
-                #endregion
-                #region case "-crytek"...
-                case "-cry":
-                case "-crytek":
-                    OutputCryTek = true;
                     break;
                 #endregion
                 #region case "-tif" / "-tiff"...
@@ -289,54 +266,47 @@ public sealed class ArgsHandler
         
         // Log info now that loglevel has been set
         if (Smooth)
-            Utils.Log(LogLevelEnum.Info, "Smoothing Faces");
+            Utilities.Log(LogLevelEnum.Info, "Smoothing Faces");
         if (GroupMeshes)
-            Utils.Log(LogLevelEnum.Info, "Grouping enabled");
+            Utilities.Log(LogLevelEnum.Info, "Grouping enabled");
         
         if (NoTextures)
-            Utils.Log(LogLevelEnum.Info, "Skipping texture output");
+            Utilities.Log(LogLevelEnum.Info, "Skipping texture output");
         else if (PngTextures)
-            Utils.Log(LogLevelEnum.Info, "Using PNG textures");
+            Utilities.Log(LogLevelEnum.Info, "Using PNG textures");
         else if (TiffTextures)
-            Utils.Log(LogLevelEnum.Info, "Using TIF textures");
+            Utilities.Log(LogLevelEnum.Info, "Using TIF textures");
         else if (TgaTextures)
-            Utils.Log(LogLevelEnum.Info, "Using TGA textures");
-        
-        if (OutputBlender)
-            Utils.Log(LogLevelEnum.Info, "Output format set to Blender (.blend)");
-        if (OutputCryTek)
-            Utils.Log(LogLevelEnum.Info, "Output format set to CryTek (.cga/.cgf/.chr/.skin)");
+            Utilities.Log(LogLevelEnum.Info, "Using TGA textures");
         if (OutputWavefront)
-            Utils.Log(LogLevelEnum.Info, "Output format set to Wavefront (.obj)");
-        if (OutputFBX)
-            Utils.Log(LogLevelEnum.Info, "Output format set to FBX (.fbx)");
+            Utilities.Log(LogLevelEnum.Info, "Output format set to Wavefront (.obj)");
         if (OutputCollada)
-            Utils.Log(LogLevelEnum.Info, "Output format set to COLLADA (.dae)");
+            Utilities.Log(LogLevelEnum.Info, "Output format set to COLLADA (.dae)");
         if (AllowConflicts)
-            Utils.Log(LogLevelEnum.Info, "Allow conflicts for mtl files enabled");
+            Utilities.Log(LogLevelEnum.Info, "Allow conflicts for mtl files enabled");
         if (NoConflicts)
-            Utils.Log(LogLevelEnum.Info, "Prevent conflicts for mtl files enabled");
+            Utilities.Log(LogLevelEnum.Info, "Prevent conflicts for mtl files enabled");
         if (ExcludeNodeNames.Any())
-            Utils.Log(LogLevelEnum.Info, $"Skipping nodes starting with any of these names: {String.Join(", ", ExcludeNodeNames)}");
+            Utilities.Log(LogLevelEnum.Info, $"Skipping nodes starting with any of these names: {String.Join(", ", ExcludeNodeNames)}");
         if (ExcludeMaterialNames.Any())
-            Utils.Log(LogLevelEnum.Info, $"Skipping meshes using materials named: {String.Join(", ", ExcludeMaterialNames)}");
+            Utilities.Log(LogLevelEnum.Info, $"Skipping meshes using materials named: {String.Join(", ", ExcludeMaterialNames)}");
         if (DumpChunkInfo)
-            Utils.Log(LogLevelEnum.Info, "Output chunk info for missing or invalid chunks.");
+            Utilities.Log(LogLevelEnum.Info, "Output chunk info for missing or invalid chunks.");
         if (Throw)
-            Utils.Log(LogLevelEnum.Info, "Exceptions thrown to debugger");
+            Utilities.Log(LogLevelEnum.Info, "Exceptions thrown to debugger");
         if (DataDir.ToString() != ".")
-            Utils.Log(LogLevelEnum.Info, "Data directory set to {0}", DataDir.FullName);
+            Utilities.Log(LogLevelEnum.Info, "Data directory set to {0}", DataDir.FullName);
         
-        Utils.Log(LogLevelEnum.Info, "Processing input file(s):");
+        Utilities.Log(LogLevelEnum.Info, "Processing input file(s):");
         foreach (var file in InputFiles)
         {
-            Utils.Log(LogLevelEnum.Info, file);
+            Utilities.Log(LogLevelEnum.Info, file);
         }
         if (OutputDir != null)
-            Utils.Log(LogLevelEnum.Info, "Output directory set to {0}", OutputDir);
+            Utilities.Log(LogLevelEnum.Info, "Output directory set to {0}", OutputDir);
         
         // Default to Collada (.dae) format
-        if (!OutputBlender && !OutputCollada && !OutputWavefront && !OutputFBX)
+        if (!OutputCollada && !OutputWavefront)
             OutputCollada = true;
 
         return 0;
@@ -357,8 +327,6 @@ public sealed class ArgsHandler
         Console.WriteLine("                  Defaults to current directory.");
         Console.WriteLine("-dae:             Export Collada format files (Default).");
         Console.WriteLine("-obj:             Export Wavefront format files (Not supported).");
-        Console.WriteLine("-blend:           Export Blender format files (Not Implemented).");
-        Console.WriteLine("-fbx:             Export FBX format files (Not Implemented).");
         Console.WriteLine();
         Console.WriteLine("-smooth:          Smooth Faces.");
         Console.WriteLine("-group:           Group meshes into single model.");

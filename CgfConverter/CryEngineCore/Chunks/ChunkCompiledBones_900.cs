@@ -13,10 +13,10 @@ internal sealed class ChunkCompiledBones_900 : ChunkCompiledBones
 
         for (int i = 0; i < NumBones; i++)
         {
-            CompiledBone tempBone = new CompiledBone();
+            CompiledBone tempBone = new();
             tempBone.ReadCompiledBone_900(b);
 
-            if (RootBone == null)  // First bone read is root bone
+            if (RootBone is null)  // First bone read is root bone
                 RootBone = tempBone;
 
             BoneList.Add(tempBone);
@@ -49,7 +49,7 @@ internal sealed class ChunkCompiledBones_900 : ChunkCompiledBones
         }
     }
 
-    internal List<string> GetNullSeparatedStrings(int numberOfNames, BinaryReader b)
+    internal static List<string> GetNullSeparatedStrings(int numberOfNames, BinaryReader b)
     {
         List<string> names = new();
         StringBuilder builder = new();

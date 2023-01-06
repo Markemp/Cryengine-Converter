@@ -35,7 +35,7 @@ public static class FileHandlingExtensions
                 return $"{mtlfile}{ext}".Replace("\\", "/");
         }
 
-        Utils.Log(LogLevelEnum.Debug, "Could not find extension for material texture \"{0}\". Defaulting to .dds", mtlfile);
+        Utilities.Log(LogLevelEnum.Debug, "Could not find extension for material texture \"{0}\". Defaulting to .dds", mtlfile);
         return $"{mtlfile}.dds".Replace("\\", "/");;
     }
 

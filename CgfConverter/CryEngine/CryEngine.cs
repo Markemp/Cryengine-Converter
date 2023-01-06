@@ -49,7 +49,7 @@ public partial class CryEngine
 
                 ChunkNode? rootNode = null;
 
-                Utils.Log(LogLevelEnum.Debug, "Mapping Nodes");
+                Utilities.Log(LogLevelEnum.Debug, "Mapping Nodes");
 
                 foreach (Model model in Models)
                 {
@@ -94,7 +94,7 @@ public partial class CryEngine
 
         if (!validExtensions.Contains(inputFile.Extension))
         {
-            Utils.Log(LogLevelEnum.Debug, invalidExtensionErrorMessage);
+            Utilities.Log(LogLevelEnum.Debug, invalidExtensionErrorMessage);
             throw new FileLoadException(invalidExtensionErrorMessage, InputFile);
         }
 
@@ -127,7 +127,7 @@ public partial class CryEngine
 
         if (mFile.Exists)
         {
-            Utils.Log(LogLevelEnum.Debug, "Found geometry file {0}", mFile.Name);
+            Utilities.Log(LogLevelEnum.Debug, "Found geometry file {0}", mFile.Name);
             inputFiles.Add(mFile);
         }
     }
@@ -195,7 +195,7 @@ public partial class CryEngine
 
             if (model.ChunkMap.Values.FirstOrDefault(c => c.ID == nodeChunk.MatID) is not ChunkMtlName matChunk)
             {
-                Utils.Log(LogLevelEnum.Debug, $"Unable to find material chunk {nodeChunk.MatID} for node {nodeChunk.ID}");
+                Utilities.Log(LogLevelEnum.Debug, $"Unable to find material chunk {nodeChunk.MatID} for node {nodeChunk.ID}");
                 continue;
             }
 
@@ -262,7 +262,7 @@ public partial class CryEngine
                 return material;
             }
             else
-                Utils.Log(LogLevelEnum.Info, $"Found MtlName chunk {mtlNameChunk.ID} with unhandled MtlNameType {mtlNameChunk.MatType}.");
+                Utilities.Log(LogLevelEnum.Info, $"Found MtlName chunk {mtlNameChunk.ID} with unhandled MtlNameType {mtlNameChunk.MatType}.");
         }
         return null;
     }
@@ -302,7 +302,7 @@ public partial class CryEngine
                 return materialFile;
         }
 
-        Utils.Log(LogLevelEnum.Info, $"Unable to find material file for {name}");
+        Utilities.Log(LogLevelEnum.Info, $"Unable to find material file for {name}");
         return null;
     }
 }

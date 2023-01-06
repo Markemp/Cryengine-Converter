@@ -9,8 +9,8 @@ public class Program
 {
     public static int Main(string[] args)
     {
-        Utils.LogLevel = LogLevelEnum.Info;
-        Utils.DebugLevel = LogLevelEnum.Debug;
+        Utilities.LogLevel = LogLevelEnum.Info;
+        Utilities.DebugLevel = LogLevelEnum.Debug;
 
         string oldTitle = Console.Title;
 
@@ -34,22 +34,10 @@ public class Program
 
                         cryData.ProcessCryengineFiles();
 
-                        if (argsHandler.OutputBlender)
-                        {
-                            Blender blendFile = new(argsHandler, cryData);
-                            blendFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
-                        }
-
                         if (argsHandler.OutputWavefront)
                         {
                             Wavefront objFile = new(argsHandler, cryData);
                             objFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
-                        }
-
-                        if (argsHandler.OutputCryTek)
-                        {
-                            CryRender cryFile = new(argsHandler, cryData);
-                            cryFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
                         }
 
                         if (argsHandler.OutputCollada)
@@ -60,15 +48,15 @@ public class Program
                     }
                     catch (Exception ex)
                     {
-                        Utils.Log(LogLevelEnum.Critical);
-                        Utils.Log(LogLevelEnum.Critical, "********************************************************************************");
-                        Utils.Log(LogLevelEnum.Critical, "There was an error rendering {0}", inputFile);
-                        Utils.Log(LogLevelEnum.Critical);
-                        Utils.Log(LogLevelEnum.Critical, ex.Message);
-                        Utils.Log(LogLevelEnum.Critical);
-                        Utils.Log(LogLevelEnum.Critical, ex.StackTrace);
-                        Utils.Log(LogLevelEnum.Critical, "********************************************************************************");
-                        Utils.Log(LogLevelEnum.Critical);
+                        Utilities.Log(LogLevelEnum.Critical);
+                        Utilities.Log(LogLevelEnum.Critical, "********************************************************************************");
+                        Utilities.Log(LogLevelEnum.Critical, "There was an error rendering {0}", inputFile);
+                        Utilities.Log(LogLevelEnum.Critical);
+                        Utilities.Log(LogLevelEnum.Critical, ex.Message);
+                        Utilities.Log(LogLevelEnum.Critical);
+                        Utilities.Log(LogLevelEnum.Critical, ex.StackTrace);
+                        Utilities.Log(LogLevelEnum.Critical, "********************************************************************************");
+                        Utilities.Log(LogLevelEnum.Critical);
                         return 1;
                     }
                 }
@@ -85,7 +73,7 @@ public class Program
 
         Console.Title = oldTitle;
 
-        Utils.Log(LogLevelEnum.Debug, "Done...");
+        Utilities.Log(LogLevelEnum.Debug, "Done...");
         
         return 0;
     }

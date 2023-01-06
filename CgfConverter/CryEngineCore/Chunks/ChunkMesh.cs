@@ -52,19 +52,19 @@ public abstract class ChunkMesh : Chunk
 
     public void WriteChunk()
     {
-        Utils.Log(LogLevelEnum.Verbose, "*** START MESH CHUNK ***");
-        Utils.Log(LogLevelEnum.Verbose, "    ChunkType:           {0}", ChunkType);
-        Utils.Log(LogLevelEnum.Verbose, "    Chunk ID:            {0:X}", ID);
-        Utils.Log(LogLevelEnum.Verbose, "    MeshSubSetID:        {0:X}", MeshSubsetsData);
-        Utils.Log(LogLevelEnum.Verbose, "    Vertex Datastream:   {0:X}", VerticesData);
-        Utils.Log(LogLevelEnum.Verbose, "    Normals Datastream:  {0:X}", NormalsData);
-        Utils.Log(LogLevelEnum.Verbose, "    UVs Datastream:      {0:X}", UVsData);
-        Utils.Log(LogLevelEnum.Verbose, "    Indices Datastream:  {0:X}", IndicesData);
-        Utils.Log(LogLevelEnum.Verbose, "    Tangents Datastream: {0:X}", TangentsData);
-        Utils.Log(LogLevelEnum.Verbose, "    Mesh Physics Data:   {0:X}", MeshPhysicsData);
-        Utils.Log(LogLevelEnum.Verbose, "    VertUVs:             {0:X}", VertsUVsData);
-        Utils.Log(LogLevelEnum.Verbose, "    MinBound:            {0:F7}, {1:F7}, {2:F7}", MinBound.X, MinBound.Y, MinBound.Z);
-        Utils.Log(LogLevelEnum.Verbose, "    MaxBound:            {0:F7}, {1:F7}, {2:F7}", MaxBound.X, MaxBound.Y, MaxBound.Z);
-        Utils.Log(LogLevelEnum.Verbose, "*** END MESH CHUNK ***");
+        Utilities.Log(LogLevelEnum.Verbose, "*** START MESH CHUNK ***");
+        Utilities.Log(LogLevelEnum.Verbose, "    ChunkType:           {0}", ChunkType);
+        Utilities.Log(LogLevelEnum.Verbose, "    Chunk ID:            {0:X}", ID);
+        Utilities.Log(LogLevelEnum.Verbose, "    MeshSubSetID:        {0:X}", MeshSubsetsData);
+        Utilities.Log(LogLevelEnum.Verbose, "    Vertex Datastream:   {0:X}", VerticesData);
+        Utilities.Log(LogLevelEnum.Verbose, "    Normals Datastream:  {0:X}", NormalsData);
+        Utilities.Log(LogLevelEnum.Verbose, "    UVs Datastream:      {0:X}", UVsData);
+        Utilities.Log(LogLevelEnum.Verbose, "    Indices Datastream:  {0:X}", IndicesData);
+        Utilities.Log(LogLevelEnum.Verbose, "    Tangents Datastream: {0:X}", TangentsData);
+        Utilities.Log(LogLevelEnum.Verbose, "    Mesh Physics Data:   {0:X}", MeshPhysicsData);
+        Utilities.Log(LogLevelEnum.Verbose, "    VertUVs:             {0:X}", VertsUVsData);
+        Utilities.Log(LogLevelEnum.Verbose, "    MinBound:            {0:F7}, {1:F7}, {2:F7}", MinBound.X, MinBound.Y, MinBound.Z);
+        Utilities.Log(LogLevelEnum.Verbose, "    MaxBound:            {0:F7}, {1:F7}, {2:F7}", MaxBound.X, MaxBound.Y, MaxBound.Z);
+        Utilities.Log(LogLevelEnum.Verbose, "*** END MESH CHUNK ***");
     }
 }
