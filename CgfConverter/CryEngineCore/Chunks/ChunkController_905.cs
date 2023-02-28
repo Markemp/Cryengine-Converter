@@ -83,17 +83,11 @@ internal sealed class ChunkController_905 : ChunkController
                 data = b.ReadBytes(length).Select(x => (float) x).ToList();
             }
             else if (keyTimeFormats[(int)EKeyTimesFormat.eF32StartStop] > 0)
-            {
                 throw new NotImplementedException();
-            }
             else if (keyTimeFormats[(int)EKeyTimesFormat.eUINT16StartStop] > 0)
-            {
                 throw new NotImplementedException();
-            }
             else if (keyTimeFormats[(int)EKeyTimesFormat.eByteStartStop] > 0)
-            {
                 throw new NotImplementedException();
-            }
             else if (keyTimeFormats[(int)EKeyTimesFormat.eBitset] > 0)
             {
                 --keyTimeFormats[(int)EKeyTimesFormat.eBitset];
@@ -138,9 +132,7 @@ internal sealed class ChunkController_905 : ChunkController
             
             List<Vector3> data;
             if (keyPosFormats[(int) ECompressionFormat.eNoCompress] > 0)
-            {
                 throw new NotImplementedException();
-            }
             else if (keyPosFormats[(int) ECompressionFormat.eNoCompressQuat] > 0)
             {
                 --keyPosFormats[(int) ECompressionFormat.eNoCompressQuat];
@@ -172,9 +164,7 @@ internal sealed class ChunkController_905 : ChunkController
                 data = Enumerable.Range(0, length).Select(_ => ((Quaternion)b.ReadSmallTree64BitQuat()).DropW()).ToList();
             }
             else if (keyPosFormats[(int) ECompressionFormat.ePolarQuat] > 0)
-            {
                 throw new NotImplementedException();
-            }
             else if (keyPosFormats[(int) ECompressionFormat.eSmallTree64BitExtQuat] > 0)
             {
                 --keyPosFormats[(int) ECompressionFormat.eSmallTree64BitExtQuat];
@@ -195,9 +185,7 @@ internal sealed class ChunkController_905 : ChunkController
             
             List<Quaternion> data;
             if (keyRotFormats[(int) ECompressionFormat.eNoCompress] > 0)
-            {
                 throw new NotImplementedException();
-            }
             else if (keyRotFormats[(int) ECompressionFormat.eNoCompressQuat] > 0)
             {
                 --keyRotFormats[(int) ECompressionFormat.eNoCompressQuat];
@@ -229,9 +217,7 @@ internal sealed class ChunkController_905 : ChunkController
                 data = Enumerable.Range(0, length).Select(_ => (Quaternion)b.ReadSmallTree64BitQuat()).ToList();
             }
             else if (keyRotFormats[(int) ECompressionFormat.ePolarQuat] > 0)
-            {
                 throw new NotImplementedException();
-            }
             else if (keyRotFormats[(int) ECompressionFormat.eSmallTree64BitExtQuat] > 0)
             {
                 --keyRotFormats[(int) ECompressionFormat.eSmallTree64BitExtQuat];

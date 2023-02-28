@@ -127,9 +127,9 @@ public partial class CryEngine
         {
             var chrparams = CryXmlSerializer.Deserialize<ChrParams.ChrParams>(InputFile + "params");
             var trackFilePath = chrparams.Animations?.FirstOrDefault(x => x.Name == "$TracksDatabase")?.Path;
-            if (trackFilePath != null)
+            if (trackFilePath is not null)
                 trackFilePath = Path.Combine(DataDir, trackFilePath);
-            if (trackFilePath != null && File.Exists(trackFilePath))
+            if (trackFilePath is not null && File.Exists(trackFilePath))
             {
                 Utilities.Log(LogLevelEnum.Info, $"Associated animation track database file found at {trackFilePath}");
                 AnimFiles.Add(trackFilePath);
