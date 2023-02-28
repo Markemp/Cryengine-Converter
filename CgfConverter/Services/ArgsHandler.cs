@@ -20,6 +20,8 @@ public sealed class ArgsHandler
     public string? OutputDir { get; internal set; }
     /// <summary>Whether to preserve path, if OutputDir is set.</summary>
     public bool PreservePath { get; internal set; }
+    /// <summary>Maximum number of threads to use.</summary>
+    public int MaxThreads { get; internal set; }
     /// <summary>Sets the output log level</summary>
     public LogLevelEnum LogLevel { get; set; } = LogLevelEnum.Critical;
     /// <summary>Allows naming conflicts for mtl file</summary>
@@ -60,7 +62,6 @@ public sealed class ArgsHandler
         ExcludeMaterialNames = new List<string> { };
     }
 
-    // TODO: Make it understand /**/ format, instead of ONLY supporting FileName wildcards
     private static string[] GetFiles(string filter)
     {
         if (File.Exists(filter))
@@ -89,7 +90,7 @@ public sealed class ArgsHandler
                 result.AddRange(GetFiles(Path.Combine(dir, "*" + parts[^1])));
             }
 
-            return result.ToArray();
+            return result.DistinctBy(x => x.ToLowerInvariant()).ToArray();
         }
         else
         {
@@ -154,6 +155,26 @@ public sealed class ArgsHandler
                     PreservePath = true;
                     break;
                 #endregion
+                #region case "-mt" / "-maxthreads"...
+                case "-mt":
+                case "-maxthreads":
+                    if (++i > inputArgs.Length)
+                    {
+                        PrintUsage();
+                        return 1;
+                    }
+
+                    if (int.TryParse(inputArgs[i], out var mt) && mt >= 0)
+                    {
+                        MaxThreads = mt;
+                    }
+                    else
+                    {
+                        Console.Error.WriteLine("Invalid number of threads {0}, defaulting to 1.", inputArgs[i]);
+                        MaxThreads = 1;
+                    }
+                    break;
+                #endregion
                 #region case "-loglevel"...
                 case "-loglevel":
                     if (++i > inputArgs.Length)
@@ -169,7 +190,7 @@ public sealed class ArgsHandler
                     }
                     else
                     {
-                        Console.WriteLine("Invalid log level {0}, defaulting to warn", inputArgs[i]);
+                        Console.Error.WriteLine("Invalid log level {0}, defaulting to warn", inputArgs[i]);
                         Utilities.LogLevel = LogLevelEnum.Warning;
                     }
                     break;
@@ -318,6 +339,10 @@ public sealed class ArgsHandler
             return 1;
         }
         
+        if (MaxThreads == 0)
+            MaxThreads = Environment.ProcessorCount;
+        Utilities.Log(LogLevelEnum.Info, $"Using up to {MaxThreads} threads");
+        
         // Log info now that loglevel has been set
         if (Smooth)
             Utilities.Log(LogLevelEnum.Info, "Smoothing Faces");
@@ -357,9 +382,7 @@ public sealed class ArgsHandler
         
         Utilities.Log(LogLevelEnum.Info, "Processing input file(s):");
         foreach (var file in InputFiles)
-        {
             Utilities.Log(LogLevelEnum.Info, file);
-        }
         if (OutputDir != null)
             Utilities.Log(LogLevelEnum.Info, "Output directory set to {0}", OutputDir);
         
@@ -383,6 +406,10 @@ public sealed class ArgsHandler
         Console.WriteLine("-outputfile:      The name of the file to write the output.  Default is [root].dae");
         Console.WriteLine("-objectdir:       The name where the base Objects directory is located.  Used to read mtl file.");
         Console.WriteLine("                  Defaults to current directory.");
+        Console.WriteLine("-pp/-preservepath:");
+        Console.WriteLine("                  Preserve the path hierarchy.");
+        Console.WriteLine("-mt/-maxthreads <number>");
+        Console.WriteLine("                  Set maximum number of threads to use. Specify 0 to use all cores.");
         Console.WriteLine("-dae:             Export Collada format files (Default).");
         Console.WriteLine("-obj:             Export Wavefront format files (Not supported).");
         Console.WriteLine("-gltf:            Export file pairs of glTF and bin files.");

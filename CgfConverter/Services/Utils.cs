@@ -129,7 +129,7 @@ public static class Utilities
 
     public static void Log(string format = null, params Object[] args) { Log(LogLevelEnum.Debug, format, args); }
 
-    public static void Log(LogLevelEnum logLevel, string format = null, params Object[] args)
+    public static void Log(LogLevelEnum logLevel, string? format = null, params object[] args)
     {
         if (Utilities.LogLevel <= logLevel)
             Console.WriteLine(format ?? string.Empty, args);
