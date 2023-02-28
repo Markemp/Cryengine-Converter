@@ -17,6 +17,8 @@ public sealed class ArgsHandler
     public string? OutputFile { get; internal set; }
     /// <summary>Directory to render to</summary>
     public string? OutputDir { get; internal set; }
+    /// <summary>Whether to preserve path, if OutputDir is set.</summary>
+    public bool PreservePath { get; internal set; }
     /// <summary>Sets the output log level</summary>
     public LogLevelEnum LogLevel { get; set; } = LogLevelEnum.Critical;
     /// <summary>Allows naming conflicts for mtl file</summary>
@@ -112,6 +114,12 @@ public sealed class ArgsHandler
                         return 1;
                     }
                     OutputDir = new DirectoryInfo(inputArgs[i]).FullName;
+                    break;
+                #endregion
+                #region case "-pp" / "-preservepath"...
+                case "-pp":
+                case "-preservepath":
+                    PreservePath = true;
                     break;
                 #endregion
                 #region case "-loglevel"...

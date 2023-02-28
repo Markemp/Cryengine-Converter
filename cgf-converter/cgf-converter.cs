@@ -40,19 +40,19 @@ public class Program
                         if (argsHandler.OutputWavefront)
                         {
                             Wavefront objFile = new(argsHandler, cryData);
-                            objFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+                            objFile.Render(argsHandler.OutputDir, argsHandler.PreservePath);
                         }
 
                         if (argsHandler.OutputCollada)
                         {
                             Collada daeFile = new(argsHandler, cryData);
-                            daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+                            daeFile.Render(argsHandler.OutputDir, argsHandler.PreservePath);
                         }
                         
                         if (argsHandler.OutputGLTF || argsHandler.OutputGLB)
                         {
                             GltfRenderer gltfFile = new(argsHandler, cryData, argsHandler.OutputGLTF, argsHandler.OutputGLB);
-                            gltfFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+                            gltfFile.Render(argsHandler.OutputDir, argsHandler.PreservePath);
                         }
 #if !DEBUG
                     }
