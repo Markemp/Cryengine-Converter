@@ -25,7 +25,7 @@ public partial class Wavefront : BaseRenderer
     /// </summary>
     /// <param name="outputDir">Folder to write files to</param>
     /// <param name="preservePath">When using an <paramref name="outputDir"/>, preserve the original hierarchy</param>
-    public override void Render(String outputDir = null, Boolean preservePath = true)
+    public override void Render(string? outputDir = null, Boolean preservePath = true)
     {
         // We need to create the obj header, then for each submesh write the vertex, UV and normal data.
         // First, let's figure out the name of the output file.  Should be <object name>.obj

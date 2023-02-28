@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace CgfConverter;
 
@@ -63,20 +64,51 @@ public sealed class ArgsHandler
     private static string[] GetFiles(string filter)
     {
         if (File.Exists(filter))
-            return new string[] { new FileInfo(filter).FullName };
+            return new [] { new FileInfo(filter).FullName };
 
-        string directory = Path.GetDirectoryName(filter);
-        if (string.IsNullOrWhiteSpace(directory))
-            directory = ".";
+        var parts = Regex.Split(filter, @"\*{2,}");
+        if (parts.Length >= 2)
+        {
+            var directory = Path.GetDirectoryName(parts[0]);
+            if (string.IsNullOrWhiteSpace(directory))
+                directory = ".";
 
-        string fileName = Path.GetFileName(filter);
-        string extension = Path.GetExtension(filter);
+            var result = new List<string>();
+            
+            // Consider it as a stack.
+            var pending = new List<string>();
+            pending.AddRange(Directory.GetDirectories(directory, Path.GetFileName(parts[0]) + "*")
+                .Select(x => Path.Combine(directory, x)));
+            while (pending.Any())
+            {
+                var dir = pending.Last();
+                pending.RemoveAt(pending.Count - 1);
 
-        bool flexibleExtension = extension.Contains('*');
+                pending.AddRange(Directory.GetDirectories(dir));
+                
+                result.AddRange(GetFiles(Path.Combine(dir, "*" + parts[^1])));
+            }
 
-        return Directory.GetFiles(directory, fileName, fileName.Contains('?') || fileName.Contains('*') ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)
-            .Where(f => flexibleExtension || Path.GetExtension(f).Length == extension.Length)
-            .ToArray();
+            return result.ToArray();
+        }
+        else
+        {
+            var directory = Path.GetDirectoryName(filter);
+            if (string.IsNullOrWhiteSpace(directory))
+                directory = ".";
+
+            var fileName = Path.GetFileName(filter);
+            var extension = Path.GetExtension(filter);
+
+            var flexibleExtension = extension.Contains('*');
+
+            return Directory.GetFiles(directory, fileName,
+                    fileName.Contains('?') || fileName.Contains('*')
+                        ? SearchOption.AllDirectories
+                        : SearchOption.TopDirectoryOnly)
+                .Where(f => flexibleExtension || Path.GetExtension(f).Length == extension.Length)
+                .ToArray();
+        }
     }
 
     /// <summary>

@@ -29,7 +29,7 @@ public class Collada : BaseRenderer
 
     public Collada(ArgsHandler argsHandler, CryEngine cryEngine) : base(argsHandler, cryEngine) { }
 
-    public override void Render(string outputDir = null, bool preservePath = true)
+    public override void Render(string? outputDir = null, bool preservePath = true)
     {
         GenerateDaeObject();
 
