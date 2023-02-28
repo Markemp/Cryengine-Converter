@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Globalization;
 using CgfConverter;
-using CgfConverter.GLTF;
+using CgfConverter.Renderers.Gltf;
 
 namespace CgfConverterConsole;
 
@@ -28,8 +28,10 @@ public class Program
             {
                 foreach (var inputFile in argsHandler.InputFiles)
                 {
+#if !DEBUG
                     try
                     {
+#endif
                         // Read CryEngine Files
                         var cryData = new CryEngine(inputFile, argsHandler.DataDir.FullName);
 
@@ -49,9 +51,10 @@ public class Program
                         
                         if (argsHandler.OutputGLTF || argsHandler.OutputGLB)
                         {
-                            GLTF gltfFile = new(argsHandler, cryData, argsHandler.OutputGLTF, argsHandler.OutputGLB);
+                            GltfRenderer gltfFile = new(argsHandler, cryData, argsHandler.OutputGLTF, argsHandler.OutputGLB);
                             gltfFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
                         }
+#if !DEBUG
                     }
                     catch (Exception ex)
                     {
@@ -66,6 +69,7 @@ public class Program
                         Utilities.Log(LogLevelEnum.Critical);
                         return 1;
                     }
+#endif
                 }
             }
 
