@@ -99,7 +99,6 @@ public partial class GltfRenderer
 
                     case Texture.MapTypeEnum.Specular:
                         specular = _gltf.AddTexture(name, width, height, raw, GltfWriter.SourceAlphaModes.Automatic);
-                        _gltf.ExtensionsUsed.Add("KHR_materials_specular");
                         break;
 
                     default:
@@ -108,6 +107,7 @@ public partial class GltfRenderer
                 }
             }
 
+            _gltf.ExtensionsUsed.Add("KHR_materials_specular");
             _gltf.Add(new GltfMaterial
             {
                 Name = m.Name,
