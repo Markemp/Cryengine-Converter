@@ -101,7 +101,7 @@ public partial class GltfRenderer
         var normals = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.NormalsData) as ChunkDataStream;
         var uvs = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.UVsData) as ChunkDataStream;
         var indices = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.IndicesData) as ChunkDataStream;
-        var colors = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.ColorsData) as ChunkDataStream;
+        // var colors = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.ColorsData) as ChunkDataStream;
         var tangents = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.TangentsData) as ChunkDataStream;
         var subsets = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.MeshSubsetsData) as ChunkMeshSubsets;
 
@@ -115,11 +115,11 @@ public partial class GltfRenderer
                     vertices.Vertices.Select(SwapAxes).ToArray());
 
             // TODO: Is this correct? This breaks some of RoL model colors, while having it set does not make anything better.
-            primitiveAccessors.Color0 = colors is null
-                ? null
-                : _gltf.AddAccessor($"{nodeChunk.Name}/colors", -1,
-                    colors.Colors.Select(x => new TypedVec4<float>(x.r / 255f, x.g / 255f, x.b / 255f, x.a / 255f))
-                        .ToArray());
+            // primitiveAccessors.Color0 = colors is null
+            //     ? null
+            //     : _gltf.AddAccessor($"{nodeChunk.Name}/colors", -1,
+            //         colors.Colors.Select(x => new TypedVec4<float>(x.r / 255f, x.g / 255f, x.b / 255f, x.a / 255f))
+            //             .ToArray());
 
             var normalsArray = normals?.Normals ?? tangents?.Normals;
             primitiveAccessors.Normal = normalsArray is null
