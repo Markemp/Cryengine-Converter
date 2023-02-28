@@ -5,10 +5,10 @@ namespace CgfConverter.Materials;
 [XmlRoot(ElementName = "Material")]
 public class Material
 {
-    private Color? diffuse;
-    private Color? specular;
-    private Color? emissive;
-    private double? opacity;
+    public Color? DiffuseValue;
+    public Color? SpecularValue;
+    public Color? EmissiveValue;
+    public double? OpacityValue;
 
     [XmlIgnore]
     internal string? SourceFileName { get; set; }
@@ -37,22 +37,22 @@ public class Material
     [XmlAttribute(AttributeName = "Diffuse")]
     public string? Diffuse 
     { 
-        get { return Color.Serialize(diffuse); }
-        set { diffuse = Color.Deserialize(value); }
+        get { return Color.Serialize(DiffuseValue); }
+        set { DiffuseValue = Color.Deserialize(value); }
     }
 
     [XmlAttribute(AttributeName = "Specular")]
     public string? Specular 
     {
-        get { return Color.Serialize(specular); }
-        set { specular = Color.Deserialize(value); } 
+        get { return Color.Serialize(SpecularValue); }
+        set { SpecularValue = Color.Deserialize(value); } 
     }
 
     [XmlAttribute(AttributeName = "Emissive")]
     public string? Emissive
     {
-        get { return Color.Serialize(emissive);    ; }
-        set { emissive = Color.Deserialize(value); }
+        get { return Color.Serialize(EmissiveValue);    ; }
+        set { EmissiveValue = Color.Deserialize(value); }
     }
 
     [XmlAttribute(AttributeName = "Shininess")]
@@ -61,8 +61,8 @@ public class Material
     [XmlAttribute(AttributeName = "Opacity")]
     public string? Opacity 
     { 
-        get { return opacity.ToString(); }
-        set { opacity = double.Parse(value ?? "1"); }
+        get { return OpacityValue.ToString(); }
+        set { OpacityValue = double.Parse(value ?? "1"); }
     }
 
     [XmlAttribute(AttributeName = "Glossiness")]

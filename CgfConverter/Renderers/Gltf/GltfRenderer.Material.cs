@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Numerics;
 using BCnEncoder.Decoder;
 using BCnEncoder.Shared.ImageFiles;
 using CgfConverter.CryEngineCore;
@@ -22,6 +23,8 @@ public partial class GltfRenderer
         var decoder = new BcDecoder();
         foreach (var m in mats)
         {
+            var useAlphaColor = m.OpacityValue != null && Math.Abs(m.OpacityValue.Value - 1.0) > 0;
+
             var diffuse = -1;
             // TODO: var diffuseDetail = -1;
             var normal = -1;
@@ -79,21 +82,22 @@ public partial class GltfRenderer
                             normal = _gltf.AddTexture(name, width, height, rawNormal);
                             metallicRoughness = _gltf.AddTexture(name, width, height, rawMetallicRoughness);
                             // TODO: diffuseDetail = _gltfDataBuffer.AddTexture(name, width, height, rawDiffuseDetail);
-                            Utilities.Log(LogLevelEnum.Warning,$"Not implemented: detailed diffuse map {texture.File}");
+                            Utilities.Log(LogLevelEnum.Warning,
+                                $"Not implemented: detailed diffuse map {texture.File}");
                         }
                         else
                         {
-                            normal = _gltf.AddTexture(name, width, height, raw, GltfWriter.UseAlphaModes.Disable);
+                            normal = _gltf.AddTexture(name, width, height, raw, GltfWriter.SourceAlphaModes.Disable);
                         }
 
                         break;
                     }
                     case Texture.MapTypeEnum.Diffuse:
-                        diffuse = _gltf.AddTexture(name, width, height, raw, GltfWriter.UseAlphaModes.Automatic);
+                        diffuse = _gltf.AddTexture(name, width, height, raw, GltfWriter.SourceAlphaModes.Automatic);
                         break;
 
                     case Texture.MapTypeEnum.Specular:
-                        specular = _gltf.AddTexture(name, width, height, raw, GltfWriter.UseAlphaModes.Automatic);
+                        specular = _gltf.AddTexture(name, width, height, raw, GltfWriter.SourceAlphaModes.Automatic);
                         _gltf.ExtensionsUsed.Add("KHR_materials_specular");
                         break;
 
@@ -106,44 +110,64 @@ public partial class GltfRenderer
             _gltf.Add(new GltfMaterial
             {
                 Name = m.Name,
+                AlphaMode = useAlphaColor ? GltfMaterialAlphaMode.Blend : GltfMaterialAlphaMode.Opaque,
                 DoubleSided = true,
                 NormalTexture = normal == -1
                     ? null
-                    : new GltfMaterialTextureSpecifier
+                    : new GltfTextureInfo
                     {
                         Index = normal,
                     },
-                PbrMetallicRoughness = diffuse == -1 && metallicRoughness == -1
-                    ? null
-                    : new GltfMaterialPbrMetallicRoughness
-                    {
-                        BaseColorTexture = diffuse == -1
-                            ? null
-                            : new GltfMaterialTextureSpecifier
-                            {
-                                Index = diffuse,
-                            },
-                        MetallicFactor = 0f,
-                        RoughnessFactor = 1f,
-                        MetallicRoughnessTexture = metallicRoughness == -1
-                            ? null
-                            : new GltfMaterialTextureSpecifier
-                            {
-                                Index = metallicRoughness,
-                            },
-                    },
-                Extensions = specular == -1
-                    ? null
-                    : new GltfExtensions
-                    {
-                        KhrMaterialsSpecular = new GltfExtensionKhrMaterialsSpecular
+                PbrMetallicRoughness = new GltfMaterialPbrMetallicRoughness
+                {
+                    BaseColorTexture = diffuse == -1
+                        ? null
+                        : new GltfTextureInfo
                         {
-                            SpecularColorTexture = new GltfMaterialTextureSpecifier
+                            Index = diffuse,
+                        },
+                    BaseColorFactor = new[]
+                    {
+                        m.DiffuseValue?.Red ?? 1f,
+                        m.DiffuseValue?.Green ?? 1f,
+                        m.DiffuseValue?.Blue ?? 1f,
+                        (float) (m.OpacityValue ?? 1.0),
+                    },
+                    MetallicFactor = 0f,
+                    RoughnessFactor = 1f,
+                    MetallicRoughnessTexture = metallicRoughness == -1
+                        ? null
+                        : new GltfTextureInfo
+                        {
+                            Index = metallicRoughness,
+                        },
+                },
+                EmissiveFactor = new[]
+                {
+                    m.EmissiveValue?.Red ?? 0f,
+                    m.EmissiveValue?.Green ?? 0f,
+                    m.EmissiveValue?.Blue ?? 0f,
+                },
+                Extensions = new GltfExtensions
+                {
+                    KhrMaterialsSpecular = new GltfExtensionKhrMaterialsSpecular
+                    {
+                        SpecularColorFactor = m.SpecularValue == null
+                            ? null
+                            : new[]
+                            {
+                                m.SpecularValue.Red,
+                                m.SpecularValue.Green,
+                                m.SpecularValue.Blue,
+                            },
+                        SpecularColorTexture = specular == -1
+                            ? null
+                            : new GltfTextureInfo
                             {
                                 Index = specular,
                             },
-                        },
                     },
+                },
             });
         }
 

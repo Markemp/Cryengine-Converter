@@ -410,32 +410,54 @@ public class GltfWriter
         return AddTexture(baseName, "image/png", ms.ToArray());
     }
 
-    public enum UseAlphaModes
+    public enum SourceAlphaModes
     {
         Disable,
         Enable,
         Automatic,
     }
 
-    public int AddTexture(string? baseName, int width, int height, ColorRgba32[] raw, UseAlphaModes useAlpha)
+    public int AddTexture(string? baseName, int width, int height, ColorRgba32[] raw, SourceAlphaModes sourceAlphaMode,
+        float? newOpacity = null)
     {
-        if (useAlpha == UseAlphaModes.Automatic)
+        if (sourceAlphaMode == SourceAlphaModes.Automatic)
         {
-            useAlpha = GltfRendererUtilities.HasMeaningfulAlphaChannel(raw)
-                ? UseAlphaModes.Enable
-                : UseAlphaModes.Disable;
+            sourceAlphaMode = GltfRendererUtilities.HasMeaningfulAlphaChannel(raw)
+                ? SourceAlphaModes.Enable
+                : SourceAlphaModes.Disable;
         }
 
         using var ms = new MemoryStream();
-        if (useAlpha == UseAlphaModes.Enable)
+        if (newOpacity != null)
         {
-            using var image = Image.LoadPixelData(raw.ToRgba32(), width, height);
+            var buf = raw.ToRgba32();
+            if (sourceAlphaMode == SourceAlphaModes.Enable)
+            {
+                for (var i = 0; i < buf.Length; i++)
+                    buf[i].A = (byte)(buf[i].A * newOpacity);
+            }
+            else
+            {
+                var newAlphaByte = (byte) (255 * newOpacity.Value);
+                for (var i = 0; i < buf.Length; i++)
+                    buf[i].A = newAlphaByte;
+            }
+            
+            using var image = Image.LoadPixelData(buf, width, height);
             image.SaveAsPng(ms);
         }
         else
         {
-            using var image = Image.LoadPixelData(raw.ToRgb24(), width, height);
-            image.SaveAsPng(ms);
+            if (sourceAlphaMode == SourceAlphaModes.Enable)
+            {
+                using var image = Image.LoadPixelData(raw.ToRgba32(), width, height);
+                image.SaveAsPng(ms);
+            }
+            else
+            {
+                using var image = Image.LoadPixelData(raw.ToRgb24(), width, height);
+                image.SaveAsPng(ms);
+            }
         }
 
         return AddTexture(baseName, "image/png", ms.ToArray());

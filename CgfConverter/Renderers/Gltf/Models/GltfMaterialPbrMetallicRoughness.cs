@@ -5,21 +5,21 @@ namespace CgfConverter.Renderers.Gltf.Models;
 
 public class GltfMaterialPbrMetallicRoughness
 {
-    [JsonProperty("baseColorFactor", NullValueHandling = NullValueHandling.Ignore)]
-    public Vector4? BaseColorFactor;
+    [JsonProperty("baseColorFactor", NullValueHandling = NullValueHandling.Ignore,
+        DefaultValueHandling = DefaultValueHandling.Ignore)]
+    public float[]? BaseColorFactor = {1f, 1f, 1f, 1f};
 
     [JsonProperty("baseColorTexture", NullValueHandling = NullValueHandling.Ignore)]
-    public GltfMaterialTextureSpecifier? BaseColorTexture;
+    public GltfTextureInfo? BaseColorTexture;
 
-    [JsonProperty("metallicFactor", NullValueHandling = NullValueHandling.Ignore)]
-    public float? MetallicFactor;
+    [JsonProperty("metallicFactor", NullValueHandling = NullValueHandling.Ignore,
+        DefaultValueHandling = DefaultValueHandling.Ignore)]
+    public float? MetallicFactor = 1f;
 
-    [JsonProperty("metallicTexture", NullValueHandling = NullValueHandling.Ignore)]
-    public GltfMaterialTextureSpecifier? MetallicTexture;
-
-    [JsonProperty("roughnessFactor", NullValueHandling = NullValueHandling.Ignore)]
-    public float? RoughnessFactor;
+    [JsonProperty("roughnessFactor", NullValueHandling = NullValueHandling.Ignore,
+        DefaultValueHandling = DefaultValueHandling.Ignore)]
+    public float? RoughnessFactor = 1f;
 
     [JsonProperty("metallicRoughnessTexture", NullValueHandling = NullValueHandling.Ignore)]
-    public GltfMaterialTextureSpecifier? MetallicRoughnessTexture;
+    public GltfTextureInfo? MetallicRoughnessTexture;
 }
