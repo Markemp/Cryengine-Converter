@@ -6,7 +6,6 @@ public partial class GltfRenderer
 {
     /*
      * https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#coordinate-system-and-units
-     * 
      * glTF uses a right-handed coordinate system.
      * glTF defines +Y as up, +Z as forward, and -X as right.
      * the front of a glTF asset faces +Z.

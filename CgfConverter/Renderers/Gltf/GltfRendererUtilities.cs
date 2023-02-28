@@ -68,6 +68,6 @@ internal static class GltfRendererUtilities
             allMax &= raw[i].a == 255;
         }
 
-        return allMax || allMin;
+        return !allMax && !allMin;
     }
 }

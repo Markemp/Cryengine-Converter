@@ -422,8 +422,8 @@ public class GltfWriter
         if (useAlpha == UseAlphaModes.Automatic)
         {
             useAlpha = GltfRendererUtilities.HasMeaningfulAlphaChannel(raw)
-                ? UseAlphaModes.Disable
-                : UseAlphaModes.Enable;
+                ? UseAlphaModes.Enable
+                : UseAlphaModes.Disable;
         }
 
         using var ms = new MemoryStream();
