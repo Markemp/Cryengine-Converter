@@ -52,7 +52,7 @@ public partial class GltfRenderer
                 {
                     case Texture.MapTypeEnum.Bumpmap:
                     {
-                        if (ddsFile.header.ddsPixelFormat.DxgiFormat == DxgiFormat.DxgiFormatBc3Unorm)
+                        if (GltfRendererUtilities.HasMeaningfulAlphaChannel(raw))
                         {
                             // https://docs.cryengine.com/display/SDKDOC2/Detail+Maps
                             // Red: Diffuse
@@ -79,23 +79,21 @@ public partial class GltfRenderer
                             normal = _gltf.AddTexture(name, width, height, rawNormal);
                             metallicRoughness = _gltf.AddTexture(name, width, height, rawMetallicRoughness);
                             // TODO: diffuseDetail = _gltfDataBuffer.AddTexture(name, width, height, rawDiffuseDetail);
+                            Utilities.Log(LogLevelEnum.Warning,$"Not implemented: detailed diffuse map {texture.File}");
                         }
                         else
                         {
-                            normal = _gltf.AddTexture(name, width, height, raw,
-                                GltfWriter.UseAlphaModes.Disable);
+                            normal = _gltf.AddTexture(name, width, height, raw, GltfWriter.UseAlphaModes.Disable);
                         }
 
                         break;
                     }
                     case Texture.MapTypeEnum.Diffuse:
-                        diffuse = _gltf.AddTexture(name, width, height, raw,
-                            GltfWriter.UseAlphaModes.Automatic);
+                        diffuse = _gltf.AddTexture(name, width, height, raw, GltfWriter.UseAlphaModes.Automatic);
                         break;
 
                     case Texture.MapTypeEnum.Specular:
-                        specular = _gltf.AddTexture(name, width, height, raw,
-                            GltfWriter.UseAlphaModes.Automatic);
+                        specular = _gltf.AddTexture(name, width, height, raw, GltfWriter.UseAlphaModes.Automatic);
                         _gltf.ExtensionsUsed.Add("KHR_materials_specular");
                         break;
 

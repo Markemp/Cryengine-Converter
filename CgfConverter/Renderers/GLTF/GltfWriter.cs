@@ -13,7 +13,7 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace CgfConverter.Renderers.Gltf;
 
-public class GltfSingleBufferWriter
+public class GltfWriter
 {
     private readonly List<byte[]> _bytesList = new();
     private readonly GltfRoot _root = new();
@@ -77,7 +77,7 @@ public class GltfSingleBufferWriter
                 ByteLength = bytes.Length,
             }
         };
-        
+
         var json = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(_root));
         if (json.Length % 4 != 0)
         {
@@ -87,7 +87,7 @@ public class GltfSingleBufferWriter
                 rv[i] = 0x20; // space
             json = rv;
         }
-        
+
         using var writer = new BinaryWriter(stream, Encoding.UTF8, true);
         writer.Write(0x46546C67);
         writer.Write(2);
@@ -163,20 +163,6 @@ public class GltfSingleBufferWriter
         _currentOffset += paddedSize;
 
         return _root.BufferViews.Count - 1;
-    }
-
-    public int AddBufferView(string? baseName, IRGBA[] data)
-    {
-        var buffer = new float[data.Length * 4];
-        for (int i = 0, j = 0; i < buffer.Length; j++)
-        {
-            buffer[i++] = data[j].r;
-            buffer[i++] = data[j].g;
-            buffer[i++] = data[j].b;
-            buffer[i++] = data[j].a;
-        }
-
-        return AddBufferView(baseName, buffer);
     }
 
     public int AddAccessor<T>(string? baseName, int bufferView, T[] data, int start = 0, int end = int.MaxValue)
@@ -358,38 +344,6 @@ public class GltfSingleBufferWriter
         return _root.Accessors.Count - 1;
     }
 
-    public int AddAccessor(string? baseName, int bufferView, IRGBA[] data, int start = 0, int end = int.MaxValue)
-    {
-        if (bufferView == -1)
-            bufferView = AddBufferView(baseName, data);
-        if (end == int.MaxValue)
-            end = data.Length;
-        _root.Accessors.Add(new GltfAccessor
-        {
-            Name = baseName is null ? null : $"{baseName}/accessor[{start}:{end}]",
-            ByteOffset = start * Marshal.SizeOf(data[0]),
-            BufferView = bufferView,
-            ComponentType = GltfAccessorComponentTypes.f32,
-            Count = end - start,
-            Type = GltfAccessorTypes.Vec4,
-            Min = new List<float>
-            {
-                data.Skip(start).Take(end - start).Min(x => x.r),
-                data.Skip(start).Take(end - start).Min(x => x.g),
-                data.Skip(start).Take(end - start).Min(x => x.b),
-                data.Skip(start).Take(end - start).Min(x => x.a),
-            },
-            Max = new List<float>
-            {
-                data.Skip(start).Take(end - start).Max(x => x.r),
-                data.Skip(start).Take(end - start).Max(x => x.g),
-                data.Skip(start).Take(end - start).Max(x => x.b),
-                data.Skip(start).Take(end - start).Max(x => x.a),
-            },
-        });
-        return _root.Accessors.Count - 1;
-    }
-
     public int AddAccessor(string? baseName, int bufferView, Matrix4x4[] data, int start = 0, int end = int.MaxValue)
     {
         if (bufferView == -1)
@@ -467,15 +421,9 @@ public class GltfSingleBufferWriter
     {
         if (useAlpha == UseAlphaModes.Automatic)
         {
-            var allMin = true;
-            var allMax = true;
-            for (var i = 0; i < raw.Length && (allMin || allMax); i++)
-            {
-                allMin &= raw[i].a == 0;
-                allMax &= raw[i].a == 255;
-            }
-
-            useAlpha = allMax || allMin ? UseAlphaModes.Disable : UseAlphaModes.Enable;
+            useAlpha = GltfRendererUtilities.HasMeaningfulAlphaChannel(raw)
+                ? UseAlphaModes.Disable
+                : UseAlphaModes.Enable;
         }
 
         using var ms = new MemoryStream();

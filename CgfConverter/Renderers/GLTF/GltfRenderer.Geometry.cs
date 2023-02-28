@@ -101,13 +101,12 @@ public partial class GltfRenderer
         var normals = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.NormalsData) as ChunkDataStream;
         var uvs = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.UVsData) as ChunkDataStream;
         var indices = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.IndicesData) as ChunkDataStream;
-        // TODO: var colors = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.ColorsData) as ChunkDataStream;
+        var colors = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.ColorsData) as ChunkDataStream;
         var tangents = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.TangentsData) as ChunkDataStream;
-        var meshSubsets =
-            nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.MeshSubsetsData) as ChunkMeshSubsets;
+        var subsets = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.MeshSubsetsData) as ChunkMeshSubsets;
 
         Debug.Assert(indices != null);
-        Debug.Assert(meshSubsets != null);
+        Debug.Assert(subsets != null);
 
         if (vertices is not null)
         {
@@ -116,19 +115,25 @@ public partial class GltfRenderer
                     vertices.Vertices.Select(SwapAxes).ToArray());
 
             // TODO: Is this correct? This breaks some of RoL model colors, while having it set does not make anything better.
-            // colorBufferAccessor = colors is null ? null : _gltfDataBuffer.AddAccessor("ColorAccessor", -1, colors.Colors);
+            primitiveAccessors.Color0 = colors is null
+                ? null
+                : _gltf.AddAccessor($"{nodeChunk.Name}/colors", -1,
+                    colors.Colors.Select(x => new TypedVec4<float>(x.r / 255f, x.g / 255f, x.b / 255f, x.a / 255f))
+                        .ToArray());
 
-            primitiveAccessors.Normal = normals is null
+            var normalsArray = normals?.Normals ?? tangents?.Normals;
+            primitiveAccessors.Normal = normalsArray is null
                 ? null
                 : _gltf.AddAccessor($"{nodeChunk.Name}/normal", -1,
-                    normals.Normals.Select(SwapAxes).ToArray());
+                    normalsArray.Select(SwapAxes).ToArray());
 
             // TODO: Do Tangents also need swapping axes?
             primitiveAccessors.Tangent = tangents is null
                 ? null
                 : _gltf.AddAccessor($"{nodeChunk.Name}/tangent", -1,
-                    tangents.Tangents.Cast<Tangent>().Where((_, i) => i % 2 == 0).Select(x =>
-                            new TypedVec4<float>(x.x / 32767f, x.y / 32767f, x.z / 32767f, x.w / 32767f))
+                    tangents.Tangents.Cast<Tangent>()
+                        .Where((_, i) => i % 2 == 0)
+                        .Select(x => new TypedVec4<float>(x.x / 32767f, x.y / 32767f, x.z / 32767f, x.w / 32767f))
                         .ToArray());
 
             primitiveAccessors.TexCoord0 =
@@ -141,7 +146,7 @@ public partial class GltfRenderer
         var indexBufferView = _gltf.AddBufferView($"{nodeChunk.Name}/index", indices.Indices);
         return _gltf.Add(new GltfMesh
         {
-            Primitives = meshSubsets.MeshSubsets.Select(v => new GltfMeshPrimitive
+            Primitives = subsets.MeshSubsets.Select(v => new GltfMeshPrimitive
             {
                 Attributes = primitiveAccessors,
                 Indices = _gltf.AddAccessor(

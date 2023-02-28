@@ -50,6 +50,4 @@ public class GltfAccessor
             _ => throw new ArgumentOutOfRangeException(nameof(value)),
         };
     }
-
-    [JsonIgnore] public int RequiredByteLength => Type.GetScalarCount() * ComponentType.GetSize() * Count;
 }
