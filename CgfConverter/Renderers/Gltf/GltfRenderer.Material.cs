@@ -93,7 +93,8 @@ public partial class GltfRenderer
                         break;
                     }
                     case Texture.MapTypeEnum.Diffuse:
-                        diffuse = _gltf.AddTexture(name, width, height, raw, GltfWriter.SourceAlphaModes.Automatic);
+                        // TODO: SpecularValue seemingly has a meaningful value as opacity, but, really?
+                        diffuse = _gltf.AddTexture(name, width, height, raw, GltfWriter.SourceAlphaModes.Automatic, useAlphaColor ? m.SpecularValue?.Red : null);
                         break;
 
                     case Texture.MapTypeEnum.Specular:
