@@ -275,9 +275,28 @@ internal sealed class ChunkController_905 : ChunkController
         eAutomaticQuat = 9
     }
 
+    [Flags]
+    public enum AssetFlags : uint
+    { 
+        Additive = 0x001,
+        Cycle = 0x002,
+        Loaded = 0x004,
+        Lmg = 0x008,
+        LmgValid = 0x020,
+        Created = 0x800,
+        Requested =   0x1000,
+        Ondemand = 0x2000,
+        Aimpose = 0x4000,
+        AimposeUnloaded = 0x8000,
+        NotFound = 0x10000,
+        Tcb = 0x20000,
+        Internaltype = 0x40000,
+        BigEndian = 0x80000000,
+    }
+
     public struct MotionParams905
     {
-        public uint AssetFlags;
+        public AssetFlags AssetFlags;
         public uint Compression;
 
         public int TicksPerFrame;
@@ -334,7 +353,7 @@ internal sealed class ChunkController_905 : ChunkController
 
         public MotionParams905(BinaryReader r)
         {
-            AssetFlags = r.ReadUInt32();
+            AssetFlags = (AssetFlags)r.ReadUInt32();
             Compression = r.ReadUInt32();
             TicksPerFrame = r.ReadInt32();
             SecsPerTick = r.ReadSingle();
