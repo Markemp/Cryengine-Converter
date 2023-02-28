@@ -1,10 +1,22 @@
-﻿using CgfConverter.Structs;
+﻿using System;
+using CgfConverter.Structs;
 using System.Numerics;
 
 namespace Extensions;
 
 public static class QuaternionExtensions
 {
+    public static float GetComponent(this Quaternion q, int index) => index switch
+    {
+        0 => q.X,
+        1 => q.Y,
+        2 => q.Z,
+        3 => q.W,
+        _ => throw new ArgumentOutOfRangeException(nameof(index))
+    };
+
+    public static Vector3 DropW(this Quaternion q) => new(q.X, q.Y, q.Z);
+
     public static Matrix3x3 ConvertToRotationMatrix(this Quaternion q)
     {
         // https://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToMatrix/index.htm

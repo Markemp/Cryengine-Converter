@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Globalization;
 using CgfConverter;
+using CgfConverter.GLTF;
 
 namespace CgfConverterConsole;
 
@@ -25,7 +26,7 @@ public class Program
 #endif
             if (argsHandler.ProcessArgs(args) == 0)
             {
-                foreach (string inputFile in argsHandler.InputFiles)
+                foreach (var inputFile in argsHandler.InputFiles)
                 {
                     try
                     {
@@ -44,6 +45,12 @@ public class Program
                         {
                             Collada daeFile = new(argsHandler, cryData);
                             daeFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
+                        }
+                        
+                        if (argsHandler.OutputGLTF || argsHandler.OutputGLB)
+                        {
+                            GLTF gltfFile = new(argsHandler, cryData, argsHandler.OutputGLTF, argsHandler.OutputGLB);
+                            gltfFile.Render(argsHandler.OutputDir, argsHandler.InputFiles.Count > 1);
                         }
                     }
                     catch (Exception ex)

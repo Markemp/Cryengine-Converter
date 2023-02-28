@@ -56,7 +56,6 @@ internal sealed class ChunkNode_824 : ChunkNode
         RotCtrlID = b.ReadInt32();
         SclCtrlID = b.ReadInt32();
 
-        Properties = b.ReadPString();
-        // Good enough for now.
+        PropertyStringLength = b.ReadInt32();
     }
 }

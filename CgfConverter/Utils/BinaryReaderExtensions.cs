@@ -84,6 +84,52 @@ public static class BinaryReaderExtensions
         return q;
     }
 
+    public static ShotInt3Quat ReadShotInt3Quat(this BinaryReader r)
+    {
+        return new ShotInt3Quat
+        {
+            X = r.ReadInt16(),
+            Y = r.ReadInt16(),
+            Z = r.ReadInt16(),
+        };
+    }
+
+    public static SmallTreeDWORDQuat ReadSmallTreeDWORDQuat(this BinaryReader r)
+    {
+        return new SmallTreeDWORDQuat
+        {
+            Value = r.ReadUInt32(),
+        };
+    }
+
+    public static SmallTree48BitQuat ReadSmallTree48BitQuat(this BinaryReader r)
+    {
+        return new SmallTree48BitQuat
+        {
+            M1 = r.ReadUInt16(),
+            M2 = r.ReadUInt16(),
+            M3 = r.ReadUInt16(),
+        };
+    }
+
+    public static SmallTree64BitQuat ReadSmallTree64BitQuat(this BinaryReader r)
+    {
+        return new SmallTree64BitQuat
+        {
+            M1 = r.ReadUInt32(),
+            M2 = r.ReadUInt32(),
+        };
+    }
+
+    public static SmallTree64BitExtQuat ReadSmallTree64BitExtQuat(this BinaryReader r)
+    {
+        return new SmallTree64BitExtQuat
+        {
+            M1 = r.ReadUInt32(),
+            M2 = r.ReadUInt32(),
+        };
+    }
+
     public static IRGBA ReadColor(this BinaryReader r)
     {
         var c = new IRGBA()

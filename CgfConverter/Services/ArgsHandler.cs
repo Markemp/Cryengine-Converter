@@ -29,6 +29,10 @@ public sealed class ArgsHandler
     public bool OutputWavefront { get; internal set; }
     /// <summary>Render Collada format files</summary>
     public bool OutputCollada { get; internal set; }
+    /// <summary>Render glTF</summary>
+    public bool OutputGLTF { get; internal set; }
+    /// <summary>Render glTF binary</summary>
+    public bool OutputGLB { get; internal set; }
     /// <summary>Smooth Faces</summary>
     public bool Smooth { get; internal set; }
     /// <summary>Flag used to indicate we should convert texture paths to use TIFF instead of DDS</summary>
@@ -146,6 +150,16 @@ public sealed class ArgsHandler
                 case "-object":
                 case "-wavefront":
                     OutputWavefront = true;
+                    break;
+                #endregion
+                #region case "-gltf"
+                case "-gltf":
+                    OutputGLTF = true;
+                    break;
+                #endregion
+                #region case "-glb"
+                case "-glb":
+                    OutputGLB = true;
                     break;
                 #endregion
                 #region case "-dae" / "-collada"...
@@ -282,6 +296,10 @@ public sealed class ArgsHandler
             Utilities.Log(LogLevelEnum.Info, "Output format set to Wavefront (.obj)");
         if (OutputCollada)
             Utilities.Log(LogLevelEnum.Info, "Output format set to COLLADA (.dae)");
+        if (OutputGLTF)
+            Utilities.Log(LogLevelEnum.Info, "Output format set to glTF (.gltf)");
+        if (OutputGLB)
+            Utilities.Log(LogLevelEnum.Info, "Output format set to glTF Binary (.glb)");
         if (AllowConflicts)
             Utilities.Log(LogLevelEnum.Info, "Allow conflicts for mtl files enabled");
         if (NoConflicts)
@@ -306,7 +324,7 @@ public sealed class ArgsHandler
             Utilities.Log(LogLevelEnum.Info, "Output directory set to {0}", OutputDir);
         
         // Default to Collada (.dae) format
-        if (!OutputCollada && !OutputWavefront)
+        if (!OutputCollada && !OutputWavefront && !OutputGLB && !OutputGLTF)
             OutputCollada = true;
 
         return 0;
@@ -327,6 +345,8 @@ public sealed class ArgsHandler
         Console.WriteLine("                  Defaults to current directory.");
         Console.WriteLine("-dae:             Export Collada format files (Default).");
         Console.WriteLine("-obj:             Export Wavefront format files (Not supported).");
+        Console.WriteLine("-gltf:            Export file pairs of glTF and bin files.");
+        Console.WriteLine("-glb:             Export glb (glTF binary) files.");
         Console.WriteLine();
         Console.WriteLine("-smooth:          Smooth Faces.");
         Console.WriteLine("-group:           Group meshes into single model.");

@@ -66,6 +66,8 @@ public enum ChunkType : uint    // complete
     FootPlantInfo = 0xAAFC0003,     // Footplant info
     BonesBoxes = 0xAAFC0004,        // unknown chunk
     FoliageInfo = 0xAAFC0005,       // unknown chunk
+    GlobalAnimationHeaderCAF = 0xAAFC0007,
+    
     // Star Citizen versions
     NodeSC = 0xCCCC100B,
     CompiledBonesSC = 0xCCCC1000,

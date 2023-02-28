@@ -1,7 +1,9 @@
-﻿using Extensions;
+﻿using System;
+using Extensions;
 using CgfConverter.Structs;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 
 namespace CgfConverter;
@@ -442,4 +444,300 @@ public struct PhysicsStruct50
     public short Unknown22;
     public short Unknown23;
     public short Unknown24;
+}
+
+public struct ShotInt3Quat
+{
+    private const float MAX_SHORTINTf = 32767f;
+    
+    public short X;
+    public short Y;
+    public short Z;
+
+    public ShotInt3Quat()
+    {
+        X = Y = Z = 0;
+    }
+
+    public static explicit operator ShotInt3Quat(Quaternion q)
+    {
+        if (q.W < 0)
+        {
+            q.X *= -1;
+            q.Y *= -1;
+            q.Z *= -1;
+        }
+
+        return new ShotInt3Quat
+        {
+            X = (short) Math.Floor(q.X * MAX_SHORTINTf + 0.5f),
+            Y = (short) Math.Floor(q.Y * MAX_SHORTINTf + 0.5f),
+            Z = (short) Math.Floor(q.Z * MAX_SHORTINTf + 0.5f),
+        };
+    }
+
+    public static implicit operator Quaternion(ShotInt3Quat value)
+    {
+        Quaternion q = new()
+        {
+            X = value.X / MAX_SHORTINTf,
+            Y = value.Y / MAX_SHORTINTf,
+            Z = value.Z / MAX_SHORTINTf,
+        };
+
+        q.W = (float)Math.Sqrt(1.0f - (q.X * q.X + q.Y * q.Y + q.Z * q.Z));
+        return q;
+    }
+}
+
+public struct SmallTreeDWORDQuat
+{
+    private const float MAX_10BITf = 723.0f;
+    private const float RANGE_10BIT = 0.707106781186f;
+
+    public uint Value;
+
+    public static explicit operator SmallTreeDWORDQuat(Quaternion q)
+    {
+        var value = 0u;
+
+        var absoluteComponents = Enumerable.Range(0, 4).Select(x => Math.Abs(q.GetComponent(x))).ToList();
+        var maxComponentIndex = absoluteComponents.IndexOf(absoluteComponents.Max());
+
+        if (q.GetComponent(maxComponentIndex) < 0.0f)
+            q = -q;
+
+        var shift = 0;
+        for (var i = 0; i < 4; ++i)
+        {
+            if (i == maxComponentIndex) continue;
+            value |= (uint)Math.Floor((q.GetComponent(i) + RANGE_10BIT) * MAX_10BITf + 0.5f) << shift;
+            shift += 10;
+        }
+
+        value |= (uint)maxComponentIndex << shift;
+        return new SmallTreeDWORDQuat {Value = value};
+    }
+
+    public static implicit operator Quaternion(SmallTreeDWORDQuat value)
+    {
+        var maxComponentIndex = (int)(value.Value >> 30);
+        var shift = 0;
+        var comp = new float[4];
+        
+        var sqrsumm = 0.0f;
+        for (var i = 0; i < 4; ++i)
+        {
+            if (i == maxComponentIndex) continue;
+            var packed = (value.Value >> shift) & 0x3FF;
+            comp[i] = packed / MAX_10BITf - RANGE_10BIT;
+            sqrsumm += comp[i] * comp[i];
+            shift += 10;
+        }
+
+        comp[maxComponentIndex] = (float)Math.Sqrt(1.0f - sqrsumm);
+        return new Quaternion(comp[0], comp[1], comp[2], comp[3]);
+    }
+}
+
+public struct SmallTree48BitQuat
+{
+    private const float MAX_15BITf = 23170.0f;
+    private const float RANGE_15BIT = 0.707106781186f;
+
+    public ushort M1, M2, M3;
+
+    public static explicit operator SmallTree48BitQuat(Quaternion q)
+    {
+        var value = 0ul;
+
+        var absoluteComponents = Enumerable.Range(0, 4).Select(x => Math.Abs(q.GetComponent(x))).ToList();
+        var maxComponentIndex = absoluteComponents.IndexOf(absoluteComponents.Max());
+
+        if (q.GetComponent(maxComponentIndex) < 0.0f)
+            q = -q;
+
+        var shift = 0;
+        for (var i = 0; i < 4; ++i)
+        {
+            if (i == maxComponentIndex) continue;
+            value |= (ulong)Math.Floor((q.GetComponent(i) + RANGE_15BIT) * MAX_15BITf + 0.5f) << shift;
+            shift += 15;
+        }
+
+        value |= (ulong)maxComponentIndex << 46;
+        return new SmallTree48BitQuat
+        {
+            M1 = (ushort)(value & 0xFFFF),
+            M2 = (ushort)((value >> 16) & 0xFFFF),
+            M3 = (ushort)((value >> 32) & 0xFFFF),
+        };
+    }
+
+    public static implicit operator Quaternion(SmallTree48BitQuat value)
+    {
+        var v64 = ((ulong)value.M3 << 32) | ((ulong)value.M2 << 16) | value.M1;
+        var maxComponentIndex = (int)(v64 >> 46);
+        var shift = 0;
+        var comp = new float[4];
+        
+        var sqrsumm = 0.0f;
+        for (var i = 0; i < 4; ++i)
+        {
+            if (i == maxComponentIndex) continue;
+            var packed = (v64 >> shift) & 0x7FFF;
+            comp[i] = packed / MAX_15BITf - RANGE_15BIT;
+            sqrsumm += comp[i] * comp[i];
+            shift += 15;
+        }
+
+        comp[maxComponentIndex] = (float)Math.Sqrt(1.0f - sqrsumm);
+        return new Quaternion(comp[0], comp[1], comp[2], comp[3]);
+    }
+}
+
+public struct SmallTree64BitQuat
+{
+    private const float MAX_20BITf = 741454f;
+    private const float RANGE_20BIT = 0.707106781186f;
+
+    // Keep these separate; order of M1 and M2 is not dependent on endianness.
+    public uint M1;
+    public uint M2;
+
+    public ulong Value
+    {
+        get => ((ulong)M2 << 32) | M1;
+        set
+        {
+            M1 = unchecked((uint)value);
+            M2 = (uint)(value >> 32);
+        }
+    }
+
+    public static explicit operator SmallTree64BitQuat(Quaternion q)
+    {
+        var value = 0ul;
+
+        var absoluteComponents = Enumerable.Range(0, 4).Select(x => Math.Abs(q.GetComponent(x))).ToList();
+        var maxComponentIndex = absoluteComponents.IndexOf(absoluteComponents.Max());
+
+        if (q.GetComponent(maxComponentIndex) < 0.0f)
+            q = -q;
+
+        var shift = 0;
+        for (var i = 0; i < 4; ++i)
+        {
+            if (i == maxComponentIndex) continue;
+            value |= (ulong)Math.Floor((q.GetComponent(i) + RANGE_20BIT) * MAX_20BITf + 0.5f) << shift;
+            shift += 20;
+        }
+
+        value |= (ulong)maxComponentIndex << 62;
+        return new SmallTree64BitQuat {Value = value};
+    }
+
+    public static implicit operator Quaternion(SmallTree64BitQuat value)
+    {
+        var maxComponentIndex = (int)(value.Value >> 62);
+        var shift = 0;
+        var comp = new float[4];
+        
+        var sqrsumm = 0.0f;
+        for (var i = 0; i < 4; ++i)
+        {
+            if (i == maxComponentIndex) continue;
+            var packed = (value.Value >> shift) & 0xFFFFF;
+            comp[i] = packed / MAX_20BITf - RANGE_20BIT;
+            sqrsumm += comp[i] * comp[i];
+            shift += 20;
+        }
+
+        comp[maxComponentIndex] = (float)Math.Sqrt(1.0f - sqrsumm);
+        return new Quaternion(comp[0], comp[1], comp[2], comp[3]);
+    }
+}
+
+
+public struct SmallTree64BitExtQuat
+{
+    private const float MAX_20BITf = 741454f;
+    private const float RANGE_20BIT = 0.707106781186f;
+    private const float MAX_21BITf = 1482909.0f;
+    private const float RANGE_21BIT = 0.707106781186f;
+
+    // Keep these separate; order of M1 and M2 is not dependent on endianness.
+    public uint M1;
+    public uint M2;
+
+    public ulong Value
+    {
+        get => ((ulong)M2 << 32) | M1;
+        set
+        {
+            M1 = unchecked((uint)value);
+            M2 = (uint)(value >> 32);
+        }
+    }
+
+    public static explicit operator SmallTree64BitExtQuat(Quaternion q)
+    {
+        var value = 0ul;
+
+        var absoluteComponents = Enumerable.Range(0, 4).Select(x => Math.Abs(q.GetComponent(x))).ToList();
+        var maxComponentIndex = absoluteComponents.IndexOf(absoluteComponents.Max());
+
+        if (q.GetComponent(maxComponentIndex) < 0.0f)
+            q = -q;
+
+        var shift = 0;
+        for (int i = 0, targetComponentIndex = 0; i < 4; ++i)
+        {
+            if (i == maxComponentIndex) continue;
+            
+            if (targetComponentIndex++ < 2)
+            {
+                value |= (ulong) Math.Floor((q.GetComponent(i) + RANGE_21BIT) * MAX_21BITf + 0.5f) << shift;
+                shift += 20;
+            }
+            else
+            {
+                value |= (ulong) Math.Floor((q.GetComponent(i) + RANGE_20BIT) * MAX_20BITf + 0.5f) << shift;
+                shift += 20;
+            }
+        }
+
+        value |= (ulong)maxComponentIndex << 62;
+        return new SmallTree64BitExtQuat {Value = value};
+    }
+
+    public static implicit operator Quaternion(SmallTree64BitExtQuat value)
+    {
+        var maxComponentIndex = (int)(value.Value >> 62);
+        var shift = 0;
+        var comp = new float[4];
+        
+        var sqrsumm = 0.0f;
+        for (int i = 0, targetComponentIndex = 0; i < 4; ++i)
+        {
+            if (i == maxComponentIndex) continue;
+            if (targetComponentIndex++ < 2)
+            {
+                var packed = (value.Value >> shift) & 0x1FFFFF;
+                comp[i] = packed / MAX_21BITf - RANGE_21BIT;
+                sqrsumm += comp[i] * comp[i];
+                shift += 21;
+            }
+            else
+            {
+                var packed = (value.Value >> shift) & 0xFFFFF;
+                comp[i] = packed / MAX_20BITf - RANGE_20BIT;
+                sqrsumm += comp[i] * comp[i];
+                shift += 20;
+            }
+        }
+
+        comp[maxComponentIndex] = (float)Math.Sqrt(1.0f - sqrsumm);
+        return new Quaternion(comp[0], comp[1], comp[2], comp[3]);
+    }
 }
