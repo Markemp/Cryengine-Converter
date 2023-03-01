@@ -13,9 +13,9 @@ public abstract class BaseRenderer
         CryData = cryEngine;
     }
 
-    public abstract void Render(string outputDir = null, bool preservePath = true);
+    public abstract void Render(string? outputDir = null, bool preservePath = true);
 
-    internal string GetOutputFile(string extension, string outputDir = null, bool preservePath = true)
+    internal string GetOutputFile(string extension, string? outputDir = null, bool preservePath = true)
     {
         var outputFile = string.Format("temp.{0}", extension);
 
@@ -53,7 +53,7 @@ public abstract class BaseRenderer
     {
         foreach (var excname in Args.ExcludeNodeNames)
         {
-            if (nodeName.ToLower().StartsWith(excname.ToLower()))
+            if (nodeName.ToLowerInvariant().StartsWith(excname.ToLower()))
             {
                 Utilities.Log(LogLevelEnum.Debug, $"Node matched excludename '{excname}'");
                 return true;
@@ -67,7 +67,7 @@ public abstract class BaseRenderer
     {
         foreach (var excname in Args.ExcludeMaterialNames)
         {
-            if (materialName.ToLower().StartsWith(excname.ToLower()))
+            if (materialName.ToLowerInvariant().StartsWith(excname.ToLower()))
             {
                 Utilities.Log(LogLevelEnum.Debug, $"Material name matched excludemat '{excname}'");
                 return true;

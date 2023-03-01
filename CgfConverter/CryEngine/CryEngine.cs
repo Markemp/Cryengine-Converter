@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using HoloXPLOR.DataForge;
 using Material = CgfConverter.Materials.Material;
 
 namespace CgfConverter;
@@ -23,12 +24,14 @@ public partial class CryEngine
     };
 
     public List<Model> Models { get; internal set; } = new();
+    public List<Model> Animations { get; internal set; }
     //public List<Material> Materials { get; internal set; } = new();
     public ChunkNode RootNode { get; internal set; }
     public ChunkCompiledBones Bones { get; internal set; }
     public SkinningInfo SkinningInfo { get; set; }
     public string InputFile { get; internal set; }
     public string DataDir { get; internal set; }
+    public List<string> AnimFiles { get; internal set; } = new();
 
     public List<Chunk> Chunks
     {
@@ -119,6 +122,21 @@ public partial class CryEngine
         {
             CreateMaterialsFor(model);
         }
+
+        if (File.Exists(InputFile + "params"))
+        {
+            var chrparams = CryXmlSerializer.Deserialize<ChrParams.ChrParams>(InputFile + "params");
+            var trackFilePath = chrparams.Animations?.FirstOrDefault(x => x.Name == "$TracksDatabase")?.Path;
+            if (trackFilePath is not null)
+                trackFilePath = Path.Combine(DataDir, trackFilePath);
+            if (trackFilePath is not null && File.Exists(trackFilePath))
+            {
+                Utilities.Log(LogLevelEnum.Info, $"Associated animation track database file found at {trackFilePath}");
+                AnimFiles.Add(trackFilePath);
+            }
+        }
+        
+        Animations = AnimFiles.Select(Model.FromFile).ToList();
     }
 
     private static void AutoDetectMFile(string filename, FileInfo inputFile, List<FileInfo> inputFiles)

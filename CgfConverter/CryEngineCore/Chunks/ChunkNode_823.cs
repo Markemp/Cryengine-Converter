@@ -47,16 +47,15 @@ internal sealed class ChunkNode_823 : ChunkNode
         transform.M44 = 1f;
         Transform = transform;
 
-        Pos = b.ReadVector3() * VERTEX_SCALE;
-        Rot = b.ReadQuaternion();
-        Scale = b.ReadVector3();
+        Pos = b.ReadVector3() * VERTEX_SCALE;   // Obsolete
+        Rot = b.ReadQuaternion();               // Obsolete
+        Scale = b.ReadVector3();                // Obsolete
 
         // read the controller pos/rot/scale
         PosCtrlID = b.ReadInt32();
         RotCtrlID = b.ReadInt32();
         SclCtrlID = b.ReadInt32();
 
-        Properties = b.ReadPString();
-        // Good enough for now.
+        PropertyStringLength = b.ReadInt32();
     }
 }

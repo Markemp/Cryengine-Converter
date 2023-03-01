@@ -29,7 +29,7 @@ public class Collada : BaseRenderer
 
     public Collada(ArgsHandler argsHandler, CryEngine cryEngine) : base(argsHandler, cryEngine) { }
 
-    public override void Render(string outputDir = null, bool preservePath = true)
+    public override void Render(string? outputDir = null, bool preservePath = true)
     {
         GenerateDaeObject();
 
@@ -1121,15 +1121,10 @@ public class Collada : BaseRenderer
             nodes.Add(boneNode);
         }
 
-        var hasGeometry = false;
-        if (CryData.Models.Count == 2)
-            hasGeometry = CryData.Models[1].HasGeometry;
-        else
-            hasGeometry = CryData.Models[0].HasGeometry;
+        var hasGeometry = CryData.Models.Any(x => x.HasGeometry);
 
         if (hasGeometry)
         {
-            // TODO:  If there are 2 models, only want parent nodes from geometry model.  Also, node names for Ivo files have the file extension on them and needs cleanup
             var allParentNodes = CryData.Models[CryData.Models.Count == 2 ? 1 : 0].NodeMap.Values.Where(n => n.ParentNodeID != ~1);
 
             foreach (var node in allParentNodes)

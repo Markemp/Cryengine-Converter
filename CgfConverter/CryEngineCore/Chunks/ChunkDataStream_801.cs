@@ -16,9 +16,9 @@ internal sealed class ChunkDataStream_801 : ChunkDataStream
         Flags2 = b.ReadUInt32(); // another filler
         uint datastreamType = b.ReadUInt32();
         DataStreamType = (DatastreamType)datastreamType;
-        SkipBytes(b, 4);
+        SkipBytes(b, 4);    // data stream inddx, for multiple streams (not used)
+        
         NumElements = b.ReadUInt32(); // number of elements in this chunk
-
         BytesPerElement = b.ReadUInt32();
 
         SkipBytes(b, 8);

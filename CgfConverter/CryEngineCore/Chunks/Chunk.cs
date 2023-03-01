@@ -75,36 +75,38 @@ public abstract class Chunk : IBinaryChunk
 
     public static T New<T>(uint version) where T : Chunk
     {
-        Dictionary<uint, Func<dynamic>> versionMap = null;
-        Func<dynamic> factory = null;
-
-        if (!_chunkFactoryCache.TryGetValue(typeof(T), out versionMap))
+        Func<dynamic>? factory;
+        
+        lock (_chunkFactoryCache)
         {
-            versionMap = new Dictionary<uint, Func<dynamic>> { };
-            _chunkFactoryCache[typeof(T)] = versionMap;
-        }
+            if (!_chunkFactoryCache.TryGetValue(typeof(T), out var versionMap))
+            {
+                versionMap = new Dictionary<uint, Func<dynamic>> { };
+                _chunkFactoryCache[typeof(T)] = versionMap;
+            }
 
-        version &= 0x7fffffff;
-        if (!versionMap.TryGetValue(version, out factory))
-        {
-            var targetType = typeof(T).Assembly.GetTypes()
-                .FirstOrDefault(type =>
-                              !type.IsAbstract
-                              && type.IsClass
-                              && !type.IsGenericType
-                              && typeof(T).IsAssignableFrom(type)
-                              && type.Name == String.Format("{0}_{1:X}", typeof(T).Name, version));
+            version &= 0x7fffffff;
+            if (!versionMap.TryGetValue(version, out factory))
+            {
+                var targetType = typeof(T).Assembly.GetTypes()
+                    .FirstOrDefault(type =>
+                        !type.IsAbstract
+                        && type.IsClass
+                        && !type.IsGenericType
+                        && typeof(T).IsAssignableFrom(type)
+                        && type.Name == String.Format("{0}_{1:X}", typeof(T).Name, version));
 
-            if (targetType != null)
-                factory = () => { return Activator.CreateInstance(targetType) as T; };
+                if (targetType != null)
+                    factory = () => Activator.CreateInstance(targetType) as T;
 
-            _chunkFactoryCache[typeof(T)][version] = factory;
+                _chunkFactoryCache[typeof(T)][version] = factory;
+            }
         }
 
         if (factory != null)
             return factory.Invoke() as T;
 
-        throw new NotSupportedException(string.Format("Version {0:X} of {1} is not supported", version, typeof(T).Name));
+        throw new NotSupportedException($"Version {version:X} of {typeof(T).Name} is not supported");
     }
 
     public void Load(Model model, ChunkHeader header)
@@ -135,7 +137,7 @@ public abstract class Chunk : IBinaryChunk
 
     public virtual void Read(BinaryReader reader)
     {
-        if (reader == null)
+        if (reader is null)
             throw new ArgumentNullException(nameof(reader));
 
         ChunkType = _header.ChunkType;

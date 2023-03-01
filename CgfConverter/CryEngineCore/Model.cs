@@ -100,8 +100,6 @@ public class Model
     {
         var inputFile = new FileInfo(fileName);
 
-        Console.Title = $"Processing {inputFile.Name}...";
-
         FileName = inputFile.Name;
 
         if (!inputFile.Exists)

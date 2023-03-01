@@ -17,13 +17,14 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
     public bool IsGroupHead { get; internal set; }
     public bool IsGroupMember { get; internal set; }
     public Matrix4x4 Transform { get; internal set; }
-    public Vector3 Pos { get; internal set; }
-    public Quaternion Rot { get; internal set; }
-    public Vector3 Scale { get; internal set; }
-    public int PosCtrlID { get; internal set; }  // Obsolete
-    public int RotCtrlID { get; internal set; }  // Obsolete
-    public int SclCtrlID { get; internal set; }  // Obsolete
+    public Vector3 Pos { get; internal set; }       // Obsolete
+    public Quaternion Rot { get; internal set; }    // Obsolete
+    public Vector3 Scale { get; internal set; }     // Obsolete
+    public int PosCtrlID { get; internal set; } 
+    public int RotCtrlID { get; internal set; }
+    public int SclCtrlID { get; internal set; }
     public string Properties { get; internal set; } = string.Empty;
+    public int PropertyStringLength { get; internal set; }
 
     /// <summary>Computed from material file. Not set for helper nodes, etc.  Flattened with all mats under Submaterial</summary>
     public Material? Materials { get; internal set; }
