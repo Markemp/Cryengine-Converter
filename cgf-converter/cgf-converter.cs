@@ -82,10 +82,24 @@ public class Program
                 Utilities.Log(LogLevelEnum.Critical,
                     "********************************************************************************");
                 Utilities.Log(LogLevelEnum.Critical, "There was an error rendering {0}", failedFile);
-                Utilities.Log(LogLevelEnum.Critical);
-                Utilities.Log(LogLevelEnum.Critical, task.Exception.Message);
-                Utilities.Log(LogLevelEnum.Critical);
-                Utilities.Log(LogLevelEnum.Critical, task.Exception.StackTrace);
+                if (task.Exception.InnerExceptions.Any())
+                {
+                    foreach (var inner in task.Exception.InnerExceptions)
+                    {
+                        Utilities.Log(LogLevelEnum.Critical);
+                        Utilities.Log(LogLevelEnum.Critical, inner.Message);
+                        Utilities.Log(LogLevelEnum.Critical);
+                        Utilities.Log(LogLevelEnum.Critical, inner.StackTrace);
+                    }
+                }
+                else
+                {
+                    Utilities.Log(LogLevelEnum.Critical);
+                    Utilities.Log(LogLevelEnum.Critical, task.Exception.Message);
+                    Utilities.Log(LogLevelEnum.Critical);
+                    Utilities.Log(LogLevelEnum.Critical, task.Exception.StackTrace);
+                }
+
                 Utilities.Log(LogLevelEnum.Critical,
                     "********************************************************************************");
                 Utilities.Log(LogLevelEnum.Critical);
@@ -121,19 +135,40 @@ public class Program
         if (_argsHandler.OutputWavefront)
         {
             Wavefront objFile = new(_argsHandler, cryData);
-            objFile.Render(_argsHandler.OutputDir, _argsHandler.PreservePath);
+            try
+            {
+                objFile.Render(_argsHandler.OutputDir, _argsHandler.PreservePath);
+            }
+            catch (NotSupportedException)
+            {
+                Utilities.Log(LogLevelEnum.Error, "Not supported [.obj]: {0}", inputFile);
+            }
         }
 
         if (_argsHandler.OutputCollada)
         {
             Collada daeFile = new(_argsHandler, cryData);
-            daeFile.Render(_argsHandler.OutputDir, _argsHandler.PreservePath);
+            try
+            {
+                daeFile.Render(_argsHandler.OutputDir, _argsHandler.PreservePath);
+            }
+            catch (NotSupportedException)
+            {
+                Utilities.Log(LogLevelEnum.Error, "Not supported [.dae]: {0}", inputFile);
+            }
         }
 
         if (_argsHandler.OutputGLTF || _argsHandler.OutputGLB)
         {
             GltfRenderer gltfFile = new(_argsHandler, cryData, _argsHandler.OutputGLTF, _argsHandler.OutputGLB);
-            gltfFile.Render(_argsHandler.OutputDir, _argsHandler.PreservePath);
+            try
+            {
+                gltfFile.Render(_argsHandler.OutputDir, _argsHandler.PreservePath);
+            }
+            catch (NotSupportedException)
+            {
+                Utilities.Log(LogLevelEnum.Error, "Not supported [.gltf]: {0}", inputFile);
+            }
         }
     }
 }

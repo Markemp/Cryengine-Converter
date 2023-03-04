@@ -207,4 +207,35 @@ public static class BinaryReaderExtensions
         Single,
         Double
     }
+    
+    public static int ReadCryInt(this Stream stream)
+    {
+        var current = stream.ReadByte();
+        var result = current & 0x7F;
+        while ((current & 0x80) != 0)
+        {
+            current = stream.ReadByte();
+            result = (result << 7) | (current & 0x7F);
+        }
+
+        return result;
+    }
+
+    public static int ReadCryInt(this BinaryReader reader) => ReadCryInt(reader.BaseStream);
+
+    public static Tuple<bool, int> ReadCryIntWithFlag(this Stream stream)
+    {
+        var current = stream.ReadByte();
+        var result = current & 0x3F;
+        var flag = (current & 0x40) != 0;
+        while ((current & 0x80) != 0)
+        {
+            current = stream.ReadByte();
+            result = (result << 7) | (current & 0x7F);
+        }
+
+        return Tuple.Create(flag, result);
+    }
+
+    public static Tuple<bool, int> ReadCryIntWithFlag(this BinaryReader reader) => ReadCryIntWithFlag(reader.BaseStream);
 }

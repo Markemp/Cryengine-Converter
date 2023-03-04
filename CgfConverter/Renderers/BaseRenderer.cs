@@ -46,6 +46,8 @@ public abstract class BaseRenderer
             outputFile = Path.Combine(outputDir, preserveDir, Path.ChangeExtension(Path.GetFileNameWithoutExtension(CryData.InputFile), extension));
         }
 
+        Directory.CreateDirectory(Path.GetDirectoryName(outputFile)!);
+
         return outputFile;
     }
 

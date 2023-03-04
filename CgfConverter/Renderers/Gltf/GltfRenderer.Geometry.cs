@@ -10,10 +10,12 @@ namespace CgfConverter.Renderers.Gltf;
 
 public partial class GltfRenderer
 {
-    private int WriteSkin(GltfNode rootNode, ChunkNode nodeChunk,
+    private int? WriteSkin(GltfNode rootNode, ChunkNode nodeChunk,
         GltfMeshPrimitiveAttributes primitiveAccessors)
     {
         var skinningInfo = nodeChunk.GetSkinningInfo();
+        if (!skinningInfo.HasSkinningInfo)
+            return null;
         primitiveAccessors.Weights0 = _gltf.AddAccessor($"{nodeChunk.Name}/bone/weight", -1,
             skinningInfo.IntVertices == null
                 ? skinningInfo.BoneMapping
@@ -91,7 +93,7 @@ public partial class GltfRenderer
         });
     }
 
-    private int WriteMesh(ChunkNode nodeChunk, ChunkMesh meshChunk,
+    private int? WriteMesh(ChunkNode nodeChunk, ChunkMesh meshChunk,
         GltfMeshPrimitiveAttributes primitiveAccessors)
     {
         var baseMaterialIndex = WriteMaterial(nodeChunk);
@@ -105,8 +107,8 @@ public partial class GltfRenderer
         var tangents = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.TangentsData) as ChunkDataStream;
         var subsets = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.MeshSubsetsData) as ChunkMeshSubsets;
 
-        Debug.Assert(indices != null);
-        Debug.Assert(subsets != null);
+        if (indices is null || subsets is null || (vertices is null && vertsUvs is null))
+            return null;
 
         if (vertices is not null)
         {
@@ -141,7 +143,7 @@ public partial class GltfRenderer
         }
 
         if (vertsUvs is not null && vertices is null)
-            throw new NotImplementedException();
+            throw new NotSupportedException();
 
         var indexBufferView = _gltf.AddBufferView($"{nodeChunk.Name}/index", indices.Indices);
         return _gltf.Add(new GltfMesh
@@ -160,6 +162,7 @@ public partial class GltfRenderer
 
     private void WriteGeometries(Model model)
     {
+        var hasAnyMesh = false;
         foreach (var nodeChunk in model.ChunkMap.Values.OfType<ChunkNode>())
         {
             if (IsNodeNameExcluded(nodeChunk.Name))
@@ -183,10 +186,17 @@ public partial class GltfRenderer
             };
 
             var primitiveAccessors = new GltfMeshPrimitiveAttributes();
-            rootNode.Skin = WriteSkin(rootNode, nodeChunk, primitiveAccessors);
             rootNode.Mesh = WriteMesh(nodeChunk, meshChunk, primitiveAccessors);
+            if (rootNode.Mesh is null)
+                continue;
+            
+            rootNode.Skin = WriteSkin(rootNode, nodeChunk, primitiveAccessors);
             
             _gltf.Scenes[_gltf.Scene].Nodes.Add(_gltf.Add(rootNode));
+            hasAnyMesh = true;
         }
+
+        if (!hasAnyMesh)
+            throw new NotSupportedException();
     }
 }

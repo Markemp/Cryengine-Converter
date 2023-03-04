@@ -116,11 +116,11 @@ public class WiiuStreamPackFileSystem : IPackFileSystem, IDisposable
                 using var ms = new MemoryStream(buffer, true);
                 while (ms.Position < buffer.Length && stream.Position < entry.Offset + entry.CompressedSize)
                 {
-                    var (backFlag, size) = ReadIntWithFlag(stream);
+                    var (backFlag, size) = stream.ReadCryIntWithFlag();
 
                     if (backFlag)
                     {
-                        var copyLength = ReadInt(stream);
+                        var copyLength = stream.ReadCryInt();
                         var copyBaseOffset = (int) ms.Position - copyLength;
 
                         for (var remaining = size + 3; remaining > 0; remaining -= copyLength)
@@ -145,33 +145,6 @@ public class WiiuStreamPackFileSystem : IPackFileSystem, IDisposable
         }
 
         return buffer;
-    }
-
-    private static int ReadInt(Stream stream)
-    {
-        var current = stream.ReadByte();
-        var result = current & 0x7F;
-        while ((current & 0x80) != 0)
-        {
-            current = stream.ReadByte();
-            result = (result << 7) | (current & 0x7F);
-        }
-
-        return result;
-    }
-
-    private static Tuple<bool, int> ReadIntWithFlag(Stream stream)
-    {
-        var current = stream.ReadByte();
-        var result = current & 0x3F;
-        var flag = (current & 0x40) != 0;
-        while ((current & 0x80) != 0)
-        {
-            current = stream.ReadByte();
-            result = (result << 7) | (current & 0x7F);
-        }
-
-        return Tuple.Create(flag, result);
     }
 
     private readonly struct FileEntry : IComparable<FileEntry>
