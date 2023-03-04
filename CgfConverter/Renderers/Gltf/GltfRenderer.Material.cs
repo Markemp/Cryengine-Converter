@@ -123,7 +123,7 @@ public partial class GltfRenderer
             {
                 Name = m.Name,
                 AlphaMode = useAlphaColor ? GltfMaterialAlphaMode.Blend : GltfMaterialAlphaMode.Opaque,
-                DoubleSided = false,
+                DoubleSided = true,
                 NormalTexture = normal == -1
                     ? null
                     : new GltfTextureInfo
