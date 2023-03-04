@@ -33,6 +33,7 @@ public partial class GltfRenderer
                 continue;
             }
             
+            // TODO: This ideally should be always true; need to figure out what's the alpha of diffuse really supposed to be
             var useAlphaColor = m.OpacityValue != null && Math.Abs(m.OpacityValue.Value - 1.0) > 0;
 
             var diffuse = -1;
@@ -122,7 +123,7 @@ public partial class GltfRenderer
             {
                 Name = m.Name,
                 AlphaMode = useAlphaColor ? GltfMaterialAlphaMode.Blend : GltfMaterialAlphaMode.Opaque,
-                DoubleSided = true,
+                DoubleSided = false,
                 NormalTexture = normal == -1
                     ? null
                     : new GltfTextureInfo
