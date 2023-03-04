@@ -38,7 +38,7 @@ public static class FileHandlingExtensions
 
     public static string CombineAndNormalizePath(params string?[] pathComponents)
     {
-        var parts = new List<string>(pathComponents.Where(x => x != null).SelectMany(x => x!.Split('/', '\\')));
+        var parts = pathComponents.Where(x => x != null).SelectMany(x => x!.Split('/', '\\')).ToList();
         for (var i = 0; i < parts.Count;)
         {
             if (parts[i] == "." || string.IsNullOrWhiteSpace(parts[i]))

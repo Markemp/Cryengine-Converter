@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using BCnEncoder.Decoder;
 using BCnEncoder.Shared.ImageFiles;
 using CgfConverter.CryEngineCore;
+using CgfConverter.Materials;
 using CgfConverter.Renderers.Gltf.Models;
 using Extensions;
 using SixLabors.ImageSharp.PixelFormats;
@@ -11,17 +13,26 @@ namespace CgfConverter.Renderers.Gltf;
 
 public partial class GltfRenderer
 {
-    private int WriteMaterial(ChunkNode nodeChunk)
+    private readonly Dictionary<Material, int> _materialMap = new();
+    
+    private Dictionary<int, int?> WriteMaterial(ChunkNode nodeChunk)
     {
-        var baseMaterialIndex = _gltf.Materials.Count;
+        var materialIndices = new Dictionary<int, int?>();
 
         var mats = nodeChunk.Materials?.SubMaterials;
         if (mats is null)
-            return baseMaterialIndex;
+            return materialIndices;
 
         var decoder = new BcDecoder();
-        foreach (var m in mats)
+        for (var i = 0; i < mats.Length; i++)
         {
+            var m = mats[i];
+            if (_materialMap.TryGetValue(m, out var existingIndex))
+            {
+                materialIndices[i] = existingIndex;
+                continue;
+            }
+            
             var useAlphaColor = m.OpacityValue != null && Math.Abs(m.OpacityValue.Value - 1.0) > 0;
 
             var diffuse = -1;
@@ -64,18 +75,18 @@ public partial class GltfRenderer
                             var rawNormal = new Rgb24[raw.Length];
                             var rawMetallicRoughness = new Rgb24[raw.Length];
                             var rawDiffuseDetail = new Rgb24[raw.Length];
-                            for (var i = 0; i < raw.Length; i++)
+                            for (var j = 0; j < raw.Length; j++)
                             {
-                                var r = (rawNormal[i].R = raw[i].g) / 255f;
-                                var g = (rawNormal[i].G = raw[i].a) / 255f;
+                                var r = (rawNormal[j].R = raw[j].g) / 255f;
+                                var g = (rawNormal[j].G = raw[j].a) / 255f;
                                 var b = Math.Sqrt(1 - Math.Pow(r * 2 - 1, 2) - Math.Pow(g * 2 - 1, 2)) / 2 + 0.5f;
-                                rawNormal[i].B = (byte) (255 * b);
+                                rawNormal[j].B = (byte) (255 * b);
 
                                 // Its green channel contains roughness values
-                                rawMetallicRoughness[i].G = (byte) (255 - raw[i].b);
+                                rawMetallicRoughness[j].G = (byte) (255 - raw[j].b);
                                 // and its blue channel contains metalness values.
 
-                                rawDiffuseDetail[i].R = rawDiffuseDetail[i].G = rawDiffuseDetail[i].B = raw[i].r;
+                                rawDiffuseDetail[j].R = rawDiffuseDetail[j].G = rawDiffuseDetail[j].B = raw[j].r;
                             }
 
                             normal = _gltf.AddTexture(name, width, height, rawNormal);
@@ -169,8 +180,10 @@ public partial class GltfRenderer
                     },
                 },
             });
+
+            materialIndices[i] = _materialMap[m] = _gltf.Materials.Count - 1;
         }
 
-        return baseMaterialIndex;
+        return materialIndices;
     }
 }

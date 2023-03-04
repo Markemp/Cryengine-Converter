@@ -196,21 +196,27 @@ public partial class CryEngine
 
     private void CreateMaterialsFor(Model model)
     {
-        foreach (ChunkNode nodeChunk in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkType.Node))
+        var loadedMaterialMap = new Dictionary<Chunk, Material?>();
+        foreach (var nodeChunk in model.ChunkMap.Values.OfType<ChunkNode>())
         {
+            Material? material;
+            
             // If Ivo file, just a single material node chunk with a library.
             if (nodeChunk._model.IsIvoFile)
             {
-                var ivoMatChunk = (ChunkMtlName)Chunks.Where(c => c.ChunkType == ChunkType.MtlNameIvo).FirstOrDefault();
-                var ivoMatFile = GetMaterialFile(ivoMatChunk.Name);
-
-                if (ivoMatFile is not null)
+                if (Chunks.FirstOrDefault(c => c.ChunkType == ChunkType.MtlNameIvo) is not ChunkMtlName ivoMatChunk)
                 {
-                    using var stream = PackFileSystem.GetStream(ivoMatFile);
-                    nodeChunk.Materials = MaterialUtilities.FromStream(stream, nodeChunk.Name);
+                    Utilities.Log(LogLevelEnum.Debug, $"Unable to find material chunk {nodeChunk.MatID} for node {nodeChunk.ID}");
+                    continue;
                 }
-                else
-                    nodeChunk.Materials = CreateDefaultMaterials(nodeChunk);
+
+                if (loadedMaterialMap.TryGetValue(ivoMatChunk, out material))
+                    nodeChunk.Materials = material;
+                else if (GetMaterialFile(ivoMatChunk.Name) is { } ivoMatFile)
+                    nodeChunk.Materials =
+                        MaterialUtilities.FromStream(PackFileSystem.GetStream(ivoMatFile), nodeChunk.Name, true);
+                
+                loadedMaterialMap[ivoMatChunk] = nodeChunk.Materials ??= CreateDefaultMaterials(nodeChunk);
                 continue;
             }
 
@@ -220,33 +226,36 @@ public partial class CryEngine
                 continue;
             }
 
-            if (matChunk.Name.Contains("mechDefault.mtl") && (matChunk.NumChildren == 5 || matChunk.NumChildren == 4))  // Edge case for MWO models
-                matChunk.Name = "Objects/mechs/generic/body/generic_body.mtl";
-
-            if (matChunk.Name.Contains("mechDefault.mtl") && matChunk.NumChildren == 11)  // Edge case for MWO models
-                matChunk.Name = "Objects/mechs/_mech_templates/body/mecha.mtl";
-
-            if (matChunk.Name.Contains("05 - Default") && matChunk.NumChildren == 5)  // Edge case for MWO models
-                matChunk.Name = "Objects/mechs/generic/body/generic_body.mtl";
-
-            var matfile = GetMaterialFile(matChunk.Name);
-
-            if (matfile is not null)
+            if (loadedMaterialMap.TryGetValue(matChunk, out material))
             {
-                using var stream = PackFileSystem.GetStream(matfile);
-                nodeChunk.Materials = MaterialUtilities.FromStream(stream, nodeChunk.Name);
+                nodeChunk.Materials = material;
+                continue;
             }
-            else
-                nodeChunk.Materials = CreateDefaultMaterials(nodeChunk);
+
+            var name = matChunk.Name;
+            
+            if (name.Contains("mechDefault.mtl") && (matChunk.NumChildren == 5 || matChunk.NumChildren == 4))  // Edge case for MWO models
+                name = "Objects/mechs/generic/body/generic_body.mtl";
+
+            if (name.Contains("mechDefault.mtl") && matChunk.NumChildren == 11)  // Edge case for MWO models
+                name = "Objects/mechs/_mech_templates/body/mecha.mtl";
+
+            if (name.Contains("05 - Default") && matChunk.NumChildren == 5)  // Edge case for MWO models
+                name = "Objects/mechs/generic/body/generic_body.mtl";
+
+            if (GetMaterialFile(name) is { } matfile)
+                nodeChunk.Materials = MaterialUtilities.FromStream(PackFileSystem.GetStream(matfile), nodeChunk.Name, true);
+
+            loadedMaterialMap[matChunk] = nodeChunk.Materials ??= CreateDefaultMaterials(nodeChunk);
 
             // create dummy 5th material (generic_variant) for MWO mechDefault.mtls
             if (matChunk.Name.Equals("Objects/mechs/generic/body/generic_body.mtl"))
             {
-                var source = nodeChunk.Materials.SubMaterials;
+                var source = nodeChunk.Materials!.SubMaterials;
                 var newMats = new Material[5];
 
                 Array.Copy(source, newMats, source.Length);
-                newMats[4] = nodeChunk.Materials.SubMaterials[2];
+                newMats[4] = nodeChunk.Materials!.SubMaterials[2];
                 nodeChunk.Materials.SubMaterials = newMats;
             }
         }

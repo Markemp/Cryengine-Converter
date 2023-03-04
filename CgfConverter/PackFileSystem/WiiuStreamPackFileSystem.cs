@@ -54,11 +54,7 @@ public class WiiuStreamPackFileSystem : IPackFileSystem, IDisposable
         return new MemoryStream(ReadAllBytes(path));
     }
 
-    public bool Exists(string path)
-    {
-        var entry = new FileEntry(path);
-        return _entries.BinarySearch(entry) >= 0;
-    }
+    public bool Exists(string path) => _entries.BinarySearch(new FileEntry(path)) >= 0;
 
     public string[] Glob(string pattern)
     {
@@ -116,7 +112,7 @@ public class WiiuStreamPackFileSystem : IPackFileSystem, IDisposable
                 using var ms = new MemoryStream(buffer, true);
                 while (ms.Position < buffer.Length && stream.Position < entry.Offset + entry.CompressedSize)
                 {
-                    var (backFlag, size) = stream.ReadCryIntWithFlag();
+                    var size = stream.ReadCryIntWithFlag(out var backFlag);
 
                     if (backFlag)
                     {

@@ -96,7 +96,7 @@ public partial class GltfRenderer
     private int? WriteMesh(ChunkNode nodeChunk, ChunkMesh meshChunk,
         GltfMeshPrimitiveAttributes primitiveAccessors)
     {
-        var baseMaterialIndex = WriteMaterial(nodeChunk);
+        var materialMap = WriteMaterial(nodeChunk);
         
         var vertices = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.VerticesData) as ChunkDataStream;
         var vertsUvs = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.VertsUVsData) as ChunkDataStream;
@@ -155,7 +155,7 @@ public partial class GltfRenderer
                     $"{nodeChunk.Name}/index",
                     indexBufferView,
                     indices.Indices, v.FirstIndex, v.FirstIndex + v.NumIndices),
-                Material = baseMaterialIndex + v.MatID,
+                Material = materialMap.GetValueOrDefault(v.MatID),
             }).ToList()
         });
     }
