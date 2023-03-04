@@ -31,7 +31,7 @@ public class SonicBoomTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SonicBoom\checkpoint.cgf", "-dds", "-dae" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         Assert.AreEqual((uint)17, cryData.Models[0].NumChunks);
@@ -56,7 +56,7 @@ public class SonicBoomTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SonicBoom\jungle_chase.cgf", "-dds", "-dae" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         Assert.AreEqual((uint)24, cryData.Models[0].NumChunks);
@@ -81,7 +81,7 @@ public class SonicBoomTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SonicBoom\jungle_chase_b.cgf", "-dds", "-dae" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         Assert.AreEqual((uint)30, cryData.Models[0].NumChunks);

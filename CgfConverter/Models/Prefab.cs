@@ -45,22 +45,21 @@ namespace CgfConverter.Models
             }
         }
 
-        public static PrefabsLibrary FromFile(FileInfo materialfile)
+        public static PrefabsLibrary? FromStream(Stream stream, bool closeAfter = false)
         {
-            if (!materialfile.Exists)
-                return null;
-
             try
             {
-                using (Stream fileStream = materialfile.OpenRead())
-                {
-                    return HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<PrefabsLibrary>(fileStream);
-                    //return HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<CryEngineCore.Material>(materialfile.FullName);
-                }
+                return HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<PrefabsLibrary>(stream);
+                //return HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<CryEngineCore.Material>(materialfile.FullName);
             }
             catch (Exception ex)
             {
-                Debug.WriteLine("{0} failed deserialize - {1}", materialfile, ex.Message);
+                Debug.WriteLine("{0} failed deserialize - {1}", stream, ex.Message);
+            }
+            finally
+            {
+                if (closeAfter)
+                    stream.Close();                
             }
 
             return null;

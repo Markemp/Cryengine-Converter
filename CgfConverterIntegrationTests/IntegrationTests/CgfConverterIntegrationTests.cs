@@ -50,7 +50,7 @@ namespace CgfConverterTests.IntegrationTests
             var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\brfl_fps_behr_p4ar_body.cgf", "-dds", "-dae" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
-            CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
+            CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
             Collada colladaData = new(testUtils.argsHandler, cryData);
@@ -68,7 +68,7 @@ namespace CgfConverterTests.IntegrationTests
             var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\forest_ruin.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
-            CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
+            CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
             Collada colladaData = new(testUtils.argsHandler, cryData);
@@ -86,7 +86,7 @@ namespace CgfConverterTests.IntegrationTests
             var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Test01\raquel_eyeoverlay.skin", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\Test01\" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
-            CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
+            CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
             Collada colladaData = new(testUtils.argsHandler, cryData);
@@ -104,7 +104,7 @@ namespace CgfConverterTests.IntegrationTests
             var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Prey\Dahl_GenMaleBody01.skin", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\Prey\" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
-            CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
+            CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
             Collada colladaData = new(testUtils.argsHandler, cryData);
@@ -122,7 +122,7 @@ namespace CgfConverterTests.IntegrationTests
             var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Prey\Dahl_GenMaleBody01.skin" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
-            CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
+            CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
             Collada colladaData = new(testUtils.argsHandler, cryData);
@@ -140,7 +140,7 @@ namespace CgfConverterTests.IntegrationTests
             var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Evolve\griffin.skin" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
-            CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
+            CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
             Collada colladaData = new(testUtils.argsHandler, cryData);
@@ -158,7 +158,7 @@ namespace CgfConverterTests.IntegrationTests
             var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Evolve\griffin_menu_harpoon.skin" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
-            CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
+            CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
             Collada colladaData = new(testUtils.argsHandler, cryData);
@@ -176,7 +176,7 @@ namespace CgfConverterTests.IntegrationTests
             var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Evolve\griffin_fp_skeleton.chr" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
-            CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
+            CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
             Collada colladaData = new(testUtils.argsHandler, cryData);
@@ -194,7 +194,7 @@ namespace CgfConverterTests.IntegrationTests
             var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\osv_96_muzzle_brake_01_fp.cgf" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
-            CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
+            CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
             Collada colladaData = new(testUtils.argsHandler, cryData);
@@ -212,7 +212,7 @@ namespace CgfConverterTests.IntegrationTests
             var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\spriggan_proto_mesh.skin" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
-            CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
+            CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
             Assert.AreEqual((uint)41, cryData.Models[0].NumChunks);
@@ -239,7 +239,7 @@ namespace CgfConverterTests.IntegrationTests
             var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\spriggan_proto_skel.chr" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
-            CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
+            CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
             Collada colladaData = new(testUtils.argsHandler, cryData);
@@ -258,7 +258,7 @@ namespace CgfConverterTests.IntegrationTests
             var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\cnylgt_marauder.cga" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
-            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
             Collada colladaData = new Collada(testUtils.argsHandler, cryData);
@@ -274,7 +274,7 @@ namespace CgfConverterTests.IntegrationTests
             var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\CryEngine\green_fern_bush_a.cgf" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
-            CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
+            CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
             Collada colladaData = new(testUtils.argsHandler, cryData);

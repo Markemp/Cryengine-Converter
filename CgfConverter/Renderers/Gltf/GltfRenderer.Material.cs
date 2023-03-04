@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Numerics;
 using BCnEncoder.Decoder;
 using BCnEncoder.Shared.ImageFiles;
 using CgfConverter.CryEngineCore;
@@ -33,8 +32,8 @@ public partial class GltfRenderer
 
             foreach (var texture in m.Textures!)
             {
-                var texturePath = FileHandlingExtensions.ResolveTextureFile(texture.File, Args.DataDir);
-                if (!File.Exists(texturePath))
+                var texturePath = FileHandlingExtensions.ResolveTextureFile(texture.File, Args.PackFileSystem);
+                if (!Args.PackFileSystem.Exists(texturePath))
                 {
                     Utilities.Log(LogLevelEnum.Warning,
                         $"Skipping {texture.File} because the file could not be found.");
@@ -42,7 +41,7 @@ public partial class GltfRenderer
                 }
 
                 DdsFile ddsFile;
-                using (var ddsfs = new FileStream(texturePath, FileMode.Open, FileAccess.Read))
+                using (var ddsfs = Args.PackFileSystem.GetStream(texturePath))
                     ddsFile = DdsFile.Load(ddsfs);
 
                 var width = (int) ddsFile.header.dwWidth;

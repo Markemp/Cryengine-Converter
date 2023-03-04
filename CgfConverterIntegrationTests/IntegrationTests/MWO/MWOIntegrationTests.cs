@@ -32,7 +32,7 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         var mtlChunks = cryData.Chunks.Where(a => a.ChunkType == ChunkType.MtlName).ToList();
@@ -62,7 +62,7 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new Collada(testUtils.argsHandler, cryData);
@@ -88,7 +88,7 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
         var matNameChunks = cryData.Chunks.Where(c => c.ChunkType == ChunkType.MtlName).ToList();
 
@@ -103,7 +103,7 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new Collada(testUtils.argsHandler, cryData);
@@ -117,7 +117,7 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new Collada(testUtils.argsHandler, cryData);
@@ -130,7 +130,7 @@ public class MWOIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\industrial_wetlamp_a.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         Collada colladaData = new Collada(testUtils.argsHandler, cryData);
@@ -146,7 +146,7 @@ public class MWOIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\timberwolf.chr", "-dds", "-dae", "-objectdir", @"d:\depot\lol\" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         Collada colladaData = new Collada(testUtils.argsHandler, cryData);
@@ -228,7 +228,7 @@ public class MWOIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\NoMats\candycane_a.chr", "-dds", "-dae" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new Collada(testUtils.argsHandler, cryData);
@@ -282,7 +282,7 @@ public class MWOIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\candycane_a.chr", "-dds", "-dae", "-objectdir", @"d:\depot\mwo" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new Collada(testUtils.argsHandler, cryData);
@@ -336,7 +336,7 @@ public class MWOIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\hbr_right_torso_uac5_bh1.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         Collada colladaData = new(testUtils.argsHandler, cryData);
@@ -353,7 +353,7 @@ public class MWOIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\hbr_right_torso.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new Collada(testUtils.argsHandler, cryData);

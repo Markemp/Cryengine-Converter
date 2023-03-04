@@ -20,7 +20,11 @@ public class Program
         _argsHandler = argsHandler;
     }
 
+#if DEBUG
+    public static int Main(string[] args)
+#else
     public static async Task<int> Main(string[] args)
+#endif
     {
         Utilities.LogLevel = LogLevelEnum.Info;
         Utilities.DebugLevel = LogLevelEnum.Debug;
@@ -34,12 +38,16 @@ public class Program
         if (numErrorsOccurred != 0)
             return numErrorsOccurred;
 
+#if DEBUG
+        return new Program(argsHandler).Run();
+#else
         return await new Program(argsHandler).Run();
+#endif
     }
 
-    private async Task<int> Run()
-    {
 #if DEBUG
+    private int Run()
+    {
         for (var i = 0; i < _argsHandler.InputFiles.Count; i++)
         {
             var inputFile = _argsHandler.InputFiles[i];
@@ -53,7 +61,10 @@ public class Program
         Utilities.Log(LogLevelEnum.Info, "Finished.");
         
         return 0;
+    }
 #else
+    private async Task<int> Run()
+    {
         var workers = new Dictionary<Task, string>();
         var numErrorsOccurred = 0;
 
@@ -97,13 +108,13 @@ public class Program
         Utilities.Log(LogLevelEnum.Info, "Finished.");
 
         return numErrorsOccurred;
-#endif
     }
+#endif
 
     private void ExportFile(string inputFile)
     {
         // Read CryEngine Files
-        var cryData = new CryEngine(inputFile, _argsHandler.DataDir.FullName);
+        var cryData = new CryEngine(inputFile, _argsHandler.PackFileSystem);
 
         cryData.ProcessCryengineFiles();
 

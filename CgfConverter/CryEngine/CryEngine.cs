@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using CgfConverter.PackFileSystem;
+using Extensions;
 using HoloXPLOR.DataForge;
 using Material = CgfConverter.Materials.Material;
 
@@ -24,14 +26,13 @@ public partial class CryEngine
     };
 
     public List<Model> Models { get; internal set; } = new();
-    public List<Model> Animations { get; internal set; }
+    public List<Model> Animations { get; internal set; } = new();
     //public List<Material> Materials { get; internal set; } = new();
     public ChunkNode RootNode { get; internal set; }
     public ChunkCompiledBones Bones { get; internal set; }
     public SkinningInfo SkinningInfo { get; set; }
     public string InputFile { get; internal set; }
-    public string DataDir { get; internal set; }
-    public List<string> AnimFiles { get; internal set; } = new();
+    public IPackFileSystem PackFileSystem { get; internal set; }
 
     public List<Chunk> Chunks
     {
@@ -84,30 +85,29 @@ public partial class CryEngine
     private List<Chunk> _chunks;
     private Dictionary<string, ChunkNode> _nodeMap;
 
-    public CryEngine(string filename, string dataDir)
+    public CryEngine(string filename, IPackFileSystem packFileSystem)
     {
         InputFile = filename;
-        DataDir = dataDir;
+        PackFileSystem = packFileSystem;
     }
 
     public void ProcessCryengineFiles()
     {
-        var inputFile = new FileInfo(InputFile);
-        var inputFiles = new List<FileInfo> { inputFile };
+        var inputFiles = new List<string> { InputFile };
 
-        if (!validExtensions.Contains(inputFile.Extension))
+        if (!validExtensions.Contains(Path.GetExtension(InputFile).ToLowerInvariant()))
         {
             Utilities.Log(LogLevelEnum.Debug, invalidExtensionErrorMessage);
             throw new FileLoadException(invalidExtensionErrorMessage, InputFile);
         }
 
-        AutoDetectMFile(InputFile, inputFile, inputFiles);
+        AutoDetectMFile(InputFile, InputFile, inputFiles);
 
         foreach (var file in inputFiles)
         {
             // Each file (.cga and .cgam if applicable) will have its own RootNode.  
             // This can cause problems.  .cga files with a .cgam files won't have geometry for the one root node.
-            Model model = Model.FromFile(file.FullName);
+            var model = Model.FromStream(file, PackFileSystem.GetStream(file), true);
 
             if (RootNode is null)
                 RootNode = model.RootNode;  // This makes the assumption that we read the .cga file before the .cgam file.
@@ -123,29 +123,29 @@ public partial class CryEngine
             CreateMaterialsFor(model);
         }
 
-        if (File.Exists(InputFile + "params"))
+        try
         {
-            var chrparams = CryXmlSerializer.Deserialize<ChrParams.ChrParams>(InputFile + "params");
+            var chrparams = CryXmlSerializer.Deserialize<ChrParams.ChrParams>(
+                PackFileSystem.GetStream(Path.ChangeExtension(InputFile, ".chrparams")));
             var trackFilePath = chrparams.Animations?.FirstOrDefault(x => x.Name == "$TracksDatabase")?.Path;
-            if (trackFilePath is not null)
-                trackFilePath = Path.Combine(DataDir, trackFilePath);
-            if (trackFilePath is not null && File.Exists(trackFilePath))
-            {
-                Utilities.Log(LogLevelEnum.Info, $"Associated animation track database file found at {trackFilePath}");
-                AnimFiles.Add(trackFilePath);
-            }
+            if (trackFilePath is null)
+                throw new FileNotFoundException();
+            
+            Utilities.Log(LogLevelEnum.Info, $"Associated animation track database file found at {trackFilePath}");
+            Animations.Add(Model.FromStream(trackFilePath, PackFileSystem.GetStream(trackFilePath), true));
         }
-        
-        Animations = AnimFiles.Select(Model.FromFile).ToList();
+        catch (FileNotFoundException)
+        {
+            // pass
+        }
     }
 
-    private static void AutoDetectMFile(string filename, FileInfo inputFile, List<FileInfo> inputFiles)
+    private void AutoDetectMFile(string filename, string inputFile, List<string> inputFiles)
     {
-        FileInfo mFile = new(Path.ChangeExtension(filename, string.Format("{0}m", inputFile.Extension)));
-
-        if (mFile.Exists)
+        var mFile = Path.ChangeExtension(filename, $"{Path.GetExtension(inputFile)}m");
+        if (PackFileSystem.Exists(mFile))
         {
-            Utilities.Log(LogLevelEnum.Debug, "Found geometry file {0}", mFile.Name);
+            Utilities.Log(LogLevelEnum.Debug, "Found geometry file {0}", mFile);
             inputFiles.Add(mFile);
         }
     }
@@ -205,7 +205,10 @@ public partial class CryEngine
                 var ivoMatFile = GetMaterialFile(ivoMatChunk.Name);
 
                 if (ivoMatFile is not null)
-                    nodeChunk.Materials = GetMaterialFromMatFile(ivoMatFile, nodeChunk.Name);
+                {
+                    using var stream = PackFileSystem.GetStream(ivoMatFile);
+                    nodeChunk.Materials = MaterialUtilities.FromStream(stream, nodeChunk.Name);
+                }
                 else
                     nodeChunk.Materials = CreateDefaultMaterials(nodeChunk);
                 continue;
@@ -229,7 +232,10 @@ public partial class CryEngine
             var matfile = GetMaterialFile(matChunk.Name);
 
             if (matfile is not null)
-                nodeChunk.Materials = GetMaterialFromMatFile(matfile, nodeChunk.Name);
+            {
+                using var stream = PackFileSystem.GetStream(matfile);
+                nodeChunk.Materials = MaterialUtilities.FromStream(stream, nodeChunk.Name);
+            }
             else
                 nodeChunk.Materials = CreateDefaultMaterials(nodeChunk);
 
@@ -245,8 +251,6 @@ public partial class CryEngine
             }
         }
     }
-
-    private static Material? GetMaterialFromMatFile(FileInfo matfile, string matName) => MaterialUtilities.FromFile(matfile.FullName, matName);
     
     private Material? CreateDefaultMaterials(ChunkNode nodeChunk)
     {
@@ -286,7 +290,7 @@ public partial class CryEngine
     }
     
     // Gets the material file for Basic, Single and Library types.  Child materials are created from the library.
-    private FileInfo? GetMaterialFile(string name)
+    private string? GetMaterialFile(string name)
     {
         if (name.Contains(':'))  // Need an example and test for this case.  Probably a child material?
             name = name.Split(':')[1];
@@ -294,30 +298,25 @@ public partial class CryEngine
         if (!name.EndsWith(".mtl"))
             name += ".mtl";
 
-        FileInfo materialFile;
-        var inputFileInfo = new FileInfo(InputFile);
-
         if (name.Contains("mechDefault.mtl"))
         {
             // For MWO models with a material called "Material #0", which is a default mat used on lots of mwo mechs.
             // The actual material file is in objects\mechs\generic\body\generic_body.mtl
             name = "objects\\mechs\\generic\\body\\generic_body.mtl";
-            materialFile = new FileInfo(Path.Combine(DataDir, name));
 
-            if (materialFile.Exists)
-                return materialFile;
+            if (PackFileSystem.Exists(name))
+                return name;
         }
         else
         {
             // Check if material file is in or relative to current directory
-            materialFile = new FileInfo(Path.Combine(inputFileInfo.Directory.FullName, name));
-            if (materialFile.Exists)
-                return materialFile;
+            var fullName = FileHandlingExtensions.CombineAndNormalizePath(Path.GetDirectoryName(InputFile), name);
+            if (PackFileSystem.Exists(fullName))
+                return fullName;
 
             // Check if material file relative to object directory
-            materialFile = new FileInfo(Path.Combine(DataDir, name));
-            if (materialFile.Exists)
-                return materialFile;
+            if (PackFileSystem.Exists(name))
+                return name;
         }
 
         Utilities.Log(LogLevelEnum.Info, $"Unable to find material file for {name}");

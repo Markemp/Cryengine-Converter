@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
+using CgfConverter.PackFileSystem;
 
 namespace CgfConverter;
 
@@ -13,7 +13,7 @@ public sealed class ArgsHandler
     /// <summary>Files to process</summary>
     public List<string> InputFiles { get; internal set; }
     /// <summary>Location of the Object Files</summary>
-    public DirectoryInfo DataDir { get; internal set; } = new DirectoryInfo(".");
+    public List<string> DataDirs { get; internal set; } = new();
     /// <summary>File to render to</summary>
     public string? OutputFile { get; internal set; }
     /// <summary>Directory to render to</summary>
@@ -55,61 +55,13 @@ public sealed class ArgsHandler
     public bool Throw { get; internal set; }
     public bool DumpChunkInfo { get; internal set; }
 
+    public CascadedPackFileSystem PackFileSystem = new();
+
     public ArgsHandler()
     {
         InputFiles = new List<string> { };
         ExcludeNodeNames = new List<string> { };
         ExcludeMaterialNames = new List<string> { };
-    }
-
-    private static string[] GetFiles(string filter)
-    {
-        if (File.Exists(filter))
-            return new [] { new FileInfo(filter).FullName };
-
-        var parts = Regex.Split(filter, @"\*{2,}");
-        if (parts.Length >= 2)
-        {
-            var directory = Path.GetDirectoryName(parts[0]);
-            if (string.IsNullOrWhiteSpace(directory))
-                directory = ".";
-
-            var result = new List<string>();
-            
-            // Consider it as a stack.
-            var pending = new List<string>();
-            pending.AddRange(Directory.GetDirectories(directory, Path.GetFileName(parts[0]) + "*")
-                .Select(x => Path.Combine(directory, x)));
-            while (pending.Any())
-            {
-                var dir = pending.Last();
-                pending.RemoveAt(pending.Count - 1);
-
-                pending.AddRange(Directory.GetDirectories(dir));
-                
-                result.AddRange(GetFiles(Path.Combine(dir, "*" + parts[^1])));
-            }
-
-            return result.DistinctBy(x => x.ToLowerInvariant()).ToArray();
-        }
-        else
-        {
-            var directory = Path.GetDirectoryName(filter);
-            if (string.IsNullOrWhiteSpace(directory))
-                directory = ".";
-
-            var fileName = Path.GetFileName(filter);
-            var extension = Path.GetExtension(filter);
-
-            var flexibleExtension = extension.Contains('*');
-
-            return Directory.GetFiles(directory, fileName,
-                    fileName.Contains('?') || fileName.Contains('*')
-                        ? SearchOption.AllDirectories
-                        : SearchOption.TopDirectoryOnly)
-                .Where(f => flexibleExtension || Path.GetExtension(f).Length == extension.Length)
-                .ToArray();
-        }
     }
 
     /// <summary>
@@ -119,6 +71,9 @@ public sealed class ArgsHandler
     /// <returns>0 on success, 1 if anything went wrong</returns>
     public int ProcessArgs(string[] inputArgs)
     {
+        var lookupDataDirs = new List<string>();
+        var lookupInputs = new List<string>();
+        
         for (int i = 0; i < inputArgs.Length; i++)
         {
             switch (inputArgs[i].ToLowerInvariant())
@@ -133,7 +88,8 @@ public sealed class ArgsHandler
                         PrintUsage();
                         return 1;
                     }
-                    DataDir = new DirectoryInfo(inputArgs[i].Replace("\"", string.Empty));
+                    
+                    lookupDataDirs.Add(inputArgs[i]);
                     break;
                 #endregion
                 #region case "-out" / "-outdir" / "-outputdir"...
@@ -300,7 +256,7 @@ public sealed class ArgsHandler
                         PrintUsage();
                         return 1;
                     }
-                    InputFiles.AddRange(GetFiles(inputArgs[i]));
+                    lookupInputs.Add(inputArgs[i]);
                     break;
 
                 #endregion
@@ -326,19 +282,19 @@ public sealed class ArgsHandler
                 #region default...
 
                 default:
-                    InputFiles.AddRange(GetFiles(inputArgs[i]));
+                    lookupInputs.Add(inputArgs[i]);
                     break;
                     #endregion
             }
         }
 
         // Ensure we have a file to process
-        if (InputFiles.Count == 0)
+        if (!lookupInputs.Any())
         {
             PrintUsage();
             return 1;
         }
-        
+
         if (MaxThreads == 0)
             MaxThreads = Environment.ProcessorCount;
         Utilities.Log(LogLevelEnum.Info, $"Using up to {MaxThreads} threads");
@@ -377,14 +333,51 @@ public sealed class ArgsHandler
             Utilities.Log(LogLevelEnum.Info, "Output chunk info for missing or invalid chunks.");
         if (Throw)
             Utilities.Log(LogLevelEnum.Info, "Exceptions thrown to debugger");
-        if (DataDir.ToString() != ".")
-            Utilities.Log(LogLevelEnum.Info, "Data directory set to {0}", DataDir.FullName);
-        
-        Utilities.Log(LogLevelEnum.Info, "Processing input file(s):");
-        foreach (var file in InputFiles)
-            Utilities.Log(LogLevelEnum.Info, file);
+
         if (OutputDir != null)
             Utilities.Log(LogLevelEnum.Info, "Output directory set to {0}", OutputDir);
+
+        foreach (var dir in lookupDataDirs)
+        {
+            var foundAny = false;
+            
+            if (Directory.Exists(dir))
+            {
+                Utilities.Log(LogLevelEnum.Info, "Source [Filesystem]: {0}", dir);
+                DataDirs.Add(dir);
+                PackFileSystem.Add(new RealFileSystem(dir));
+                foundAny = true;
+            }
+
+            foreach (var globbed in PackFileSystem.Glob(dir))
+            {
+                if (globbed.EndsWith(WiiuStreamPackFileSystem.PackFileNameSuffix,
+                        StringComparison.InvariantCultureIgnoreCase))
+                {
+                    Utilities.Log(LogLevelEnum.Info, "Source [Packfile]: {0}", globbed);
+                    DataDirs.Add(globbed);
+                    PackFileSystem.Add(new WiiuStreamPackFileSystem(PackFileSystem.GetStream(globbed)));
+                    foundAny = true;
+                }
+            }
+
+            if (!foundAny)
+                Utilities.Log(LogLevelEnum.Warning, "No corresponding source directory exist: {0}", dir);
+        }
+
+        foreach (var input in lookupInputs)
+        {
+            var foundAny = false;
+            foreach (var globbed in PackFileSystem.Glob(input))
+            {
+                Utilities.Log(LogLevelEnum.Info, "Found input: {0}", globbed);
+                InputFiles.Add(globbed);
+                foundAny = true;
+            }
+            
+            if (!foundAny)
+                Utilities.Log(LogLevelEnum.Warning, "No corresponding input file exist: {0}", input);
+        }
         
         // Default to Collada (.dae) format
         if (!OutputCollada && !OutputWavefront && !OutputGLB && !OutputGLTF)
@@ -436,5 +429,5 @@ public sealed class ArgsHandler
         Console.WriteLine();
     }
 
-    public override string ToString() => $@"Input file: {InputFiles}, Obj Dir: {DataDir}, Output file: {OutputFile}";
+    public override string ToString() => $@"Input file: {InputFiles}, Obj Dir: {DataDirs}, Output file: {OutputFile}";
 }

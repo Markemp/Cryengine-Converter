@@ -245,15 +245,23 @@ public static class CryXmlSerializer
         return xmlDoc;
     }
 
-    public static TObject Deserialize<TObject>(Stream inStream) where TObject : class
+    public static TObject Deserialize<TObject>(Stream inStream, bool closeAfter = false) where TObject : class
     {
-        using MemoryStream ms = new();
-        var xs = new XmlSerializer(typeof(TObject));
-        var xmlDoc = ReadStream(inStream);
+        try
+        {
+            using MemoryStream ms = new();
+            var xs = new XmlSerializer(typeof(TObject));
+            var xmlDoc = ReadStream(inStream);
 
-        xmlDoc.Save(ms);
-        ms.Seek(0, SeekOrigin.Begin);
-        return xs.Deserialize(ms) as TObject;
+            xmlDoc.Save(ms);
+            ms.Seek(0, SeekOrigin.Begin);
+            return xs.Deserialize(ms) as TObject;
+        }
+        finally
+        {
+            if (closeAfter)
+                inStream.Close();
+        }
     }
 
     public static TObject Deserialize<TObject>(string inFile) where TObject : class

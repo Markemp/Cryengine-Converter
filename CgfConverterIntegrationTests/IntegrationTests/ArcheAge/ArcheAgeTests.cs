@@ -30,7 +30,7 @@ public class ArcheAgeTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\ArcheAge\coupleduckship_foot.chr", "-dds", "-dae" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new Collada(testUtils.argsHandler, cryData);

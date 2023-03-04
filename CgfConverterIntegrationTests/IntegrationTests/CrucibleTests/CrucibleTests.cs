@@ -32,7 +32,7 @@ namespace CgfConverterTests.IntegrationTests.Crucible
             var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Crucible\technomancerpillar.cgf", "-dds", "-dae" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
-            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
             Assert.AreEqual((uint)11, cryData.Models[0].NumChunks);

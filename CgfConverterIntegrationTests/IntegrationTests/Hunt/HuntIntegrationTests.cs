@@ -31,7 +31,7 @@ namespace CgfConverterTests.IntegrationTests.Hunt
             var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Hunt\assassin_good\assassin_christmas_body.skin", "-dds", "-dae" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
-            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
             Collada colladaData = new Collada(testUtils.argsHandler, cryData);
@@ -92,7 +92,7 @@ namespace CgfConverterTests.IntegrationTests.Hunt
             var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Hunt\assassin_bad\assassin_body.skin", "-dds", "-dae" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
-            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.DataDir.FullName);
+            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
             Assert.AreEqual(1.00000f, cryData.Models[1].RootNode.LocalTransform.M11, TestUtils.delta);
