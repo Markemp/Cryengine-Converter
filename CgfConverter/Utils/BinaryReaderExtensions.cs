@@ -25,6 +25,13 @@ public static class BinaryReaderExtensions
         return CryHalf.ConvertDymekHalfToFloat(bver);
     }
 
+    public static Plane ReadPlane(this BinaryReader r)
+    {
+        var n = r.ReadVector3();
+        var d = r.ReadSingle();
+        return new Plane(n, d);
+    }
+
     public static Vector3 ReadVector3(this BinaryReader r, InputType inputType = InputType.Single)
     {
         Vector3 v;
@@ -259,6 +266,7 @@ public static class BinaryReaderExtensions
     public static void ReadInto(this BinaryReader reader, out float value) => value = reader.ReadSingle();
     public static void ReadInto(this BinaryReader reader, out double value) => value = reader.ReadDouble();
     public static void ReadInto(this BinaryReader reader, out AaBb value) => value = reader.ReadAaBb();
+    public static void ReadInto(this BinaryReader reader, out Plane value) => value = reader.ReadPlane();
     public static void ReadInto(this BinaryReader reader, out Vector3 value) => value = reader.ReadVector3();
     public static void ReadInto(this BinaryReader reader, out Matrix3x4 value) => value = reader.ReadMatrix3x4();
     public static void ReadInto(this BinaryReader reader, out Matrix3x3 value) => value = reader.ReadMatrix3x3();

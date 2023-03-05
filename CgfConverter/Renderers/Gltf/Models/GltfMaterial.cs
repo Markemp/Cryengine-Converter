@@ -23,8 +23,7 @@ public class GltfMaterial
     [JsonProperty("emissiveFactor", NullValueHandling = NullValueHandling.Ignore)]
     public float[]? EmissiveFactor;
 
-    [JsonIgnore]
-    public GltfMaterialAlphaMode? AlphaMode;
+    [JsonIgnore] public GltfMaterialAlphaMode? AlphaMode;
 
     [JsonProperty("alphaCutoff", NullValueHandling = NullValueHandling.Ignore)]
     public float? AlphaCutoff;
@@ -55,4 +54,15 @@ public class GltfMaterial
             _ => throw new ArgumentOutOfRangeException(nameof(value)),
         };
     }
+
+    public bool HasNormalTexture() =>
+        NormalTexture is not null;
+
+    public bool HasAnyTexture() =>
+        EmissiveTexture is not null
+        || OcclusionTexture is not null
+        || PbrMetallicRoughness?.BaseColorTexture is not null
+        || PbrMetallicRoughness?.MetallicRoughnessTexture is not null
+        || Extensions?.KhrMaterialsSpecular?.SpecularTexture is not null
+        || Extensions?.KhrMaterialsSpecular?.SpecularColorTexture is not null;
 }

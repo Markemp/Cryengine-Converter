@@ -145,7 +145,7 @@ public class CryTerrain
                 entity.AllAttachedModelPaths = attachedModels
                     .Where(x => !string.IsNullOrWhiteSpace(x))
                     .Cast<string>()
-                    .Select(x => x.Replace("%level%", BasePath).ToLowerInvariant())
+                    .Select(x => x.Replace("%level%", BasePath).ToLowerInvariant().Replace('\\', '/'))
                     .ToList();
                 attachedModels.Clear();
 
@@ -176,7 +176,7 @@ public class CryTerrain
         Objects = TerrainFile.BrushObjects
             .Concat(Missions.SelectMany(x => x.ObjectsAndEntities!)
                 .SelectMany(x => x.AllAttachedModelPaths))
-            .Select(x => x.Replace("%level%", BasePath).ToLowerInvariant())
+            .Select(x => x.Replace("%level%", BasePath).ToLowerInvariant().Replace('\\', '/'))
             .Distinct()
             .AsParallel()
             .Select(path =>
@@ -189,6 +189,7 @@ public class CryTerrain
                 }
                 catch (FileNotFoundException)
                 {
+                    Utilities.Log(LogLevelEnum.Warning, "Model file was expected at {0} but could not be found.", path);
                     return null;
                 }
             })

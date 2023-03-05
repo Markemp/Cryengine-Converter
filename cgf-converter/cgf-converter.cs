@@ -190,13 +190,14 @@ public class Program
         
         if (_argsHandler.OutputGLTF || _argsHandler.OutputGLB)
         {
-            new GltfRendererCommon(_argsHandler.PackFileSystem,
+            var renderer = new GltfRendererCommon(_argsHandler.PackFileSystem,
                     new List<Regex>
                 {
                     new(".*_shadows?[_.].*", RegexOptions.IgnoreCase),
                     new(".*shadow_caster.*", RegexOptions.IgnoreCase),
-                })
-                .RenderSingleTerrain(terrain, outBasePath, _argsHandler.OutputGLB, _argsHandler.OutputGLTF, false);
+                });
+            if (renderer.RenderSingleTerrain(terrain, outBasePath, _argsHandler.OutputGLB, _argsHandler.OutputGLTF, true) > 1)
+                renderer.RenderSingleTerrain(terrain, outBasePath, _argsHandler.OutputGLB, _argsHandler.OutputGLTF, false);
         }
     }
 }

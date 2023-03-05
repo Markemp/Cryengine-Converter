@@ -125,6 +125,12 @@ public partial class GltfRendererCommon
 
         var materialMap = WriteMaterial(node);
 
+        var usesTangent = subsets.MeshSubsets.Any(v =>
+            materialMap.GetValueOrDefault(v.MatID) is { } matIndex && _gltf.Materials[matIndex].HasNormalTexture());
+
+        var usesUv = usesTangent || subsets.MeshSubsets.Any(v =>
+            materialMap.GetValueOrDefault(v.MatID) is { } matIndex && _gltf.Materials[matIndex].HasAnyTexture());
+
         string baseName;
         if (vertices is not null)
         {
@@ -153,7 +159,7 @@ public partial class GltfRendererCommon
 
             // TODO: Do Tangents also need swapping axes?
             baseName = $"${fileName}/{node.Name}/tangent";
-            accessors.Tangent = tangents is null
+            accessors.Tangent = tangents is null || !usesTangent
                 ? null
                 : _gltf.GetAccessorOrDefault(baseName, 0, tangents.Tangents.Length / 2)
                   ?? _gltf.AddAccessor(baseName, -1, GltfBufferViewTarget.ArrayBuffer,
@@ -164,7 +170,7 @@ public partial class GltfRendererCommon
 
             baseName = $"${fileName}/{node.Name}/uv";
             accessors.TexCoord0 =
-                uvs is null
+                uvs is null || !usesUv
                     ? null
                     : _gltf.GetAccessorOrDefault(baseName, 0, uvs.UVs.Length)
                       ?? _gltf.AddAccessor($"{node.Name}/uv", -1, GltfBufferViewTarget.ArrayBuffer, uvs.UVs);
@@ -174,18 +180,37 @@ public partial class GltfRendererCommon
             throw new NotSupportedException();
 
         baseName = $"${fileName}/{node.Name}/index";
-        var indexBufferView = _gltf.GetBufferViewOrDefault(baseName) ?? _gltf.AddBufferView(baseName, indices.Indices, GltfBufferViewTarget.ElementArrayBuffer);
+        var indexBufferView = _gltf.GetBufferViewOrDefault(baseName) ??
+                              _gltf.AddBufferView(baseName, indices.Indices, GltfBufferViewTarget.ElementArrayBuffer);
         return _gltf.Add(new GltfMesh
         {
-            Primitives = subsets.MeshSubsets.Select(v => new GltfMeshPrimitive
+            Primitives = subsets.MeshSubsets.Select(v =>
             {
-                Attributes = accessors,
-                Indices = _gltf.GetAccessorOrDefault(baseName, v.FirstIndex, v.FirstIndex + v.NumIndices)
-                          ?? _gltf.AddAccessor(
-                              $"{node.Name}/index",
-                              indexBufferView, GltfBufferViewTarget.ElementArrayBuffer,
-                              indices.Indices, v.FirstIndex, v.FirstIndex + v.NumIndices),
-                Material = materialMap.GetValueOrDefault(v.MatID),
+                var matIndex = materialMap.GetValueOrDefault(v.MatID);
+
+                return new GltfMeshPrimitive
+                {
+                    Attributes = new GltfMeshPrimitiveAttributes
+                    {
+                        Position = accessors.Position,
+                        Normal = accessors.Normal,
+                        Tangent = matIndex is null || !_gltf.Materials[matIndex.Value].HasNormalTexture()
+                            ? null
+                            : accessors.Tangent,
+                        TexCoord0 = matIndex is null || !_gltf.Materials[matIndex.Value].HasAnyTexture()
+                            ? null
+                            : accessors.TexCoord0,
+                        Color0 = accessors.Color0,
+                        Joints0 = accessors.Joints0,
+                        Weights0 = accessors.Weights0,
+                    },
+                    Indices = _gltf.GetAccessorOrDefault(baseName, v.FirstIndex, v.FirstIndex + v.NumIndices)
+                              ?? _gltf.AddAccessor(
+                                  $"{node.Name}/index",
+                                  indexBufferView, GltfBufferViewTarget.ElementArrayBuffer,
+                                  indices.Indices, v.FirstIndex, v.FirstIndex + v.NumIndices),
+                    Material = matIndex,
+                };
             }).ToList()
         });
     }
@@ -193,7 +218,9 @@ public partial class GltfRendererCommon
     private int? WriteModel(CryEngine cryObject) =>
         WriteModel(cryObject, Vector3.Zero, Quaternion.Identity, Vector3.One, false);
 
-    private int? WriteModel(CryEngine cryObject, Vector3 translation, Quaternion rotation, Vector3 scale, bool omitSkins) {
+    private int? WriteModel(CryEngine cryObject, Vector3 translation, Quaternion rotation, Vector3 scale,
+        bool omitSkins)
+    {
         var model = cryObject.Models[^1];
         var controllerIdToNodeIndex = new Dictionary<uint, int>();
 
@@ -222,14 +249,15 @@ public partial class GltfRendererCommon
             };
 
             var primitiveAccessors = new GltfMeshPrimitiveAttributes();
-            
+
             rootNode.Mesh = WriteMesh(model.FileName!, nodeChunk, meshChunk, primitiveAccessors);
             if (rootNode.Mesh is not null)
                 _gltf.Meshes[rootNode.Mesh.Value].Name = rootNode.Name + "/mesh";
             else
                 continue;
 
-            if (!omitSkins){
+            if (!omitSkins)
+            {
                 rootNode.Skin = WriteSkin(model.FileName!, rootNode, nodeChunk, primitiveAccessors,
                     controllerIdToNodeIndex);
                 if (rootNode.Skin is not null)

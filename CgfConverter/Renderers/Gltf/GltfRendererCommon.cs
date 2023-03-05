@@ -54,35 +54,44 @@ public partial class GltfRendererCommon
         }
     }
 
-    public void RenderSingleTerrain(CryTerrain terrain, string outputName, bool writeBinary, bool writeText, bool separateLayers)
+    public int RenderSingleTerrain(CryTerrain terrain, string outputName, bool writeBinary, bool writeText,
+        bool separateLayers)
     {
         var allLayers = new Dictionary<string, List<string>>();
         var layerIds = new Dictionary<string, int>();
         var rootLayers = new Dictionary<string, List<string>>();
-        foreach (var layer in terrain.LevelData.Layers!)
+        if (terrain.LevelData.Layers == null)
         {
-            if (layer.IdValue is { } id)
-                layerIds[layer.Name!] = id;
-            if (string.IsNullOrEmpty(layer.Parent))
-            {
-                rootLayers[layer.Name!] = allLayers[layer.Name!] = new List<string>();
-            }
-            else
-            {
-                allLayers[layer.Name!] = new List<string>();
-                if (allLayers.TryGetValue(layer.Parent, out var dict))
-                    dict.Add(layer.Name!);
-                else
-                    allLayers[layer.Parent] = new List<string> {layer.Name!};
-            }
+            rootLayers[""] = allLayers[""] = new List<string>();
+            layerIds[""] = 0;
         }
-
-        if (!separateLayers)
+        else
         {
-            rootLayers = new Dictionary<string, List<string>>
+            foreach (var layer in terrain.LevelData.Layers)
             {
-                [""] = allLayers[""] = rootLayers.Keys.ToList(),
-            };
+                if (layer.IdValue is { } id)
+                    layerIds[layer.Name!] = id;
+                if (string.IsNullOrEmpty(layer.Parent))
+                {
+                    rootLayers[layer.Name!] = allLayers[layer.Name!] = new List<string>();
+                }
+                else
+                {
+                    allLayers[layer.Name!] = new List<string>();
+                    if (allLayers.TryGetValue(layer.Parent, out var dict))
+                        dict.Add(layer.Name!);
+                    else
+                        allLayers[layer.Parent] = new List<string> {layer.Name!};
+                }
+            }
+
+            if (!separateLayers)
+            {
+                rootLayers = new Dictionary<string, List<string>>
+                {
+                    [""] = allLayers[""] = rootLayers.Keys.ToList(),
+                };
+            }
         }
 
         var rootEntities = new HashSet<ObjectOrEntity>();
@@ -109,8 +118,8 @@ public partial class GltfRendererCommon
             }
         }
 
-        var childEntityNodes = new List<int>();
         var numProcessedLayers = 0;
+        var numOutputSet = 0;
         foreach (var rootLayer in rootLayers)
         {
             _gltf.Clear();
@@ -139,14 +148,17 @@ public partial class GltfRendererCommon
                 var (parentNode, layerName) = layerStack.Last();
                 layerStack.RemoveAt(layerStack.Count - 1);
 
-                Utilities.Log(LogLevelEnum.Info, "Current layer ({0}/{1}): {2}", numProcessedLayers + 1,
-                    allLayers.Count, layerName);
+                Utilities.Log(LogLevelEnum.Info,
+                    "Current layer ({0}/{1}): {2} (RenderNode: {3})",
+                    numProcessedLayers + 1,
+                    allLayers.Count,
+                    layerName,
+                    layerIds.GetValueOrDefault(layerName));
 
                 var layerNode = _gltf.Add(new GltfNode
                 {
                     Name = layerName,
                 });
-
                 _gltf.Nodes[parentNode].Children.Add(layerNode);
 
                 layerStack.AddRange(allLayers[layerName].Select(x => Tuple.Create(layerNode, x)));
@@ -217,7 +229,8 @@ public partial class GltfRendererCommon
 
                         name = name
                             .Replace("%level%", terrain.BasePath)
-                            .ToLowerInvariant();
+                            .ToLowerInvariant()
+                            .Replace('\\', '/');
                         if (_excludedNodeNames.Any(y => y.IsMatch(name)))
                             continue;
 
@@ -244,22 +257,24 @@ public partial class GltfRendererCommon
                     }
                 }
 
-                var entityNode = _gltf.Add(new GltfNode
+                var entityNode = new GltfNode
                 {
-                    Name = "Entities"
-                });
-                _gltf.Nodes[layerNode].Children.Add(entityNode);
+                    Name = $"Entities@{layerName}"
+                };
 
                 var entityStack = rootEntities.ToList();
                 while (entityStack.Any())
                 {
                     var entity = entityStack.Last();
                     entityStack.RemoveAt(entityStack.Count - 1);
-                    entityStack.AddRange(childEntities[entity.EntityIdValue!.Value]
-                        .Select(x => allEntities[x]));
+                    entityStack.AddRange(childEntities[entity.EntityIdValue!.Value].Select(x => allEntities[x]));
 
                     if (entity.Layer != layerName)
                         continue;
+
+                    var scale = entity.ScaleValue is { } t1 ? SwapAxesForScale(t1) : Vector3.One;
+                    var rotation = entity.RotateValue is { } t2 ? SwapAxesForLayout(t2) : Quaternion.Identity;
+                    var translation = entity.PosValue is { } t3 ? SwapAxesForPosition(t3) : Vector3.Zero;
 
                     foreach (var name in entity.AllAttachedModelPaths)
                     {
@@ -269,39 +284,22 @@ public partial class GltfRendererCommon
                         if (!terrain.Objects.TryGetValue(name, out var cryObject))
                             continue;
 
-                        var translation = SwapAxesForPosition(entity.PosValue ?? Vector3.Zero);
-                        var rotation = SwapAxesForLayout(entity.RotateValue ?? Quaternion.Identity);
-                        var scale = SwapAxesForScale(entity.ScaleValue ?? Vector3.One);
-
                         if (WriteModel(cryObject, translation, rotation, scale, true) is { } node2)
-                            childEntityNodes.Add(node2);
-                    }
-
-                    switch (childEntityNodes.Count)
-                    {
-                        case 0:
-                            break;
-                        case 1:
-                            _gltf.Nodes[entityNode].Children.Add(childEntityNodes.First());
-                            childEntityNodes.Clear();
-                            break;
-                        default:
-                            _gltf.Nodes[entityNode].Children.Add(_gltf.Add(new GltfNode
-                            {
-                                Name = $"{entity.Name}:{entity.EntityClass}@{layerName}",
-                                Children = childEntityNodes,
-                            }));
-                            
-                            childEntityNodes = new List<int>();
-                            break;
+                        {
+                            entityNode.Children.Add(node2);
+                            _gltf.Nodes[node2].Name = $"{entity.Name}:{entity.EntityClass}@{layerName}@{name}";
+                        }
                     }
                 }
+
+                if (entityNode.Children.Any())
+                    _gltf.Nodes[layerNode].Children.Add(_gltf.Add(entityNode));
             }
 
             var layerBaseName = outputName;
             if (!string.IsNullOrWhiteSpace(rootLayer.Key))
                 layerBaseName += "." + Regex.Replace(rootLayer.Key, "[<>:\\\\\"/\\|\\?\\*]", "_");
-            
+
             if (writeBinary)
             {
                 using var glb = new FileStream($"{layerBaseName}.glb", FileMode.Create, FileAccess.Write);
@@ -311,12 +309,15 @@ public partial class GltfRendererCommon
 
             if (writeText)
             {
-                using var gltf = new FileStream($"{layerBaseName}.gltf", FileMode.Create,
-                    FileAccess.Write);
+                using var gltf = new FileStream($"{layerBaseName}.gltf", FileMode.Create, FileAccess.Write);
                 using var bin = new FileStream($"{layerBaseName}.bin", FileMode.Create, FileAccess.Write);
                 _gltf.CompileToPair($"{outputName}.{rootLayer.Key}.bin", gltf, bin);
                 Utilities.Log(LogLevelEnum.Info, "Created \"{0}.gltf\" and .bin files.", layerBaseName);
             }
+
+            numOutputSet++;
         }
+
+        return numOutputSet;
     }
 }

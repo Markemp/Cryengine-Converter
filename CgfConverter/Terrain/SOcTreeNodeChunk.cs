@@ -38,6 +38,9 @@ public class SOcTreeNodeChunk
             var type = (EerType) reader.ReadInt32();
             switch (type)
             {
+                case EerType.NotRenderNode:
+                    System.Diagnostics.Debugger.Break();
+                    break;
                 case EerType.Brush:
                     objects.Add(new SBrushChunk(reader, ChunkVersion));
                     break;
@@ -49,10 +52,20 @@ public class SOcTreeNodeChunk
                 case EerType.Decal:
                     objects.Add(new SDecalChunk(reader, ChunkVersion));
                     break;
+                
+                case EerType.WaterVolume:
+                    objects.Add(new SWaterVolumeChunk(reader, ChunkVersion));
+                    break;
+                
+                case EerType.LightShape:
+                    objects.Add(new SLightShape(reader, ChunkVersion));
+                    break;
 
                 default:
                     throw new NotSupportedException($"Render node chunk type of {type} is currently not supported.");
             }
+            
+            reader.AlignTo(4);
         }
 
         if (reader.BaseStream.Position != targetPosition)
