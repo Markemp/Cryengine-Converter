@@ -7,7 +7,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using BCnEncoder.Shared;
 using CgfConverter.Renderers.Gltf.Models;
-using Dolkens.Framework.Extensions;
 using Newtonsoft.Json;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -151,7 +150,7 @@ public class GltfWriter
         return index == -1 ? null : index;
     } 
 
-    public unsafe int AddBufferView<T>(string? baseName, T[] data) where T : unmanaged
+    public unsafe int AddBufferView<T>(string? baseName, T[] data, GltfBufferViewTarget? bufferViewTarget) where T : unmanaged
     {
         var rawSize = Marshal.SizeOf(data[0]) * data.Length;
         var paddedSize = (rawSize + 3) / 4 * 4;
@@ -166,6 +165,7 @@ public class GltfWriter
             Name = baseName is null ? null : $"{baseName}/bufferView",
             ByteOffset = _currentOffset,
             ByteLength = rawSize,
+            Target = bufferViewTarget,
         });
         _bytesList.Add(target);
         _currentOffset += paddedSize;
@@ -180,11 +180,11 @@ public class GltfWriter
         return index == -1 ? null : index;
     } 
 
-    public int AddAccessor<T>(string? baseName, int bufferView, T[] data, int start = 0, int end = int.MaxValue)
+    public int AddAccessor<T>(string? baseName, int bufferView, GltfBufferViewTarget? bufferViewTarget, T[] data, int start = 0, int end = int.MaxValue)
         where T : unmanaged
     {
         if (bufferView == -1)
-            bufferView = AddBufferView(baseName, data);
+            bufferView = AddBufferView(baseName, data, bufferViewTarget);
         if (end == int.MaxValue)
             end = data.Length;
 
@@ -218,12 +218,12 @@ public class GltfWriter
         return _root.Accessors.Count - 1;
     }
 
-    public int AddAccessor<T>(string? baseName, int bufferView, TypedVec4<T>[] data, int start = 0,
+    public int AddAccessor<T>(string? baseName, int bufferView, GltfBufferViewTarget? bufferViewTarget, TypedVec4<T>[] data, int start = 0,
         int end = int.MaxValue)
         where T : unmanaged
     {
         if (bufferView == -1)
-            bufferView = AddBufferView(baseName, data);
+            bufferView = AddBufferView(baseName, data, bufferViewTarget);
         if (end == int.MaxValue)
             end = data.Length;
 
@@ -269,10 +269,10 @@ public class GltfWriter
         return _root.Accessors.Count - 1;
     }
 
-    public int AddAccessor(string? baseName, int bufferView, UV[] data, int start = 0, int end = int.MaxValue)
+    public int AddAccessor(string? baseName, int bufferView, GltfBufferViewTarget? bufferViewTarget, UV[] data, int start = 0, int end = int.MaxValue)
     {
         if (bufferView == -1)
-            bufferView = AddBufferView(baseName, data);
+            bufferView = AddBufferView(baseName, data, bufferViewTarget);
         if (end == int.MaxValue)
             end = data.Length;
         _root.Accessors.Add(new GltfAccessor
@@ -297,10 +297,10 @@ public class GltfWriter
         return _root.Accessors.Count - 1;
     }
 
-    public int AddAccessor(string? baseName, int bufferView, Vector3[] data, int start = 0, int end = int.MaxValue)
+    public int AddAccessor(string? baseName, int bufferView, GltfBufferViewTarget? bufferViewTarget, Vector3[] data, int start = 0, int end = int.MaxValue)
     {
         if (bufferView == -1)
-            bufferView = AddBufferView(baseName, data);
+            bufferView = AddBufferView(baseName, data, bufferViewTarget);
         if (end == int.MaxValue)
             end = data.Length;
         _root.Accessors.Add(new GltfAccessor
@@ -327,10 +327,10 @@ public class GltfWriter
         return _root.Accessors.Count - 1;
     }
 
-    public int AddAccessor(string? baseName, int bufferView, Quaternion[] data, int start = 0, int end = int.MaxValue)
+    public int AddAccessor(string? baseName, int bufferView, GltfBufferViewTarget? bufferViewTarget, Quaternion[] data, int start = 0, int end = int.MaxValue)
     {
         if (bufferView == -1)
-            bufferView = AddBufferView(baseName, data);
+            bufferView = AddBufferView(baseName, data, bufferViewTarget);
         if (end == int.MaxValue)
             end = data.Length;
         _root.Accessors.Add(new GltfAccessor
@@ -359,10 +359,10 @@ public class GltfWriter
         return _root.Accessors.Count - 1;
     }
 
-    public int AddAccessor(string? baseName, int bufferView, Matrix4x4[] data, int start = 0, int end = int.MaxValue)
+    public int AddAccessor(string? baseName, int bufferView, GltfBufferViewTarget? bufferViewTarget, Matrix4x4[] data, int start = 0, int end = int.MaxValue)
     {
         if (bufferView == -1)
-            bufferView = AddBufferView(baseName, data);
+            bufferView = AddBufferView(baseName, data, bufferViewTarget);
         if (end == int.MaxValue)
             end = data.Length;
 
@@ -480,7 +480,7 @@ public class GltfWriter
 
     public int AddTexture(string? baseName, string mimeType, byte[] textureBytes)
     {
-        var bufferViewIndex = AddBufferView(baseName, textureBytes);
+        var bufferViewIndex = AddBufferView(baseName, textureBytes, null);
 
         _root.Images.Add(new GltfImage
         {

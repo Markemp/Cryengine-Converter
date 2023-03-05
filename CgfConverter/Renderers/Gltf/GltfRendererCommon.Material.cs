@@ -19,7 +19,6 @@ public partial class GltfRendererCommon
     private Dictionary<int, int?> WriteMaterial(ChunkNode nodeChunk)
     {
         var materialIndices = new Dictionary<int, int?>();
-        return materialIndices;
 
         var childIds = nodeChunk.MaterialLibraryChunk?.ChildIDs;
         var submats = nodeChunk.Materials?.SubMaterials;

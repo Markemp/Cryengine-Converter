@@ -28,30 +28,6 @@ public partial class GltfRendererCommon
     private static Quaternion SwapAxesForAnimations(Quaternion val) => new(-val.X, val.Z, val.Y, val.W);
     
     private static Quaternion SwapAxesForLayout(Quaternion val) => new(val.Y, val.W, val.Z, val.X);
-    // private static Quaternion SwapAxesForLayout(Quaternion val) => new(-val.X, val.Y, val.W, -val.Z);
-    // private static Quaternion SwapAxesForLayout(Quaternion val) => new(-val.X, val.W, val.Y, -val.Z);
-    // private static Quaternion SwapAxesForLayout(Quaternion val) => new(-val.Y, val.X, val.Z, -val.W);
-    // private static Quaternion SwapAxesForLayout(Quaternion val) => new(-val.Y, val.X, val.W, -val.Z);
-    // private static Quaternion SwapAxesForLayout(Quaternion val) => new(-val.Y, val.Z, val.X, -val.W);
-    // private static Quaternion SwapAxesForLayout(Quaternion val) => new(-val.Y, val.Z, val.W, -val.X);
-    // private static Quaternion SwapAxesForLayout(Quaternion val) => new(-val.Y, val.W, val.X, -val.Z);
-    // private static Quaternion SwapAxesForLayout(Quaternion val) => new(-val.Y, val.W, val.Z, -val.X);
-    // private static Quaternion SwapAxesForLayout(Quaternion val) => new(-val.W, val.X, val.Y, -val.Z);
-    // private static Quaternion SwapAxesForLayout(Quaternion val) => new(-val.W, val.Y, val.X, -val.Z);
-    // private static Quaternion SwapAxesForLayout(Quaternion val) => new(-val.W, val.Y, val.Z, -val.X);
-    
-    // private static Quaternion SwapAxesForLayout(Quaternion val) => new(val.X, val.Z, val.Y, -val.W);
-    // private static Quaternion SwapAxesForLayout(Quaternion val) => new(val.X, val.Z, val.W, -val.Y);
-    // private static Quaternion SwapAxesForLayout(Quaternion val) => new(val.X, val.W, val.Z, -val.Y);
-    // private static Quaternion SwapAxesForLayout(Quaternion val) => new(val.Z, val.X, val.Y, -val.W);
-    // private static Quaternion SwapAxesForLayout(Quaternion val) => new(val.Z, val.X, val.W, -val.Y);
-    // private static Quaternion SwapAxesForLayout(Quaternion val) => new(val.Z, val.Y, val.X, -val.W);
-    // private static Quaternion SwapAxesForLayout(Quaternion val) => new(val.Z, val.Y, val.W, -val.X);
-    // private static Quaternion SwapAxesForLayout(Quaternion val) => new(val.Z, val.W, val.X, -val.Y);
-    // private static Quaternion SwapAxesForLayout(Quaternion val) => new(val.Z, val.W, val.Y, -val.X);
-    // private static Quaternion SwapAxesForLayout(Quaternion val) => new(val.W, val.X, val.Z, -val.Y);
-    // private static Quaternion SwapAxesForLayout(Quaternion val) => new(val.W, val.Z, val.X, -val.Y);
-    // private static Quaternion SwapAxesForLayout(Quaternion val) => new(val.W, val.Z, val.Y, -val.X);
 
     // M':   swapped matrix
     // T:    swap matrix = new Matrix4x4(-1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1)

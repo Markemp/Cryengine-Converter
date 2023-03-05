@@ -25,7 +25,7 @@ public partial class GltfRendererCommon
         primitiveAccessors.Weights0 =
             _gltf.GetAccessorOrDefault(baseName, 0,
                 skinningInfo.IntVertices == null ? skinningInfo.BoneMapping.Count : skinningInfo.Ext2IntMap.Count)
-            ?? _gltf.AddAccessor(baseName, -1,
+            ?? _gltf.AddAccessor(baseName, -1, null,
                 skinningInfo.IntVertices == null
                     ? skinningInfo.BoneMapping
                         .Select(x => new TypedVec4<float>(
@@ -82,7 +82,7 @@ public partial class GltfRendererCommon
         primitiveAccessors.Joints0 =
             _gltf.GetAccessorOrDefault(baseName, 0,
                 skinningInfo.IntVertices == null ? skinningInfo.BoneMapping.Count : skinningInfo.Ext2IntMap.Count)
-            ?? _gltf.AddAccessor(baseName, -1,
+            ?? _gltf.AddAccessor(baseName, -1, null,
                 skinningInfo is {HasIntToExtMapping: true, IntVertices: { }}
                     ? skinningInfo.Ext2IntMap
                         .Select(x => skinningInfo.IntVertices[x])
@@ -98,7 +98,7 @@ public partial class GltfRendererCommon
         baseName = $"{fileName}/{nodeChunk.Name}/inverseBindMatrix";
         var inverseBindMatricesAccessor =
             _gltf.GetAccessorOrDefault(baseName, 0, skinningInfo.CompiledBones.Count)
-            ?? _gltf.AddAccessor(baseName, -1,
+            ?? _gltf.AddAccessor(baseName, -1, null,
                 skinningInfo.CompiledBones.Select(x => SwapAxes(Matrix4x4.Transpose(x.BindPoseMatrix))).ToArray());
 
         return _gltf.Add(new GltfSkin
@@ -116,7 +116,7 @@ public partial class GltfRendererCommon
         var normals = node._model.ChunkMap.GetValueOrDefault(mesh.NormalsData) as ChunkDataStream;
         var uvs = node._model.ChunkMap.GetValueOrDefault(mesh.UVsData) as ChunkDataStream;
         var indices = node._model.ChunkMap.GetValueOrDefault(mesh.IndicesData) as ChunkDataStream;
-        var colors = node._model.ChunkMap.GetValueOrDefault(mesh.ColorsData) as ChunkDataStream;
+        // var colors = node._model.ChunkMap.GetValueOrDefault(mesh.ColorsData) as ChunkDataStream;
         var tangents = node._model.ChunkMap.GetValueOrDefault(mesh.TangentsData) as ChunkDataStream;
         var subsets = node._model.ChunkMap.GetValueOrDefault(mesh.MeshSubsetsData) as ChunkMeshSubsets;
 
@@ -131,7 +131,8 @@ public partial class GltfRendererCommon
             baseName = $"{fileName}/{node.Name}/vertex";
             accessors.Position =
                 _gltf.GetAccessorOrDefault(baseName, 0, vertices.Vertices.Length)
-                ?? _gltf.AddAccessor(baseName, -1, vertices.Vertices.Select(SwapAxesForPosition).ToArray());
+                ?? _gltf.AddAccessor(baseName, -1, GltfBufferViewTarget.ArrayBuffer,
+                    vertices.Vertices.Select(SwapAxesForPosition).ToArray());
 
             // TODO: Is this correct? This breaks some of RoL model colors, while having it set does not make anything better.
             // baseName = $"{fileName}/{nodeChunk.Name}/colors";
@@ -147,7 +148,7 @@ public partial class GltfRendererCommon
             accessors.Normal = normalsArray is null
                 ? null
                 : _gltf.GetAccessorOrDefault(baseName, 0, normalsArray.Length)
-                  ?? _gltf.AddAccessor(baseName, -1,
+                  ?? _gltf.AddAccessor(baseName, -1, GltfBufferViewTarget.ArrayBuffer,
                       normalsArray.Select(SwapAxesForPosition).ToArray());
 
             // TODO: Do Tangents also need swapping axes?
@@ -155,7 +156,7 @@ public partial class GltfRendererCommon
             accessors.Tangent = tangents is null
                 ? null
                 : _gltf.GetAccessorOrDefault(baseName, 0, tangents.Tangents.Length / 2)
-                  ?? _gltf.AddAccessor(baseName, -1,
+                  ?? _gltf.AddAccessor(baseName, -1, GltfBufferViewTarget.ArrayBuffer,
                       tangents.Tangents.Cast<Tangent>()
                           .Where((_, i) => i % 2 == 0)
                           .Select(x => new TypedVec4<float>(x.x / 32767f, x.y / 32767f, x.z / 32767f, x.w / 32767f))
@@ -166,14 +167,14 @@ public partial class GltfRendererCommon
                 uvs is null
                     ? null
                     : _gltf.GetAccessorOrDefault(baseName, 0, uvs.UVs.Length)
-                      ?? _gltf.AddAccessor($"{node.Name}/uv", -1, uvs.UVs);
+                      ?? _gltf.AddAccessor($"{node.Name}/uv", -1, GltfBufferViewTarget.ArrayBuffer, uvs.UVs);
         }
 
         if (vertsUvs is not null && vertices is null)
             throw new NotSupportedException();
 
         baseName = $"${fileName}/{node.Name}/index";
-        var indexBufferView = _gltf.GetBufferViewOrDefault(baseName) ?? _gltf.AddBufferView(baseName, indices.Indices);
+        var indexBufferView = _gltf.GetBufferViewOrDefault(baseName) ?? _gltf.AddBufferView(baseName, indices.Indices, GltfBufferViewTarget.ElementArrayBuffer);
         return _gltf.Add(new GltfMesh
         {
             Primitives = subsets.MeshSubsets.Select(v => new GltfMeshPrimitive
@@ -182,7 +183,7 @@ public partial class GltfRendererCommon
                 Indices = _gltf.GetAccessorOrDefault(baseName, v.FirstIndex, v.FirstIndex + v.NumIndices)
                           ?? _gltf.AddAccessor(
                               $"{node.Name}/index",
-                              indexBufferView,
+                              indexBufferView, GltfBufferViewTarget.ElementArrayBuffer,
                               indices.Indices, v.FirstIndex, v.FirstIndex + v.NumIndices),
                 Material = materialMap.GetValueOrDefault(v.MatID),
             }).ToList()

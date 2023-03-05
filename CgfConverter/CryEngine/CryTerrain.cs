@@ -61,75 +61,139 @@ public class CryTerrain
             stack.AddRange(chunk.Children.Where(x => x is not null)!);
         }
 
+        var attachedModels = new List<string?>();
+        var entityClasses = new HashSet<string>();
         foreach (var mission in Missions)
         {
             foreach (var entity in mission.ObjectsAndEntities!)
             {
-                if (!string.IsNullOrWhiteSpace(entity.Geometry))
-                    continue;
-                
-                if (entity.Properties is {ObjectModel: {} val} properties)
-                {
-                    if (CryEngine.SupportsFile(val))
-                        entity.Geometry = val;
-                    else if (val.EndsWith(".cdf", StringComparison.InvariantCultureIgnoreCase))
-                        entity.Geometry = val[..^4] + ".chr";  // TODO: AttachmentList
+                if (entity.EntityClass is not null)
+                    entityClasses.Add(entity.EntityClass);
+                attachedModels.Clear();
+                attachedModels.Add(entity.Geometry);
 
-                    if (false && properties is {UseTranslation: "1", Movement: { X: {} xDistance, Y: {} yDistance, Z: {} zDistance }})
+                if (entity.Properties is { } properties)
+                {
+                    attachedModels.Add(properties.BladesModel);
+                    attachedModels.Add(properties.ObjectModel);
+                    attachedModels.Add(properties.ObjectMesh);
+                    attachedModels.Add(properties.ObjectMeshDrc);
+
+                    if (properties is
+                        {UseTranslation: "1", Movement: {X: { } xDistance, Y: { } yDistance, Z: { } zDistance}})
                     {
                         // TODO: check if this is correct
                         entity.PosValue = (entity.PosValue ?? Vector3.Zero) +
-                                          new Vector3(float.Parse(xDistance),float.Parse(yDistance), float.Parse(zDistance));
+                                          new Vector3(float.Parse(xDistance), float.Parse(yDistance),
+                                              float.Parse(zDistance));
                     }
 
-                    if (properties is {UseRotation: "1", Rotation: { X: {} xAngle, Y: {} yAngle, Z: {} zAngle }})
+                    if (properties is {UseRotation: "1", Rotation: {X: { } xAngle, Y: { } yAngle, Z: { } zAngle}})
                     {
-                        var x = Quaternion.CreateFromAxisAngle(Vector3.UnitY, (float)(float.Parse(xAngle) * Math.PI / 180f));
-                        var y = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, (float)(float.Parse(yAngle) * Math.PI / 180f));
-                        var z = Quaternion.CreateFromAxisAngle(Vector3.UnitX, (float)(float.Parse(zAngle) * Math.PI / 180f));
-                            
+                        var x = Quaternion.CreateFromAxisAngle(Vector3.UnitY,
+                            -(float) (float.Parse(xAngle) * Math.PI / 180f));
+                        var y = Quaternion.CreateFromAxisAngle(Vector3.UnitZ,
+                            -(float) (float.Parse(yAngle) * Math.PI / 180f));
+                        var z = Quaternion.CreateFromAxisAngle(Vector3.UnitX,
+                            -(float) (float.Parse(zAngle) * Math.PI / 180f));
+
                         // TODO: check if we did rotate it the right direction (CW/CCW)
                         entity.RotateValue = (entity.RotateValue ?? Quaternion.Identity) * (x * y * z);
                     }
-                        
-                    continue;
                 }
-                
-                if (entity.EntityClass?.StartsWith("brb", StringComparison.InvariantCultureIgnoreCase) is true)
+
+                switch (entity.EntityClass?.ToLowerInvariant())
                 {
-                    var path = $"objects/gameplay_assets/{entity.EntityClass[3..]}.cgf";
-                    if (packFileSystem.Exists(path))
+                    // Couldn't find where are these object name constants defined, thus hardcoding.
+                    case "brbjumppad":
+                        attachedModels.Add(entity.Properties?.JumpPadType == "1"
+                            ? "objects/characters/11_ambient/bouncepad_rotate/bouncepad_rotate.chr"
+                            : "objects/characters/11_ambient/bouncepad_static/bouncepad_static.chr");
+                        break;
+
+                    case "brbpartchest":
+                        attachedModels.Add("objects/characters/11_ambient/treasure_chest/treasure_chest.chr");
+                        break;
+
+                    case "brbcrystallock":
+                        // TODO: use .cdf file
+                        attachedModels.Add("objects/characters/11_ambient/crystal_lock/crystal_lock.chr");
+                        attachedModels.Add(new[]
+                        {
+                            "objects/characters/11_ambient/crystal_lock/crystals_amber.chr",
+                            "objects/characters/11_ambient/crystal_lock/crystals_aqua.chr",
+                            "objects/characters/11_ambient/crystal_lock/crystals_black.chr",
+                            "objects/characters/11_ambient/crystal_lock/crystals_gold.chr",
+                            "objects/characters/11_ambient/crystal_lock/crystals_blue.chr",
+                            "objects/characters/11_ambient/crystal_lock/crystals_green.chr",
+                            "objects/characters/11_ambient/crystal_lock/crystals_purple.chr",
+                            "objects/characters/11_ambient/crystal_lock/crystals_red.chr",
+                        }[int.Parse(entity.Properties?.CrystalType ?? "0")]);
+                        break;
+
+                    default:
+                        if (entity.EntityClass?.StartsWith("brb", StringComparison.InvariantCultureIgnoreCase) is not
+                            true)
+                            break;
+
+                        var path = $"objects/gameplay_assets/{entity.EntityClass[3..]}.cgf";
+                        if (packFileSystem.Exists(path))
+                            attachedModels.Add(path);
+                        break;
+                }
+
+                entity.AllAttachedModelPaths = attachedModels
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Cast<string>()
+                    .Select(x => x.Replace("%level%", BasePath).ToLowerInvariant())
+                    .ToList();
+                attachedModels.Clear();
+
+                for (var i = 0; i < entity.AllAttachedModelPaths.Count; i++)
+                {
+                    var val = entity.AllAttachedModelPaths[i];
+                    if (CryEngine.SupportsFile(val))
+                        continue;
+                    if (val.EndsWith(".cdf", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        entity.Geometry = path;
+                        // TODO: use AttachmentList inside .cdf file
+                        entity.AllAttachedModelPaths[i] = val[..^4] + ".chr";
                         continue;
                     }
 
-                    if (entity.EntityClass == "brbJumpPad")
-                    {
-                        entity.Geometry = "objects/characters/11_ambient/bouncepad_static/bouncepad_static.chr";
-                        continue;
-                    }
+                    entity.AllAttachedModelPaths.RemoveAt(i--);
                 }
-                
+
                 // entity.Geometry = "objects/default/primitive_cube.cgf";
             }
         }
+
+        Utilities.Log(LogLevelEnum.Verbose, "The file contains the following types of EntityClass:\n" +
+                                            string.Join("\n", entityClasses.Select(x => $" - {x}")));
 
         AllRenderNodes = allObjects.ToImmutableList();
 
         Objects = TerrainFile.BrushObjects
             .Concat(Missions.SelectMany(x => x.ObjectsAndEntities!)
-                .Select(x => x.Geometry)
-                .Where(x => x is not null))
-            .Select(x => x!.Replace("%level%", Path.GetDirectoryName(filename)))
-            .DistinctBy(x => x.ToLowerInvariant())
+                .SelectMany(x => x.AllAttachedModelPaths))
+            .Select(x => x.Replace("%level%", BasePath).ToLowerInvariant())
+            .Distinct()
             .AsParallel()
             .Select(path =>
             {
-                var engine = new CryEngine(path, packFileSystem);
-                engine.ProcessCryengineFiles();
-                return Tuple.Create(path, engine);
-            }).ToDictionary(x => x.Item1.ToLowerInvariant(), x => x.Item2);
+                try
+                {
+                    var engine = new CryEngine(path, packFileSystem);
+                    engine.ProcessCryengineFiles();
+                    return Tuple.Create(path, engine);
+                }
+                catch (FileNotFoundException)
+                {
+                    return null;
+                }
+            })
+            .Where(x => x != null)
+            .ToDictionary(x => x!.Item1.ToLowerInvariant(), x => x!.Item2);
     }
 
     public static bool SupportsFile(string name) => Path.GetFileName(name).ToLowerInvariant() == "leveldata.xml";

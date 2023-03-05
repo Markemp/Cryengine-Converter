@@ -183,18 +183,26 @@ public class Program
     private void ExportSingleTerrain(string inputFile)
     {
         var terrain = new CryTerrain(inputFile, _argsHandler.PackFileSystem);
+        var outBasePath = _argsHandler.OutputDir;
+        if (outBasePath == null)
+            outBasePath = Path.TrimEndingDirectorySeparator(Path.GetDirectoryName(inputFile)!);
+        else
+            outBasePath = Path.Join(outBasePath, Path.GetFileName(Path.GetDirectoryName(inputFile)!));
+        // TODO: bunch of args processing
+        
         if (_argsHandler.OutputGLTF || _argsHandler.OutputGLB)
         {
-            new GltfRendererCommon(_argsHandler.PackFileSystem, new List<Regex>
+            new GltfRendererCommon(_argsHandler.PackFileSystem,
+                    new List<Regex>
                 {
                     new(".*_shadows?[_.].*", RegexOptions.IgnoreCase),
                     new(".*shadow_caster.*", RegexOptions.IgnoreCase),
                 })
                 .RenderSingleTerrain(
                     terrain,
-                    new FileInfo("Z:/test.glb"),
-                    new FileInfo("Z:/test.gltf"),
-                    new FileInfo("Z:/test.bin")
+                    _argsHandler.OutputGLB ? new FileInfo($"{outBasePath}.glb") : null,
+                    _argsHandler.OutputGLTF ? new FileInfo($"{outBasePath}.gltf") : null,
+                    _argsHandler.OutputGLTF ? new FileInfo($"{outBasePath}.bin") : null
                     );
         }
     }

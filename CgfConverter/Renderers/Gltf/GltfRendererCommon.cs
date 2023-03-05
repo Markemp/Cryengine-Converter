@@ -73,7 +73,10 @@ public partial class GltfRendererCommon
             else
             {
                 allLayers[layer.Name!] = new List<string>();
-                allLayers[layer.Parent].Add(layer.Name!);
+                if (allLayers.TryGetValue(layer.Parent, out var dict))
+                    dict.Add(layer.Name!);
+                else
+                    allLayers[layer.Parent] = new List<string> {layer.Name!};
             }
         }
 
@@ -185,7 +188,7 @@ public partial class GltfRendererCommon
                                 zAxis.X, zAxis.Y, zAxis.Z, 0,
                                 0, 0, 0, 1));
                             break;
-                        
+
                         default:
                             // Unsupported
                             continue;
@@ -206,7 +209,7 @@ public partial class GltfRendererCommon
 
                     if (WriteModel(cryObject, translation, rotation, scale, true) is not { } node)
                         continue;
-                    
+
                     _gltf.Nodes[node].Name = Path.GetFileNameWithoutExtension(_gltf.Nodes[node].Name);
                     if (staticNodeContainer == -1)
                     {
@@ -215,63 +218,47 @@ public partial class GltfRendererCommon
                             Name = "Static",
                         }));
                     }
+
                     _gltf.Nodes[staticNodeContainer].Children.Add(node);
                 }
             }
 
-            var entityNode = -1;
+            var entityNode = _gltf.Add(new GltfNode
+            {
+                Name = "Entities"
+            });
+            _gltf.Nodes[layerNode].Children.Add(entityNode);
+            
             var entityStack = rootEntities.ToList();
             while (entityStack.Any())
             {
                 var entity = entityStack.Last();
                 entityStack.RemoveAt(entityStack.Count - 1);
 
-                var node = -1;
-
-                if (entity.Layer == layerName && entity.Geometry is not null && entity.EntityClass == "AnimObject")
+                var node = _gltf.Add(new GltfNode
                 {
-                    var name = entity.Geometry!
-                        .Replace("%level%", terrain.BasePath)
-                        .ToLowerInvariant();
+                    Name = $"{entity.Name}:{entity.EntityClass}@{layerName}",
+                });
+                _gltf.Nodes[entityNode].Children.Add(node);
 
-                    do
-                    {
+                if (entity.Layer == layerName)
+                {
+                    foreach (var name in entity.AllAttachedModelPaths) {
                         if (_excludedNodeNames.Any(y => y.IsMatch(name)))
-                            break;
+                            continue;
 
                         if (!terrain.Objects.TryGetValue(name, out var cryObject))
-                            break;
+                            continue;
 
                         var translation = SwapAxesForPosition(entity.PosValue ?? Vector3.Zero);
                         var rotation = SwapAxesForLayout(entity.RotateValue ?? Quaternion.Identity);
-                        var scale = SwapAxesForScale(entity.ScaleValue ?? Vector3.One) * 4;
+                        var scale = SwapAxesForScale(entity.ScaleValue ?? Vector3.One);
 
                         if (WriteModel(cryObject, translation, rotation, scale, true) is { } node2)
-                            node = node2;
-                    } while (false);
+                            _gltf.Nodes[node].Children.Add(node2);
+                    }
                 }
 
-                if (node == -1)
-                {
-                    if (!childEntities[entity.EntityIdValue!.Value].Any())
-                        continue;
-                    node = _gltf.Add(new GltfNode
-                    {
-                        Name = entity.Name,
-                    });
-                }
-                else
-                {
-                    _gltf.Nodes[node].Name = entity.Name;
-                }
-
-                if (entityNode == -1)
-                    _gltf.Nodes[layerNode].Children.Add(entityNode = _gltf.Add(new GltfNode
-                    {
-                        Name = "Entities"
-                    }));
-
-                _gltf.Nodes[entityNode].Children.Add(node);
                 entityStack.AddRange(childEntities[entity.EntityIdValue!.Value]
                     .Select(x => allEntities[x]));
             }

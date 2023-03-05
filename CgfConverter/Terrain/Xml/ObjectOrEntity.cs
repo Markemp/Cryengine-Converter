@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Xml.Serialization;
 
@@ -6,6 +7,8 @@ namespace CgfConverter.Terrain.Xml;
 
 public class ObjectOrEntity
 {
+    [XmlIgnore] public List<string> AllAttachedModelPaths = new();
+    
     [XmlAttribute(AttributeName = "Id")] public string? Id;
     
     [XmlAttribute(AttributeName = "Name")] public string? Name;
