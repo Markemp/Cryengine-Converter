@@ -14,8 +14,6 @@ namespace CgfConverter.Renderers.Gltf;
 
 public partial class GltfRendererCommon
 {
-    private readonly Dictionary<Material, int> _materialMap = new();
-
     private Dictionary<int, int?> WriteMaterial(ChunkNode nodeChunk)
     {
         var materialIndices = new Dictionary<int, int?>();

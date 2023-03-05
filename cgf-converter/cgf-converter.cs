@@ -196,12 +196,7 @@ public class Program
                     new(".*_shadows?[_.].*", RegexOptions.IgnoreCase),
                     new(".*shadow_caster.*", RegexOptions.IgnoreCase),
                 })
-                .RenderSingleTerrain(
-                    terrain,
-                    _argsHandler.OutputGLB ? new FileInfo($"{outBasePath}.glb") : null,
-                    _argsHandler.OutputGLTF ? new FileInfo($"{outBasePath}.gltf") : null,
-                    _argsHandler.OutputGLTF ? new FileInfo($"{outBasePath}.bin") : null
-                    );
+                .RenderSingleTerrain(terrain, outBasePath, _argsHandler.OutputGLB, _argsHandler.OutputGLTF, false);
         }
     }
 }

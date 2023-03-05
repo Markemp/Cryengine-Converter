@@ -16,7 +16,7 @@ namespace CgfConverter.Renderers.Gltf;
 public class GltfWriter
 {
     private readonly List<byte[]> _bytesList = new();
-    private readonly GltfRoot _root = new();
+    private GltfRoot _root = new();
 
     private int _currentOffset;
 
@@ -33,6 +33,13 @@ public class GltfWriter
     public List<GltfSkin> Skins => _root.Skins;
     public List<GltfMesh> Meshes => _root.Meshes;
     public List<GltfMaterial> Materials => _root.Materials;
+
+    public void Clear()
+    {
+        _root = new GltfRoot();
+        _bytesList.Clear();
+        _currentOffset = 0;
+    }
 
     private void Compile()
     {

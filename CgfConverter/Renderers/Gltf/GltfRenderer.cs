@@ -21,8 +21,5 @@ public class GltfRenderer : BaseRenderer
                 Args.ExcludeNodeNames
                     .Select(x => new Regex(x, RegexOptions.Compiled | RegexOptions.IgnoreCase))
                     .ToList())
-            .RenderSingleModel(CryData,
-                _writeBinary ? new FileInfo(GetOutputFile("glb", outputDir, preservePath)) : null,
-                _writeText ? new FileInfo(GetOutputFile("gltf", outputDir, preservePath)) : null,
-                _writeText ? new FileInfo(GetOutputFile("bin", outputDir, preservePath)) : null);
+            .RenderSingleModel(CryData, Path.ChangeExtension(GetOutputFile("glb", outputDir, preservePath), null), _writeBinary, _writeText);
 }

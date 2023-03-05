@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text.RegularExpressions;
+using CgfConverter.Materials;
 using CgfConverter.PackFileSystem;
 using CgfConverter.Renderers.Gltf.Models;
 using CgfConverter.Terrain;
@@ -14,6 +15,7 @@ namespace CgfConverter.Renderers.Gltf;
 public partial class GltfRendererCommon
 {
     private readonly IPackFileSystem _packFileSystem;
+    private readonly Dictionary<Material, int> _materialMap = new();
     private readonly GltfWriter _gltf;
     private readonly List<Regex> _excludedNodeNames;
 
@@ -24,9 +26,10 @@ public partial class GltfRendererCommon
         _excludedNodeNames = excludedNodeNames;
     }
 
-    public void RenderSingleModel(CryEngine cryData, FileInfo? glbOutputFile, FileInfo? gltfOutputFile,
-        FileInfo? gltfBinOutputFile)
+    public void RenderSingleModel(CryEngine cryData, string outputName, bool writeBinary, bool writeText)
     {
+        _gltf.Clear();
+        _materialMap.Clear();
         _gltf.Add(new GltfScene
         {
             Name = "Scene",
@@ -37,28 +40,22 @@ public partial class GltfRendererCommon
         else
             throw new NotSupportedException();
 
-        if (glbOutputFile is not null)
+        if (writeBinary)
         {
-            using var glb = glbOutputFile.Open(FileMode.Create, FileAccess.Write);
+            using var glb = new FileStream($"{outputName}.glb", FileMode.Create, FileAccess.Write);
             _gltf.CompileToBinary(glb);
         }
 
-        if (gltfOutputFile is not null && gltfBinOutputFile is not null)
+        if (writeText)
         {
-            using var gltf = gltfOutputFile.Open(FileMode.Create, FileAccess.Write);
-            using var bin = gltfBinOutputFile.Open(FileMode.Create, FileAccess.Write);
-            _gltf.CompileToPair(gltfBinOutputFile.Name, gltf, bin);
+            using var gltf = new FileStream($"{outputName}.gltf", FileMode.Create, FileAccess.Write);
+            using var bin = new FileStream($"{outputName}.bin", FileMode.Create, FileAccess.Write);
+            _gltf.CompileToPair($"{outputName}.bin", gltf, bin);
         }
     }
 
-    public void RenderSingleTerrain(CryTerrain terrain, FileInfo? glbOutputFile, FileInfo? gltfOutputFile,
-        FileInfo? gltfBinOutputFile)
+    public void RenderSingleTerrain(CryTerrain terrain, string outputName, bool writeBinary, bool writeText, bool separateLayers)
     {
-        _gltf.Add(new GltfScene
-        {
-            Name = "Scene",
-        });
-
         var allLayers = new Dictionary<string, List<string>>();
         var layerIds = new Dictionary<string, int>();
         var rootLayers = new Dictionary<string, List<string>>();
@@ -78,6 +75,14 @@ public partial class GltfRendererCommon
                 else
                     allLayers[layer.Parent] = new List<string> {layer.Name!};
             }
+        }
+
+        if (!separateLayers)
+        {
+            rootLayers = new Dictionary<string, List<string>>
+            {
+                [""] = allLayers[""] = rootLayers.Keys.ToList(),
+            };
         }
 
         var rootEntities = new HashSet<ObjectOrEntity>();
@@ -104,150 +109,160 @@ public partial class GltfRendererCommon
             }
         }
 
-        var rootNode = _gltf.Add(new GltfNode
+        var childEntityNodes = new List<int>();
+        var numProcessedLayers = 0;
+        foreach (var rootLayer in rootLayers)
         {
-            Name = "Terrain",
-            Translation = new List<float>
+            _gltf.Clear();
+            _materialMap.Clear();
+            _gltf.Add(new GltfScene
             {
-                (terrain.TerrainFile.OcTreeNode.NodeBox.Max.X - terrain.TerrainFile.OcTreeNode.NodeBox.Min.X) / 2,
-                0,
-                (terrain.TerrainFile.OcTreeNode.NodeBox.Max.Z - terrain.TerrainFile.OcTreeNode.NodeBox.Min.Z) / -2,
-            },
-        });
-
-        _gltf.Scenes[0].Nodes.Add(rootNode);
-
-        var layerStack = rootLayers.Keys.Select(x => Tuple.Create(rootNode, x)).ToList();
-        for (var i = 0; layerStack.Any(); i++)
-        {
-            var (parentNode, layerName) = layerStack.Last();
-            layerStack.RemoveAt(layerStack.Count - 1);
-
-            Utilities.Log(LogLevelEnum.Info, "Current layer ({0}/{1}): {2}", i + 1, allLayers.Count, layerName);
-
-            var layerNode = _gltf.Add(new GltfNode
-            {
-                Name = layerName,
+                Name = "Scene",
             });
 
-            _gltf.Nodes[parentNode].Children.Add(layerNode);
-
-            layerStack.AddRange(allLayers[layerName].Select(x => Tuple.Create(layerNode, x)));
-
-            if (layerIds.TryGetValue(layerName, out var layerId))
+            var rootNode = _gltf.Add(new GltfNode
             {
-                var staticNodeContainer = -1;
-                foreach (var renderNode in terrain.AllRenderNodes.Where(x => x.LayerId == layerId))
+                Name = "Terrain",
+                Translation = new List<float>
                 {
-                    string name;
-                    Vector3 scale, translation;
-                    Quaternion rotation;
-
-                    switch (renderNode)
-                    {
-                        case SBrushChunk chunk:
-                            name = terrain.TerrainFile.BrushObjects[chunk.ObjectTypeId];
-
-                            if (!Matrix4x4.Decompose(Matrix4x4.Transpose(chunk.Matrix.ConvertToTransformMatrix()),
-                                    out scale,
-                                    out rotation,
-                                    out translation))
-                                throw new Exception();
-                            break;
-
-                        case SVegetationChunkEx chunk:
-                            name = terrain.TerrainFile.Files[chunk.ObjectTypeId].FileName;
-
-                            translation = chunk.Pos;
-                            scale = new Vector3(chunk.Scale);
-
-                            var x = (chunk.NormalX - 127) / 127f;
-                            var y = (chunk.NormalY - 127) / 127f;
-                            var terrainNormal = new Vector3
-                            {
-                                X = x,
-                                Y = y
-                            };
-                            terrainNormal.Z = (float) Math.Sqrt(
-                                1
-                                - terrainNormal.X * terrainNormal.X
-                                + terrainNormal.Y * terrainNormal.Y);
-
-                            var vDir = Vector3.Cross(-Vector3.UnitX, terrainNormal);
-                            var up = -terrainNormal;
-                            var yAxis = Vector3.Normalize(vDir);
-                            if (yAxis is {X: 0, Y: 0} && up == Vector3.UnitZ)
-                                up = Vector3.UnitX * -yAxis.Z;
-
-                            var xAxis = Vector3.Normalize(Vector3.Cross(up, yAxis));
-                            var zAxis = Vector3.Normalize(Vector3.Cross(xAxis, yAxis));
-
-                            rotation = Quaternion.CreateFromRotationMatrix(new Matrix4x4(
-                                xAxis.X, xAxis.Y, xAxis.Z, 0,
-                                yAxis.X, yAxis.Y, yAxis.Z, 0,
-                                zAxis.X, zAxis.Y, zAxis.Z, 0,
-                                0, 0, 0, 1));
-                            break;
-                        
-                        case SDecalChunk:
-                            // TODO
-                            continue;
-
-                        default:
-                            // Unsupported
-                            continue;
-                    }
-
-                    name = name
-                        .Replace("%level%", terrain.BasePath)
-                        .ToLowerInvariant();
-                    if (_excludedNodeNames.Any(y => y.IsMatch(name)))
-                        continue;
-
-                    if (!terrain.Objects.TryGetValue(name, out var cryObject))
-                        continue;
-
-                    translation = SwapAxesForPosition(translation);
-                    rotation = SwapAxesForAnimations(rotation);
-                    scale = SwapAxesForScale(scale);
-
-                    if (WriteModel(cryObject, translation, rotation, scale, true) is not { } node)
-                        continue;
-
-                    _gltf.Nodes[node].Name = Path.GetFileNameWithoutExtension(_gltf.Nodes[node].Name);
-                    if (staticNodeContainer == -1)
-                    {
-                        _gltf.Nodes[parentNode].Children.Add(staticNodeContainer = _gltf.Add(new GltfNode
-                        {
-                            Name = "Static",
-                        }));
-                    }
-
-                    _gltf.Nodes[staticNodeContainer].Children.Add(node);
-                }
-            }
-
-            var entityNode = _gltf.Add(new GltfNode
-            {
-                Name = "Entities"
+                    (terrain.TerrainFile.OcTreeNode.NodeBox.Max.X - terrain.TerrainFile.OcTreeNode.NodeBox.Min.X) / 2,
+                    0,
+                    (terrain.TerrainFile.OcTreeNode.NodeBox.Max.Z - terrain.TerrainFile.OcTreeNode.NodeBox.Min.Z) / -2,
+                },
             });
-            _gltf.Nodes[layerNode].Children.Add(entityNode);
-            
-            var entityStack = rootEntities.ToList();
-            while (entityStack.Any())
-            {
-                var entity = entityStack.Last();
-                entityStack.RemoveAt(entityStack.Count - 1);
 
-                var node = _gltf.Add(new GltfNode
+            _gltf.Scenes[0].Nodes.Add(rootNode);
+
+            var layerStack = new List<Tuple<int, string>> {Tuple.Create(rootNode, rootLayer.Key)};
+            for (; layerStack.Any(); numProcessedLayers++)
+            {
+                var (parentNode, layerName) = layerStack.Last();
+                layerStack.RemoveAt(layerStack.Count - 1);
+
+                Utilities.Log(LogLevelEnum.Info, "Current layer ({0}/{1}): {2}", numProcessedLayers + 1,
+                    allLayers.Count, layerName);
+
+                var layerNode = _gltf.Add(new GltfNode
                 {
-                    Name = $"{entity.Name}:{entity.EntityClass}@{layerName}",
+                    Name = layerName,
                 });
-                _gltf.Nodes[entityNode].Children.Add(node);
 
-                if (entity.Layer == layerName)
+                _gltf.Nodes[parentNode].Children.Add(layerNode);
+
+                layerStack.AddRange(allLayers[layerName].Select(x => Tuple.Create(layerNode, x)));
+
+                if (layerIds.TryGetValue(layerName, out var layerId))
                 {
-                    foreach (var name in entity.AllAttachedModelPaths) {
+                    var staticNodeContainer = -1;
+                    foreach (var renderNode in terrain.AllRenderNodes.Where(x => x.LayerId == layerId))
+                    {
+                        string name;
+                        Vector3 scale, translation;
+                        Quaternion rotation;
+
+                        switch (renderNode)
+                        {
+                            case SBrushChunk chunk:
+                                name = terrain.TerrainFile.BrushObjects[chunk.ObjectTypeId];
+
+                                if (!Matrix4x4.Decompose(Matrix4x4.Transpose(chunk.Matrix.ConvertToTransformMatrix()),
+                                        out scale,
+                                        out rotation,
+                                        out translation))
+                                    throw new Exception();
+                                break;
+
+                            case SVegetationChunkEx chunk:
+                                name = terrain.TerrainFile.Files[chunk.ObjectTypeId].FileName;
+
+                                translation = chunk.Pos;
+                                scale = new Vector3(chunk.Scale);
+
+                                var x = (chunk.NormalX - 127) / 127f;
+                                var y = (chunk.NormalY - 127) / 127f;
+                                var terrainNormal = new Vector3
+                                {
+                                    X = x,
+                                    Y = y
+                                };
+                                terrainNormal.Z = (float) Math.Sqrt(
+                                    1
+                                    - terrainNormal.X * terrainNormal.X
+                                    + terrainNormal.Y * terrainNormal.Y);
+
+                                var vDir = Vector3.Cross(-Vector3.UnitX, terrainNormal);
+                                var up = -terrainNormal;
+                                var yAxis = Vector3.Normalize(vDir);
+                                if (yAxis is {X: 0, Y: 0} && up == Vector3.UnitZ)
+                                    up = Vector3.UnitX * -yAxis.Z;
+
+                                var xAxis = Vector3.Normalize(Vector3.Cross(up, yAxis));
+                                var zAxis = Vector3.Normalize(Vector3.Cross(xAxis, yAxis));
+
+                                rotation = Quaternion.CreateFromRotationMatrix(new Matrix4x4(
+                                    xAxis.X, xAxis.Y, xAxis.Z, 0,
+                                    yAxis.X, yAxis.Y, yAxis.Z, 0,
+                                    zAxis.X, zAxis.Y, zAxis.Z, 0,
+                                    0, 0, 0, 1));
+                                break;
+
+                            case SDecalChunk:
+                                // TODO
+                                continue;
+
+                            default:
+                                // Unsupported
+                                continue;
+                        }
+
+                        name = name
+                            .Replace("%level%", terrain.BasePath)
+                            .ToLowerInvariant();
+                        if (_excludedNodeNames.Any(y => y.IsMatch(name)))
+                            continue;
+
+                        if (!terrain.Objects.TryGetValue(name, out var cryObject))
+                            continue;
+
+                        translation = SwapAxesForPosition(translation);
+                        rotation = SwapAxesForAnimations(rotation);
+                        scale = SwapAxesForScale(scale);
+
+                        if (WriteModel(cryObject, translation, rotation, scale, true) is not { } node)
+                            continue;
+
+                        _gltf.Nodes[node].Name = Path.GetFileNameWithoutExtension(_gltf.Nodes[node].Name);
+                        if (staticNodeContainer == -1)
+                        {
+                            _gltf.Nodes[parentNode].Children.Add(staticNodeContainer = _gltf.Add(new GltfNode
+                            {
+                                Name = "Static",
+                            }));
+                        }
+
+                        _gltf.Nodes[staticNodeContainer].Children.Add(node);
+                    }
+                }
+
+                var entityNode = _gltf.Add(new GltfNode
+                {
+                    Name = "Entities"
+                });
+                _gltf.Nodes[layerNode].Children.Add(entityNode);
+
+                var entityStack = rootEntities.ToList();
+                while (entityStack.Any())
+                {
+                    var entity = entityStack.Last();
+                    entityStack.RemoveAt(entityStack.Count - 1);
+                    entityStack.AddRange(childEntities[entity.EntityIdValue!.Value]
+                        .Select(x => allEntities[x]));
+
+                    if (entity.Layer != layerName)
+                        continue;
+
+                    foreach (var name in entity.AllAttachedModelPaths)
+                    {
                         if (_excludedNodeNames.Any(y => y.IsMatch(name)))
                             continue;
 
@@ -259,26 +274,49 @@ public partial class GltfRendererCommon
                         var scale = SwapAxesForScale(entity.ScaleValue ?? Vector3.One);
 
                         if (WriteModel(cryObject, translation, rotation, scale, true) is { } node2)
-                            _gltf.Nodes[node].Children.Add(node2);
+                            childEntityNodes.Add(node2);
+                    }
+
+                    switch (childEntityNodes.Count)
+                    {
+                        case 0:
+                            break;
+                        case 1:
+                            _gltf.Nodes[entityNode].Children.Add(childEntityNodes.First());
+                            childEntityNodes.Clear();
+                            break;
+                        default:
+                            _gltf.Nodes[entityNode].Children.Add(_gltf.Add(new GltfNode
+                            {
+                                Name = $"{entity.Name}:{entity.EntityClass}@{layerName}",
+                                Children = childEntityNodes,
+                            }));
+                            
+                            childEntityNodes = new List<int>();
+                            break;
                     }
                 }
-
-                entityStack.AddRange(childEntities[entity.EntityIdValue!.Value]
-                    .Select(x => allEntities[x]));
             }
-        }
 
-        if (glbOutputFile is not null)
-        {
-            using var glb = glbOutputFile.Open(FileMode.Create, FileAccess.Write);
-            _gltf.CompileToBinary(glb);
-        }
+            var layerBaseName = outputName;
+            if (!string.IsNullOrWhiteSpace(rootLayer.Key))
+                layerBaseName += "." + Regex.Replace(rootLayer.Key, "[<>:\\\\\"/\\|\\?\\*]", "_");
+            
+            if (writeBinary)
+            {
+                using var glb = new FileStream($"{layerBaseName}.glb", FileMode.Create, FileAccess.Write);
+                _gltf.CompileToBinary(glb);
+                Utilities.Log(LogLevelEnum.Info, "Created \"{0}.glb\" file.", layerBaseName);
+            }
 
-        if (gltfOutputFile is not null && gltfBinOutputFile is not null)
-        {
-            using var gltf = gltfOutputFile.Open(FileMode.Create, FileAccess.Write);
-            using var bin = gltfBinOutputFile.Open(FileMode.Create, FileAccess.Write);
-            _gltf.CompileToPair(gltfBinOutputFile.Name, gltf, bin);
+            if (writeText)
+            {
+                using var gltf = new FileStream($"{layerBaseName}.gltf", FileMode.Create,
+                    FileAccess.Write);
+                using var bin = new FileStream($"{layerBaseName}.bin", FileMode.Create, FileAccess.Write);
+                _gltf.CompileToPair($"{outputName}.{rootLayer.Key}.bin", gltf, bin);
+                Utilities.Log(LogLevelEnum.Info, "Created \"{0}.gltf\" and .bin files.", layerBaseName);
+            }
         }
     }
 }

@@ -15,7 +15,7 @@ public abstract class BaseRenderer
 
     public abstract void Render(string? outputDir = null, bool preservePath = true);
 
-    internal string GetOutputFile(string extension, string? outputDir = null, bool preservePath = true)
+    internal string GetOutputFile(string? extension, string? outputDir = null, bool preservePath = true)
     {
         var outputFile = string.Format("temp.{0}", extension);
 
