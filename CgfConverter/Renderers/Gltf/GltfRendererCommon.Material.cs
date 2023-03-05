@@ -19,18 +19,12 @@ public partial class GltfRendererCommon
     private Dictionary<int, int?> WriteMaterial(ChunkNode nodeChunk)
     {
         var materialIndices = new Dictionary<int, int?>();
-        // return materialIndices;
+        return materialIndices;
 
         var childIds = nodeChunk.MaterialLibraryChunk?.ChildIDs;
         var submats = nodeChunk.Materials?.SubMaterials;
         if (submats is null || childIds is null)
             return materialIndices;
-
-        // var childMats = childIds
-        //     .Where(x => x != 0)
-        //     .Select(x => nodeChunk._model.ChunkMap[(int)x])
-        //     .OfType<ChunkMtlName>()
-        //     .ToArray();
 
         var matIds = nodeChunk._model.ChunkMap
             .Select(x => x.Value)
@@ -41,34 +35,39 @@ public partial class GltfRendererCommon
 
         var decoder = new BcDecoder();
         foreach (var matId in matIds)
-        {   
+        {
             if (matId >= submats.Length)
             {
                 Utilities.Log(LogLevelEnum.Error, $"Requested material ID {matId} was not found.");
                 continue;
             }
+
             var m = submats[matId];
-            
+
             if (_materialMap.TryGetValue(m, out var existingIndex))
             {
                 materialIndices[matId] = existingIndex;
                 continue;
             }
 
-            if ((m.MaterialFlags & MaterialFlags.NoDraw) != 0)
+            if ((m.MaterialFlags & MaterialFlags.NoDraw) != 0 || string.IsNullOrWhiteSpace(m.StringGenMask))
             {
                 _gltf.Add(new GltfMaterial
                 {
                     Name = m.Name,
                     AlphaMode = GltfMaterialAlphaMode.Mask,
-                    AlphaCutoff = 1f,  // Fully transparent
-                    DoubleSided = (m.MaterialFlags & MaterialFlags.TwoSided) != 0,
+                    AlphaCutoff = 1f, // Fully transparent
+                    DoubleSided = true, // (m.MaterialFlags & MaterialFlags.TwoSided) != 0,
+                    PbrMetallicRoughness = new GltfMaterialPbrMetallicRoughness
+                    {
+                        BaseColorFactor = new[] {0f, 0f, 0f, 0f},
+                    },
                 });
 
                 materialIndices[matId] = _materialMap[m] = _gltf.Materials.Count - 1;
                 continue;
             }
-            
+
             // TODO: This ideally should be always true; need to figure out what's the alpha of diffuse really supposed to be
             var useAlphaColor = m.OpacityValue != null && Math.Abs(m.OpacityValue.Value - 1.0) > 0;
 
@@ -86,7 +85,7 @@ public partial class GltfRendererCommon
                 // seems to be a sentinel value
                 if (texture.File == "nearest_cubemap" || string.IsNullOrWhiteSpace(texture.File))
                     continue;
-                
+
                 var texturePath = FileHandlingExtensions.ResolveTextureFile(texture.File, _packFileSystem);
                 if (!_packFileSystem.Exists(texturePath))
                 {
@@ -170,8 +169,8 @@ public partial class GltfRendererCommon
                     : m.AlphaTest == 0
                         ? GltfMaterialAlphaMode.Opaque
                         : GltfMaterialAlphaMode.Mask,
-                AlphaCutoff = useAlphaColor || m.AlphaTest == 0 ? null : (float)m.AlphaTest,
-                DoubleSided = (m.MaterialFlags & MaterialFlags.TwoSided) != 0,
+                AlphaCutoff = useAlphaColor || m.AlphaTest == 0 ? null : (float) m.AlphaTest,
+                DoubleSided = true, // (m.MaterialFlags & MaterialFlags.TwoSided) != 0,
                 NormalTexture = normal == -1
                     ? null
                     : new GltfTextureInfo

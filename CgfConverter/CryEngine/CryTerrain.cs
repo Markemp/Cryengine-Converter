@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using CgfConverter.PackFileSystem;
 using CgfConverter.Terrain;
 using CgfConverter.Terrain.Xml;
@@ -67,16 +68,31 @@ public class CryTerrain
                 if (!string.IsNullOrWhiteSpace(entity.Geometry))
                     continue;
                 
-                if (entity.Properties is { } properties)
+                if (entity.Properties is {ObjectModel: {} val} properties)
                 {
-                    if (properties.ObjectModel is {} val)
+                    if (CryEngine.SupportsFile(val))
+                        entity.Geometry = val;
+                    else if (val.EndsWith(".cdf", StringComparison.InvariantCultureIgnoreCase))
+                        entity.Geometry = val[..^4] + ".chr";  // TODO: AttachmentList
+
+                    if (false && properties is {UseTranslation: "1", Movement: { X: {} xDistance, Y: {} yDistance, Z: {} zDistance }})
                     {
-                        if (CryEngine.SupportsFile(val))
-                            entity.Geometry = val;
-                        else if (val.EndsWith(".cdf", StringComparison.InvariantCultureIgnoreCase))
-                            entity.Geometry = val[..^4] + ".chr";  // TODO: AttachmentList
-                        continue;
+                        // TODO: check if this is correct
+                        entity.PosValue = (entity.PosValue ?? Vector3.Zero) +
+                                          new Vector3(float.Parse(xDistance),float.Parse(yDistance), float.Parse(zDistance));
                     }
+
+                    if (properties is {UseRotation: "1", Rotation: { X: {} xAngle, Y: {} yAngle, Z: {} zAngle }})
+                    {
+                        var x = Quaternion.CreateFromAxisAngle(Vector3.UnitY, (float)(float.Parse(xAngle) * Math.PI / 180f));
+                        var y = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, (float)(float.Parse(yAngle) * Math.PI / 180f));
+                        var z = Quaternion.CreateFromAxisAngle(Vector3.UnitX, (float)(float.Parse(zAngle) * Math.PI / 180f));
+                            
+                        // TODO: check if we did rotate it the right direction (CW/CCW)
+                        entity.RotateValue = (entity.RotateValue ?? Quaternion.Identity) * (x * y * z);
+                    }
+                        
+                    continue;
                 }
                 
                 if (entity.EntityClass?.StartsWith("brb", StringComparison.InvariantCultureIgnoreCase) is true)
@@ -95,7 +111,7 @@ public class CryTerrain
                     }
                 }
                 
-                entity.Geometry = "objects/default/primitive_cube.cgf";
+                // entity.Geometry = "objects/default/primitive_cube.cgf";
             }
         }
 

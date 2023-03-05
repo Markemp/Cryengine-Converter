@@ -187,13 +187,15 @@ public class Program
         {
             new GltfRendererCommon(_argsHandler.PackFileSystem, new List<Regex>
                 {
-                    new(".*_shadows?\\..*", RegexOptions.IgnoreCase)
+                    new(".*_shadows?[_.].*", RegexOptions.IgnoreCase),
+                    new(".*shadow_caster.*", RegexOptions.IgnoreCase),
                 })
                 .RenderSingleTerrain(
                     terrain,
-                    null,  // new FileInfo("Z:/test.glb"),
+                    new FileInfo("Z:/test.glb"),
                     new FileInfo("Z:/test.gltf"),
-                    new FileInfo("Z:/test.bin"));
+                    new FileInfo("Z:/test.bin")
+                    );
         }
     }
 }

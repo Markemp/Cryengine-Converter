@@ -88,7 +88,7 @@ public partial class GltfRendererCommon
                 .ToDictionary(i => i, i =>
                     _gltf.AddAccessor(
                         $"animation/translation/{i}", -1,
-                        animChunk.KeyPositions[i].Select(SwapAxes).ToArray()));
+                        animChunk.KeyPositions[i].Select(SwapAxesForPosition).ToArray()));
 
             var keyRotationAccessors = animChunk.Animations.SelectMany(x =>
                     x.Controllers.Where(y => y.HasRotTrack).Select(y => y.RotTrack))
@@ -96,7 +96,7 @@ public partial class GltfRendererCommon
                 .ToDictionary(i => i, i =>
                     _gltf.AddAccessor(
                         $"animation/rotation/{i}", -1,
-                        animChunk.KeyRotations[i].Select(SwapAxes).ToArray()));
+                        animChunk.KeyRotations[i].Select(SwapAxesForAnimations).ToArray()));
 
             var names = GltfRendererUtilities.StripCommonParentPaths(
                 animChunk.Animations.Select(x => Path.ChangeExtension(x.Name, null)).ToList());

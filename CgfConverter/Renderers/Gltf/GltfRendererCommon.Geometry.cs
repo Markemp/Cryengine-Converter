@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using CgfConverter.CryEngineCore;
@@ -14,7 +15,7 @@ public partial class GltfRendererCommon
         GltfNode rootNode,
         ChunkNode nodeChunk,
         GltfMeshPrimitiveAttributes primitiveAccessors,
-        Dictionary<uint, int> controllerIdToNodeIndex)
+        IDictionary<uint, int> controllerIdToNodeIndex)
     {
         var skinningInfo = nodeChunk.GetSkinningInfo();
         if (!skinningInfo.HasSkinningInfo)
@@ -108,30 +109,29 @@ public partial class GltfRendererCommon
         });
     }
 
-    private int? WriteMesh(string fileName, ChunkNode nodeChunk, ChunkMesh meshChunk,
-        GltfMeshPrimitiveAttributes primitiveAccessors)
+    private int? WriteMesh(string fileName, ChunkNode node, ChunkMesh mesh, GltfMeshPrimitiveAttributes accessors)
     {
-        var vertices = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.VerticesData) as ChunkDataStream;
-        var vertsUvs = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.VertsUVsData) as ChunkDataStream;
-        var normals = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.NormalsData) as ChunkDataStream;
-        var uvs = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.UVsData) as ChunkDataStream;
-        var indices = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.IndicesData) as ChunkDataStream;
-        var colors = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.ColorsData) as ChunkDataStream;
-        var tangents = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.TangentsData) as ChunkDataStream;
-        var subsets = nodeChunk._model.ChunkMap.GetValueOrDefault(meshChunk.MeshSubsetsData) as ChunkMeshSubsets;
+        var vertices = node._model.ChunkMap.GetValueOrDefault(mesh.VerticesData) as ChunkDataStream;
+        var vertsUvs = node._model.ChunkMap.GetValueOrDefault(mesh.VertsUVsData) as ChunkDataStream;
+        var normals = node._model.ChunkMap.GetValueOrDefault(mesh.NormalsData) as ChunkDataStream;
+        var uvs = node._model.ChunkMap.GetValueOrDefault(mesh.UVsData) as ChunkDataStream;
+        var indices = node._model.ChunkMap.GetValueOrDefault(mesh.IndicesData) as ChunkDataStream;
+        var colors = node._model.ChunkMap.GetValueOrDefault(mesh.ColorsData) as ChunkDataStream;
+        var tangents = node._model.ChunkMap.GetValueOrDefault(mesh.TangentsData) as ChunkDataStream;
+        var subsets = node._model.ChunkMap.GetValueOrDefault(mesh.MeshSubsetsData) as ChunkMeshSubsets;
 
         if (indices is null || subsets is null || (vertices is null && vertsUvs is null))
             return null;
 
-        var materialMap = WriteMaterial(nodeChunk);
+        var materialMap = WriteMaterial(node);
 
         string baseName;
         if (vertices is not null)
         {
-            baseName = $"{fileName}/{nodeChunk.Name}/vertex";
-            primitiveAccessors.Position =
+            baseName = $"{fileName}/{node.Name}/vertex";
+            accessors.Position =
                 _gltf.GetAccessorOrDefault(baseName, 0, vertices.Vertices.Length)
-                ?? _gltf.AddAccessor(baseName, -1, vertices.Vertices.Select(SwapAxes).ToArray());
+                ?? _gltf.AddAccessor(baseName, -1, vertices.Vertices.Select(SwapAxesForPosition).ToArray());
 
             // TODO: Is this correct? This breaks some of RoL model colors, while having it set does not make anything better.
             // baseName = $"{fileName}/{nodeChunk.Name}/colors";
@@ -143,16 +143,16 @@ public partial class GltfRendererCommon
             //                .ToArray()));
 
             var normalsArray = normals?.Normals ?? tangents?.Normals;
-            baseName = $"{fileName}/{nodeChunk.Name}/normal";
-            primitiveAccessors.Normal = normalsArray is null
+            baseName = $"{fileName}/{node.Name}/normal";
+            accessors.Normal = normalsArray is null
                 ? null
                 : _gltf.GetAccessorOrDefault(baseName, 0, normalsArray.Length)
                   ?? _gltf.AddAccessor(baseName, -1,
-                      normalsArray.Select(SwapAxes).ToArray());
+                      normalsArray.Select(SwapAxesForPosition).ToArray());
 
             // TODO: Do Tangents also need swapping axes?
-            baseName = $"${fileName}/{nodeChunk.Name}/tangent";
-            primitiveAccessors.Tangent = tangents is null
+            baseName = $"${fileName}/{node.Name}/tangent";
+            accessors.Tangent = tangents is null
                 ? null
                 : _gltf.GetAccessorOrDefault(baseName, 0, tangents.Tangents.Length / 2)
                   ?? _gltf.AddAccessor(baseName, -1,
@@ -161,27 +161,27 @@ public partial class GltfRendererCommon
                           .Select(x => new TypedVec4<float>(x.x / 32767f, x.y / 32767f, x.z / 32767f, x.w / 32767f))
                           .ToArray());
 
-            baseName = $"${fileName}/{nodeChunk.Name}/uv";
-            primitiveAccessors.TexCoord0 =
+            baseName = $"${fileName}/{node.Name}/uv";
+            accessors.TexCoord0 =
                 uvs is null
                     ? null
                     : _gltf.GetAccessorOrDefault(baseName, 0, uvs.UVs.Length)
-                      ?? _gltf.AddAccessor($"{nodeChunk.Name}/uv", -1, uvs.UVs);
+                      ?? _gltf.AddAccessor($"{node.Name}/uv", -1, uvs.UVs);
         }
 
         if (vertsUvs is not null && vertices is null)
             throw new NotSupportedException();
 
-        baseName = $"${fileName}/{nodeChunk.Name}/index";
+        baseName = $"${fileName}/{node.Name}/index";
         var indexBufferView = _gltf.GetBufferViewOrDefault(baseName) ?? _gltf.AddBufferView(baseName, indices.Indices);
         return _gltf.Add(new GltfMesh
         {
             Primitives = subsets.MeshSubsets.Select(v => new GltfMeshPrimitive
             {
-                Attributes = primitiveAccessors,
+                Attributes = accessors,
                 Indices = _gltf.GetAccessorOrDefault(baseName, v.FirstIndex, v.FirstIndex + v.NumIndices)
                           ?? _gltf.AddAccessor(
-                              $"{nodeChunk.Name}/index",
+                              $"{node.Name}/index",
                               indexBufferView,
                               indices.Indices, v.FirstIndex, v.FirstIndex + v.NumIndices),
                 Material = materialMap.GetValueOrDefault(v.MatID),
@@ -189,35 +189,11 @@ public partial class GltfRendererCommon
         });
     }
 
-    private int? WriteModel(
-        Model model,
-        IEnumerable<Model> animations,
-        Matrix4x4 transformationMatrix)
-    {
-        var scale = Vector3.One;
-        var location = Vector3.Zero;
-        var rotation = Quaternion.Identity;
-        if (!Matrix4x4.Decompose(SwapAxes(Matrix4x4.Transpose(transformationMatrix)),
-                out scale,
-                out rotation,
-                out location))
-            throw new Exception();
-        return WriteModelWithTransformInGltfCoordinateSystems(model, animations, location, rotation, scale);
-    }
+    private int? WriteModel(CryEngine cryObject) =>
+        WriteModel(cryObject, Vector3.Zero, Quaternion.Identity, Vector3.One, false);
 
-    private int? WriteModel(
-        Model model,
-        IEnumerable<Model> animations) =>
-        WriteModelWithTransformInGltfCoordinateSystems(model, animations, Vector3.Zero, Quaternion.Identity,
-            Vector3.One);
-
-    private int? WriteModelWithTransformInGltfCoordinateSystems(
-        Model model,
-        IEnumerable<Model> animations,
-        Vector3 locationGltf,
-        Quaternion rotationGltf,
-        Vector3 scaleGltf)
-    {
+    private int? WriteModel(CryEngine cryObject, Vector3 translation, Quaternion rotation, Vector3 scale, bool omitSkins) {
+        var model = cryObject.Models[^1];
         var controllerIdToNodeIndex = new Dictionary<uint, int>();
 
         var meshNodes = new List<int>();
@@ -241,16 +217,23 @@ public partial class GltfRendererCommon
 
             var rootNode = new GltfNode
             {
-                Name = nodeChunk.Name,
+                Name = Path.GetFileNameWithoutExtension(model.FileName!) + "/" + nodeChunk.Name,
             };
 
             var primitiveAccessors = new GltfMeshPrimitiveAttributes();
+            
             rootNode.Mesh = WriteMesh(model.FileName!, nodeChunk, meshChunk, primitiveAccessors);
-            if (rootNode.Mesh is null)
+            if (rootNode.Mesh is not null)
+                _gltf.Meshes[rootNode.Mesh.Value].Name = rootNode.Name + "/mesh";
+            else
                 continue;
 
-            rootNode.Skin = WriteSkin(model.FileName!, rootNode, nodeChunk, primitiveAccessors,
-                controllerIdToNodeIndex);
+            if (!omitSkins){
+                rootNode.Skin = WriteSkin(model.FileName!, rootNode, nodeChunk, primitiveAccessors,
+                    controllerIdToNodeIndex);
+                if (rootNode.Skin is not null)
+                    _gltf.Skins[rootNode.Skin.Value].Name = rootNode.Name + "/skin";
+            }
 
             meshNodes.Add(_gltf.Add(rootNode));
         }
@@ -258,21 +241,22 @@ public partial class GltfRendererCommon
         if (!meshNodes.Any())
             return null;
 
-        WriteAnimations(animations, controllerIdToNodeIndex);
+        if (!omitSkins)
+            WriteAnimations(cryObject.Animations, controllerIdToNodeIndex);
 
         return _gltf.Add(new GltfNode
         {
             Name = model.FileName,
             Children = meshNodes,
-            Translation = locationGltf == Vector3.Zero
+            Translation = translation == Vector3.Zero
                 ? null
-                : new List<float> {locationGltf.X, locationGltf.Y, locationGltf.Z},
-            Rotation = rotationGltf == Quaternion.Identity
+                : new List<float> {translation.X, translation.Y, translation.Z},
+            Rotation = rotation == Quaternion.Identity
                 ? null
-                : new List<float> {rotationGltf.X, rotationGltf.Y, rotationGltf.Z, rotationGltf.W},
-            Scale = scaleGltf == Vector3.One
+                : new List<float> {rotation.X, rotation.Y, rotation.Z, rotation.W},
+            Scale = scale == Vector3.One
                 ? null
-                : new List<float> {scaleGltf.X, scaleGltf.Y, scaleGltf.Z},
+                : new List<float> {scale.X, scale.Y, scale.Z},
         });
     }
 }
