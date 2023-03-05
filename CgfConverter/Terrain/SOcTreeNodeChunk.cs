@@ -45,6 +45,10 @@ public class SOcTreeNodeChunk
                 case EerType.Vegetation:
                     objects.Add(new SVegetationChunkEx(reader, ChunkVersion));
                     break;
+                
+                case EerType.Decal:
+                    objects.Add(new SDecalChunk(reader, ChunkVersion));
+                    break;
 
                 default:
                     throw new NotSupportedException($"Render node chunk type of {type} is currently not supported.");

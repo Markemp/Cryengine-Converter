@@ -188,6 +188,10 @@ public partial class GltfRendererCommon
                                 zAxis.X, zAxis.Y, zAxis.Z, 0,
                                 0, 0, 0, 1));
                             break;
+                        
+                        case SDecalChunk:
+                            // TODO
+                            continue;
 
                         default:
                             // Unsupported

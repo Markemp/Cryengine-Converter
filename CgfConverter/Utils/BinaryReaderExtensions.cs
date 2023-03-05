@@ -261,6 +261,7 @@ public static class BinaryReaderExtensions
     public static void ReadInto(this BinaryReader reader, out AaBb value) => value = reader.ReadAaBb();
     public static void ReadInto(this BinaryReader reader, out Vector3 value) => value = reader.ReadVector3();
     public static void ReadInto(this BinaryReader reader, out Matrix3x4 value) => value = reader.ReadMatrix3x4();
+    public static void ReadInto(this BinaryReader reader, out Matrix3x3 value) => value = reader.ReadMatrix3x3();
 
     public static void AlignTo(this BinaryReader reader, int unit) =>
         reader.BaseStream.Position = (reader.BaseStream.Position + unit - 1) / unit * unit;

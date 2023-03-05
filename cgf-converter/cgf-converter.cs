@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 using System.Globalization;
 using System.IO;
@@ -9,7 +8,6 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CgfConverter;
 using CgfConverter.Renderers.Gltf;
-using Exception = System.Exception;
 
 namespace CgfConverterConsole;
 
