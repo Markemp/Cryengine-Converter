@@ -5,12 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using CgfConverter.PackFileSystem;
-using CgfConverter.Terrain;
 using CgfConverter.Terrain.Xml;
 using Extensions;
 using HoloXPLOR.DataForge;
 
-namespace CgfConverter;
+namespace CgfConverter.Terrain;
 
 public class CryTerrain
 {
@@ -24,12 +23,15 @@ public class CryTerrain
     public readonly ImmutableList<SRenderNodeChunk> AllRenderNodes;
     public readonly Dictionary<string, CryEngine> Objects;
 
+    public readonly CryTerrainLayer RootLayer;
+    public readonly CryTerrainEntity RootEntity;
+
     public CryTerrain(string filename, IPackFileSystem packFileSystem)
     {
         InputFile = filename;
         PackFileSystem = packFileSystem;
 
-        BasePath = Path.GetDirectoryName(filename)!;
+        BasePath = Path.TrimEndingDirectorySeparator(Path.GetDirectoryName(filename)!);
 
         LevelData = CryXmlSerializer.Deserialize<LevelData>(packFileSystem.GetStream(
             FileHandlingExtensions.CombineAndNormalizePath(
@@ -60,6 +62,15 @@ public class CryTerrain
             allObjects.AddRange(chunk.Objects);
             stack.AddRange(chunk.Children.Where(x => x is not null)!);
         }
+
+        RootLayer = new CryTerrainLayer(
+            null,
+            0,
+            LevelData.Layers?.ToImmutableList() ?? ImmutableList<Layer>.Empty,
+            allObjects);
+
+        RootEntity = new CryTerrainEntity(0, new ObjectOrEntity(),
+            Missions.SelectMany(x => x.ObjectsAndEntities!).ToImmutableList());
 
         var attachedModels = new List<string?>();
         var entityClasses = new HashSet<string>();

@@ -27,7 +27,7 @@ public partial class GltfRendererCommon
 
     private static Quaternion SwapAxesForAnimations(Quaternion val) => new(-val.X, val.Z, val.Y, val.W);
     
-    private static Quaternion SwapAxesForLayout(Quaternion val) => new(val.Y, val.W, val.Z, val.X);
+    private static Quaternion SwapAxesForLayout(Quaternion val) => new(-val.Y, val.W, val.Z, val.X);
 
     // M':   swapped matrix
     // T:    swap matrix = new Matrix4x4(-1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1)
@@ -41,8 +41,10 @@ public partial class GltfRendererCommon
     
     /*/
 
-    private static Vector3 SwapAxes(Vector3 x) => x;
-    private static Quaternion SwapAxes(Quaternion x) => x;
+    private static Vector3 SwapAxesForPosition(Vector3 x) => x;
+    private static Vector3 SwapAxesForScale(Vector3 x) => x;
+    private static Quaternion SwapAxesForLayout(Quaternion x) => x;
+    private static Quaternion SwapAxesForAnimations(Quaternion x) => x;
     private static Matrix4x4 SwapAxes(Matrix4x4 x) => x;
     //*/
 }

@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CgfConverter;
 using CgfConverter.Renderers.Gltf;
+using CgfConverter.Terrain;
 
 namespace CgfConverterConsole;
 
@@ -196,7 +197,7 @@ public class Program
                     new(".*_shadows?[_.].*", RegexOptions.IgnoreCase),
                     new(".*shadow_caster.*", RegexOptions.IgnoreCase),
                 });
-            if (renderer.RenderSingleTerrain(terrain, outBasePath, _argsHandler.OutputGLB, _argsHandler.OutputGLTF, true) > 1)
+            // if (renderer.RenderSingleTerrain(terrain, outBasePath, _argsHandler.OutputGLB, _argsHandler.OutputGLTF, true) > 1)
                 renderer.RenderSingleTerrain(terrain, outBasePath, _argsHandler.OutputGLB, _argsHandler.OutputGLTF, false);
         }
     }

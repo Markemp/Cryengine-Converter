@@ -28,6 +28,7 @@ public class GltfWriter
 
     public HashSet<string> ExtensionsUsed => _root.ExtensionsUsed;
     public List<GltfScene> Scenes => _root.Scenes;
+    public GltfScene CurrentScene => _root.Scenes[_root.Scene];
     public List<GltfSampler> Samplers => _root.Samplers;
     public List<GltfNode> Nodes => _root.Nodes;
     public List<GltfSkin> Skins => _root.Skins;

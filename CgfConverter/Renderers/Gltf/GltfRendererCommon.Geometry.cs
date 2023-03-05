@@ -215,16 +215,12 @@ public partial class GltfRendererCommon
         });
     }
 
-    private int? WriteModel(CryEngine cryObject) =>
-        WriteModel(cryObject, Vector3.Zero, Quaternion.Identity, Vector3.One, false);
-
-    private int? WriteModel(CryEngine cryObject, Vector3 translation, Quaternion rotation, Vector3 scale,
-        bool omitSkins)
+    private bool CreateModelNode(out GltfNode node, CryEngine cryObject, bool omitSkins = false)
     {
         var model = cryObject.Models[^1];
         var controllerIdToNodeIndex = new Dictionary<uint, int>();
 
-        var meshNodes = new List<int>();
+        var childNodes = new List<GltfNode>();
         foreach (var nodeChunk in model.ChunkMap.Values.OfType<ChunkNode>())
         {
             // TODO
@@ -264,28 +260,27 @@ public partial class GltfRendererCommon
                     _gltf.Skins[rootNode.Skin.Value].Name = rootNode.Name + "/skin";
             }
 
-            meshNodes.Add(_gltf.Add(rootNode));
+            childNodes.Add(rootNode);
         }
-
-        if (!meshNodes.Any())
-            return null;
 
         if (!omitSkins)
             WriteAnimations(cryObject.Animations, controllerIdToNodeIndex);
 
-        return _gltf.Add(new GltfNode
+        switch (childNodes.Count)
         {
-            Name = model.FileName,
-            Children = meshNodes,
-            Translation = translation == Vector3.Zero
-                ? null
-                : new List<float> {translation.X, translation.Y, translation.Z},
-            Rotation = rotation == Quaternion.Identity
-                ? null
-                : new List<float> {rotation.X, rotation.Y, rotation.Z, rotation.W},
-            Scale = scale == Vector3.One
-                ? null
-                : new List<float> {scale.X, scale.Y, scale.Z},
-        });
+            case 0:
+                node = null!;
+                return false;
+            case 1:
+                node = childNodes.First();
+                return true;
+            default:
+                node = new GltfNode
+                {
+                    Name = model.FileName,
+                    Children = childNodes.Select(x => _gltf.Add(x)).ToList(),
+                };
+                return true;
+        }
     }
 }
