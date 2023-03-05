@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BCnEncoder.Decoder;
+using BCnEncoder.Shared;
 using BCnEncoder.Shared.ImageFiles;
 using CgfConverter.CryEngineCore;
 using CgfConverter.Materials;
@@ -98,7 +99,17 @@ public partial class GltfRendererCommon
 
                 var width = (int) ddsFile.header.dwWidth;
                 var height = (int) ddsFile.header.dwHeight;
-                var raw = decoder.Decode(ddsFile);
+                ColorRgba32[] raw;
+                try
+                {
+                    raw = decoder.Decode(ddsFile);
+                }
+                catch (Exception e)
+                {
+                    Utilities.Log(LogLevelEnum.Error, "Failed to decode {0}; ignoring and moving on\n\t{1}: {2}",
+                        texturePath, e.GetType().Name, e.Message);
+                    continue;
+                }
 
                 var name = Path.GetFileNameWithoutExtension(texturePath);
 
