@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CgfConverter;
 using CgfConverter.Renderers.Gltf;
@@ -55,7 +57,10 @@ public class Program
                 $"[{i + 1}/{_argsHandler.InputFiles.Count} {100f * i / _argsHandler.InputFiles.Count:0.00}%] " +
                 inputFile);
             
-            ExportFile(inputFile);
+            if (CryEngine.SupportsFile(inputFile))
+                ExportSingleModel(inputFile);
+            else if (CryTerrain.SupportsFile(inputFile))
+                ExportSingleTerrain(inputFile);
         }
 
         Utilities.Log(LogLevelEnum.Info, "Finished.");
@@ -114,7 +119,10 @@ public class Program
                 $"[{i + 1}/{_argsHandler.InputFiles.Count} {100f * i / _argsHandler.InputFiles.Count:0.00}%] " +
                 inputFile);
 
-            workers.Add(Task.Run(() => ExportFile(inputFile)), inputFile);
+            if (CryEngine.SupportsFile(inputFile))
+                workers.Add(Task.Run(() => ExportSingleModel(inputFile)), inputFile);
+            else if (CryTerrain.SupportsFile(inputFile))
+                workers.Add(Task.Run(() => ExportSingleTerrain(inputFile)), inputFile);
 
             i++;
         }
@@ -125,7 +133,7 @@ public class Program
     }
 #endif
 
-    private void ExportFile(string inputFile)
+    private void ExportSingleModel(string inputFile)
     {
         // Read CryEngine Files
         var cryData = new CryEngine(inputFile, _argsHandler.PackFileSystem);
@@ -169,6 +177,23 @@ public class Program
             {
                 Utilities.Log(LogLevelEnum.Error, "Not supported [.gltf]: {0}", inputFile);
             }
+        }
+    }
+
+    private void ExportSingleTerrain(string inputFile)
+    {
+        var terrain = new CryTerrain(inputFile, _argsHandler.PackFileSystem);
+        if (_argsHandler.OutputGLTF || _argsHandler.OutputGLB)
+        {
+            new GltfRendererCommon(_argsHandler.PackFileSystem, new List<Regex>
+                {
+                    new(".*_shadows?\\..*", RegexOptions.IgnoreCase)
+                })
+                .RenderSingleTerrain(
+                    terrain,
+                    null,  // new FileInfo("Z:/test.glb"),
+                    new FileInfo("Z:/test.gltf"),
+                    new FileInfo("Z:/test.bin"));
         }
     }
 }

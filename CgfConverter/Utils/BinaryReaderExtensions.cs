@@ -84,6 +84,15 @@ public static class BinaryReaderExtensions
         return q;
     }
 
+    public static AaBb ReadAaBb(this BinaryReader reader)
+    {
+        return new AaBb
+        {
+            Min = reader.ReadVector3(),
+            Max = reader.ReadVector3(),
+        };
+    }
+
     public static ShotInt3Quat ReadShotInt3Quat(this BinaryReader r)
     {
         return new ShotInt3Quat
@@ -238,4 +247,21 @@ public static class BinaryReaderExtensions
     }
 
     public static int ReadCryIntWithFlag(this BinaryReader reader, out bool flag) => ReadCryIntWithFlag(reader.BaseStream, out flag);
+
+    public static void ReadInto(this BinaryReader reader, out byte value) => value = reader.ReadByte();
+    public static void ReadInto(this BinaryReader reader, out sbyte value) => value = reader.ReadSByte();
+    public static void ReadInto(this BinaryReader reader, out ushort value) => value = reader.ReadUInt16();
+    public static void ReadInto(this BinaryReader reader, out short value) => value = reader.ReadInt16();
+    public static void ReadInto(this BinaryReader reader, out uint value) => value = reader.ReadUInt32();
+    public static void ReadInto(this BinaryReader reader, out int value) => value = reader.ReadInt32();
+    public static void ReadInto(this BinaryReader reader, out ulong value) => value = reader.ReadUInt64();
+    public static void ReadInto(this BinaryReader reader, out long value) => value = reader.ReadInt64();
+    public static void ReadInto(this BinaryReader reader, out float value) => value = reader.ReadSingle();
+    public static void ReadInto(this BinaryReader reader, out double value) => value = reader.ReadDouble();
+    public static void ReadInto(this BinaryReader reader, out AaBb value) => value = reader.ReadAaBb();
+    public static void ReadInto(this BinaryReader reader, out Vector3 value) => value = reader.ReadVector3();
+    public static void ReadInto(this BinaryReader reader, out Matrix3x4 value) => value = reader.ReadMatrix3x4();
+
+    public static void AlignTo(this BinaryReader reader, int unit) =>
+        reader.BaseStream.Position = (reader.BaseStream.Position + unit - 1) / unit * unit;
 }

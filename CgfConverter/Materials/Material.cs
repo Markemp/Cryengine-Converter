@@ -9,6 +9,7 @@ public class Material
     public Color? SpecularValue;
     public Color? EmissiveValue;
     public double? OpacityValue;
+    public MaterialFlags MaterialFlags;
 
     [XmlIgnore]
     internal string? SourceFileName { get; set; }
@@ -17,7 +18,11 @@ public class Material
     public string? Name { get; set; } = string.Empty;
 
     [XmlAttribute(AttributeName = "MtlFlags")]
-    public string? MtlFlags { get; set; }
+    public string? MtlFlags
+    {
+        get => MaterialFlags == 0 ? null : ((int) MaterialFlags).ToString();
+        set => MaterialFlags = value is null ? 0 : (MaterialFlags)int.Parse(value);
+    }
 
     [XmlAttribute(AttributeName = "Shader")]
     public string? Shader { get; set; }

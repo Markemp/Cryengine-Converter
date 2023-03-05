@@ -331,4 +331,6 @@ public partial class CryEngine
         Utilities.Log(LogLevelEnum.Info, $"Unable to find material file for {name}");
         return null;
     }
+
+    public static bool SupportsFile(string name) => validExtensions.Contains(Path.GetExtension(name).ToLowerInvariant());
 }

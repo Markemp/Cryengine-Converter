@@ -6,14 +6,15 @@ using CgfConverter.Renderers.Gltf.Models;
 
 namespace CgfConverter.Renderers.Gltf;
 
-public partial class GltfRenderer
+public partial class GltfRendererCommon
 {
     private void WriteAnimation(
         string name,
         ChunkController_905.Animation anim,
         IReadOnlyDictionary<int, int> keyTimeAccessors,
         IReadOnlyDictionary<int, int> keyPositionAccessors,
-        IReadOnlyDictionary<int, int> keyRotationAccessors)
+        IReadOnlyDictionary<int, int> keyRotationAccessors,
+        IReadOnlyDictionary<uint, int> controllerIdToNodeIndex)
     {
         var animationNode = new GltfAnimation
         {
@@ -36,7 +37,7 @@ public partial class GltfRenderer
                     Sampler = animationNode.Samplers.Count - 1,
                     Target = new GltfAnimationChannelTarget
                     {
-                        Node = _controllerIdToNodeIndex[con.ControllerID],
+                        Node = controllerIdToNodeIndex[con.ControllerID],
                         Path = GltfAnimationChannelTargetPath.Translation,
                     },
                 });
@@ -55,7 +56,7 @@ public partial class GltfRenderer
                     Sampler = animationNode.Samplers.Count - 1,
                     Target = new GltfAnimationChannelTarget
                     {
-                        Node = _controllerIdToNodeIndex[con.ControllerID],
+                        Node = controllerIdToNodeIndex[con.ControllerID],
                         Path = GltfAnimationChannelTargetPath.Rotation,
                     },
                 });
@@ -63,9 +64,11 @@ public partial class GltfRenderer
         }
     }
 
-    private void WriteAnimations()
+    private void WriteAnimations(
+        IEnumerable<Model> animationContainers,
+        IReadOnlyDictionary<uint, int> controllerIdToNodeIndex)
     {
-        var animChunks = CryData.Animations
+        var animChunks = animationContainers
             .SelectMany(x => x.ChunkMap.Values.OfType<ChunkController_905>())
             .ToList();
         foreach (var animChunk in animChunks)
@@ -100,7 +103,8 @@ public partial class GltfRenderer
 
             foreach (var (anim, name) in animChunk.Animations.Zip(names)
                          .OrderBy(pair => pair.Second.ToLowerInvariant()))
-                WriteAnimation(name, anim, keyTimeAccessors, keyPositionAccessors, keyRotationAccessors);
+                WriteAnimation(name, anim, keyTimeAccessors, keyPositionAccessors, keyRotationAccessors,
+                    controllerIdToNodeIndex);
         }
     }
 }

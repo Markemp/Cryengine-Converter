@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using BCnEncoder.Decoder;
 using BCnEncoder.Shared.ImageFiles;
 using CgfConverter.CryEngineCore;
@@ -11,30 +12,68 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace CgfConverter.Renderers.Gltf;
 
-public partial class GltfRenderer
+public partial class GltfRendererCommon
 {
     private readonly Dictionary<Material, int> _materialMap = new();
-    
+
     private Dictionary<int, int?> WriteMaterial(ChunkNode nodeChunk)
     {
         var materialIndices = new Dictionary<int, int?>();
+        // return materialIndices;
 
-        var mats = nodeChunk.Materials?.SubMaterials;
-        if (mats is null)
+        var childIds = nodeChunk.MaterialLibraryChunk?.ChildIDs;
+        var submats = nodeChunk.Materials?.SubMaterials;
+        if (submats is null || childIds is null)
             return materialIndices;
 
+        // var childMats = childIds
+        //     .Where(x => x != 0)
+        //     .Select(x => nodeChunk._model.ChunkMap[(int)x])
+        //     .OfType<ChunkMtlName>()
+        //     .ToArray();
+
+        var matIds = nodeChunk._model.ChunkMap
+            .Select(x => x.Value)
+            .OfType<ChunkMeshSubsets>()
+            .SelectMany(x => x.MeshSubsets)
+            .Select(x => x.MatID)
+            .ToHashSet();
+
         var decoder = new BcDecoder();
-        for (var i = 0; i < mats.Length; i++)
-        {
-            var m = mats[i];
+        foreach (var matId in matIds)
+        {   
+            if (matId >= submats.Length)
+            {
+                Utilities.Log(LogLevelEnum.Error, $"Requested material ID {matId} was not found.");
+                continue;
+            }
+            var m = submats[matId];
+            
             if (_materialMap.TryGetValue(m, out var existingIndex))
             {
-                materialIndices[i] = existingIndex;
+                materialIndices[matId] = existingIndex;
+                continue;
+            }
+
+            if ((m.MaterialFlags & MaterialFlags.NoDraw) != 0)
+            {
+                _gltf.Add(new GltfMaterial
+                {
+                    Name = m.Name,
+                    AlphaMode = GltfMaterialAlphaMode.Mask,
+                    AlphaCutoff = 1f,  // Fully transparent
+                    DoubleSided = (m.MaterialFlags & MaterialFlags.TwoSided) != 0,
+                });
+
+                materialIndices[matId] = _materialMap[m] = _gltf.Materials.Count - 1;
                 continue;
             }
             
             // TODO: This ideally should be always true; need to figure out what's the alpha of diffuse really supposed to be
             var useAlphaColor = m.OpacityValue != null && Math.Abs(m.OpacityValue.Value - 1.0) > 0;
+
+            // TODO: SpecularValue seemingly has a meaningful value as opacity, but, really?
+            var preferredAlphaColor = useAlphaColor ? m.SpecularValue?.Red : null;
 
             var diffuse = -1;
             // TODO: var diffuseDetail = -1;
@@ -44,8 +83,12 @@ public partial class GltfRenderer
 
             foreach (var texture in m.Textures!)
             {
-                var texturePath = FileHandlingExtensions.ResolveTextureFile(texture.File, Args.PackFileSystem);
-                if (!Args.PackFileSystem.Exists(texturePath))
+                // seems to be a sentinel value
+                if (texture.File == "nearest_cubemap" || string.IsNullOrWhiteSpace(texture.File))
+                    continue;
+                
+                var texturePath = FileHandlingExtensions.ResolveTextureFile(texture.File, _packFileSystem);
+                if (!_packFileSystem.Exists(texturePath))
                 {
                     Utilities.Log(LogLevelEnum.Warning,
                         $"Skipping {texture.File} because the file could not be found.");
@@ -53,7 +96,7 @@ public partial class GltfRenderer
                 }
 
                 DdsFile ddsFile;
-                using (var ddsfs = Args.PackFileSystem.GetStream(texturePath))
+                using (var ddsfs = _packFileSystem.GetStream(texturePath))
                     ddsFile = DdsFile.Load(ddsfs);
 
                 var width = (int) ddsFile.header.dwWidth;
@@ -104,8 +147,8 @@ public partial class GltfRenderer
                         break;
                     }
                     case Texture.MapTypeEnum.Diffuse:
-                        // TODO: SpecularValue seemingly has a meaningful value as opacity, but, really?
-                        diffuse = _gltf.AddTexture(name, width, height, raw, GltfWriter.SourceAlphaModes.Automatic, useAlphaColor ? m.SpecularValue?.Red : null);
+                        diffuse = _gltf.AddTexture(name, width, height, raw, GltfWriter.SourceAlphaModes.Automatic,
+                            preferredAlphaColor);
                         break;
 
                     case Texture.MapTypeEnum.Specular:
@@ -122,8 +165,13 @@ public partial class GltfRenderer
             _gltf.Add(new GltfMaterial
             {
                 Name = m.Name,
-                AlphaMode = useAlphaColor ? GltfMaterialAlphaMode.Blend : GltfMaterialAlphaMode.Opaque,
-                DoubleSided = true,
+                AlphaMode = useAlphaColor
+                    ? GltfMaterialAlphaMode.Blend
+                    : m.AlphaTest == 0
+                        ? GltfMaterialAlphaMode.Opaque
+                        : GltfMaterialAlphaMode.Mask,
+                AlphaCutoff = useAlphaColor || m.AlphaTest == 0 ? null : (float)m.AlphaTest,
+                DoubleSided = (m.MaterialFlags & MaterialFlags.TwoSided) != 0,
                 NormalTexture = normal == -1
                     ? null
                     : new GltfTextureInfo
@@ -182,7 +230,7 @@ public partial class GltfRenderer
                 },
             });
 
-            materialIndices[i] = _materialMap[m] = _gltf.Materials.Count - 1;
+            materialIndices[matId] = _materialMap[m] = _gltf.Materials.Count - 1;
         }
 
         return materialIndices;

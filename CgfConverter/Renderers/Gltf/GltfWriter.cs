@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using BCnEncoder.Shared;
 using CgfConverter.Renderers.Gltf.Models;
+using Dolkens.Framework.Extensions;
 using Newtonsoft.Json;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -143,6 +144,13 @@ public class GltfWriter
         return _root.Materials.Count - 1;
     }
 
+    public int? GetBufferViewOrDefault(string baseName)
+    {
+        var name = $"{baseName}/bufferView";
+        var index = _root.Accessors.FindIndex(x => x.Name == name);
+        return index == -1 ? null : index;
+    } 
+
     public unsafe int AddBufferView<T>(string? baseName, T[] data) where T : unmanaged
     {
         var rawSize = Marshal.SizeOf(data[0]) * data.Length;
@@ -164,6 +172,13 @@ public class GltfWriter
 
         return _root.BufferViews.Count - 1;
     }
+
+    public int? GetAccessorOrDefault(string baseName, int start, int end)
+    {
+        var name = $"{baseName}/accessor[{start}:{end}]";
+        var index = _root.Accessors.FindIndex(x => x.Name == name);
+        return index == -1 ? null : index;
+    } 
 
     public int AddAccessor<T>(string? baseName, int bufferView, T[] data, int start = 0, int end = int.MaxValue)
         where T : unmanaged

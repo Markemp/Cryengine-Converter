@@ -2,7 +2,7 @@
 
 namespace CgfConverter.Renderers.Gltf;
 
-public partial class GltfRenderer
+public partial class GltfRendererCommon
 {
     /*
      * https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#coordinate-system-and-units
@@ -21,6 +21,7 @@ public partial class GltfRenderer
      * Forward   +Z        +Y
      */
     
+    //*
     private static Vector3 SwapAxes(Vector3 val) => new(-val.X, val.Z, val.Y);
 
     private static Quaternion SwapAxes(Quaternion val) => new(-val.X, val.Z, val.Y, val.W);
@@ -34,4 +35,11 @@ public partial class GltfRenderer
         -val.M31, val.M33, val.M32, val.M34,
         -val.M21, val.M23, val.M22, val.M24,
         -val.M41, val.M43, val.M42, val.M44);
+    
+    /*/
+
+    private static Vector3 SwapAxes(Vector3 x) => x;
+    private static Quaternion SwapAxes(Quaternion x) => x;
+    private static Matrix4x4 SwapAxes(Matrix4x4 x) => x;
+    //*/
 }

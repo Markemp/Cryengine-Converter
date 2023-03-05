@@ -11,7 +11,6 @@ using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-using CgfConverter.PackFileSystem;
 using static Extensions.FileHandlingExtensions;
 using static CgfConverter.Utilities;
 
