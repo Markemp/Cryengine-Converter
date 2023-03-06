@@ -82,9 +82,9 @@ public class RealFileSystem : IPackFileSystem
                 {
                     var searchBase = pattern[..i];
                     var prefix = pattern[(i + 1)..pos];
-                    var suffix = pattern[(pos + 1)..next].TrimStart('*');
+                    var suffix = pattern[pos..next].TrimStart('*');
 
-                    var remainingPattern = pattern[(next + 1)..];
+                    var remainingPattern = next == pattern.Length ? string.Empty : pattern[(next + 1)..];
                     if (!remainingPattern.Contains('\\'))
                     {
                         try
