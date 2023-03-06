@@ -264,44 +264,49 @@ public partial class CryEngine
             }
         }
     }
-    
+
     private Material? CreateDefaultMaterials(ChunkNode nodeChunk)
     {
         // For each child of this node chunk's material file, create a default material.
-        var mtlNameChunk = (ChunkMtlName)Chunks.Where(c => c.ID == nodeChunk.MatID).FirstOrDefault();
-        if (mtlNameChunk is not null)
+        if (Chunks.OfType<ChunkMtlName>().FirstOrDefault(c => c.ID == nodeChunk.MatID) is not { } mtlNameChunk)
+            return null;
+
+        switch (mtlNameChunk.MatType)
         {
-            if (mtlNameChunk.MatType == MtlNameType.Basic || mtlNameChunk.MatType == MtlNameType.Single)
+            case MtlNameType.Basic:
+            case MtlNameType.Single:
+                return new Material
+                {
+                    Name = nodeChunk.Name,
+                    SubMaterials = new[] {MaterialUtilities.CreateDefaultMaterial(nodeChunk.Name)}
+                };
+            
+            case MtlNameType.Library:
             {
-                var material = new Material() { Name = nodeChunk.Name };
-                Material[] submats = new Material[1];
-                submats[0] = MaterialUtilities.CreateDefaultMaterial(nodeChunk.Name);
-                material.SubMaterials = submats;
-                return material;
-            }
-            else if (mtlNameChunk.MatType == MtlNameType.Library)
-            {
-                var material = new Material { SubMaterials = new Material[mtlNameChunk.NumChildren] };
-                for (int i = 0; i < mtlNameChunk.NumChildren; i++)
+                var material = new Material {SubMaterials = new Material[mtlNameChunk.NumChildren]};
+                for (var i = 0; i < mtlNameChunk.NumChildren; i++)
                 {
                     if (mtlNameChunk.ChildIDs is not null)
                     {
-                        var childMaterial = (ChunkMtlName)Chunks.Where(c => c.ID == mtlNameChunk.ChildIDs[i]).FirstOrDefault();
-                        var mat = MaterialUtilities.CreateDefaultMaterial(childMaterial.Name, $"{i / (float)mtlNameChunk.NumChildren},0.5,0.5");
+                        var childMaterial =
+                            (ChunkMtlName?) Chunks.FirstOrDefault(c => c.ID == mtlNameChunk.ChildIDs[i]);
+                        var mat = MaterialUtilities.CreateDefaultMaterial(childMaterial?.Name ?? $"Material-{i}",
+                            $"{i / (float) mtlNameChunk.NumChildren},0.5,0.5");
                         material.SubMaterials[i] = mat;
                     }
-                    else   // TODO: For SC, there are no more mtlname chunks. Use node name?
-                        material.SubMaterials[i] = MaterialUtilities.CreateDefaultMaterial($"Material-{i}", $"{i / (float)mtlNameChunk.NumChildren},0.5,0.5");
+                    else // TODO: For SC, there are no more mtlname chunks. Use node name?
+                        material.SubMaterials[i] = MaterialUtilities.CreateDefaultMaterial($"Material-{i}",
+                            $"{i / (float) mtlNameChunk.NumChildren},0.5,0.5");
                 }
 
                 return material;
             }
-            else
+            default:
                 Log.I($"Found MtlName chunk {mtlNameChunk.ID} with unhandled MtlNameType {mtlNameChunk.MatType}.");
+                return null;
         }
-        return null;
     }
-    
+
     // Gets the material file for Basic, Single and Library types.  Child materials are created from the library.
     private string? GetMaterialFile(string name)
     {

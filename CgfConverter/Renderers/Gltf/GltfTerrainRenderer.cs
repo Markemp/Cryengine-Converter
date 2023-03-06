@@ -119,7 +119,7 @@ public class GltfTerrainRenderer : BaseGltfRenderer, IRenderer
 
                 default:
                     // Unsupported
-                    Log.I("Unsupported renderer node type: {0}", renderNode.GetType().Name);
+                    Log.D("Unsupported renderer node type: {0}", renderNode.GetType().Name);
                     continue;
             }
 
