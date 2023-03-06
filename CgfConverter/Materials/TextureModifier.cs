@@ -27,28 +27,52 @@ public class TextureModifier
     [DefaultValue(1)]
     public int __Projected
     {
-        get { return this.Projected ? 1 : 0; }
-        set { Projected = value == 1; }
+        get => Projected ? 1 : 0;
+        set => Projected = value == 1;
     }
 
     [XmlIgnore]
     public bool Projected { get; set; }
 
     [XmlAttribute(AttributeName = "TexMod_UOscillatorType")]
-    [DefaultValue(ETexModMoveType.NoChange)]    
-    public ETexModMoveType UOscillatorType;
+    [DefaultValue(0)]
+    public int __UOscillatorType;
+
+    public ETexModMoveType UOscillatorType
+    {
+        get => (ETexModMoveType) __UOscillatorType;
+        set => __UOscillatorType = (int) value;
+    }
     
     [XmlAttribute(AttributeName = "TexMod_VOscillatorType")]
-    [DefaultValue(ETexModMoveType.NoChange)]
-    public ETexModMoveType VOscillatorType;
+    [DefaultValue(0)]
+    public int __VOscillatorType;
+    
+    public ETexModMoveType VOscillatorType
+    {
+        get => (ETexModMoveType) __VOscillatorType;
+        set => __VOscillatorType = (int) value;
+    }
     
     [XmlAttribute(AttributeName = "TexMod_RotateType")]
     [DefaultValue(ETexModRotateType.NoChange)]
-    public ETexModRotateType RotateType { get; set; } 
+    public int __RotateType { get; set; }
+    
+    public ETexModRotateType RotateType
+    {
+        get => (ETexModRotateType) __RotateType;
+        set => __RotateType = (int) value;
+    }
 
     [XmlAttribute(AttributeName = "TexMod_TexGenType")]
     [DefaultValue(ETexGenType.Stream)]
-    public ETexGenType GenType { get; set; }
+    public int __GenType { get; set; }
+    
+    public ETexGenType GenType
+    {
+        get => (ETexGenType) __GenType;
+        set => __GenType = (int) value;
+    }
 
     [XmlAttribute(AttributeName = "RotateU")]
     [DefaultValue(0)]
