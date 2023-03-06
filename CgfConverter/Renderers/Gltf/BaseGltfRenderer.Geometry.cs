@@ -12,18 +12,20 @@ public partial class BaseGltfRenderer
 {
     private bool WriteSkinOrLogError(
         out GltfSkin newSkin,
+        out int weights,
+        out int joints,
         GltfNode rootNode,
         SkinningInfo skinningInfo,
-        GltfMeshPrimitiveAttributes primitiveAccessors,
         IDictionary<uint, int> controllerIdToNodeIndex)
     {
         if (!skinningInfo.HasSkinningInfo)
             throw new ArgumentException("HasSkinningInfo must be true", nameof(skinningInfo));
 
         newSkin = null!;
+        weights = joints = 0;
 
         var baseName = $"{rootNode.Name}/bone/weight";
-        primitiveAccessors.Weights0 =
+        weights =
             GetAccessorOrDefault(baseName, 0,
                 skinningInfo.IntVertices == null ? skinningInfo.BoneMapping.Count : skinningInfo.Ext2IntMap.Count)
             ?? AddAccessor(baseName, -1, null,
@@ -82,7 +84,7 @@ public partial class BaseGltfRenderer
         }
 
         baseName = $"{rootNode.Name}/bone/joint";
-        primitiveAccessors.Joints0 =
+        joints =
             GetAccessorOrDefault(baseName, 0,
                 skinningInfo.IntVertices == null ? skinningInfo.BoneMapping.Count : skinningInfo.Ext2IntMap.Count)
             ?? AddAccessor(baseName, -1, null,
@@ -259,18 +261,25 @@ public partial class BaseGltfRenderer
             if (!WriteMeshOrLogError(out var newMesh, rootNode, nodeChunk, meshChunk, accessors))
                 continue;
 
-            rootNode.Mesh = AddMesh(newMesh);
-
             if (omitSkins)
                 Log.D("NodeChunk[0]: Skipping skins.", nodeChunk.Name);
             else if (nodeChunk.GetSkinningInfo() is {HasSkinningInfo: true} skinningInfo)
             {
-                if (WriteSkinOrLogError(out var newSkin, rootNode, skinningInfo, accessors, controllerIdToNodeIndex))
-                    AddSkin(newSkin);
+                if (WriteSkinOrLogError(out var newSkin, out var weights, out var joints, rootNode, skinningInfo,
+                        controllerIdToNodeIndex))
+                {
+                    rootNode.Skin = AddSkin(newSkin);
+                    foreach (var prim in newMesh.Primitives)
+                    {
+                        prim.Attributes.Joints0 = joints;
+                        prim.Attributes.Weights0 = weights;
+                    }
+                }
             }
             else
                 Log.D("NodeChunk[{0}]: No skinning info is available.", nodeChunk.Name);
 
+            rootNode.Mesh = AddMesh(newMesh);
             childNodes.Add(rootNode);
         }
 
