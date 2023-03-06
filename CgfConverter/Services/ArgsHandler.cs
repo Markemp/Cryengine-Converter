@@ -13,6 +13,7 @@ public sealed class ArgsHandler
     public readonly CascadedPackFileSystem PackFileSystem = new();
     public readonly List<Regex> ExcludeNodeNameRegexes = new();
     public readonly List<Regex> ExcludeMaterialNameRegexes = new();
+    public readonly List<Regex> ExcludeShaderNameRegexes = new();
     
     public bool Verbose { get; set; }
     /// <summary>Files to process</summary>
@@ -59,14 +60,17 @@ public sealed class ArgsHandler
     public List<string> ExcludeNodeNames { get; internal set; }
     /// <summary>List of material names to skipping the rendering of a mesh that uses the specified material</summary>
     public List<string> ExcludeMaterialNames { get; internal set; }
+    /// <summary>List of shader names to skip when rendering</summary>
+    public List<string> ExcludeShaderNames { get; internal set; }
     public bool Throw { get; internal set; }
     public bool DumpChunkInfo { get; internal set; }
 
     public ArgsHandler()
     {
-        InputFiles = new List<string> { };
-        ExcludeNodeNames = new List<string> { };
-        ExcludeMaterialNames = new List<string> { };
+        InputFiles = new List<string>();
+        ExcludeNodeNames = new List<string>();
+        ExcludeMaterialNames = new List<string>();
+        ExcludeShaderNames = new List<string>();
     }
 
     /// <summary>
@@ -243,6 +247,18 @@ public sealed class ArgsHandler
                     break;
 
                 #endregion
+                #region case "-es" / "-excludeshader"...
+                case "-es":
+                case "-excludeshader":
+                    if (++i > inputArgs.Length)
+                    {
+                        PrintUsage();
+                        return 1;
+                    }
+                    ExcludeShaderNames.Add(inputArgs[i]);
+                    break;
+
+                #endregion
                 #region case "-group"...
 
                 case "-group":
@@ -392,6 +408,7 @@ public sealed class ArgsHandler
         
         ExcludeNodeNameRegexes.AddRange(ExcludeNodeNames.Select(x => new Regex(x, RegexOptions.Compiled | RegexOptions.IgnoreCase)));
         ExcludeMaterialNameRegexes.AddRange(ExcludeMaterialNames.Select(x => new Regex(x, RegexOptions.Compiled | RegexOptions.IgnoreCase)));
+        ExcludeShaderNameRegexes.AddRange(ExcludeShaderNames.Select(x => new Regex(x, RegexOptions.Compiled | RegexOptions.IgnoreCase)));
         
         // Default to Collada (.dae) format
         if (!OutputCollada && !OutputWavefront && !OutputGLB && !OutputGLTF)
@@ -426,10 +443,12 @@ public sealed class ArgsHandler
         Console.WriteLine();
         Console.WriteLine("-smooth:          Smooth Faces.");
         Console.WriteLine("-group:           Group meshes into single model.");
-        Console.WriteLine("-en/-excludenode <nodename>:");
-        Console.WriteLine("                  Exclude nodes starting with <nodename> from rendering. Can be listed multiple times.");
-        Console.WriteLine("-em/-excludemat <material_name>:");
-        Console.WriteLine("                  Exclude meshes with the material <material_name> from rendering. Can be listed multiple times.");
+        Console.WriteLine("-en/-excludenode <regular expression for node names>:");
+        Console.WriteLine("                  Exclude matching nodes from rendering. Can be listed multiple times.");
+        Console.WriteLine("-em/-excludemat <regular expression for material names>:");
+        Console.WriteLine("                  Exclude meshes with matching materials from rendering. Can be listed multiple times.");
+        Console.WriteLine("-sm/-excludeshader <material_name>:");
+        Console.WriteLine("                  Exclude meshes with the material using matching shader from rendering. Can be listed multiple times.");
         Console.WriteLine("-noconflict:      Use non-conflicting naming scheme (<cgf File>_out.obj)");
         Console.WriteLine("-allowconflict:   Allows conflicts in .mtl file name. (obj exports only, as not an issue in dae.)");
         Console.WriteLine();

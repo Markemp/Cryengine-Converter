@@ -51,4 +51,7 @@ internal static class RendererUtilities
 
     internal static bool IsMeshMaterialExcluded(this ArgsHandler args, string materialName) =>
         args.ExcludeMaterialNameRegexes.Any(x => x.IsMatch(materialName));
+
+    internal static bool IsMeshMaterialShaderExcluded(this ArgsHandler args, string shaderName) =>
+        args.ExcludeShaderNameRegexes.Any(x => x.IsMatch(shaderName));
 }

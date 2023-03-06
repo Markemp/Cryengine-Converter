@@ -15,9 +15,23 @@ namespace CgfConverter.Renderers.Gltf;
 
 public partial class BaseGltfRenderer
 {
-    private Dictionary<int, int?> WriteMaterial(ChunkNode nodeChunk)
+    private class WrittenMaterial
     {
-        var materialIndices = new Dictionary<int, int?>();
+        public readonly int Index;
+        public readonly Material Source;
+        public readonly GltfMaterial Target;
+
+        public WrittenMaterial(int index, Material source, GltfMaterial target)
+        {
+            Index = index;
+            Source = source;
+            Target = target;
+        }
+    } 
+    
+    private Dictionary<int, WrittenMaterial> WriteMaterial(ChunkNode nodeChunk)
+    {
+        var materialIndices = new Dictionary<int, WrittenMaterial>();
         // return materialIndices;
 
         var submats = nodeChunk.Materials?.SubMaterials;
@@ -46,13 +60,13 @@ public partial class BaseGltfRenderer
 
             if (_materialMap.TryGetValue(m, out var existingIndex))
             {
-                materialIndices[matId] = existingIndex;
+                materialIndices[matId] = new WrittenMaterial(existingIndex, m, _root.Materials[existingIndex]);
                 continue;
             }
 
             if ((m.MaterialFlags & MaterialFlags.NoDraw) != 0)
             {
-                materialIndices[matId] = _materialMap[m] = AddMaterial(new GltfMaterial
+                var matIndexHidden = _materialMap[m] = AddMaterial(new GltfMaterial
                 {
                     Name = m.Name,
                     AlphaMode = GltfMaterialAlphaMode.Mask,
@@ -63,6 +77,7 @@ public partial class BaseGltfRenderer
                         BaseColorFactor = new[] {0f, 0f, 0f, 0f},
                     },
                 });
+                materialIndices[matId] = new WrittenMaterial(matIndexHidden, m, _root.Materials[matIndexHidden]);
                 continue;
             }
 
@@ -170,7 +185,7 @@ public partial class BaseGltfRenderer
             }
 
             _root.ExtensionsUsed.Add("KHR_materials_specular");
-            materialIndices[matId] = _materialMap[m] = AddMaterial(new GltfMaterial
+            var matIndex = _materialMap[m] = AddMaterial(new GltfMaterial
             {
                 Name = m.Name,
                 AlphaMode = useAlphaColor
@@ -237,6 +252,7 @@ public partial class BaseGltfRenderer
                     },
                 },
             });
+            materialIndices[matId] = new WrittenMaterial(matIndex, m, _root.Materials[matIndex]);
         }
 
         return materialIndices;

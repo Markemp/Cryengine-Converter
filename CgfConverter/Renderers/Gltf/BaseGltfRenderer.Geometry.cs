@@ -139,10 +139,10 @@ public partial class BaseGltfRenderer
         var materialMap = WriteMaterial(node);
 
         var usesTangent = subsets.MeshSubsets.Any(v =>
-            materialMap.GetValueOrDefault(v.MatID) is { } matIndex && _root.Materials[matIndex].HasNormalTexture());
+            materialMap.GetValueOrDefault(v.MatID) is { } m && m.Target.HasNormalTexture());
 
         var usesUv = usesTangent || subsets.MeshSubsets.Any(v =>
-            materialMap.GetValueOrDefault(v.MatID) is { } matIndex && _root.Materials[matIndex].HasAnyTexture());
+            materialMap.GetValueOrDefault(v.MatID) is { } m && m.Target.HasAnyTexture());
 
         string baseName;
         if (vertices is not null)
@@ -200,7 +200,13 @@ public partial class BaseGltfRenderer
             Name = $"{rootNode.Name}/mesh",
             Primitives = subsets.MeshSubsets.Select(v =>
             {
-                var matIndex = materialMap.GetValueOrDefault(v.MatID);
+                var mat = materialMap.GetValueOrDefault(v.MatID);
+                
+                if (mat?.Source.Name != null && Args.IsMeshMaterialExcluded(mat.Source.Name))
+                    return null;
+                
+                if (mat?.Source.Shader != null && Args.IsMeshMaterialShaderExcluded(mat.Source.Shader))
+                    return null;
 
                 return new GltfMeshPrimitive
                 {
@@ -208,24 +214,20 @@ public partial class BaseGltfRenderer
                     {
                         Position = accessors.Position,
                         Normal = accessors.Normal,
-                        Tangent = matIndex is null || !_root.Materials[matIndex.Value].HasNormalTexture()
-                            ? null
-                            : accessors.Tangent,
-                        TexCoord0 = matIndex is null || !_root.Materials[matIndex.Value].HasAnyTexture()
-                            ? null
-                            : accessors.TexCoord0,
+                        Tangent = mat?.Target.HasNormalTexture() is true ? accessors.Tangent : null,
+                        TexCoord0 = mat?.Target.HasAnyTexture() is true ? accessors.TexCoord0 : null,
                         Color0 = accessors.Color0,
-                        Joints0 = accessors.Joints0,
-                        Weights0 = accessors.Weights0,
                     },
                     Indices = GetAccessorOrDefault(baseName, v.FirstIndex, v.FirstIndex + v.NumIndices)
                               ?? AddAccessor(
                                   $"{node.Name}/index",
                                   indexBufferView, GltfBufferViewTarget.ElementArrayBuffer,
                                   indices.Indices, v.FirstIndex, v.FirstIndex + v.NumIndices),
-                    Material = matIndex,
+                    Material = mat?.Index,
                 };
-            }).ToList()
+            })
+                .Where(x => x is not null)
+                .ToList()!
         };
         return true;
     }

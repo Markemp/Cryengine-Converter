@@ -103,8 +103,9 @@ public class Program
             i++;
         }
 
-        Log.I("Finished. Rendered {0} file(s). {1} error(s) occurred.",
-            _args.InputFiles.Count - numErrorsOccurred, numErrorsOccurred);
+        Log.I("Finished. Rendered {0} file(s)", _args.InputFiles.Count - numErrorsOccurred);
+        if (numErrorsOccurred > 0)
+            Log.E("Failed to convert {1} file(s).", numErrorsOccurred);
 
         return numErrorsOccurred;
     }
