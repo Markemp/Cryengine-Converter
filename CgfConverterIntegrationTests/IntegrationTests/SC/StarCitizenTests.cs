@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Globalization;
 using System.Threading;
+using CgfConverter.Renderers.Collada;
 
 namespace CgfConverterTests.IntegrationTests.SC;
 
@@ -32,7 +33,7 @@ public class StarCitizenTests
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new Collada(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
     }
@@ -46,7 +47,7 @@ public class StarCitizenTests
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new Collada(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
     }
@@ -61,7 +62,7 @@ public class StarCitizenTests
         CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new Collada(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
     }
@@ -76,7 +77,7 @@ public class StarCitizenTests
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new Collada(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
     }
@@ -90,7 +91,7 @@ public class StarCitizenTests
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new Collada(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject(); 
         var daeObject = colladaData.DaeObject;
 
@@ -108,7 +109,7 @@ public class StarCitizenTests
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new Collada(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
 
@@ -124,7 +125,7 @@ public class StarCitizenTests
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new Collada(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
 
@@ -140,7 +141,7 @@ public class StarCitizenTests
         var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new Collada(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
         // Make sure Rotations are still right
@@ -164,7 +165,7 @@ public class StarCitizenTests
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new Collada(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
 
@@ -180,7 +181,7 @@ public class StarCitizenTests
         CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        Collada colladaData = new Collada(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
 
         var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
@@ -200,7 +201,7 @@ public class StarCitizenTests
         CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        Collada colladaData = new Collada(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
 
         var controllers = colladaData.DaeObject.Library_Controllers.Controller;
@@ -229,7 +230,7 @@ public class StarCitizenTests
         CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        Collada colladaData = new Collada(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
 
         // Geometry Library checks
@@ -282,7 +283,7 @@ public class StarCitizenTests
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        Collada colladaData = new(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
 
         // Geometry Library checks
@@ -305,7 +306,7 @@ public class StarCitizenTests
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        Collada colladaData = new(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
 
         // Geometry Library checks
@@ -329,7 +330,7 @@ public class StarCitizenTests
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        Collada colladaData = new(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
 
         // Geometry Library checks

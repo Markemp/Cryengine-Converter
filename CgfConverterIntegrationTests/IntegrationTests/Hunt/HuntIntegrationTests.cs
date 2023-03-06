@@ -6,6 +6,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using CgfConverter.Renderers.Collada;
 
 namespace CgfConverterTests.IntegrationTests.Hunt
 {
@@ -34,7 +35,7 @@ namespace CgfConverterTests.IntegrationTests.Hunt
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
-            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
+            ColladaModelRenderer colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
             var daeObject = colladaData.DaeObject;
             colladaData.GenerateDaeObject();
 
@@ -97,7 +98,7 @@ namespace CgfConverterTests.IntegrationTests.Hunt
 
             Assert.AreEqual(1.00000f, cryData.Models[1].RootNode.LocalTransform.M11, TestUtils.delta);
 
-            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
+            ColladaModelRenderer colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
             var daeObject = colladaData.DaeObject;
             colladaData.GenerateDaeObject();
 

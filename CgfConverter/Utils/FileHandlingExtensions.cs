@@ -33,9 +33,11 @@ public static class FileHandlingExtensions
         return $"{mtl}.dds".Replace("\\", "/");
     }
 
-    /// <summary>Takes the texture file name and returns just the file name with no extension</summary>
-    public static string CleanTextureFileName(string cleanMe) => Path.GetFileNameWithoutExtension(cleanMe);
-
+    /// <summary>
+    /// Combines and normalizes path components that may not exist yet in the local filesystem.
+    /// </summary>
+    /// <param name="pathComponents">Path fragments, which may include path separators.</param>
+    /// <returns>Normalized path.</returns>
     public static string CombineAndNormalizePath(params string?[] pathComponents)
     {
         var parts = pathComponents.Where(x => x != null).SelectMany(x => x!.Split('/', '\\')).ToList();

@@ -2,7 +2,7 @@
 
 namespace CgfConverter.Renderers.Gltf;
 
-public partial class GltfRendererCommon
+public partial class BaseGltfRenderer
 {
     /*
      * https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#coordinate-system-and-units
@@ -22,18 +22,18 @@ public partial class GltfRendererCommon
      */
     
     //*
-    private static Vector3 SwapAxesForPosition(Vector3 val) => new(-val.X, val.Z, val.Y);
-    private static Vector3 SwapAxesForScale(Vector3 val) => new(val.X, val.Z, val.Y);
+    protected static Vector3 SwapAxesForPosition(Vector3 val) => new(-val.X, val.Z, val.Y);
+    protected static Vector3 SwapAxesForScale(Vector3 val) => new(val.X, val.Z, val.Y);
 
-    private static Quaternion SwapAxesForAnimations(Quaternion val) => new(-val.X, val.Z, val.Y, val.W);
+    protected static Quaternion SwapAxesForAnimations(Quaternion val) => new(-val.X, val.Z, val.Y, val.W);
     
-    private static Quaternion SwapAxesForLayout(Quaternion val) => new(-val.Y, val.W, val.Z, val.X);
+    protected static Quaternion SwapAxesForLayout(Quaternion val) => new(-val.Y, val.W, val.Z, val.X);
 
     // M':   swapped matrix
     // T:    swap matrix = new Matrix4x4(-1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1)
     // T^-1: inverse of swap matrix (= T, for this specific configuration)
     // M' = T @ M @ T^-1 = <what's below>
-    private static Matrix4x4 SwapAxes(Matrix4x4 val) => new(
+    protected static Matrix4x4 SwapAxes(Matrix4x4 val) => new(
         val.M11, -val.M13, -val.M12, -val.M14,
         -val.M31, val.M33, val.M32, val.M34,
         -val.M21, val.M23, val.M22, val.M24,
@@ -41,10 +41,11 @@ public partial class GltfRendererCommon
     
     /*/
 
-    private static Vector3 SwapAxesForPosition(Vector3 x) => x;
-    private static Vector3 SwapAxesForScale(Vector3 x) => x;
-    private static Quaternion SwapAxesForLayout(Quaternion x) => x;
-    private static Quaternion SwapAxesForAnimations(Quaternion x) => x;
-    private static Matrix4x4 SwapAxes(Matrix4x4 x) => x;
+    // Use these if you need to confirm directions
+    protected static Vector3 SwapAxesForPosition(Vector3 x) => x;
+    protected static Vector3 SwapAxesForScale(Vector3 x) => x;
+    protected static Quaternion SwapAxesForLayout(Quaternion x) => x;
+    protected static Quaternion SwapAxesForAnimations(Quaternion x) => x;
+    protected static Matrix4x4 SwapAxes(Matrix4x4 x) => x;
     //*/
 }

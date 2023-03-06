@@ -3,12 +3,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using CgfConverter.PackFileSystem;
 
 namespace CgfConverter;
 
 public sealed class ArgsHandler
 {
+    public readonly CascadedPackFileSystem PackFileSystem = new();
+    public readonly List<Regex> ExcludeNodeNameRegexes = new();
+    public readonly List<Regex> ExcludeMaterialNameRegexes = new();
+    
     public bool Verbose { get; set; }
     /// <summary>Files to process</summary>
     public List<string> InputFiles { get; internal set; }
@@ -48,14 +53,14 @@ public sealed class ArgsHandler
     public bool TgaTextures { get; internal set; }
     /// <summary>Flag used to indicate that textures should not be included in the output file</summary>
     public bool NoTextures { get; internal set; }
+    /// <summary>Split each layer into different files, if a file does contain multiple layers.</summary>
+    public bool SplitLayers { get; internal set; }
     /// <summary>List of node names to skip when rendering</summary>
     public List<string> ExcludeNodeNames { get; internal set; }
     /// <summary>List of material names to skipping the rendering of a mesh that uses the specified material</summary>
     public List<string> ExcludeMaterialNames { get; internal set; }
     public bool Throw { get; internal set; }
     public bool DumpChunkInfo { get; internal set; }
-
-    public CascadedPackFileSystem PackFileSystem = new();
 
     public ArgsHandler()
     {
@@ -131,6 +136,13 @@ public sealed class ArgsHandler
                     }
                     break;
                 #endregion
+                #region case "-sl" / "-splitlayer" / "-splitlayers"...
+                case "-sl":
+                case "-splitlayer":
+                case "-splitlayers":
+                    SplitLayers = true;
+                    break;
+                #endregion
                 #region case "-loglevel"...
                 case "-loglevel":
                     if (++i > inputArgs.Length)
@@ -139,8 +151,7 @@ public sealed class ArgsHandler
                         return 1;
                     }
 
-                    LogLevelEnum level; 
-                    if (LogLevelEnum.TryParse(inputArgs[i], true, out level))
+                    if (Enum.TryParse(inputArgs[i], true, out LogLevelEnum level))
                     {
                         Utilities.LogLevel = level;
                     }
@@ -379,6 +390,9 @@ public sealed class ArgsHandler
                 Utilities.Log(LogLevelEnum.Warning, "No corresponding input file exist: {0}", input);
         }
         
+        ExcludeNodeNameRegexes.AddRange(ExcludeNodeNames.Select(x => new Regex(x, RegexOptions.Compiled | RegexOptions.IgnoreCase)));
+        ExcludeMaterialNameRegexes.AddRange(ExcludeMaterialNames.Select(x => new Regex(x, RegexOptions.Compiled | RegexOptions.IgnoreCase)));
+        
         // Default to Collada (.dae) format
         if (!OutputCollada && !OutputWavefront && !OutputGLB && !OutputGLTF)
             OutputCollada = true;
@@ -403,6 +417,8 @@ public sealed class ArgsHandler
         Console.WriteLine("                  Preserve the path hierarchy.");
         Console.WriteLine("-mt/-maxthreads <number>");
         Console.WriteLine("                  Set maximum number of threads to use. Specify 0 to use all cores.");
+        Console.WriteLine("-sl/-splitlayer(s)");
+        Console.WriteLine("                  Split into multiple layers (terrain only).");
         Console.WriteLine("-dae:             Export Collada format files (Default).");
         Console.WriteLine("-obj:             Export Wavefront format files (Not supported).");
         Console.WriteLine("-gltf:            Export file pairs of glTF and bin files.");

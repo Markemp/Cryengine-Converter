@@ -6,6 +6,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using CgfConverter.Renderers.Collada;
 
 namespace CgfConverterTests.IntegrationTests.Crucible
 {
@@ -44,7 +45,7 @@ namespace CgfConverterTests.IntegrationTests.Crucible
             Assert.AreEqual(1.9326171875, datastream.Vertices[0].Y, TestUtils.delta);
             Assert.AreEqual(1.9189453125, datastream.Vertices[0].Z, TestUtils.delta);
 
-            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
+            ColladaModelRenderer colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
             Assert.AreEqual(1, actualMaterialsCount);

@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Globalization;
 using System.Threading;
+using CgfConverter.Renderers.Collada;
 
 namespace CgfConverterTests.IntegrationTests.Crysis;
 
@@ -32,7 +33,7 @@ public class CrysisIntegrationTests
         var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new Collada(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.Render();
     }
 
@@ -46,7 +47,7 @@ public class CrysisIntegrationTests
         var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new Collada(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.Render();
     }
 }

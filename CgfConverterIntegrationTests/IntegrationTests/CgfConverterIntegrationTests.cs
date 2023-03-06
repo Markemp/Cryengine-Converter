@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using CgfConverter.Renderers.Collada;
 
 namespace CgfConverterTests.IntegrationTests
 {
@@ -53,7 +54,7 @@ namespace CgfConverterTests.IntegrationTests
             CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
-            Collada colladaData = new(testUtils.argsHandler, cryData);
+            ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
@@ -71,7 +72,7 @@ namespace CgfConverterTests.IntegrationTests
             CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
-            Collada colladaData = new(testUtils.argsHandler, cryData);
+            ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
@@ -89,7 +90,7 @@ namespace CgfConverterTests.IntegrationTests
             CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
-            Collada colladaData = new(testUtils.argsHandler, cryData);
+            ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
@@ -107,7 +108,7 @@ namespace CgfConverterTests.IntegrationTests
             CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
-            Collada colladaData = new(testUtils.argsHandler, cryData);
+            ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
@@ -125,7 +126,7 @@ namespace CgfConverterTests.IntegrationTests
             CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
-            Collada colladaData = new(testUtils.argsHandler, cryData);
+            ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
@@ -143,7 +144,7 @@ namespace CgfConverterTests.IntegrationTests
             CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
-            Collada colladaData = new(testUtils.argsHandler, cryData);
+            ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
@@ -161,7 +162,7 @@ namespace CgfConverterTests.IntegrationTests
             CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
-            Collada colladaData = new(testUtils.argsHandler, cryData);
+            ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
@@ -179,7 +180,7 @@ namespace CgfConverterTests.IntegrationTests
             CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
-            Collada colladaData = new(testUtils.argsHandler, cryData);
+            ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
@@ -197,7 +198,7 @@ namespace CgfConverterTests.IntegrationTests
             CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
-            Collada colladaData = new(testUtils.argsHandler, cryData);
+            ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
@@ -224,7 +225,7 @@ namespace CgfConverterTests.IntegrationTests
             Assert.AreEqual(0.42320457, datastream.Vertices[0].Y, TestUtils.delta);
             Assert.AreEqual(3.24175549, datastream.Vertices[0].Z, TestUtils.delta);
 
-            Collada colladaData = new(testUtils.argsHandler, cryData);
+            ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
@@ -242,7 +243,7 @@ namespace CgfConverterTests.IntegrationTests
             CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
-            Collada colladaData = new(testUtils.argsHandler, cryData);
+            ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
@@ -261,7 +262,7 @@ namespace CgfConverterTests.IntegrationTests
             CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
-            Collada colladaData = new Collada(testUtils.argsHandler, cryData);
+            ColladaModelRenderer colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
@@ -277,7 +278,7 @@ namespace CgfConverterTests.IntegrationTests
             CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
-            Collada colladaData = new(testUtils.argsHandler, cryData);
+            ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
             int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();

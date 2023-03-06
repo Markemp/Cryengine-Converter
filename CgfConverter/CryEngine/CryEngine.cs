@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using CgfConverter.PackFileSystem;
+using CgfConverter.Utils;
 using Extensions;
 using HoloXPLOR.DataForge;
 using Material = CgfConverter.Materials.Material;
@@ -24,6 +25,8 @@ public partial class CryEngine
         ".anim",
         ".soc"
     };
+
+    protected readonly TaggedLogger Log;
 
     public List<Model> Models { get; internal set; } = new();
     public List<Model> Animations { get; internal set; } = new();
@@ -53,7 +56,7 @@ public partial class CryEngine
 
                 ChunkNode? rootNode = null;
 
-                Utilities.Log(LogLevelEnum.Debug, "Mapping Nodes");
+                Log.D("Mapping Nodes");
 
                 foreach (Model model in Models)
                 {
@@ -82,11 +85,12 @@ public partial class CryEngine
         }
     }
 
-    private List<Chunk> _chunks;
-    private Dictionary<string, ChunkNode> _nodeMap;
+    private List<Chunk>? _chunks;
+    private Dictionary<string, ChunkNode>? _nodeMap;
 
-    public CryEngine(string filename, IPackFileSystem packFileSystem)
+    public CryEngine(string filename, IPackFileSystem packFileSystem, TaggedLogger? parentLogger = null)
     {
+        Log = new TaggedLogger(Path.GetFileName(filename), parentLogger);
         InputFile = filename;
         PackFileSystem = packFileSystem;
     }
@@ -97,7 +101,7 @@ public partial class CryEngine
 
         if (!validExtensions.Contains(Path.GetExtension(InputFile).ToLowerInvariant()))
         {
-            Utilities.Log(LogLevelEnum.Debug, invalidExtensionErrorMessage);
+            Log.D(invalidExtensionErrorMessage);
             throw new FileLoadException(invalidExtensionErrorMessage, InputFile);
         }
 
@@ -131,7 +135,7 @@ public partial class CryEngine
             if (trackFilePath is null)
                 throw new FileNotFoundException();
             
-            Utilities.Log(LogLevelEnum.Info, $"Associated animation track database file found at {trackFilePath}");
+            Log.D("Associated animation track database file found at {0}", trackFilePath);
             Animations.Add(Model.FromStream(trackFilePath, PackFileSystem.GetStream(trackFilePath), true));
         }
         catch (FileNotFoundException)
@@ -145,7 +149,7 @@ public partial class CryEngine
         var mFile = Path.ChangeExtension(filename, $"{Path.GetExtension(inputFile)}m");
         if (PackFileSystem.Exists(mFile))
         {
-            Utilities.Log(LogLevelEnum.Debug, "Found geometry file {0}", mFile);
+            Log.D("Found geometry file {0}", mFile);
             inputFiles.Add(mFile);
         }
     }
@@ -206,7 +210,7 @@ public partial class CryEngine
             {
                 if (Chunks.FirstOrDefault(c => c.ChunkType == ChunkType.MtlNameIvo) is not ChunkMtlName ivoMatChunk)
                 {
-                    Utilities.Log(LogLevelEnum.Debug, $"Unable to find material chunk {nodeChunk.MatID} for node {nodeChunk.ID}");
+                    Log.D($"Unable to find material chunk {nodeChunk.MatID} for node {nodeChunk.ID}");
                     continue;
                 }
 
@@ -222,7 +226,7 @@ public partial class CryEngine
 
             if (model.ChunkMap.Values.FirstOrDefault(c => c.ID == nodeChunk.MatID) is not ChunkMtlName matChunk)
             {
-                Utilities.Log(LogLevelEnum.Debug, $"Unable to find material chunk {nodeChunk.MatID} for node {nodeChunk.ID}");
+                Log.D($"Unable to find material chunk {nodeChunk.MatID} for node {nodeChunk.ID}");
                 continue;
             }
 
@@ -293,7 +297,7 @@ public partial class CryEngine
                 return material;
             }
             else
-                Utilities.Log(LogLevelEnum.Info, $"Found MtlName chunk {mtlNameChunk.ID} with unhandled MtlNameType {mtlNameChunk.MatType}.");
+                Log.I($"Found MtlName chunk {mtlNameChunk.ID} with unhandled MtlNameType {mtlNameChunk.MatType}.");
         }
         return null;
     }
@@ -328,7 +332,7 @@ public partial class CryEngine
                 return name;
         }
 
-        Utilities.Log(LogLevelEnum.Info, $"Unable to find material file for {name}");
+        Log.W("Unable to find material file for {0}", name);
         return null;
     }
 

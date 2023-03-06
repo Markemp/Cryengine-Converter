@@ -13,18 +13,19 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace CgfConverter.Renderers.Gltf;
 
-public partial class GltfRendererCommon
+public partial class BaseGltfRenderer
 {
     private Dictionary<int, int?> WriteMaterial(ChunkNode nodeChunk)
     {
         var materialIndices = new Dictionary<int, int?>();
         // return materialIndices;
 
-        var childIds = nodeChunk.MaterialLibraryChunk?.ChildIDs;
         var submats = nodeChunk.Materials?.SubMaterials;
-        if (submats is null || childIds is null)
+        if (submats is null)
             return materialIndices;
-
+        
+        var materialSetName = nodeChunk.MaterialLibraryChunk?.Name ?? nodeChunk._model.FileName;
+        
         var matIds = nodeChunk._model.ChunkMap
             .Select(x => x.Value)
             .OfType<ChunkMeshSubsets>()
@@ -37,7 +38,7 @@ public partial class GltfRendererCommon
         {
             if (matId >= submats.Length)
             {
-                Utilities.Log(LogLevelEnum.Error, $"Requested material ID {matId} was not found.");
+                Log.W("Material[{0}:{1}]: Not found.", materialSetName, matId);
                 continue;
             }
 
@@ -51,7 +52,7 @@ public partial class GltfRendererCommon
 
             if ((m.MaterialFlags & MaterialFlags.NoDraw) != 0 || string.IsNullOrWhiteSpace(m.StringGenMask))
             {
-                _gltf.Add(new GltfMaterial
+                materialIndices[matId] = _materialMap[m] = AddMaterial(new GltfMaterial
                 {
                     Name = m.Name,
                     AlphaMode = GltfMaterialAlphaMode.Mask,
@@ -62,8 +63,6 @@ public partial class GltfRendererCommon
                         BaseColorFactor = new[] {0f, 0f, 0f, 0f},
                     },
                 });
-
-                materialIndices[matId] = _materialMap[m] = _gltf.Materials.Count - 1;
                 continue;
             }
 
@@ -85,16 +84,15 @@ public partial class GltfRendererCommon
                 if (texture.File == "nearest_cubemap" || string.IsNullOrWhiteSpace(texture.File))
                     continue;
 
-                var texturePath = FileHandlingExtensions.ResolveTextureFile(texture.File, _packFileSystem);
-                if (!_packFileSystem.Exists(texturePath))
+                var texturePath = FileHandlingExtensions.ResolveTextureFile(texture.File, Args.PackFileSystem);
+                if (!Args.PackFileSystem.Exists(texturePath))
                 {
-                    Utilities.Log(LogLevelEnum.Warning,
-                        $"Skipping {texture.File} because the file could not be found.");
+                    Log.W("Material[{0}:{1}]: Texture file not found: {2}", materialSetName, matId, texture.File);
                     continue;
                 }
 
                 DdsFile ddsFile;
-                using (var ddsfs = _packFileSystem.GetStream(texturePath))
+                using (var ddsfs = Args.PackFileSystem.GetStream(texturePath))
                     ddsFile = DdsFile.Load(ddsfs);
 
                 var width = (int) ddsFile.header.dwWidth;
@@ -106,8 +104,7 @@ public partial class GltfRendererCommon
                 }
                 catch (Exception e)
                 {
-                    Utilities.Log(LogLevelEnum.Error, "Failed to decode {0}; ignoring and moving on\n\t{1}: {2}",
-                        texturePath, e.GetType().Name, e.Message);
+                    Log.E(e, "Material[{0}:{1}]: Failed to decode: {2}", materialSetName, matId, texture.File);
                     continue;
                 }
 
@@ -141,36 +138,38 @@ public partial class GltfRendererCommon
                                 rawDiffuseDetail[j].R = rawDiffuseDetail[j].G = rawDiffuseDetail[j].B = raw[j].r;
                             }
 
-                            normal = _gltf.AddTexture(name, width, height, rawNormal);
-                            metallicRoughness = _gltf.AddTexture(name, width, height, rawMetallicRoughness);
+                            normal = AddTexture(name, width, height, rawNormal);
+                            metallicRoughness = AddTexture(name, width, height, rawMetallicRoughness);
+                            
                             // TODO: diffuseDetail = _gltfDataBuffer.AddTexture(name, width, height, rawDiffuseDetail);
-                            Utilities.Log(LogLevelEnum.Warning,
-                                $"Not implemented: detailed diffuse map {texture.File}");
+                            Log.D("Material[{0}:{1}]: Detailed diffuse map is not implemented: {2}",
+                                materialSetName, matId, texture.File);
                         }
                         else
                         {
-                            normal = _gltf.AddTexture(name, width, height, raw, GltfWriter.SourceAlphaModes.Disable);
+                            normal = AddTexture(name, width, height, raw, SourceAlphaModes.Disable);
                         }
 
                         break;
                     }
                     case Texture.MapTypeEnum.Diffuse:
-                        diffuse = _gltf.AddTexture(name, width, height, raw, GltfWriter.SourceAlphaModes.Automatic,
+                        diffuse = AddTexture(name, width, height, raw, SourceAlphaModes.Automatic,
                             preferredAlphaColor);
                         break;
 
                     case Texture.MapTypeEnum.Specular:
-                        specular = _gltf.AddTexture(name, width, height, raw, GltfWriter.SourceAlphaModes.Automatic);
+                        specular = AddTexture(name, width, height, raw, SourceAlphaModes.Automatic);
                         break;
 
                     default:
-                        Utilities.Log($"Ignoring texture type {texture.Map}");
+                        Log.D("Material[{0}:{1}]: Ignoring texture type {2}: {3}",
+                            materialSetName, matId, texture.Map, texture.File);
                         break;
                 }
             }
 
-            _gltf.ExtensionsUsed.Add("KHR_materials_specular");
-            _gltf.Add(new GltfMaterial
+            _root.ExtensionsUsed.Add("KHR_materials_specular");
+            materialIndices[matId] = _materialMap[m] = AddMaterial(new GltfMaterial
             {
                 Name = m.Name,
                 AlphaMode = useAlphaColor
@@ -237,8 +236,6 @@ public partial class GltfRendererCommon
                     },
                 },
             });
-
-            materialIndices[matId] = _materialMap[m] = _gltf.Materials.Count - 1;
         }
 
         return materialIndices;

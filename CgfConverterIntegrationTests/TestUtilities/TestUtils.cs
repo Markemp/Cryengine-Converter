@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using CgfConverter.Renderers.Collada;
 
 namespace CgfConverterTests.TestUtilities;
 
@@ -27,7 +28,7 @@ public class TestUtils
         settings.ValidationEventHandler += ValidationEventHandler;
     }
 
-    internal void ValidateColladaXml(Collada colladaData)
+    internal void ValidateColladaXml(ColladaModelRenderer colladaData)
     {
         using var stringWriter = new System.IO.StringWriter();
         var serializer = new XmlSerializer(colladaData.DaeObject.GetType());

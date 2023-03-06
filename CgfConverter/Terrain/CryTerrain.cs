@@ -6,6 +6,7 @@ using System.Linq;
 using System.Numerics;
 using CgfConverter.PackFileSystem;
 using CgfConverter.Terrain.Xml;
+using CgfConverter.Utils;
 using Extensions;
 using HoloXPLOR.DataForge;
 
@@ -13,9 +14,11 @@ namespace CgfConverter.Terrain;
 
 public class CryTerrain
 {
-    public readonly string InputFile;
+    protected readonly TaggedLogger Log;
+    
     public readonly IPackFileSystem PackFileSystem;
     public readonly string BasePath;
+    public readonly string BaseName;
     public readonly LevelData LevelData;
     public readonly LevelInfo LevelInfo;
     public readonly TerrainFile TerrainFile;
@@ -28,10 +31,11 @@ public class CryTerrain
 
     public CryTerrain(string filename, IPackFileSystem packFileSystem)
     {
-        InputFile = filename;
         PackFileSystem = packFileSystem;
 
         BasePath = Path.TrimEndingDirectorySeparator(Path.GetDirectoryName(filename)!);
+        BaseName = Path.GetFileName(BasePath);
+        Log = new TaggedLogger(BaseName);
 
         LevelData = CryXmlSerializer.Deserialize<LevelData>(packFileSystem.GetStream(
             FileHandlingExtensions.CombineAndNormalizePath(
@@ -179,8 +183,8 @@ public class CryTerrain
             }
         }
 
-        Utilities.Log(LogLevelEnum.Verbose, "The file contains the following types of EntityClass:\n" +
-                                            string.Join("\n", entityClasses.Select(x => $" - {x}")));
+        Log.V("The file contains the following types of EntityClass:\n" +
+              string.Join("\n", entityClasses.Select(x => $" - {x}")));
 
         AllRenderNodes = allObjects.ToImmutableList();
 
@@ -194,13 +198,13 @@ public class CryTerrain
             {
                 try
                 {
-                    var engine = new CryEngine(path, packFileSystem);
+                    var engine = new CryEngine(path, packFileSystem, Log);
                     engine.ProcessCryengineFiles();
                     return Tuple.Create(path, engine);
                 }
                 catch (FileNotFoundException)
                 {
-                    Utilities.Log(LogLevelEnum.Warning, "Model file was expected at {0} but could not be found.", path);
+                    Log.W("Model file was expected at {0} but could not be found.", path);
                     return null;
                 }
             })

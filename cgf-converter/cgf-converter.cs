@@ -1,24 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
-using CgfConverter;
+using CgfConverter.Renderers;
+using CgfConverter.Renderers.Collada;
 using CgfConverter.Renderers.Gltf;
+using CgfConverter.Renderers.Wavefront;
 using CgfConverter.Terrain;
+using CgfConverter.Utils;
 
-namespace CgfConverterConsole;
+namespace CgfConverter;
 
 public class Program
 {
-    private readonly ArgsHandler _argsHandler;
+    private readonly TaggedLogger Log = new TaggedLogger("Program");
+    private readonly ArgsHandler _args;
 
-    private Program(ArgsHandler argsHandler)
+    private Program(ArgsHandler args)
     {
-        _argsHandler = argsHandler;
+        _args = args;
     }
 
 #if DEBUG
@@ -49,11 +51,11 @@ public class Program
 #if DEBUG
     private int Run()
     {
-        for (var i = 0; i < _argsHandler.InputFiles.Count; i++)
+        for (var i = 0; i < _args.InputFiles.Count; i++)
         {
-            var inputFile = _argsHandler.InputFiles[i];
-            Utilities.Log(LogLevelEnum.Info,
-                $"[{i + 1}/{_argsHandler.InputFiles.Count} {100f * i / _argsHandler.InputFiles.Count:0.00}%] " +
+            var inputFile = _args.InputFiles[i];
+            Log.I(
+                $"[{i + 1}/{_args.InputFiles.Count} {100f * i / _args.InputFiles.Count:0.00}%] " +
                 inputFile);
             
             if (CryEngine.SupportsFile(inputFile))
@@ -62,7 +64,7 @@ public class Program
                 ExportSingleTerrain(inputFile);
         }
 
-        Utilities.Log(LogLevelEnum.Info, "Finished.");
+        Log.I("Finished.");
         
         return 0;
     }
@@ -72,51 +74,26 @@ public class Program
         var workers = new Dictionary<Task, string>();
         var numErrorsOccurred = 0;
 
-        for (var i = 0; i < _argsHandler.InputFiles.Count || workers.Any();)
+        for (var i = 0; i < _args.InputFiles.Count || workers.Any();)
         {
-            while (workers.Count >= _argsHandler.MaxThreads || (workers.Any() && i == _argsHandler.InputFiles.Count))
+            while (workers.Count >= _args.MaxThreads || (workers.Any() && i == _args.InputFiles.Count))
             {
                 var task = await Task.WhenAny(workers.Keys);
                 if (!workers.Remove(task, out var failedFile))
                     continue;
                 if (!task.IsFaulted || task.Exception is null)
                     continue;
-
-                Utilities.Log(LogLevelEnum.Critical);
-                Utilities.Log(LogLevelEnum.Critical,
-                    "********************************************************************************");
-                Utilities.Log(LogLevelEnum.Critical, "There was an error rendering {0}", failedFile);
-                if (task.Exception.InnerExceptions.Any())
-                {
-                    foreach (var inner in task.Exception.InnerExceptions)
-                    {
-                        Utilities.Log(LogLevelEnum.Critical);
-                        Utilities.Log(LogLevelEnum.Critical, inner.Message);
-                        Utilities.Log(LogLevelEnum.Critical);
-                        Utilities.Log(LogLevelEnum.Critical, inner.StackTrace);
-                    }
-                }
-                else
-                {
-                    Utilities.Log(LogLevelEnum.Critical);
-                    Utilities.Log(LogLevelEnum.Critical, task.Exception.Message);
-                    Utilities.Log(LogLevelEnum.Critical);
-                    Utilities.Log(LogLevelEnum.Critical, task.Exception.StackTrace);
-                }
-
-                Utilities.Log(LogLevelEnum.Critical,
-                    "********************************************************************************");
-                Utilities.Log(LogLevelEnum.Critical);
+                
+                Log.E(task.Exception, "Failed to render: {0}", failedFile);
                 numErrorsOccurred++;
             }
 
-            if (i >= _argsHandler.InputFiles.Count)
+            if (i >= _args.InputFiles.Count)
                 continue;
 
-            var inputFile = _argsHandler.InputFiles[i];
-            Utilities.Log(LogLevelEnum.Info,
-                $"[{i + 1}/{_argsHandler.InputFiles.Count} {100f * i / _argsHandler.InputFiles.Count:0.00}%] " +
-                inputFile);
+            var inputFile = _args.InputFiles[i];
+            Log.I("[{0}/{1} {2:0.00}%] {3}",
+                i + 1, _args.InputFiles.Count, 100f * i / _args.InputFiles.Count, inputFile);
 
             if (CryEngine.SupportsFile(inputFile))
                 workers.Add(Task.Run(() => ExportSingleModel(inputFile)), inputFile);
@@ -126,7 +103,8 @@ public class Program
             i++;
         }
 
-        Utilities.Log(LogLevelEnum.Info, "Finished.");
+        Log.I("Finished. Rendered {0} file(s). {1} error(s) occurred.",
+            _args.InputFiles.Count - numErrorsOccurred, numErrorsOccurred);
 
         return numErrorsOccurred;
     }
@@ -135,70 +113,48 @@ public class Program
     private void ExportSingleModel(string inputFile)
     {
         // Read CryEngine Files
-        var cryData = new CryEngine(inputFile, _argsHandler.PackFileSystem);
+        var data = new CryEngine(inputFile, _args.PackFileSystem);
 
-        cryData.ProcessCryengineFiles();
+        data.ProcessCryengineFiles();
 
-        if (_argsHandler.OutputWavefront)
-        {
-            Wavefront objFile = new(_argsHandler, cryData);
-            try
-            {
-                objFile.Render(_argsHandler.OutputDir, _argsHandler.PreservePath);
-            }
-            catch (NotSupportedException)
-            {
-                Utilities.Log(LogLevelEnum.Error, "Not supported [.obj]: {0}", inputFile);
-            }
-        }
+        var renderers = new List<IRenderer>();
+        if (_args.OutputWavefront)
+            renderers.Add(new WavefrontModelRenderer(_args, data));
+        if (_args.OutputCollada)
+            renderers.Add(new ColladaModelRenderer(_args, data));
+        if (_args.OutputGLB || _args.OutputGLTF)
+            renderers.Add(new GltfModelRenderer(_args, data, _args.OutputGLTF, _args.OutputGLB));
 
-        if (_argsHandler.OutputCollada)
-        {
-            Collada daeFile = new(_argsHandler, cryData);
-            try
-            {
-                daeFile.Render(_argsHandler.OutputDir, _argsHandler.PreservePath);
-            }
-            catch (NotSupportedException)
-            {
-                Utilities.Log(LogLevelEnum.Error, "Not supported [.dae]: {0}", inputFile);
-            }
-        }
-
-        if (_argsHandler.OutputGLTF || _argsHandler.OutputGLB)
-        {
-            GltfRenderer gltfFile = new(_argsHandler, cryData, _argsHandler.OutputGLTF, _argsHandler.OutputGLB);
-            try
-            {
-                gltfFile.Render(_argsHandler.OutputDir, _argsHandler.PreservePath);
-            }
-            catch (NotSupportedException)
-            {
-                Utilities.Log(LogLevelEnum.Error, "Not supported [.gltf]: {0}", inputFile);
-            }
-        }
+        RunRenderersAndThrowAggregateExceptionIfAny(renderers);
     }
 
     private void ExportSingleTerrain(string inputFile)
     {
-        var terrain = new CryTerrain(inputFile, _argsHandler.PackFileSystem);
-        var outBasePath = _argsHandler.OutputDir;
-        if (outBasePath == null)
-            outBasePath = Path.TrimEndingDirectorySeparator(Path.GetDirectoryName(inputFile)!);
-        else
-            outBasePath = Path.Join(outBasePath, Path.GetFileName(Path.GetDirectoryName(inputFile)!));
-        // TODO: bunch of args processing
+        var data = new CryTerrain(inputFile, _args.PackFileSystem);
         
-        if (_argsHandler.OutputGLTF || _argsHandler.OutputGLB)
+        var renderers = new List<IRenderer>();
+        if (_args.OutputGLB || _args.OutputGLTF)
+            renderers.Add(new GltfTerrainRenderer(_args, data, _args.OutputGLTF, _args.OutputGLB));
+        
+        RunRenderersAndThrowAggregateExceptionIfAny(renderers);
+    }
+
+    private void RunRenderersAndThrowAggregateExceptionIfAny(IEnumerable<IRenderer> renderers)
+    {
+        var exceptions = new List<Exception>();
+        foreach (var renderer in renderers)
         {
-            var renderer = new GltfRendererCommon(_argsHandler.PackFileSystem,
-                    new List<Regex>
-                {
-                    new(".*_shadows?[_.].*", RegexOptions.IgnoreCase),
-                    new(".*shadow_caster.*", RegexOptions.IgnoreCase),
-                });
-            // if (renderer.RenderSingleTerrain(terrain, outBasePath, _argsHandler.OutputGLB, _argsHandler.OutputGLTF, true) > 1)
-                renderer.RenderSingleTerrain(terrain, outBasePath, _argsHandler.OutputGLB, _argsHandler.OutputGLTF, false);
+            try
+            {
+                renderer.Render();
+            }
+            catch (Exception e)
+            {
+                exceptions.Add(e);
+            }
         }
+
+        if (exceptions.Any())
+            throw new AggregateException(exceptions);
     }
 }

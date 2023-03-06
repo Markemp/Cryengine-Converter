@@ -127,7 +127,7 @@ public static class Utilities
 
 //    #endregion
 
-    public static void Log(string format = null, params Object[] args) { Log(LogLevelEnum.Debug, format, args); }
+    public static void Log(string? format = null, params object[] args) => Log(LogLevelEnum.Debug, format, args);
 
     public static void Log(LogLevelEnum logLevel, string? format = null, params object[] args)
     {

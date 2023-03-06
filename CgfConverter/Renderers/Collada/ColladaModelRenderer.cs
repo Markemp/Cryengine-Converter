@@ -1,7 +1,4 @@
-﻿using CgfConverter.CryEngineCore;
-using CgfConverter.Materials;
-using grendgine_collada;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -11,26 +8,37 @@ using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using CgfConverter.CryEngineCore;
+using CgfConverter.Materials;
+using grendgine_collada;
 using static Extensions.FileHandlingExtensions;
 using static CgfConverter.Utilities;
 
-namespace CgfConverter;
+namespace CgfConverter.Renderers.Collada;
 
-public class Collada : BaseRenderer
+public class ColladaModelRenderer : IRenderer
 {
-    public Grendgine_Collada DaeObject { get; private set; } = new();
+    protected readonly ArgsHandler Args;
+    protected readonly CryEngine CryData;
+    public readonly Grendgine_Collada DaeObject = new();
 
     private readonly CultureInfo culture = CultureInfo.CreateSpecificCulture("en-US");
     private const string colladaVersion = "1.4.1";
     private readonly XmlSerializer serializer = new(typeof(Grendgine_Collada));
-    private FileInfo daeOutputFile;
+    private readonly FileInfo daeOutputFile;
 
     /// <summary>Dictionary of all material libraries in the model, with the key being the library from mtlname chunk.</summary>
     private readonly Dictionary<string, Material> createdMaterialLibraries = new();
 
-    public Collada(ArgsHandler argsHandler, CryEngine cryEngine) : base(argsHandler, cryEngine) { }
+    public ColladaModelRenderer(ArgsHandler argsHandler, CryEngine cryEngine) {
+        Args = argsHandler;
+        CryData = cryEngine;
 
-    public override void Render(string? outputDir = null, bool preservePath = true)
+        // File name will be "<object name>.dae"
+        daeOutputFile = Args.FormatOutputFileName(".dae", CryData.InputFile);
+    }
+
+    public int Render()
     {
         GenerateDaeObject();
 
@@ -39,17 +47,12 @@ public class Collada : BaseRenderer
         Utilities.Log(LogLevelEnum.Debug, "*** Starting WriteCOLLADA() ***");
         Utilities.Log(LogLevelEnum.Debug);
 
-        // File name will be "<object name>.dae"
-        daeOutputFile = new FileInfo(GetOutputFile("dae", outputDir, preservePath));
-
-        if (!daeOutputFile.Directory.Exists)
-            daeOutputFile.Directory.Create();
-
         TextWriter writer = new StreamWriter(daeOutputFile.FullName);
         serializer.Serialize(writer, DaeObject);
 
         writer.Close();
         Utilities.Log(LogLevelEnum.Debug, "End of Write Collada.  Export complete.");
+        return 1;
     }
 
     public void GenerateDaeObject()
@@ -325,7 +328,7 @@ public class Collada : BaseRenderer
             ChunkDataStream? colors = null;
             ChunkDataStream? tangents = null;
 
-            if (IsNodeNameExcluded(nodeChunk.Name))
+            if (Args.IsNodeNameExcluded(nodeChunk.Name))
             {
                 Utilities.Log(LogLevelEnum.Debug, $"Excluding node {nodeChunk.Name}");
                 continue;
@@ -1289,7 +1292,7 @@ public class Collada : BaseRenderer
             List<Grendgine_Collada_Node> childNodes = new();
             foreach (var childNodeChunk in nodeChunk.AllChildNodes.ToList())
             {
-                if (IsNodeNameExcluded(childNodeChunk.Name))
+                if (Args.IsNodeNameExcluded(childNodeChunk.Name))
                 {
                     Utilities.Log(LogLevelEnum.Debug, $"Excluding child node {childNodeChunk.Name}");
                     continue;
