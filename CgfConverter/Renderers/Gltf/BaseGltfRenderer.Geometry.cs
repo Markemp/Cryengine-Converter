@@ -137,12 +137,16 @@ public partial class BaseGltfRenderer
             return Log.D<bool>("Mesh[{0}]: both VerticesData and VertsUVsData are empty.", rootNode.Name);
 
         var materialMap = WriteMaterial(node);
+        if (subsets.MeshSubsets
+                .Select(x => materialMap.GetValueOrDefault(x.MatID))
+                .All(x => x?.IsSkippedFromArgs ?? false))
+            return false;
 
         var usesTangent = subsets.MeshSubsets.Any(v =>
-            materialMap.GetValueOrDefault(v.MatID) is { } m && m.Target.HasNormalTexture());
+            materialMap.GetValueOrDefault(v.MatID) is { } m && m.Target?.HasNormalTexture() is true);
 
         var usesUv = usesTangent || subsets.MeshSubsets.Any(v =>
-            materialMap.GetValueOrDefault(v.MatID) is { } m && m.Target.HasAnyTexture());
+            materialMap.GetValueOrDefault(v.MatID) is { } m && m.Target?.HasAnyTexture() is true);
 
         string baseName;
         if (vertices is not null)
@@ -198,38 +202,34 @@ public partial class BaseGltfRenderer
         newMesh = new GltfMesh
         {
             Name = $"{rootNode.Name}/mesh",
-            Primitives = subsets.MeshSubsets.Select(v =>
-            {
-                var mat = materialMap.GetValueOrDefault(v.MatID);
-                
-                if (mat?.Source.Name != null && Args.IsMeshMaterialExcluded(mat.Source.Name))
-                    return null;
-                
-                if (mat?.Source.Shader != null && Args.IsMeshMaterialShaderExcluded(mat.Source.Shader))
-                    return null;
-
-                return new GltfMeshPrimitive
+            Primitives = subsets.MeshSubsets
+                .Select(x => Tuple.Create(x, materialMap.GetValueOrDefault(x.MatID)))
+                .Where(x => !(x.Item2?.IsSkippedFromArgs ?? false))
+                .Select(x =>
                 {
-                    Attributes = new GltfMeshPrimitiveAttributes
+                    var (v, mat) = x;
+
+                    return new GltfMeshPrimitive
                     {
-                        Position = accessors.Position,
-                        Normal = accessors.Normal,
-                        Tangent = mat?.Target.HasNormalTexture() is true ? accessors.Tangent : null,
-                        TexCoord0 = mat?.Target.HasAnyTexture() is true ? accessors.TexCoord0 : null,
-                        Color0 = accessors.Color0,
-                    },
-                    Indices = GetAccessorOrDefault(baseName, v.FirstIndex, v.FirstIndex + v.NumIndices)
-                              ?? AddAccessor(
-                                  $"{node.Name}/index",
-                                  indexBufferView, GltfBufferViewTarget.ElementArrayBuffer,
-                                  indices.Indices, v.FirstIndex, v.FirstIndex + v.NumIndices),
-                    Material = mat?.Index,
-                };
-            })
-                .Where(x => x is not null)
-                .ToList()!
+                        Attributes = new GltfMeshPrimitiveAttributes
+                        {
+                            Position = accessors.Position,
+                            Normal = accessors.Normal,
+                            Tangent = mat?.Target?.HasNormalTexture() is true ? accessors.Tangent : null,
+                            TexCoord0 = mat?.Target?.HasAnyTexture() is true ? accessors.TexCoord0 : null,
+                            Color0 = accessors.Color0,
+                        },
+                        Indices = GetAccessorOrDefault(baseName, v.FirstIndex, v.FirstIndex + v.NumIndices)
+                                  ?? AddAccessor(
+                                      $"{node.Name}/index",
+                                      indexBufferView, GltfBufferViewTarget.ElementArrayBuffer,
+                                      indices.Indices, v.FirstIndex, v.FirstIndex + v.NumIndices),
+                        Material = mat?.Index,
+                    };
+                })
+                .ToList()
         };
-        return true;
+        return newMesh.Primitives.Any();
     }
 
     protected bool CreateModelNode(out GltfNode node, CryEngine cryObject, bool omitSkins = false)

@@ -17,16 +17,20 @@ public partial class BaseGltfRenderer
 {
     private class WrittenMaterial
     {
+        public const int SkippedFromArgsIndex = -1;
+        
         public readonly int Index;
         public readonly Material Source;
-        public readonly GltfMaterial Target;
+        public readonly GltfMaterial? Target;
 
-        public WrittenMaterial(int index, Material source, GltfMaterial target)
+        public WrittenMaterial(int index, Material source, GltfMaterial? target)
         {
             Index = index;
             Source = source;
             Target = target;
         }
+
+        public bool IsSkippedFromArgs => Index == SkippedFromArgsIndex;
     } 
     
     private Dictionary<int, WrittenMaterial> WriteMaterial(ChunkNode nodeChunk)
@@ -57,6 +61,13 @@ public partial class BaseGltfRenderer
             }
 
             var m = submats[matId];
+
+            if ((m.Name is not null && Args.IsMeshMaterialExcluded(m.Name))
+                || (m.Shader is not null && Args.IsMeshMaterialShaderExcluded(m.Shader)))
+            {
+                materialIndices[matId] = new WrittenMaterial(WrittenMaterial.SkippedFromArgsIndex, m, null);
+                continue;
+            }
 
             if (_materialMap.TryGetValue(m, out var existingIndex))
             {
