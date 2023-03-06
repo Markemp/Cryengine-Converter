@@ -9,9 +9,9 @@ namespace CgfConverter.Terrain;
 public class TerrainFile
 {
     public readonly STerrainChunkHeader Header;
-    public readonly IReadOnlyList<StatInstGroupChunk> Files;
+    public readonly ImmutableList<StatInstGroupChunk> StaticInstanceGroups;
     public readonly ImmutableList<string> BrushObjects;
-    public readonly IReadOnlyList<string> BrushMaterials;
+    public readonly ImmutableList<string> BrushMaterials;
     public readonly STerrainNodeChunk TerrainNode;
     public readonly SOcTreeNodeChunk OcTreeNode;
 
@@ -20,7 +20,7 @@ public class TerrainFile
         try
         {
             Header = new STerrainChunkHeader(reader);
-            Files = Enumerable.Range(0, reader.ReadInt32())
+            StaticInstanceGroups = Enumerable.Range(0, reader.ReadInt32())
                 .Select(_ => new StatInstGroupChunk(reader, Header.Version))
                 .ToImmutableList();
             BrushObjects = Enumerable.Range(0, reader.ReadInt32())

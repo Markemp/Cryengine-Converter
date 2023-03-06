@@ -217,7 +217,7 @@ public class ColladaModelRenderer : IRenderer
                 };
             }
 
-            if (texture.Map == Texture.MapTypeEnum.Bumpmap)
+            if (texture.Map == Texture.MapTypeEnum.Normals)
             {
                 // Bump maps go in an extra node.
                 // bump maps are added to an extra node.

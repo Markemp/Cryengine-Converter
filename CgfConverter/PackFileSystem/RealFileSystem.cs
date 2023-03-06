@@ -84,16 +84,19 @@ public class RealFileSystem : IPackFileSystem
                     var prefix = pattern[(i + 1)..pos];
                     var suffix = pattern[(pos + 1)..next].TrimStart('*');
 
-                    var remainingPattern = pattern[next..];
-                    try
+                    var remainingPattern = pattern[(next + 1)..];
+                    if (!remainingPattern.Contains('\\'))
                     {
-                        remainingPatterns.AddRange(
-                            Directory.GetFileSystemEntries(searchBase, $"{prefix}*{suffix}")
-                                .Select(x => Path.Combine(searchBase, x, remainingPattern)));
-                    }
-                    catch (IOException)
-                    {
-                        // pass
+                        try
+                        {
+                            remainingPatterns.AddRange(
+                                Directory.GetFiles(searchBase, $"{prefix}*{suffix}{remainingPattern}")
+                                    .Select(x => Path.Combine(searchBase, x)));
+                        }
+                        catch (Exception)
+                        {
+                            // pass
+                        }
                     }
 
                     remainingPattern = $"**{pattern[(pos + 1)..]}";
@@ -103,10 +106,10 @@ public class RealFileSystem : IPackFileSystem
                             Directory.GetDirectories(searchBase, $"{prefix}*")
                                 .Select(x => Path.Combine(searchBase, x, remainingPattern)));
                     }
-                    catch (IOException)
+                    catch (Exception)
                     {
                         // pass
-                    }
+                    } 
                     break;
                 }
 
@@ -120,7 +123,7 @@ public class RealFileSystem : IPackFileSystem
                             Directory.GetFileSystemEntries(searchBase, pattern[i..next])
                                 .Select(x => Path.Combine(searchBase, x) + remainingPattern));
                     }
-                    catch (IOException)
+                    catch (Exception)
                     {
                         // pass
                     }

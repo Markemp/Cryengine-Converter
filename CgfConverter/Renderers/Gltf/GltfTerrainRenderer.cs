@@ -31,9 +31,6 @@ public class GltfTerrainRenderer : BaseGltfRenderer, IRenderer
         CryTerrainEntity entity,
         Func<string, bool>? layerFilter = null)
     {
-        if (entity.Underlying.Name == "S07_Spike_Hazard")
-            System.Diagnostics.Debugger.Break();
-
         newNode = new GltfNode {Name = entity.Underlying.Name};
         if (entity.Underlying.ScaleValue is { } scaleValue && scaleValue != Vector3.One)
         {
@@ -110,45 +107,19 @@ public class GltfTerrainRenderer : BaseGltfRenderer, IRenderer
                     break;
 
                 case SVegetationChunkEx chunk:
-                    name = terrain.TerrainFile.Files[chunk.ObjectTypeId].FileName;
+                {
+                    var sigc = terrain.TerrainFile.StaticInstanceGroups[chunk.ObjectTypeId];
+                    name = sigc.FileName;
 
                     translation = chunk.Pos;
                     scale = new Vector3(chunk.Scale);
-
-                    var x = (chunk.NormalX - 127) / 127f;
-                    var y = (chunk.NormalY - 127) / 127f;
-                    var terrainNormal = new Vector3
-                    {
-                        X = x,
-                        Y = y
-                    };
-                    terrainNormal.Z = (float) Math.Sqrt(
-                        1
-                        - terrainNormal.X * terrainNormal.X
-                        + terrainNormal.Y * terrainNormal.Y);
-
-                    var vDir = Vector3.Cross(-Vector3.UnitX, terrainNormal);
-                    var up = -terrainNormal;
-                    var yAxis = Vector3.Normalize(vDir);
-                    if (yAxis is {X: 0, Y: 0} && up == Vector3.UnitZ)
-                        up = Vector3.UnitX * -yAxis.Z;
-
-                    var xAxis = Vector3.Normalize(Vector3.Cross(up, yAxis));
-                    var zAxis = Vector3.Normalize(Vector3.Cross(xAxis, yAxis));
-
-                    rotation = Quaternion.CreateFromRotationMatrix(new Matrix4x4(
-                        xAxis.X, xAxis.Y, xAxis.Z, 0,
-                        yAxis.X, yAxis.Y, yAxis.Z, 0,
-                        zAxis.X, zAxis.Y, zAxis.Z, 0,
-                        0, 0, 0, 1));
+                    rotation = chunk.GetRotation(sigc);
                     break;
-
-                case SDecalChunk:
-                    // TODO
-                    continue;
+                }
 
                 default:
                     // Unsupported
+                    Log.I("Unsupported renderer node type: {0}", renderNode.GetType().Name);
                     continue;
             }
 

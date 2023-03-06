@@ -35,29 +35,29 @@ public class SOcTreeNodeChunk
         var targetPosition = reader.BaseStream.Position + ObjectsBlockSize;
         while (reader.BaseStream.Position < targetPosition)
         {
-            var type = (EerType) reader.ReadInt32();
+            var type = (EErType) reader.ReadInt32();
             switch (type)
             {
-                case EerType.NotRenderNode:
+                case EErType.NotRenderNode:
                     System.Diagnostics.Debugger.Break();
                     break;
-                case EerType.Brush:
+                case EErType.Brush:
                     objects.Add(new SBrushChunk(reader, ChunkVersion));
                     break;
 
-                case EerType.Vegetation:
+                case EErType.Vegetation:
                     objects.Add(new SVegetationChunkEx(reader, ChunkVersion));
                     break;
                 
-                case EerType.Decal:
+                case EErType.Decal:
                     objects.Add(new SDecalChunk(reader, ChunkVersion));
                     break;
                 
-                case EerType.WaterVolume:
+                case EErType.WaterVolume:
                     objects.Add(new SWaterVolumeChunk(reader, ChunkVersion));
                     break;
                 
-                case EerType.LightShape:
+                case EErType.LightShape:
                     objects.Add(new SLightShape(reader, ChunkVersion));
                     break;
 

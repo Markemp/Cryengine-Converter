@@ -189,6 +189,7 @@ public class CryTerrain
         AllRenderNodes = allObjects.ToImmutableList();
 
         Objects = TerrainFile.BrushObjects
+            .Concat(TerrainFile.StaticInstanceGroups.Select(x => x.FileName))
             .Concat(Missions.SelectMany(x => x.ObjectsAndEntities!)
                 .SelectMany(x => x.AllAttachedModelPaths))
             .Select(x => x.Replace("%level%", BasePath).ToLowerInvariant().Replace('\\', '/'))
@@ -205,6 +206,11 @@ public class CryTerrain
                 catch (FileNotFoundException)
                 {
                     Log.W("Model file was expected at {0} but could not be found.", path);
+                    return null;
+                }
+                catch (Exception e)
+                {
+                    Log.E(e, "Unexpected error loading: {0}", path);
                     return null;
                 }
             })

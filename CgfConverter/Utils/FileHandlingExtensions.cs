@@ -29,6 +29,10 @@ public static class FileHandlingExtensions
                 return testPath.Replace('\\', '/');
         }
 
+        if (fs.Glob($"**/{Path.GetFileNameWithoutExtension(mtl)}.*")
+                .FirstOrDefault(x => TextureExtensions.Contains(Path.GetExtension(x)?.ToLowerInvariant())) is { } path)
+            return path;
+
         Utilities.Log(LogLevelEnum.Debug, $"Could not find extension for material texture \"{mtl}\". Defaulting to .dds");
         return $"{mtl}.dds".Replace("\\", "/");
     }

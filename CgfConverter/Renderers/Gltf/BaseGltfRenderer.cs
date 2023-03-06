@@ -45,7 +45,7 @@ public partial class BaseGltfRenderer
         if (_writeBinary)
         {
             var glbf = Args.FormatOutputFileName(".glb", referenceName, layerName);
-            using (var glb = glbf.OpenWrite())
+            using (var glb = glbf.Open(FileMode.Create, FileAccess.Write))
                 CompileToBinary(glb);
             Log.I($"Saved: {glbf.Name} in {glbf.DirectoryName}");
         }
@@ -54,8 +54,8 @@ public partial class BaseGltfRenderer
         {
             var gltfFile = Args.FormatOutputFileName(".gltf", referenceName, layerName);
             var glbFile = Args.FormatOutputFileName(".bin", referenceName, layerName);
-            using (var gltf = gltfFile.OpenWrite())
-            using (var bin = glbFile.OpenWrite())
+            using (var gltf = gltfFile.Open(FileMode.Create, FileAccess.Write))
+            using (var bin = glbFile.Open(FileMode.Create, FileAccess.Write))
                 CompileToPair(Path.GetFileName(bin.Name), gltf, bin);
             Log.I($"Saved: {gltfFile.Name} and {glbFile.Name} in {gltfFile.DirectoryName}");
         }

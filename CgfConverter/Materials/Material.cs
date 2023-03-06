@@ -8,7 +8,7 @@ public class Material
     public Color? DiffuseValue;
     public Color? SpecularValue;
     public Color? EmissiveValue;
-    public double? OpacityValue;
+    public float? OpacityValue;
     public MaterialFlags MaterialFlags;
 
     [XmlIgnore]
@@ -67,7 +67,7 @@ public class Material
     public string? Opacity 
     { 
         get { return OpacityValue.ToString(); }
-        set { OpacityValue = double.Parse(value ?? "1"); }
+        set { OpacityValue = float.Parse(value ?? "1"); }
     }
 
     [XmlAttribute(AttributeName = "Glossiness")]

@@ -1,6 +1,9 @@
-﻿namespace CgfConverter.Terrain;
+﻿using System.Diagnostics.CodeAnalysis;
 
-public enum EerType : int
+namespace CgfConverter.Terrain;
+
+[SuppressMessage("ReSharper", "UnusedMember.Global")]
+public enum EErType
 {
     NotRenderNode = 0,
     Brush = 1,

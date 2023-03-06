@@ -11,7 +11,7 @@ public class SVegetationChunk : SRenderNodeChunk
     public readonly Vector3 Pos;
     public readonly float Scale;
     public readonly byte Bright;
-    public readonly byte Angle;
+    public readonly byte AngleZ;  // [0..255] <=> [0..pi]
 
     public SVegetationChunk(BinaryReader reader, int version) : base(reader, version)
     {
@@ -22,7 +22,7 @@ public class SVegetationChunk : SRenderNodeChunk
                 reader.ReadInto(out Pos);
                 reader.ReadInto(out Scale);
                 reader.ReadInto(out Bright);
-                reader.ReadInto(out Angle);
+                reader.ReadInto(out AngleZ);
                 return;
         }
 

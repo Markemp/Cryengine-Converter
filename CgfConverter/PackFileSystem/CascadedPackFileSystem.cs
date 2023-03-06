@@ -44,7 +44,7 @@ public class CascadedPackFileSystem : IPackFileSystem, IDisposable
         
         return _underlying.SelectMany(x => x.Glob(pattern))
             .Concat(new RealFileSystem(temporaryRootDir)
-                .Glob(pattern[temporaryRootDir.Length..])
+                .Glob(Path.Combine(Path.GetFullPath("."), pattern)[temporaryRootDir.Length..])
                 .Select(x => Path.Combine(temporaryRootDir, x)))
             .Distinct()
             .ToArray();

@@ -50,7 +50,7 @@ public partial class BaseGltfRenderer
                 continue;
             }
 
-            if ((m.MaterialFlags & MaterialFlags.NoDraw) != 0 || string.IsNullOrWhiteSpace(m.StringGenMask))
+            if ((m.MaterialFlags & MaterialFlags.NoDraw) != 0)
             {
                 materialIndices[matId] = _materialMap[m] = AddMaterial(new GltfMaterial
                 {
@@ -66,11 +66,12 @@ public partial class BaseGltfRenderer
                 continue;
             }
 
-            // TODO: This ideally should be always true; need to figure out what's the alpha of diffuse really supposed to be
             var useAlphaColor = m.OpacityValue != null && Math.Abs(m.OpacityValue.Value - 1.0) > 0;
 
-            // TODO: SpecularValue seemingly has a meaningful value as opacity, but, really?
-            var preferredAlphaColor = useAlphaColor ? m.SpecularValue?.Red : null;
+            // SpecularValue seemingly has a meaningful value as opacity for characters.
+            // Not for decals.
+            // ???
+            var preferredAlphaColor = useAlphaColor ? m.OpacityValue : null;
 
             var diffuse = -1;
             // TODO: var diffuseDetail = -1;
@@ -112,7 +113,7 @@ public partial class BaseGltfRenderer
 
                 switch (texture.Map)
                 {
-                    case Texture.MapTypeEnum.Bumpmap:
+                    case Texture.MapTypeEnum.Normals:
                     {
                         if (GltfRendererUtilities.HasMeaningfulAlphaChannel(raw))
                         {
@@ -163,7 +164,7 @@ public partial class BaseGltfRenderer
 
                     default:
                         Log.D("Material[{0}:{1}]: Ignoring texture type {2}: {3}",
-                            materialSetName, matId, texture.Map, texture.File);
+                            materialSetName, matId, texture.MapString, texture.File);
                         break;
                 }
             }
