@@ -43,7 +43,7 @@ public class STerrainNodeChunk
         for (var i = 0; i < Size; i++)
         {
             for (var j = 0; j < Size; j++)
-                HeightMapData[i, j] = reader.ReadUInt16();
+                reader.ReadInto(out HeightMapData[i, j]);
         }
         
         reader.AlignTo(4);

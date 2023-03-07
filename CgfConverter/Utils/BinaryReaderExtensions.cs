@@ -4,6 +4,7 @@ using CgfConverter.Utililities;
 using System;
 using System.IO;
 using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace Extensions;
 
@@ -255,6 +256,27 @@ public static class BinaryReaderExtensions
 
     public static int ReadCryIntWithFlag(this BinaryReader reader, out bool flag) => ReadCryIntWithFlag(reader.BaseStream, out flag);
 
+    public static unsafe T ReadEnum<T>(this BinaryReader reader) where T : unmanaged, Enum
+    {
+        switch (Marshal.SizeOf(Enum.GetUnderlyingType(typeof(T))))
+        {
+            case 1:
+                var b1 = reader.ReadByte();
+                return *(T*) &b1;
+            case 2:
+                var b2 = reader.ReadUInt16();
+                return *(T*) &b2;
+            case 4:
+                var b4 = reader.ReadUInt32();
+                return *(T*) &b4;
+            case 8:
+                var b8 = reader.ReadUInt64();
+                return *(T*) &b8;
+            default:
+                throw new ArgumentException("Enum is not of size 1, 2, 4, or 8.", nameof(T), null);
+        }
+    }
+    
     public static void ReadInto(this BinaryReader reader, out byte value) => value = reader.ReadByte();
     public static void ReadInto(this BinaryReader reader, out sbyte value) => value = reader.ReadSByte();
     public static void ReadInto(this BinaryReader reader, out ushort value) => value = reader.ReadUInt16();
@@ -265,6 +287,10 @@ public static class BinaryReaderExtensions
     public static void ReadInto(this BinaryReader reader, out long value) => value = reader.ReadInt64();
     public static void ReadInto(this BinaryReader reader, out float value) => value = reader.ReadSingle();
     public static void ReadInto(this BinaryReader reader, out double value) => value = reader.ReadDouble();
+    
+    public static void ReadInto<T>(this BinaryReader reader, out T value) where T : unmanaged, Enum
+        => value = reader.ReadEnum<T>();
+
     public static void ReadInto(this BinaryReader reader, out AaBb value) => value = reader.ReadAaBb();
     public static void ReadInto(this BinaryReader reader, out Plane value) => value = reader.ReadPlane();
     public static void ReadInto(this BinaryReader reader, out Vector3 value) => value = reader.ReadVector3();

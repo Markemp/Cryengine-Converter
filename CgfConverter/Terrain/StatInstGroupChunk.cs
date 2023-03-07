@@ -60,9 +60,9 @@ public class StatInstGroupChunk
                 reader.ReadInto(out StatObjRadiusVertNotUsed);
                 reader.ReadInto(out LodDistRatio);
                 reader.ReadInto(out Reserved);
-                Flags = (StatInstGroupChunkFlags) reader.ReadInt32();
+                reader.ReadInto(out Flags);
                 reader.ReadInto(out MaterialId);
-                RenderFlags = (ERenderFlags) reader.ReadInt32();
+                reader.ReadInto(out RenderFlags);
                 return;
             case 29:
                 FileName = reader.ReadFString(0x100);
@@ -85,9 +85,9 @@ public class StatInstGroupChunk
                 reader.ReadInto(out IdPlusOne);
                 reader.ReadInto(out LodDistRatio);
                 reader.ReadInto(out Reserved);
-                Flags = (StatInstGroupChunkFlags) reader.ReadInt32();
+                reader.ReadInto(out Flags);
                 reader.ReadInto(out MaterialId);
-                RenderFlags = (ERenderFlags) reader.ReadInt32();
+                reader.ReadInto(out RenderFlags);
                 reader.ReadInto(out Stiffness);
                 reader.ReadInto(out Damping);
                 reader.ReadInto(out Variance);
