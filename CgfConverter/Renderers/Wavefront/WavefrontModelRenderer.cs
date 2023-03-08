@@ -5,27 +5,34 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 
-namespace CgfConverter;
+namespace CgfConverter.Renderers.Wavefront;
 
-public partial class Wavefront : BaseRenderer
+public class WavefrontModelRenderer : IRenderer
 {
-    public Wavefront(ArgsHandler argsHandler, CryEngine cryEngine) : base(argsHandler, cryEngine) { }
-
-    public FileInfo OutputFile_Model { get; internal set; }
-    public FileInfo OutputFile_Material { get; internal set; }
+    protected readonly ArgsHandler Args;
+    protected readonly CryEngine CryData;
+    public readonly FileInfo OutputFile_Model;
+    public readonly FileInfo OutputFile_Material;
+    
+    public WavefrontModelRenderer(ArgsHandler argsHandler, CryEngine cryEngine) 
+    {
+        Args = argsHandler;
+        CryData = cryEngine;
+        OutputFile_Model = Args.FormatOutputFileName(".obj", cryEngine.InputFile);
+        OutputFile_Material = Args.FormatOutputFileName(".mtl", cryEngine.InputFile);
+    }
+    
     public int CurrentVertexPosition { get; internal set; }
     public int TempIndicesPosition { get; internal set; }
     public int TempVertexPosition { get; internal set; }
     public int CurrentIndicesPosition { get; internal set; }
     public String GroupOverride { get; internal set; }
     public Int32 FaceIndex { get; internal set; }
-
+    
     /// <summary>
     /// Renders an .obj file, and matching .mat file for the current model
     /// </summary>
-    /// <param name="outputDir">Folder to write files to</param>
-    /// <param name="preservePath">When using an <paramref name="outputDir"/>, preserve the original hierarchy</param>
-    public override void Render(string? outputDir = null, Boolean preservePath = true)
+    public int Render()
     {
         // We need to create the obj header, then for each submesh write the vertex, UV and normal data.
         // First, let's figure out the name of the output file.  Should be <object name>.obj
@@ -36,18 +43,11 @@ public partial class Wavefront : BaseRenderer
         // Get object name.  This is the Root Node chunk Name
         // Get the objOutputFile name
 
-        // String outputFile = outputFile;
-
-        this.OutputFile_Model = new FileInfo(this.GetOutputFile("obj", outputDir, preservePath));
-        this.OutputFile_Material = new FileInfo(this.GetOutputFile("mtl", outputDir, preservePath));
 
         if (this.Args.GroupMeshes)
             this.GroupOverride = Path.GetFileNameWithoutExtension(this.OutputFile_Model.Name);
 
-        Utilities.Log(LogLevelEnum.Info, @"Output file is {0}\...\{1}", outputDir, this.OutputFile_Model.Name);
-
-        if (!OutputFile_Model.Directory.Exists)
-            OutputFile_Model.Directory.Create();
+        Utilities.Log(LogLevelEnum.Info, @"Output file is {0}", OutputFile_Model);
 
         //this.WriteMaterial(this.CryData);
 
@@ -73,7 +73,7 @@ public partial class Wavefront : BaseRenderer
 
             foreach (CryEngineCore.ChunkNode node in this.CryData.NodeMap.Values)
             {
-                if (IsNodeNameExcluded(node.Name))
+                if (Args.IsNodeNameExcluded(node.Name))
                 {
                     Utilities.Log(LogLevelEnum.Debug, $"Excluding node {node.Name}");
                     continue;
@@ -119,6 +119,8 @@ public partial class Wavefront : BaseRenderer
             }
 
         }  // End of writing the output file
+        
+        return 1;
     }
 
     public float safe(float value)

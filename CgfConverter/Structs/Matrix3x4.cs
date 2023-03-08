@@ -93,7 +93,7 @@ public struct Matrix3x4 : IEquatable<Matrix3x4>
         return result;
     }
 
-    public Matrix4x4 ConvertToTransformMatrix()
+    public readonly Matrix4x4 ConvertToTransformMatrix()
     {
         var m = new Matrix4x4
         {

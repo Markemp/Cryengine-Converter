@@ -27,7 +27,7 @@ public class CompiledBone
     public uint parentID;                      // Calculated controllerID of the parent bone put into the Bone Dictionary (the key)
     public List<uint> childIDs = new();        // Calculated controllerIDs of the children to this bone.
 
-    public CompiledBone ParentBone;
+    public CompiledBone? ParentBone;
 
     public Matrix4x4 LocalTransform
     {

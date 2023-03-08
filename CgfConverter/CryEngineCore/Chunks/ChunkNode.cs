@@ -73,10 +73,7 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
         }
     }
 
-    public ChunkMtlName? MaterialLibraryChunk
-    {
-        get => (ChunkMtlName)_model.ChunkMap.Values.Where(c => c.ID == MatID).FirstOrDefault();
-    }
+    public ChunkMtlName? MaterialLibraryChunk => (ChunkMtlName?)_model.ChunkMap.Values.FirstOrDefault(c => c.ID == MatID);
 
     public List<ChunkNode>? AllChildNodes
     {

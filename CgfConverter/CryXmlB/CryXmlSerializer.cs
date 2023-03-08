@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
+using Extensions;
 
 namespace HoloXPLOR.DataForge;
 
@@ -46,27 +47,29 @@ public static class CryXmlSerializer
 
     private static XmlElement CreateNewElement(BinaryReader br, XmlDocument doc)
     {
-        int numberOfChildren = br.ReadByte();
-        int numberOfAttributes = br.ReadByte();
+        var numberOfChildren = br.ReadCryInt();
+        var numberOfAttributes = br.ReadCryInt();
 
         var nodeName = br.ReadCString();
 
         var element = doc.CreateElement(nodeName);
 
-        for (int i = 0; i < numberOfAttributes; i++)
+        for (var i = 0; i < numberOfAttributes; i++)
         {
             var key = br.ReadCString();
             var value = br.ReadCString();
             element.SetAttribute(key, value);
         }
-        for (int i = 0; i < numberOfChildren; i++)
-        {
-            br.ReadByte();
-            var flag = br.ReadSByte(); 
-            if (flag < 0)  // if 10000000 or more, read extra byte
-                br.ReadByte();
 
+        element.InnerText = br.ReadCString();
+
+        for (var i = 0; i < numberOfChildren; i++)
+        {
+            var expectedLength = br.ReadCryInt();
+            var expectedPosition = br.BaseStream.Position + expectedLength;
             element.AppendChild(CreateNewElement(br, doc));
+            if (expectedLength != 0 && br.BaseStream.Position != expectedPosition)
+                throw new InvalidDataException();
         }
 
         return element;
@@ -245,15 +248,23 @@ public static class CryXmlSerializer
         return xmlDoc;
     }
 
-    public static TObject Deserialize<TObject>(Stream inStream) where TObject : class
+    public static TObject Deserialize<TObject>(Stream inStream, bool closeAfter = false) where TObject : class
     {
-        using MemoryStream ms = new();
-        var xs = new XmlSerializer(typeof(TObject));
-        var xmlDoc = ReadStream(inStream);
+        try
+        {
+            using MemoryStream ms = new();
+            var xs = new XmlSerializer(typeof(TObject));
+            var xmlDoc = ReadStream(inStream);
 
-        xmlDoc.Save(ms);
-        ms.Seek(0, SeekOrigin.Begin);
-        return xs.Deserialize(ms) as TObject;
+            xmlDoc.Save(ms);
+            ms.Seek(0, SeekOrigin.Begin);
+            return xs.Deserialize(ms) as TObject;
+        }
+        finally
+        {
+            if (closeAfter)
+                inStream.Close();
+        }
     }
 
     public static TObject Deserialize<TObject>(string inFile) where TObject : class

@@ -109,6 +109,12 @@ public struct IRGBA
     }
 }
 
+public struct AaBb
+{
+    public Vector3 Min;
+    public Vector3 Max;
+}
+
 public struct Tangent
 {
     // Tangents.  Divide each component by 32767 to get the actual value

@@ -6,6 +6,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using CgfConverter.Renderers.Collada;
 
 namespace CgfConverterTests.IntegrationTests.SonicBoom;
 
@@ -31,7 +32,7 @@ public class SonicBoomTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SonicBoom\checkpoint.cgf", "-dds", "-dae" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         Assert.AreEqual((uint)17, cryData.Models[0].NumChunks);
@@ -43,7 +44,7 @@ public class SonicBoomTests
         Assert.AreEqual(0, datastream.Vertices[0].Y, TestUtils.delta);
         Assert.AreEqual(0.983217179775238, datastream.Vertices[0].Z, TestUtils.delta);
 
-        Collada colladaData = new(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
         Assert.AreEqual(2, actualMaterialsCount);
@@ -56,7 +57,7 @@ public class SonicBoomTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SonicBoom\jungle_chase.cgf", "-dds", "-dae" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         Assert.AreEqual((uint)24, cryData.Models[0].NumChunks);
@@ -68,7 +69,7 @@ public class SonicBoomTests
         Assert.AreEqual(36.3558387756, datastream.Vertices[0].Y, TestUtils.delta);
         Assert.AreEqual(24.2049655914, datastream.Vertices[0].Z, TestUtils.delta);
 
-        Collada colladaData = new(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
         Assert.AreEqual(20, actualMaterialsCount);
@@ -81,7 +82,7 @@ public class SonicBoomTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SonicBoom\jungle_chase_b.cgf", "-dds", "-dae" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.DataDir.FullName);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         Assert.AreEqual((uint)30, cryData.Models[0].NumChunks);
@@ -93,7 +94,7 @@ public class SonicBoomTests
         Assert.AreEqual(137.044921875, datastream.Vertices[0].Y, TestUtils.delta);
         Assert.AreEqual(24.923294067382812, datastream.Vertices[0].Z, TestUtils.delta);
 
-        Collada colladaData = new(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
         Assert.AreEqual(20, actualMaterialsCount);

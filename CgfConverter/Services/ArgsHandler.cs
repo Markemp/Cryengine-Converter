@@ -4,16 +4,22 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using CgfConverter.PackFileSystem;
 
 namespace CgfConverter;
 
 public sealed class ArgsHandler
 {
+    public readonly CascadedPackFileSystem PackFileSystem = new();
+    public readonly List<Regex> ExcludeNodeNameRegexes = new();
+    public readonly List<Regex> ExcludeMaterialNameRegexes = new();
+    public readonly List<Regex> ExcludeShaderNameRegexes = new();
+    
     public bool Verbose { get; set; }
     /// <summary>Files to process</summary>
     public List<string> InputFiles { get; internal set; }
     /// <summary>Location of the Object Files</summary>
-    public DirectoryInfo DataDir { get; internal set; } = new DirectoryInfo(".");
+    public List<string> DataDirs { get; internal set; } = new();
     /// <summary>File to render to</summary>
     public string? OutputFile { get; internal set; }
     /// <summary>Directory to render to</summary>
@@ -48,68 +54,23 @@ public sealed class ArgsHandler
     public bool TgaTextures { get; internal set; }
     /// <summary>Flag used to indicate that textures should not be included in the output file</summary>
     public bool NoTextures { get; internal set; }
+    /// <summary>Split each layer into different files, if a file does contain multiple layers.</summary>
+    public bool SplitLayers { get; internal set; }
     /// <summary>List of node names to skip when rendering</summary>
     public List<string> ExcludeNodeNames { get; internal set; }
     /// <summary>List of material names to skipping the rendering of a mesh that uses the specified material</summary>
     public List<string> ExcludeMaterialNames { get; internal set; }
+    /// <summary>List of shader names to skip when rendering</summary>
+    public List<string> ExcludeShaderNames { get; internal set; }
     public bool Throw { get; internal set; }
     public bool DumpChunkInfo { get; internal set; }
 
     public ArgsHandler()
     {
-        InputFiles = new List<string> { };
-        ExcludeNodeNames = new List<string> { };
-        ExcludeMaterialNames = new List<string> { };
-    }
-
-    private static string[] GetFiles(string filter)
-    {
-        if (File.Exists(filter))
-            return new [] { new FileInfo(filter).FullName };
-
-        var parts = Regex.Split(filter, @"\*{2,}");
-        if (parts.Length >= 2)
-        {
-            var directory = Path.GetDirectoryName(parts[0]);
-            if (string.IsNullOrWhiteSpace(directory))
-                directory = ".";
-
-            var result = new List<string>();
-            
-            // Consider it as a stack.
-            var pending = new List<string>();
-            pending.AddRange(Directory.GetDirectories(directory, Path.GetFileName(parts[0]) + "*")
-                .Select(x => Path.Combine(directory, x)));
-            while (pending.Any())
-            {
-                var dir = pending.Last();
-                pending.RemoveAt(pending.Count - 1);
-
-                pending.AddRange(Directory.GetDirectories(dir));
-                
-                result.AddRange(GetFiles(Path.Combine(dir, "*" + parts[^1])));
-            }
-
-            return result.DistinctBy(x => x.ToLowerInvariant()).ToArray();
-        }
-        else
-        {
-            var directory = Path.GetDirectoryName(filter);
-            if (string.IsNullOrWhiteSpace(directory))
-                directory = ".";
-
-            var fileName = Path.GetFileName(filter);
-            var extension = Path.GetExtension(filter);
-
-            var flexibleExtension = extension.Contains('*');
-
-            return Directory.GetFiles(directory, fileName,
-                    fileName.Contains('?') || fileName.Contains('*')
-                        ? SearchOption.AllDirectories
-                        : SearchOption.TopDirectoryOnly)
-                .Where(f => flexibleExtension || Path.GetExtension(f).Length == extension.Length)
-                .ToArray();
-        }
+        InputFiles = new List<string>();
+        ExcludeNodeNames = new List<string>();
+        ExcludeMaterialNames = new List<string>();
+        ExcludeShaderNames = new List<string>();
     }
 
     /// <summary>
@@ -119,6 +80,9 @@ public sealed class ArgsHandler
     /// <returns>0 on success, 1 if anything went wrong</returns>
     public int ProcessArgs(string[] inputArgs)
     {
+        var lookupDataDirs = new List<string>();
+        var lookupInputs = new List<string>();
+        
         for (int i = 0; i < inputArgs.Length; i++)
         {
             switch (inputArgs[i].ToLowerInvariant())
@@ -133,7 +97,8 @@ public sealed class ArgsHandler
                         PrintUsage();
                         return 1;
                     }
-                    DataDir = new DirectoryInfo(inputArgs[i].Replace("\"", string.Empty));
+                    
+                    lookupDataDirs.Add(inputArgs[i]);
                     break;
                 #endregion
                 #region case "-out" / "-outdir" / "-outputdir"...
@@ -175,6 +140,13 @@ public sealed class ArgsHandler
                     }
                     break;
                 #endregion
+                #region case "-sl" / "-splitlayer" / "-splitlayers"...
+                case "-sl":
+                case "-splitlayer":
+                case "-splitlayers":
+                    SplitLayers = true;
+                    break;
+                #endregion
                 #region case "-loglevel"...
                 case "-loglevel":
                     if (++i > inputArgs.Length)
@@ -183,8 +155,7 @@ public sealed class ArgsHandler
                         return 1;
                     }
 
-                    LogLevelEnum level; 
-                    if (LogLevelEnum.TryParse(inputArgs[i], true, out level))
+                    if (Enum.TryParse(inputArgs[i], true, out LogLevelEnum level))
                     {
                         Utilities.LogLevel = level;
                     }
@@ -276,6 +247,18 @@ public sealed class ArgsHandler
                     break;
 
                 #endregion
+                #region case "-es" / "-excludeshader"...
+                case "-es":
+                case "-excludeshader":
+                    if (++i > inputArgs.Length)
+                    {
+                        PrintUsage();
+                        return 1;
+                    }
+                    ExcludeShaderNames.Add(inputArgs[i]);
+                    break;
+
+                #endregion
                 #region case "-group"...
 
                 case "-group":
@@ -300,7 +283,7 @@ public sealed class ArgsHandler
                         PrintUsage();
                         return 1;
                     }
-                    InputFiles.AddRange(GetFiles(inputArgs[i]));
+                    lookupInputs.Add(inputArgs[i]);
                     break;
 
                 #endregion
@@ -326,19 +309,19 @@ public sealed class ArgsHandler
                 #region default...
 
                 default:
-                    InputFiles.AddRange(GetFiles(inputArgs[i]));
+                    lookupInputs.Add(inputArgs[i]);
                     break;
                     #endregion
             }
         }
 
         // Ensure we have a file to process
-        if (InputFiles.Count == 0)
+        if (!lookupInputs.Any())
         {
             PrintUsage();
             return 1;
         }
-        
+
         if (MaxThreads == 0)
             MaxThreads = Environment.ProcessorCount;
         Utilities.Log(LogLevelEnum.Info, $"Using up to {MaxThreads} threads");
@@ -377,14 +360,55 @@ public sealed class ArgsHandler
             Utilities.Log(LogLevelEnum.Info, "Output chunk info for missing or invalid chunks.");
         if (Throw)
             Utilities.Log(LogLevelEnum.Info, "Exceptions thrown to debugger");
-        if (DataDir.ToString() != ".")
-            Utilities.Log(LogLevelEnum.Info, "Data directory set to {0}", DataDir.FullName);
-        
-        Utilities.Log(LogLevelEnum.Info, "Processing input file(s):");
-        foreach (var file in InputFiles)
-            Utilities.Log(LogLevelEnum.Info, file);
+
         if (OutputDir != null)
             Utilities.Log(LogLevelEnum.Info, "Output directory set to {0}", OutputDir);
+
+        foreach (var dir in lookupDataDirs)
+        {
+            var foundAny = false;
+            
+            if (Directory.Exists(dir))
+            {
+                Utilities.Log(LogLevelEnum.Info, "Source [Filesystem]: {0}", dir);
+                DataDirs.Add(dir);
+                PackFileSystem.Add(new RealFileSystem(dir));
+                foundAny = true;
+            }
+
+            foreach (var globbed in PackFileSystem.Glob(dir))
+            {
+                if (globbed.EndsWith(WiiuStreamPackFileSystem.PackFileNameSuffix,
+                        StringComparison.InvariantCultureIgnoreCase))
+                {
+                    Utilities.Log(LogLevelEnum.Info, "Source [Packfile]: {0}", globbed);
+                    DataDirs.Add(globbed);
+                    PackFileSystem.Add(new WiiuStreamPackFileSystem(PackFileSystem.GetStream(globbed)));
+                    foundAny = true;
+                }
+            }
+
+            if (!foundAny)
+                Utilities.Log(LogLevelEnum.Warning, "No corresponding source directory exist: {0}", dir);
+        }
+
+        foreach (var input in lookupInputs)
+        {
+            var foundAny = false;
+            foreach (var globbed in PackFileSystem.Glob(input))
+            {
+                Utilities.Log(LogLevelEnum.Info, "Found input: {0}", globbed);
+                InputFiles.Add(globbed);
+                foundAny = true;
+            }
+            
+            if (!foundAny)
+                Utilities.Log(LogLevelEnum.Warning, "No corresponding input file exist: {0}", input);
+        }
+        
+        ExcludeNodeNameRegexes.AddRange(ExcludeNodeNames.Select(x => new Regex(x, RegexOptions.Compiled | RegexOptions.IgnoreCase)));
+        ExcludeMaterialNameRegexes.AddRange(ExcludeMaterialNames.Select(x => new Regex(x, RegexOptions.Compiled | RegexOptions.IgnoreCase)));
+        ExcludeShaderNameRegexes.AddRange(ExcludeShaderNames.Select(x => new Regex(x, RegexOptions.Compiled | RegexOptions.IgnoreCase)));
         
         // Default to Collada (.dae) format
         if (!OutputCollada && !OutputWavefront && !OutputGLB && !OutputGLTF)
@@ -410,6 +434,8 @@ public sealed class ArgsHandler
         Console.WriteLine("                  Preserve the path hierarchy.");
         Console.WriteLine("-mt/-maxthreads <number>");
         Console.WriteLine("                  Set maximum number of threads to use. Specify 0 to use all cores.");
+        Console.WriteLine("-sl/-splitlayer(s)");
+        Console.WriteLine("                  Split into multiple layers (terrain only).");
         Console.WriteLine("-dae:             Export Collada format files (Default).");
         Console.WriteLine("-obj:             Export Wavefront format files (Not supported).");
         Console.WriteLine("-gltf:            Export file pairs of glTF and bin files.");
@@ -417,10 +443,12 @@ public sealed class ArgsHandler
         Console.WriteLine();
         Console.WriteLine("-smooth:          Smooth Faces.");
         Console.WriteLine("-group:           Group meshes into single model.");
-        Console.WriteLine("-en/-excludenode <nodename>:");
-        Console.WriteLine("                  Exclude nodes starting with <nodename> from rendering. Can be listed multiple times.");
-        Console.WriteLine("-em/-excludemat <material_name>:");
-        Console.WriteLine("                  Exclude meshes with the material <material_name> from rendering. Can be listed multiple times.");
+        Console.WriteLine("-en/-excludenode <regular expression for node names>:");
+        Console.WriteLine("                  Exclude matching nodes from rendering. Can be listed multiple times.");
+        Console.WriteLine("-em/-excludemat <regular expression for material names>:");
+        Console.WriteLine("                  Exclude meshes with matching materials from rendering. Can be listed multiple times.");
+        Console.WriteLine("-sm/-excludeshader <material_name>:");
+        Console.WriteLine("                  Exclude meshes with the material using matching shader from rendering. Can be listed multiple times.");
         Console.WriteLine("-noconflict:      Use non-conflicting naming scheme (<cgf File>_out.obj)");
         Console.WriteLine("-allowconflict:   Allows conflicts in .mtl file name. (obj exports only, as not an issue in dae.)");
         Console.WriteLine();
@@ -436,5 +464,5 @@ public sealed class ArgsHandler
         Console.WriteLine();
     }
 
-    public override string ToString() => $@"Input file: {InputFiles}, Obj Dir: {DataDir}, Output file: {OutputFile}";
+    public override string ToString() => $@"Input file: {InputFiles}, Obj Dir: {DataDirs}, Output file: {OutputFile}";
 }

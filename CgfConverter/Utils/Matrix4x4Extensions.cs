@@ -1,4 +1,5 @@
-﻿using CgfConverter.Structs;
+﻿using System;
+using CgfConverter.Structs;
 using System.Numerics;
 
 namespace Extensions
@@ -111,6 +112,59 @@ namespace Extensions
                 m43: 0.0f,
                 m44: 1.0f
             );
+        }
+
+        public static Matrix4x4 CreateOrientation(Vector3 dir, Vector3 up, float rollAngle)
+        {
+            if (dir.Length() == 0f)
+                return Matrix4x4.Identity;
+
+            var yAxis = Vector3.Normalize(dir);
+
+            if (yAxis is {X: 0, Y: 0} && up == Vector3.UnitZ)
+                up = new Vector3(-yAxis.Z, 0, 0);
+
+            var xAxis = Vector3.Normalize(Vector3.Cross(up, yAxis));
+            var zAxis = Vector3.Normalize(Vector3.Cross(xAxis, yAxis));
+
+            var tm = new Matrix4x4(
+                xAxis.X, xAxis.Y, xAxis.Z, 0,
+                yAxis.X, yAxis.Y, yAxis.Z, 0,
+                zAxis.X, zAxis.Y, zAxis.Z, 0,
+                0, 0, 0, 1);
+
+            if (rollAngle != 0)
+                tm *= Matrix4x4.CreateRotationY(rollAngle);
+            
+            return tm;
+        }
+
+        public static Matrix4x4 CreateFromAngles(float x, float y, float z)
+        {
+            var (sx, cx) = Math.SinCos(x);
+            var (sy, cy) = Math.SinCos(y);
+            var (sz, cz) = Math.SinCos(z);
+            var sycz = sy * cz;
+            var sysz = sy * sz;
+            return new Matrix4x4
+            {
+                M11 = (float)(cy * cz),
+                M12 = (float)(sycz * sx - cx * sz),
+                M13 = (float)(sycz * cx + sx * sz),
+                M14 = 0,
+                M21 = (float)(cy * sz),
+                M22 = (float)(sysz * sx + cx * cz),
+                M23 = (float)(sysz * cx - sx * cz),
+                M24 = 0,
+                M31 = (float)-sy,
+                M32 = (float)(cy * sx),
+                M33 = (float)(cy * cx),
+                M34 = 0,
+                M41 = 0,
+                M42 = 0,
+                M43 = 0,
+                M44 = 1,
+            };
         }
     }
 }

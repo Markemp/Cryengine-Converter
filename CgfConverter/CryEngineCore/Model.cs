@@ -85,27 +85,29 @@ public class Model
             return false;
         }
     }
-
-    /// <summary> Load the specified file as a Model</summary>
-    public static Model FromFile(string fileName)
+    
+    /// <summary> Load the specified stream as a Model</summary>
+    public static Model FromStream(string fileName, Stream stream, bool closeStream =false)
     {
-        var buffer = new Model();
-        buffer.Load(fileName);
-        return buffer;
+        try
+        {
+            var buffer = new Model();
+            buffer.Load(fileName, stream);
+            return buffer;
+        }
+        finally
+        {
+            if (closeStream)
+                stream.Close();
+        }
     }
 
     public bool IsIvoFile => FileSignature?.Equals("#ivo") ?? false;
 
-    private void Load(string fileName)
+    private void Load(string fileName, Stream fs)
     {
-        var inputFile = new FileInfo(fileName);
+        FileName = fileName;
 
-        FileName = inputFile.Name;
-
-        if (!inputFile.Exists)
-            throw new FileNotFoundException();
-
-        using FileStream fs = new(fileName, FileMode.Open, FileAccess.Read);
         using EndiannessChangeableBinaryReader reader = new(fs);
         // Get the header.  This isn't essential for .cgam files, but we need this info to find the version and offset to the chunk table
         ReadFileHeader(reader);

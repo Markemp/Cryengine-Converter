@@ -1,6 +1,7 @@
 ﻿using CgfConverter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
+using CgfConverter.PackFileSystem;
 
 namespace CgfConverterTests.UnitTests
 {
@@ -11,7 +12,7 @@ namespace CgfConverterTests.UnitTests
         [ExpectedException(typeof(FileLoadException))]
         public void ProcessCryengineFiles_UnsupportedException()
         {
-            var ce = new CryEngine("filename.bad", "datadir");
+            var ce = new CryEngine("filename.chr", new RealFileSystem(Path.GetFullPath("datadir")));
             ce.ProcessCryengineFiles();
         }
 
@@ -19,7 +20,7 @@ namespace CgfConverterTests.UnitTests
         [ExpectedException(typeof(FileNotFoundException))]
         public void ProcessCryengineFiles_FileNotFoundException()
         {
-            var ce = new CryEngine("filename.chr", "datadir");
+            var ce = new CryEngine("filename.chr", new RealFileSystem(Path.GetFullPath("datadir")));
             ce.ProcessCryengineFiles();
         }
     }

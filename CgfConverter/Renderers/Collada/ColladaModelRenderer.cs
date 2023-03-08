@@ -1,7 +1,4 @@
-﻿using CgfConverter.CryEngineCore;
-using CgfConverter.Materials;
-using grendgine_collada;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -11,25 +8,37 @@ using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using CgfConverter.CryEngineCore;
+using CgfConverter.Materials;
+using grendgine_collada;
 using static Extensions.FileHandlingExtensions;
 using static CgfConverter.Utilities;
 
-namespace CgfConverter;
+namespace CgfConverter.Renderers.Collada;
 
-public class Collada : BaseRenderer
+public class ColladaModelRenderer : IRenderer
 {
-    public Grendgine_Collada DaeObject { get; private set; } = new();
+    protected readonly ArgsHandler Args;
+    protected readonly CryEngine CryData;
+    public readonly Grendgine_Collada DaeObject = new();
 
     private readonly CultureInfo culture = CultureInfo.CreateSpecificCulture("en-US");
     private const string colladaVersion = "1.4.1";
-    readonly XmlSerializer serializer = new(typeof(Grendgine_Collada));
+    private readonly XmlSerializer serializer = new(typeof(Grendgine_Collada));
+    private readonly FileInfo daeOutputFile;
 
     /// <summary>Dictionary of all material libraries in the model, with the key being the library from mtlname chunk.</summary>
     private readonly Dictionary<string, Material> createdMaterialLibraries = new();
 
-    public Collada(ArgsHandler argsHandler, CryEngine cryEngine) : base(argsHandler, cryEngine) { }
+    public ColladaModelRenderer(ArgsHandler argsHandler, CryEngine cryEngine) {
+        Args = argsHandler;
+        CryData = cryEngine;
 
-    public override void Render(string? outputDir = null, bool preservePath = true)
+        // File name will be "<object name>.dae"
+        daeOutputFile = Args.FormatOutputFileName(".dae", CryData.InputFile);
+    }
+
+    public int Render()
     {
         GenerateDaeObject();
 
@@ -38,17 +47,12 @@ public class Collada : BaseRenderer
         Utilities.Log(LogLevelEnum.Debug, "*** Starting WriteCOLLADA() ***");
         Utilities.Log(LogLevelEnum.Debug);
 
-        // File name will be "<object name>.dae"
-        var daeOutputFile = new FileInfo(GetOutputFile("dae", outputDir, preservePath));
-
-        if (!daeOutputFile.Directory.Exists)
-            daeOutputFile.Directory.Create();
-
         TextWriter writer = new StreamWriter(daeOutputFile.FullName);
         serializer.Serialize(writer, DaeObject);
 
         writer.Close();
         Utilities.Log(LogLevelEnum.Debug, "End of Write Collada.  Export complete.");
+        return 1;
     }
 
     public void GenerateDaeObject()
@@ -213,7 +217,7 @@ public class Collada : BaseRenderer
                 };
             }
 
-            if (texture.Map == Texture.MapTypeEnum.Bumpmap)
+            if (texture.Map == Texture.MapTypeEnum.Normals)
             {
                 // Bump maps go in an extra node.
                 // bump maps are added to an extra node.
@@ -324,7 +328,7 @@ public class Collada : BaseRenderer
             ChunkDataStream? colors = null;
             ChunkDataStream? tangents = null;
 
-            if (IsNodeNameExcluded(nodeChunk.Name))
+            if (Args.IsNodeNameExcluded(nodeChunk.Name))
             {
                 Utilities.Log(LogLevelEnum.Debug, $"Excluding node {nodeChunk.Name}");
                 continue;
@@ -820,21 +824,20 @@ public class Collada : BaseRenderer
                 Init_From = new Grendgine_Collada_Init_From()
             };
             // Try to resolve the texture file to a file on disk. Texture are always based on DataDir.
-            StringBuilder builder = new(ResolveTextureFile(mat.Textures[i].File, Args.DataDir));
+            var textureFile = ResolveTextureFile(mat.Textures[i].File, Args.PackFileSystem);
 
-            if (Args.PngTextures && File.Exists(builder.ToString().Replace(".dds", ".png")))
-                builder.Replace(".dds", ".png");
-            else if (Args.TgaTextures && File.Exists(builder.ToString().Replace(".dds", ".tga")))
-                builder.Replace(".dds", ".tga");
-            else if (Args.TiffTextures && File.Exists(builder.ToString().Replace(".dds", ".tif")))
-                builder.Replace(".dds", ".tif");
+            if (Args.PngTextures && File.Exists(Path.ChangeExtension(textureFile, ".png")))
+                textureFile = Path.ChangeExtension(textureFile, ".png");
+            else if (Args.TgaTextures && File.Exists(Path.ChangeExtension(textureFile, ".tga")))
+                textureFile = Path.ChangeExtension(textureFile, ".tga");
+            else if (Args.TiffTextures && File.Exists(Path.ChangeExtension(textureFile, ".tif")))
+                textureFile = Path.ChangeExtension(textureFile, ".tif");
 
-            if (Args.DataDir.ToString() != ".")
-                builder.Insert(0, "/");  // Path is absolute, preface with a "/"
+            textureFile = Path.GetRelativePath(daeOutputFile.DirectoryName, textureFile);
 
-            builder.Replace(" ", @"%20");
+            textureFile = textureFile.Replace(" ", @"%20");
             // if 1.4.1, use URI.  If 1.5.0, use Ref.
-            _ = DaeObject.Collada_Version == "1.4.1" ? image.Init_From.Uri = builder.ToString() : image.Init_From.Ref = builder.ToString();
+            _ = DaeObject.Collada_Version == "1.4.1" ? image.Init_From.Uri = textureFile : image.Init_From.Ref = textureFile;
 
             imageList.Add(image);
         }
@@ -1289,7 +1292,7 @@ public class Collada : BaseRenderer
             List<Grendgine_Collada_Node> childNodes = new();
             foreach (var childNodeChunk in nodeChunk.AllChildNodes.ToList())
             {
-                if (IsNodeNameExcluded(childNodeChunk.Name))
+                if (Args.IsNodeNameExcluded(childNodeChunk.Name))
                 {
                     Utilities.Log(LogLevelEnum.Debug, $"Excluding child node {childNodeChunk.Name}");
                     continue;
