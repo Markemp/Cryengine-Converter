@@ -6,19 +6,21 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using CgfConverter.Services;
+using CgfConverter.Utils;
 using Extensions;
 
 namespace CgfConverter.PackFileSystem;
 
 public class WiiuStreamPackFileSystem : IPackFileSystem, IDisposable
 {
+    private readonly TaggedLogger Log = new TaggedLogger("WiiuStreamPackFileSystem");
     public const string PackFileNameSuffix = ".wiiu.stream";
 
     private readonly Stream _stream;
     private readonly Mutex _streamMutex = new();
     private readonly List<FileEntry> _entries = new();
 
-    public WiiuStreamPackFileSystem(Stream stream)
+    public WiiuStreamPackFileSystem(Stream stream, Dictionary<string, string> options)
     {
         _stream = stream;
 
@@ -28,14 +30,27 @@ public class WiiuStreamPackFileSystem : IPackFileSystem, IDisposable
         if (reader.ReadUInt32() != 0x7374726d) // 'strm'
             throw new InvalidDataException();
 
+        options = options.ToDictionary(x => x.Key, x => x.Value);
+        
+        var altCostume = false;
+        if (options.Remove("alt", out var altCostumeString))
+            altCostume = altCostumeString.IsTrueyString(true);
+
+        foreach (var (k, v) in options)
+            Log.W("Ignoring unknown parameter \"{0}\" with value \"{1}\".", k, v);
+
         while (reader.PeekChar() != -1)
         {
             var entry = new FileEntry(reader);
-            var i = _entries.BinarySearch(entry);
-            if (i >= 0)
-                _entries[i] = entry;
-            else
-                _entries.Insert(~i, entry);
+            if ((entry.Variant >= 0 && altCostume) || (entry.Variant <= 0 && !altCostume))
+            {
+                var i = _entries.BinarySearch(entry);
+                if (i >= 0)
+                    _entries[i] = entry;
+                else
+                    _entries.Insert(~i, entry);
+            }
+
             reader.BaseStream.Seek(
                 entry.CompressedSize == 0 ? entry.DecompressedSize : entry.CompressedSize,
                 SeekOrigin.Current);
@@ -145,10 +160,11 @@ public class WiiuStreamPackFileSystem : IPackFileSystem, IDisposable
 
     private readonly struct FileEntry : IComparable<FileEntry>
     {
+        public readonly int CompressedSize;
         public readonly int DecompressedSize;
         public readonly int Hash;
-        public readonly int CompressedSize;
-        public readonly int UnknownValue1;
+        public readonly ushort UnknownValue1;
+        public readonly short Variant;
         public readonly string InnerPath;
         public readonly long Offset;
 
@@ -159,16 +175,17 @@ public class WiiuStreamPackFileSystem : IPackFileSystem, IDisposable
         public FileEntry(string innerPath)
         {
             InnerPath = FileHandlingExtensions.CombineAndNormalizePath(innerPath);
-            DecompressedSize = Hash = CompressedSize = UnknownValue1 = 0;
-            Offset = 0;
+            Offset = CompressedSize = DecompressedSize = Hash = UnknownValue1 = 0;
+            Variant = 0;
         }
 
         public FileEntry(BinaryReader reader)
         {
-            CompressedSize = reader.ReadInt32();
-            DecompressedSize = reader.ReadInt32();
-            Hash = reader.ReadInt32();
-            UnknownValue1 = reader.ReadInt32();
+            reader.ReadInto(out CompressedSize);
+            reader.ReadInto(out DecompressedSize);
+            reader.ReadInto(out Hash);
+            reader.ReadInto(out UnknownValue1);
+            reader.ReadInto(out Variant);
             InnerPath = FileHandlingExtensions.CombineAndNormalizePath(reader.ReadCString());
             Offset = reader.BaseStream.Position;
         }

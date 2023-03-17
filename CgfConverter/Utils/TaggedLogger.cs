@@ -20,7 +20,7 @@ public class TaggedLogger
     public void V(string? format = null, params object?[] args) => DoLog(LogLevelEnum.Verbose, null, format, args);
     public void D(string? format = null, params object?[] args) => DoLog(LogLevelEnum.Debug, null, format, args);
     public void I(string? format = null, params object?[] args) => DoLog(LogLevelEnum.Info, null, format, args);
-    public void W(string? format = null, params object?[] args) => DoLog(LogLevelEnum.Debug, null, format, args);
+    public void W(string? format = null, params object?[] args) => DoLog(LogLevelEnum.Warning, null, format, args);
     public void E(string? format = null, params object?[] args) => DoLog(LogLevelEnum.Error, null, format, args);
     public void C(string? format = null, params object?[] args) => DoLog(LogLevelEnum.Critical, null, format, args);
 
@@ -34,7 +34,7 @@ public class TaggedLogger
         => DoLog(LogLevelEnum.Info, e, format, args);
 
     public void W(Exception e, string? format = null, params object?[] args)
-        => DoLog(LogLevelEnum.Debug, e, format, args);
+        => DoLog(LogLevelEnum.Warning, e, format, args);
 
     public void E(Exception e, string? format = null, params object?[] args)
         => DoLog(LogLevelEnum.Error, e, format, args);
@@ -47,7 +47,7 @@ public class TaggedLogger
 
     public T D<T>(string? format = null, params object?[] args) => DoLog<T>(LogLevelEnum.Debug, null, format, args);
     public T I<T>(string? format = null, params object?[] args) => DoLog<T>(LogLevelEnum.Info, null, format, args);
-    public T W<T>(string? format = null, params object?[] args) => DoLog<T>(LogLevelEnum.Debug, null, format, args);
+    public T W<T>(string? format = null, params object?[] args) => DoLog<T>(LogLevelEnum.Warning, null, format, args);
     public T E<T>(string? format = null, params object?[] args) => DoLog<T>(LogLevelEnum.Error, null, format, args);
     public T C<T>(string? format = null, params object?[] args) => DoLog<T>(LogLevelEnum.Critical, null, format, args);
 
@@ -61,7 +61,7 @@ public class TaggedLogger
         DoLog<T>(LogLevelEnum.Info, e, format, args);
 
     public T W<T>(Exception e, string? format = null, params object?[] args) =>
-        DoLog<T>(LogLevelEnum.Debug, e, format, args);
+        DoLog<T>(LogLevelEnum.Warning, e, format, args);
 
     public T E<T>(Exception e, string? format = null, params object?[] args) =>
         DoLog<T>(LogLevelEnum.Error, e, format, args);
