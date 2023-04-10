@@ -364,9 +364,15 @@ public sealed class ArgsHandler
         if (OutputDir != null)
             Utilities.Log(LogLevelEnum.Info, "Output directory set to {0}", OutputDir);
 
-        foreach (var dir in lookupDataDirs)
+        foreach (var dirAndOptions in lookupDataDirs)
         {
             var foundAny = false;
+
+            var dirAndOptionStrings = dirAndOptions.Split("?", 2);
+            var dir = dirAndOptionStrings[0].Trim();
+            var packFileSystemOptions = dirAndOptionStrings.Length == 2
+                ? dirAndOptionStrings[1].Split("&").Select(x => x.Split("=", 2)).ToDictionary(x => x[0].ToLowerInvariant(), x => x.Length == 2 ? x[1] : "")
+                : new Dictionary<string, string>();
             
             if (Directory.Exists(dir))
             {
@@ -383,7 +389,7 @@ public sealed class ArgsHandler
                 {
                     Utilities.Log(LogLevelEnum.Info, "Source [Packfile]: {0}", globbed);
                     DataDirs.Add(globbed);
-                    PackFileSystem.Add(new WiiuStreamPackFileSystem(PackFileSystem.GetStream(globbed)));
+                    PackFileSystem.Add(new WiiuStreamPackFileSystem(PackFileSystem.GetStream(globbed), packFileSystemOptions));
                     foundAny = true;
                 }
             }
@@ -429,7 +435,7 @@ public sealed class ArgsHandler
         Console.WriteLine("<.cgf file>:      The name of the .cgf, .cga or .skin file to process.");
         Console.WriteLine("-outputfile:      The name of the file to write the output.  Default is [root].dae");
         Console.WriteLine("-objectdir:       The name where the base Objects directory is located.  Used to read mtl file.");
-        Console.WriteLine("                  Defaults to current directory.");
+        Console.WriteLine("                  Defaults to current directory. Some packfile formats may accept additional options in the form of some.pack.file?key=value&key2=value2.");
         Console.WriteLine("-pp/-preservepath:");
         Console.WriteLine("                  Preserve the path hierarchy.");
         Console.WriteLine("-mt/-maxthreads <number>");

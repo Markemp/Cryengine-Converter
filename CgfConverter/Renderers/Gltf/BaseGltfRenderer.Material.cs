@@ -101,6 +101,7 @@ public partial class BaseGltfRenderer
 
             var diffuse = -1;
             // TODO: var diffuseDetail = -1;
+            var emissive = -1;
             var normal = -1;
             var specular = -1;
             var metallicRoughness = -1;
@@ -180,7 +181,19 @@ public partial class BaseGltfRenderer
                         break;
                     }
                     case Texture.MapTypeEnum.Diffuse:
-                        diffuse = AddTexture(name, width, height, raw, SourceAlphaModes.Automatic,
+                        if (m.GlowAmount > 0)
+                        {
+                            var rawEmissive = new Rgb24[raw.Length];
+                            for (var j = 0; j < raw.Length; j++)
+                            {
+                                rawEmissive[j].R = (byte)(raw[j].r * raw[j].a / 255);
+                                rawEmissive[j].G = (byte)(raw[j].g * raw[j].a / 255);
+                                rawEmissive[j].B = (byte)(raw[j].b * raw[j].a / 255);
+                            }
+                            
+                            emissive = AddTexture(name, width, height, rawEmissive);
+                        }
+                        diffuse = AddTexture(name, width, height, raw, SourceAlphaModes.Disable,
                             preferredAlphaColor);
                         break;
 
@@ -194,6 +207,14 @@ public partial class BaseGltfRenderer
                         break;
                 }
             }
+            
+            const float legacyHdrDynMult = 2.0f;
+            const float legacyIntensityScale = 10.0f;
+            const float emissiveIntensitySoftMax = 200.0f;
+            var emissionMultiplier = (float)(Math.Min(
+                Math.Pow(m.GlowAmount * legacyHdrDynMult, legacyHdrDynMult) * legacyIntensityScale,
+                emissiveIntensitySoftMax) / 65535f);
+            // TODO: How are this and m.emissiveValue related?
 
             _root.ExtensionsUsed.Add("KHR_materials_specular");
             var matIndex = _materialMap[m] = AddMaterial(new GltfMaterial
@@ -238,10 +259,16 @@ public partial class BaseGltfRenderer
                 },
                 EmissiveFactor = new[]
                 {
-                    m.EmissiveValue?.Red ?? 0f,
-                    m.EmissiveValue?.Green ?? 0f,
-                    m.EmissiveValue?.Blue ?? 0f,
+                    emissionMultiplier,
+                    emissionMultiplier,
+                    emissionMultiplier,
                 },
+                EmissiveTexture = emissive == -1
+                    ? null
+                    : new GltfTextureInfo
+                    {
+                        Index = emissive,
+                    },
                 Extensions = new GltfExtensions
                 {
                     KhrMaterialsSpecular = new GltfExtensionKhrMaterialsSpecular
