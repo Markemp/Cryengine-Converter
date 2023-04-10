@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using CgfConverter.Services;
 
 namespace CgfConverter.CryEngineCore;
@@ -11,7 +12,7 @@ public abstract class Chunk : IBinaryChunk
     protected static Random rnd = new();
     protected static HashSet<int> alreadyPickedRandoms = new();
 
-    private readonly static Dictionary<Type, Dictionary<uint, Func<dynamic>>> _chunkFactoryCache = new() { };
+    private readonly static Dictionary<Type, Dictionary<uint, Func<Chunk>>> _chunkFactoryCache = new() { };
 
     internal ChunkHeader _header;
     internal Model _model;
@@ -75,13 +76,13 @@ public abstract class Chunk : IBinaryChunk
 
     public static T New<T>(uint version) where T : Chunk
     {
-        Func<dynamic>? factory;
+        Func<Chunk> factory;
         
         lock (_chunkFactoryCache)
         {
             if (!_chunkFactoryCache.TryGetValue(typeof(T), out var versionMap))
             {
-                versionMap = new Dictionary<uint, Func<dynamic>> { };
+                versionMap = new Dictionary<uint, Func<Chunk>> { };
                 _chunkFactoryCache[typeof(T)] = versionMap;
             }
 
