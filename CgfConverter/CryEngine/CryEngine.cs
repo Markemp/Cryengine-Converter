@@ -4,10 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using CgfConverter.CryXmlB;
 using CgfConverter.PackFileSystem;
 using CgfConverter.Utils;
 using Extensions;
-using HoloXPLOR.DataForge;
 using Material = CgfConverter.Materials.Material;
 
 namespace CgfConverter;

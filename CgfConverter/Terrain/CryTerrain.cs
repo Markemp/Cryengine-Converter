@@ -4,11 +4,11 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using CgfConverter.CryXmlB;
 using CgfConverter.PackFileSystem;
 using CgfConverter.Terrain.Xml;
 using CgfConverter.Utils;
 using Extensions;
-using HoloXPLOR.DataForge;
 
 namespace CgfConverter.Terrain;
 
