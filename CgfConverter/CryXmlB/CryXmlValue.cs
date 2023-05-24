@@ -1,4 +1,4 @@
-﻿namespace HoloXPLOR.DataForge;
+﻿namespace CgfConverter.CryXmlB;
 
 public class CryXmlValue
 {

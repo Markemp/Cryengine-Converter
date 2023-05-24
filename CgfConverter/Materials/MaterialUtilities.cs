@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.IO;
 using System;
-using HoloXPLOR.DataForge;
+using CgfConverter.CryXmlB;
 
 namespace CgfConverter.Materials;
 
