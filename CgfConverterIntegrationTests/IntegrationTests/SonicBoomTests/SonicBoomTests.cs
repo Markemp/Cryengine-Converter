@@ -4,7 +4,6 @@ using CgfConverterTests.TestUtilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Globalization;
-using System.Linq;
 using System.Threading;
 using CgfConverter.Renderers.Collada;
 

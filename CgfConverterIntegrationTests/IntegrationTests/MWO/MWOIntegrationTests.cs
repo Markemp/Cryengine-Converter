@@ -82,6 +82,51 @@ public class MWOIntegrationTests
     }
 
     [TestMethod]
+    public void Atlas_VerifyArmature()
+    {
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\atlas.chr", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.Render();
+        var daeObject = colladaData.DaeObject;
+    }
+
+    [TestMethod]
+    public void Atlas_VerifyArmature2()
+    {
+        var args = new string[] { $@"d:\depot\mwo\objects\mechs\atlas\body\atlas.chr", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.Render();
+        var daeObject = colladaData.DaeObject;
+    }
+
+    [TestMethod]
+    public void Adder_VerifyArmature()
+    {
+        var args = new string[] { $@"d:\depot\mwo\objects\mechs\adder\body\adder.chr", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.Render();
+        var daeObject = colladaData.DaeObject;
+    }
+
+    [TestMethod]
     public void adr_right_torso_uac20_bh1()
     {
         // This model has 4 mtl files, all variations of mechdefault.

@@ -27,7 +27,7 @@ internal sealed class ChunkController_905 : ChunkController
         base.Read(b);
 
         // TODO: detect shit
-        ((EndiannessChangeableBinaryReader) b).IsBigEndian = true;
+        ((EndiannessChangeableBinaryReader) b).IsBigEndian = false;
 
         NumKeyPos = b.ReadUInt32();
         NumKeyRot = b.ReadUInt32();

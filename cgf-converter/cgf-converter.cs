@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using CgfConverter.Renderers;
 using CgfConverter.Renderers.Collada;
 using CgfConverter.Renderers.Gltf;
@@ -15,7 +14,7 @@ namespace CgfConverter;
 
 public class Program
 {
-    private readonly TaggedLogger Log = new TaggedLogger("Program");
+    private readonly TaggedLogger Log = new("Program");
     private readonly ArgsHandler _args;
 
     private Program(ArgsHandler args)

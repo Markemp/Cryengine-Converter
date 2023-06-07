@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Xml.Serialization;
 using System;
-using System.Diagnostics.CodeAnalysis;
 using CgfConverter.Materials;
 
 /// <summary>The texture object</summary>
