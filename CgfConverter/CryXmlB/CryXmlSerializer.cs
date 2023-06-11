@@ -1,42 +1,68 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using Extensions;
 
-namespace HoloXPLOR.DataForge;
+namespace CgfConverter.CryXmlB;
 
 public static class CryXmlSerializer
 {
-    public static XmlDocument ReadFile(string inFile, bool writeLog = false) => ReadStream(File.OpenRead(inFile), writeLog);
+    public static readonly ImmutableArray<byte> PbxmlMagic = "pbxml\0"u8.ToArray().ToImmutableArray();
+    public static readonly ImmutableArray<byte> CryXmlMagic = "CryXmlB\0"u8.ToArray().ToImmutableArray();
 
-    public static XmlDocument ReadStream(Stream inStream, bool writeLog = false)
+    public static XmlDocument ReadFile(string inFile, bool writeLog = false)
+        => ReadStream(File.OpenRead(inFile), writeLog);
+
+    public static XmlDocument ReadStream(Stream inStream, bool writeLog = false, bool leaveOpen = false)
     {
-        using var br = new BinaryReader(inStream);
-        var peek = (char)br.PeekChar();
-
-        if (peek == '<')    // XML
+        Span<byte> peek = stackalloc byte[Math.Max(PbxmlMagic.Length, CryXmlMagic.Length)];
+        try
         {
+            // Ensure that inStream is peekable.
+            // If it isn't, then make a copy of the stream into a MemoryStream.
+            if (!inStream.CanSeek)
+            {
+                var prevStream = inStream;
+                inStream = new MemoryStream();
+                prevStream.CopyTo(inStream);
+                if (!leaveOpen)
+                    prevStream.Dispose();
+            }
+            
+            peek = peek[..inStream.Read(peek)];
+            inStream.Position -= peek.Length;
+            
+            // There is no way that a text XML file starts with these bytes.
+            if (peek.StartsWith(PbxmlMagic.AsSpan()))
+                return LoadPbxmlFile(new(inStream));
+            if (peek.StartsWith(CryXmlMagic.AsSpan()))
+                return LoadScXmlFile(writeLog, new(inStream));
+
+            // Attempt parsing as text XML document as the final option,
+            // as the file may be containing byte order mark, or is in other unicode encodings else than UTF-8.
             var xml = new XmlDocument();
             xml.Load(inStream);
-            return xml;     // File is already XML
+            return xml;
         }
-        else if (peek == 'p')  // pbxml, for Sonic Boom {
-            return LoadPbxmlFile(br);
-        else if (peek == 'C')  // Binary Cryengine XML (CryXmlB)
-            return LoadScXmlFile(writeLog, br);
-
-        throw new Exception("Unknown File Format"); // Unknown file format
+        catch (Exception e)
+        {
+            throw new InvalidDataException($"Unknown file format(head={peek.ToString()})", e);
+        }
+        finally
+        {
+            if (!leaveOpen)
+                inStream.Dispose();
+        }
     }
 
     private static XmlDocument LoadPbxmlFile(BinaryReader br)
     {
-        string header = br.ReadCString();
-
-        if (header != "pbxml")
-            throw new Exception("Unknown File Format");
+        if (!PbxmlMagic.AsSpan().SequenceEqual(br.ReadBytes(PbxmlMagic.Length)))
+            throw new InvalidDataException("Provided stream does not contain a pbxml file.");
 
         XmlDocument doc = new();
 
@@ -61,15 +87,25 @@ public static class CryXmlSerializer
             element.SetAttribute(key, value);
         }
 
-        element.InnerText = br.ReadCString();
+        var nodeText = br.ReadCString();
+        if (nodeText != "")
+            element.AppendChild(doc.CreateTextNode(nodeText));
 
         for (var i = 0; i < numberOfChildren; i++)
         {
             var expectedLength = br.ReadCryInt();
             var expectedPosition = br.BaseStream.Position + expectedLength;
             element.AppendChild(CreateNewElement(br, doc));
-            if (expectedLength != 0 && br.BaseStream.Position != expectedPosition)
-                throw new InvalidDataException();
+            if (i + 1 == numberOfChildren)
+            {
+                if (expectedLength != 0)
+                    throw new InvalidDataException("Last child node must not have an expectedLength.");
+            }
+            else
+            {
+                if (br.BaseStream.Position != expectedPosition)
+                    throw new InvalidDataException("Expected length does not match.");
+            }
         }
 
         return element;
@@ -77,10 +113,8 @@ public static class CryXmlSerializer
 
     private static XmlDocument LoadScXmlFile(bool writeLog, BinaryReader br)
     {
-        string header = br.ReadCString();
-
-        if (header != "CryXmlB")
-            throw new Exception("Unknown File Format");
+        if (!CryXmlMagic.AsSpan().SequenceEqual(br.ReadBytes(CryXmlMagic.Length)))
+            throw new InvalidDataException("Provided stream does not contain a CryXml file.");
 
         var headerLength = br.BaseStream.Position;
         var fileLength = br.ReadInt32();
@@ -103,7 +137,6 @@ public static class CryXmlSerializer
         if (writeLog)
         {
             Console.WriteLine("Header");
-            Console.WriteLine("0x{0:X6}: {1}", 0x00, header);
             Console.WriteLine("0x{0:X6}: {1:X8} (Dec: {1:D8})", headerLength + 0x00, fileLength);
             Console.WriteLine("0x{0:X6}: {1:X8} (Dec: {1:D8})", headerLength + 0x04, nodeTableOffset);
             Console.WriteLine("0x{0:X6}: {1:X8} (Dec: {1:D8})", headerLength + 0x08, nodeTableCount);
@@ -175,7 +208,7 @@ public static class CryXmlSerializer
                 Console.WriteLine("0x{0:X6}: {1:X8} {2:X8}", position, value.NameOffset, value.ValueOffset);
         }
         if (writeLog)
-            Console.WriteLine("\nOrder Table");
+            Console.Write("\nOrder Table... ");
 
         var table3 = new List<int>();
         br.BaseStream.Seek(offset3, SeekOrigin.Begin);
@@ -191,7 +224,10 @@ public static class CryXmlSerializer
         }
 
         if (writeLog)
+        {
+            Console.WriteLine("{0} entries.", table3.Count);
             Console.WriteLine("\nDynamic Dictionary");
+        }
 
         var dataTable = new List<CryXmlValue>();
         br.BaseStream.Seek(contentOffset, SeekOrigin.Begin);
@@ -220,7 +256,7 @@ public static class CryXmlSerializer
         var bugged = false;
 #pragma warning restore CS0219 // The variable 'bugged' is assigned but its value is never used
 
-        var xmlMap = new Dictionary<int, XmlElement> { };
+        var xmlMap = new Dictionary<int, XmlElement>();
 
         foreach (var node in nodeTable)
         {
@@ -228,8 +264,8 @@ public static class CryXmlSerializer
 
             for (int i = 0, j = node.AttributeCount; i < j; i++)
             {
-                if (dataMap.ContainsKey(attributeTable[attributeIndex].ValueOffset))
-                    element.SetAttribute(dataMap[attributeTable[attributeIndex].NameOffset], dataMap[attributeTable[attributeIndex].ValueOffset]);
+                if (dataMap.TryGetValue(attributeTable[attributeIndex].ValueOffset, out var attrValue))
+                    element.SetAttribute(dataMap[attributeTable[attributeIndex].NameOffset], attrValue);
                 else
                 {
                     bugged = true;
@@ -239,11 +275,14 @@ public static class CryXmlSerializer
             }
 
             xmlMap[node.NodeID] = element;
-            if (xmlMap.ContainsKey(node.ParentNodeID))
-                xmlMap[node.ParentNodeID].AppendChild(element);
+            if (xmlMap.TryGetValue(node.ParentNodeID, out var parent))
+                parent.AppendChild(element);
             else
                 xmlDoc.AppendChild(element);
         }
+        
+        if (writeLog && bugged)
+            Console.WriteLine("XML file had attributes without valid value.");
 
         return xmlDoc;
     }
@@ -258,7 +297,7 @@ public static class CryXmlSerializer
 
             xmlDoc.Save(ms);
             ms.Seek(0, SeekOrigin.Begin);
-            return xs.Deserialize(ms) as TObject;
+            return (TObject) (xs.Deserialize(ms) ?? throw new NullReferenceException("Deserialize returned null"));
         }
         finally
         {
@@ -278,6 +317,6 @@ public static class CryXmlSerializer
 
         XmlSerializer xs = new XmlSerializer(typeof(TObject));
 
-        return xs.Deserialize(ms) as TObject;
+        return (TObject) (xs.Deserialize(ms) ?? throw new NullReferenceException("Deserialize returned null"));
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using CgfConverter.CryXmlB;
 
 namespace CgfConverter.Models
 {
@@ -49,7 +50,7 @@ namespace CgfConverter.Models
         {
             try
             {
-                return HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<PrefabsLibrary>(stream);
+                return CryXmlSerializer.Deserialize<PrefabsLibrary>(stream);
                 //return HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<CryEngineCore.Material>(materialfile.FullName);
             }
             catch (Exception ex)
