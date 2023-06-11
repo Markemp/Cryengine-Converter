@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -30,14 +29,6 @@ public class RealFileSystem : IPackFileSystem
                 FileMode.Open,
                 FileAccess.Read);
         }
-        catch (FileNotFoundException)
-        {
-            throw new FileNotFoundException(path);
-        }
-        catch (DirectoryNotFoundException)
-        {
-            throw new FileNotFoundException(path);
-        }
         catch (IOException ioe) when (ioe.HResult == unchecked((int) 0x8007007B)) // Path name is invalid
         {
             throw new FileNotFoundException(path);
@@ -54,8 +45,8 @@ public class RealFileSystem : IPackFileSystem
         {
             Regex.Replace(FileHandlingExtensions.CombineAndNormalizePath(_rootPath, pattern), "[/\\\\]+", "\\")
         };
-        var testedPatterns = new HashSet<string>();
-        var foundPaths = new HashSet<string>();
+        var testedPatterns = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+        var foundPaths = new List<string>();
 
         while (remainingPatterns.Any())
         {
@@ -91,7 +82,7 @@ public class RealFileSystem : IPackFileSystem
                         {
                             remainingPatterns.AddRange(
                                 Directory.GetFiles(searchBase, $"{prefix}*{suffix}{remainingPattern}")
-                                    .Select(x => Path.Combine(searchBase, x)));
+                                    .Select(x => Path.Join(searchBase, x)));
                         }
                         catch (Exception)
                         {
@@ -104,7 +95,7 @@ public class RealFileSystem : IPackFileSystem
                     {
                         remainingPatterns.AddRange(
                             Directory.GetDirectories(searchBase, $"{prefix}*")
-                                .Select(x => Path.Combine(searchBase, x, remainingPattern)));
+                                .Select(x => Path.Join(searchBase, x, remainingPattern)));
                     }
                     catch (Exception)
                     {
@@ -121,7 +112,7 @@ public class RealFileSystem : IPackFileSystem
                     try {
                         remainingPatterns.AddRange(
                             Directory.GetFileSystemEntries(searchBase, pattern[i..next])
-                                .Select(x => Path.Combine(searchBase, x) + remainingPattern));
+                                .Select(x => Path.Join(searchBase, x) + remainingPattern));
                     }
                     catch (Exception)
                     {
@@ -141,7 +132,7 @@ public class RealFileSystem : IPackFileSystem
     {
         try
         {
-            return File.ReadAllBytes(Path.Combine(_rootPath, path));
+            return File.ReadAllBytes(Path.Join(_rootPath, path));
         }
         catch (FileNotFoundException)
         {

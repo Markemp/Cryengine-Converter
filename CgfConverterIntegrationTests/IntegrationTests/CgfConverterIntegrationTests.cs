@@ -281,7 +281,7 @@ namespace CgfConverterTests.IntegrationTests
             ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
             colladaData.GenerateDaeObject();
 
-            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
             Assert.AreEqual(3, actualMaterialsCount);
             var libraryGeometry = colladaData.DaeObject.Library_Geometries;
             Assert.AreEqual(3, libraryGeometry.Geometry.Length);
@@ -309,7 +309,7 @@ namespace CgfConverterTests.IntegrationTests
             var images = colladaData.DaeObject.Library_Images;
             Assert.AreEqual(3, images.Image.Length);
             Assert.AreEqual("green_fern_bush_Diffuse", images.Image[0].ID);
-            Assert.AreEqual("textures/green_fern_bush_leaf_a.dds", images.Image[0].Init_From.Uri);
+            Assert.AreEqual("objects\\natural\\bushes\\green_fern_bush\\green_fern_bush_leaf_a.dds", images.Image[0].Init_From.Uri);
 
             // Validate visual_scene
             var visualScene = colladaData.DaeObject.Library_Visual_Scene;

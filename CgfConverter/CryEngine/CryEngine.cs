@@ -33,7 +33,7 @@ public partial class CryEngine
     //public List<Material> Materials { get; internal set; } = new();
     public ChunkNode RootNode { get; internal set; }
     public ChunkCompiledBones Bones { get; internal set; }
-    public SkinningInfo SkinningInfo { get; set; }
+    public SkinningInfo? SkinningInfo { get; set; }
     public string InputFile { get; internal set; }
     public IPackFileSystem PackFileSystem { get; internal set; }
 
