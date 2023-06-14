@@ -4,6 +4,9 @@ using Newtonsoft.Json;
 
 namespace CgfConverter.Renderers.Gltf.Models;
 
+/// <summary>
+/// Base object for a GLTF file.
+/// </summary>
 public class GltfRoot
 {
     [JsonProperty("asset")] public GltfAsset Asset = new();

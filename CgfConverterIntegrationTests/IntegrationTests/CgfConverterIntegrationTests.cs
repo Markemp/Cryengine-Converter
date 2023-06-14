@@ -8,6 +8,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using CgfConverter.Renderers.Collada;
+using CgfConverter.Renderers.Gltf;
 
 namespace CgfConverterTests.IntegrationTests
 {
@@ -299,6 +300,72 @@ namespace CgfConverterTests.IntegrationTests
             Assert.IsTrue(uvs.Float_Array.Value_As_String.StartsWith("0.520376 0.339241 0.506553 0.148210 0.582104 0.149441 0.421715 0.334883 0.408283"));
             Assert.IsTrue(colors.Float_Array.Value_As_String.StartsWith("0.388235 0.854902 0.635294 0.831373 1 0.854902 0.615686 0.827451 1 0.854902 0.690196"));
             
+            // Validate Triangles
+            Assert.AreEqual(918, mesh.Triangles[0].Count);
+            Assert.AreEqual("green_fern_bush-material", mesh.Triangles[0].Material);
+            Assert.IsTrue(mesh.Triangles[0].P.Value_As_String.StartsWith("0 0 0 0 1 1 1 1 2 2 2 2 3 3 3 3 4 4 4 4 1 1 1 1 1 1 1 1 0 0 0 0 3 3 3 3 5"));
+            Assert.AreEqual(4, mesh.Triangles[0].Input.Length);
+
+            // Validate image library
+            var images = colladaData.DaeObject.Library_Images;
+            Assert.AreEqual(3, images.Image.Length);
+            Assert.AreEqual("green_fern_bush_Diffuse", images.Image[0].ID);
+            Assert.AreEqual("objects\\natural\\bushes\\green_fern_bush\\green_fern_bush_leaf_a.dds", images.Image[0].Init_From.Uri);
+
+            // Validate visual_scene
+            var visualScene = colladaData.DaeObject.Library_Visual_Scene;
+            Assert.AreEqual(1, visualScene.Visual_Scene.Length);
+            Assert.AreEqual("Scene", visualScene.Visual_Scene[0].ID);
+            var nodes = visualScene.Visual_Scene[0].Node;
+            Assert.AreEqual(1, nodes.Length);
+            Assert.AreEqual(6, nodes[0].node.Length);
+            Assert.AreEqual("green_fern_bush_a", nodes[0].ID);
+            Assert.AreEqual("green_fern_bush_a", nodes[0].ID);
+            Assert.AreEqual("NODE", nodes[0].Type.ToString());
+            Assert.AreEqual("0.993981 0.109553 -0 0 -0.109553 0.993981 -0 0 -0 0 1 0 0 0 0 1", nodes[0].Matrix[0].Value_As_String);
+            Assert.AreEqual("green_fern_bush_a", nodes[0].Instance_Geometry[0].Name);
+            Assert.AreEqual("#green_fern_bush_a-mesh", nodes[0].Instance_Geometry[0].URL);
+            Assert.AreEqual("#green_fern_bush-material", nodes[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
+            Assert.AreEqual("green_fern_bush-material", nodes[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+            Assert.AreEqual("#proxy_AI-material", nodes[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[1].Target);
+            Assert.AreEqual("proxy_AI-material", nodes[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[1].Symbol);
+
+            testUtils.ValidateColladaXml(colladaData);
+        }
+
+        [TestMethod]
+        public void Green_fern_bush_a_GltfFormat_MaterialFileExists()
+        {
+            var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\CryEngine\green_fern_bush_a.cgf" };
+            int result = testUtils.argsHandler.ProcessArgs(args);
+            Assert.AreEqual(0, result);
+            CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+            cryData.ProcessCryengineFiles();
+
+            GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+            var gltfObject = gltfRenderer.GenerateGltfObject();
+
+            ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+            colladaData.GenerateDaeObject();
+
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
+            Assert.AreEqual(3, actualMaterialsCount);
+            var libraryGeometry = colladaData.DaeObject.Library_Geometries;
+            Assert.AreEqual(3, libraryGeometry.Geometry.Length);
+
+            // Validate geometry and colors
+            var mesh = colladaData.DaeObject.Library_Geometries.Geometry[0].Mesh;
+            Assert.AreEqual(4, mesh.Source.Length);
+            Assert.AreEqual(2, mesh.Triangles.Length);
+            var vertices = mesh.Source[0];
+            var normals = mesh.Source[1];
+            var uvs = mesh.Source[2];
+            var colors = mesh.Source[3];
+            Assert.IsTrue(vertices.Float_Array.Value_As_String.StartsWith("0.234264 0.802049 0.952682 0.171377 0.854397 0.869569 0.118639 0.752597 0.880529 0.302113"));
+            Assert.IsTrue(normals.Float_Array.Value_As_String.StartsWith("-0.486369 0.300190 0.820567 -0.605179 0.386607 0.695912 -0.628418 0.290691 0.721519 -0.521254"));
+            Assert.IsTrue(uvs.Float_Array.Value_As_String.StartsWith("0.520376 0.339241 0.506553 0.148210 0.582104 0.149441 0.421715 0.334883 0.408283"));
+            Assert.IsTrue(colors.Float_Array.Value_As_String.StartsWith("0.388235 0.854902 0.635294 0.831373 1 0.854902 0.615686 0.827451 1 0.854902 0.690196"));
+
             // Validate Triangles
             Assert.AreEqual(918, mesh.Triangles[0].Count);
             Assert.AreEqual("green_fern_bush-material", mesh.Triangles[0].Material);

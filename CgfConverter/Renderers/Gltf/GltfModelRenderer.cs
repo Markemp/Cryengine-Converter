@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using CgfConverter.Renderers.Gltf.Models;
+using System;
+using System.IO;
 
 namespace CgfConverter.Renderers.Gltf;
 
@@ -23,5 +25,17 @@ public class GltfModelRenderer : BaseGltfRenderer, IRenderer
 
         Save(_cryEngine.InputFile);
         return 1;
+    }
+
+    public GltfRoot GenerateGltfObject()
+    {
+        Reset("Scene");
+
+        if (!CreateModelNode(out var node, _cryEngine))
+            throw new ApplicationException("Model could not be written.");
+
+        CurrentScene.Nodes.Add(AddNode(node));
+        
+        return _root;
     }
 }
