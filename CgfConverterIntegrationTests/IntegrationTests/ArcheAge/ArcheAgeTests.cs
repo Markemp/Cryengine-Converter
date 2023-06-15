@@ -6,7 +6,7 @@ using System.Globalization;
 using System.Threading;
 using CgfConverter.Renderers.Collada;
 
-namespace CgfConverterTests.IntegrationTests.ArcheAge;
+namespace CgfConverterTests.IntegrationTests;
 
 [TestClass]
 public class ArcheAgeTests

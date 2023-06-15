@@ -7,7 +7,7 @@ using System.Globalization;
 using System.Threading;
 using CgfConverter.Renderers.Collada;
 
-namespace CgfConverterTests.IntegrationTests.SonicBoom;
+namespace CgfConverterTests.IntegrationTests;
 
 [TestClass]
 public class SonicBoomTests

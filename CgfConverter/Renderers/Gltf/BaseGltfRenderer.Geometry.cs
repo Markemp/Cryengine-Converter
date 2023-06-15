@@ -194,7 +194,7 @@ public partial class BaseGltfRenderer
         }
 
         if (vertsUvs is not null && vertices is null)
-            return Log.E<bool>("Mesh[{0}]: vertsUvs is currently not supported.", rootNode.Name);
+            return Log.E<bool>("Mesh[{0}]: vertsUvs is currently not supported.", rootNode.Name);  // TODO: Support VertsUvs.
 
         baseName = $"${rootNode.Name}/index";
         var indexBufferView = GetBufferViewOrDefault(baseName) ??

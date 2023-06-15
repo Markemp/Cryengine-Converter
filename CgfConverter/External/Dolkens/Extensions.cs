@@ -518,7 +518,7 @@ namespace Dolkens.Framework.Extensions
         public static Dictionary<Object, Object> ToDictionary(this Object[] input)
         {
             Int32 i = 0;
-            Dictionary<Object, Object> buffer = new Dictionary<Object, Object>();
+            Dictionary<Object, Object> buffer = new();
 
             if (input == null)
                 return buffer;
@@ -541,7 +541,7 @@ namespace Dolkens.Framework.Extensions
         public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(this Object[] args)
         {
             Int32 i = 0;
-            Dictionary<TKey, TValue> buffer = new Dictionary<TKey, TValue>();
+            Dictionary<TKey, TValue> buffer = new();
 
             if (args == null)
                 return buffer;

@@ -8,7 +8,7 @@ using System.Linq;
 using System.Threading;
 using CgfConverter.Renderers.Collada;
 
-namespace CgfConverterTests.IntegrationTests.Hunt
+namespace CgfConverterTests.IntegrationTests
 {
     [TestClass]
     public class HuntIntegrationTests

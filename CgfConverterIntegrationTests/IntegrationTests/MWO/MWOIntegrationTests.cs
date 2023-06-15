@@ -9,7 +9,7 @@ using System.Linq;
 using System.Threading;
 using CgfConverter.Renderers.Collada;
 
-namespace CgfConverterTests.IntegrationTests.MWO;
+namespace CgfConverterTests.IntegrationTests;
 
 [TestClass]
 public class MWOIntegrationTests
