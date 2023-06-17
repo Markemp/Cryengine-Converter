@@ -75,7 +75,6 @@ public class ColladaModelRenderer : IRenderer
         Grendgine_Collada_Library_Effects libraryEffects = new();
         DaeObject.Library_Effects = libraryEffects;
 
-        //WriteLibrary_Geometries();
         WriteLibrary_Geometries();
 
         // If there is Skinning info, create the controller library and set up visual scene to refer to it.  Otherwise just write the Visual Scene

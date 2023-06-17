@@ -8,6 +8,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using CgfConverter.Renderers.Collada;
+using CgfConverter.Renderers.Gltf;
 
 namespace CgfConverterTests.IntegrationTests;
 
@@ -488,5 +489,36 @@ public class MWOIntegrationTests
         Assert.AreEqual("hbr_right_torso", daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].ID);
         Assert.AreEqual(1, daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].Instance_Geometry.Length);
         testUtils.ValidateColladaXml(colladaData);
+    }
+
+    [TestMethod]
+    public void HulaGirl_ColladaFormat()
+    {
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\hulagirl__gold_a.cga" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+
+        int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
+        Assert.AreEqual(1, actualMaterialsCount);
+        var libraryGeometry = colladaData.DaeObject.Library_Geometries;
+        Assert.AreEqual(2, libraryGeometry.Geometry.Length);
+    }
+
+    [TestMethod]
+    public void HulaGirl_GltfFormat()
+    {
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\hulagirl__gold_a.cga" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        var objectData = gltfRenderer.GenerateGltfObject();
     }
 }

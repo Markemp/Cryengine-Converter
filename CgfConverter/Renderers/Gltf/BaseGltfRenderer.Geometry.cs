@@ -5,6 +5,7 @@ using System.Linq;
 using System.Numerics;
 using CgfConverter.CryEngineCore;
 using CgfConverter.Renderers.Gltf.Models;
+using Extensions;
 
 namespace CgfConverter.Renderers.Gltf;
 
@@ -25,11 +26,12 @@ public partial class BaseGltfRenderer
         weights = joints = 0;
 
         var baseName = $"{rootNode.Name}/bone/weight";
+        
         weights =
             GetAccessorOrDefault(baseName, 0,
-                skinningInfo.IntVertices == null ? skinningInfo.BoneMapping.Count : skinningInfo.Ext2IntMap.Count)
+                skinningInfo.IntVertices is null ? skinningInfo.BoneMapping.Count : skinningInfo.Ext2IntMap.Count)
             ?? AddAccessor(baseName, -1, null,
-                skinningInfo.IntVertices == null
+                skinningInfo.IntVertices is null
                     ? skinningInfo.BoneMapping
                         .Select(x => new TypedVec4<float>(
                             x.Weight[0] / 255f, x.Weight[1] / 255f, x.Weight[2] / 255f, x.Weight[3] / 255f))
@@ -86,7 +88,7 @@ public partial class BaseGltfRenderer
         baseName = $"{rootNode.Name}/bone/joint";
         joints =
             GetAccessorOrDefault(baseName, 0,
-                skinningInfo.IntVertices == null ? skinningInfo.BoneMapping.Count : skinningInfo.Ext2IntMap.Count)
+                skinningInfo.IntVertices is null ? skinningInfo.BoneMapping.Count : skinningInfo.Ext2IntMap.Count)
             ?? AddAccessor(baseName, -1, null,
                 skinningInfo is {HasIntToExtMapping: true, IntVertices: { }}
                     ? skinningInfo.Ext2IntMap
@@ -247,7 +249,7 @@ public partial class BaseGltfRenderer
                 continue;
             }
 
-            if (nodeChunk.ObjectChunk is not ChunkMesh meshChunk)
+            if (nodeChunk.ObjectChunk is not ChunkMesh meshChunk)  // TODO: Check this.  Proxy nodes may not have a mesh but have children with geometry.
             {
                 Log.D("NodeChunk[{0}]: Skipped; no valid ChunkMesh is referenced to.", nodeChunk.Name);
                 continue;
@@ -255,7 +257,10 @@ public partial class BaseGltfRenderer
 
             var rootNode = new GltfNode
             {
-                Name = rootNodeName + "/" + nodeChunk.Name,
+                Name = nodeChunk.Name,
+                Rotation = Quaternion.CreateFromRotationMatrix(nodeChunk.LocalTransform).ToGltfList(true),
+                Translation = nodeChunk.LocalTransform.GetTranslation().ToGltfList(true),
+                Scale = nodeChunk.Scale.ToGltfList()
             };
 
             var accessors = new GltfMeshPrimitiveAttributes();

@@ -1,6 +1,7 @@
 ﻿using System;
 using CgfConverter.Structs;
 using System.Numerics;
+using System.Collections.Generic;
 
 namespace Extensions;
 
@@ -47,5 +48,14 @@ public static class QuaternionExtensions
         rotationalMatrix.M23 = 2.0f * (tmp1 - tmp2) * invs;
 
         return rotationalMatrix;
+    }
+
+    public static List<float> ToGltfList(this Quaternion q, bool isGltfCoordinateSystem = false)
+    {
+        if (isGltfCoordinateSystem)
+            return new List<float>() { q.X, q.Z, -q.Y, q.W };
+        else
+            return new List<float>() { q.X, q.Y, q.Z, q.W };
+        //new() { q.X, q.Y, q.Z, q.W };
     }
 }

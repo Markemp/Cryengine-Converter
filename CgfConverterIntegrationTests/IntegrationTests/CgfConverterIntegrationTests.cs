@@ -1,5 +1,7 @@
 ﻿using CgfConverter;
 using CgfConverter.CryEngineCore;
+using CgfConverter.Renderers.Collada;
+using CgfConverter.Renderers.Gltf;
 using CgfConverterTests.TestUtilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -7,8 +9,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
-using CgfConverter.Renderers.Collada;
-using CgfConverter.Renderers.Gltf;
 
 namespace CgfConverterTests.IntegrationTests;
 
@@ -30,7 +30,6 @@ public class CgfConverterIntegrationTests
         testUtils.GetSchemaSet();
     }
 
-
     [TestMethod]
     public void SimpleCubeSchemaValidation()
     {
@@ -44,7 +43,6 @@ public class CgfConverterIntegrationTests
         testUtils.ValidateXml($@"{userHome}\OneDrive\ResourceFiles\simple_cube_bad.dae");
         Assert.AreEqual(1, testUtils.errors.Count);
     }
-
 
     [TestMethod]
     public void brfl_rifle_NoMtlFilev802_CreatesDummyInstanceMaterial()
@@ -332,7 +330,7 @@ public class CgfConverterIntegrationTests
         Assert.IsTrue(normals.Float_Array.Value_As_String.StartsWith("-0.486369 0.300190 0.820567 -0.605179 0.386607 0.695912 -0.628418 0.290691 0.721519 -0.521254"));
         Assert.IsTrue(uvs.Float_Array.Value_As_String.StartsWith("0.520376 0.339241 0.506553 0.148210 0.582104 0.149441 0.421715 0.334883 0.408283"));
         Assert.IsTrue(colors.Float_Array.Value_As_String.StartsWith("0.388235 0.854902 0.635294 0.831373 1 0.854902 0.615686 0.827451 1 0.854902 0.690196"));
-        
+
         // Validate Triangles
         Assert.AreEqual(918, mesh.Triangles[0].Count);
         Assert.AreEqual("green_fern_bush-material", mesh.Triangles[0].Material);
@@ -407,7 +405,7 @@ public class CgfConverterIntegrationTests
 
         // Validate Geometry
 
-       
+
     }
 }
 
