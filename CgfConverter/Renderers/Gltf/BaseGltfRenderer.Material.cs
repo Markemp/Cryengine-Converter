@@ -71,7 +71,7 @@ public partial class BaseGltfRenderer
 
             if (_materialMap.TryGetValue(m, out var existingIndex))
             {
-                materialIndices[matId] = new WrittenMaterial(existingIndex, m, _root.Materials[existingIndex]);
+                materialIndices[matId] = new WrittenMaterial(existingIndex, m, _gltfRoot.Materials[existingIndex]);
                 continue;
             }
 
@@ -88,7 +88,7 @@ public partial class BaseGltfRenderer
                         BaseColorFactor = new[] {0f, 0f, 0f, 0f},
                     },
                 });
-                materialIndices[matId] = new WrittenMaterial(matIndexHidden, m, _root.Materials[matIndexHidden]);
+                materialIndices[matId] = new WrittenMaterial(matIndexHidden, m, _gltfRoot.Materials[matIndexHidden]);
                 continue;
             }
 
@@ -216,7 +216,7 @@ public partial class BaseGltfRenderer
                 emissiveIntensitySoftMax) / 65535f);
             // TODO: How are this and m.emissiveValue related?
 
-            _root.ExtensionsUsed.Add("KHR_materials_specular");
+            _gltfRoot.ExtensionsUsed.Add("KHR_materials_specular");
             var matIndex = _materialMap[m] = AddMaterial(new GltfMaterial
             {
                 Name = m.Name,
@@ -290,7 +290,7 @@ public partial class BaseGltfRenderer
                     },
                 },
             });
-            materialIndices[matId] = new WrittenMaterial(matIndex, m, _root.Materials[matIndex]);
+            materialIndices[matId] = new WrittenMaterial(matIndex, m, _gltfRoot.Materials[matIndex]);
         }
 
         return materialIndices;

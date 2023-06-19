@@ -18,8 +18,8 @@ namespace CgfConverter.Renderers.Collada;
 
 public class ColladaModelRenderer : IRenderer
 {
-    protected readonly ArgsHandler Args;
-    protected readonly CryEngine CryData;
+    protected readonly ArgsHandler _args;
+    protected readonly CryEngine _cryData;
     public readonly Grendgine_Collada DaeObject = new();
 
     private readonly CultureInfo culture = CultureInfo.CreateSpecificCulture("en-US");
@@ -30,12 +30,13 @@ public class ColladaModelRenderer : IRenderer
     /// <summary>Dictionary of all material libraries in the model, with the key being the library from mtlname chunk.</summary>
     private readonly Dictionary<string, Material> createdMaterialLibraries = new();
 
-    public ColladaModelRenderer(ArgsHandler argsHandler, CryEngine cryEngine) {
-        Args = argsHandler;
-        CryData = cryEngine;
+    public ColladaModelRenderer(ArgsHandler argsHandler, CryEngine cryEngine) 
+    {
+        _args = argsHandler;
+        _cryData = cryEngine;
 
         // File name will be "<object name>.dae"
-        daeOutputFile = Args.FormatOutputFileName(".dae", CryData.InputFile);
+        daeOutputFile = _args.FormatOutputFileName(".dae", _cryData.InputFile);
     }
 
     public int Render()
@@ -43,24 +44,24 @@ public class ColladaModelRenderer : IRenderer
         GenerateDaeObject();
 
         // At this point, we should have a cryData.Asset object, fully populated.
-        Utilities.Log(LogLevelEnum.Debug);
-        Utilities.Log(LogLevelEnum.Debug, "*** Starting WriteCOLLADA() ***");
-        Utilities.Log(LogLevelEnum.Debug);
+        Log(LogLevelEnum.Debug);
+        Log(LogLevelEnum.Debug, "*** Starting WriteCOLLADA() ***");
+        Log(LogLevelEnum.Debug);
 
         TextWriter writer = new StreamWriter(daeOutputFile.FullName);
         serializer.Serialize(writer, DaeObject);
 
         writer.Close();
-        Utilities.Log(LogLevelEnum.Debug, "End of Write Collada.  Export complete.");
+        Log(LogLevelEnum.Debug, "End of Write Collada.  Export complete.");
         return 1;
     }
 
     public void GenerateDaeObject()
     {
-        Utilities.Log(LogLevelEnum.Debug, "Number of models: {0}", CryData.Models.Count);
-        for (int i = 0; i < CryData.Models.Count; i++)
+        Log(LogLevelEnum.Debug, "Number of models: {0}", _cryData.Models.Count);
+        for (int i = 0; i < _cryData.Models.Count; i++)
         {
-            Utilities.Log(LogLevelEnum.Debug, "\tNumber of nodes in model: {0}", CryData.Models[i].NodeMap.Count);
+            Log(LogLevelEnum.Debug, "\tNumber of nodes in model: {0}", _cryData.Models[i].NodeMap.Count);
         }
 
         WriteColladaRoot(colladaVersion);
@@ -78,7 +79,7 @@ public class ColladaModelRenderer : IRenderer
         WriteLibrary_Geometries();
 
         // If there is Skinning info, create the controller library and set up visual scene to refer to it.  Otherwise just write the Visual Scene
-        if (CryData.SkinningInfo.HasSkinningInfo)
+        if (_cryData.SkinningInfo.HasSkinningInfo)
         {
             WriteLibrary_Controllers();
             WriteLibrary_VisualScenesWithSkeleton();
@@ -110,11 +111,11 @@ public class ColladaModelRenderer : IRenderer
             Author = "Heffay",
             Author_Website = "https://github.com/Markemp/Cryengine-Converter",
             Author_Email = "markemp@gmail.com",
-            Source_Data = CryData.RootNode.Name                    // The cgf/cga/skin/whatever file we read
+            Source_Data = _cryData.RootNode.Name                    // The cgf/cga/skin/whatever file we read
         };
         // Get the actual file creators from the Source Chunk
         contributors[1] = new Grendgine_Collada_Asset_Contributor();
-        foreach (ChunkSourceInfo sourceInfo in CryData.Chunks.Where(a => a.ChunkType == ChunkType.SourceInfo))
+        foreach (ChunkSourceInfo sourceInfo in _cryData.Chunks.Where(a => a.ChunkType == ChunkType.SourceInfo))
         {
             contributors[1].Author = sourceInfo.Author;
             contributors[1].Source_Data = sourceInfo.SourceFile;
@@ -127,7 +128,7 @@ public class ColladaModelRenderer : IRenderer
             Meter = 1.0,
             Name = "meter"
         };
-        asset.Title = CryData.RootNode.Name;
+        asset.Title = _cryData.RootNode.Name;
         DaeObject.Asset = asset;
         DaeObject.Asset.Contributor = contributors;
     }
@@ -297,10 +298,10 @@ public class ColladaModelRenderer : IRenderer
 
     public void WriteLibrary_Geometries()
     {
-        if (CryData.Models.Count == 1)  // Single file model
-            WriteGeometries(CryData.Models[0]);
+        if (_cryData.Models.Count == 1)  // Single file model
+            WriteGeometries(_cryData.Models[0]);
         else
-            WriteGeometries(CryData.Models[1]);
+            WriteGeometries(_cryData.Models[1]);
     }
 
     public void WriteGeometries(Model model)
@@ -327,15 +328,15 @@ public class ColladaModelRenderer : IRenderer
             ChunkDataStream? colors = null;
             ChunkDataStream? tangents = null;
 
-            if (Args.IsNodeNameExcluded(nodeChunk.Name))
+            if (_args.IsNodeNameExcluded(nodeChunk.Name))
             {
-                Utilities.Log(LogLevelEnum.Debug, $"Excluding node {nodeChunk.Name}");
+                Log(LogLevelEnum.Debug, $"Excluding node {nodeChunk.Name}");
                 continue;
             }
 
             if (nodeChunk.ObjectChunk is null)
             {
-                Utilities.Log(LogLevelEnum.Warning, "Skipped node with missing Object {0}", nodeChunk.Name);
+                Log(LogLevelEnum.Warning, "Skipped node with missing Object {0}", nodeChunk.Name);
                 continue;
             }
 
@@ -520,7 +521,7 @@ public class ColladaModelRenderer : IRenderer
                         {
                             Vector3 vertex = vertsUvs.Vertices[j];
                             // Rotate/translate the vertex
-                            if (!CryData.InputFile.EndsWith("skin") && !CryData.InputFile.EndsWith("chr"))
+                            if (!_cryData.InputFile.EndsWith("skin") && !_cryData.InputFile.EndsWith("chr"))
                                 vertex = (vertex * multiplerVector) + boundaryBoxCenter;
 
                             vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(vertex.X), Safe(vertex.Y), Safe(vertex.Z));
@@ -823,13 +824,13 @@ public class ColladaModelRenderer : IRenderer
                 Init_From = new Grendgine_Collada_Init_From()
             };
             // Try to resolve the texture file to a file on disk. Texture are always based on DataDir.
-            var textureFile = ResolveTextureFile(mat.Textures[i].File, Args.PackFileSystem);
+            var textureFile = ResolveTextureFile(mat.Textures[i].File, _args.PackFileSystem);
 
-            if (Args.PngTextures && File.Exists(Path.ChangeExtension(textureFile, ".png")))
+            if (_args.PngTextures && File.Exists(Path.ChangeExtension(textureFile, ".png")))
                 textureFile = Path.ChangeExtension(textureFile, ".png");
-            else if (Args.TgaTextures && File.Exists(Path.ChangeExtension(textureFile, ".tga")))
+            else if (_args.TgaTextures && File.Exists(Path.ChangeExtension(textureFile, ".tga")))
                 textureFile = Path.ChangeExtension(textureFile, ".tga");
-            else if (Args.TiffTextures && File.Exists(Path.ChangeExtension(textureFile, ".tif")))
+            else if (_args.TiffTextures && File.Exists(Path.ChangeExtension(textureFile, ".tif")))
                 textureFile = Path.ChangeExtension(textureFile, ".tif");
 
             textureFile = Path.GetRelativePath(daeOutputFile.DirectoryName, textureFile);
@@ -881,12 +882,12 @@ public class ColladaModelRenderer : IRenderer
             jointsSource.Name_Array = new Grendgine_Collada_Name_Array()
             {
                 ID = "Controller-joints-array",
-                Count = CryData.SkinningInfo.CompiledBones.Count,
+                Count = _cryData.SkinningInfo.CompiledBones.Count,
             };
             StringBuilder boneNames = new();
-            for (int i = 0; i < CryData.SkinningInfo.CompiledBones.Count; i++)
+            for (int i = 0; i < _cryData.SkinningInfo.CompiledBones.Count; i++)
             {
-                boneNames.Append(CryData.SkinningInfo.CompiledBones[i].boneName.Replace(' ', '_') + " ");
+                boneNames.Append(_cryData.SkinningInfo.CompiledBones[i].boneName.Replace(' ', '_') + " ");
             }
             jointsSource.Name_Array.Value_Pre_Parse = boneNames.ToString().TrimEnd();
             jointsSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
@@ -894,7 +895,7 @@ public class ColladaModelRenderer : IRenderer
                 Accessor = new Grendgine_Collada_Accessor
                 {
                     Source = "#Controller-joints-array",
-                    Count = (uint)CryData.SkinningInfo.CompiledBones.Count,
+                    Count = (uint)_cryData.SkinningInfo.CompiledBones.Count,
                     Stride = 1
                 }
             };
@@ -908,15 +909,15 @@ public class ColladaModelRenderer : IRenderer
                 Float_Array = new()
                 {
                     ID = "Controller-bind_poses-array",
-                    Count = CryData.SkinningInfo.CompiledBones.Count * 16,
-                    Value_As_String = GetBindPoseArray(CryData.SkinningInfo.CompiledBones)
+                    Count = _cryData.SkinningInfo.CompiledBones.Count * 16,
+                    Value_As_String = GetBindPoseArray(_cryData.SkinningInfo.CompiledBones)
                 },
                 Technique_Common = new Grendgine_Collada_Technique_Common_Source
                 {
                     Accessor = new Grendgine_Collada_Accessor
                     {
                         Source = "#Controller-bind_poses-array",
-                        Count = (uint)CryData.SkinningInfo.CompiledBones.Count,
+                        Count = (uint)_cryData.SkinningInfo.CompiledBones.Count,
                         Stride = 16,
                     }
                 }
@@ -944,28 +945,28 @@ public class ColladaModelRenderer : IRenderer
             };
             StringBuilder weights = new();
 
-            if (CryData.SkinningInfo.IntVertices is null)       // This is a case where there are bones, and only Bone Mapping data from a datastream chunk.  Skin files.
+            if (_cryData.SkinningInfo.IntVertices is null)       // This is a case where there are bones, and only Bone Mapping data from a datastream chunk.  Skin files.
             {
-                weightArraySource.Float_Array.Count = CryData.SkinningInfo.BoneMapping.Count;
-                for (int i = 0; i < CryData.SkinningInfo.BoneMapping.Count; i++)
+                weightArraySource.Float_Array.Count = _cryData.SkinningInfo.BoneMapping.Count;
+                for (int i = 0; i < _cryData.SkinningInfo.BoneMapping.Count; i++)
                 {
                     for (int j = 0; j < 4; j++)
                     {
-                        weights.Append(((float)CryData.SkinningInfo.BoneMapping[i].Weight[j] / 255).ToString() + " ");
+                        weights.Append(((float)_cryData.SkinningInfo.BoneMapping[i].Weight[j] / 255).ToString() + " ");
                     }
                 };
-                accessor.Count = (uint)CryData.SkinningInfo.BoneMapping.Count * 4;
+                accessor.Count = (uint)_cryData.SkinningInfo.BoneMapping.Count * 4;
             }
             else                                                // Bones and int verts.  Will use int verts for weights, but this doesn't seem perfect either.
             {
-                weightArraySource.Float_Array.Count = CryData.SkinningInfo.Ext2IntMap.Count;
-                for (int i = 0; i < CryData.SkinningInfo.Ext2IntMap.Count; i++)
+                weightArraySource.Float_Array.Count = _cryData.SkinningInfo.Ext2IntMap.Count;
+                for (int i = 0; i < _cryData.SkinningInfo.Ext2IntMap.Count; i++)
                 {
                     for (int j = 0; j < 4; j++)
                     {
-                        weights.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].Weights[j] + " ");
+                        weights.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].Weights[j] + " ");
                     }
-                    accessor.Count = (uint)CryData.SkinningInfo.Ext2IntMap.Count * 4;
+                    accessor.Count = (uint)_cryData.SkinningInfo.Ext2IntMap.Count * 4;
                 };
             }
             CleanNumbers(weights);
@@ -1004,7 +1005,7 @@ public class ColladaModelRenderer : IRenderer
 
             #region Vertex Weights
             Grendgine_Collada_Vertex_Weights vertexWeights = skin.Vertex_Weights = new Grendgine_Collada_Vertex_Weights();
-            vertexWeights.Count = CryData.SkinningInfo.BoneMapping.Count;
+            vertexWeights.Count = _cryData.SkinningInfo.BoneMapping.Count;
             skin.Vertex_Weights.Input = new Grendgine_Collada_Input_Shared[2];
             Grendgine_Collada_Input_Shared jointSemantic = skin.Vertex_Weights.Input[0] = new Grendgine_Collada_Input_Shared();
             jointSemantic.Semantic = Grendgine_Collada_Input_Semantic.JOINT;
@@ -1016,7 +1017,7 @@ public class ColladaModelRenderer : IRenderer
             weightSemantic.Offset = 1;
             StringBuilder vCount = new();
             //for (int i = 0; i < CryData.Models[0].SkinningInfo.IntVertices.Count; i++)
-            for (int i = 0; i < CryData.SkinningInfo.BoneMapping.Count; i++)
+            for (int i = 0; i < _cryData.SkinningInfo.BoneMapping.Count; i++)
             {
                 vCount.Append("4 ");
             };
@@ -1027,27 +1028,27 @@ public class ColladaModelRenderer : IRenderer
             StringBuilder vertices = new();
             //for (int i = 0; i < CryData.Models[0].SkinningInfo.IntVertices.Count * 4; i++)
             int index = 0;
-            if (!CryData.Models[0].SkinningInfo.HasIntToExtMapping)
+            if (!_cryData.Models[0].SkinningInfo.HasIntToExtMapping)
             {
-                for (int i = 0; i < CryData.SkinningInfo.BoneMapping.Count; i++)
+                for (int i = 0; i < _cryData.SkinningInfo.BoneMapping.Count; i++)
                 {
                     int wholePart = (int)i / 4;
-                    vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[0] + " " + index + " ");
-                    vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[1] + " " + (index + 1) + " ");
-                    vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[2] + " " + (index + 2) + " ");
-                    vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[3] + " " + (index + 3) + " ");
+                    vertices.Append(_cryData.SkinningInfo.BoneMapping[i].BoneIndex[0] + " " + index + " ");
+                    vertices.Append(_cryData.SkinningInfo.BoneMapping[i].BoneIndex[1] + " " + (index + 1) + " ");
+                    vertices.Append(_cryData.SkinningInfo.BoneMapping[i].BoneIndex[2] + " " + (index + 2) + " ");
+                    vertices.Append(_cryData.SkinningInfo.BoneMapping[i].BoneIndex[3] + " " + (index + 3) + " ");
                     index += 4;
                 }
             }
             else
             {
-                for (int i = 0; i < CryData.SkinningInfo.Ext2IntMap.Count; i++)
+                for (int i = 0; i < _cryData.SkinningInfo.Ext2IntMap.Count; i++)
                 {
                     int wholePart = (int)i / 4;
-                    vertices.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[0] + " " + index + " ");
-                    vertices.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[1] + " " + (index + 1) + " ");
-                    vertices.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[2] + " " + (index + 2) + " ");
-                    vertices.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[3] + " " + (index + 3) + " ");
+                    vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[0] + " " + index + " ");
+                    vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[1] + " " + (index + 1) + " ");
+                    vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[2] + " " + (index + 2) + " ");
+                    vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[3] + " " + (index + 3) + " ");
 
                     index += 4;
                 }
@@ -1089,7 +1090,7 @@ public class ColladaModelRenderer : IRenderer
 
         // THERE CAN BE MULTIPLE ROOT NODES IN EACH FILE!  Check to see if the parentnodeid ~0 and be sure to add a node for it.
         List<Grendgine_Collada_Node> positionNodes = new();
-        List<ChunkNode> positionRoots = CryData.Models[0].NodeMap.Values.Where(a => a.ParentNodeID == ~0).ToList();
+        List<ChunkNode> positionRoots = _cryData.Models[0].NodeMap.Values.Where(a => a.ParentNodeID == ~0).ToList();
         foreach (ChunkNode root in positionRoots)
         {
             positionNodes.Add(CreateNode(root));
@@ -1114,20 +1115,20 @@ public class ColladaModelRenderer : IRenderer
         List<Grendgine_Collada_Node> nodes = new();
 
         // Check to see if there is a CompiledBones chunk.  If so, add a Node.  
-        if (CryData.Chunks.Any(a => a.ChunkType == ChunkType.CompiledBones ||
+        if (_cryData.Chunks.Any(a => a.ChunkType == ChunkType.CompiledBones ||
             a.ChunkType == ChunkType.CompiledBonesSC ||
             a.ChunkType == ChunkType.CompiledBonesIvo))
         {
             Grendgine_Collada_Node boneNode = new();
-            boneNode = CreateJointNode(CryData.Bones.RootBone);
+            boneNode = CreateJointNode(_cryData.Bones.RootBone);
             nodes.Add(boneNode);
         }
 
-        var hasGeometry = CryData.Models.Any(x => x.HasGeometry);
+        var hasGeometry = _cryData.Models.Any(x => x.HasGeometry);
 
         if (hasGeometry)
         {
-            var allParentNodes = CryData.Models[CryData.Models.Count == 2 ? 1 : 0].NodeMap.Values.Where(n => n.ParentNodeID != ~1);
+            var allParentNodes = _cryData.Models[_cryData.Models.Count == 2 ? 1 : 0].NodeMap.Values.Where(n => n.ParentNodeID != ~1);
 
             foreach (var node in allParentNodes)
             {
@@ -1182,15 +1183,15 @@ public class ColladaModelRenderer : IRenderer
         ChunkMesh meshNode;
         ChunkMeshSubsets submeshNode;
 
-        if (CryData.Models.Count > 1)
+        if (_cryData.Models.Count > 1)
         {
-            meshNode = (ChunkMesh)CryData.Models[1].ChunkMap[node.ObjectNodeID];
-            submeshNode = (ChunkMeshSubsets)CryData.Models[1].ChunkMap[meshNode.MeshSubsetsData];
+            meshNode = (ChunkMesh)_cryData.Models[1].ChunkMap[node.ObjectNodeID];
+            submeshNode = (ChunkMeshSubsets)_cryData.Models[1].ChunkMap[meshNode.MeshSubsetsData];
         }
         else
         {
-            meshNode = (ChunkMesh)CryData.Models[0].ChunkMap[node.ObjectNodeID];
-            submeshNode = (ChunkMeshSubsets)CryData.Models[0].ChunkMap[meshNode.MeshSubsetsData];
+            meshNode = (ChunkMesh)_cryData.Models[0].ChunkMap[node.ObjectNodeID];
+            submeshNode = (ChunkMeshSubsets)_cryData.Models[0].ChunkMap[meshNode.MeshSubsetsData];
         }
 
         for (int i = 0; i < submeshNode.MeshSubsets.Length; i++)
@@ -1212,24 +1213,24 @@ public class ColladaModelRenderer : IRenderer
 
         Grendgine_Collada_Node colladaNode = new();
         // Check to see if there is a second model file, and if the mesh chunk is actually there.
-        if (CryData.Models.Count > 1)
+        if (_cryData.Models.Count > 1)
         {
             // Star Citizen pair.  Get the Node and Mesh chunks from the geometry file, unless it's a Proxy node.
             string nodeName = nodeChunk.Name;
             int nodeID = nodeChunk.ID;
 
             // make sure there is a geometry node in the geometry file
-            if (CryData.Models[0].ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkType.Helper)
+            if (_cryData.Models[0].ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkType.Helper)
                 colladaNode = CreateSimpleNode(nodeChunk);
             else
             {
-                ChunkNode geometryNode = CryData.Models[1].NodeMap.Values.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
+                ChunkNode geometryNode = _cryData.Models[1].NodeMap.Values.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
                 Grendgine_Collada_Geometry geometryLibraryObject = DaeObject.Library_Geometries.Geometry.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
                 if (geometryNode == null || geometryLibraryObject == null)
                     colladaNode = CreateSimpleNode(nodeChunk);  // Can't find geometry for given node.
                 else
                 {
-                    ChunkMesh geometryMesh = (ChunkMesh)CryData.Models[1].ChunkMap[geometryNode.ObjectNodeID];
+                    ChunkMesh geometryMesh = (ChunkMesh)_cryData.Models[1].ChunkMap[geometryNode.ObjectNodeID];
                     colladaNode = CreateGeometryNode(geometryNode, geometryMesh);
                 }
             }
@@ -1291,9 +1292,9 @@ public class ColladaModelRenderer : IRenderer
             List<Grendgine_Collada_Node> childNodes = new();
             foreach (var childNodeChunk in nodeChunk.AllChildNodes.ToList())
             {
-                if (Args.IsNodeNameExcluded(childNodeChunk.Name))
+                if (_args.IsNodeNameExcluded(childNodeChunk.Name))
                 {
-                    Utilities.Log(LogLevelEnum.Debug, $"Excluding child node {childNodeChunk.Name}");
+                    Log(LogLevelEnum.Debug, $"Excluding child node {childNodeChunk.Name}");
                     continue;
                 }
 
@@ -1334,7 +1335,7 @@ public class ColladaModelRenderer : IRenderer
             Grendgine_Collada_Node[] childNodes = new Grendgine_Collada_Node[bone.childIDs.Count];
             int counter = 0;
 
-            foreach (CompiledBone childBone in CryData.Bones.GetAllChildBones(bone))
+            foreach (CompiledBone childBone in _cryData.Bones.GetAllChildBones(bone))
             {
                 Grendgine_Collada_Node childNode = new();
                 childNode = CreateJointNode(childBone);
@@ -1428,14 +1429,14 @@ public class ColladaModelRenderer : IRenderer
         {
             if (materialLibraryIndex >= materials.Length)
             {
-                Utilities.Log(LogLevelEnum.Warning, $"Attempting to assign material beyond the list of given materials for node ${nodeChunk.Name} with id {nodeChunk.ID}.  Assigning first material.\nCheck if material file is missing.");
+                Log(LogLevelEnum.Warning, $"Attempting to assign material beyond the list of given materials for node ${nodeChunk.Name} with id {nodeChunk.ID}.  Assigning first material.\nCheck if material file is missing.");
                 return materials[0].Name + "-material";
             }
             var material = materials[materialLibraryIndex];
             return material.Name + "-material";
         }
         else
-            Utilities.Log(LogLevelEnum.Debug, $"Unable to find submaterials for node chunk ${nodeChunk.Name}");
+            Log(LogLevelEnum.Debug, $"Unable to find submaterials for node chunk ${nodeChunk.Name}");
 
         return null;
     }

@@ -14,8 +14,10 @@ public partial class BaseGltfRenderer
     private readonly bool _writeBinary;
     private readonly Dictionary<Material, int> _materialMap = new();
     
-    protected GltfRoot _root = new();
+    protected GltfRoot _gltfRoot = new();
     private readonly List<byte[]> _bytesList = new();
+
+    protected CryEngine _cryData;
 
     private int _currentOffset;
 
@@ -33,8 +35,8 @@ public partial class BaseGltfRenderer
         
         _bytesList.Clear();
         _currentOffset = 0;
-        _root = new GltfRoot();
-        _root.Scenes.Add(new GltfScene
+        _gltfRoot = new GltfRoot();
+        _gltfRoot.Scenes.Add(new GltfScene
         {
             Name = sceneName,
         });
@@ -45,8 +47,10 @@ public partial class BaseGltfRenderer
         if (_writeBinary)
         {
             var glbf = Args.FormatOutputFileName(".glb", referenceName, layerName);
-            using (var glb = glbf.Open(FileMode.Create, FileAccess.Write))
-                CompileToBinary(glb);
+            
+            using var glb = glbf.Open(FileMode.Create, FileAccess.Write);
+            CompileToBinary(glb);
+            
             Log.I($"Saved: {glbf.Name} in {glbf.DirectoryName}");
         }
 
@@ -54,9 +58,11 @@ public partial class BaseGltfRenderer
         {
             var gltfFile = Args.FormatOutputFileName(".gltf", referenceName, layerName);
             var glbFile = Args.FormatOutputFileName(".bin", referenceName, layerName);
-            using (var gltf = gltfFile.Open(FileMode.Create, FileAccess.Write))
-            using (var bin = glbFile.Open(FileMode.Create, FileAccess.Write))
-                CompileToPair(Path.GetFileName(bin.Name), gltf, bin);
+            
+            using var gltf = gltfFile.Open(FileMode.Create, FileAccess.Write);
+            using var bin = glbFile.Open(FileMode.Create, FileAccess.Write);
+            CompileToPair(Path.GetFileName(bin.Name), gltf, bin);
+            
             Log.I($"Saved: {gltfFile.Name} and {glbFile.Name} in {gltfFile.DirectoryName}");
         }
     }
