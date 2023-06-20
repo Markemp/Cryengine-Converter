@@ -11,8 +11,10 @@ namespace CgfConverter.Renderers.Gltf;
 
 public partial class BaseGltfRenderer
 {
-    protected int CreateGltfNode(ChunkNode cryNode)
+    protected int CreateGltfNode(ChunkNode cryNode, bool omitSkins = false)
     {
+        var controllerIdToNodeIndex = new Dictionary<uint, int>();
+
         // Create this node and add to GltfRoot.Nodes
         var node = new GltfNode()
         {
@@ -33,10 +35,35 @@ public partial class BaseGltfRenderer
             }
         }
 
-        // If this node has a mesh, add it to GltfRoot.Meshes. Assign index to node.Mesh.
-        if (_cryData.Models[^1].ChunkMap[cryNode.ObjectNodeID].ChunkType == ChunkType.Helper)
-        {
+        // If this node doesn't have a mesh, just return nodeIndex. Otherwise, add mesh.
+        if (_cryData.Models[^1].ChunkMap[cryNode.ObjectNodeID].ChunkType != ChunkType.Mesh &&
+            _cryData.Models[^1].ChunkMap[cryNode.ObjectNodeID].ChunkType != ChunkType.MeshIvo)
             return nodeIndex;
+        else
+        {
+            var accessors = new GltfMeshPrimitiveAttributes();
+            var meshChunk = cryNode.ObjectChunk as ChunkMesh;
+            WriteMeshOrLogError(out var newMesh, node, cryNode, meshChunk!, accessors);
+
+            if (omitSkins)
+                Log.D("NodeChunk[0]: Skipping skins.", cryNode.Name);
+            else if (cryNode.GetSkinningInfo() is { HasSkinningInfo: true } skinningInfo)
+            {
+                if (WriteSkinOrLogError(out var newSkin, out var weights, out var joints, node, skinningInfo,
+                        controllerIdToNodeIndex))
+                {
+                    node.Skin = AddSkin(newSkin);
+                    foreach (var prim in newMesh.Primitives)
+                    {
+                        prim.Attributes.Joints0 = joints;
+                        prim.Attributes.Weights0 = weights;
+                    }
+                }
+            }
+            else
+                Log.D("NodeChunk[{0}]: No skinning info is available.", cryNode.Name);
+
+            node.Mesh = AddMesh(newMesh);
         }
 
         // Returns the int for the index of this node.
