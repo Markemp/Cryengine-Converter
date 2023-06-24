@@ -121,7 +121,10 @@ public partial class BaseGltfRenderer
         return index == -1 ? null : index;
     }
 
-    private unsafe int AddBufferView<T>(string? baseName, T[] data, GltfBufferViewTarget? bufferViewTarget)
+    private unsafe int AddBufferView<T>(
+        string? baseName, 
+        T[] data, 
+        GltfBufferViewTarget? bufferViewTarget)
         where T : unmanaged
     {
         var rawSize = Marshal.SizeOf(data[0]) * data.Length;
@@ -152,7 +155,11 @@ public partial class BaseGltfRenderer
         return index == -1 ? null : index;
     }
 
-    private int AddAccessor<T>(string? baseName, int bufferView, GltfBufferViewTarget? bufferViewTarget, T[] data,
+    private int AddAccessor<T>(
+        string? baseName, 
+        int bufferView, 
+        GltfBufferViewTarget? bufferViewTarget, 
+        T[] data,
         int start = 0, int end = int.MaxValue)
         where T : unmanaged
     {
@@ -191,9 +198,12 @@ public partial class BaseGltfRenderer
         return _gltfRoot.Accessors.Count - 1;
     }
 
-    private int AddAccessor<T>(string? baseName, int bufferView, GltfBufferViewTarget? bufferViewTarget,
-        TypedVec4<T>[] data, int start = 0,
-        int end = int.MaxValue)
+    private int AddAccessor<T>(
+        string? baseName, 
+        int bufferView, 
+        GltfBufferViewTarget? bufferViewTarget,
+        TypedVec4<T>[] data, 
+        int start = 0, int end = int.MaxValue)
         where T : unmanaged
     {
         if (bufferView == -1)
@@ -243,13 +253,19 @@ public partial class BaseGltfRenderer
         return _gltfRoot.Accessors.Count - 1;
     }
 
-    private int AddAccessor(string? baseName, int bufferView, GltfBufferViewTarget? bufferViewTarget, UV[] data,
+    private int AddAccessor(
+        string? baseName, 
+        int bufferView, 
+        GltfBufferViewTarget? bufferViewTarget, 
+        UV[] data,
         int start = 0, int end = int.MaxValue)
     {
         if (bufferView == -1)
             bufferView = AddBufferView(baseName, data, bufferViewTarget);
+        
         if (end == int.MaxValue)
             end = data.Length;
+        
         _gltfRoot.Accessors.Add(new GltfAccessor
         {
             Name = baseName is null ? null : $"{baseName}/accessor[{start}:{end}]",
@@ -272,7 +288,11 @@ public partial class BaseGltfRenderer
         return _gltfRoot.Accessors.Count - 1;
     }
 
-    private int AddAccessor(string? baseName, int bufferView, GltfBufferViewTarget? bufferViewTarget, Vector3[] data,
+    private int AddAccessor(
+        string? baseName, 
+        int bufferView, 
+        GltfBufferViewTarget? bufferViewTarget, 
+        Vector3[] data,
         int start = 0, int end = int.MaxValue)
     {
         if (bufferView == -1)
@@ -303,7 +323,11 @@ public partial class BaseGltfRenderer
         return _gltfRoot.Accessors.Count - 1;
     }
 
-    private int AddAccessor(string? baseName, int bufferView, GltfBufferViewTarget? bufferViewTarget, Quaternion[] data,
+    private int AddAccessor(
+        string? baseName, 
+        int bufferView, 
+        GltfBufferViewTarget? bufferViewTarget, 
+        Quaternion[] data,
         int start = 0, int end = int.MaxValue)
     {
         if (bufferView == -1)
@@ -336,7 +360,11 @@ public partial class BaseGltfRenderer
         return _gltfRoot.Accessors.Count - 1;
     }
 
-    private int AddAccessor(string? baseName, int bufferView, GltfBufferViewTarget? bufferViewTarget, Matrix4x4[] data,
+    private int AddAccessor(
+        string? baseName, 
+        int bufferView, 
+        GltfBufferViewTarget? bufferViewTarget, 
+        Matrix4x4[] data,
         int start = 0, int end = int.MaxValue)
     {
         if (bufferView == -1)

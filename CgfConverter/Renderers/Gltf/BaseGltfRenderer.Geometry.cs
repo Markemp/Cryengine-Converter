@@ -19,9 +19,9 @@ public partial class BaseGltfRenderer
         var node = new GltfNode()
         {
             Name = cryNode.Name,
-            Rotation = Quaternion.CreateFromRotationMatrix(cryNode.LocalTransform).ToGltfList(true),
+            Rotation = Quaternion.CreateFromRotationMatrix(cryNode.LocalTransform).ToGltfList(false),
             Translation = cryNode.LocalTransform.GetTranslation().ToGltfList(true),
-            Scale = cryNode.Scale.ToGltfList()
+            Scale = Vector3.One.ToGltfList()
         };
         _gltfRoot.Nodes.Add(node);
         var nodeIndex = _gltfRoot.Nodes.Count - 1;
@@ -71,7 +71,7 @@ public partial class BaseGltfRenderer
     }
 
 
-    // Entry point where all other objects are created.
+    // Currently used for terrain
     protected bool CreateModelNode(out GltfNode node, CryEngine cryObject, bool omitSkins = false)
     {
         var model = cryObject.Models[^1];
@@ -282,7 +282,8 @@ public partial class BaseGltfRenderer
         var normals = nodeChunk._model.ChunkMap.GetValueOrDefault(mesh.NormalsData) as ChunkDataStream;
         var uvs = nodeChunk._model.ChunkMap.GetValueOrDefault(mesh.UVsData) as ChunkDataStream;
         var indices = nodeChunk._model.ChunkMap.GetValueOrDefault(mesh.IndicesData) as ChunkDataStream;
-        // var colors = node._model.ChunkMap.GetValueOrDefault(mesh.ColorsData) as ChunkDataStream;
+        var colors = nodeChunk._model.ChunkMap.GetValueOrDefault(mesh.ColorsData) as ChunkDataStream;
+        var colors2 = nodeChunk._model.ChunkMap.GetValueOrDefault(mesh.Colors2Data) as ChunkDataStream;
         var tangents = nodeChunk._model.ChunkMap.GetValueOrDefault(mesh.TangentsData) as ChunkDataStream;
         var subsets = nodeChunk._model.ChunkMap.GetValueOrDefault(mesh.MeshSubsetsData) as ChunkMeshSubsets;
 
@@ -316,13 +317,23 @@ public partial class BaseGltfRenderer
                     vertices.Vertices.Select(SwapAxesForPosition).ToArray());
 
             // TODO: Is this correct? This breaks some of RoL model colors, while having it set does not make anything better.
-            // baseName = $"{rootNode.Name}/colors";
-            // primitiveAccessors.Color0 = colors is null
-            //     ? null
-            //     : (_gltf.GetAccessorOrDefault(baseName, 0, colors.Colors.Length)
-            //        ?? _AddAccessor(baseName, -1,
-            //            colors.Colors.Select(x => new TypedVec4<float>(x.r / 255f, x.g / 255f, x.b / 255f, x.a / 255f))
-            //                .ToArray()));
+            baseName = $"{gltfNode.Name}/colors";
+            accessors.Color0 = colors is null
+                ? null
+                : (GetAccessorOrDefault(baseName, 0, colors.Colors.Length)
+                    ?? AddAccessor(
+                        baseName, 
+                        -1, 
+                        GltfBufferViewTarget.ArrayBuffer,
+                        colors.Colors.Select(x => new TypedVec4<float>(x.r / 255f, x.g / 255f, x.b / 255f, x.a / 255f))
+                            .ToArray()));
+
+            //primitiveAccessors.Color0 = colors is null
+            //    ? null
+            //    : (_gltf.GetAccessorOrDefault(baseName, 0, colors.Colors.Length)
+            //       ?? _AddAccessor(baseName, -1,
+            //           colors.Colors.Select(x => new TypedVec4<float>(x.r / 255f, x.g / 255f, x.b / 255f, x.a / 255f))
+            //               .ToArray()));
 
             var normalsArray = normals?.Normals ?? tangents?.Normals;
             baseName = $"{gltfNode.Name}/normal";
@@ -345,7 +356,7 @@ public partial class BaseGltfRenderer
 
             baseName = $"${gltfNode.Name}/uv";
             accessors.TexCoord0 =
-                uvs is null || !usesUv
+                uvs is null
                     ? null
                     : GetAccessorOrDefault(baseName, 0, uvs.UVs.Length)
                       ?? AddAccessor($"{nodeChunk.Name}/uv", -1, GltfBufferViewTarget.ArrayBuffer, uvs.UVs);

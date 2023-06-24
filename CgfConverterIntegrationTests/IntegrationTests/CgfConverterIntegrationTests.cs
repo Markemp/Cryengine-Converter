@@ -286,14 +286,14 @@ public class CgfConverterIntegrationTests
 
         // Validate Nodes
         Assert.AreEqual(1, objectData.Nodes.Count);
-        Assert.AreEqual("cnylgt_marauder/cnylgt_marauder", objectData.Nodes[0].Name);
+        Assert.AreEqual("cnylgt_marauder", objectData.Nodes[0].Name);
         Assert.AreEqual(0, objectData.Nodes[0].Mesh);
 
         // Validate Meshes
-        Assert.AreEqual(3, objectData.BufferViews.Count);
+        Assert.AreEqual(4, objectData.BufferViews.Count);
         Assert.AreEqual(32004, objectData.BufferViews[0].ByteLength);
         Assert.AreEqual(32004, objectData.BufferViews[1].ByteLength);
-        Assert.AreEqual(29832, objectData.BufferViews[2].ByteLength);
+        Assert.AreEqual(21336, objectData.BufferViews[2].ByteLength);
 
         // Validate Materials
         Assert.AreEqual(2, objectData.Materials.Count);
@@ -381,24 +381,25 @@ public class CgfConverterIntegrationTests
         Assert.AreEqual("Scene", objectData.Scenes[0].Name);
 
         // Validate Nodes
-        Assert.AreEqual(4, objectData.Nodes.Count);
-        Assert.AreEqual("green_fern_bush_a/green_fern_bush_a", objectData.Nodes[0].Name);
-        Assert.AreEqual(0, objectData.Nodes[0].Mesh);
-        Assert.AreEqual("green_fern_bush_a/$LOD1", objectData.Nodes[1].Name);
-        Assert.AreEqual("green_fern_bush_a/$LOD2", objectData.Nodes[2].Name);
-        Assert.AreEqual("green_fern_bush_a", objectData.Nodes[3].Name);
+        Assert.AreEqual(7, objectData.Nodes.Count);
+        Assert.AreEqual("green_fern_bush_a", objectData.Nodes[0].Name);
+        Assert.AreEqual(0, objectData.Nodes[1].Mesh);
+        Assert.AreEqual("$LOD1", objectData.Nodes[1].Name);
+        Assert.AreEqual("$LOD2", objectData.Nodes[2].Name);
+        Assert.AreEqual("branch1_1", objectData.Nodes[3].Name);
+        Assert.AreEqual("branch1_1", objectData.Nodes[3].Name);
 
         // Validate Meshes
-        Assert.AreEqual(9, objectData.BufferViews.Count);
-        Assert.AreEqual(9672, objectData.BufferViews[0].ByteLength);
-        Assert.AreEqual(9672, objectData.BufferViews[1].ByteLength);
-        Assert.AreEqual(11160, objectData.BufferViews[2].ByteLength);
-        Assert.AreEqual(5688, objectData.BufferViews[3].ByteLength);
-        Assert.AreEqual(5688, objectData.BufferViews[4].ByteLength);
-        Assert.AreEqual(5376, objectData.BufferViews[5].ByteLength);
-        Assert.AreEqual(2700, objectData.BufferViews[6].ByteLength);
+        Assert.AreEqual(15, objectData.BufferViews.Count);
+        Assert.AreEqual(5688, objectData.BufferViews[0].ByteLength);
+        Assert.AreEqual(7584, objectData.BufferViews[1].ByteLength);
+        Assert.AreEqual(5688, objectData.BufferViews[2].ByteLength);
+        Assert.AreEqual(3792, objectData.BufferViews[3].ByteLength);
+        Assert.AreEqual(5376, objectData.BufferViews[4].ByteLength);
+        Assert.AreEqual(2700, objectData.BufferViews[5].ByteLength);
+        Assert.AreEqual(3600, objectData.BufferViews[6].ByteLength);
         Assert.AreEqual(2700, objectData.BufferViews[7].ByteLength);
-        Assert.AreEqual(2184, objectData.BufferViews[8].ByteLength);
+        Assert.AreEqual(1800, objectData.BufferViews[8].ByteLength);
 
         // Validate Materials
         Assert.AreEqual(2, objectData.Materials.Count);

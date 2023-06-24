@@ -9,6 +9,8 @@ using System.Linq;
 using System.Threading;
 using CgfConverter.Renderers.Collada;
 using CgfConverter.Renderers.Gltf;
+using CgfConverterIntegrationTests.Extensions;
+using Extensions;
 
 namespace CgfConverterTests.IntegrationTests;
 
@@ -53,8 +55,8 @@ public class MWOIntegrationTests
         Assert.AreEqual("#clanbanner_a-effect", daeObject.Library_Materials.Material[0].Instance_Effect.URL);
         Assert.AreEqual("clanbanner_a_Diffuse", daeObject.Library_Images.Image[0].Name);
         Assert.AreEqual("clanbanner_a_Diffuse", daeObject.Library_Images.Image[0].ID);
-        Assert.AreEqual("clanbanner_a_Bumpmap", daeObject.Library_Images.Image[1].Name);
-        Assert.AreEqual("clanbanner_a_Bumpmap", daeObject.Library_Images.Image[1].ID);
+        Assert.AreEqual("clanbanner_a_Normals", daeObject.Library_Images.Image[1].Name);
+        Assert.AreEqual("clanbanner_a_Normals", daeObject.Library_Images.Image[1].ID);
     }
 
     [TestMethod]
@@ -70,9 +72,9 @@ public class MWOIntegrationTests
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.Render();
         var daeObject = colladaData.DaeObject;
-        Assert.AreEqual(5, daeObject.Library_Materials.Material.Length);
-        Assert.AreEqual(5, daeObject.Library_Effects.Effect.Length);
-        Assert.AreEqual(27, daeObject.Library_Images.Image.Length);
+        Assert.AreEqual(4, daeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(4, daeObject.Library_Effects.Effect.Length);
+        Assert.AreEqual(19, daeObject.Library_Images.Image.Length);
         Assert.AreEqual("generic_body", daeObject.Library_Materials.Material[0].Name);
         Assert.AreEqual("generic_body-material", daeObject.Library_Materials.Material[0].ID);
         Assert.AreEqual("#generic_body-effect", daeObject.Library_Materials.Material[0].Instance_Effect.URL);
@@ -155,6 +157,49 @@ public class MWOIntegrationTests
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         
+    }
+
+    [TestMethod]
+    public void FiftyCalNecklas_GltfConversion()
+    {
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\50calnecklace_a.chr" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        var gltfData = gltfRenderer.GenerateGltfObject();
+
+        Assert.AreEqual(1, gltfData.Materials.Count);
+        Assert.AreEqual(1, gltfData.Meshes.Count);
+
+        // Nodes check
+        Assert.AreEqual(9, gltfData.Nodes.Count);
+        Assert.AreEqual("50calnecklace_a", gltfData.Nodes[0].Name);
+        Assert.AreEqual("Bip01", gltfData.Nodes[1].Name);
+        Assert.AreEqual("hang seg1", gltfData.Nodes[2].Name);
+
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[0].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { -0.4963841f, -0.5035906f, 0.491474152f, 0.5083822f }, gltfData.Nodes[1].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0.00154118659f, -0.008913527f, 0.0122360326f, 0.9998842f }, gltfData.Nodes[2].Rotation, TestUtils.delta);
+
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0 }, gltfData.Nodes[0].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 2.09588125E-13f, 0.0204448365f, -8.731578E-10f }, gltfData.Nodes[1].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { -0.0209655762f, -8.90577E-09f, 3.4356154E-10f }, gltfData.Nodes[2].Translation, TestUtils.delta);
+
+        Assert.AreEqual(1, gltfData.Nodes[0].Children.Count);
+        Assert.AreEqual(1, gltfData.Nodes[1].Children.Count);
+        Assert.AreEqual(1, gltfData.Nodes[2].Children.Count);
+
+        // Accessors check
+        Assert.AreEqual(7, gltfData.Accessors.Count);
+
+        // Skins check
+        Assert.AreEqual(1, gltfData.Skins.Count);
+        Assert.AreEqual(8, gltfData.Skins[0].Joints.Count);
+        Assert.AreEqual(6, gltfData.Skins[0].InverseBindMatrices);
+        Assert.AreEqual("50calnecklace_a/skin", gltfData.Skins[0].Name);
     }
 
     [TestMethod]
@@ -389,7 +434,7 @@ public class MWOIntegrationTests
         ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-        Assert.AreEqual(17, actualMaterialsCount);
+        Assert.AreEqual(16, actualMaterialsCount);
 
         testUtils.ValidateColladaXml(colladaData);
     }
@@ -448,12 +493,12 @@ public class MWOIntegrationTests
         Assert.AreEqual("decals-material", materials.Material[1].ID);
         Assert.AreEqual("hellbringer_variant-material", materials.Material[2].ID);
         Assert.AreEqual("hellbringer_window-material", materials.Material[3].ID);
-        Assert.AreEqual("hellbringer_variant-material", materials.Material[4].ID);
+        Assert.AreEqual("Material #0-material", materials.Material[4].ID);
         Assert.AreEqual("#hellbringer_body-effect", materials.Material[0].Instance_Effect.URL);
         Assert.AreEqual("#decals-effect", materials.Material[1].Instance_Effect.URL);
         Assert.AreEqual("#hellbringer_variant-effect", materials.Material[2].Instance_Effect.URL);
         Assert.AreEqual("#hellbringer_window-effect", materials.Material[3].Instance_Effect.URL);
-        Assert.AreEqual("#hellbringer_variant-effect", materials.Material[4].Instance_Effect.URL);
+        Assert.AreEqual("#Material #0-effect", materials.Material[4].Instance_Effect.URL);
 
         // library_geometries check
         Assert.AreEqual(1, colladaData.DaeObject.Library_Geometries.Geometry.Length);
@@ -519,6 +564,31 @@ public class MWOIntegrationTests
         cryData.ProcessCryengineFiles();
 
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
-        var objectData = gltfRenderer.GenerateGltfObject();
+        var gltfData = gltfRenderer.GenerateGltfObject();
+
+        Assert.AreEqual(1, gltfData.Materials.Count);
+        Assert.AreEqual(2, gltfData.Meshes.Count);
+
+        // Nodes check
+        Assert.AreEqual(3, gltfData.Nodes.Count);
+        Assert.AreEqual("hulagirl_a", gltfData.Nodes[0].Name);
+        Assert.AreEqual("HulaGirl_UpperBody", gltfData.Nodes[1].Name);
+        Assert.AreEqual("HulaGirl_LowerBody", gltfData.Nodes[2].Name);
+
+        var rotationMatrix = cryData.RootNode.AllChildNodes[0].Rot.ConvertToRotationMatrix();
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[0].Rotation);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0.10248467f, -0.046882357f, -0.0038453776f, 0.9936217f }, gltfData.Nodes[1].Rotation);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[2].Rotation);
+
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0 }, gltfData.Nodes[0].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0.000101296f, 0.0640777f, 0f }, gltfData.Nodes[1].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0 }, gltfData.Nodes[2].Translation, TestUtils.delta);
+
+        Assert.AreEqual(2, gltfData.Nodes[0].Children.Count);
+        Assert.AreEqual(0, gltfData.Nodes[1].Children.Count);
+        Assert.AreEqual(0, gltfData.Nodes[2].Children.Count);
+
+        // Accessors check
+        Assert.AreEqual(10, gltfData.Accessors.Count);
     }
 }

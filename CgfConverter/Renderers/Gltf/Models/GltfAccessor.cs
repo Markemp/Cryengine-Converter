@@ -8,15 +8,20 @@ public class GltfAccessor
     [JsonProperty("name", NullValueHandling = NullValueHandling.Ignore)]
     public string? Name;
 
-    [JsonProperty("bufferView")] public int BufferView;
+    [JsonProperty("bufferView")] 
+    public int BufferView;
 
-    [JsonProperty("byteOffset")] public long ByteOffset;
+    [JsonProperty("byteOffset")] 
+    public long ByteOffset;
 
-    [JsonProperty("componentType")] public GltfAccessorComponentTypes ComponentType;
+    [JsonProperty("componentType")] 
+    public GltfAccessorComponentTypes ComponentType;
 
-    [JsonProperty("count")] public int Count;
+    [JsonProperty("count")] 
+    public int Count;
 
-    [JsonIgnore] public GltfAccessorTypes Type;
+    [JsonIgnore] 
+    public GltfAccessorTypes Type;
 
     [JsonProperty("min", NullValueHandling = NullValueHandling.Ignore)]
     public object? Min;
@@ -50,4 +55,7 @@ public class GltfAccessor
             _ => throw new ArgumentOutOfRangeException(nameof(value)),
         };
     }
+
+    public override string ToString() => 
+        $"{Name}: {BufferView}, {ComponentType}, {TypeString}";
 }
