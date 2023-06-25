@@ -185,7 +185,7 @@ public abstract class Chunk : IBinaryChunk
     /// <returns>Link to the SkinningInfo model.</returns>
     public SkinningInfo GetSkinningInfo()
     {
-        if (_model.SkinningInfo == null)
+        if (_model.SkinningInfo is null)
             _model.SkinningInfo = new SkinningInfo();
         
         return _model.SkinningInfo;

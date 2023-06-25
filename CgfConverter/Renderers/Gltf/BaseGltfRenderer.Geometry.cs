@@ -319,13 +319,50 @@ public partial class BaseGltfRenderer
 
         string baseName;
 
-        if (vertices is not null)
+        if (vertices is not null || vertsUvs is not null)
         {
-            baseName = $"{gltfNode.Name}/vertex";
-            accessors.Position =
-                GetAccessorOrDefault(baseName, 0, vertices.Vertices.Length)
-                ?? AddAccessor(baseName, -1, GltfBufferViewTarget.ArrayBuffer,
-                    vertices.Vertices.Select(SwapAxesForPosition).ToArray());
+            if (vertices is not null)
+            {
+                baseName = $"{gltfNode.Name}/vertex";
+                accessors.Position =
+                    GetAccessorOrDefault(baseName, 0, vertices.Vertices.Length)
+                    ?? AddAccessor(baseName, -1, GltfBufferViewTarget.ArrayBuffer,
+                        vertices.Vertices.Select(SwapAxesForPosition).ToArray());
+
+                baseName = $"${gltfNode.Name}/uv";
+                accessors.TexCoord0 =
+                    uvs is null
+                        ? null
+                        : GetAccessorOrDefault(baseName, 0, uvs.UVs.Length)
+                          ?? AddAccessor($"{nodeChunk.Name}/uv", -1, GltfBufferViewTarget.ArrayBuffer, uvs.UVs);
+            }
+            else
+            {
+                baseName = $"{gltfNode.Name}/vertex";
+                accessors.Position =
+                    GetAccessorOrDefault(baseName, 0, vertsUvs.Vertices.Length)
+                        ?? AddAccessor(
+                            baseName, 
+                            -1, 
+                            GltfBufferViewTarget.ArrayBuffer,
+                            vertsUvs.Vertices.Select(SwapAxesForPosition).ToArray());
+                baseName = $"${gltfNode.Name}/uv";
+                accessors.TexCoord0 =
+                    GetAccessorOrDefault(baseName, 0, vertsUvs.UVs.Length)
+                        ?? AddAccessor(
+                            $"{nodeChunk.Name}/uv", 
+                            -1, 
+                            GltfBufferViewTarget.ArrayBuffer, 
+                            vertsUvs.UVs);
+            }
+
+            var normalsArray = normals?.Normals ?? tangents?.Normals;
+            baseName = $"{gltfNode.Name}/normal";
+            accessors.Normal = normalsArray is null
+                ? null
+                : GetAccessorOrDefault(baseName, 0, normalsArray.Length)
+                  ?? AddAccessor(baseName, -1, GltfBufferViewTarget.ArrayBuffer,
+                      normalsArray.Select(SwapAxesForPosition).ToArray());
 
             // TODO: Is this correct? This breaks some of RoL model colors, while having it set does not make anything better.
             baseName = $"{gltfNode.Name}/colors";
@@ -339,14 +376,6 @@ public partial class BaseGltfRenderer
                         colors.Colors.Select(x => new TypedVec4<float>(x.r / 255f, x.g / 255f, x.b / 255f, x.a / 255f))
                             .ToArray()));
 
-            var normalsArray = normals?.Normals ?? tangents?.Normals;
-            baseName = $"{gltfNode.Name}/normal";
-            accessors.Normal = normalsArray is null
-                ? null
-                : GetAccessorOrDefault(baseName, 0, normalsArray.Length)
-                  ?? AddAccessor(baseName, -1, GltfBufferViewTarget.ArrayBuffer,
-                      normalsArray.Select(SwapAxesForPosition).ToArray());
-
             // TODO: Do Tangents also need swapping axes?
             baseName = $"${gltfNode.Name}/tangent";
             accessors.Tangent = tangents is null || !usesTangent
@@ -358,16 +387,10 @@ public partial class BaseGltfRenderer
                           .Select(x => new TypedVec4<float>(x.x / 32767f, x.y / 32767f, x.z / 32767f, x.w / 32767f))
                           .ToArray());
 
-            baseName = $"${gltfNode.Name}/uv";
-            accessors.TexCoord0 =
-                uvs is null
-                    ? null
-                    : GetAccessorOrDefault(baseName, 0, uvs.UVs.Length)
-                      ?? AddAccessor($"{nodeChunk.Name}/uv", -1, GltfBufferViewTarget.ArrayBuffer, uvs.UVs);
         }
 
-        if (vertsUvs is not null && vertices is null)
-            return Log.E<bool>("Mesh[{0}]: vertsUvs is currently not supported.", gltfNode.Name);  // TODO: Support VertsUvs.
+        //if (vertsUvs is not null && vertices is null)
+        //    return Log.E<bool>("Mesh[{0}]: vertsUvs is currently not supported.", gltfNode.Name);  // TODO: Support VertsUvs.
 
         baseName = $"${gltfNode.Name}/index";
         var indexBufferView = GetBufferViewOrDefault(baseName) ??
