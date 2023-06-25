@@ -5,6 +5,9 @@ using System;
 using System.Globalization;
 using System.Threading;
 using CgfConverter.Renderers.Collada;
+using CgfConverter.Renderers.Gltf;
+using CgfConverterIntegrationTests.Extensions;
+using Extensions;
 
 namespace CgfConverterTests.IntegrationTests;
 
@@ -154,6 +157,62 @@ public class StarCitizenTests
         Assert.AreEqual(29, colladaData.DaeObject.Library_Materials.Material.Length);
         Assert.AreEqual(88, colladaData.DaeObject.Library_Images.Image.Length);
         testUtils.ValidateColladaXml(colladaData);
+    }
+
+    [TestMethod]
+    public void AEGS_Avenger_Gltf()
+    {
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\AEGS_Avenger.cga", "-dds" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        var gltfData = gltfRenderer.GenerateGltfObject();
+
+        Assert.AreEqual(19, gltfData.Materials.Count);
+        Assert.AreEqual(56, gltfData.Meshes.Count);
+
+        // Nodes check
+        Assert.AreEqual(135, gltfData.Nodes.Count);
+        Assert.AreEqual("AEGS_Avenger", gltfData.Nodes[0].Name);
+        Assert.AreEqual("Nose", gltfData.Nodes[1].Name);
+        Assert.AreEqual("UI_Helper", gltfData.Nodes[2].Name);
+
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[0].Rotation);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0.10248467f, -0.046882357f, -0.0038453776f, 0.9936217f }, gltfData.Nodes[1].Rotation);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[2].Rotation);
+
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0 }, gltfData.Nodes[0].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0.000101296f, 0.0640777f, 0f }, gltfData.Nodes[1].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0 }, gltfData.Nodes[2].Translation, TestUtils.delta);
+
+        Assert.AreEqual(2, gltfData.Nodes[0].Children.Count);
+        Assert.AreEqual(0, gltfData.Nodes[1].Children.Count);
+        Assert.AreEqual(0, gltfData.Nodes[2].Children.Count);
+
+        // Accessors check
+        Assert.AreEqual(10, gltfData.Accessors.Count);
+
+        //int result = testUtils.argsHandler.ProcessArgs(args);
+        //Assert.AreEqual(0, result);
+        //var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        //cryData.ProcessCryengineFiles();
+
+        //var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        //var daeObject = colladaData.DaeObject;
+        //colladaData.GenerateDaeObject();
+        //// Make sure Rotations are still right
+        //const string frontLGDoorLeftMatrix = "1 0 0 -0.300001 0 -0.938131 -0.346280 0.512432 0 0.346280 -0.938131 -1.835138 0 0 0 1";
+        //var noseNode = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].node[0];
+        //Assert.AreEqual("Nose", noseNode.ID);
+        //Assert.AreEqual("Front_LG_Door_Left", noseNode.node[28].ID);
+        //Assert.AreEqual(frontLGDoorLeftMatrix, noseNode.node[28].Matrix[0].Value_As_String);
+
+        //Assert.AreEqual(29, colladaData.DaeObject.Library_Materials.Material.Length);
+        //Assert.AreEqual(88, colladaData.DaeObject.Library_Images.Image.Length);
+        //testUtils.ValidateColladaXml(colladaData);
     }
 
     [TestMethod]

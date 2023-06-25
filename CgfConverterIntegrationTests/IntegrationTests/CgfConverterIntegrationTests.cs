@@ -374,39 +374,37 @@ public class CgfConverterIntegrationTests
         cryData.ProcessCryengineFiles();
 
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
-        var objectData = gltfRenderer.GenerateGltfObject();
+        var gltfData = gltfRenderer.GenerateGltfObject();
 
         // Validate Scene
-        Assert.AreEqual(1, objectData.Scenes.Count);
-        Assert.AreEqual("Scene", objectData.Scenes[0].Name);
+        Assert.AreEqual(1, gltfData.Scenes.Count);
+        Assert.AreEqual("Scene", gltfData.Scenes[0].Name);
 
         // Validate Nodes
-        Assert.AreEqual(7, objectData.Nodes.Count);
-        Assert.AreEqual("green_fern_bush_a", objectData.Nodes[0].Name);
-        Assert.AreEqual(0, objectData.Nodes[1].Mesh);
-        Assert.AreEqual("$LOD1", objectData.Nodes[1].Name);
-        Assert.AreEqual("$LOD2", objectData.Nodes[2].Name);
-        Assert.AreEqual("branch1_1", objectData.Nodes[3].Name);
-        Assert.AreEqual("branch1_1", objectData.Nodes[3].Name);
+        Assert.AreEqual(7, gltfData.Nodes.Count);
+        Assert.AreEqual("green_fern_bush_a", gltfData.Nodes[0].Name);
+        Assert.AreEqual(1, gltfData.Nodes[1].Mesh);
+        Assert.AreEqual("$LOD1", gltfData.Nodes[1].Name);
+        Assert.AreEqual("$LOD2", gltfData.Nodes[2].Name);
+        Assert.AreEqual("branch1_1", gltfData.Nodes[3].Name);
+        Assert.AreEqual("branch1_1", gltfData.Nodes[3].Name);
 
         // Validate Meshes
-        Assert.AreEqual(15, objectData.BufferViews.Count);
-        Assert.AreEqual(5688, objectData.BufferViews[0].ByteLength);
-        Assert.AreEqual(7584, objectData.BufferViews[1].ByteLength);
-        Assert.AreEqual(5688, objectData.BufferViews[2].ByteLength);
-        Assert.AreEqual(3792, objectData.BufferViews[3].ByteLength);
-        Assert.AreEqual(5376, objectData.BufferViews[4].ByteLength);
-        Assert.AreEqual(2700, objectData.BufferViews[5].ByteLength);
-        Assert.AreEqual(3600, objectData.BufferViews[6].ByteLength);
-        Assert.AreEqual(2700, objectData.BufferViews[7].ByteLength);
-        Assert.AreEqual(1800, objectData.BufferViews[8].ByteLength);
+        Assert.AreEqual(15, gltfData.BufferViews.Count);
+        Assert.AreEqual(9672, gltfData.BufferViews[0].ByteLength);
+        Assert.AreEqual(12896, gltfData.BufferViews[1].ByteLength);
+        Assert.AreEqual(9672, gltfData.BufferViews[2].ByteLength);
+        Assert.AreEqual(6448, gltfData.BufferViews[3].ByteLength);
+        Assert.AreEqual(11160, gltfData.BufferViews[4].ByteLength);
+        Assert.AreEqual(5688, gltfData.BufferViews[5].ByteLength);
+        Assert.AreEqual(7584, gltfData.BufferViews[6].ByteLength);
+        Assert.AreEqual(5688, gltfData.BufferViews[7].ByteLength);
+        Assert.AreEqual(3792, gltfData.BufferViews[8].ByteLength);
 
         // Validate Materials
-        Assert.AreEqual(2, objectData.Materials.Count);
+        Assert.AreEqual(2, gltfData.Materials.Count);
 
         // Validate Geometry
-
-
     }
 }
 

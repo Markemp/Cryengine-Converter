@@ -19,12 +19,28 @@ public partial class BaseGltfRenderer
         var node = new GltfNode()
         {
             Name = cryNode.Name,
-            Rotation = Quaternion.CreateFromRotationMatrix(cryNode.LocalTransform).ToGltfList(false),
-            Translation = cryNode.LocalTransform.GetTranslation().ToGltfList(true),
+            Rotation = SwapAxesForLayout(Quaternion.CreateFromRotationMatrix(cryNode.LocalTransform)).ToGltfList(),
+            Translation = SwapAxesForPosition(cryNode.LocalTransform.GetTranslation()).ToGltfList(),
             Scale = Vector3.One.ToGltfList()
         };
         _gltfRoot.Nodes.Add(node);
         var nodeIndex = _gltfRoot.Nodes.Count - 1;
+
+        // Add mesh if needed
+        if (_cryData.Models[0].ChunkMap[cryNode.ObjectNodeID].ChunkType != ChunkType.Helper)
+        {
+            if (_cryData.Models.Count == 1)
+                AddMesh(cryNode, node, controllerIdToNodeIndex, omitSkins);
+            else  // Has geometry file
+            {
+                string nodeName = cryNode.Name;
+                int nodeId = cryNode.ID;
+
+                ChunkNode geometryNode = _cryData.Models[1].NodeMap.Values.Where(a => a.Name == cryNode.Name).FirstOrDefault();
+                ChunkMesh geometryMesh = (ChunkMesh)_cryData.Models[1].ChunkMap[geometryNode.ObjectNodeID];
+                AddMesh(geometryNode, node, controllerIdToNodeIndex, omitSkins);
+            }
+        }
 
         // For each child, recursively call this method to add the child to GltfRoot.Nodes.
         if (cryNode.AllChildNodes is not null)
@@ -35,41 +51,36 @@ public partial class BaseGltfRenderer
             }
         }
 
-        // If this node doesn't have a mesh, just return nodeIndex. Otherwise, add mesh.
-        if (_cryData.Models[^1].ChunkMap[cryNode.ObjectNodeID].ChunkType != ChunkType.Mesh &&
-            _cryData.Models[^1].ChunkMap[cryNode.ObjectNodeID].ChunkType != ChunkType.MeshIvo)
-            return nodeIndex;
-        else
-        {
-            var accessors = new GltfMeshPrimitiveAttributes();
-            var meshChunk = cryNode.ObjectChunk as ChunkMesh;
-            WriteMeshOrLogError(out var newMesh, node, cryNode, meshChunk!, accessors);
-
-            if (omitSkins)
-                Log.D("NodeChunk[0]: Skipping skins.", cryNode.Name);
-            else if (cryNode.GetSkinningInfo() is { HasSkinningInfo: true } skinningInfo)
-            {
-                if (WriteSkinOrLogError(out var newSkin, out var weights, out var joints, node, skinningInfo,
-                        controllerIdToNodeIndex))
-                {
-                    node.Skin = AddSkin(newSkin);
-                    foreach (var prim in newMesh.Primitives)
-                    {
-                        prim.Attributes.Joints0 = joints;
-                        prim.Attributes.Weights0 = weights;
-                    }
-                }
-            }
-            else
-                Log.D("NodeChunk[{0}]: No skinning info is available.", cryNode.Name);
-
-            node.Mesh = AddMesh(newMesh);
-        }
-
         // Returns the int for the index of this node.
         return nodeIndex;
     }
 
+    private void AddMesh(ChunkNode cryNode, GltfNode gltfNode, Dictionary<uint, int> controllerIdToNodeIndex, bool omitSkins = false)
+    {
+        var accessors = new GltfMeshPrimitiveAttributes();
+        var meshChunk = cryNode.ObjectChunk as ChunkMesh;
+        WriteMeshOrLogError(out var gltfMesh, gltfNode, cryNode, meshChunk!, accessors);
+
+        if (omitSkins)
+            Log.D("NodeChunk[0]: Skipping skins.", cryNode.Name);
+        else if (cryNode.GetSkinningInfo() is { HasSkinningInfo: true } skinningInfo)
+        {
+            if (WriteSkinOrLogError(out var newSkin, out var weights, out var joints, gltfNode, skinningInfo,
+                    controllerIdToNodeIndex))
+            {
+                gltfNode.Skin = AddSkin(newSkin);
+                foreach (var prim in gltfMesh.Primitives)
+                {
+                    prim.Attributes.Joints0 = joints;
+                    prim.Attributes.Weights0 = weights;
+                }
+            }
+        }
+        else
+            Log.D("NodeChunk[{0}]: No skinning info is available.", cryNode.Name);
+
+        gltfNode.Mesh = AddMesh(gltfMesh);
+    }
 
     // Currently used for terrain
     protected bool CreateModelNode(out GltfNode node, CryEngine cryObject, bool omitSkins = false)
@@ -327,13 +338,6 @@ public partial class BaseGltfRenderer
                         GltfBufferViewTarget.ArrayBuffer,
                         colors.Colors.Select(x => new TypedVec4<float>(x.r / 255f, x.g / 255f, x.b / 255f, x.a / 255f))
                             .ToArray()));
-
-            //primitiveAccessors.Color0 = colors is null
-            //    ? null
-            //    : (_gltf.GetAccessorOrDefault(baseName, 0, colors.Colors.Length)
-            //       ?? _AddAccessor(baseName, -1,
-            //           colors.Colors.Select(x => new TypedVec4<float>(x.r / 255f, x.g / 255f, x.b / 255f, x.a / 255f))
-            //               .ToArray()));
 
             var normalsArray = normals?.Normals ?? tangents?.Normals;
             baseName = $"{gltfNode.Name}/normal";
