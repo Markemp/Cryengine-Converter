@@ -496,7 +496,7 @@ public class ColladaModelRenderer : IRenderer
                         floatArrayColors.ID = colorSource.ID + "-array";
                         floatArrayColors.Digits = 6;
                         floatArrayColors.Magnitude = 38;
-                        if (vertsUvs.Colors != null)
+                        if (vertsUvs.Colors is not null)
                         {
                             floatArrayColors.Count = vertsUvs.Colors.Length * 4;
                             for (uint j = 0; j < vertsUvs.Colors.Length; j++)  // Create Colors string
@@ -510,6 +510,7 @@ public class ColladaModelRenderer : IRenderer
                         }
 
                         // Dymek's code to rescale by bounding box.  Only apply to geometry (cga or cgf), and not skin or chr objects.
+                        // TODO: Move this to the cryengine data.
                         var multiplerVector = Vector3.Abs((meshChunk.MinBound - meshChunk.MaxBound) / 2f);
                         if (multiplerVector.X < 1) { multiplerVector.X = 1; }
                         if (multiplerVector.Y < 1) { multiplerVector.Y = 1; }
@@ -529,9 +530,9 @@ public class ColladaModelRenderer : IRenderer
                             // TODO:  This isn't right?  VertsUvs may always have color as the 3rd element.
                             // Normals depend on the data size.  16 byte structures have the normals in the Tangents.  20 byte structures are in the VertsUV.
                             Vector3 normal = new();
-                            if (vertsUvs.Normals != null)
+                            if (vertsUvs.Normals is not null)
                                 normal = vertsUvs.Normals[j];
-                            else if (tangents != null && tangents.Normals != null)
+                            else if (tangents is not null && tangents.Normals is not null)
                                 normal = tangents.Normals[j];
 
                             normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(normal.X), Safe(normal.Y), Safe(normal.Z));
@@ -1226,7 +1227,7 @@ public class ColladaModelRenderer : IRenderer
             {
                 ChunkNode geometryNode = _cryData.Models[1].NodeMap.Values.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
                 Grendgine_Collada_Geometry geometryLibraryObject = DaeObject.Library_Geometries.Geometry.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
-                if (geometryNode == null || geometryLibraryObject == null)
+                if (geometryNode is null || geometryLibraryObject is null)
                     colladaNode = CreateSimpleNode(nodeChunk);  // Can't find geometry for given node.
                 else
                 {

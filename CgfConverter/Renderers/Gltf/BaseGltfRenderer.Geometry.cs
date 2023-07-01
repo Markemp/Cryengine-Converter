@@ -336,16 +336,24 @@ public partial class BaseGltfRenderer
                         : GetAccessorOrDefault(baseName, 0, uvs.UVs.Length)
                           ?? AddAccessor($"{nodeChunk.Name}/uv", -1, GltfBufferViewTarget.ArrayBuffer, uvs.UVs);
             }
-            else
+            else  // VertsUVs.
             {
+                // TODO: Rescale these by bounding box (Collada renderer line 512).
                 baseName = $"{gltfNode.Name}/vertex";
+                var multiplerVector = Vector3.Abs((mesh.MinBound - mesh.MaxBound) / 2f);
+                if (multiplerVector.X < 1) { multiplerVector.X = 1; }
+                if (multiplerVector.Y < 1) { multiplerVector.Y = 1; }
+                if (multiplerVector.Z < 1) { multiplerVector.Z = 1; }
+                var boundaryBoxCenter = (mesh.MinBound + mesh.MaxBound) / 2f;
+                var scaleToBBox = _cryData.InputFile.EndsWith("cga") || _cryData.InputFile.EndsWith("cgf");
+
                 accessors.Position =
                     GetAccessorOrDefault(baseName, 0, vertsUvs.Vertices.Length)
                         ?? AddAccessor(
                             baseName, 
                             -1, 
                             GltfBufferViewTarget.ArrayBuffer,
-                            vertsUvs.Vertices.Select(SwapAxesForPosition).ToArray());
+                            vertsUvs.Vertices.Select(x => scaleToBBox ? SwapAxesForPosition((x * multiplerVector) + boundaryBoxCenter) : SwapAxesForPosition(x)).ToArray());
                 baseName = $"${gltfNode.Name}/uv";
                 accessors.TexCoord0 =
                     GetAccessorOrDefault(baseName, 0, vertsUvs.UVs.Length)
