@@ -16,10 +16,12 @@ public partial class BaseGltfRenderer
         var controllerIdToNodeIndex = new Dictionary<uint, int>();
 
         // Create this node and add to GltfRoot.Nodes
+        var rotationQuat = Quaternion.CreateFromRotationMatrix(cryNode.LocalTransform);
+        var swappedAxesQuat = SwapAxesForLayout(rotationQuat);
         var node = new GltfNode()
         {
             Name = cryNode.Name,
-            Rotation = SwapAxesForLayout(Quaternion.CreateFromRotationMatrix(cryNode.LocalTransform)).ToGltfList(),
+            Rotation = SwapAxesForLayout(rotationQuat).ToGltfList(),
             Translation = SwapAxesForPosition(cryNode.LocalTransform.GetTranslation()).ToGltfList(),
             Scale = Vector3.One.ToGltfList()
         };
@@ -110,7 +112,7 @@ public partial class BaseGltfRenderer
             var rootNode = new GltfNode
             {
                 Name = nodeChunk.Name,
-                Rotation = Quaternion.CreateFromRotationMatrix(nodeChunk.LocalTransform).ToGltfList(true),
+                Rotation = Quaternion.CreateFromRotationMatrix(nodeChunk.LocalTransform).ToGltfList(),
                 Translation = nodeChunk.LocalTransform.GetTranslation().ToGltfList(true),
                 Scale = nodeChunk.Scale.ToGltfList(),
             };
@@ -338,7 +340,6 @@ public partial class BaseGltfRenderer
             }
             else  // VertsUVs.
             {
-                // TODO: Rescale these by bounding box (Collada renderer line 512).
                 baseName = $"{gltfNode.Name}/vertex";
                 var multiplerVector = Vector3.Abs((mesh.MinBound - mesh.MaxBound) / 2f);
                 if (multiplerVector.X < 1) { multiplerVector.X = 1; }

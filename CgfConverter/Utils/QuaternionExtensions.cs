@@ -50,11 +50,5 @@ public static class QuaternionExtensions
         return rotationalMatrix;
     }
 
-    public static List<float> ToGltfList(this Quaternion q, bool isGltfCoordinateSystem = false)
-    {
-        if (isGltfCoordinateSystem)
-            return new List<float>() { q.X, q.Z, -q.Y, q.W };
-        else
-            return new List<float>() { q.X, q.Y, q.Z, q.W };
-    }
+    public static List<float> ToGltfList(this Quaternion q) => new List<float>() { q.X, q.Y, q.Z, q.W };
 }
