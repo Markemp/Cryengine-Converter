@@ -292,8 +292,8 @@ public class CgfConverterIntegrationTests
         // Validate Meshes
         Assert.AreEqual(4, objectData.BufferViews.Count);
         Assert.AreEqual(32004, objectData.BufferViews[0].ByteLength);
-        Assert.AreEqual(32004, objectData.BufferViews[1].ByteLength);
-        Assert.AreEqual(21336, objectData.BufferViews[2].ByteLength);
+        Assert.AreEqual(21336, objectData.BufferViews[1].ByteLength);
+        Assert.AreEqual(32004, objectData.BufferViews[2].ByteLength);
 
         // Validate Materials
         Assert.AreEqual(2, objectData.Materials.Count);
@@ -392,14 +392,14 @@ public class CgfConverterIntegrationTests
         // Validate Meshes
         Assert.AreEqual(15, gltfData.BufferViews.Count);
         Assert.AreEqual(9672, gltfData.BufferViews[0].ByteLength);
-        Assert.AreEqual(12896, gltfData.BufferViews[1].ByteLength);
+        Assert.AreEqual(6448, gltfData.BufferViews[1].ByteLength);
         Assert.AreEqual(9672, gltfData.BufferViews[2].ByteLength);
-        Assert.AreEqual(6448, gltfData.BufferViews[3].ByteLength);
+        Assert.AreEqual(12896, gltfData.BufferViews[3].ByteLength);
         Assert.AreEqual(11160, gltfData.BufferViews[4].ByteLength);
         Assert.AreEqual(5688, gltfData.BufferViews[5].ByteLength);
-        Assert.AreEqual(7584, gltfData.BufferViews[6].ByteLength);
+        Assert.AreEqual(3792, gltfData.BufferViews[6].ByteLength);
         Assert.AreEqual(5688, gltfData.BufferViews[7].ByteLength);
-        Assert.AreEqual(3792, gltfData.BufferViews[8].ByteLength);
+        Assert.AreEqual(7584, gltfData.BufferViews[8].ByteLength);
 
         // Validate Materials
         Assert.AreEqual(2, gltfData.Materials.Count);

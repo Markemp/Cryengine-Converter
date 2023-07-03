@@ -10,6 +10,59 @@ namespace CgfConverterTests.UnitTests;
 public class QuaternionExtensionsTests
 {
     [TestMethod]
+    public void Avenger_Door_Convert4x4ToGltf()
+    {
+        string colladaMatrix = "1 0 0 0.300001 0 0.939693 0.342020 0.512432 0 -0.342020 0.939693 -1.835138 0 0 0 1";
+
+        var stringValues = colladaMatrix.Split(' ');
+        float[] floatValues = new float[stringValues.Length];  // create new float array
+
+        for (int i = 0; i < stringValues.Length; i++)  // loop over string array
+        {
+            floatValues[i] = float.Parse(stringValues[i]);  // convert string to float and store in float array
+        }
+
+        Matrix4x4 rotationMatrix = new Matrix4x4(
+            floatValues[0], floatValues[1], floatValues[2], floatValues[3], 
+            floatValues[4], floatValues[5], floatValues[6], floatValues[7], 
+            floatValues[8], floatValues[9], floatValues[10], floatValues[11], 
+            floatValues[12], floatValues[13], floatValues[14], floatValues[15]);
+        
+        var quat = Quaternion.CreateFromRotationMatrix(rotationMatrix);
+        
+        Assert.AreEqual(0.174f, quat.X, 0.001f);
+        Assert.AreEqual(0, quat.Y, 0.001f);
+        Assert.AreEqual(0, quat.Z, 0.001f);
+        Assert.AreEqual(0.985f, quat.W, 0.001f);
+    }
+
+    [TestMethod]
+    public void Avenger_Grip_Convert4x4_ToGltf()
+    {
+        string colladaMatrix = "-0.282173 -0.548292 -0.787244 -1.412314 -0.882792 0.469642 -0.010671 1.660965 0.375574 0.691962 -0.616549 0.021400 0 0 0 1";
+        var stringValues = colladaMatrix.Split(' ');
+        float[] floatValues = new float[stringValues.Length];  // create new float array
+
+        for (int i = 0; i < stringValues.Length; i++)  // loop over string array
+        {
+            floatValues[i] = float.Parse(stringValues[i]);  // convert string to float and store in float array
+        }
+
+        Matrix4x4 rotationMatrix = new Matrix4x4(
+            floatValues[0], floatValues[1], floatValues[2], floatValues[3],
+            floatValues[4], floatValues[5], floatValues[6], floatValues[7],
+            floatValues[8], floatValues[9], floatValues[10], floatValues[11],
+            floatValues[12], floatValues[13], floatValues[14], floatValues[15]);
+
+        var quat = Quaternion.CreateFromRotationMatrix(rotationMatrix);
+
+        Assert.AreEqual(-0.465f, quat.X, 0.001f);
+        Assert.AreEqual(0.770f, quat.Y, 0.001f);
+        Assert.AreEqual(0.221f, quat.Z, 0.001f);
+        Assert.AreEqual(0.378f, quat.W, 0.001f);
+    }
+
+    [TestMethod]
     public void ConvertToRotationMatrix_Identity()
     {
         var q = Quaternion.Identity;

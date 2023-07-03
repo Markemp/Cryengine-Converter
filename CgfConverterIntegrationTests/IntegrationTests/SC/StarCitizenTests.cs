@@ -8,6 +8,7 @@ using CgfConverter.Renderers.Collada;
 using CgfConverter.Renderers.Gltf;
 using CgfConverterIntegrationTests.Extensions;
 using Extensions;
+using System.Linq;
 
 namespace CgfConverterTests.IntegrationTests;
 
@@ -180,39 +181,26 @@ public class StarCitizenTests
         Assert.AreEqual("Nose", gltfData.Nodes[1].Name);
         Assert.AreEqual("UI_Helper", gltfData.Nodes[2].Name);
 
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[0].Rotation);
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0.10248467f, -0.046882357f, -0.0038453776f, 0.9936217f }, gltfData.Nodes[1].Rotation);
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[2].Rotation);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[0].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { -0.0f, -0.0f, 0.0f, 1f }, gltfData.Nodes[1].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[2].Rotation, TestUtils.delta);
 
         AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0 }, gltfData.Nodes[0].Translation, TestUtils.delta);
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0.000101296f, 0.0640777f, 0f }, gltfData.Nodes[1].Translation, TestUtils.delta);
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0 }, gltfData.Nodes[2].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0.0f, -0.473000f, -5.702999f }, gltfData.Nodes[1].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0f, 0.795895f, -1.898374f }, gltfData.Nodes[2].Translation, TestUtils.delta);
 
-        Assert.AreEqual(2, gltfData.Nodes[0].Children.Count);
-        Assert.AreEqual(0, gltfData.Nodes[1].Children.Count);
+        // Grip.  Test loc and rotation on a node with a parent
+        var grip = gltfData.Nodes.Where(x => x.Name == "Grip").FirstOrDefault();
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { -1.41231394f, 0.0213999934f, -1.660965f }, grip.Translation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0.464955121f, -0.221349508f, 0.769474566f, 0.3777963f }, grip.Rotation, TestUtils.delta);
+
+        Assert.AreEqual(3, gltfData.Nodes[0].Children.Count); // Root
+        Assert.AreEqual(44, gltfData.Nodes[1].Children.Count);
         Assert.AreEqual(0, gltfData.Nodes[2].Children.Count);
 
         // Accessors check
-        Assert.AreEqual(10, gltfData.Accessors.Count);
+        Assert.AreEqual(288, gltfData.Accessors.Count);
 
-        //int result = testUtils.argsHandler.ProcessArgs(args);
-        //Assert.AreEqual(0, result);
-        //var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
-        //cryData.ProcessCryengineFiles();
-
-        //var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        //var daeObject = colladaData.DaeObject;
-        //colladaData.GenerateDaeObject();
-        //// Make sure Rotations are still right
-        //const string frontLGDoorLeftMatrix = "1 0 0 -0.300001 0 -0.938131 -0.346280 0.512432 0 0.346280 -0.938131 -1.835138 0 0 0 1";
-        //var noseNode = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].node[0];
-        //Assert.AreEqual("Nose", noseNode.ID);
-        //Assert.AreEqual("Front_LG_Door_Left", noseNode.node[28].ID);
-        //Assert.AreEqual(frontLGDoorLeftMatrix, noseNode.node[28].Matrix[0].Value_As_String);
-
-        //Assert.AreEqual(29, colladaData.DaeObject.Library_Materials.Material.Length);
-        //Assert.AreEqual(88, colladaData.DaeObject.Library_Images.Image.Length);
-        //testUtils.ValidateColladaXml(colladaData);
     }
 
     [TestMethod]

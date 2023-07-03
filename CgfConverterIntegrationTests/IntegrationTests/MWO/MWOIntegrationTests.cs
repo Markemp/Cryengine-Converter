@@ -576,9 +576,9 @@ public class MWOIntegrationTests
         Assert.AreEqual("HulaGirl_LowerBody", gltfData.Nodes[2].Name);
 
         var rotationMatrix = cryData.RootNode.AllChildNodes[0].Rot.ConvertToRotationMatrix();
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[0].Rotation);
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0.10248467f, -0.046882357f, -0.0038453776f, 0.9936217f }, gltfData.Nodes[1].Rotation);
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[2].Rotation);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[0].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { -0.10248467f, 0.00384537f, -0.04688235744833946f, 0.9936217f }, gltfData.Nodes[1].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[2].Rotation, TestUtils.delta);
 
         AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0 }, gltfData.Nodes[0].Translation, TestUtils.delta);
         AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0.000101296f, 0.0640777f, 0f }, gltfData.Nodes[1].Translation, TestUtils.delta);

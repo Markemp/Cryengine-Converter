@@ -20,19 +20,18 @@ public partial class BaseGltfRenderer
      * Up        +Y        +Z
      * Forward   +Z        +Y
      */
-    
-    //*
-    protected static Vector3 SwapAxesForPosition(Vector3 val) => new(-val.X, val.Z, val.Y);
+
+    // orig
+    //protected static Vector3 SwapAxesForPosition(Vector3 val) => new(-val.X, val.Z, val.Y);
+    protected static Vector3 SwapAxesForPosition(Vector3 val) => new(val.X, val.Z, -val.Y);
+
     protected static Vector3 SwapAxesForScale(Vector3 val) => new(val.X, val.Z, val.Y);
 
     protected static Quaternion SwapAxesForAnimations(Quaternion val) => new(-val.X, val.Z, val.Y, val.W);
 
     // orig.  Just need to rotate 180 around z axis, which swaps Z and -W
     //protected static Quaternion SwapAxesForLayout(Quaternion val) => new(-val.Y, val.W, val.Z, val.X);
-    protected static Quaternion SwapAxesForLayout(Quaternion val) => new(val.X, val.Y, val.Z, val.W);
-    //protected static Quaternion SwapAxesForLayout(Quaternion val) => new(-val.Y, val.W, -val.X, val.Z);
-    //protected static Quaternion SwapAxesForLayout(Quaternion val) => new(val.X, val.Y, val.W, -val.Z); bad
-    //protected static Quaternion SwapAxesForLayout(Quaternion val) => new(-val.Y, val.Z, -val.W, val.X);
+    protected static Quaternion SwapAxesForLayout(Quaternion val) => new(-val.X, -val.Z, val.Y, val.W);
 
     // M':   swapped matrix
     // T:    swap matrix = new Matrix4x4(-1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1)
