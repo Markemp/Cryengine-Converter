@@ -38,9 +38,15 @@ public partial class BaseGltfRenderer
                 string nodeName = cryNode.Name;
                 int nodeId = cryNode.ID;
 
+                // Some nodes don't have matching geometry in geometry file, even though the object chunk for the node
+                // points to a mesh chunk ($PHYSICS_Proxy_Tail in Buccaneer Blue).  Check if the node exists in the geometry
+                // file, and if not, continue processing.
                 ChunkNode geometryNode = _cryData.Models[1].NodeMap.Values.Where(a => a.Name == cryNode.Name).FirstOrDefault();
-                ChunkMesh geometryMesh = (ChunkMesh)_cryData.Models[1].ChunkMap[geometryNode.ObjectNodeID];
-                AddMesh(geometryNode, node, controllerIdToNodeIndex, omitSkins);
+                if (geometryNode is not null)
+                {
+                    ChunkMesh geometryMesh = (ChunkMesh)_cryData.Models[1].ChunkMap[geometryNode.ObjectNodeID];
+                    AddMesh(geometryNode, node, controllerIdToNodeIndex, omitSkins);
+                }
             }
         }
 

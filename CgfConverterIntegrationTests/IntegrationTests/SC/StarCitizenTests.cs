@@ -7,7 +7,6 @@ using System.Threading;
 using CgfConverter.Renderers.Collada;
 using CgfConverter.Renderers.Gltf;
 using CgfConverterIntegrationTests.Extensions;
-using Extensions;
 using System.Linq;
 
 namespace CgfConverterTests.IntegrationTests;
@@ -54,6 +53,21 @@ public class StarCitizenTests
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
+    }
+
+    [TestMethod]
+    public void CutlassBlue_312_Gltf_NonIvo()
+    {
+        var args = new string[] { $@"D:\depot\SC2\Data\objects\Spaceships\Ships\DRAK\Cutlass\Cutlass_Blue\DRAK_Cutlass_Blue.cga", "-dds", "-objectdir", @"d:\depot\sc2\data" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        //var gltfData = gltfRenderer.GenerateGltfObject();
+        gltfRenderer.Render();
+
     }
 
     [TestMethod]
@@ -200,7 +214,6 @@ public class StarCitizenTests
 
         // Accessors check
         Assert.AreEqual(288, gltfData.Accessors.Count);
-
     }
 
     [TestMethod]

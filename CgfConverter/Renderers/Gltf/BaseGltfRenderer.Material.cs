@@ -8,6 +8,7 @@ using BCnEncoder.Shared.ImageFiles;
 using CgfConverter.CryEngineCore;
 using CgfConverter.Materials;
 using CgfConverter.Renderers.Gltf.Models;
+using CgfConverter.Utils;
 using Extensions;
 using SixLabors.ImageSharp.PixelFormats;
 
@@ -36,7 +37,6 @@ public partial class BaseGltfRenderer
     private Dictionary<int, WrittenMaterial> WriteMaterial(ChunkNode nodeChunk)
     {
         var materialIndices = new Dictionary<int, WrittenMaterial>();
-        // return materialIndices;
 
         var submats = nodeChunk.Materials?.SubMaterials;
         if (submats is null)
@@ -120,8 +120,16 @@ public partial class BaseGltfRenderer
                 }
 
                 DdsFile ddsFile;
-                using (var ddsfs = Args.PackFileSystem.GetStream(texturePath))
+                if (DDSFileCombiner.IsSplitDDSIsSplitDDS(texturePath))
+                {
+                    using var ddsfs = DDSFileCombiner.CombineToStream(texturePath);
                     ddsFile = DdsFile.Load(ddsfs);
+                }
+                else
+                {
+                    using var ddsfs = Args.PackFileSystem.GetStream(texturePath);
+                    ddsFile = DdsFile.Load(ddsfs);
+                }
 
                 var width = (int) ddsFile.header.dwWidth;
                 var height = (int) ddsFile.header.dwHeight;

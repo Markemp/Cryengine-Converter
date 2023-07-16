@@ -416,9 +416,9 @@ public sealed class ArgsHandler
         ExcludeMaterialNameRegexes.AddRange(ExcludeMaterialNames.Select(x => new Regex(x, RegexOptions.Compiled | RegexOptions.IgnoreCase)));
         ExcludeShaderNameRegexes.AddRange(ExcludeShaderNames.Select(x => new Regex(x, RegexOptions.Compiled | RegexOptions.IgnoreCase)));
         
-        // Default to Collada (.dae) format
+        // Default to glTF binary (.glb) format
         if (!OutputCollada && !OutputWavefront && !OutputGLB && !OutputGLTF)
-            OutputCollada = true;
+            OutputGLB = true;
 
         return 0;
     }
