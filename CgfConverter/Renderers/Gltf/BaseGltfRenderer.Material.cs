@@ -113,16 +113,19 @@ public partial class BaseGltfRenderer
                     continue;
 
                 var texturePath = FileHandlingExtensions.ResolveTextureFile(texture.File, Args.PackFileSystem);
+                var fullTexturePath = FileHandlingExtensions.CombineAndNormalizePath(Args.DataDirs.FirstOrDefault(), texturePath);
+                
                 if (!Args.PackFileSystem.Exists(texturePath))
                 {
                     Log.W("Material[{0}:{1}]: Texture file not found: {2}", materialSetName, matId, texture.File);
                     continue;
                 }
+                var fullpath = FileHandlingExtensions.CombineAndNormalizePath(texturePath);
 
                 DdsFile ddsFile;
-                if (DDSFileCombiner.IsSplitDDSIsSplitDDS(texturePath))
+                if (DDSFileCombiner.IsSplitDDSIsSplitDDS(fullTexturePath))
                 {
-                    using var ddsfs = DDSFileCombiner.CombineToStream(texturePath);
+                    using var ddsfs = DDSFileCombiner.CombineToStream(fullTexturePath);
                     ddsFile = DdsFile.Load(ddsfs);
                 }
                 else
@@ -148,6 +151,7 @@ public partial class BaseGltfRenderer
 
                 switch (texture.Map)
                 {
+                    case Texture.MapTypeEnum.TexSlot2:
                     case Texture.MapTypeEnum.Normals:
                     {
                         if (GltfRendererUtilities.HasMeaningfulAlphaChannel(raw))
@@ -188,6 +192,7 @@ public partial class BaseGltfRenderer
 
                         break;
                     }
+                    case Texture.MapTypeEnum.TexSlot1:
                     case Texture.MapTypeEnum.Diffuse:
                         if (m.GlowAmount > 0)
                         {

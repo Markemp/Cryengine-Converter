@@ -474,5 +474,5 @@ public sealed class ArgsHandler
         Console.WriteLine();
     }
 
-    public override string ToString() => $@"Input file: {InputFiles}, Obj Dir: {DataDirs}, Output file: {OutputFile}";
+    public override string ToString() => $@"Input file: {InputFiles}, Object Dir: {string.Join(',', DataDirs)}, Output file: {OutputFile}";
 }

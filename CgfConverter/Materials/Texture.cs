@@ -39,6 +39,10 @@ public class Texture
         Emittance,
         Occlusion,
         Specular2,
+        TexSlot1,
+        TexSlot2,
+        TexSlot3,
+        TexSlot4,
         Unknown,
     }
 
@@ -67,6 +71,10 @@ public class Texture
             "Emittance" => MapTypeEnum.Emittance,
             "Occlusion" => MapTypeEnum.Occlusion,
             "Specular2" => MapTypeEnum.Specular2,
+            "TexSlot1" => MapTypeEnum.TexSlot1,  // Diffuse
+            "TexSlot2" => MapTypeEnum.TexSlot2,
+            "TexSlot3" => MapTypeEnum.TexSlot3,
+            "TexSlot4" => MapTypeEnum.TexSlot4,
             
             // Backwards-compatible names
             "Normal" => MapTypeEnum.Normals,
@@ -93,6 +101,10 @@ public class Texture
             MapTypeEnum.Emittance => "Emittance",
             MapTypeEnum.Occlusion => "Occlusion",
             MapTypeEnum.Specular2 => "Specular2",
+            MapTypeEnum.TexSlot1 => "TexSlot1",
+            MapTypeEnum.TexSlot2 => "TexSlot2",
+            MapTypeEnum.TexSlot3 => "TexSlot3",
+            MapTypeEnum.TexSlot4 => "TexSlot4",
             MapTypeEnum.Unknown => "Unknown",
             _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
         };

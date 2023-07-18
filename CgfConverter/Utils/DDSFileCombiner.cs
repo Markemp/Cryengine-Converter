@@ -68,15 +68,17 @@ public class DDSFileCombiner
 
         string fileNameWithExtension = Path.GetFileName(baseFileName);
 
+        var files = Directory.GetFiles(directory, $"{fileNameWithExtension}.*");
+
         // Get all files that start with the base file name and have a numeric extension
-        var filesToCombine = Directory.GetFiles(directory, $"{fileNameWithExtension}*")
-            .Where(path => Path.GetFileName(path).StartsWith($"{fileNameWithExtension}.") &&
-                           int.TryParse(Path.GetExtension(path).TrimStart('.'), out _))
-            .OrderByDescending(path => int.Parse(Path.GetExtension(path).TrimStart('.'))) // Order files by descending order
-            .ToList();
+        //var filesToCombine = Directory.GetFiles(directory, $"{fileNameWithExtension}*")
+        //    .Where(path => Path.GetFileName(path).StartsWith($"{fileNameWithExtension}.") &&
+        //                   int.TryParse(Path.GetExtension(path).TrimStart('.'), out _))
+        //    .OrderByDescending(path => int.Parse(Path.GetExtension(path).TrimStart('.'))) // Order files by descending order
+        //    .ToList();
 
         // If no files to combine, inform the user and exit
-        if (!filesToCombine.Any())
+        if (!files.Any())
             throw new Exception("No matching part files found.");
 
         // Create a new MemoryStream to hold the combined file data
@@ -85,15 +87,20 @@ public class DDSFileCombiner
         try
         {
             // Append the base file to the combined file first, as it contains the header
-            using FileStream baseFileStream = new FileStream(baseFileName, FileMode.Open);
+            using FileStream baseFileStream = new(baseFileName, FileMode.Open);
             baseFileStream.CopyTo(combinedStream);
 
             // Iterate over each file and append it to the combined MemoryStream
-            foreach (string filePath in filesToCombine)
+            for (int i = files.Length - 1; i >= 1; i--)
             {
-                using FileStream partFileStream = new FileStream(filePath, FileMode.Open);
+                using FileStream partFileStream = new(files[i], FileMode.Open);
                 partFileStream.CopyTo(combinedStream);
             }
+            //foreach (string filePath in filesToCombine)
+            //{
+            //    using FileStream partFileStream = new(filePath, FileMode.Open);
+            //    partFileStream.CopyTo(combinedStream);
+            //}
 
             // Reset the position of the MemoryStream to the beginning
             combinedStream.Position = 0;
