@@ -93,10 +93,22 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
 
             case DatastreamType.NORMALS:
                 Normals = new Vector3[NumElements];
-                for (int i = 0; i < NumElements; i++)
+                if (BytesPerElement == 4)
                 {
-                    Normals[i] = b.ReadVector3();
+                    for (int i = 0; i < NumElements; i++)
+                    {
+                        SkipBytes(b, 4);
+                        Normals[i] = new Vector3();
+                    }
                 }
+                else
+                {
+                    for (int i = 0; i < NumElements; i++)
+                    {
+                        Normals[i] = b.ReadVector3();
+                    }
+                }
+
                 break;
 
             #endregion

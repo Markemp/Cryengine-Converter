@@ -58,6 +58,8 @@ public class DDSFileCombiner
 
     public static Stream CombineToStream(string baseFileName)
     {
+        // TODO:  Normal files have both .1 and .1a style names. Figure out how to handle these.
+        // Make this more resilient.
         if (baseFileName is null)
             throw new ArgumentException("Base file name cannot be null or empty.", nameof(baseFileName));
 

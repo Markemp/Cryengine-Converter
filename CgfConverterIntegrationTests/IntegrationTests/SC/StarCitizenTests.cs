@@ -1,13 +1,13 @@
 ﻿using CgfConverter;
+using CgfConverter.Renderers.Collada;
+using CgfConverter.Renderers.Gltf;
+using CgfConverterIntegrationTests.Extensions;
 using CgfConverterTests.TestUtilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Globalization;
-using System.Threading;
-using CgfConverter.Renderers.Collada;
-using CgfConverter.Renderers.Gltf;
-using CgfConverterIntegrationTests.Extensions;
 using System.Linq;
+using System.Threading;
 
 namespace CgfConverterTests.IntegrationTests;
 
@@ -110,7 +110,7 @@ public class StarCitizenTests
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.GenerateDaeObject(); 
+        colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
 
         //Assert.AreEqual(17, cryData.Materials.Count);
@@ -148,6 +148,20 @@ public class StarCitizenTests
         var daeObject = colladaData.DaeObject;
 
         testUtils.ValidateColladaXml(colladaData);
+    }
+
+    [TestMethod]
+    public void BehrRifleParts_34_Gltf_ChCrSkinFile()
+    {
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\brfl_fps_behr_p4ar_parts_3.4.skin", "-dds", "-dae" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        var gltfData = gltfRenderer.GenerateGltfObject();
+        gltfRenderer.Render();
     }
 
     [TestMethod]
@@ -253,8 +267,8 @@ public class StarCitizenTests
     [TestMethod]
     public void SC_BehrRifle_34()
     {
-        var args = new string[] { 
-            $@"{userHome}\OneDrive\ResourceFiles\SC\brfl_fps_behr_p4ar_parts_3.4.skin", 
+        var args = new string[] {
+            $@"{userHome}\OneDrive\ResourceFiles\SC\brfl_fps_behr_p4ar_parts_3.4.skin",
             "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
@@ -372,10 +386,37 @@ public class StarCitizenTests
         // Geometry Library checks
         var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
         Assert.AreEqual(1, geometries.Length);
-        
+
         // Materials check
         var materials = colladaData.DaeObject.Library_Materials.Material;
         Assert.AreEqual(5, materials.Length);
+    }
+
+    [TestMethod]
+    public void Mobiglass_Gltf()
+    {
+        var args = new string[] {
+            $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\f_mobiglas_civilian_01.skin",
+            "-dds", "-dae" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        var gltfData = gltfRenderer.GenerateGltfObject();
+        gltfRenderer.Render();
+
+        //ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        //colladaData.GenerateDaeObject();
+
+        //// Geometry Library checks
+        //var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
+        //Assert.AreEqual(1, geometries.Length);
+
+        //// Materials check
+        //var materials = colladaData.DaeObject.Library_Materials.Material;
+        //Assert.AreEqual(5, materials.Length);
     }
 
     [TestMethod]

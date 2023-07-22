@@ -157,7 +157,7 @@ public class Model
     {
         ChunkNode rootNode = new ChunkNode_823
         {
-            Name = FileName,
+            Name = Path.GetFileNameWithoutExtension(FileName!),
             ObjectNodeID = 2,      // No node IDs in #ivo files.  The actual mesh is the only node in the m file.
             ParentNodeID = ~0,     // No parent
             __NumChildren = 0,     // Single object

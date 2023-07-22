@@ -11,6 +11,7 @@ namespace CgfConverter.Renderers.Gltf;
 
 public partial class BaseGltfRenderer
 {
+    // Crynode should always be from model[0]
     protected int CreateGltfNode(ChunkNode cryNode, bool omitSkins = false)
     {
         var controllerIdToNodeIndex = new Dictionary<uint, int>();
@@ -29,7 +30,8 @@ public partial class BaseGltfRenderer
         var nodeIndex = _gltfRoot.Nodes.Count - 1;
 
         // Add mesh if needed
-        if (_cryData.Models[0].ChunkMap[cryNode.ObjectNodeID].ChunkType != ChunkType.Helper)
+        if (_cryData.Models[0].IsIvoFile || 
+            _cryData.Models[0].ChunkMap[cryNode.ObjectNodeID].ChunkType != ChunkType.Helper)
         {
             if (_cryData.Models.Count == 1)
                 AddMesh(cryNode, node, controllerIdToNodeIndex, omitSkins);
