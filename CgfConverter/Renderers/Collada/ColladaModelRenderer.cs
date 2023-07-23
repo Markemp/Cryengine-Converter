@@ -352,7 +352,7 @@ public class ColladaModelRenderer : IRenderer
                 //if (meshChunk.MeshPhysicsData != 0)
                 // TODO:  Implement this chunk
 
-                if (meshChunk.MeshSubsetsData != 0)   // For the SC files, you can have Mesh chunks with no Mesh Subset.  Need to skip these.  They are in the .cga file and contain no geometry.
+                if (meshChunk.MeshSubsetsData != 0)   // You can have Mesh chunks with no Mesh Subset.  Need to skip these.  They are in the .cga file and contain no geometry.
                 {
                     var meshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[meshChunk.MeshSubsetsData];  // Listed as Object ID for the Node
 

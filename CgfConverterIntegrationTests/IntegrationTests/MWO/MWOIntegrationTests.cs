@@ -591,4 +591,30 @@ public class MWOIntegrationTests
         // Accessors check
         Assert.AreEqual(10, gltfData.Accessors.Count);
     }
+
+    [TestMethod]
+    public void MechFactory_CratesA_Gltf()
+    {
+        var args = new string[] { $@"d:\depot\mwo\objects\environments\mech_factory\mf_crates\mechfactory_cratesa.cgf" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        var gltfData = gltfRenderer.GenerateGltfObject();
+    }
+
+    [TestMethod]
+    public void MechFactory_CratesA_Collada()
+    {
+        var args = new string[] { $@"d:\depot\mwo\objects\environments\mech_factory\mf_crates\mechfactory_cratesa.cgf" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+    }
 }

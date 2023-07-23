@@ -419,6 +419,8 @@ public class StarCitizenTests
 
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
         var gltfData = gltfRenderer.GenerateGltfObject();
+        var geometries = gltfData.Meshes;
+
         gltfRenderer.Render();
     }
 

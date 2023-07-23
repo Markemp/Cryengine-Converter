@@ -34,7 +34,12 @@ public partial class BaseGltfRenderer
             _cryData.Models[0].ChunkMap[cryNode.ObjectNodeID].ChunkType != ChunkType.Helper)
         {
             if (_cryData.Models.Count == 1)
-                AddMesh(cryNode, node, controllerIdToNodeIndex, omitSkins);
+            {
+                var meshChunk = cryNode.ObjectChunk as ChunkMesh;
+                if (meshChunk is not null && meshChunk.MeshSubsetsData != 0)
+                    AddMesh(cryNode, node, controllerIdToNodeIndex, omitSkins);
+            }
+                
             else  // Has geometry file
             {
                 string nodeName = cryNode.Name;
