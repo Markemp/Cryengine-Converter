@@ -47,7 +47,8 @@ public partial class BaseGltfRenderer
                 if (geometryNode is not null)
                 {
                     ChunkMesh geometryMesh = (ChunkMesh)_cryData.Models[1].ChunkMap[geometryNode.ObjectNodeID];
-                    AddMesh(geometryNode, node, controllerIdToNodeIndex, omitSkins);
+                    if (geometryMesh is not null && geometryMesh.NumIndices != 0)
+                        AddMesh(geometryNode, node, controllerIdToNodeIndex, omitSkins);
                 }
             }
         }

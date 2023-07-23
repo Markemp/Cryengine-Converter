@@ -406,18 +406,22 @@ public class StarCitizenTests
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
         var gltfData = gltfRenderer.GenerateGltfObject();
         gltfRenderer.Render();
-
-        //ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
-        //colladaData.GenerateDaeObject();
-
-        //// Geometry Library checks
-        //var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
-        //Assert.AreEqual(1, geometries.Length);
-
-        //// Materials check
-        //var materials = colladaData.DaeObject.Library_Materials.Material;
-        //Assert.AreEqual(5, materials.Length);
     }
+
+    [TestMethod]
+    public void Avenger_Ramp_Exterior()
+    {
+        var args = new string[] { $@"D:\depot\SC2\Data\Objects\Spaceships\Ships\AEGS\Avenger\aegs_avenger_ramp_exterior.cga", "-dds", "-gltf" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        var gltfData = gltfRenderer.GenerateGltfObject();
+        gltfRenderer.Render();
+    }
+
 
     [TestMethod]
     public void Glaive()
