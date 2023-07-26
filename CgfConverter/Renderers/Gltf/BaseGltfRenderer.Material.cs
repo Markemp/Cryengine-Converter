@@ -112,7 +112,7 @@ public partial class BaseGltfRenderer
                 if (texture.File == "nearest_cubemap" || string.IsNullOrWhiteSpace(texture.File))
                     continue;
 
-                var texturePath = FileHandlingExtensions.ResolveTextureFile(texture.File, Args.PackFileSystem);
+                var texturePath = FileHandlingExtensions.ResolveTextureFile(texture.File, Args.PackFileSystem, Args.DataDirs);
                 var fullTexturePath = FileHandlingExtensions.CombineAndNormalizePath(Args.DataDirs.FirstOrDefault(), texturePath);
                 
                 if (!Args.PackFileSystem.Exists(texturePath))
@@ -187,12 +187,19 @@ public partial class BaseGltfRenderer
                         }
                         else
                         {
+                            // For normal maps, blue is usually set to 0.  Should be 255.  This
+                            // is why the normal textures look yellow instead of blue.
+                            for (int i = 0; i < raw.Length; i++)
+                            {
+                                    raw[i].b = (byte)Math.Sqrt(raw[i].r * raw[i].r + raw[i].g * raw[i].g);
+                            }
                             normal = AddTexture(name, width, height, raw, SourceAlphaModes.Disable);
                         }
 
                         break;
                     }
                     case Texture.MapTypeEnum.TexSlot1:
+                    case Texture.MapTypeEnum.TexSlot9:
                     case Texture.MapTypeEnum.Diffuse:
                         if (m.GlowAmount > 0)
                         {
@@ -209,7 +216,8 @@ public partial class BaseGltfRenderer
                         diffuse = AddTexture(name, width, height, raw, SourceAlphaModes.Disable,
                             preferredAlphaColor);
                         break;
-
+                    case Texture.MapTypeEnum.TexSlot4:
+                    case Texture.MapTypeEnum.TexSlot10:
                     case Texture.MapTypeEnum.Specular:
                         specular = AddTexture(name, width, height, raw, SourceAlphaModes.Automatic);
                         break;

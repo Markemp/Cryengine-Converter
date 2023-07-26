@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using CgfConverter;
@@ -11,7 +13,7 @@ public static class FileHandlingExtensions
     private static readonly string?[] TextureExtensions = {null, ".dds", ".png", ".tif"};
 
     /// <summary>Attempts to resolve a material path to the correct file extension, and normalizes the path separators</summary>
-    public static string ResolveTextureFile(string mtl, IPackFileSystem fs)
+    public static string ResolveTextureFile(string mtl, IPackFileSystem fs, List<string> dataDirs)
     {
         foreach (var ext in TextureExtensions)
         {
@@ -26,6 +28,16 @@ public static class FileHandlingExtensions
 
             if (fs.Exists(testPath = Path.Combine("textures", Path.GetFileName(m))))
                 return testPath.Replace('\\', '/');
+
+            if (dataDirs is not null && dataDirs.Count > 0)
+            {
+                foreach (var dataDir in dataDirs)
+                {
+                    var texturePath = Path.Combine(dataDir, m);
+                    if (fs.Exists(texturePath))
+                        return texturePath.Replace('\\', '/');
+                }
+            }
         }
 
         if (fs.Glob($"**/{Path.GetFileNameWithoutExtension(mtl)}.*")
@@ -33,7 +45,8 @@ public static class FileHandlingExtensions
             return path;
 
         Utilities.Log(LogLevelEnum.Debug, $"Could not find extension for material texture \"{mtl}\". Defaulting to .dds");
-        return $"{mtl}.dds".Replace("\\", "/").Replace(".tif", string.Empty);
+        
+        return Path.ChangeExtension(mtl, ".dds").Replace("\\", "/");
     }
 
     /// <summary>

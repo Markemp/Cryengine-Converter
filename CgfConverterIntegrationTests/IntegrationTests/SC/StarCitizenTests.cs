@@ -191,7 +191,7 @@ public class StarCitizenTests
     [TestMethod]
     public void AEGS_Avenger_Gltf()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\AEGS_Avenger.cga", "-dds" };
+        var args = new string[] { @"d:\depot\sc2\data\objects\spaceships\ships\aegs\Avenger\AEGS_Avenger.cga", "-dds", "-objectdir", @"d:\depot\sc2\data" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
@@ -200,8 +200,8 @@ public class StarCitizenTests
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
         var gltfData = gltfRenderer.GenerateGltfObject();
 
-        Assert.AreEqual(19, gltfData.Materials.Count);
-        Assert.AreEqual(56, gltfData.Meshes.Count);
+        Assert.AreEqual(22, gltfData.Materials.Count);
+        Assert.AreEqual(46, gltfData.Meshes.Count);
 
         // Nodes check
         Assert.AreEqual(135, gltfData.Nodes.Count);

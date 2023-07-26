@@ -253,7 +253,7 @@ public partial class CryEngine
             loadedMaterialMap[matChunk] = nodeChunk.Materials ??= CreateDefaultMaterials(nodeChunk);
 
             // create dummy 5th material (generic_variant) for MWO mechDefault.mtls
-            if (matChunk.Name.Equals("Objects/mechs/generic/body/generic_body.mtl"))
+            if (matChunk.Name.Equals("Objects/mechs/generic/body/generic_body.mtl", StringComparison.OrdinalIgnoreCase))
             {
                 var source = nodeChunk.Materials!.SubMaterials;
                 var newMats = new Material[5];
@@ -325,16 +325,38 @@ public partial class CryEngine
             if (PackFileSystem.Exists(name))
                 return name;
         }
-        else
-        {
-            // Check if material file is in or relative to current directory
-            var fullName = FileHandlingExtensions.CombineAndNormalizePath(Path.GetDirectoryName(InputFile), name);
-            if (PackFileSystem.Exists(fullName))
-                return fullName;
 
-            // Check if material file relative to object directory
-            if (PackFileSystem.Exists(name))
-                return name;
+        var dirStrings = InputFile.Split("\\");
+        for (int i = 0; i < dirStrings.Length; i++)
+        {
+            if (string.Equals(dirStrings[i], "Objects", StringComparison.OrdinalIgnoreCase))
+            {
+                var path = string.Join("\\", dirStrings.Take(i));
+                var mtlFileName = FileHandlingExtensions.CombineAndNormalizePath(path, name);
+                if (PackFileSystem.Exists(mtlFileName))
+                    return mtlFileName;
+            }
+        }
+
+        // Check if material file is in or relative to current directory
+        var fullName = FileHandlingExtensions.CombineAndNormalizePath(Path.GetDirectoryName(InputFile), name);
+        if (PackFileSystem.Exists(fullName))
+            return fullName;
+
+        // Check if material file relative to object directory
+        if (PackFileSystem.Exists(name))
+            return name;
+
+        // See if there is any .mtl file in the current directory. If so, use that.
+        var currentDir = Path.GetDirectoryName(fullName);
+        if (Directory.Exists(currentDir!))
+        {
+            var mtlFiles = Directory.GetFiles(currentDir!, "*.mtl");
+            if (mtlFiles.Length > 0)
+            {
+                Log.I("Found one ore more multiple material files in {0}. Using {1}", currentDir, mtlFiles[0]);
+                return mtlFiles[0];
+            }
         }
 
         Log.W("Unable to find material file for {0}", name);

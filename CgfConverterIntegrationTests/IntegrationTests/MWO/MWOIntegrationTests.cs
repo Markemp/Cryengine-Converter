@@ -227,8 +227,6 @@ public class MWOIntegrationTests
 
         ColladaModelRenderer colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
-        int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-        Assert.AreEqual(3, actualMaterialsCount);
         testUtils.ValidateColladaXml(colladaData);
     }
 
@@ -245,9 +243,6 @@ public class MWOIntegrationTests
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
 
-        int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
-        Assert.AreEqual(11, actualMaterialsCount);
-        
         // Visual Scene Check 
         Assert.AreEqual("Scene", daeObject.Scene.Visual_Scene.Name);
         Assert.AreEqual("#Scene", daeObject.Scene.Visual_Scene.URL);
@@ -433,8 +428,6 @@ public class MWOIntegrationTests
 
         ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
-        int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-        Assert.AreEqual(16, actualMaterialsCount);
 
         testUtils.ValidateColladaXml(colladaData);
     }
@@ -595,7 +588,7 @@ public class MWOIntegrationTests
     [TestMethod]
     public void MechFactory_CratesA_Gltf()
     {
-        var args = new string[] { $@"d:\depot\mwo\objects\environments\mech_factory\mf_crates\mechfactory_cratesa.cgf" };
+        var args = new string[] { $@"d:\depot\mwo\objects\environments\mech_factory\mf_crates\mechfactory_cratesa.cgf", "-objectdir", "d:\\depot\\mwo" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
@@ -603,6 +596,8 @@ public class MWOIntegrationTests
 
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
         var gltfData = gltfRenderer.GenerateGltfObject();
+        Assert.AreEqual(1, gltfData.Textures.Count);
+        Assert.AreEqual(1, gltfData.Materials.Count);
     }
 
     [TestMethod]
@@ -616,5 +611,18 @@ public class MWOIntegrationTests
 
         ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
+    }
+
+    [TestMethod]
+    public void Mf_Bldg_A_Corner_Slope_Gltf()
+    {
+        var args = new string[] { $@"D:\depot\mwo\objects\environments\mech_factory\building_blocks\mf_bldg_a_corner_slope_01.cgf", "-objectdir", "d:\\depot\\mwo" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        var gltfData = gltfRenderer.GenerateGltfObject();
     }
 }

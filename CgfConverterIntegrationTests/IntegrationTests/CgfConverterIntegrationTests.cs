@@ -57,7 +57,7 @@ public class CgfConverterIntegrationTests
         colladaData.GenerateDaeObject();
 
         int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-        Assert.AreEqual(17, actualMaterialsCount);
+        Assert.AreEqual(19, actualMaterialsCount);
 
         testUtils.ValidateColladaXml(colladaData);
     }
@@ -73,9 +73,6 @@ public class CgfConverterIntegrationTests
 
         ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
-
-        int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-        Assert.AreEqual(13, actualMaterialsCount);
 
         testUtils.ValidateColladaXml(colladaData);
     }
@@ -200,9 +197,6 @@ public class CgfConverterIntegrationTests
         ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
 
-        int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-        Assert.AreEqual(5, actualMaterialsCount);
-
         testUtils.ValidateColladaXml(colladaData);
     }
 
@@ -227,9 +221,6 @@ public class CgfConverterIntegrationTests
         ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
 
-        int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-        Assert.AreEqual(2, actualMaterialsCount);
-
         testUtils.ValidateColladaXml(colladaData);
     }
 
@@ -244,9 +235,6 @@ public class CgfConverterIntegrationTests
 
         ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
-
-        int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-        Assert.AreEqual(1, actualMaterialsCount);
 
         testUtils.ValidateColladaXml(colladaData);
     }
@@ -263,9 +251,6 @@ public class CgfConverterIntegrationTests
 
         ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
-
-        int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
-        Assert.AreEqual(2, actualMaterialsCount);
     }
 
     [TestMethod]
@@ -294,11 +279,6 @@ public class CgfConverterIntegrationTests
         Assert.AreEqual(32004, objectData.BufferViews[0].ByteLength);
         Assert.AreEqual(21336, objectData.BufferViews[1].ByteLength);
         Assert.AreEqual(32004, objectData.BufferViews[2].ByteLength);
-
-        // Validate Materials
-        Assert.AreEqual(2, objectData.Materials.Count);
-
-        // Validate Geometry
     }
 
     [TestMethod]

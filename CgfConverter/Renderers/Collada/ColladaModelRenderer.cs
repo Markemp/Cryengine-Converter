@@ -825,7 +825,7 @@ public class ColladaModelRenderer : IRenderer
                 Init_From = new Grendgine_Collada_Init_From()
             };
             // Try to resolve the texture file to a file on disk. Texture are always based on DataDir.
-            var textureFile = ResolveTextureFile(mat.Textures[i].File, _args.PackFileSystem);
+            var textureFile = ResolveTextureFile(mat.Textures[i].File, _args.PackFileSystem, _args.DataDirs);
 
             if (_args.PngTextures && File.Exists(Path.ChangeExtension(textureFile, ".png")))
                 textureFile = Path.ChangeExtension(textureFile, ".png");

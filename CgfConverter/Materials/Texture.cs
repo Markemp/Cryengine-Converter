@@ -1,7 +1,8 @@
 ﻿using System.ComponentModel;
 using System.Xml.Serialization;
 using System;
-using CgfConverter.Materials;
+
+namespace CgfConverter.Materials;
 
 /// <summary>The texture object</summary>
 [XmlRoot(ElementName = "Texture")]
@@ -40,15 +41,18 @@ public class Texture
         Occlusion,
         Specular2,
         TexSlot1,
-        TexSlot2,
+        TexSlot2,  // Normal
         TexSlot3,
-        TexSlot4,
+        TexSlot4,  // Specular
+        TexSlot9,  // Diffuse
+        TexSlot10, // Specular
+        TexSlot12, // Blend
         Unknown,
     }
 
     [XmlAttribute(AttributeName = "Map")]
     public string MapString = string.Empty;
-    
+
     /// <summary>Diffuse, Specular, Bumpmap, Environment, HeightMamp or Custom</summary>
     [XmlIgnore]
     public MapTypeEnum Map
@@ -72,15 +76,18 @@ public class Texture
             "Occlusion" => MapTypeEnum.Occlusion,
             "Specular2" => MapTypeEnum.Specular2,
             "TexSlot1" => MapTypeEnum.TexSlot1,  // Diffuse
-            "TexSlot2" => MapTypeEnum.TexSlot2,
+            "TexSlot2" => MapTypeEnum.Normals,
             "TexSlot3" => MapTypeEnum.TexSlot3,
-            "TexSlot4" => MapTypeEnum.TexSlot4,
-            
+            "TexSlot4" => MapTypeEnum.Specular,
+            "TexSlot9" => MapTypeEnum.Diffuse,
+            "TexSlot10" => MapTypeEnum.TexSlot10,
+            "TexSlot12" => MapTypeEnum.TexSlot12,
+
             // Backwards-compatible names
             "Normal" => MapTypeEnum.Normals,
             "GlossNormalA" => MapTypeEnum.Smoothness,
             "Height" => MapTypeEnum.Height,
-            
+
             _ => MapTypeEnum.Unknown,
         };
         set => MapString = value switch
@@ -102,9 +109,12 @@ public class Texture
             MapTypeEnum.Occlusion => "Occlusion",
             MapTypeEnum.Specular2 => "Specular2",
             MapTypeEnum.TexSlot1 => "TexSlot1",
-            MapTypeEnum.TexSlot2 => "TexSlot2",
+            MapTypeEnum.TexSlot2 => "Specular",
             MapTypeEnum.TexSlot3 => "TexSlot3",
-            MapTypeEnum.TexSlot4 => "TexSlot4",
+            MapTypeEnum.TexSlot4 => "Specular",
+            MapTypeEnum.TexSlot9 => "Diffuse",
+            MapTypeEnum.TexSlot10 => "TexSlot10",
+            MapTypeEnum.TexSlot12 => "TexSlot12",
             MapTypeEnum.Unknown => "Unknown",
             _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
         };
