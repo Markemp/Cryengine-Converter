@@ -146,9 +146,9 @@ public class MWOIntegrationTests
     }
 
     [TestMethod]
-    public void FiftyCalNecklace_VerifyMaterials()
+    public void FiftyCalNecklace_ColladaVerifyMaterials()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\50calnecklace_a.chr", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+        var args = new string[] { $@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.chr", "-dds", "-objectdir", @"d:\depot\mwo\" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         
@@ -156,13 +156,12 @@ public class MWOIntegrationTests
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        
     }
 
     [TestMethod]
-    public void FiftyCalNecklas_GltfConversion()
+    public void FiftyCalNecklace_GltfConversion()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\50calnecklace_a.chr" };
+        var args = new string[] { $@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.chr", "-dds", "-objectdir", @"d:\depot\mwo\" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
@@ -193,12 +192,12 @@ public class MWOIntegrationTests
         Assert.AreEqual(1, gltfData.Nodes[2].Children.Count);
 
         // Accessors check
-        Assert.AreEqual(7, gltfData.Accessors.Count);
+        Assert.AreEqual(8, gltfData.Accessors.Count);
 
         // Skins check
         Assert.AreEqual(1, gltfData.Skins.Count);
         Assert.AreEqual(8, gltfData.Skins[0].Joints.Count);
-        Assert.AreEqual(6, gltfData.Skins[0].InverseBindMatrices);
+        Assert.AreEqual(7, gltfData.Skins[0].InverseBindMatrices);
         Assert.AreEqual("50calnecklace_a/skin", gltfData.Skins[0].Name);
     }
 

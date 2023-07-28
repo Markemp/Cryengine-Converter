@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using CgfConverter;
 using CgfConverter.PackFileSystem;
+using grendgine_collada;
 
 namespace Extensions;
 
@@ -36,6 +37,8 @@ public static class FileHandlingExtensions
                     var texturePath = Path.Combine(dataDir, m);
                     if (fs.Exists(texturePath))
                         return texturePath.Replace('\\', '/');
+                    if (fs.Exists(texturePath + ".1"))  // Armored warfare split dds files
+                        return texturePath.Replace('\\', '/') + ".1";
                 }
             }
         }

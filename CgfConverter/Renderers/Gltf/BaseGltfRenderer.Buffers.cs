@@ -449,7 +449,7 @@ public partial class BaseGltfRenderer
         }
 
         using var ms = new MemoryStream();
-        if (newOpacity != null)
+        if (newOpacity is not null)
         {
             var buf = raw.ToRgba32();
             if (sourceAlphaMode == SourceAlphaModes.Enable)

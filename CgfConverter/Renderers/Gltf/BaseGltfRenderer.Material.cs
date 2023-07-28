@@ -113,24 +113,23 @@ public partial class BaseGltfRenderer
                     continue;
 
                 var texturePath = FileHandlingExtensions.ResolveTextureFile(texture.File, Args.PackFileSystem, Args.DataDirs);
-                var fullTexturePath = FileHandlingExtensions.CombineAndNormalizePath(Args.DataDirs.FirstOrDefault(), texturePath);
-                
-                if (!Args.PackFileSystem.Exists(texturePath))
+                var normalizedPath = FileHandlingExtensions.CombineAndNormalizePath(texturePath);
+
+                if (!Args.PackFileSystem.Exists(normalizedPath))
                 {
                     Log.W("Material[{0}:{1}]: Texture file not found: {2}", materialSetName, matId, texture.File);
                     continue;
                 }
-                var fullpath = FileHandlingExtensions.CombineAndNormalizePath(texturePath);
 
                 DdsFile ddsFile;
-                if (DDSFileCombiner.IsSplitDDSIsSplitDDS(fullTexturePath))
+                if (DDSFileCombiner.IsSplitDDS(normalizedPath))
                 {
-                    using var ddsfs = DDSFileCombiner.CombineToStream(fullTexturePath);
+                    using var ddsfs = DDSFileCombiner.CombineToStream(normalizedPath);
                     ddsFile = DdsFile.Load(ddsfs);
                 }
                 else
                 {
-                    using var ddsfs = Args.PackFileSystem.GetStream(texturePath);
+                    using var ddsfs = Args.PackFileSystem.GetStream(normalizedPath);
                     ddsFile = DdsFile.Load(ddsfs);
                 }
 
@@ -147,7 +146,7 @@ public partial class BaseGltfRenderer
                     continue;
                 }
 
-                var name = Path.GetFileNameWithoutExtension(texturePath);
+                var name = Path.GetFileNameWithoutExtension(normalizedPath);
 
                 switch (texture.Map)
                 {
@@ -191,7 +190,7 @@ public partial class BaseGltfRenderer
                             // is why the normal textures look yellow instead of blue.
                             for (int i = 0; i < raw.Length; i++)
                             {
-                                    raw[i].b = (byte)Math.Sqrt(raw[i].r * raw[i].r + raw[i].g * raw[i].g);
+                                    raw[i].b = 255;
                             }
                             normal = AddTexture(name, width, height, raw, SourceAlphaModes.Disable);
                         }

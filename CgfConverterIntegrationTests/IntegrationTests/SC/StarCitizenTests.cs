@@ -201,10 +201,10 @@ public class StarCitizenTests
         var gltfData = gltfRenderer.GenerateGltfObject();
 
         Assert.AreEqual(22, gltfData.Materials.Count);
-        Assert.AreEqual(46, gltfData.Meshes.Count);
+        Assert.AreEqual(34, gltfData.Meshes.Count);
 
         // Nodes check
-        Assert.AreEqual(135, gltfData.Nodes.Count);
+        Assert.AreEqual(116, gltfData.Nodes.Count);
         Assert.AreEqual("AEGS_Avenger", gltfData.Nodes[0].Name);
         Assert.AreEqual("Nose", gltfData.Nodes[1].Name);
         Assert.AreEqual("UI_Helper", gltfData.Nodes[2].Name);
@@ -227,7 +227,7 @@ public class StarCitizenTests
         Assert.AreEqual(0, gltfData.Nodes[2].Children.Count);
 
         // Accessors check
-        Assert.AreEqual(288, gltfData.Accessors.Count);
+        Assert.AreEqual(282, gltfData.Accessors.Count);
     }
 
     [TestMethod]

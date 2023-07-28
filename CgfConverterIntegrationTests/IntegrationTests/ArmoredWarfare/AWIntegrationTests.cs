@@ -1,0 +1,39 @@
+﻿using CgfConverter;
+using CgfConverter.Renderers.Gltf;
+using CgfConverterTests.TestUtilities;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Globalization;
+using System.Threading;
+
+namespace CgfConverterTests.IntegrationTests.ArmoredWarfare;
+
+[TestClass]
+public class AWIntegrationTests
+{
+    private readonly TestUtils testUtils = new();
+
+    [TestInitialize]
+    public void Initialize()
+    {
+        CultureInfo customCulture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
+        customCulture.NumberFormat.NumberDecimalSeparator = ".";
+        Thread.CurrentThread.CurrentCulture = customCulture;
+        testUtils.GetSchemaSet();
+    }
+
+    [TestMethod]
+    public void Chicken_Gltf()
+    {
+        // Verify bones and materials
+        var args = new string[] { $@"d:\depot\armoredwarfare\objects\characters\animals\birds\chicken\chicken.chr", "-dds", "-objectdir", @"d:\depot\armoredwarfare\" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        var gltfData = gltfRenderer.GenerateGltfObject();
+
+    }
+}

@@ -56,76 +56,98 @@ public class DDSFileCombiner
         }
     }
 
-    public static Stream CombineToStream(string baseFileName)
+    public static Stream CombineToStream(string normalizedPath)
     {
         // TODO:  Normal files have both .1 and .1a style names. Figure out how to handle these.
         // Make this more resilient.
-        if (baseFileName is null)
-            throw new ArgumentException("Base file name cannot be null or empty.", nameof(baseFileName));
+        if (normalizedPath is null)
+            throw new ArgumentException("Base file name cannot be null or empty.", nameof(normalizedPath));
 
-        string? directory = Path.GetDirectoryName(baseFileName);
+        string? directory = Path.GetDirectoryName(normalizedPath);
 
         if (directory is null)
-            throw new ArgumentException("Base file name must contain a directory.", nameof(baseFileName));
+            throw new ArgumentException("Base file name must contain a directory.", nameof(normalizedPath));
 
-        string fileNameWithExtension = Path.GetFileName(baseFileName);
-
-        var files = Directory.GetFiles(directory, $"{fileNameWithExtension}.*");
-
-        // Get all files that start with the base file name and have a numeric extension
-        //var filesToCombine = Directory.GetFiles(directory, $"{fileNameWithExtension}*")
-        //    .Where(path => Path.GetFileName(path).StartsWith($"{fileNameWithExtension}.") &&
-        //                   int.TryParse(Path.GetExtension(path).TrimStart('.'), out _))
-        //    .OrderByDescending(path => int.Parse(Path.GetExtension(path).TrimStart('.'))) // Order files by descending order
-        //    .ToList();
-
-        // If no files to combine, inform the user and exit
-        if (!files.Any())
-            throw new Exception("No matching part files found.");
-
-        // Create a new MemoryStream to hold the combined file data
-        MemoryStream combinedStream = new();
-
-        try
+        if (Path.GetExtension(normalizedPath) == ".dds")
         {
-            // Append the base file to the combined file first, as it contains the header
-            using FileStream baseFileStream = new(baseFileName, FileMode.Open);
-            baseFileStream.CopyTo(combinedStream);
+            string fileNameWithExtension = Path.GetFileName(normalizedPath);
 
-            // Iterate over each file and append it to the combined MemoryStream
-            for (int i = files.Length - 1; i >= 1; i--)
+            var files = Directory.GetFiles(directory, $"{fileNameWithExtension}.*");
+
+            // Get all files that start with the base file name and have a numeric extension
+            // If no files to combine, inform the user and exit
+            if (!files.Any())
+                throw new Exception("No matching part files found.");
+
+            MemoryStream combinedStream = new();
+
+            try
             {
-                using FileStream partFileStream = new(files[i], FileMode.Open);
-                partFileStream.CopyTo(combinedStream);
+                // Append the base file to the combined file first, as it contains the header
+                using FileStream baseFileStream = new(normalizedPath, FileMode.Open);
+                baseFileStream.CopyTo(combinedStream);
+
+                // Iterate over each file and append it to the combined MemoryStream
+                for (int i = files.Length - 1; i >= 1; i--)
+                {
+                    using FileStream partFileStream = new(files[i], FileMode.Open);
+                    partFileStream.CopyTo(combinedStream);
+                }
+
+                // Reset the position of the MemoryStream to the beginning
+                combinedStream.Position = 0;
+                return combinedStream;
             }
-            //foreach (string filePath in filesToCombine)
-            //{
-            //    using FileStream partFileStream = new(filePath, FileMode.Open);
-            //    partFileStream.CopyTo(combinedStream);
-            //}
-
-            // Reset the position of the MemoryStream to the beginning
-            combinedStream.Position = 0;
-
-            return combinedStream;
+            catch (Exception ex)
+            {
+                throw new Exception($"An error occurred: {ex.Message}");
+            }
         }
-        catch (Exception ex)
+        else if (Path.GetExtension(normalizedPath) == ".1")
         {
-            throw new Exception($"An error occurred: {ex.Message}");
+            var headerFile = normalizedPath.Replace(".1", ".0");
+            var filenameWithoutExtension = Path.GetFileNameWithoutExtension(normalizedPath);
+            var files = Directory.GetFiles(directory, $"{filenameWithoutExtension}.*");
+
+            if (!files.Any())
+                throw new Exception("No matching part files found.");
+            MemoryStream combinedStream = new();
+
+            try
+            {
+                using FileStream baseFileStream = new(headerFile, FileMode.Open);
+                baseFileStream.CopyTo(combinedStream);
+
+                for (int i = files.Length - 1; i >= 1; i--)
+                {
+                    using FileStream partFileStream = new(files[i], FileMode.Open);
+                    partFileStream.CopyTo(combinedStream);
+                }
+
+                combinedStream.Position = 0;
+                return combinedStream;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"An error occurred: {ex.Message}");
+            }
         }
+        else
+            throw new FileNotFoundException("Split DDS texture file not found.", normalizedPath);
     }
 
-    public static bool IsSplitDDSIsSplitDDS(string baseFileName)
+    public static bool IsSplitDDS(string fullTexturePath)
     {
         // Check if baseFileName is null or empty
-        if (string.IsNullOrEmpty(baseFileName))
-            throw new ArgumentException("Base file name cannot be null or empty.", nameof(baseFileName));
+        if (string.IsNullOrEmpty(fullTexturePath))
+            throw new ArgumentException("Base file name cannot be null or empty.", nameof(fullTexturePath));
 
-        string directory = Path.GetDirectoryName(baseFileName);
-        string fileNameWithExtension = Path.GetFileName(baseFileName);
+        // For Armored Warfare files.
+        if (Path.GetExtension(fullTexturePath) == ".1")
+            return File.Exists(fullTexturePath);
 
         // Check if a file exists that starts with the base file name and ends with '.1'
-        return File.Exists(Path.Combine(directory, $"{fileNameWithExtension}.1"));
+        return File.Exists($"{fullTexturePath}.1");
     }
 
 }
