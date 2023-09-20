@@ -21,6 +21,7 @@ public class GltfModelRenderer : BaseGltfRenderer, IRenderer
         foreach (var cryNode in _cryData.Models[0].NodeMap.Values.Where(a => a.ParentNodeID == ~0).ToList())
         {
             // CurrentScene.Nodes has the index for the nodes in GltfRoot.Nodes
+            // This is only for node chunks.  Bones are handled next.
             CurrentScene.Nodes.Add(CreateGltfNode(cryNode));
         }
 

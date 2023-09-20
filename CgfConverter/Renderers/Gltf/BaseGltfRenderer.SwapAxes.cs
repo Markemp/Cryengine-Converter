@@ -32,6 +32,8 @@ public partial class BaseGltfRenderer
     // orig.  Just need to rotate 180 around z axis, which swaps Z and -W
     //protected static Quaternion SwapAxesForLayout(Quaternion val) => new(-val.Y, val.W, val.Z, val.X);
     protected static Quaternion SwapAxesForLayout(Quaternion val) => new(-val.X, -val.Z, val.Y, val.W);
+    
+    //protected static Quaternion SwapBoneAxesForLayout(Quaternion val) => new(-val.X, val.Z, val.Y, val.W); // no
 
     // M':   swapped matrix
     // T:    swap matrix = new Matrix4x4(-1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1)

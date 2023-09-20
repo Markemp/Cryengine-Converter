@@ -1,45 +1,50 @@
-﻿using System;
+﻿using CgfConverter.CryEngineCore;
+using CgfConverter.Renderers.Gltf.Models;
+using Extensions;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using CgfConverter.CryEngineCore;
-using CgfConverter.Renderers.Gltf.Models;
-using Extensions;
 
 namespace CgfConverter.Renderers.Gltf;
 
 public partial class BaseGltfRenderer
 {
-    // Crynode should always be from model[0]
-    protected int CreateGltfNode(ChunkNode cryNode, bool omitSkins = false)
+    /// <summary>
+    /// Recursive method to add a gltf node to the nodes array. Crynode should always be from model[0]
+    /// </summary>
+    /// <param name="cryNode">A node chunk</param>
+    /// <returns></returns>
+    protected int CreateGltfNode(ChunkNode cryNode)
     {
         var controllerIdToNodeIndex = new Dictionary<uint, int>();
 
         // Create this node and add to GltfRoot.Nodes
         var rotationQuat = Quaternion.CreateFromRotationMatrix(cryNode.LocalTransform);
-        var swappedAxesQuat = SwapAxesForLayout(rotationQuat);
+        var translation = cryNode.LocalTransform.GetTranslation();
+        
         var node = new GltfNode()
         {
             Name = cryNode.Name,
+            Translation = SwapAxesForPosition(translation).ToGltfList(),
             Rotation = SwapAxesForLayout(rotationQuat).ToGltfList(),
-            Translation = SwapAxesForPosition(cryNode.LocalTransform.GetTranslation()).ToGltfList(),
             Scale = Vector3.One.ToGltfList()
         };
         _gltfRoot.Nodes.Add(node);
         var nodeIndex = _gltfRoot.Nodes.Count - 1;
 
         // Add mesh if needed
-        if (_cryData.Models[0].IsIvoFile || 
+        if (_cryData.Models[0].IsIvoFile ||
             _cryData.Models[0].ChunkMap[cryNode.ObjectNodeID].ChunkType != ChunkType.Helper)
         {
             if (_cryData.Models.Count == 1)
             {
                 var meshChunk = cryNode.ObjectChunk as ChunkMesh;
                 if (meshChunk is not null && meshChunk.MeshSubsetsData != 0)
-                    AddMesh(cryNode, node, controllerIdToNodeIndex, omitSkins);
+                    AddMesh(cryNode, node, controllerIdToNodeIndex);
             }
-                
+
             else  // Has geometry file
             {
                 string nodeName = cryNode.Name;
@@ -53,7 +58,7 @@ public partial class BaseGltfRenderer
                 {
                     ChunkMesh geometryMesh = (ChunkMesh)_cryData.Models[1].ChunkMap[geometryNode.ObjectNodeID];
                     if (geometryMesh is not null && geometryMesh.NumIndices != 0)
-                        AddMesh(geometryNode, node, controllerIdToNodeIndex, omitSkins);
+                        AddMesh(geometryNode, node, controllerIdToNodeIndex);
                 }
             }
         }
@@ -71,18 +76,18 @@ public partial class BaseGltfRenderer
         return nodeIndex;
     }
 
-    private void AddMesh(ChunkNode cryNode, GltfNode gltfNode, Dictionary<uint, int> controllerIdToNodeIndex, bool omitSkins = false)
+    private void AddMesh(ChunkNode cryNode, GltfNode gltfNode, Dictionary<uint, int> controllerIdToNodeIndex)
     {
         var accessors = new GltfMeshPrimitiveAttributes();
         var meshChunk = cryNode.ObjectChunk as ChunkMesh;
         WriteMeshOrLogError(out var gltfMesh, gltfNode, cryNode, meshChunk!, accessors);
-
-        if (omitSkins)
-            Log.D("NodeChunk[0]: Skipping skins.", cryNode.Name);
-        else if (cryNode.GetSkinningInfo() is { HasSkinningInfo: true } skinningInfo)
+        
+        gltfNode.Mesh = AddMesh(gltfMesh);
+        
+        if (cryNode.GetSkinningInfo() is { HasSkinningInfo: true } skinningInfo)
         {
             if (WriteSkinOrLogError(out var newSkin, out var weights, out var joints, gltfNode, skinningInfo,
-                    controllerIdToNodeIndex))
+                controllerIdToNodeIndex))
             {
                 gltfNode.Skin = AddSkin(newSkin);
                 foreach (var prim in gltfMesh.Primitives)
@@ -94,9 +99,8 @@ public partial class BaseGltfRenderer
         }
         else
             Log.D("NodeChunk[{0}]: No skinning info is available.", cryNode.Name);
-
-        gltfNode.Mesh = AddMesh(gltfMesh);
     }
+
 
     // Currently used for terrain
     protected bool CreateModelNode(out GltfNode node, CryEngine cryObject, bool omitSkins = false)
@@ -224,41 +228,45 @@ public partial class BaseGltfRenderer
         var boneIdToBindPoseMatrices = new Dictionary<uint, Matrix4x4>();
         foreach (var bone in skinningInfo.CompiledBones)
         {
-            var mat = boneIdToBindPoseMatrices[bone.ControllerID] = bone.BindPoseMatrix;
-            if (bone.parentID != 0)
-            {
-                if (!Matrix4x4.Invert(boneIdToBindPoseMatrices[bone.parentID], out var parentMat))
-                    return Log.E<bool>("CompiledBone[{0}/{1}]: Failed to invert BindPoseMatrix.",
-                        rootNode.Name, bone.ParentBone?.boneName);
+            //var matrix = boneIdToBindPoseMatrices[bone.ControllerID] = bone.BindPoseMatrix;
+            //if (bone.parentID != 0)
+            //{
+            //    if (!Matrix4x4.Invert(boneIdToBindPoseMatrices[bone.parentID], out var parentMat))
+            //        return Log.E<bool>("CompiledBone[{0}/{1}]: Failed to invert BindPoseMatrix.",
+            //            rootNode.Name, bone.ParentBone?.boneName);
 
-                mat *= parentMat;
-            }
+            //    matrix *= parentMat;
+            //}
 
-            if (!Matrix4x4.Invert(mat, out mat))
-                return Log.E<bool>("CompiledBone[{0}/{1}]: Failed to invert BindPoseMatrix.",
-                    rootNode.Name, bone.boneName);
+            //if (!Matrix4x4.Invert(matrix, out matrix))
+            //    return Log.E<bool>("CompiledBone[{0}/{1}]: Failed to invert BindPoseMatrix.",
+            //        rootNode.Name, bone.boneName);
 
-            mat = SwapAxes(Matrix4x4.Transpose(mat));
-            if (!Matrix4x4.Decompose(mat, out var scale, out var rotation, out var translation))
-                return Log.E<bool>("CompiledBone[{0}/{1}]: BindPoseMatrix is not decomposable.",
-                    rootNode.Name, bone.boneName);
+            //matrix = SwapAxes(Matrix4x4.Transpose(matrix));
+            //if (!Matrix4x4.Decompose(matrix, out var scale, out var rotation, out var translation))
+            //    return Log.E<bool>("CompiledBone[{0}/{1}]: BindPoseMatrix is not decomposable.",
+            //    rootNode.Name, bone.boneName);
+            //var translationVec = new Vector3(bone.LocalTransform.M14, bone.LocalTransform.M24, bone.LocalTransform.M34);
 
-            controllerIdToNodeIndex[bone.ControllerID] = AddNode(new GltfNode
+            var boneTranslation = bone.LocalTransform.GetTranslation();
+            var boneRotationQuat = Quaternion.CreateFromRotationMatrix(bone.LocalTransform);
+
+            var boneNode = new GltfNode
             {
                 Name = bone.boneName,
-                Scale = (scale - Vector3.One).LengthSquared() > 0.000001
-                    ? new List<float> { scale.X, scale.Y, scale.Z }
-                    : null,
-                Translation = translation != Vector3.Zero
-                    ? new List<float> { translation.X, translation.Y, translation.Z }
-                    : null,
-                Rotation = rotation != Quaternion.Identity
-                    ? new List<float> { rotation.X, rotation.Y, rotation.Z, rotation.W }
-                    : null,
-            });
+                
+                Translation = SwapAxesForPosition(boneTranslation).ToGltfList(),
+                Rotation = SwapAxesForLayout(boneRotationQuat).ToGltfList(),
+                Scale = Vector3.One.ToGltfList()
+            };
+            controllerIdToNodeIndex[bone.ControllerID] = AddNode(boneNode);
 
             if (bone.parentID == 0)
-                rootNode.Children.Add(controllerIdToNodeIndex[bone.ControllerID]);
+            {
+                //rootNode.Children.Add(controllerIdToNodeIndex[bone.ControllerID]);
+                //_gltfRoot.Nodes.Add(boneNode);
+                CurrentScene.Nodes.Add(controllerIdToNodeIndex[bone.ControllerID]);
+            }
             else
                 _gltfRoot.Nodes[controllerIdToNodeIndex[bone.parentID]].Children
                     .Add(controllerIdToNodeIndex[bone.ControllerID]);
@@ -266,9 +274,14 @@ public partial class BaseGltfRenderer
 
         baseName = $"{rootNode.Name}/bone/joint";
         joints =
-            GetAccessorOrDefault(baseName, 0,
+            GetAccessorOrDefault(
+                baseName, 
+                0,
                 skinningInfo.IntVertices is null ? skinningInfo.BoneMapping.Count : skinningInfo.Ext2IntMap.Count)
-            ?? AddAccessor(baseName, -1, null,
+            ?? AddAccessor(
+                baseName, 
+                -1, 
+                null,
                 skinningInfo is { HasIntToExtMapping: true, IntVertices: { } }
                     ? skinningInfo.Ext2IntMap
                         .Select(x => skinningInfo.IntVertices[x])
@@ -286,6 +299,7 @@ public partial class BaseGltfRenderer
             GetAccessorOrDefault(baseName, 0, skinningInfo.CompiledBones.Count)
             ?? AddAccessor(baseName, -1, null,
                 skinningInfo.CompiledBones.Select(x => SwapAxes(Matrix4x4.Transpose(x.BindPoseMatrix))).ToArray());
+                //skinningInfo.CompiledBones.Select(x => SwapAxes(x.BindPoseMatrix)).ToArray());
 
         newSkin = new GltfSkin
         {
@@ -296,9 +310,9 @@ public partial class BaseGltfRenderer
         return true;
     }
 
-    private bool WriteMeshOrLogError(out GltfMesh newMesh, 
-        GltfNode gltfNode, 
-        ChunkNode nodeChunk, 
+    private bool WriteMeshOrLogError(out GltfMesh newMesh,
+        GltfNode gltfNode,
+        ChunkNode nodeChunk,
         ChunkMesh mesh,
         GltfMeshPrimitiveAttributes accessors)
     {
@@ -365,17 +379,17 @@ public partial class BaseGltfRenderer
                 accessors.Position =
                     GetAccessorOrDefault(baseName, 0, vertsUvs.Vertices.Length)
                         ?? AddAccessor(
-                            baseName, 
-                            -1, 
+                            baseName,
+                            -1,
                             GltfBufferViewTarget.ArrayBuffer,
                             vertsUvs.Vertices.Select(x => scaleToBBox ? SwapAxesForPosition((x * multiplerVector) + boundaryBoxCenter) : SwapAxesForPosition(x)).ToArray());
                 baseName = $"${gltfNode.Name}/uv";
                 accessors.TexCoord0 =
                     GetAccessorOrDefault(baseName, 0, vertsUvs.UVs.Length)
                         ?? AddAccessor(
-                            $"{nodeChunk.Name}/uv", 
-                            -1, 
-                            GltfBufferViewTarget.ArrayBuffer, 
+                            $"{nodeChunk.Name}/uv",
+                            -1,
+                            GltfBufferViewTarget.ArrayBuffer,
                             vertsUvs.UVs);
             }
 
@@ -393,8 +407,8 @@ public partial class BaseGltfRenderer
                 ? null
                 : (GetAccessorOrDefault(baseName, 0, colors.Colors.Length)
                     ?? AddAccessor(
-                        baseName, 
-                        -1, 
+                        baseName,
+                        -1,
                         GltfBufferViewTarget.ArrayBuffer,
                         colors.Colors.Select(x => new TypedVec4<float>(x.r / 255f, x.g / 255f, x.b / 255f, x.a / 255f))
                             .ToArray()));
@@ -412,13 +426,10 @@ public partial class BaseGltfRenderer
 
         }
 
-        //if (vertsUvs is not null && vertices is null)
-        //    return Log.E<bool>("Mesh[{0}]: vertsUvs is currently not supported.", gltfNode.Name);  // TODO: Support VertsUvs.
-
         baseName = $"${gltfNode.Name}/index";
         var indexBufferView = GetBufferViewOrDefault(baseName) ??
                               AddBufferView(baseName, indices.Indices, GltfBufferViewTarget.ElementArrayBuffer);
-        
+
         newMesh = new GltfMesh
         {
             Name = $"{gltfNode.Name}/mesh",

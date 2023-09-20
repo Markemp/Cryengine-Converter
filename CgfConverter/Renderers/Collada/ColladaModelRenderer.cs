@@ -870,7 +870,8 @@ public class ColladaModelRenderer : IRenderer
                 Bind_Shape_Matrix = new Grendgine_Collada_Float_Array_String()
             };
             skin.Bind_Shape_Matrix.Value_As_String = CreateStringFromMatrix4x4(Matrix4x4.Identity);  // We will assume the BSM is the identity matrix for now
-                                                                                                     // Create the 3 sources for this controller:  joints, bind poses, and weights
+            
+            // Create the 3 sources for this controller:  joints, bind poses, and weights
             skin.Source = new Grendgine_Collada_Source[3];
 
             // Populate the data.
@@ -878,12 +879,12 @@ public class ColladaModelRenderer : IRenderer
             #region Joints Source
             Grendgine_Collada_Source jointsSource = new()
             {
-                ID = "Controller-joints"
-            };
-            jointsSource.Name_Array = new Grendgine_Collada_Name_Array()
-            {
-                ID = "Controller-joints-array",
-                Count = _cryData.SkinningInfo.CompiledBones.Count,
+                ID = "Controller-joints",
+                Name_Array = new Grendgine_Collada_Name_Array()
+                {
+                    ID = "Controller-joints-array",
+                    Count = _cryData.SkinningInfo.CompiledBones.Count,
+                }
             };
             StringBuilder boneNames = new();
             for (int i = 0; i < _cryData.SkinningInfo.CompiledBones.Count; i++)

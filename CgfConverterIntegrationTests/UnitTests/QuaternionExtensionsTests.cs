@@ -10,6 +10,45 @@ namespace CgfConverterTests.UnitTests;
 public class QuaternionExtensionsTests
 {
     [TestMethod]
+    public void ArmorWarfare_Chicken_Convert4x4ToGltf()
+    {
+        string leftLegThighArmature = "-0.995234 0.007154 -0.097251 -0.035172 " +
+                                      "0.046991 0.909053 -0.414023 0.028731 " +
+                                      "0.085444 -0.416620 -0.905056 0.223571 " +
+                                      "0 0 0 1";
+
+        var stringValues = leftLegThighArmature.Split(' ');
+        float[] floatValues = new float[stringValues.Length];  // create new float array
+
+        for (int i = 0; i < stringValues.Length; i++)  // loop over string array
+        {
+            floatValues[i] = float.Parse(stringValues[i]);  // convert string to float and store in float array
+        }
+
+        Matrix4x4 rotationMatrix = new(
+            floatValues[0], floatValues[1], floatValues[2], floatValues[3],
+            floatValues[4], floatValues[5], floatValues[6], floatValues[7],
+            floatValues[8], floatValues[9], floatValues[10], floatValues[11],
+            floatValues[12], floatValues[13], floatValues[14], floatValues[15]);
+
+        var expectedQuat = Quaternion.CreateFromRotationMatrix(rotationMatrix);
+        var expectedTranslation = new Vector3(floatValues[3], floatValues[7], floatValues[11]);
+
+        Assert.AreEqual(0.01387, expectedQuat.X, 0.001f);
+        Assert.AreEqual(0.9758769, expectedQuat.Y, 0.001f);
+        Assert.AreEqual(-0.212794, expectedQuat.Z, 0.001f);
+        Assert.AreEqual(0.04680, expectedQuat.W, 0.001f);
+
+        Assert.AreEqual(-0.035f, expectedTranslation.X, 0.001f);
+        Assert.AreEqual(0.028f, expectedTranslation.Y, 0.001f);
+        Assert.AreEqual(0.223f, expectedTranslation.Z, 0.001f);
+
+        // 0.03517237, -0.013496172, 0.028730806  chicken thigh translation
+        // X:-0.013871077 Y:-0.21279413 Z:0.9758769 W:-0.0468028 chicken thigh rotation
+
+    }
+
+    [TestMethod]
     public void Avenger_Door_Convert4x4ToGltf()
     {
         string colladaMatrix = "1 0 0 0.300001 0 0.939693 0.342020 0.512432 0 -0.342020 0.939693 -1.835138 0 0 0 1";
@@ -22,18 +61,18 @@ public class QuaternionExtensionsTests
             floatValues[i] = float.Parse(stringValues[i]);  // convert string to float and store in float array
         }
 
-        Matrix4x4 rotationMatrix = new Matrix4x4(
+        Matrix4x4 rotationMatrix = new(
             floatValues[0], floatValues[1], floatValues[2], floatValues[3], 
             floatValues[4], floatValues[5], floatValues[6], floatValues[7], 
             floatValues[8], floatValues[9], floatValues[10], floatValues[11], 
             floatValues[12], floatValues[13], floatValues[14], floatValues[15]);
         
-        var quat = Quaternion.CreateFromRotationMatrix(rotationMatrix);
+        var expectedQuat = Quaternion.CreateFromRotationMatrix(rotationMatrix);
         
-        Assert.AreEqual(0.174f, quat.X, 0.001f);
-        Assert.AreEqual(0, quat.Y, 0.001f);
-        Assert.AreEqual(0, quat.Z, 0.001f);
-        Assert.AreEqual(0.985f, quat.W, 0.001f);
+        Assert.AreEqual(0.174f, expectedQuat.X, 0.001f);
+        Assert.AreEqual(0, expectedQuat.Y, 0.001f);
+        Assert.AreEqual(0, expectedQuat.Z, 0.001f);
+        Assert.AreEqual(0.985f, expectedQuat.W, 0.001f);
     }
 
     [TestMethod]
@@ -48,7 +87,7 @@ public class QuaternionExtensionsTests
             floatValues[i] = float.Parse(stringValues[i]);  // convert string to float and store in float array
         }
 
-        Matrix4x4 rotationMatrix = new Matrix4x4(
+        Matrix4x4 rotationMatrix = new(
             floatValues[0], floatValues[1], floatValues[2], floatValues[3],
             floatValues[4], floatValues[5], floatValues[6], floatValues[7],
             floatValues[8], floatValues[9], floatValues[10], floatValues[11],
