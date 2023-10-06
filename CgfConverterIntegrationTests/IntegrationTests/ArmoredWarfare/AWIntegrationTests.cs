@@ -1,4 +1,5 @@
 ﻿using CgfConverter;
+using CgfConverter.Renderers.Collada;
 using CgfConverter.Renderers.Gltf;
 using CgfConverterTests.TestUtilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -35,5 +36,20 @@ public class AWIntegrationTests
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
         var gltfData = gltfRenderer.GenerateGltfObject();
 
+    }
+
+    [TestMethod]
+    public void Chicken_WalkAnim()
+    {
+        var args = new string[] { $@"d:\depot\armoredwarfare\animations\animals\birds\chicken\walk.caf", "-dds", "-dae", "-objectdir", @"d:\depot\armoredwarfare\" };
+
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        //cryData.ProcessCryengineFiles();
+
+        //var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        //colladaData.Render();
     }
 }

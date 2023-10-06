@@ -248,14 +248,17 @@ public partial class BaseGltfRenderer
             //    rootNode.Name, bone.boneName);
             //var translationVec = new Vector3(bone.LocalTransform.M14, bone.LocalTransform.M24, bone.LocalTransform.M34);
 
+            //var boneTranslation = bone.LocalTransform.GetTranslation();
             var boneTranslation = bone.LocalTransform.GetTranslation();
             var boneRotationQuat = Quaternion.CreateFromRotationMatrix(bone.LocalTransform);
+            //boneRotationQuat = new Quaternion(0,0,1,0) * boneRotationQuat;
 
             var boneNode = new GltfNode
             {
                 Name = bone.boneName,
-                
-                Translation = SwapAxesForPosition(boneTranslation).ToGltfList(),
+
+                //Translation = SwapAxesForPosition(boneTranslation).ToGltfList(),
+                Translation = boneTranslation.ToGltfList(),
                 Rotation = SwapAxesForLayout(boneRotationQuat).ToGltfList(),
                 Scale = Vector3.One.ToGltfList()
             };
@@ -306,6 +309,7 @@ public partial class BaseGltfRenderer
             InverseBindMatrices = inverseBindMatricesAccessor,
             Joints = skinningInfo.CompiledBones.Select(x => controllerIdToNodeIndex[x.ControllerID]).ToList(),
             Name = $"{rootNode.Name}/skin",
+            Skeleton = 1
         };
         return true;
     }

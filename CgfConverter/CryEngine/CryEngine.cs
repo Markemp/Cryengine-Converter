@@ -23,14 +23,15 @@ public partial class CryEngine
         ".chr",
         ".skin",
         ".anim",
-        ".soc"
+        ".soc",
+        ".caf",
+        ".dba"
     };
 
     protected readonly TaggedLogger Log;
 
     public List<Model> Models { get; internal set; } = new();
     public List<Model> Animations { get; internal set; } = new();
-    //public List<Material> Materials { get; internal set; } = new();
     public ChunkNode RootNode { get; internal set; }
     public ChunkCompiledBones Bones { get; internal set; }
     public SkinningInfo? SkinningInfo { get; set; }

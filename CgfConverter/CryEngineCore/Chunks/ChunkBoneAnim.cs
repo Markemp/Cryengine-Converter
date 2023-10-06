@@ -1,7 +1,6 @@
-﻿namespace CgfConverter.CryEngineCore
+﻿namespace CgfConverter.CryEngineCore;
+
+public abstract class ChunkBoneAnim : Chunk
 {
-    public abstract class ChunkBoneAnim : Chunk
-    {
-        public int NumBones;
-    }
+    public int NumBones;
 }

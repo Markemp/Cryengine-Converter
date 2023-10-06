@@ -18,4 +18,7 @@ public class GltfSkin
     [JsonProperty("inverseBindMatrices")] public int? InverseBindMatrices;
 
     [JsonProperty("joints")] public List<int> Joints = new();
+
+    [JsonProperty("skeleton", NullValueHandling = NullValueHandling.Ignore)]
+    public int? Skeleton;
 }

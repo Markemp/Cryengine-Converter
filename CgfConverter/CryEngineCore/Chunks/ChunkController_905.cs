@@ -17,16 +17,15 @@ internal sealed class ChunkController_905 : ChunkController
     public uint NumKeyTime { get; internal set; }
     public uint NumAnims { get; internal set; }
 
-    public List<List<float>> KeyTimes { get; internal set; }
-    public List<List<Vector3>> KeyPositions { get; internal set; }
-    public List<List<Quaternion>> KeyRotations { get; internal set; }
-    public List<Animation> Animations { get; internal set; }
+    public List<List<float>>? KeyTimes { get; internal set; }
+    public List<List<Vector3>>? KeyPositions { get; internal set; }
+    public List<List<Quaternion>>? KeyRotations { get; internal set; }
+    public List<Animation>? Animations { get; internal set; }
 
     public override void Read(BinaryReader b)
     {
         base.Read(b);
 
-        // TODO: detect shit
         ((EndiannessChangeableBinaryReader) b).IsBigEndian = false;
 
         NumKeyPos = b.ReadUInt32();
@@ -114,9 +113,7 @@ internal sealed class ChunkController_905 : ChunkController
                     Utilities.Log(LogLevelEnum.Warning, "eBitset: Expected last as {0}, got {1}", end, data[^1]);
             }
             else
-            {
                 throw new Exception("sum(count per format) != count of keytimes");
-            }
             
             // Get rid of decreasing entries at end (zero-pads)
             while (data.Count >= 2 && data[^2] > data[^1])
@@ -171,9 +168,7 @@ internal sealed class ChunkController_905 : ChunkController
                 data = Enumerable.Range(0, length).Select(_ => ((Quaternion)b.ReadSmallTree64BitExtQuat()).DropW()).ToList();
             }
             else
-            {
                 throw new Exception("sum(count per format) != count of keypos");
-            }
             
             KeyPositions.Add(data);
         }

@@ -86,6 +86,12 @@ public class ColladaModelRenderer : IRenderer
         }
         else
             WriteLibrary_VisualScenes();
+
+        // Write animations
+        if (_cryData.Animations is not null)
+        {
+            WriteLibrary_Animations();
+        }
     }
 
     protected void WriteColladaRoot(string version)
@@ -111,7 +117,7 @@ public class ColladaModelRenderer : IRenderer
             Author = "Heffay",
             Author_Website = "https://github.com/Markemp/Cryengine-Converter",
             Author_Email = "markemp@gmail.com",
-            Source_Data = _cryData.RootNode.Name                    // The cgf/cga/skin/whatever file we read
+            Source_Data = _cryData.RootNode?.Name ?? Path.GetFileNameWithoutExtension(_cryData.InputFile)
         };
         // Get the actual file creators from the Source Chunk
         contributors[1] = new Grendgine_Collada_Asset_Contributor();
@@ -128,9 +134,35 @@ public class ColladaModelRenderer : IRenderer
             Meter = 1.0,
             Name = "meter"
         };
-        asset.Title = _cryData.RootNode.Name;
+        asset.Title = _cryData.RootNode?.Name ?? Path.GetFileNameWithoutExtension(_cryData.InputFile);
         DaeObject.Asset = asset;
         DaeObject.Asset.Contributor = contributors;
+    }
+
+    public void WriteLibrary_Animations()
+    {
+        var animationLibrary = new Grendgine_Collada_Library_Animations();
+        // Find all the 905 controller chunks
+        foreach (var animChunk in _cryData.Animations
+            .SelectMany(x => x.ChunkMap.Values.OfType<ChunkController_905>())
+            .ToList())
+        {
+            
+            var names = animChunk?.Animations?.Select(x => Path.GetFileNameWithoutExtension(x.Name)).ToArray();
+            animationLibrary.Animation = new Grendgine_Collada_Animation[names.Count()];
+
+            for (int i = 0; i < names.Length; i++)
+            {
+                var animation = new Grendgine_Collada_Animation
+                {
+                    Name = names[i],
+                    ID = $"{names[i]}_animation"
+                };
+                animationLibrary.Animation[i] = animation;
+            }
+        }
+
+        DaeObject.Library_Animations = animationLibrary;
     }
 
     public Grendgine_Collada_Effect CreateColladaEffect(Material material)
