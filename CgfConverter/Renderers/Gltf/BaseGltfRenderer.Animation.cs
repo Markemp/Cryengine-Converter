@@ -101,7 +101,9 @@ public partial class BaseGltfRenderer
         foreach (var animChunk in animChunks)
         {
             var keyTimeAccessors = animChunk.Animations.SelectMany(x =>
-                    x.Controllers.Where(y => y.HasPosTrack).Select(y => y.PosKeyTimeTrack)
+                    x.Controllers
+                        .Where(y => y.HasPosTrack)
+                        .Select(y => y.PosKeyTimeTrack)
                         .Concat(x.Controllers.Where(y => y.HasRotTrack).Select(y => y.RotKeyTimeTrack)))
                 .Distinct()
                 .ToDictionary(i => i, i =>

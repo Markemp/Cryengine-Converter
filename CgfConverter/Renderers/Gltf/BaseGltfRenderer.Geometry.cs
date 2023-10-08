@@ -1,6 +1,7 @@
 ﻿using CgfConverter.CryEngineCore;
 using CgfConverter.Renderers.Gltf.Models;
 using Extensions;
+using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -62,6 +63,12 @@ public partial class BaseGltfRenderer
                 }
             }
         }
+
+        var numAnimations = WriteAnimations(_cryData.Animations, controllerIdToNodeIndex);
+        //if (numAnimations == 0)
+        //    Log.D("Model[{0}]: No associated animations found.");
+        //else
+        //    Log.I("Model[{0}]: Written {1} animations.", rootNodeName, numAnimations);
 
         // For each child, recursively call this method to add the child to GltfRoot.Nodes.
         if (cryNode.AllChildNodes is not null)

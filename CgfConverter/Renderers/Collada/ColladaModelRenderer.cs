@@ -147,17 +147,51 @@ public class ColladaModelRenderer : IRenderer
             .SelectMany(x => x.ChunkMap.Values.OfType<ChunkController_905>())
             .ToList())
         {
-            
             var names = animChunk?.Animations?.Select(x => Path.GetFileNameWithoutExtension(x.Name)).ToArray();
             animationLibrary.Animation = new Grendgine_Collada_Animation[names.Count()];
 
-            for (int i = 0; i < names.Length; i++)
+            for (int i = 0; i < names.Length; i++)  // base animation.
             {
                 var animation = new Grendgine_Collada_Animation
                 {
                     Name = names[i],
                     ID = $"{names[i]}_animation"
                 };
+                foreach (var anim in animChunk.Animations)
+                {
+
+                    var timeSource = new Grendgine_Collada_Source
+                    {
+
+                    };
+                    var positionSource = new Grendgine_Collada_Source
+                    {
+
+                    };
+                    var rotationSource = new Grendgine_Collada_Source
+                    {
+
+                    };
+                    var sampler = new Grendgine_Collada_Sampler
+                    {
+                        ID = $"{anim.Name}_sampler"
+                    };
+                    var channel = new Grendgine_Collada_Channel
+                    {
+                        Source = $"#{anim.Name}_sampler"
+                    };
+                    var animPart = new Grendgine_Collada_Animation
+                    {
+                        Name = Path.ChangeExtension(anim.Name, null),
+                        ID = $"{anim.Name}_animation",
+                        Source = new Grendgine_Collada_Source[3] { timeSource, positionSource, rotationSource },
+                        Sampler = new Grendgine_Collada_Sampler[1] { sampler },
+                        Channel = new Grendgine_Collada_Channel[1] { channel }
+                    };
+                }
+
+
+
                 animationLibrary.Animation[i] = animation;
             }
         }
