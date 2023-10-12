@@ -29,6 +29,7 @@ public class ColladaModelRenderer : IRenderer
 
     /// <summary>Dictionary of all material libraries in the model, with the key being the library from mtlname chunk.</summary>
     private readonly Dictionary<string, Material> createdMaterialLibraries = new();
+    private readonly Dictionary<uint, string> controllerIdToBoneName = new();
 
     public ColladaModelRenderer(ArgsHandler argsHandler, CryEngine cryEngine) 
     {
@@ -89,9 +90,7 @@ public class ColladaModelRenderer : IRenderer
 
         // Write animations
         if (_cryData.Animations is not null)
-        {
             WriteLibrary_Animations();
-        }
     }
 
     protected void WriteColladaRoot(string version)
@@ -153,6 +152,7 @@ public class ColladaModelRenderer : IRenderer
             for (int i = 0; i < animChunk.Animations.Count; i++)
             {
                 var animation = animChunk.Animations[i];
+                var animationName = Path.GetFileNameWithoutExtension(animation.Name);
 
                 var timeElements = animChunk.KeyTimes[i];
                 var positions = animChunk.KeyPositions[i];
@@ -169,43 +169,44 @@ public class ColladaModelRenderer : IRenderer
                 for (int j = 0; j < animation.Controllers.Count; j++)
                 {
                     var controller = animation.Controllers[j];
+                    var controllerBoneName = controllerIdToBoneName[controller.ControllerID];
                     var timeSource = new Grendgine_Collada_Source
                     {
-                        ID = $"{controller}_time",
-                        Name = $"{animation.Name}_time"
+                        ID = $"{controller.ControllerID}_time",
+                        Name = $"{animationName}_time"
                     };
                     var positionSource = new Grendgine_Collada_Source
                     {
-                        ID = $"{controller}_position",
-                        Name = $"{controller}_position"
+                        ID = $"{controller.ControllerID}_position",
+                        Name = $"{animationName}_position"
                     };
                     var rotationSource = new Grendgine_Collada_Source
                     {
-                        ID = $"{controller}_rotation",
-                        Name = $"{controller}_rotation"
+                        ID = $"{controller.ControllerID}_rotation",
+                        Name = $"{animationName}_rotation"
                     };
                     var sampler = new Grendgine_Collada_Sampler
                     {
-                        ID = $"{controller}_sampler"
+                        ID = $"{controller.ControllerID}_sampler"
                     };
                     var channel = new Grendgine_Collada_Channel
                     {
-                        Source = $"#{controller}_sampler",
-                        Target = $"{controller.ControllerID}/transform"
+                        Source = $"#{controller.ControllerID}_sampler",
+                        Target = $"{controllerBoneName}/transform"
                     };
                     var controllerAnimation = new Grendgine_Collada_Animation
                     {
-                        Name = Path.GetFileNameWithoutExtension(animation.Name),
-                        ID = $"{Path.GetFileNameWithoutExtension(animation.Name)}_animation",
+                        Name = animationName,
+                        ID = $"{animationName}_animation",
                         Source = new Grendgine_Collada_Source[3] { timeSource, positionSource, rotationSource },
+                        Channel = new Grendgine_Collada_Channel[1] { channel },
                         Sampler = new Grendgine_Collada_Sampler[1] { sampler },
-                        Channel = new Grendgine_Collada_Channel[1] { channel }
                     };
 
                     // Create the time source
                     var timeArray = new Grendgine_Collada_Float_Array
                     {
-                        ID = $"{animation.Name}_{controller.ControllerID}_time_array",
+                        ID = $"{animationName}_{controller.ControllerID}_time_array",
                         Count =  timeElements.Count,
                         Value_As_String = string.Join(" ", timeElements.Select(x => (x - controller.RotKeyTimeTrack) / 30f))
                     };
@@ -214,7 +215,7 @@ public class ColladaModelRenderer : IRenderer
                     {
                         Accessor = new Grendgine_Collada_Accessor
                         {
-                            Source = $"#{animation.Name}_{controller.ControllerID}_time_array",
+                            Source = $"#{animationName}_{controller.ControllerID}_time_array",
                             Count = (uint)timeElements.Count,
                             Stride = 1,
                             Param = new Grendgine_Collada_Param[1]
@@ -234,6 +235,7 @@ public class ColladaModelRenderer : IRenderer
 
 
                     baseAnimation.Animation[j] = controllerAnimation;
+                    animationLibrary.Animation[i] = baseAnimation;
                 }
             }
 
@@ -1259,7 +1261,7 @@ public class ColladaModelRenderer : IRenderer
                 };
 
                 var skeleton = colladaNode.Instance_Controller[0].Skeleton[0] = new Grendgine_Collada_Skeleton();
-                skeleton.Value = "#Armature";
+                skeleton.Value = $"#{_cryData.Bones.RootBone.boneName}";
                 colladaNode.Instance_Controller[0].Bind_Material = new Grendgine_Collada_Bind_Material[1];
                 Grendgine_Collada_Bind_Material bindMaterial = colladaNode.Instance_Controller[0].Bind_Material[0] = new Grendgine_Collada_Bind_Material();
 
@@ -1268,12 +1270,7 @@ public class ColladaModelRenderer : IRenderer
                 colladaNode.Instance_Controller[0].Bind_Material[0].Technique_Common.Instance_Material = CreateInstanceMaterials(node);
 
                 if (node.AllChildNodes is not null)
-                {
-                    foreach (var child in node.AllChildNodes)
-                    {
-                        colladaNode.node = CreateChildNodes(child);
-                    }
-                }
+                    node.AllChildNodes.Select(child => CreateChildNodes(child));
 
                 nodes.Add(colladaNode);
             }
@@ -1420,25 +1417,22 @@ public class ColladaModelRenderer : IRenderer
 
     private Grendgine_Collada_Node CreateJointNode(CompiledBone bone)
     {
-        // This will be used recursively to create a node object and return it to WriteLibrary_VisualScenes
-        // If this is the root bone, set the node id to Armature.  Otherwise set to armature_<bonename>
-        string id = "Armature";
-        if (bone.parentID != 0)
-            id = bone.ControllerID.ToString();
-            //id += "_" + bone.boneName.Replace(' ', '_');
+        var boneName = bone.boneName.Replace(' ', '_');
         Grendgine_Collada_Node tmpNode = new()
         {
-            ID = id,
-            Name = bone.boneName.Replace(' ', '_'),
-            sID = bone.boneName.Replace(' ', '_'),
+            ID = boneName,
+            Name = boneName,
+            sID = bone.ControllerID.ToString(),
             Type = Grendgine_Collada_Node_Type.JOINT
         };
+        controllerIdToBoneName.Add(bone.ControllerID, boneName);
 
         Grendgine_Collada_Matrix matrix = new();
         List<Grendgine_Collada_Matrix> matrices = new();
         matrix.Value_As_String = CreateStringFromMatrix4x4(bone.LocalTransform);
+        matrix.sID = "transform";
 
-        matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
+        matrices.Add(matrix);             // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
         tmpNode.Matrix = matrices.ToArray();
 
         // Recursively call this for each of the child bones to this bone.
