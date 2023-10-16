@@ -135,7 +135,7 @@ public partial class CryEngine
             var trackFilePath = chrparams.Animations?.FirstOrDefault(x => x.Name == "$TracksDatabase")?.Path;
             if (trackFilePath is null)
                 throw new FileNotFoundException();
-            
+
             Log.D("Associated animation track database file found at {0}", trackFilePath);
             Animations.Add(Model.FromStream(trackFilePath, PackFileSystem.GetStream(trackFilePath), true));
         }

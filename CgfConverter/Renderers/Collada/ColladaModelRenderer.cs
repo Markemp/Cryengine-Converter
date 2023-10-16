@@ -170,35 +170,55 @@ public class ColladaModelRenderer : IRenderer
                 {
                     var controller = animation.Controllers[j];
                     var controllerBoneName = controllerIdToBoneName[controller.ControllerID];
-                    var timeSource = new Grendgine_Collada_Source
+                    var controllerIdBase = $"{controllerBoneName}_{controller.ControllerID}";
+
+                    var inputSource = new Grendgine_Collada_Source   // Time
                     {
-                        ID = $"{controller.ControllerID}_time",
-                        Name = $"{animationName}_time"
+                        ID = $"{controllerIdBase}_input",
+                        Name = $"{controllerIdBase}_input"
                     };
-                    var positionSource = new Grendgine_Collada_Source
+                    var outputSource = new Grendgine_Collada_Source     // transform matrix
                     {
-                        ID = $"{controller.ControllerID}_position",
-                        Name = $"{animationName}_position"
+                        ID = $"{controllerIdBase}_output",
+                        Name = $"{controllerIdBase}_output"
                     };
-                    var rotationSource = new Grendgine_Collada_Source
+                    var interpolationSource = new Grendgine_Collada_Source  // interpolation
                     {
-                        ID = $"{controller.ControllerID}_rotation",
-                        Name = $"{animationName}_rotation"
+                        ID = $"{controllerIdBase}_interpolation",
+                        Name = $"{controllerIdBase}_interpolation"
                     };
                     var sampler = new Grendgine_Collada_Sampler
                     {
-                        ID = $"{controller.ControllerID}_sampler"
+                        ID = $"{controllerIdBase}_sampler",
+                        Input = new Grendgine_Collada_Input_Unshared[3]
+                        {
+                            new Grendgine_Collada_Input_Unshared
+                            {
+                                Semantic = Grendgine_Collada_Input_Semantic.INPUT,
+                                source = $"#{controllerIdBase}_input"
+                            },
+                            new Grendgine_Collada_Input_Unshared
+                            {
+                                Semantic = Grendgine_Collada_Input_Semantic.OUTPUT,
+                                source = $"#{controllerIdBase}_output"
+                            },
+                            new Grendgine_Collada_Input_Unshared
+                            {
+                                Semantic = Grendgine_Collada_Input_Semantic.INTERPOLATION,
+                                source = $"#{controllerIdBase}_interpolation"
+                            }
+                        }
                     };
                     var channel = new Grendgine_Collada_Channel
                     {
-                        Source = $"#{controller.ControllerID}_sampler",
+                        Source = $"#{controllerIdBase}_sampler",
                         Target = $"{controllerBoneName}/transform"
                     };
                     var controllerAnimation = new Grendgine_Collada_Animation
                     {
-                        Name = animationName,
-                        ID = $"{animationName}_animation",
-                        Source = new Grendgine_Collada_Source[3] { timeSource, positionSource, rotationSource },
+                        Name = controllerIdBase,
+                        ID = $"{controllerIdBase}_animation",
+                        Source = new Grendgine_Collada_Source[3] { inputSource, outputSource, interpolationSource },
                         Channel = new Grendgine_Collada_Channel[1] { channel },
                         Sampler = new Grendgine_Collada_Sampler[1] { sampler },
                     };
@@ -210,8 +230,8 @@ public class ColladaModelRenderer : IRenderer
                         Count =  timeElements.Count,
                         Value_As_String = string.Join(" ", timeElements.Select(x => (x - controller.RotKeyTimeTrack) / 30f))
                     };
-                    timeSource.Float_Array = timeArray;
-                    timeSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
+                    inputSource.Float_Array = timeArray;
+                    inputSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
                     {
                         Accessor = new Grendgine_Collada_Accessor
                         {
@@ -226,10 +246,34 @@ public class ColladaModelRenderer : IRenderer
                                     Type = "float"
                                 }
                             }
-                        },
+                        }
                     };
 
                     // Create the position source
+                    var positionArray = new Grendgine_Collada_Float_Array
+                    {
+                        ID = $"{animationName}_{controller.ControllerID}_position_array",
+                        Count = positions.Count,
+                        Value_As_String = string.Join(" ", positions.Select(x => x.ToString()))
+                    };
+                    outputSource.Float_Array = positionArray;
+                    outputSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
+                    {
+                        Accessor = new Grendgine_Collada_Accessor
+                        {
+                            Source = $"#{animationName}_{controller.ControllerID}_time_array",
+                            Count = (uint)timeElements.Count,
+                            Stride = 1,
+                            Param = new Grendgine_Collada_Param[1]
+                            {
+                                new Grendgine_Collada_Param
+                                {
+                                    Name = "TRANSFORM",
+                                    Type = "float4x4"
+                                }
+                            }
+                        }
+                    };
 
                     // Create the rotation source
 
@@ -1422,7 +1466,7 @@ public class ColladaModelRenderer : IRenderer
         {
             ID = boneName,
             Name = boneName,
-            sID = bone.ControllerID.ToString(),
+            sID = boneName,  // Both ID and sID have to be the bonename or the import goes bad.
             Type = Grendgine_Collada_Node_Type.JOINT
         };
         controllerIdToBoneName.Add(bone.ControllerID, boneName);
