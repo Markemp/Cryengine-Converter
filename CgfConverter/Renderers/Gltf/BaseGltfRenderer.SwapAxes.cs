@@ -22,16 +22,16 @@ public partial class BaseGltfRenderer
      */
 
     // orig
-    //protected static Vector3 SwapAxesForPosition(Vector3 val) => new(-val.X, val.Z, val.Y);
-    protected static Vector3 SwapAxesForPosition(Vector3 val) => new(val.X, val.Z, -val.Y);
+    protected static Vector3 SwapAxesForPosition(Vector3 val) => new(-val.X, val.Z, val.Y);
+    //protected static Vector3 SwapAxesForPosition(Vector3 val) => new(val.X, val.Z, -val.Y);
 
     protected static Vector3 SwapAxesForScale(Vector3 val) => new(val.X, val.Z, val.Y);
 
     protected static Quaternion SwapAxesForAnimations(Quaternion val) => new(-val.X, val.Z, val.Y, val.W);
 
     // orig.  Just need to rotate 180 around z axis, which swaps Z and -W
-    //protected static Quaternion SwapAxesForLayout(Quaternion val) => new(-val.Y, val.W, val.Z, val.X);
-    protected static Quaternion SwapAxesForLayout(Quaternion val) => new(-val.X, -val.Z, val.Y, val.W);
+    protected static Quaternion SwapAxesForLayout(Quaternion val) => new(-val.Y, val.W, val.Z, val.X);
+    //protected static Quaternion SwapAxesForLayout(Quaternion val) => new(-val.X, -val.Z, val.Y, val.W);
     
     //protected static Quaternion SwapBoneAxesForLayout(Quaternion val) => new(-val.X, val.Z, val.Y, val.W); // no
 

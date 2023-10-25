@@ -234,48 +234,43 @@ public partial class BaseGltfRenderer
         var boneIdToBindPoseMatrices = new Dictionary<uint, Matrix4x4>();
         foreach (var bone in skinningInfo.CompiledBones)
         {
-            //var matrix = boneIdToBindPoseMatrices[bone.ControllerID] = bone.BindPoseMatrix;
-            //if (bone.parentID != 0)
-            //{
-            //    if (!Matrix4x4.Invert(boneIdToBindPoseMatrices[bone.parentID], out var parentMat))
-            //        return Log.E<bool>("CompiledBone[{0}/{1}]: Failed to invert BindPoseMatrix.",
-            //            rootNode.Name, bone.ParentBone?.boneName);
+            var matrix = boneIdToBindPoseMatrices[bone.ControllerID] = bone.BindPoseMatrix;
+            if (bone.parentID != 0)
+            {
+                if (!Matrix4x4.Invert(boneIdToBindPoseMatrices[bone.parentID], out var parentMat))
+                    return Log.E<bool>("CompiledBone[{0}/{1}]: Failed to invert BindPoseMatrix.",
+                        rootNode.Name, bone.ParentBone?.boneName);
 
-            //    matrix *= parentMat;
-            //}
+                matrix *= parentMat;
+            }
 
-            //if (!Matrix4x4.Invert(matrix, out matrix))
-            //    return Log.E<bool>("CompiledBone[{0}/{1}]: Failed to invert BindPoseMatrix.",
-            //        rootNode.Name, bone.boneName);
+            if (!Matrix4x4.Invert(matrix, out matrix))
+                return Log.E<bool>("CompiledBone[{0}/{1}]: Failed to invert BindPoseMatrix.",
+                    rootNode.Name, bone.boneName);
 
-            //matrix = SwapAxes(Matrix4x4.Transpose(matrix));
-            //if (!Matrix4x4.Decompose(matrix, out var scale, out var rotation, out var translation))
-            //    return Log.E<bool>("CompiledBone[{0}/{1}]: BindPoseMatrix is not decomposable.",
-            //    rootNode.Name, bone.boneName);
-            //var translationVec = new Vector3(bone.LocalTransform.M14, bone.LocalTransform.M24, bone.LocalTransform.M34);
-
-            //var boneTranslation = bone.LocalTransform.GetTranslation();
-            var boneTranslation = bone.LocalTransform.GetTranslation();
-            var boneRotationQuat = Quaternion.CreateFromRotationMatrix(bone.LocalTransform);
-            //boneRotationQuat = new Quaternion(0,0,1,0) * boneRotationQuat;
+            matrix = SwapAxes(Matrix4x4.Transpose(matrix));
+            if (!Matrix4x4.Decompose(matrix, out var scale, out var rotation, out var translation))
+                return Log.E<bool>("CompiledBone[{0}/{1}]: BindPoseMatrix is not decomposable.",
+                rootNode.Name, bone.boneName);
 
             var boneNode = new GltfNode
             {
                 Name = bone.boneName,
 
-                //Translation = SwapAxesForPosition(boneTranslation).ToGltfList(),
-                Translation = boneTranslation.ToGltfList(),
-                Rotation = SwapAxesForLayout(boneRotationQuat).ToGltfList(),
-                Scale = Vector3.One.ToGltfList()
+                Scale = (scale - Vector3.One).LengthSquared() > 0.000001
+                    ? new List<float> { scale.X, scale.Y, scale.Z }
+                    : null,
+                Translation = translation != Vector3.Zero
+                    ? new List<float> { translation.X, translation.Y, translation.Z }
+                    : null,
+                Rotation = rotation != Quaternion.Identity
+                    ? new List<float> { rotation.X, rotation.Y, rotation.Z, rotation.W }
+                    : null
             };
             controllerIdToNodeIndex[bone.ControllerID] = AddNode(boneNode);
 
             if (bone.parentID == 0)
-            {
-                //rootNode.Children.Add(controllerIdToNodeIndex[bone.ControllerID]);
-                //_gltfRoot.Nodes.Add(boneNode);
                 CurrentScene.Nodes.Add(controllerIdToNodeIndex[bone.ControllerID]);
-            }
             else
                 _gltfRoot.Nodes[controllerIdToNodeIndex[bone.parentID]].Children
                     .Add(controllerIdToNodeIndex[bone.ControllerID]);
@@ -308,7 +303,6 @@ public partial class BaseGltfRenderer
             GetAccessorOrDefault(baseName, 0, skinningInfo.CompiledBones.Count)
             ?? AddAccessor(baseName, -1, null,
                 skinningInfo.CompiledBones.Select(x => SwapAxes(Matrix4x4.Transpose(x.BindPoseMatrix))).ToArray());
-                //skinningInfo.CompiledBones.Select(x => SwapAxes(x.BindPoseMatrix)).ToArray());
 
         newSkin = new GltfSkin
         {
