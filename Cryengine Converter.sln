@@ -12,7 +12,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CgfConverter", "CgfConverte
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CgfConverterTests", "CgfConverterIntegrationTests\CgfConverterTests.csproj", "{2E40A418-2553-44B7-80EE-031FC94FA4EC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CgfConverterTestingConsole", "CgfConverterTestingConsole\CgfConverterTestingConsole.csproj", "{B3A24561-55A0-4124-8F1C-6A26F20360B7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CgfConverterTestingConsole", "CgfConverterTestingConsole\CgfConverterTestingConsole.csproj", "{B3A24561-55A0-4124-8F1C-6A26F20360B7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{02B37E78-2794-42F9-955C-35B7D6581897}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
