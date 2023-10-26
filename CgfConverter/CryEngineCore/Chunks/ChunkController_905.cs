@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -6,12 +7,15 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using CgfConverter.Services;
+using CgfConverter.Utils;
 using Extensions;
 
 namespace CgfConverter.CryEngineCore;
 
 internal sealed class ChunkController_905 : ChunkController
 {
+    private readonly TaggedLogger Log = new TaggedLogger(nameof(ChunkController_905));
+
     public uint NumKeyPos { get; internal set; }
     public uint NumKeyRot { get; internal set; }
     public uint NumKeyTime { get; internal set; }
@@ -26,12 +30,39 @@ internal sealed class ChunkController_905 : ChunkController
     {
         base.Read(b);
 
+        // Assume little endian for now
         ((EndiannessChangeableBinaryReader) b).IsBigEndian = false;
 
         NumKeyPos = b.ReadUInt32();
         NumKeyRot = b.ReadUInt32();
         NumKeyTime = b.ReadUInt32();
         NumAnims = b.ReadUInt32();
+
+        // Test: if there exists a number that exceeds 0x10000, it may not be in little endian.
+        var endianCheck =
+            (NumKeyPos >= 0x10000 ? 1 : 0) |
+            (NumKeyRot >= 0x10000 ? 2 : 0) |
+            (NumKeyTime >= 0x10000 ? 4 : 0) |
+            (NumAnims >= 0x10000 ? 8 : 0);
+
+        switch (endianCheck)
+        {
+            case 0: // most likely to be little endian
+                break; // do nothing
+
+            case 15: // most likely to be big endian
+                NumKeyPos = BinaryPrimitives.ReverseEndianness(NumKeyPos);
+                NumKeyRot = BinaryPrimitives.ReverseEndianness(NumKeyRot);
+                NumKeyTime = BinaryPrimitives.ReverseEndianness(NumKeyTime);
+                NumAnims = BinaryPrimitives.ReverseEndianness(NumAnims);
+                ((EndiannessChangeableBinaryReader) b).IsBigEndian = true;
+                Log.I($"Assuming big endian: {this}");
+                break;
+
+            default:
+                Log.W($"Could not deduce endianness(endianCheck={endianCheck}); assuming little endian: {this}");
+                break;
+        }
 
         var keyTimeLengths = Enumerable.Range(0, (int) NumKeyTime).Select(_ => b.ReadUInt16()).ToList();
         var keyTimeFormats = Enumerable.Range(0, (int) EKeyTimesFormat.eBitset + 1).Select(_ => b.ReadUInt32()).ToList();
