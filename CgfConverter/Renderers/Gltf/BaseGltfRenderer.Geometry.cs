@@ -23,7 +23,7 @@ public partial class BaseGltfRenderer
         // Create this node and add to GltfRoot.Nodes
         var rotationQuat = Quaternion.CreateFromRotationMatrix(cryNode.LocalTransform);
         var translation = cryNode.LocalTransform.GetTranslation();
-        
+
         var node = new GltfNode()
         {
             Name = cryNode.Name,
@@ -44,7 +44,6 @@ public partial class BaseGltfRenderer
                 if (meshChunk is not null && meshChunk.MeshSubsetsData != 0)
                     AddMesh(cryNode, node, controllerIdToNodeIndex);
             }
-
             else  // Has geometry file
             {
                 string nodeName = cryNode.Name;
@@ -64,10 +63,6 @@ public partial class BaseGltfRenderer
         }
 
         var numAnimations = WriteAnimations(_cryData.Animations, controllerIdToNodeIndex);
-        //if (numAnimations == 0)
-        //    Log.D("Model[{0}]: No associated animations found.");
-        //else
-        //    Log.I("Model[{0}]: Written {1} animations.", rootNodeName, numAnimations);
 
         // For each child, recursively call this method to add the child to GltfRoot.Nodes.
         if (cryNode.AllChildNodes is not null)
@@ -87,9 +82,9 @@ public partial class BaseGltfRenderer
         var accessors = new GltfMeshPrimitiveAttributes();
         var meshChunk = cryNode.ObjectChunk as ChunkMesh;
         WriteMeshOrLogError(out var gltfMesh, gltfNode, cryNode, meshChunk!, accessors);
-        
+
         gltfNode.Mesh = AddMesh(gltfMesh);
-        
+
         if (cryNode.GetSkinningInfo() is { HasSkinningInfo: true } skinningInfo)
         {
             if (WriteSkinOrLogError(out var newSkin, out var weights, out var joints, gltfNode, skinningInfo,
@@ -232,6 +227,7 @@ public partial class BaseGltfRenderer
                         .ToArray());
 
         var boneIdToBindPoseMatrices = new Dictionary<uint, Matrix4x4>();
+
         foreach (var bone in skinningInfo.CompiledBones)
         {
             var matrix = boneIdToBindPoseMatrices[bone.ControllerID] = bone.BindPoseMatrix;
@@ -270,7 +266,8 @@ public partial class BaseGltfRenderer
             controllerIdToNodeIndex[bone.ControllerID] = AddNode(boneNode);
 
             if (bone.parentID == 0)
-                CurrentScene.Nodes.Add(controllerIdToNodeIndex[bone.ControllerID]);
+                _gltfRoot.Nodes[0].Children
+                    .Add(controllerIdToNodeIndex[bone.ControllerID]);
             else
                 _gltfRoot.Nodes[controllerIdToNodeIndex[bone.parentID]].Children
                     .Add(controllerIdToNodeIndex[bone.ControllerID]);
@@ -279,12 +276,12 @@ public partial class BaseGltfRenderer
         baseName = $"{rootNode.Name}/bone/joint";
         joints =
             GetAccessorOrDefault(
-                baseName, 
+                baseName,
                 0,
                 skinningInfo.IntVertices is null ? skinningInfo.BoneMapping.Count : skinningInfo.Ext2IntMap.Count)
             ?? AddAccessor(
-                baseName, 
-                -1, 
+                baseName,
+                -1,
                 null,
                 skinningInfo is { HasIntToExtMapping: true, IntVertices: { } }
                     ? skinningInfo.Ext2IntMap

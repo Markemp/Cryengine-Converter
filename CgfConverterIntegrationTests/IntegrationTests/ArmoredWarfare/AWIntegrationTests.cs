@@ -1,5 +1,4 @@
 ﻿using CgfConverter;
-using CgfConverter.Renderers.Collada;
 using CgfConverter.Renderers.Gltf;
 using CgfConverterTests.TestUtilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
