@@ -81,8 +81,7 @@ public class RealFileSystem : IPackFileSystem
                         try
                         {
                             remainingPatterns.AddRange(
-                                Directory.GetFiles(searchBase, $"{prefix}*{suffix}{remainingPattern}")
-                                    .Select(x => Path.Join(searchBase, x)));
+                                Directory.GetFiles(searchBase, $"{prefix}*{suffix}{remainingPattern}"));
                         }
                         catch (Exception)
                         {
@@ -95,7 +94,7 @@ public class RealFileSystem : IPackFileSystem
                     {
                         remainingPatterns.AddRange(
                             Directory.GetDirectories(searchBase, $"{prefix}*")
-                                .Select(x => Path.Join(searchBase, x, remainingPattern)));
+                                .Select(x => Path.Join(x, remainingPattern)));
                     }
                     catch (Exception)
                     {
