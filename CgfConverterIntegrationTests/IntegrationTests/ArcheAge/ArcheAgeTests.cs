@@ -58,13 +58,13 @@ public class ArcheAgeTests
 
         // Armature Node check 
         var node = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0];
-        Assert.AreEqual("Armature", node.ID);
+        Assert.AreEqual("Bip01", node.ID);
         Assert.AreEqual("Bip01", node.sID);
         Assert.AreEqual("Bip01", node.Name);
         Assert.AreEqual("JOINT", node.Type.ToString());
         Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1", node.Matrix[0].Value_As_String);
         var locatorBone = node.node[0];
-        Assert.AreEqual("Armature_Locator_Locomotion", locatorBone.ID);
+        Assert.AreEqual("Locator_Locomotion", locatorBone.ID);
         Assert.AreEqual("Locator_Locomotion", locatorBone.Name);
         Assert.AreEqual("Locator_Locomotion", locatorBone.sID);
         Assert.AreEqual("JOINT", locatorBone.Type.ToString());

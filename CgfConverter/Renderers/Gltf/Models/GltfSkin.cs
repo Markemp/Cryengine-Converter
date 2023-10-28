@@ -15,9 +15,11 @@ public class GltfSkin
     /// Its `accessor.count` property **MUST** be greater than or equal to the number of elements of the `joints`
     /// array. When undefined, each matrix is a 4x4 identity matrix.
     /// </remarks>
-    [JsonProperty("inverseBindMatrices")] public int? InverseBindMatrices;
+    [JsonProperty("inverseBindMatrices")]
+    public int? InverseBindMatrices;
 
-    [JsonProperty("joints")] public List<int> Joints = new();
+    [JsonProperty("joints")]
+    public List<int> Joints = new();
 
     [JsonProperty("skeleton", NullValueHandling = NullValueHandling.Ignore)]
     public int? Skeleton;

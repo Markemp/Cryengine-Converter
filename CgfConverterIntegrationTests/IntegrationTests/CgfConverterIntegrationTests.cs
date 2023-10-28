@@ -270,9 +270,10 @@ public class CgfConverterIntegrationTests
         Assert.AreEqual("Scene", objectData.Scenes[0].Name);
 
         // Validate Nodes
-        Assert.AreEqual(1, objectData.Nodes.Count);
+        Assert.AreEqual(2, objectData.Nodes.Count);
         Assert.AreEqual("cnylgt_marauder", objectData.Nodes[0].Name);
-        Assert.AreEqual(0, objectData.Nodes[0].Mesh);
+        Assert.IsNull(objectData.Nodes[0].Mesh);
+        Assert.AreEqual(0, objectData.Nodes[1].Mesh);
 
         // Validate Meshes
         Assert.AreEqual(4, objectData.BufferViews.Count);
@@ -361,13 +362,12 @@ public class CgfConverterIntegrationTests
         Assert.AreEqual("Scene", gltfData.Scenes[0].Name);
 
         // Validate Nodes
-        Assert.AreEqual(7, gltfData.Nodes.Count);
+        Assert.AreEqual(8, gltfData.Nodes.Count);
         Assert.AreEqual("green_fern_bush_a", gltfData.Nodes[0].Name);
-        Assert.AreEqual(1, gltfData.Nodes[1].Mesh);
-        Assert.AreEqual("$LOD1", gltfData.Nodes[1].Name);
-        Assert.AreEqual("$LOD2", gltfData.Nodes[2].Name);
-        Assert.AreEqual("branch1_1", gltfData.Nodes[3].Name);
-        Assert.AreEqual("branch1_1", gltfData.Nodes[3].Name);
+        Assert.AreEqual(0, gltfData.Nodes[1].Mesh);
+        Assert.AreEqual("green_fern_bush_a", gltfData.Nodes[1].Name);
+        Assert.AreEqual("$LOD1", gltfData.Nodes[2].Name);
+        Assert.AreEqual("$LOD2", gltfData.Nodes[3].Name);
 
         // Validate Meshes
         Assert.AreEqual(15, gltfData.BufferViews.Count);

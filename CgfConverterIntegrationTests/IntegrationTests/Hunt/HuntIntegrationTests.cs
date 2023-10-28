@@ -32,14 +32,14 @@ namespace CgfConverterTests.IntegrationTests
             var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Hunt\assassin_good\assassin_christmas_body.skin", "-dds", "-dae" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
-            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+            CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
-            ColladaModelRenderer colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+            ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
             var daeObject = colladaData.DaeObject;
             colladaData.GenerateDaeObject();
 
-            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
             Assert.AreEqual(5, actualMaterialsCount);  // Need to figure out material chunks
 
             // Visual Scene Check
@@ -51,7 +51,7 @@ namespace CgfConverterTests.IntegrationTests
 
             // Armature Node check
             var node = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0];
-            Assert.AreEqual("Armature", node.ID);
+            Assert.AreEqual("root", node.ID);
             Assert.AreEqual("root", node.sID);
             Assert.AreEqual("root", node.Name);
             Assert.AreEqual("JOINT", node.Type.ToString());
@@ -64,7 +64,7 @@ namespace CgfConverterTests.IntegrationTests
             Assert.AreEqual("NODE", node.Type.ToString());
             Assert.IsNull(node.Instance_Geometry);
             Assert.AreEqual(1, node.Instance_Controller.Length);
-            Assert.AreEqual("#Armature", node.Instance_Controller[0].Skeleton[0].Value);
+            Assert.AreEqual("#root", node.Instance_Controller[0].Skeleton[0].Value);
 
             // Controller check
             var controller = daeObject.Library_Controllers.Controller[0];
@@ -81,7 +81,7 @@ namespace CgfConverterTests.IntegrationTests
             Assert.AreEqual(91, controllerJoints.Name_Array.Count);
             Assert.AreEqual("Controller-joints-array", controllerJoints.Name_Array.ID);
             var nameArray = controllerJoints.Name_Array.Value();
-            Assert.AreEqual(91, nameArray.Count());
+            Assert.AreEqual(91, nameArray.Length);
             Assert.IsTrue(nameArray.Contains("L_leg_spiral_01"));
 
             testUtils.ValidateColladaXml(colladaData);
@@ -93,16 +93,16 @@ namespace CgfConverterTests.IntegrationTests
             var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Hunt\assassin_bad\assassin_body.skin", "-dds", "-dae" };
             int result = testUtils.argsHandler.ProcessArgs(args);
             Assert.AreEqual(0, result);
-            CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+            CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
             cryData.ProcessCryengineFiles();
 
             Assert.AreEqual(1.00000f, cryData.Models[1].RootNode.LocalTransform.M11, TestUtils.delta);
 
-            ColladaModelRenderer colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+            ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
             var daeObject = colladaData.DaeObject;
             colladaData.GenerateDaeObject();
 
-            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
+            int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
             Assert.AreEqual(5, actualMaterialsCount);   // Need to figure out material chunks
 
             // Visual Scene Check
@@ -114,7 +114,7 @@ namespace CgfConverterTests.IntegrationTests
 
             // Armature Node check
             var node = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0];
-            Assert.AreEqual("Armature", node.ID);
+            Assert.AreEqual("root", node.ID);
             Assert.AreEqual("root", node.sID);
             Assert.AreEqual("root", node.Name);
             Assert.AreEqual("JOINT", node.Type.ToString());
@@ -127,7 +127,7 @@ namespace CgfConverterTests.IntegrationTests
             Assert.AreEqual("NODE", node.Type.ToString());
             Assert.IsNull(node.Instance_Geometry);
             Assert.AreEqual(1, node.Instance_Controller.Length);
-            Assert.AreEqual("#Armature", node.Instance_Controller[0].Skeleton[0].Value);
+            Assert.AreEqual("#root", node.Instance_Controller[0].Skeleton[0].Value);
 
             // Controller check
             var controller = daeObject.Library_Controllers.Controller[0];
@@ -144,7 +144,7 @@ namespace CgfConverterTests.IntegrationTests
             Assert.AreEqual(91, controllerJoints.Name_Array.Count);
             Assert.AreEqual("Controller-joints-array", controllerJoints.Name_Array.ID);
             var nameArray = controllerJoints.Name_Array.Value();
-            Assert.AreEqual(91, nameArray.Count());
+            Assert.AreEqual(91, nameArray.Length);
             Assert.IsTrue(nameArray.Contains("L_leg_spiral_01"));
 
             // Geometry Library check
@@ -166,7 +166,7 @@ namespace CgfConverterTests.IntegrationTests
             Assert.AreEqual(Grendgine_Collada_Input_Semantic.NORMAL, triangles.Input[1].Semantic);
             Assert.AreEqual("#assassin_body-mesh-norm", triangles.Input[1].source);
             Assert.AreEqual(1, triangles.Input[1].Offset);
-            Assert.AreEqual(0, triangles.Input[1].Set); 
+            Assert.AreEqual(0, triangles.Input[1].Set);
             Assert.AreEqual(Grendgine_Collada_Input_Semantic.TEXCOORD, triangles.Input[2].Semantic);
             Assert.AreEqual("#assassin_body-mesh-UV", triangles.Input[2].source);
             Assert.AreEqual(2, triangles.Input[2].Offset);
