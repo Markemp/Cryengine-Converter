@@ -35,7 +35,7 @@ public class MWOIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\clanbanner_a_adder.cga", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        
+
         var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
@@ -65,7 +65,7 @@ public class MWOIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\as7_centre_torso.cga", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        
+
         var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
@@ -166,7 +166,7 @@ public class MWOIntegrationTests
         var args = new string[] { $@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.chr", "-dds", "-objectdir", @"d:\depot\mwo\" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        
+
         var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
@@ -189,22 +189,21 @@ public class MWOIntegrationTests
         Assert.AreEqual(1, gltfData.Meshes.Count);
 
         // Nodes check
-        Assert.AreEqual(10, gltfData.Nodes.Count);
+        Assert.AreEqual(9, gltfData.Nodes.Count);
         Assert.AreEqual("50calnecklace_a", gltfData.Nodes[0].Name);
-        Assert.AreEqual("50calnecklace_a", gltfData.Nodes[1].Name);
-        Assert.AreEqual("Bip01", gltfData.Nodes[2].Name);
-        Assert.AreEqual("hang seg1", gltfData.Nodes[3].Name);
+        Assert.AreEqual("Bip01", gltfData.Nodes[1].Name);
+        Assert.AreEqual("hang seg1", gltfData.Nodes[2].Name);
 
-        //AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[0].Rotation, TestUtils.delta);
-        //AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { -0.4963841f, -0.5035906f, 0.491474152f, 0.5083822f }, gltfData.Nodes[1].Rotation, TestUtils.delta);
-        //AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0.00154118659f, -0.008913527f, 0.0122360326f, 0.9998842f }, gltfData.Nodes[2].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[0].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { -0.4963841f, -0.5035906f, 0.491474152f, 0.5083822f }, gltfData.Nodes[1].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0.00154118659f, -0.008913527f, 0.0122360326f, 0.9998842f }, gltfData.Nodes[2].Rotation, TestUtils.delta);
 
-        //AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0 }, gltfData.Nodes[0].Translation, TestUtils.delta);
-        //AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 2.09588125E-13f, 0.0204448365f, -8.731578E-10f }, gltfData.Nodes[1].Translation, TestUtils.delta);
-        //AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { -0.0209655762f, -8.90577E-09f, 3.4356154E-10f }, gltfData.Nodes[2].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0 }, gltfData.Nodes[0].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 2.09588125E-13f, 0.0204448365f, -8.731578E-10f }, gltfData.Nodes[1].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { -0.0209655762f, -8.90577E-09f, 3.4356154E-10f }, gltfData.Nodes[2].Translation, TestUtils.delta);
 
-        Assert.AreEqual(2, gltfData.Nodes[0].Children.Count);
-        Assert.AreEqual(0, gltfData.Nodes[1].Children.Count);
+        Assert.AreEqual(0, gltfData.Nodes[0].Children.Count);
+        Assert.AreEqual(1, gltfData.Nodes[1].Children.Count);
         Assert.AreEqual(1, gltfData.Nodes[2].Children.Count);
 
         // Accessors check
@@ -240,7 +239,7 @@ public class MWOIntegrationTests
         var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        ColladaModelRenderer colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         testUtils.ValidateColladaXml(colladaData);
     }
@@ -254,7 +253,7 @@ public class MWOIntegrationTests
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        ColladaModelRenderer colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
 
@@ -287,7 +286,7 @@ public class MWOIntegrationTests
         Assert.AreEqual("-0.000001 -0.999753 -0.022216 -8.346856 -0 -0.022216 0.999753 0 -1 0.000001 -0 6.719837 0 0 0 1", leftHipNode.Matrix[0].Value_As_String);
         Assert.AreEqual("0 0.999753 -0.022216 -8.346855 0 0.022216 0.999753 0.000001 1 -0 -0 9.973884 0 0 0 1", rightHipNode.Matrix[0].Value_As_String);
         Assert.AreEqual("-0.452222 -0.891861 -0.008838 -9.126455 -0.891905 0.452200 0.004481 0.000001 0 0.009909 -0.999951 8.346861 0 0 0 1", pitchNode.Matrix[0].Value_As_String);
-        
+
         // Geometry Node check
         node = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[1];
         Assert.AreEqual("timberwolf", node.ID);
@@ -578,23 +577,22 @@ public class MWOIntegrationTests
         Assert.AreEqual(2, gltfData.Meshes.Count);
 
         // Nodes check
-        Assert.AreEqual(4, gltfData.Nodes.Count);
+        Assert.AreEqual(3, gltfData.Nodes.Count);
         Assert.AreEqual("hulagirl_a", gltfData.Nodes[0].Name);
-        Assert.AreEqual("hulagirl_a", gltfData.Nodes[1].Name);
-        Assert.AreEqual("HulaGirl_UpperBody", gltfData.Nodes[2].Name);
-        Assert.AreEqual("HulaGirl_LowerBody", gltfData.Nodes[3].Name);
+        Assert.AreEqual("HulaGirl_UpperBody", gltfData.Nodes[1].Name);
+        Assert.AreEqual("HulaGirl_LowerBody", gltfData.Nodes[2].Name);
 
         var rotationMatrix = cryData.RootNode.AllChildNodes[0].Rot.ConvertToRotationMatrix();
-        //AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[0].Rotation, TestUtils.delta);
-        //AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { -0.10248467f, 0.00384537f, -0.04688235744833946f, 0.9936217f }, gltfData.Nodes[1].Rotation, TestUtils.delta);
-        //AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[2].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[0].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { -0.10248467f, 0.00384537f, -0.04688235744833946f, 0.9936217f }, gltfData.Nodes[1].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[2].Rotation, TestUtils.delta);
 
-        //AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0 }, gltfData.Nodes[0].Translation, TestUtils.delta);
-        //AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0.000101296f, 0.0640777f, 0f }, gltfData.Nodes[1].Translation, TestUtils.delta);
-        //AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0 }, gltfData.Nodes[2].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0 }, gltfData.Nodes[0].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0.000101296f, 0.0640777f, 0f }, gltfData.Nodes[1].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0 }, gltfData.Nodes[2].Translation, TestUtils.delta);
 
-        Assert.AreEqual(1, gltfData.Nodes[0].Children.Count);
-        Assert.AreEqual(2, gltfData.Nodes[1].Children.Count);
+        Assert.AreEqual(2, gltfData.Nodes[0].Children.Count);
+        Assert.AreEqual(0, gltfData.Nodes[1].Children.Count);
         Assert.AreEqual(0, gltfData.Nodes[2].Children.Count);
 
         // Accessors check
@@ -648,7 +646,7 @@ public class MWOIntegrationTests
         var args = new string[] { $@"d:\depot\mwo\animations\props\harness_cable.dba", "-objectdir", "d:\\depot\\mwo", "-dae" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        
+
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 

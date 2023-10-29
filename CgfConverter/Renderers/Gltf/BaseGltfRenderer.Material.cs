@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
+using System.Text;
 using BCnEncoder.Decoder;
 using BCnEncoder.Shared;
 using BCnEncoder.Shared.ImageFiles;
@@ -11,6 +13,7 @@ using CgfConverter.Renderers.Gltf.Models;
 using CgfConverter.Utils;
 using Extensions;
 using SixLabors.ImageSharp.PixelFormats;
+using Newtonsoft.Json.Linq;
 
 namespace CgfConverter.Renderers.Gltf;
 
@@ -23,6 +26,8 @@ public partial class BaseGltfRenderer
         public readonly int Index;
         public readonly Material Source;
         public readonly GltfMaterial? Target;
+
+        private BcDecoder decoder = new ();
 
         public WrittenMaterial(int index, Material source, GltfMaterial? target)
         {
@@ -96,7 +101,6 @@ public partial class BaseGltfRenderer
 
             // SpecularValue seemingly has a meaningful value as opacity for characters.
             // Not for decals.
-            // ???
             var preferredAlphaColor = useAlphaColor ? m.OpacityValue : null;
 
             var diffuse = -1;
@@ -121,31 +125,6 @@ public partial class BaseGltfRenderer
                     continue;
                 }
 
-                DdsFile ddsFile;
-                if (DDSFileCombiner.IsSplitDDS(normalizedPath))
-                {
-                    using var ddsfs = DDSFileCombiner.CombineToStream(normalizedPath);
-                    ddsFile = DdsFile.Load(ddsfs);
-                }
-                else
-                {
-                    using var ddsfs = Args.PackFileSystem.GetStream(normalizedPath);
-                    ddsFile = DdsFile.Load(ddsfs);
-                }
-
-                var width = (int) ddsFile.header.dwWidth;
-                var height = (int) ddsFile.header.dwHeight;
-                ColorRgba32[] raw;
-                try
-                {
-                    raw = decoder.Decode(ddsFile);
-                }
-                catch (Exception e)
-                {
-                    Log.E(e, "Material[{0}:{1}]: Failed to decode: {2}", materialSetName, matId, texture.File);
-                    continue;
-                }
-
                 var name = Path.GetFileNameWithoutExtension(normalizedPath);
 
                 switch (texture.Map)
@@ -153,74 +132,91 @@ public partial class BaseGltfRenderer
                     case Texture.MapTypeEnum.TexSlot2:
                     case Texture.MapTypeEnum.Normals:
                     {
-                        if (GltfRendererUtilities.HasMeaningfulAlphaChannel(raw))
+                        if (Args.EmbedTextures)
                         {
-                            // https://docs.cryengine.com/display/SDKDOC2/Detail+Maps
-                            // Red: Diffuse
-                            // Green: Normal Red
-                            // Blue: Gloss
-                            // Alpha: Normal Green
-                            var rawNormal = new Rgb24[raw.Length];
-                            var rawMetallicRoughness = new Rgb24[raw.Length];
-                            var rawDiffuseDetail = new Rgb24[raw.Length];
-                            for (var j = 0; j < raw.Length; j++)
+                            var rawDetails = GetImageFileDetails(normalizedPath, decoder);
+                            if (GltfRendererUtilities.HasMeaningfulAlphaChannel(rawDetails.raw))
                             {
-                                var r = (rawNormal[j].R = raw[j].g) / 255f;
-                                var g = (rawNormal[j].G = raw[j].a) / 255f;
-                                var b = Math.Sqrt(1 - Math.Pow(r * 2 - 1, 2) - Math.Pow(g * 2 - 1, 2)) / 2 + 0.5f;
-                                rawNormal[j].B = (byte) (255 * b);
+                                // https://docs.cryengine.com/display/SDKDOC2/Detail+Maps
+                                // Red: Diffuse
+                                // Green: Normal Red
+                                // Blue: Gloss
+                                // Alpha: Normal Green
+                                var rawNormal = new Rgb24[rawDetails.raw.Length];
+                                var rawMetallicRoughness = new Rgb24[rawDetails.raw.Length];
+                                var rawDiffuseDetail = new Rgb24[rawDetails.raw.Length];
+                                for (var j = 0; j < rawDetails.raw.Length; j++)
+                                {
+                                    var r = (rawNormal[j].R = rawDetails.raw[j].g) / 255f;
+                                    var g = (rawNormal[j].G = rawDetails.raw[j].a) / 255f;
+                                    var b = Math.Sqrt(1 - Math.Pow(r * 2 - 1, 2) - Math.Pow(g * 2 - 1, 2)) / 2 + 0.5f;
+                                    rawNormal[j].B = (byte)(255 * b);
 
-                                // Its green channel contains roughness values
-                                rawMetallicRoughness[j].G = (byte) (255 - raw[j].b);
-                                // and its blue channel contains metalness values.
+                                    // Its green channel contains roughness values
+                                    rawMetallicRoughness[j].G = (byte)(255 - rawDetails.raw[j].b);
+                                    // and its blue channel contains metalness values.
 
-                                rawDiffuseDetail[j].R = rawDiffuseDetail[j].G = rawDiffuseDetail[j].B = raw[j].r;
+                                    rawDiffuseDetail[j].R = rawDiffuseDetail[j].G = rawDiffuseDetail[j].B = rawDetails.raw[j].r;
+                                }
+
+                                normal = AddTexture(name, rawDetails.width, rawDetails.height, rawNormal);
+                                metallicRoughness = AddTexture(name, rawDetails.width, rawDetails.height, rawMetallicRoughness);
+
+                                // TODO: diffuseDetail = _gltfDataBuffer.AddTexture(name, width, height, rawDiffuseDetail);
+                                Log.D("Material[{0}:{1}]: Detailed diffuse map is not implemented: {2}",
+                                    materialSetName, matId, texture.File);
                             }
-
-                            normal = AddTexture(name, width, height, rawNormal);
-                            metallicRoughness = AddTexture(name, width, height, rawMetallicRoughness);
-                            
-                            // TODO: diffuseDetail = _gltfDataBuffer.AddTexture(name, width, height, rawDiffuseDetail);
-                            Log.D("Material[{0}:{1}]: Detailed diffuse map is not implemented: {2}",
-                                materialSetName, matId, texture.File);
+                            else
+                            {
+                                // For normal maps, blue is usually set to 0.  Should be 255.  This
+                                // is why the normal textures look yellow instead of blue.
+                                for (int i = 0; i < rawDetails.raw.Length; i++)
+                                {
+                                    rawDetails.raw[i].b = 255;
+                                }
+                                normal = AddTexture(name, rawDetails.width, rawDetails.height, rawDetails.raw, SourceAlphaModes.Disable);
+                            }
                         }
                         else
-                        {
-                            // For normal maps, blue is usually set to 0.  Should be 255.  This
-                            // is why the normal textures look yellow instead of blue.
-                            for (int i = 0; i < raw.Length; i++)
-                            {
-                                    raw[i].b = 255;
-                            }
-                            normal = AddTexture(name, width, height, raw, SourceAlphaModes.Disable);
-                        }
+                            normal = AddRelativeTexture(normalizedPath);
 
                         break;
                     }
                     case Texture.MapTypeEnum.TexSlot1:
                     case Texture.MapTypeEnum.TexSlot9:
                     case Texture.MapTypeEnum.Diffuse:
-                        if (m.GlowAmount > 0)
+                        if (Args.EmbedTextures)
                         {
-                            var rawEmissive = new Rgb24[raw.Length];
-                            for (var j = 0; j < raw.Length; j++)
+                            var rawDetails = GetImageFileDetails(normalizedPath, decoder);
+                            if (m.GlowAmount > 0)
                             {
-                                rawEmissive[j].R = (byte)(raw[j].r * raw[j].a / 255);
-                                rawEmissive[j].G = (byte)(raw[j].g * raw[j].a / 255);
-                                rawEmissive[j].B = (byte)(raw[j].b * raw[j].a / 255);
+                                var rawEmissive = new Rgb24[rawDetails.raw.Length];
+                                for (var j = 0; j < rawDetails.raw.Length; j++)
+                                {
+                                    rawEmissive[j].R = (byte)(rawDetails.raw[j].r * rawDetails.raw[j].a / 255);
+                                    rawEmissive[j].G = (byte)(rawDetails.raw[j].g * rawDetails.raw[j].a / 255);
+                                    rawEmissive[j].B = (byte)(rawDetails.raw[j].b * rawDetails.raw[j].a / 255);
+                                }
+
+                                emissive = AddTexture(name, rawDetails.width, rawDetails.height, rawEmissive);
                             }
-                            
-                            emissive = AddTexture(name, width, height, rawEmissive);
+                            diffuse = AddTexture(name, rawDetails.width, rawDetails.height, rawDetails.raw, SourceAlphaModes.Disable,
+                                preferredAlphaColor);
                         }
-                        diffuse = AddTexture(name, width, height, raw, SourceAlphaModes.Disable,
-                            preferredAlphaColor);
+                        else
+                            diffuse = AddRelativeTexture(normalizedPath);
                         break;
                     case Texture.MapTypeEnum.TexSlot4:
                     case Texture.MapTypeEnum.TexSlot10:
                     case Texture.MapTypeEnum.Specular:
-                        specular = AddTexture(name, width, height, raw, SourceAlphaModes.Automatic);
+                        if (Args.EmbedTextures)
+                        {
+                            var rawDetails = GetImageFileDetails(normalizedPath, decoder);
+                            specular = AddTexture(name, rawDetails.width, rawDetails.height, rawDetails.raw, SourceAlphaModes.Disable);
+                        }
+                        else
+                            specular = AddRelativeTexture(normalizedPath);
                         break;
-
                     default:
                         Log.D("Material[{0}:{1}]: Ignoring texture type {2}: {3}",
                             materialSetName, matId, texture.MapString, texture.File);
@@ -314,5 +310,42 @@ public partial class BaseGltfRenderer
         }
 
         return materialIndices;
+    }
+
+    private DdsFileDetails GetImageFileDetails(string normalizedPath, BcDecoder decoder)
+    {
+        var ddsDetails = new DdsFileDetails();
+
+        DdsFile ddsFile;
+        if (DDSFileCombiner.IsSplitDDS(normalizedPath))
+        {
+            using var ddsfs = DDSFileCombiner.CombineToStream(normalizedPath);
+            ddsFile = DdsFile.Load(ddsfs);
+        }
+        else
+        {
+            using var ddsfs = Args.PackFileSystem.GetStream(normalizedPath);
+            ddsFile = DdsFile.Load(ddsfs);
+        }
+
+        ddsDetails.width = (int)ddsFile.header.dwWidth;
+        ddsDetails.height = (int)ddsFile.header.dwHeight;
+
+        try
+        {
+            ddsDetails.raw = decoder.Decode(ddsFile);
+        }
+        catch (Exception e)
+        {
+            Log.E(e, "Material error: Failed to decode: {0}", normalizedPath);
+        }
+        return ddsDetails;
+    }
+
+    internal sealed class DdsFileDetails
+    {
+        internal int width { get; set; }
+        internal int height { get; set; }
+        internal ColorRgba32[] raw { get; set; }
     }
 }

@@ -6,6 +6,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using BCnEncoder.Shared;
+using CgfConverter.Materials;
 using CgfConverter.Renderers.Gltf.Models;
 using Newtonsoft.Json;
 using SixLabors.ImageSharp;
@@ -420,6 +421,24 @@ public partial class BaseGltfRenderer
             },
         });
         return _gltfRoot.Accessors.Count - 1;
+    }
+
+    private int AddRelativeTexture(string normalizedPath)
+    {
+        var name = Path.GetFileNameWithoutExtension(normalizedPath);
+        _gltfRoot.Images.Add(new GltfImage
+        {
+            Name = $"{name}/image",
+            Uri = Path.Join(Args.DataDirs[0], normalizedPath)
+        });
+
+        _gltfRoot.Textures.Add(new GltfTexture
+        {
+            Name = name is null ? null : $"{name}/texture",
+            Source = _gltfRoot.Images.Count - 1,
+        });
+
+        return _gltfRoot.Textures.Count - 1;
     }
 
     private int AddTexture<TPixel>(string? baseName, int width, int height, TPixel[] raw)

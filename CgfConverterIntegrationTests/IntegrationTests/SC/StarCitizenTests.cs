@@ -204,28 +204,27 @@ public class StarCitizenTests
         Assert.AreEqual(34, gltfData.Meshes.Count);
 
         // Nodes check
-        Assert.AreEqual(117, gltfData.Nodes.Count);
+        Assert.AreEqual(116, gltfData.Nodes.Count);
         Assert.AreEqual("AEGS_Avenger", gltfData.Nodes[0].Name);
-        Assert.AreEqual("AEGS_Avenger", gltfData.Nodes[1].Name);
-        Assert.AreEqual("Nose", gltfData.Nodes[2].Name);
-        Assert.AreEqual("UI_Helper", gltfData.Nodes[3].Name);
+        Assert.AreEqual("Nose", gltfData.Nodes[1].Name);
+        Assert.AreEqual("UI_Helper", gltfData.Nodes[2].Name);
 
-        //AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[0].Rotation, TestUtils.delta);
-        //AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { -0.0f, -0.0f, 0.0f, 1f }, gltfData.Nodes[1].Rotation, TestUtils.delta);
-        //AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[2].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[0].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { -0.0f, -0.0f, 0.0f, 1f }, gltfData.Nodes[1].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[2].Rotation, TestUtils.delta);
 
-        //AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0 }, gltfData.Nodes[0].Translation, TestUtils.delta);
-        //AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0.0f, -0.473000f, -5.702999f }, gltfData.Nodes[1].Translation, TestUtils.delta);
-        //AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0f, 0.795895f, -1.898374f }, gltfData.Nodes[2].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0 }, gltfData.Nodes[0].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0.0f, -0.473000f, -5.702999f }, gltfData.Nodes[1].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0f, 0.795895f, -1.898374f }, gltfData.Nodes[2].Translation, TestUtils.delta);
 
         // Grip.  Test loc and rotation on a node with a parent
-        //var grip = gltfData.Nodes.Where(x => x.Name == "Grip").FirstOrDefault();
-        //AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { -1.41231394f, 0.0213999934f, -1.660965f }, grip.Translation, TestUtils.delta);
-        //AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0.464955121f, -0.221349508f, 0.769474566f, 0.3777963f }, grip.Rotation, TestUtils.delta);
+        var grip = gltfData.Nodes.Where(x => x.Name == "Grip").FirstOrDefault();
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { -1.41231394f, 0.0213999934f, -1.660965f }, grip.Translation, TestUtils.delta);
+        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0.464955121f, -0.221349508f, 0.769474566f, 0.3777963f }, grip.Rotation, TestUtils.delta);
 
-        Assert.AreEqual(1, gltfData.Nodes[0].Children.Count); // Root
-        Assert.AreEqual(3, gltfData.Nodes[1].Children.Count);
-        Assert.AreEqual(44, gltfData.Nodes[2].Children.Count);
+        Assert.AreEqual(3, gltfData.Nodes[0].Children.Count); // Root
+        Assert.AreEqual(44, gltfData.Nodes[1].Children.Count);
+        Assert.AreEqual(0, gltfData.Nodes[2].Children.Count);
 
         // Accessors check
         Assert.AreEqual(282, gltfData.Accessors.Count);

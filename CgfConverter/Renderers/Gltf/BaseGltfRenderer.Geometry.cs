@@ -44,6 +44,7 @@ public partial class BaseGltfRenderer
                 if (meshChunk is not null && meshChunk.MeshSubsetsData != 0)
                     AddMesh(cryNode, node, controllerIdToNodeIndex);
             }
+
             else  // Has geometry file
             {
                 string nodeName = cryNode.Name;
@@ -63,6 +64,10 @@ public partial class BaseGltfRenderer
         }
 
         var numAnimations = WriteAnimations(_cryData.Animations, controllerIdToNodeIndex);
+        //if (numAnimations == 0)
+        //    Log.D("Model[{0}]: No associated animations found.");
+        //else
+        //    Log.I("Model[{0}]: Written {1} animations.", rootNodeName, numAnimations);
 
         // For each child, recursively call this method to add the child to GltfRoot.Nodes.
         if (cryNode.AllChildNodes is not null)
@@ -227,7 +232,6 @@ public partial class BaseGltfRenderer
                         .ToArray());
 
         var boneIdToBindPoseMatrices = new Dictionary<uint, Matrix4x4>();
-
         foreach (var bone in skinningInfo.CompiledBones)
         {
             var matrix = boneIdToBindPoseMatrices[bone.ControllerID] = bone.BindPoseMatrix;
@@ -266,8 +270,7 @@ public partial class BaseGltfRenderer
             controllerIdToNodeIndex[bone.ControllerID] = AddNode(boneNode);
 
             if (bone.parentID == 0)
-                _gltfRoot.Nodes[0].Children
-                    .Add(controllerIdToNodeIndex[bone.ControllerID]);
+                CurrentScene.Nodes.Add(controllerIdToNodeIndex[bone.ControllerID]);
             else
                 _gltfRoot.Nodes[controllerIdToNodeIndex[bone.parentID]].Children
                     .Add(controllerIdToNodeIndex[bone.ControllerID]);
@@ -337,6 +340,7 @@ public partial class BaseGltfRenderer
             return Log.D<bool>("Mesh[{0}]: both VerticesData and VertsUVsData are empty.", gltfNode.Name);
 
         var materialMap = WriteMaterial(nodeChunk);
+
         if (subsets.MeshSubsets
                 .Select(x => materialMap.GetValueOrDefault(x.MatID))
                 .All(x => x?.IsSkippedFromArgs ?? false))

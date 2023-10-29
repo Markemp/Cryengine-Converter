@@ -54,6 +54,8 @@ public sealed class ArgsHandler
     public bool TgaTextures { get; internal set; }
     /// <summary>Flag used to indicate that textures should not be included in the output file</summary>
     public bool NoTextures { get; internal set; }
+    /// <summary>For glTF exports, embed textures into the glTF file instead of external references.</summary>
+    public bool EmbedTextures { get; internal set; }
     /// <summary>Split each layer into different files, if a file does contain multiple layers.</summary>
     public bool SplitLayers { get; internal set; }
     /// <summary>List of node names to skip when rendering</summary>
@@ -87,8 +89,6 @@ public sealed class ArgsHandler
         {
             switch (inputArgs[i].ToLowerInvariant())
             {
-                #region case "-objectdir" / "-datadir"...
-
                 // Next item in list will be the Object directory
                 case "-datadir":
                 case "-objectdir":
@@ -100,8 +100,6 @@ public sealed class ArgsHandler
                     
                     lookupDataDirs.Add(inputArgs[i]);
                     break;
-                #endregion
-                #region case "-out" / "-outdir" / "-outputdir"...
                 // Next item in list will be the output directory
                 case "-out":
                 case "-outdir":
@@ -113,14 +111,10 @@ public sealed class ArgsHandler
                     }
                     OutputDir = new DirectoryInfo(inputArgs[i]).FullName;
                     break;
-                #endregion
-                #region case "-pp" / "-preservepath"...
                 case "-pp":
                 case "-preservepath":
                     PreservePath = true;
                     break;
-                #endregion
-                #region case "-mt" / "-maxthreads"...
                 case "-mt":
                 case "-maxthreads":
                     if (++i > inputArgs.Length)
@@ -139,15 +133,11 @@ public sealed class ArgsHandler
                         MaxThreads = 1;
                     }
                     break;
-                #endregion
-                #region case "-sl" / "-splitlayer" / "-splitlayers"...
                 case "-sl":
                 case "-splitlayer":
                 case "-splitlayers":
                     SplitLayers = true;
                     break;
-                #endregion
-                #region case "-loglevel"...
                 case "-loglevel":
                     if (++i > inputArgs.Length)
                     {
@@ -156,73 +146,50 @@ public sealed class ArgsHandler
                     }
 
                     if (Enum.TryParse(inputArgs[i], true, out LogLevelEnum level))
-                    {
                         Utilities.LogLevel = level;
-                    }
                     else
                     {
                         Console.Error.WriteLine("Invalid log level {0}, defaulting to warn", inputArgs[i]);
                         Utilities.LogLevel = LogLevelEnum.Warning;
                     }
                     break;
-                #endregion
-                #region case "-usage"...
                 case "-usage":
                     PrintUsage();
                     return 1;
-                #endregion
-                #region case "-smooth"...
                 case "-smooth":
                     Smooth = true;
                     break;
-                #endregion
-                #region case "-obj" / "-object" / "wavefront"...
-
                 case "-obj":
                 case "-object":
                 case "-wavefront":
                     OutputWavefront = true;
                     break;
-                #endregion
-                #region case "-gltf"
                 case "-gltf":
                     OutputGLTF = true;
                     break;
-                #endregion
-                #region case "-glb"
                 case "-glb":
                     OutputGLB = true;
                     break;
-                #endregion
-                #region case "-dae" / "-collada"...
                 case "-dae":
                 case "-collada":
                     OutputCollada = true;
                     break;
-                #endregion
-                #region case "-tif" / "-tiff"...
                 case "-tif":
                 case "-tiff":
                     TiffTextures = true;
                     break;
-                #endregion
-                #region case "-png" ...
                 case "-png":
                     PngTextures = true;
                     break;
-                #endregion
-                #region case "-tga" ...
+                case "-embedtextures":
+                    EmbedTextures = true;
+                    break;
                 case "-tga":
                     TgaTextures = true;
                     break;
-                #endregion
-                #region case "-notex" ...
                 case "-notex":
                     NoTextures = true;
                     break;
-                #endregion
-                #region case "-en" / "-excludenode"...
-
                 case "-en":
                 case "-excludenode":
                     if (++i > inputArgs.Length)
@@ -232,10 +199,6 @@ public sealed class ArgsHandler
                     }
                     ExcludeNodeNames.Add(inputArgs[i]);
                     break;
-
-                #endregion
-                #region case "-em" / "-excludemat"...
-
                 case "-em":
                 case "-excludemat":
                     if (++i > inputArgs.Length)
@@ -245,9 +208,6 @@ public sealed class ArgsHandler
                     }
                     ExcludeMaterialNames.Add(inputArgs[i]);
                     break;
-
-                #endregion
-                #region case "-es" / "-excludeshader"...
                 case "-es":
                 case "-excludeshader":
                     if (++i > inputArgs.Length)
@@ -257,25 +217,12 @@ public sealed class ArgsHandler
                     }
                     ExcludeShaderNames.Add(inputArgs[i]);
                     break;
-
-                #endregion
-                #region case "-group"...
-
                 case "-group":
                     GroupMeshes = true;
                     break;
-
-                #endregion
-                #region case "-throw"...
-
                 case "-throw":
                     Throw = true;
-
                     break;
-
-                #endregion
-                #region case "-infile" / "-inputfile"...
-
                 case "-infile":
                 case "-inputfile":
                     if (++i > inputArgs.Length)
@@ -285,33 +232,22 @@ public sealed class ArgsHandler
                     }
                     lookupInputs.Add(inputArgs[i]);
                     break;
-
-                #endregion
-                #region case "-allowconflict"...
                 case "-allowconflicts":
                 case "-allowconflict":
                     AllowConflicts = true;
                     break;
-                #endregion
-                #region case "-noconflict"...
                 case "-noconflict":
                 case "-noconflicts":
                     NoConflicts = true;
                     break;
-                #endregion
-                #region case "-dumpchunkinfo"...
                 case "-dump":
                 case "-dumpchunk":
                 case "-dumpchunkinfo":
                     DumpChunkInfo = true;
                     break;
-                #endregion
-                #region default...
-
                 default:
                     lookupInputs.Add(inputArgs[i]);
                     break;
-                    #endregion
             }
         }
 
@@ -448,6 +384,7 @@ public sealed class ArgsHandler
         Console.WriteLine("-tif:             Change the materials to look for .tif files instead of .dds.");
         Console.WriteLine("-png:             Change the materials to look for .png files instead of .dds.");
         Console.WriteLine("-tga:             Change the materials to look for .tga files instead of .dds.");
+        Console.WriteLine("-embedtextures:   Embed textures into the glTF binary file instead of external references.");
         Console.WriteLine();
         Console.WriteLine("-smooth:          Smooth Faces.");
         Console.WriteLine("-group:           Group meshes into single model.");
