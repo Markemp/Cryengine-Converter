@@ -6,10 +6,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Globalization;
 using System.Threading;
 
-namespace CgfConverterTests.IntegrationTests.ArmoredWarfare;
+namespace CgfConverterTests.IntegrationTests;
 
 [TestClass]
-public class AWIntegrationTests
+public class ArmoredWarfareIntegrationTests
 {
     private readonly TestUtils testUtils = new();
 

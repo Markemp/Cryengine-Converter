@@ -177,11 +177,11 @@ public class StarCitizenTests
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
         // Make sure Rotations are still right
-        const string frontLGDoorLeftMatrix = "1 0 0 -0.300001 0 -0.938131 -0.346280 0.512432 0 0.346280 -0.938131 -1.835138 0 0 0 1";
         var noseNode = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].node[0];
         Assert.AreEqual("Nose", noseNode.ID);
         Assert.AreEqual("Front_LG_Door_Left", noseNode.node[28].ID);
-        Assert.AreEqual(frontLGDoorLeftMatrix, noseNode.node[28].Matrix[0].Value_As_String);
+        Assert.AreEqual("-0.300001 0.512432 -1.835138", noseNode.node[28].Translate[0].Value_As_String);
+        Assert.AreEqual("-1 -0 -0 200.259949", noseNode.node[28].Rotate[0].Value_As_String);
 
         Assert.AreEqual(29, colladaData.DaeObject.Library_Materials.Material.Length);
         Assert.AreEqual(88, colladaData.DaeObject.Library_Images.Image.Length);

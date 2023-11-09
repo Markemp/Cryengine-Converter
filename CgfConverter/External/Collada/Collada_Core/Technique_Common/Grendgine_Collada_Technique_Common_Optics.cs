@@ -6,7 +6,7 @@ namespace CgfConverter.Collada
 
     [Serializable]
     [XmlType(AnonymousType = true)]
-    public partial class Grendgine_Collada_Technique_Common_Optics : Grendgine_Collada_Technique_Common
+    public partial class Grendgine_Collada_Technique_Common_Optics : ColladaTechniqueCommon
     {
 
         [XmlElement(ElementName = "orthographic")]

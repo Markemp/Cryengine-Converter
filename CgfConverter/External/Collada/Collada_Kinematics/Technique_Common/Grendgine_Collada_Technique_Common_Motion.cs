@@ -7,7 +7,7 @@ namespace CgfConverter.Collada
     [Serializable]
     [XmlType(AnonymousType = true)]
     [System.Xml.Serialization.XmlRootAttribute(ElementName = "technique_common", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-    public partial class Grendgine_Collada_Technique_Common_Motion : Grendgine_Collada_Technique_Common
+    public partial class Grendgine_Collada_Technique_Common_Motion : ColladaTechniqueCommon
     {
 
         [XmlElement(ElementName = "axis_info")]

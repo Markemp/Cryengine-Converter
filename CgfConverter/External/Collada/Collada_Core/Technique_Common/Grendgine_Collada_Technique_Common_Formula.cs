@@ -6,7 +6,7 @@ namespace CgfConverter.Collada
 
     [Serializable]
     [XmlType(AnonymousType = true)]
-    public partial class Grendgine_Collada_Technique_Common_Formula : Grendgine_Collada_Technique_Common
+    public partial class Grendgine_Collada_Technique_Common_Formula : ColladaTechniqueCommon
     {
         /// <summary>
         /// Need to determine the type and value of the Object(s)

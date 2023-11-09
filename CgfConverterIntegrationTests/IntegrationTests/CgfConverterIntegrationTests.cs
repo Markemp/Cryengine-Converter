@@ -333,7 +333,8 @@ public class CgfConverterIntegrationTests
         Assert.AreEqual("green_fern_bush_a", nodes[0].ID);
         Assert.AreEqual("green_fern_bush_a", nodes[0].ID);
         Assert.AreEqual("NODE", nodes[0].Type.ToString());
-        Assert.AreEqual("0.993981 0.109553 -0 0 -0.109553 0.993981 -0 0 -0 0 1 0 0 0 0 1", nodes[0].Matrix[0].Value_As_String);
+        Assert.AreEqual("0 0 0", nodes[0].Translate[0].Value_As_String);
+        Assert.AreEqual("0.000002 -0 -1 6.289582", nodes[0].Rotate[0].Value_As_String);
         Assert.AreEqual("green_fern_bush_a", nodes[0].Instance_Geometry[0].Name);
         Assert.AreEqual("#green_fern_bush_a-mesh", nodes[0].Instance_Geometry[0].URL);
         Assert.AreEqual("#green_fern_bush-material", nodes[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);

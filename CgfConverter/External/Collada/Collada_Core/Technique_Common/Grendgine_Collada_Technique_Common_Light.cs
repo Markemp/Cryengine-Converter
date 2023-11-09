@@ -6,7 +6,7 @@ namespace CgfConverter.Collada
 
     [Serializable]
     [XmlType(AnonymousType = true)]
-    public partial class Grendgine_Collada_Technique_Common_Light : Grendgine_Collada_Technique_Common
+    public partial class Grendgine_Collada_Technique_Common_Light : ColladaTechniqueCommon
     {
         [XmlElement(ElementName = "ambient")]
         public Grendgine_Collada_Ambient Ambient;

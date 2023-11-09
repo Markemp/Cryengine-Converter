@@ -57,6 +57,7 @@ public static class QuaternionExtensions
         if (MathF.Abs(quaternion.W) >= 1.0f - float.Epsilon)
             return new Vector4(1, 0, 0, 0); // Arbitrary axis with 0 angle.
 
+        // TODO:  Figure out why this is inverted.
         Vector3 axis = new(-quaternion.X, -quaternion.Y, -quaternion.Z);
         float scale = axis.Length();
 

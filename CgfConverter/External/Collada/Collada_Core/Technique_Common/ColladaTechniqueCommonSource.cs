@@ -6,7 +6,7 @@ namespace CgfConverter.Collada
 
     [Serializable]
     [XmlType(AnonymousType = true)]
-    public partial class ColladaTechniqueCommonSource : Grendgine_Collada_Technique_Common
+    public partial class ColladaTechniqueCommonSource : ColladaTechniqueCommon
     {
 
 

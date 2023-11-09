@@ -6,7 +6,7 @@ namespace CgfConverter.Collada
 
     [Serializable]
     [XmlType(AnonymousType = true)]
-    public partial class Grendgine_Collada_Technique_Common_Rigid_Body : Grendgine_Collada_Technique_Common
+    public partial class Grendgine_Collada_Technique_Common_Rigid_Body : ColladaTechniqueCommon
     {
 
         [XmlElement(ElementName = "dynamic")]
