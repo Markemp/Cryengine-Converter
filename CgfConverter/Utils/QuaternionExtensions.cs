@@ -68,8 +68,7 @@ public static class QuaternionExtensions
         axis /= scale;
         float angle = 2.0f * MathF.Acos(quaternion.W);
 
-        // Convert the angle to degrees.
-        angle *= (180.0f / MathF.PI);
+        angle *= (180.0f / MathF.PI);  // Convert the angle to degrees.
 
         return new Vector4(axis, angle);
     }

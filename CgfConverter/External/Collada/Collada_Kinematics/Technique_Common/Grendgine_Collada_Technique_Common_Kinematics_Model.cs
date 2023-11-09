@@ -22,7 +22,7 @@ namespace CgfConverter.Collada
         public Grendgine_Collada_Link[] Link;
 
         [XmlElement(ElementName = "formula")]
-        public Grendgine_Collada_Formula[] Formula;
+        public ColladaFormula[] Formula;
 
         [XmlElement(ElementName = "instance_formula")]
         public ColladaInstanceFormula[] Instance_Formula;

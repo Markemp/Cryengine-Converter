@@ -4,7 +4,6 @@ using System.Xml.Serialization;
 
 namespace CgfConverter.Collada
 {
-
     /// <summary>
     /// This is the core <technique>
     /// </summary>

@@ -24,7 +24,7 @@ namespace CgfConverter.Collada
         public Grendgine_Collada_Kinematics_Axis_Info_Limits Limits;
 
         [XmlElement(ElementName = "formula")]
-        public Grendgine_Collada_Formula[] Formula;
+        public ColladaFormula[] Formula;
 
         [XmlElement(ElementName = "instance_formula")]
         public ColladaInstanceFormula[] Instance_Formula;

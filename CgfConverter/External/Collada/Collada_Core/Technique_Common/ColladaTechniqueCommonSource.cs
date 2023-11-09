@@ -1,21 +1,17 @@
 using System;
 using System.Xml;
 using System.Xml.Serialization;
-namespace CgfConverter.Collada
+
+namespace CgfConverter.Collada;
+
+[Serializable]
+[XmlType(AnonymousType = true)]
+public partial class ColladaTechniqueCommonSource : ColladaTechniqueCommon
 {
+    [XmlElement(ElementName = "accessor")]
+    public ColladaAccessor Accessor;
 
-    [Serializable]
-    [XmlType(AnonymousType = true)]
-    public partial class ColladaTechniqueCommonSource : ColladaTechniqueCommon
-    {
-
-
-
-        [XmlElement(ElementName = "accessor")]
-        public ColladaAccessor Accessor;
-
-        [XmlElement(ElementName = "asset")]
-        public ColladaAsset Asset;
-    }
+    [XmlElement(ElementName = "asset")]
+    public ColladaAsset Asset;
 }
 

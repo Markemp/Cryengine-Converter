@@ -21,7 +21,7 @@ namespace CgfConverter.Collada
         public ColladaNewParam[] New_Param;
 
         [XmlElement(ElementName = "setparam")]
-        public Grendgine_Collada_Set_Param[] Set_Param;
+        public ColladaSetParam[] Set_Param;
 
         [XmlElement(ElementName = "speed")]
         public Grendgine_Collada_Common_Float2_Or_Param_Type Speed;

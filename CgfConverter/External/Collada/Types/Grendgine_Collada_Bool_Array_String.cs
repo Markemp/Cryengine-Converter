@@ -6,7 +6,7 @@ namespace CgfConverter.Collada
     [Serializable]
     [XmlType(AnonymousType = true)]
 
-    public partial class Grendgine_Collada_Bool_Array_String
+    public partial class ColladaBoolArrayString
     {
 
         //TODO: cleanup to legit array

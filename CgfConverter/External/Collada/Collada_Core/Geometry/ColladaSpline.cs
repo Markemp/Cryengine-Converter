@@ -1,25 +1,25 @@
 using System;
 using System.Xml;
 using System.Xml.Serialization;
-namespace CgfConverter.Collada
+
+namespace CgfConverter.Collada;
+
+[Serializable]
+[XmlType(AnonymousType = true)]
+public partial class ColladaSpline
 {
-    [Serializable]
-    [XmlType(AnonymousType = true)]
-    public partial class ColladaSpline
-    {
-        [XmlAttribute("closed")]
-        public bool Closed;
+    [XmlAttribute("closed")]
+    public bool Closed;
 
 
-        [XmlElement(ElementName = "source")]
-        public ColladaSource[] Source;
+    [XmlElement(ElementName = "source")]
+    public ColladaSource[] Source;
 
-        [XmlElement(ElementName = "control_vertices")]
-        public ColladaControlVertices Control_Vertices;
+    [XmlElement(ElementName = "control_vertices")]
+    public ColladaControlVertices Control_Vertices;
 
 
-        [XmlElement(ElementName = "extra")]
-        public ColladaExtra[] Extra;
-    }
+    [XmlElement(ElementName = "extra")]
+    public ColladaExtra[] Extra;
 }
 

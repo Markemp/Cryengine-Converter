@@ -1,13 +1,13 @@
 using System;
 using System.Xml;
 using System.Xml.Serialization;
+
 namespace CgfConverter.Collada;
 
 [Serializable]
 [XmlType(AnonymousType = true)]
 public partial class ColladaAnimationClip
 {
-
     [XmlAttribute("id")]
     public string ID;
 
@@ -27,7 +27,6 @@ public partial class ColladaAnimationClip
 
     [XmlElement(ElementName = "instance_formula")]
     public ColladaInstanceFormula[] Instance_Formula;
-
 
     [XmlElement(ElementName = "asset")]
     public ColladaAsset Asset;

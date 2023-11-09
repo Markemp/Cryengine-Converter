@@ -1,47 +1,45 @@
 using System;
 using System.Xml;
 using System.Xml.Serialization;
-namespace CgfConverter.Collada
+
+namespace CgfConverter.Collada;
+
+[Serializable]
+[XmlType(AnonymousType = true)]
+public partial class ColladaSource
 {
-    [Serializable]
-    [XmlType(AnonymousType = true)]
-    public partial class ColladaSource
-    {
-        [XmlAttribute("id")]
-        public string ID;
+    [XmlAttribute("id")]
+    public string ID;
 
-        [XmlAttribute("name")]
-        public string Name;
+    [XmlAttribute("name")]
+    public string Name;
 
+    [XmlElement(ElementName = "bool_array")]
+    public ColladaBoolArray Bool_Array;
+    [XmlElement(ElementName = "float_array")]
+    public ColladaFloatArray Float_Array;
+    [XmlElement(ElementName = "IDREF_array")]
+    public ColladaIDREFArray IDREF_Array;
+    [XmlElement(ElementName = "int_array")]
+    public ColladaIntArray Int_Array;
+    [XmlElement(ElementName = "Name_array")]
+    public ColladaNameArray Name_Array;
+    [XmlElement(ElementName = "SIDREF_array")]
+    public ColladaSIDREFArray SIDREF_Array;
+    [XmlElement(ElementName = "token_array")]
+    public ColladaTokenArray Token_Array;
 
-        [XmlElement(ElementName = "bool_array")]
-        public Grendgine_Collada_Bool_Array Bool_Array;
-        [XmlElement(ElementName = "float_array")]
-        public ColladaFloatArray Float_Array;
-        [XmlElement(ElementName = "IDREF_array")]
-        public Grendgine_Collada_IDREF_Array IDREF_Array;
-        [XmlElement(ElementName = "int_array")]
-        public Grendgine_Collada_Int_Array Int_Array;
-        [XmlElement(ElementName = "Name_array")]
-        public ColladaNameArray Name_Array;
-        [XmlElement(ElementName = "SIDREF_array")]
-        public Grendgine_Collada_SIDREF_Array SIDREF_Array;
-        [XmlElement(ElementName = "token_array")]
-        public Grendgine_Collada_Token_Array Token_Array;
+    [XmlElement(ElementName = "technique_common")]
+    public ColladaTechniqueCommonSource Technique_Common;
 
+    [XmlElement(ElementName = "technique")]
+    public ColladaTechnique[] Technique;
 
-        [XmlElement(ElementName = "technique_common")]
-        public ColladaTechniqueCommonSource Technique_Common;
+    [XmlElement(ElementName = "asset")]
+    public ColladaAsset Asset;
 
-        [XmlElement(ElementName = "technique")]
-        public ColladaTechnique[] Technique;
-
-        [XmlElement(ElementName = "asset")]
-        public ColladaAsset Asset;
-
-        // ggerber 1.4.1 compatibilitiy
-        [XmlAttribute("source")]
-        public string Source;
-    }
+    // ggerber 1.4.1 compatibilitiy
+    [XmlAttribute("source")]
+    public string Source;
 }
 

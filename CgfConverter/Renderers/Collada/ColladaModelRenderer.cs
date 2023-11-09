@@ -169,15 +169,35 @@ public class ColladaModelRenderer : IRenderer
                 // Add an animation for each controller
                 for (int j = 0; j < animation.Controllers.Count; j++)
                 {
+                    // Each controller can have up to 2 sub Animations, one for position and one for rotation
                     var controller = animation.Controllers[j];
                     var controllerBoneName = controllerIdToBoneName[controller.ControllerID];
                     var controllerIdBase = $"{controllerBoneName}_{controller.ControllerID}";
+                    var animations = new List<ColladaAnimation>();
 
-                    var inputSource = new ColladaSource   // Time
+                    if (animation.Controllers[j].HasPosTrack)
                     {
-                        ID = $"{controllerIdBase}_input",
-                        Name = $"{controllerIdBase}_input"
-                    };
+                        animations.Add(CreateAnimation(controller, controllerBoneName, "translate", animChunk));
+                        var inputSource = new ColladaSource   // Time
+                        {
+                            ID = $"{controllerIdBase}_input_translate",
+                            Name = $"{controllerIdBase}_input_translate"
+                        };
+                    }
+
+                    if (animation.Controllers[j].HasRotTrack)
+                    {
+                        animations.Add(CreateAnimation(controller, controllerBoneName, "rotate", animChunk));
+
+                        var inputSource = new ColladaSource   // Time
+                        {
+                            ID = $"{controllerIdBase}_input",
+                            Name = $"{controllerIdBase}_input"
+                        };
+                    }
+
+
+
                     var outputSource = new ColladaSource     // transform matrix
                     {
                         ID = $"{controllerIdBase}_output",
@@ -320,6 +340,18 @@ public class ColladaModelRenderer : IRenderer
         }
 
         DaeObject.Library_Animations = animationLibrary;
+    }
+
+    private ColladaAnimation CreateAnimation(ChunkController_905.CControllerInfo controllerInfo, string controllerId, string animType, ChunkController_905 controllerChunk)
+    {
+        var animation = new ColladaAnimation();
+        var controllerBoneName = controllerIdToBoneName[controllerInfo.ControllerID];
+        var controllerIdBase = $"{controllerBoneName}_{controllerInfo.ControllerID}_{animType}";
+
+
+
+
+        return animation;
     }
 
     public ColladaEffect CreateColladaEffect(Material material)
@@ -1270,7 +1302,6 @@ public class ColladaModelRenderer : IRenderer
         }
     }
 
-    /// <summary> Provides a library in which to place visual_scene elements. </summary>
     public void WriteLibrary_VisualScenes()
     {
         ColladaLibraryVisualScenes libraryVisualScenes = new();
@@ -1296,7 +1327,6 @@ public class ColladaModelRenderer : IRenderer
         DaeObject.Library_Visual_Scene = libraryVisualScenes;
     }
 
-    /// <summary> Provides a library in which to place visual_scene elements for chr files (rigs + geometry). </summary>
     public void WriteLibrary_VisualScenesWithSkeleton()
     {
         ColladaLibraryVisualScenes libraryVisualScenes = new();

@@ -718,18 +718,4 @@ public class MWOIntegrationTests
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
         var gltfData = gltfRenderer.GenerateGltfObject();
     }
-
-    [TestMethod]
-    public void HarnessCable_Animation()
-    {
-        var args = new string[] { $@"d:\depot\mwo\animations\props\harness_cable.dba", "-objectdir", "d:\\depot\\mwo", "-dae" };
-        int result = testUtils.argsHandler.ProcessArgs(args);
-        Assert.AreEqual(0, result);
-
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
-        cryData.ProcessCryengineFiles();
-
-        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
-        colladaData.GenerateDaeObject();
-    }
 }

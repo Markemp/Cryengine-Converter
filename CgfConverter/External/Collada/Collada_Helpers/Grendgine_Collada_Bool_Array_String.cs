@@ -1,7 +1,7 @@
 namespace CgfConverter.Collada
 {
 
-    public partial class Grendgine_Collada_Bool_Array_String
+    public partial class ColladaBoolArrayString
     {
         public bool[] Value()
         {

@@ -1,23 +1,23 @@
 using System;
 using System.Xml;
 using System.Xml.Serialization;
-namespace CgfConverter.Collada
+
+namespace CgfConverter.Collada;
+
+[Serializable]
+[XmlType(AnonymousType = true)]
+public partial class ColladaInstanceCamera
 {
-    [Serializable]
-    [XmlType(AnonymousType = true)]
-    public partial class ColladaInstanceCamera
-    {
-        [XmlAttribute("sid")]
-        public string sID;
+    [XmlAttribute("sid")]
+    public string sID;
 
-        [XmlAttribute("name")]
-        public string Name;
+    [XmlAttribute("name")]
+    public string Name;
 
-        [XmlAttribute("url")]
-        public string URL;
+    [XmlAttribute("url")]
+    public string URL;
 
-        [XmlElement(ElementName = "extra")]
-        public ColladaExtra[] Extra;
-    }
+    [XmlElement(ElementName = "extra")]
+    public ColladaExtra[] Extra;
 }
 

@@ -2,36 +2,33 @@
 using System;
 using System.Xml;
 using System.Xml.Serialization;
-namespace CgfConverter.Collada
+
+namespace CgfConverter.Collada;
+
+[Serializable]
+[XmlType(AnonymousType = true)]
+public partial class ColladaAssetContributor
 {
-    [Serializable]
-    [XmlType(AnonymousType = true)]
-    public partial class ColladaAssetContributor
-    {
+    [XmlElement(ElementName = "author")]
+    public string Author;
 
+    [XmlElement(ElementName = "author_email")]
+    public string Author_Email;
 
+    [XmlElement(ElementName = "author_website")]
+    public string Author_Website;
 
-        [XmlElement(ElementName = "author")]
-        public string Author;
+    [XmlElement(ElementName = "authoring_tool")]
+    public string Authoring_Tool;
 
-        [XmlElement(ElementName = "author_email")]
-        public string Author_Email;
+    [XmlElement(ElementName = "comments")]
+    public string Comments;
 
-        [XmlElement(ElementName = "author_website")]
-        public string Author_Website;
+    [XmlElement(ElementName = "copyright")]
+    public string Copyright;
 
-        [XmlElement(ElementName = "authoring_tool")]
-        public string Authoring_Tool;
+    [XmlElement(ElementName = "source_data")]
+    public string Source_Data;
 
-        [XmlElement(ElementName = "comments")]
-        public string Comments;
-
-        [XmlElement(ElementName = "copyright")]
-        public string Copyright;
-
-        [XmlElement(ElementName = "source_data")]
-        public string Source_Data;
-
-    }
 }
 
