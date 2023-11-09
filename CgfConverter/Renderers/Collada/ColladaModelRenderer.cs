@@ -1341,7 +1341,7 @@ public class ColladaModelRenderer : IRenderer
                 };
 
                 var skeleton = colladaNode.Instance_Controller[0].Skeleton[0] = new Grendgine_Collada_Skeleton();
-                skeleton.Value = $"#{_cryData.Bones.RootBone.boneName}";
+                skeleton.Value = $"#{_cryData.Bones.RootBone.boneName}".Replace(' ', '_');
                 colladaNode.Instance_Controller[0].Bind_Material = new Grendgine_Collada_Bind_Material[1];
                 Grendgine_Collada_Bind_Material bindMaterial = colladaNode.Instance_Controller[0].Bind_Material[0] = new Grendgine_Collada_Bind_Material();
 
@@ -1507,37 +1507,37 @@ public class ColladaModelRenderer : IRenderer
         };
         controllerIdToBoneName.Add(bone.ControllerID, boneName);
 
-        //bool canDecompose = true;
-        ////Matrix4x4.Decompose(
-        ////    bone.LocalTransform,
-        ////    out Vector3 translation,
-        ////    out Quaternion rotation,
-        ////    out Vector3 scale);
-        //if (canDecompose)
-        //{
-        //    Grendgine_Collada_Translate translate = new()
-        //    {
-        //        sID = "translate",
-        //        Value_As_String = CreateStringFromVector3(new Vector3 { X = bone.WorldTransformMatrix.M14, Y = bone.WorldTransformMatrix.M24, Z = bone.WorldTransformMatrix.M34 })
-        //    };
-        //    Grendgine_Collada_Rotate rotate = new()
-        //    {
-        //        sID = "rotate",
-        //        Value_As_String = CreateStringFromVector4(Quaternion.CreateFromRotationMatrix(bone.LocalTransform).ToAxisAngle())
-        //    };
-        //    tmpNode.Translate = new Grendgine_Collada_Translate[1] { translate };
-        //    tmpNode.Rotate = new Grendgine_Collada_Rotate[1] { rotate };
-        //}
-        //else
-        //{
-        Grendgine_Collada_Matrix matrix = new();
-        List<Grendgine_Collada_Matrix> matrices = new();
-        matrix.Value_As_String = CreateStringFromMatrix4x4(bone.LocalTransform);
-        matrix.sID = "transform";
+        bool canDecompose = true;
+        //Matrix4x4.Decompose(
+        //    bone.LocalTransform,
+        //    out Vector3 translation,
+        //    out Quaternion rotation,
+        //    out Vector3 scale);
+        if (canDecompose)
+        {
+            Grendgine_Collada_Translate translate = new()
+            {
+                sID = "translate",
+                Value_As_String = CreateStringFromVector3(new Vector3 { X = bone.LocalTransform.M14, Y = bone.LocalTransform.M24, Z = bone.LocalTransform.M34 })
+            };
+            Grendgine_Collada_Rotate rotate = new()
+            {
+                sID = "rotate",
+                Value_As_String = CreateStringFromVector4(Quaternion.CreateFromRotationMatrix(bone.LocalTransform).ToAxisAngle())
+            };
+            tmpNode.Translate = new Grendgine_Collada_Translate[1] { translate };
+            tmpNode.Rotate = new Grendgine_Collada_Rotate[1] { rotate };
+        }
+        else
+        {
+            Grendgine_Collada_Matrix matrix = new();
+            List<Grendgine_Collada_Matrix> matrices = new();
+            matrix.Value_As_String = CreateStringFromMatrix4x4(bone.LocalTransform);
+            matrix.sID = "transform";
 
-        matrices.Add(matrix);            
-        tmpNode.Matrix = matrices.ToArray();
-        //}
+            matrices.Add(matrix);            
+            tmpNode.Matrix = matrices.ToArray();
+        }
 
         // Recursively call this for each of the child bones to this bone.
         if (bone.childIDs.Count > 0)
