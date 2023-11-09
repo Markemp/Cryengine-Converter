@@ -1,7 +1,7 @@
 using System;
 using System.Xml;
 using System.Xml.Serialization;
-namespace grendgine_collada
+namespace CgfConverter.Collada
 {
     [Serializable]
     [XmlType(AnonymousType = true)]
@@ -10,11 +10,11 @@ namespace grendgine_collada
     {
 
         [XmlElement(ElementName = "rotate")]
-        public Grendgine_Collada_Rotate[] Rotate;
+        public ColladaRotate[] Rotate;
 
 
         [XmlElement(ElementName = "translate")]
-        public Grendgine_Collada_Translate[] Translate;
+        public ColladaTranslate[] Translate;
     }
 }
 

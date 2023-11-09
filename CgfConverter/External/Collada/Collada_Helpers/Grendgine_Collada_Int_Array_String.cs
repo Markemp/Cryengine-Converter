@@ -1,6 +1,6 @@
-namespace grendgine_collada
+namespace CgfConverter.Collada
 {
-    public partial class Grendgine_Collada_Int_Array_String
+    public partial class ColladaIntArrayString
     {
         public int[] Value()
         {

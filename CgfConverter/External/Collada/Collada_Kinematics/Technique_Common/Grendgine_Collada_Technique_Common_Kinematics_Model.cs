@@ -1,7 +1,7 @@
 using System;
 using System.Xml;
 using System.Xml.Serialization;
-namespace grendgine_collada
+namespace CgfConverter.Collada
 {
 
     [Serializable]
@@ -25,7 +25,7 @@ namespace grendgine_collada
         public Grendgine_Collada_Formula[] Formula;
 
         [XmlElement(ElementName = "instance_formula")]
-        public Grendgine_Collada_Instance_Formula[] Instance_Formula;
+        public ColladaInstanceFormula[] Instance_Formula;
 
     }
 }

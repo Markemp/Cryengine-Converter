@@ -1,7 +1,7 @@
 using System;
 using System.Xml;
 using System.Xml.Serialization;
-namespace grendgine_collada
+namespace CgfConverter.Collada
 {
     [Serializable]
     [XmlType(AnonymousType = true)]
@@ -15,13 +15,13 @@ namespace grendgine_collada
         public string Method;
 
         [XmlArray("targets")]
-        public Grendgine_Collada_Input_Shared[] Targets;
+        public ColladaInputShared[] Targets;
 
         [XmlElement(ElementName = "source")]
-        public Grendgine_Collada_Source[] Source;
+        public ColladaSource[] Source;
 
         [XmlElement(ElementName = "extra")]
-        public Grendgine_Collada_Extra[] Extra;
+        public ColladaExtra[] Extra;
     }
 }
 

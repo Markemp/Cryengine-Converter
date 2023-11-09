@@ -1,11 +1,11 @@
 using System;
 using System.Xml;
 using System.Xml.Serialization;
-namespace grendgine_collada
+namespace CgfConverter.Collada
 {
     [Serializable]
     [XmlType(AnonymousType = true)]
-    public partial class Grendgine_Collada_Int_Array : Grendgine_Collada_Int_Array_String
+    public partial class Grendgine_Collada_Int_Array : ColladaIntArrayString
     {
         [XmlAttribute("id")]
         public string ID;

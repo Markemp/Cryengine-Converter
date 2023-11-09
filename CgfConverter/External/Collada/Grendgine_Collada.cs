@@ -4,7 +4,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using CgfConverter;
 
-namespace grendgine_collada
+namespace CgfConverter.Collada
 {
 
     [Serializable]
@@ -20,7 +20,7 @@ namespace grendgine_collada
         public string Collada_Version;
 
         [XmlElement(ElementName = "asset")]
-        public Grendgine_Collada_Asset Asset;
+        public ColladaAsset Asset;
 
         #region FX Elements
         [XmlElement(ElementName = "library_images")]
@@ -38,10 +38,10 @@ namespace grendgine_collada
 
 
         [XmlElement(ElementName = "library_animations")]
-        public Grendgine_Collada_Library_Animations Library_Animations;
+        public ColladaLibraryAnimations Library_Animations;
 
         [XmlElement(ElementName = "library_animation_clips")]
-        public Grendgine_Collada_Library_Animation_Clips Library_Animation_Clips;
+        public ColladaLibraryAnimationClips Library_Animation_Clips;
 
         [XmlElement(ElementName = "library_cameras")]
         public Grendgine_Collada_Library_Cameras Library_Cameras;
@@ -53,16 +53,16 @@ namespace grendgine_collada
         public Grendgine_Collada_Library_Formulas Library_Formulas;
 
         [XmlElement(ElementName = "library_geometries")]
-        public Grendgine_Collada_Library_Geometries Library_Geometries;
+        public ColladaLibraryGeometries Library_Geometries;
 
         [XmlElement(ElementName = "library_lights")]
         public Grendgine_Collada_Library_Lights Library_Lights;
 
         [XmlElement(ElementName = "library_nodes")]
-        public Grendgine_Collada_Library_Nodes Library_Nodes;
+        public ColladaLibraryNodes Library_Nodes;
 
         [XmlElement(ElementName = "library_visual_scenes")]
-        public Grendgine_Collada_Library_Visual_Scenes Library_Visual_Scene;
+        public ColladaLibraryVisualScenes Library_Visual_Scene;
 
         #endregion
 
@@ -97,19 +97,19 @@ namespace grendgine_collada
         public Grendgine_Collada_Library_Kinematics_Scene Library_Kinematics_Scene;
 
         [XmlElement(ElementName = "scene")]
-        public Grendgine_Collada_Scene Scene;
+        public ColladaScene Scene;
 
         [XmlElement(ElementName = "extra")]
-        public Grendgine_Collada_Extra[] Extra;
+        public ColladaExtra[] Extra;
 
         #endregion
 
         public Grendgine_Collada()
         {
             Collada_Version = "1.5";
-            Asset = new Grendgine_Collada_Asset();
+            Asset = new ColladaAsset();
             Asset.Title = "Test Engine 1";
-            Library_Visual_Scene = new Grendgine_Collada_Library_Visual_Scenes();
+            Library_Visual_Scene = new ColladaLibraryVisualScenes();
         }
 
         public static Grendgine_Collada Grendgine_Load_File(string file_name)

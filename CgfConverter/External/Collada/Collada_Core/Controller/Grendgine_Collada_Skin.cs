@@ -1,7 +1,7 @@
 using System;
 using System.Xml;
 using System.Xml.Serialization;
-namespace grendgine_collada
+namespace CgfConverter.Collada
 {
     [Serializable]
     [XmlType(AnonymousType = true)]
@@ -17,7 +17,7 @@ namespace grendgine_collada
         public Grendgine_Collada_Float_Array_String Bind_Shape_Matrix;
 
         [XmlElement(ElementName = "source")]
-        public Grendgine_Collada_Source[] Source;
+        public ColladaSource[] Source;
 
         [XmlElement(ElementName = "joints")]
         public Grendgine_Collada_Joints Joints;
@@ -26,7 +26,7 @@ namespace grendgine_collada
         public Grendgine_Collada_Vertex_Weights Vertex_Weights;
 
         [XmlElement(ElementName = "extra")]
-        public Grendgine_Collada_Extra[] Extra;
+        public ColladaExtra[] Extra;
     }
 }
 

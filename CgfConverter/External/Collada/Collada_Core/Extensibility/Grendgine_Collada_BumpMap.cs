@@ -3,7 +3,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
 
-namespace grendgine_collada
+namespace CgfConverter.Collada
 {
     [Serializable]
     [XmlRoot(ElementName = "bump")]

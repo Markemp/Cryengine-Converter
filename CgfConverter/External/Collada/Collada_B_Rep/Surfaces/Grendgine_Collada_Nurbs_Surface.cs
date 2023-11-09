@@ -1,7 +1,7 @@
 using System;
 using System.Xml;
 using System.Xml.Serialization;
-namespace grendgine_collada
+namespace CgfConverter.Collada
 {
     [Serializable]
     [XmlType(AnonymousType = true)]
@@ -17,13 +17,13 @@ namespace grendgine_collada
         public bool Closed_V;
 
         [XmlElement(ElementName = "source")]
-        public Grendgine_Collada_Source[] Source;
+        public ColladaSource[] Source;
 
         [XmlElement(ElementName = "control_vertices")]
-        public Grendgine_Collada_Control_Vertices Control_Vertices;
+        public ColladaControlVertices Control_Vertices;
 
         [XmlElement(ElementName = "extra")]
-        public Grendgine_Collada_Extra[] Extra;
+        public ColladaExtra[] Extra;
     }
 }
 

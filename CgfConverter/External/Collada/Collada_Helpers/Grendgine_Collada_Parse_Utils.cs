@@ -1,7 +1,7 @@
 using System;
 using CgfConverter;
 
-namespace grendgine_collada
+namespace CgfConverter.Collada
 {
     public class Grendgine_Collada_Parse_Utils
     {

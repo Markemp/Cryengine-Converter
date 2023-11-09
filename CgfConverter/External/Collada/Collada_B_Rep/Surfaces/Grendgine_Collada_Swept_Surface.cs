@@ -1,7 +1,7 @@
 using System;
 using System.Xml;
 using System.Xml.Serialization;
-namespace grendgine_collada
+namespace CgfConverter.Collada
 {
     [Serializable]
     [XmlType(AnonymousType = true)]
@@ -9,10 +9,10 @@ namespace grendgine_collada
     {
 
         [XmlElement(ElementName = "curve")]
-        public Grendgine_Collada_Curve Curve;
+        public ColladaCurve Curve;
 
         [XmlElement(ElementName = "origin")]
-        public Grendgine_Collada_Origin Origin;
+        public ColladaOrigin Origin;
 
         [XmlElement(ElementName = "direction")]
         public Grendgine_Collada_Float_Array_String Direction;
@@ -21,7 +21,7 @@ namespace grendgine_collada
         public Grendgine_Collada_Float_Array_String Axis;
 
         [XmlElement(ElementName = "extra")]
-        public Grendgine_Collada_Extra[] Extra;
+        public ColladaExtra[] Extra;
     }
 }
 

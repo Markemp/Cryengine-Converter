@@ -1,7 +1,7 @@
 using System;
 using System.Xml;
 using System.Xml.Serialization;
-namespace grendgine_collada
+namespace CgfConverter.Collada
 {
     [Serializable]
     [XmlType(AnonymousType = true)]
@@ -39,10 +39,10 @@ namespace grendgine_collada
         public Grendgine_Collada_Swept_Surface Swept_Surface;
 
         [XmlElement(ElementName = "orient")]
-        public Grendgine_Collada_Orient[] Orient;
+        public ColladaOrient[] Orient;
 
         [XmlElement(ElementName = "origin")]
-        public Grendgine_Collada_Origin Origin;
+        public ColladaOrigin Origin;
 
         //ggerber 1.4.1
         [XmlElement(ElementName = "init_from")]

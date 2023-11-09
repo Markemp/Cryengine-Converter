@@ -1,7 +1,7 @@
 using System;
 using System.Xml;
 using System.Xml.Serialization;
-namespace grendgine_collada
+namespace CgfConverter.Collada
 {
     [Serializable]
     [XmlType(AnonymousType = true)]
@@ -11,16 +11,16 @@ namespace grendgine_collada
         public int Count;
 
         [XmlElement(ElementName = "input")]
-        public Grendgine_Collada_Input_Shared[] Input;
+        public ColladaInputShared[] Input;
 
         [XmlElement(ElementName = "vcount")]
-        public Grendgine_Collada_Int_Array_String VCount;
+        public ColladaIntArrayString VCount;
 
         [XmlElement(ElementName = "v")]
-        public Grendgine_Collada_Int_Array_String V;
+        public ColladaIntArrayString V;
 
         [XmlElement(ElementName = "extra")]
-        public Grendgine_Collada_Extra[] Extra;
+        public ColladaExtra[] Extra;
     }
 }
 

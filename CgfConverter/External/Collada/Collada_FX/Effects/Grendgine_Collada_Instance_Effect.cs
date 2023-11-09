@@ -1,7 +1,7 @@
 using System;
 using System.Xml;
 using System.Xml.Serialization;
-namespace grendgine_collada
+namespace CgfConverter.Collada
 {
     [Serializable]
     [XmlType(AnonymousType = true)]
@@ -21,7 +21,7 @@ namespace grendgine_collada
         public Grendgine_Collada_Set_Param[] Set_Param;
 
         [XmlElement(ElementName = "extra")]
-        public Grendgine_Collada_Extra[] Extra;
+        public ColladaExtra[] Extra;
 
         [XmlElement(ElementName = "technique_hint")]
         public Grendgine_Collada_Technique_Hint[] Technique_Hint;

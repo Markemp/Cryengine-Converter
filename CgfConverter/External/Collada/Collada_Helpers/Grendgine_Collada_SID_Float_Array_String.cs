@@ -1,4 +1,4 @@
-namespace grendgine_collada
+namespace CgfConverter.Collada
 {
 
     public partial class Grendgine_Collada_SID_Float_Array_String

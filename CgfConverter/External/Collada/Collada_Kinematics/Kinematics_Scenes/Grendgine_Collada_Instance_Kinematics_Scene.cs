@@ -1,7 +1,7 @@
 using System;
 using System.Xml;
 using System.Xml.Serialization;
-namespace grendgine_collada
+namespace CgfConverter.Collada
 {
     [Serializable]
     [XmlType(AnonymousType = true)]
@@ -18,10 +18,10 @@ namespace grendgine_collada
         public string URL;
 
         [XmlElement(ElementName = "asset")]
-        public Grendgine_Collada_Asset Asset;
+        public ColladaAsset Asset;
 
         [XmlElement(ElementName = "extra")]
-        public Grendgine_Collada_Extra[] Extra;
+        public ColladaExtra[] Extra;
 
         [XmlElement(ElementName = "newparam")]
         public Grendgine_Collada_New_Param[] New_Param;

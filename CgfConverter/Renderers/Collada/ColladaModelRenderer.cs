@@ -10,11 +10,9 @@ using System.Xml;
 using System.Xml.Serialization;
 using CgfConverter.CryEngineCore;
 using CgfConverter.Materials;
-using grendgine_collada;
+using CgfConverter.Collada;
 using static Extensions.FileHandlingExtensions;
 using static CgfConverter.Utilities;
-using static System.Formats.Asn1.AsnWriter;
-using System.Transactions;
 using Extensions;
 
 namespace CgfConverter.Renderers.Collada;
@@ -109,12 +107,12 @@ public class ColladaModelRenderer : IRenderer
     {
         var fileCreated = DateTime.Now;
         var fileModified = DateTime.Now;
-        Grendgine_Collada_Asset asset = new()
+        ColladaAsset asset = new()
         {
             Revision = Assembly.GetExecutingAssembly().GetName().Version.ToString()
         };
-        Grendgine_Collada_Asset_Contributor[] contributors = new Grendgine_Collada_Asset_Contributor[2];
-        contributors[0] = new Grendgine_Collada_Asset_Contributor
+        ColladaAssetContributor[] contributors = new ColladaAssetContributor[2];
+        contributors[0] = new ColladaAssetContributor
         {
             Author = "Heffay",
             Author_Website = "https://github.com/Markemp/Cryengine-Converter",
@@ -122,7 +120,7 @@ public class ColladaModelRenderer : IRenderer
             Source_Data = _cryData.RootNode?.Name ?? Path.GetFileNameWithoutExtension(_cryData.InputFile)
         };
         // Get the actual file creators from the Source Chunk
-        contributors[1] = new Grendgine_Collada_Asset_Contributor();
+        contributors[1] = new ColladaAssetContributor();
         foreach (ChunkSourceInfo sourceInfo in _cryData.Chunks.Where(a => a.ChunkType == ChunkType.SourceInfo))
         {
             contributors[1].Author = sourceInfo.Author;
@@ -131,7 +129,7 @@ public class ColladaModelRenderer : IRenderer
         asset.Created = fileCreated;
         asset.Modified = fileModified;
         asset.Up_Axis = "Z_UP";
-        asset.Unit = new Grendgine_Collada_Asset_Unit()
+        asset.Unit = new ColladaAssetUnit()
         {
             Meter = 1.0,
             Name = "meter"
@@ -143,14 +141,14 @@ public class ColladaModelRenderer : IRenderer
 
     public void WriteLibrary_Animations()
     {
-        var animationLibrary = new Grendgine_Collada_Library_Animations();
+        var animationLibrary = new ColladaLibraryAnimations();
         // Find all the 905 controller chunks
         foreach (var animChunk in _cryData.Animations
             .SelectMany(x => x.ChunkMap.Values.OfType<ChunkController_905>())
             .ToList())
         {
             var names = animChunk?.Animations?.Select(x => Path.GetFileNameWithoutExtension(x.Name)).ToArray();
-            animationLibrary.Animation = new Grendgine_Collada_Animation[names.Count()];
+            animationLibrary.Animation = new ColladaAnimation[names.Count()];
 
             for (int i = 0; i < animChunk.Animations.Count; i++)
             {
@@ -161,11 +159,11 @@ public class ColladaModelRenderer : IRenderer
                 var positions = animChunk.KeyPositions[i];
                 var rotations = animChunk.KeyRotations[i];
 
-                var baseAnimation = new Grendgine_Collada_Animation
+                var baseAnimation = new ColladaAnimation
                 {
                     Name = Path.GetFileNameWithoutExtension(animation.Name),
                     ID = $"{Path.GetFileNameWithoutExtension(animation.Name)}_animation",
-                    Animation = new Grendgine_Collada_Animation[animation.Controllers.Count]
+                    Animation = new ColladaAnimation[animation.Controllers.Count]
                 };
 
                 // Add an animation for each controller
@@ -175,55 +173,55 @@ public class ColladaModelRenderer : IRenderer
                     var controllerBoneName = controllerIdToBoneName[controller.ControllerID];
                     var controllerIdBase = $"{controllerBoneName}_{controller.ControllerID}";
 
-                    var inputSource = new Grendgine_Collada_Source   // Time
+                    var inputSource = new ColladaSource   // Time
                     {
                         ID = $"{controllerIdBase}_input",
                         Name = $"{controllerIdBase}_input"
                     };
-                    var outputSource = new Grendgine_Collada_Source     // transform matrix
+                    var outputSource = new ColladaSource     // transform matrix
                     {
                         ID = $"{controllerIdBase}_output",
                         Name = $"{controllerIdBase}_output"
                     };
-                    var interpolationSource = new Grendgine_Collada_Source  // interpolation
+                    var interpolationSource = new ColladaSource  // interpolation
                     {
                         ID = $"{controllerIdBase}_interpolation",
                         Name = $"{controllerIdBase}_interpolation"
                     };
-                    var sampler = new Grendgine_Collada_Sampler
+                    var sampler = new ColladaSampler
                     {
                         ID = $"{controllerIdBase}_sampler",
-                        Input = new Grendgine_Collada_Input_Unshared[3]
+                        Input = new ColladaInputUnshared[3]
                         {
-                            new Grendgine_Collada_Input_Unshared
+                            new ColladaInputUnshared
                             {
                                 Semantic = Grendgine_Collada_Input_Semantic.INPUT,
                                 source = $"#{controllerIdBase}_input"
                             },
-                            new Grendgine_Collada_Input_Unshared
+                            new ColladaInputUnshared
                             {
                                 Semantic = Grendgine_Collada_Input_Semantic.OUTPUT,
                                 source = $"#{controllerIdBase}_output"
                             },
-                            new Grendgine_Collada_Input_Unshared
+                            new ColladaInputUnshared
                             {
                                 Semantic = Grendgine_Collada_Input_Semantic.INTERPOLATION,
                                 source = $"#{controllerIdBase}_interpolation"
                             }
                         }
                     };
-                    var channel = new Grendgine_Collada_Channel
+                    var channel = new ColladaChannel
                     {
                         Source = $"#{controllerIdBase}_sampler",
                         Target = $"{controllerBoneName}/transform"
                     };
-                    var controllerAnimation = new Grendgine_Collada_Animation
+                    var controllerAnimation = new ColladaAnimation
                     {
                         Name = controllerIdBase,
                         ID = $"{controllerIdBase}_animation",
-                        Source = new Grendgine_Collada_Source[3] { inputSource, outputSource, interpolationSource },
-                        Channel = new Grendgine_Collada_Channel[1] { channel },
-                        Sampler = new Grendgine_Collada_Sampler[1] { sampler },
+                        Source = new ColladaSource[3] { inputSource, outputSource, interpolationSource },
+                        Channel = new ColladaChannel[1] { channel },
+                        Sampler = new ColladaSampler[1] { sampler },
                     };
 
                     // Create the time source
@@ -412,8 +410,8 @@ public class ColladaModelRenderer : IRenderer
             {
                 // Bump maps go in an extra node.
                 // bump maps are added to an extra node.
-                Grendgine_Collada_Extra[] extras = new Grendgine_Collada_Extra[1];
-                Grendgine_Collada_Extra extra = new();
+                ColladaExtra[] extras = new ColladaExtra[1];
+                ColladaExtra extra = new();
                 extras[0] = extra;
 
                 technique.Extra = extras;
@@ -497,11 +495,11 @@ public class ColladaModelRenderer : IRenderer
 
     public void WriteGeometries(Model model)
     {
-        Grendgine_Collada_Library_Geometries libraryGeometries = new();
+        ColladaLibraryGeometries libraryGeometries = new();
 
         // Make a list for all the geometries objects we will need. Will convert to array at end.  Define the array here as well
         // We have to define a Geometry for EACH meshsubset in the meshsubsets, since the mesh can contain multiple materials
-        List<Grendgine_Collada_Geometry> geometryList = new();
+        List<ColladaGeometry> geometryList = new();
 
         // For each of the nodes, we need to write the geometry.
         foreach (ChunkNode nodeChunk in model.ChunkMap.Values.Where(a => a.ChunkType == ChunkType.Node))
@@ -572,20 +570,20 @@ public class ColladaModelRenderer : IRenderer
                         tangents = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.TangentsData];
 
                     // geometry is a Geometry object for each meshsubset.  Name will be "Nodechunk name_matID".
-                    Grendgine_Collada_Geometry geometry = new()
+                    ColladaGeometry geometry = new()
                     {
                         Name = nodeChunk.Name,
                         ID = nodeChunk.Name + "-mesh"
                     };
-                    Grendgine_Collada_Mesh colladaMesh = new();
+                    ColladaMesh colladaMesh = new();
                     geometry.Mesh = colladaMesh;
 
                     // TODO:  Move the source creation to a separate function.  Too much retyping.
-                    Grendgine_Collada_Source[] source = new Grendgine_Collada_Source[4];   // 4 possible source types.
-                    Grendgine_Collada_Source posSource = new();
-                    Grendgine_Collada_Source normSource = new();
-                    Grendgine_Collada_Source uvSource = new();
-                    Grendgine_Collada_Source colorSource = new();
+                    ColladaSource[] source = new ColladaSource[4];   // 4 possible source types.
+                    ColladaSource posSource = new();
+                    ColladaSource normSource = new();
+                    ColladaSource uvSource = new();
+                    ColladaSource colorSource = new();
                     source[0] = posSource;
                     source[1] = normSource;
                     source[2] = uvSource;
@@ -599,15 +597,15 @@ public class ColladaModelRenderer : IRenderer
                     colorSource.ID = nodeChunk.Name + "-mesh-color";
                     colorSource.Name = nodeChunk.Name + "-color";
 
-                    Grendgine_Collada_Vertices vertices = new() { ID = nodeChunk.Name + "-vertices" };
+                    ColladaVertices vertices = new() { ID = nodeChunk.Name + "-vertices" };
                     geometry.Mesh.Vertices = vertices;
-                    Grendgine_Collada_Input_Unshared[] inputshared = new Grendgine_Collada_Input_Unshared[4];
-                    Grendgine_Collada_Input_Unshared posInput = new() { Semantic = Grendgine_Collada_Input_Semantic.POSITION };
+                    ColladaInputUnshared[] inputshared = new ColladaInputUnshared[4];
+                    ColladaInputUnshared posInput = new() { Semantic = Grendgine_Collada_Input_Semantic.POSITION };
                     vertices.Input = inputshared;
 
-                    Grendgine_Collada_Input_Unshared normInput = new() { Semantic = Grendgine_Collada_Input_Semantic.NORMAL };
-                    Grendgine_Collada_Input_Unshared uvInput = new() { Semantic = Grendgine_Collada_Input_Semantic.TEXCOORD };
-                    Grendgine_Collada_Input_Unshared colorInput = new() { Semantic = Grendgine_Collada_Input_Semantic.COLOR };
+                    ColladaInputUnshared normInput = new() { Semantic = Grendgine_Collada_Input_Semantic.NORMAL };
+                    ColladaInputUnshared uvInput = new() { Semantic = Grendgine_Collada_Input_Semantic.TEXCOORD };
+                    ColladaInputUnshared colorInput = new() { Semantic = Grendgine_Collada_Input_Semantic.COLOR };
 
                     posInput.source = "#" + posSource.ID;
                     normInput.source = "#" + normSource.ID;
@@ -740,12 +738,12 @@ public class ColladaModelRenderer : IRenderer
                     CleanNumbers(colorString);
 
                     #region Create the triangles node.
-                    var triangles = new Grendgine_Collada_Triangles[meshSubsets.NumMeshSubset];
+                    var triangles = new ColladaTriangles[meshSubsets.NumMeshSubset];
                     geometry.Mesh.Triangles = triangles;
 
                     for (uint j = 0; j < meshSubsets.NumMeshSubset; j++) // Need to make a new Triangles entry for each submesh.
                     {
-                        triangles[j] = new Grendgine_Collada_Triangles
+                        triangles[j] = new ColladaTriangles
                         {
                             Count = meshSubsets.MeshSubsets[j].NumIndices / 3,
                             Material = GetMaterialName(nodeChunk, meshSubsets, (int)j)
@@ -756,22 +754,22 @@ public class ColladaModelRenderer : IRenderer
                         if (colors != null || vertsUvs?.Colors != null)
                             inputCount++;
 
-                        triangles[j].Input = new Grendgine_Collada_Input_Shared[inputCount];
+                        triangles[j].Input = new ColladaInputShared[inputCount];
 
-                        triangles[j].Input[0] = new Grendgine_Collada_Input_Shared
+                        triangles[j].Input[0] = new ColladaInputShared
                         {
                             Semantic = new Grendgine_Collada_Input_Semantic()
                         };
                         triangles[j].Input[0].Semantic = Grendgine_Collada_Input_Semantic.VERTEX;
                         triangles[j].Input[0].Offset = 0;
                         triangles[j].Input[0].source = "#" + vertices.ID;
-                        triangles[j].Input[1] = new Grendgine_Collada_Input_Shared
+                        triangles[j].Input[1] = new ColladaInputShared
                         {
                             Semantic = Grendgine_Collada_Input_Semantic.NORMAL,
                             Offset = 1,
                             source = "#" + normSource.ID
                         };
-                        triangles[j].Input[2] = new Grendgine_Collada_Input_Shared
+                        triangles[j].Input[2] = new ColladaInputShared
                         {
                             Semantic = Grendgine_Collada_Input_Semantic.TEXCOORD,
                             Offset = 2,
@@ -781,7 +779,7 @@ public class ColladaModelRenderer : IRenderer
                         int nextInputID = 3;
                         if (colors != null || vertsUvs?.Colors != null)
                         {
-                            triangles[j].Input[nextInputID] = new Grendgine_Collada_Input_Shared
+                            triangles[j].Input[nextInputID] = new ColladaInputShared
                             {
                                 Semantic = Grendgine_Collada_Input_Semantic.COLOR,
                                 Offset = nextInputID,
@@ -827,7 +825,7 @@ public class ColladaModelRenderer : IRenderer
                             p.AppendFormat(finalformat, indices.Indices[k], indices.Indices[k + 1], indices.Indices[k + 2]);
                             k += 2;
                         }
-                        triangles[j].P = new Grendgine_Collada_Int_Array_String
+                        triangles[j].P = new ColladaIntArrayString
                         {
                             Value_As_String = p.ToString().TrimEnd()
                         };
@@ -1063,12 +1061,12 @@ public class ColladaModelRenderer : IRenderer
             skin.Bind_Shape_Matrix.Value_As_String = CreateStringFromMatrix4x4(Matrix4x4.Identity);  // We will assume the BSM is the identity matrix for now
             
             // Create the 3 sources for this controller:  joints, bind poses, and weights
-            skin.Source = new Grendgine_Collada_Source[3];
+            skin.Source = new ColladaSource[3];
 
             // Populate the data.
             // Need to map the exterior vertices (geometry) to the int vertices.  Or use the Bone Map datastream if it exists (check HasBoneMapDatastream).
             #region Joints Source
-            Grendgine_Collada_Source jointsSource = new()
+            ColladaSource jointsSource = new()
             {
                 ID = "Controller-joints",
                 Name_Array = new Grendgine_Collada_Name_Array()
@@ -1096,7 +1094,7 @@ public class ColladaModelRenderer : IRenderer
             #endregion
 
             #region Bind Pose Array Source
-            Grendgine_Collada_Source bindPoseArraySource = new()
+            ColladaSource bindPoseArraySource = new()
             {
                 ID = "Controller-bind_poses",
                 Float_Array = new()
@@ -1125,7 +1123,7 @@ public class ColladaModelRenderer : IRenderer
             #endregion
 
             #region Weights Source
-            Grendgine_Collada_Source weightArraySource = new()
+            ColladaSource weightArraySource = new()
             {
                 ID = "Controller-weights",
                 Technique_Common = new Grendgine_Collada_Technique_Common_Source()
@@ -1180,15 +1178,15 @@ public class ColladaModelRenderer : IRenderer
             #region Joints
             skin.Joints = new Grendgine_Collada_Joints
             {
-                Input = new Grendgine_Collada_Input_Unshared[2]
+                Input = new ColladaInputUnshared[2]
             };
-            skin.Joints.Input[0] = new Grendgine_Collada_Input_Unshared
+            skin.Joints.Input[0] = new ColladaInputUnshared
             {
                 Semantic = new Grendgine_Collada_Input_Semantic()
             };
             skin.Joints.Input[0].Semantic = Grendgine_Collada_Input_Semantic.JOINT;
             skin.Joints.Input[0].source = "#Controller-joints";
-            skin.Joints.Input[1] = new Grendgine_Collada_Input_Unshared
+            skin.Joints.Input[1] = new ColladaInputUnshared
             {
                 Semantic = new Grendgine_Collada_Input_Semantic()
             };
@@ -1199,12 +1197,12 @@ public class ColladaModelRenderer : IRenderer
             #region Vertex Weights
             Grendgine_Collada_Vertex_Weights vertexWeights = skin.Vertex_Weights = new Grendgine_Collada_Vertex_Weights();
             vertexWeights.Count = _cryData.SkinningInfo.BoneMapping.Count;
-            skin.Vertex_Weights.Input = new Grendgine_Collada_Input_Shared[2];
-            Grendgine_Collada_Input_Shared jointSemantic = skin.Vertex_Weights.Input[0] = new Grendgine_Collada_Input_Shared();
+            skin.Vertex_Weights.Input = new ColladaInputShared[2];
+            ColladaInputShared jointSemantic = skin.Vertex_Weights.Input[0] = new ColladaInputShared();
             jointSemantic.Semantic = Grendgine_Collada_Input_Semantic.JOINT;
             jointSemantic.source = "#Controller-joints";
             jointSemantic.Offset = 0;
-            Grendgine_Collada_Input_Shared weightSemantic = skin.Vertex_Weights.Input[1] = new Grendgine_Collada_Input_Shared();
+            ColladaInputShared weightSemantic = skin.Vertex_Weights.Input[1] = new ColladaInputShared();
             weightSemantic.Semantic = Grendgine_Collada_Input_Semantic.WEIGHT;
             weightSemantic.source = "#Controller-weights";
             weightSemantic.Offset = 1;
@@ -1214,7 +1212,7 @@ public class ColladaModelRenderer : IRenderer
             {
                 vCount.Append("4 ");
             };
-            vertexWeights.VCount = new Grendgine_Collada_Int_Array_String
+            vertexWeights.VCount = new ColladaIntArrayString
             {
                 Value_As_String = vCount.ToString().TrimEnd()
             };
@@ -1246,15 +1244,15 @@ public class ColladaModelRenderer : IRenderer
                     index += 4;
                 }
             }
-            vertexWeights.V = new Grendgine_Collada_Int_Array_String
+            vertexWeights.V = new ColladaIntArrayString
             {
                 Value_As_String = vertices.ToString().TrimEnd()
             };
             #endregion
 
             // create the extra element for the FCOLLADA profile
-            controller.Extra = new Grendgine_Collada_Extra[1];
-            controller.Extra[0] = new Grendgine_Collada_Extra
+            controller.Extra = new ColladaExtra[1];
+            controller.Extra[0] = new ColladaExtra
             {
                 Technique = new Grendgine_Collada_Technique[1]
             };
@@ -1275,18 +1273,18 @@ public class ColladaModelRenderer : IRenderer
     /// <summary> Provides a library in which to place visual_scene elements. </summary>
     public void WriteLibrary_VisualScenes()
     {
-        Grendgine_Collada_Library_Visual_Scenes libraryVisualScenes = new();
+        ColladaLibraryVisualScenes libraryVisualScenes = new();
 
-        List<Grendgine_Collada_Visual_Scene> visualScenes = new();
-        Grendgine_Collada_Visual_Scene visualScene = new();
-        List<Grendgine_Collada_Node> nodes = new();
+        List<ColladaVisualScene> visualScenes = new();
+        ColladaVisualScene visualScene = new();
+        List<ColladaNode> nodes = new();
 
         // THERE CAN BE MULTIPLE ROOT NODES IN EACH FILE!  Check to see if the parentnodeid ~0 and be sure to add a node for it.
-        List<Grendgine_Collada_Node> positionNodes = new();
+        List<ColladaNode> positionNodes = new();
         List<ChunkNode> positionRoots = _cryData.Models[0].NodeMap.Values.Where(a => a.ParentNodeID == ~0).ToList();
         foreach (ChunkNode root in positionRoots)
         {
-            positionNodes.Add(CreateNode(root));
+            positionNodes.Add(CreateNode(root, false));
         }
         nodes.AddRange(positionNodes.ToArray());
 
@@ -1301,18 +1299,18 @@ public class ColladaModelRenderer : IRenderer
     /// <summary> Provides a library in which to place visual_scene elements for chr files (rigs + geometry). </summary>
     public void WriteLibrary_VisualScenesWithSkeleton()
     {
-        Grendgine_Collada_Library_Visual_Scenes libraryVisualScenes = new();
+        ColladaLibraryVisualScenes libraryVisualScenes = new();
 
-        List<Grendgine_Collada_Visual_Scene> visualScenes = new();
-        Grendgine_Collada_Visual_Scene visualScene = new();
-        List<Grendgine_Collada_Node> nodes = new();
+        List<ColladaVisualScene> visualScenes = new();
+        ColladaVisualScene visualScene = new();
+        List<ColladaNode> nodes = new();
 
         // Check to see if there is a CompiledBones chunk.  If so, add a Node.  
         if (_cryData.Chunks.Any(a => a.ChunkType == ChunkType.CompiledBones ||
             a.ChunkType == ChunkType.CompiledBonesSC ||
             a.ChunkType == ChunkType.CompiledBonesIvo))
         {
-            Grendgine_Collada_Node boneNode = new();
+            ColladaNode boneNode = new();
             boneNode = CreateJointNode(_cryData.Bones.RootBone);
             nodes.Add(boneNode);
         }
@@ -1325,16 +1323,9 @@ public class ColladaModelRenderer : IRenderer
 
             foreach (var node in allParentNodes)
             {
-                Grendgine_Collada_Node colladaNode = new()
-                {
-                    ID = node.Name,
-                    Name = node.Name,
-                    Type = Grendgine_Collada_Node_Type.NODE,
-                    Matrix = new Grendgine_Collada_Matrix[1]
-                };
-                colladaNode.Matrix[0] = new Grendgine_Collada_Matrix { Value_As_String = CreateStringFromMatrix4x4(Matrix4x4.Identity) };
-                colladaNode.Instance_Controller = new Grendgine_Collada_Instance_Controller[1];
-                colladaNode.Instance_Controller[0] = new Grendgine_Collada_Instance_Controller
+                var colladaNode = CreateNode(node, true);
+                colladaNode.Instance_Controller = new ColladaInstanceController[1];
+                colladaNode.Instance_Controller[0] = new ColladaInstanceController
                 {
                     URL = "#Controller",
                     Skeleton = new Grendgine_Collada_Skeleton[1]
@@ -1342,15 +1333,15 @@ public class ColladaModelRenderer : IRenderer
 
                 var skeleton = colladaNode.Instance_Controller[0].Skeleton[0] = new Grendgine_Collada_Skeleton();
                 skeleton.Value = $"#{_cryData.Bones.RootBone.boneName}".Replace(' ', '_');
-                colladaNode.Instance_Controller[0].Bind_Material = new Grendgine_Collada_Bind_Material[1];
-                Grendgine_Collada_Bind_Material bindMaterial = colladaNode.Instance_Controller[0].Bind_Material[0] = new Grendgine_Collada_Bind_Material();
+                colladaNode.Instance_Controller[0].Bind_Material = new ColladaBindMaterial[1];
+                ColladaBindMaterial bindMaterial = colladaNode.Instance_Controller[0].Bind_Material[0] = new ColladaBindMaterial();
 
                 // Create an Instance_Material for each material
                 bindMaterial.Technique_Common = new Grendgine_Collada_Technique_Common_Bind_Material();
                 colladaNode.Instance_Controller[0].Bind_Material[0].Technique_Common.Instance_Material = CreateInstanceMaterials(node);
 
                 if (node.AllChildNodes is not null)
-                    node.AllChildNodes.Select(child => CreateChildNodes(child));
+                    node.AllChildNodes.Select(child => CreateChildNodes(child, true));
 
                 nodes.Add(colladaNode);
             }
@@ -1395,11 +1386,11 @@ public class ColladaModelRenderer : IRenderer
         return instanceMaterials.ToArray();
     }
 
-    private Grendgine_Collada_Node CreateNode(ChunkNode nodeChunk)
+    private ColladaNode CreateNode(ChunkNode nodeChunk, bool isControllerNode)
     {
-        List<Grendgine_Collada_Node> childNodes = new();
+        List<ColladaNode> childNodes = new();
+        ColladaNode colladaNode = new();
 
-        Grendgine_Collada_Node colladaNode = new();
         // Check to see if there is a second model file, and if the mesh chunk is actually there.
         if (_cryData.Models.Count > 1)
         {
@@ -1409,17 +1400,17 @@ public class ColladaModelRenderer : IRenderer
 
             // make sure there is a geometry node in the geometry file
             if (_cryData.Models[0].ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkType.Helper)
-                colladaNode = CreateSimpleNode(nodeChunk);
+                colladaNode = CreateSimpleNode(nodeChunk, isControllerNode);
             else
             {
                 ChunkNode geometryNode = _cryData.Models[1].NodeMap.Values.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
-                Grendgine_Collada_Geometry geometryLibraryObject = DaeObject.Library_Geometries.Geometry.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
+                ColladaGeometry geometryLibraryObject = DaeObject.Library_Geometries.Geometry.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
                 if (geometryNode is null || geometryLibraryObject is null)
-                    colladaNode = CreateSimpleNode(nodeChunk);  // Can't find geometry for given node.
+                    colladaNode = CreateSimpleNode(nodeChunk, isControllerNode);  // Can't find geometry for given node.
                 else
                 {
                     ChunkMesh geometryMesh = (ChunkMesh)_cryData.Models[1].ChunkMap[geometryNode.ObjectNodeID];
-                    colladaNode = CreateGeometryNode(geometryNode, geometryMesh);
+                    colladaNode = CreateGeometryNode(geometryNode, geometryMesh, isControllerNode);
                 }
             }
         }
@@ -1429,55 +1420,60 @@ public class ColladaModelRenderer : IRenderer
             {
                 var meshChunk = (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID];
                 if (meshChunk.MeshSubsetsData == 0 || meshChunk.NumVertices == 0)  // Can have a node with a mesh and meshsubset, but no vertices.  Write as simple node.
-                    colladaNode = CreateSimpleNode(nodeChunk);
+                    colladaNode = CreateSimpleNode(nodeChunk, isControllerNode);
                 else
                 {
                     if (nodeChunk._model.ChunkMap[meshChunk.MeshSubsetsData].ID != 0)
-                        colladaNode = CreateGeometryNode(nodeChunk, (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID]);
+                        colladaNode = CreateGeometryNode(nodeChunk, (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID], isControllerNode);
                     else
-                        colladaNode = CreateSimpleNode(nodeChunk);
+                        colladaNode = CreateSimpleNode(nodeChunk, isControllerNode);
                 }
             }
             else
-                colladaNode = CreateSimpleNode(nodeChunk);
+                colladaNode = CreateSimpleNode(nodeChunk, isControllerNode);
         }
 
-        colladaNode.node = CreateChildNodes(nodeChunk);
+        colladaNode.node = CreateChildNodes(nodeChunk, isControllerNode);
         return colladaNode;
     }
 
     /// <summary>This will be used to make the Collada node element for Node chunks that point to Helper Chunks and MeshPhysics </summary>
-    private Grendgine_Collada_Node CreateSimpleNode(ChunkNode nodeChunk)
+    private ColladaNode CreateSimpleNode(ChunkNode nodeChunk, bool isControllerNode)
     {
         // This will be used to make the Collada node element for Node chunks that point to Helper Chunks and MeshPhysics
         Grendgine_Collada_Node_Type nodeType = Grendgine_Collada_Node_Type.NODE;
-        Grendgine_Collada_Node colladaNode = new()
+        ColladaNode colladaNode = new()
         {
             Type = nodeType,
             Name = nodeChunk.Name,
             ID = nodeChunk.Name
         };
-        List<Grendgine_Collada_Matrix> matrices = new();
 
-        Grendgine_Collada_Matrix matrix = new()
+        ColladaTranslate translate = new()
         {
-            Value_As_String = CreateStringFromMatrix4x4(nodeChunk.LocalTransform),
-            sID = "transform"
+            sID = "translate",
+            Value_As_String = CreateStringFromVector3(new Vector3 { X = nodeChunk.LocalTransform.M14, Y = nodeChunk.LocalTransform.M24, Z = nodeChunk.LocalTransform.M34 })
         };
-        matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
-        colladaNode.Matrix = matrices.ToArray();
+        var quat = Quaternion.CreateFromRotationMatrix(nodeChunk.LocalTransform);
+        ColladaRotate rotate = new()
+        {
+            sID = "rotate",
+            Value_As_String = CreateStringFromVector4(Quaternion.CreateFromRotationMatrix(nodeChunk.LocalTransform).ToAxisAngle())
+        };
+        colladaNode.Translate = new ColladaTranslate[1] { translate };
+        colladaNode.Rotate = new ColladaRotate[1] { rotate };
 
         // Add childnodes
-        colladaNode.node = CreateChildNodes(nodeChunk);
+        colladaNode.node = CreateChildNodes(nodeChunk, isControllerNode);
         return colladaNode;
     }
 
     /// <summary>Used by CreateNode and CreateSimpleNodes to create all the child nodes for the given node.</summary>
-    private Grendgine_Collada_Node[]? CreateChildNodes(ChunkNode nodeChunk)
+    private ColladaNode[]? CreateChildNodes(ChunkNode nodeChunk, bool isControllerNode)
     {
         if (nodeChunk.AllChildNodes is not null)
         {
-            List<Grendgine_Collada_Node> childNodes = new();
+            List<ColladaNode> childNodes = new();
             foreach (var childNodeChunk in nodeChunk.AllChildNodes.ToList())
             {
                 if (_args.IsNodeNameExcluded(childNodeChunk.Name))
@@ -1486,7 +1482,7 @@ public class ColladaModelRenderer : IRenderer
                     continue;
                 }
 
-                Grendgine_Collada_Node childNode = CreateNode(childNodeChunk); ;
+                ColladaNode childNode = CreateNode(childNodeChunk, isControllerNode); ;
                 childNodes.Add(childNode);
             }
             return childNodes.ToArray();
@@ -1495,10 +1491,10 @@ public class ColladaModelRenderer : IRenderer
             return null;
     }
 
-    private Grendgine_Collada_Node CreateJointNode(CompiledBone bone)
+    private ColladaNode CreateJointNode(CompiledBone bone)
     {
         var boneName = bone.boneName.Replace(' ', '_');
-        Grendgine_Collada_Node tmpNode = new()
+        ColladaNode tmpNode = new()
         {
             ID = boneName,
             Name = boneName,
@@ -1506,48 +1502,29 @@ public class ColladaModelRenderer : IRenderer
             Type = Grendgine_Collada_Node_Type.JOINT
         };
         controllerIdToBoneName.Add(bone.ControllerID, boneName);
-
-        bool canDecompose = true;
-        //Matrix4x4.Decompose(
-        //    bone.LocalTransform,
-        //    out Vector3 translation,
-        //    out Quaternion rotation,
-        //    out Vector3 scale);
-        if (canDecompose)
+        
+        ColladaTranslate translate = new()
         {
-            Grendgine_Collada_Translate translate = new()
-            {
-                sID = "translate",
-                Value_As_String = CreateStringFromVector3(new Vector3 { X = bone.LocalTransform.M14, Y = bone.LocalTransform.M24, Z = bone.LocalTransform.M34 })
-            };
-            Grendgine_Collada_Rotate rotate = new()
-            {
-                sID = "rotate",
-                Value_As_String = CreateStringFromVector4(Quaternion.CreateFromRotationMatrix(bone.LocalTransform).ToAxisAngle())
-            };
-            tmpNode.Translate = new Grendgine_Collada_Translate[1] { translate };
-            tmpNode.Rotate = new Grendgine_Collada_Rotate[1] { rotate };
-        }
-        else
+            sID = "translate",
+            Value_As_String = CreateStringFromVector3(new Vector3 { X = bone.LocalTransform.M14, Y = bone.LocalTransform.M24, Z = bone.LocalTransform.M34 })
+        };
+        ColladaRotate rotate = new()
         {
-            Grendgine_Collada_Matrix matrix = new();
-            List<Grendgine_Collada_Matrix> matrices = new();
-            matrix.Value_As_String = CreateStringFromMatrix4x4(bone.LocalTransform);
-            matrix.sID = "transform";
-
-            matrices.Add(matrix);            
-            tmpNode.Matrix = matrices.ToArray();
-        }
+            sID = "rotate",
+            Value_As_String = CreateStringFromVector4(Quaternion.CreateFromRotationMatrix(bone.LocalTransform).ToAxisAngle())
+        };
+        tmpNode.Translate = new ColladaTranslate[1] { translate };
+        tmpNode.Rotate = new ColladaRotate[1] { rotate };
 
         // Recursively call this for each of the child bones to this bone.
         if (bone.childIDs.Count > 0)
         {
-            Grendgine_Collada_Node[] childNodes = new Grendgine_Collada_Node[bone.childIDs.Count];
+            ColladaNode[] childNodes = new ColladaNode[bone.childIDs.Count];
             int counter = 0;
 
             foreach (CompiledBone childBone in _cryData.Bones.GetAllChildBones(bone))
             {
-                Grendgine_Collada_Node childNode = new();
+                ColladaNode childNode = new();
                 childNode = CreateJointNode(childBone);
                 childNodes[counter] = childNode;
                 counter++;
@@ -1557,49 +1534,55 @@ public class ColladaModelRenderer : IRenderer
         return tmpNode;
     }
 
-    private Grendgine_Collada_Node CreateGeometryNode(ChunkNode nodeChunk, ChunkMesh tmpMeshChunk)
+    private ColladaNode CreateGeometryNode(ChunkNode nodeChunk, ChunkMesh tmpMeshChunk, bool isControllerNode)
     {
-        Grendgine_Collada_Node colladaNode = new();
+        ColladaNode colladaNode = new();
         var meshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsetsData];
         var nodeType = Grendgine_Collada_Node_Type.NODE;
         colladaNode.Type = nodeType;
         colladaNode.Name = nodeChunk.Name;
         colladaNode.ID = nodeChunk.Name;
         // Make the lists necessary for this Node.
-        List<Grendgine_Collada_Matrix> matrices = new();
-        List<Grendgine_Collada_Instance_Geometry> instanceGeometries = new();
-        List<Grendgine_Collada_Bind_Material> bindMaterials = new();
-        List<Grendgine_Collada_Instance_Material_Geometry> instanceMaterials = new();
 
-        Grendgine_Collada_Matrix matrix = new()
+        List<ColladaBindMaterial> bindMaterials = new();
+
+        ColladaTranslate translate = new()
         {
-            Value_As_String = CreateStringFromMatrix4x4(nodeChunk.LocalTransform),
-            sID = "transform"
+            sID = "translate",
+            Value_As_String = CreateStringFromVector3(new Vector3 { X = nodeChunk.LocalTransform.M14, Y = nodeChunk.LocalTransform.M24, Z = nodeChunk.LocalTransform.M34 })
         };
-
-        matrices.Add(matrix);          // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
-        colladaNode.Matrix = matrices.ToArray();
+        var quat = Quaternion.CreateFromRotationMatrix(nodeChunk.LocalTransform);
+        ColladaRotate rotate = new()
+        {
+            sID = "rotate",
+            Value_As_String = CreateStringFromVector4(Quaternion.CreateFromRotationMatrix(nodeChunk.LocalTransform).ToAxisAngle())
+        };
+        colladaNode.Translate = new ColladaTranslate[1] { translate };
+        colladaNode.Rotate = new ColladaRotate[1] { rotate };
 
         // Each node will have one instance geometry, although it could be a list.
-        Grendgine_Collada_Instance_Geometry instanceGeometry = new()
+        if (!isControllerNode)
         {
-            Name = nodeChunk.Name,
-            URL = "#" + nodeChunk.Name + "-mesh"  // this is the ID of the geometry.
-        };
-
-        Grendgine_Collada_Bind_Material bindMaterial = new()
-        {
-            Technique_Common = new Grendgine_Collada_Technique_Common_Bind_Material
+            List<ColladaInstanceGeometry> instanceGeometries = new();
+            ColladaInstanceGeometry instanceGeometry = new()
             {
-                Instance_Material = new Grendgine_Collada_Instance_Material_Geometry[meshSubsets.NumMeshSubset]
-            }
-        };
-        bindMaterials.Add(bindMaterial);
-        instanceGeometry.Bind_Material = bindMaterials.ToArray();
-        instanceGeometries.Add(instanceGeometry);
+                Name = nodeChunk.Name,
+                URL = "#" + nodeChunk.Name + "-mesh"  // this is the ID of the geometry.
+            };
+            ColladaBindMaterial bindMaterial = new()
+            {
+                Technique_Common = new Grendgine_Collada_Technique_Common_Bind_Material
+                {
+                    Instance_Material = new Grendgine_Collada_Instance_Material_Geometry[meshSubsets.NumMeshSubset]
+                }
+            };
+            bindMaterials.Add(bindMaterial);
+            instanceGeometry.Bind_Material = bindMaterials.ToArray();
+            instanceGeometries.Add(instanceGeometry);
 
-        colladaNode.Instance_Geometry = instanceGeometries.ToArray();
-        colladaNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material = CreateInstanceMaterials(nodeChunk);
+            colladaNode.Instance_Geometry = instanceGeometries.ToArray();
+            colladaNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material = CreateInstanceMaterials(nodeChunk);
+        }
 
         return colladaNode;
     }
@@ -1618,8 +1601,8 @@ public class ColladaModelRenderer : IRenderer
     /// <summary> Adds the scene element to the Collada document. </summary>
     private void WriteScene()
     {
-        Grendgine_Collada_Scene scene = new();
-        Grendgine_Collada_Instance_Visual_Scene visualScene = new()
+        ColladaScene scene = new();
+        ColladaInstanceVisualScene visualScene = new()
         {
             URL = "#Scene",
             Name = "Scene"
@@ -1662,7 +1645,7 @@ public class ColladaModelRenderer : IRenderer
     private static string CreateStringFromVector4(Vector4 vector)
     {
         StringBuilder vectorValues = new();
-        vectorValues.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6}", vector.W, vector.X, vector.Y, vector.Z);
+        vectorValues.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6}", vector.X, vector.Y, vector.Z, vector.W);
         CleanNumbers(vectorValues);
         return vectorValues.ToString();
     }
