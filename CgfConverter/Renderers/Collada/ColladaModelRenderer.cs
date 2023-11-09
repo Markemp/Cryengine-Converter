@@ -13,6 +13,9 @@ using CgfConverter.Materials;
 using grendgine_collada;
 using static Extensions.FileHandlingExtensions;
 using static CgfConverter.Utilities;
+using static System.Formats.Asn1.AsnWriter;
+using System.Transactions;
+using Extensions;
 
 namespace CgfConverter.Renderers.Collada;
 
@@ -249,12 +252,21 @@ public class ColladaModelRenderer : IRenderer
                         }
                     };
 
-                    // Create the position source
+                    // Create the transform source
+                    List<Matrix4x4> transformMatricies = new();
+
+                    for (int k = 0; k < rotations.Count; k++)
+                    {
+                        var rot = rotations[k];
+                        var pos = positions[0];
+                        var transform = Matrix4x4.CreateFromQuaternion(rot) * Matrix4x4.CreateTranslation(pos);
+                        transformMatricies.Add(transform);
+                    }
                     var positionArray = new Grendgine_Collada_Float_Array
                     {
                         ID = $"{animationName}_{controller.ControllerID}_position_array",
                         Count = positions.Count,
-                        Value_As_String = string.Join(" ", positions.Select(x => x.ToString()))
+                        //Value_As_String = string.Join(" ", transformMatricies.Select(x => CreateStringFromMatrix(x)))
                     };
                     outputSource.Float_Array = positionArray;
                     outputSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
@@ -275,8 +287,32 @@ public class ColladaModelRenderer : IRenderer
                         }
                     };
 
-                    // Create the rotation source
-
+                    // Create the interpolation source (all LINEAR)
+                    int count = timeElements.Count;
+                    var interpolationArray = new Grendgine_Collada_Name_Array
+                    {
+                        ID = $"{animationName}_{controller.ControllerID}_interpolation_array",
+                        Count = count,
+                        Value_Pre_Parse = string.Join(' ', Enumerable.Repeat("LINEAR", count))
+                    };
+                    interpolationSource.Name_Array = interpolationArray;
+                    interpolationSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
+                    {
+                        Accessor = new Grendgine_Collada_Accessor
+                        {
+                            Source = $"#{animationName}_{controller.ControllerID}_interpolation_array",
+                            Count = (uint)count,
+                            Stride = 1,
+                            Param = new Grendgine_Collada_Param[1]
+                            {
+                                new Grendgine_Collada_Param
+                                {
+                                    Name = "INTERPOLATION",
+                                    Type = "name"
+                                }
+                            }
+                        }
+                    };
 
                     baseAnimation.Animation[j] = controllerAnimation;
                     animationLibrary.Animation[i] = baseAnimation;
@@ -309,7 +345,7 @@ public class ColladaModelRenderer : IRenderer
             // Add the Surface node
             Grendgine_Collada_New_Param texSurface = new()
             {
-                sID = material.Name + "_" + material.Textures[j].Map + "-surface" // CleanTextureFileName(material.Textures[j].File) + "-surface"
+                sID = material.Name + "_" + material.Textures[j].Map + "-surface"
             };
             Grendgine_Collada_Surface surface = new();
             texSurface.Surface = surface;
@@ -323,7 +359,7 @@ public class ColladaModelRenderer : IRenderer
             // Add the Sampler node
             Grendgine_Collada_New_Param texSampler = new()
             {
-                sID = material.Name + "_" + material.Textures[j].Map + "-sampler" // CleanTextureFileName(material.Textures[j].File) + "-sampler"
+                sID = material.Name + "_" + material.Textures[j].Map + "-sampler"
             };
             Grendgine_Collada_Sampler2D sampler2D = new();
             texSampler.Sampler2D = sampler2D;
@@ -1471,13 +1507,37 @@ public class ColladaModelRenderer : IRenderer
         };
         controllerIdToBoneName.Add(bone.ControllerID, boneName);
 
+        //bool canDecompose = true;
+        ////Matrix4x4.Decompose(
+        ////    bone.LocalTransform,
+        ////    out Vector3 translation,
+        ////    out Quaternion rotation,
+        ////    out Vector3 scale);
+        //if (canDecompose)
+        //{
+        //    Grendgine_Collada_Translate translate = new()
+        //    {
+        //        sID = "translate",
+        //        Value_As_String = CreateStringFromVector3(new Vector3 { X = bone.WorldTransformMatrix.M14, Y = bone.WorldTransformMatrix.M24, Z = bone.WorldTransformMatrix.M34 })
+        //    };
+        //    Grendgine_Collada_Rotate rotate = new()
+        //    {
+        //        sID = "rotate",
+        //        Value_As_String = CreateStringFromVector4(Quaternion.CreateFromRotationMatrix(bone.LocalTransform).ToAxisAngle())
+        //    };
+        //    tmpNode.Translate = new Grendgine_Collada_Translate[1] { translate };
+        //    tmpNode.Rotate = new Grendgine_Collada_Rotate[1] { rotate };
+        //}
+        //else
+        //{
         Grendgine_Collada_Matrix matrix = new();
         List<Grendgine_Collada_Matrix> matrices = new();
         matrix.Value_As_String = CreateStringFromMatrix4x4(bone.LocalTransform);
         matrix.sID = "transform";
 
-        matrices.Add(matrix);             // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
+        matrices.Add(matrix);            
         tmpNode.Matrix = matrices.ToArray();
+        //}
 
         // Recursively call this for each of the child bones to this bone.
         if (bone.childIDs.Count > 0)
@@ -1589,6 +1649,22 @@ public class ColladaModelRenderer : IRenderer
             Log(LogLevelEnum.Debug, $"Unable to find submaterials for node chunk ${nodeChunk.Name}");
 
         return null;
+    }
+
+    private static string CreateStringFromVector3(Vector3 vector)
+    {
+        StringBuilder vectorValues = new();
+        vectorValues.AppendFormat("{0:F6} {1:F6} {2:F6}", vector.X, vector.Y, vector.Z);
+        CleanNumbers(vectorValues);
+        return vectorValues.ToString();
+    }
+
+    private static string CreateStringFromVector4(Vector4 vector)
+    {
+        StringBuilder vectorValues = new();
+        vectorValues.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6}", vector.W, vector.X, vector.Y, vector.Z);
+        CleanNumbers(vectorValues);
+        return vectorValues.ToString();
     }
 
     private static string CreateStringFromMatrix4x4(Matrix4x4 matrix)

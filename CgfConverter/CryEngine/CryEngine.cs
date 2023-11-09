@@ -61,8 +61,7 @@ public partial class CryEngine
 
                 foreach (Model model in Models)
                 {
-                    // TODO: Refactor. Not sure every model has just 1 root node. Find where parent id = ~0.
-                    model.RootNode = rootNode = (rootNode ?? model.RootNode);  // ?? Each model will have it's own rootnode.
+                    model.RootNode = rootNode = (rootNode ?? model.RootNode);
 
                     foreach (ChunkNode node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkType.Node).Select(c => c as ChunkNode))
                     {
@@ -132,10 +131,11 @@ public partial class CryEngine
         {
             var chrparams = CryXmlSerializer.Deserialize<ChrParams.ChrParams>(
                 PackFileSystem.GetStream(Path.ChangeExtension(InputFile, ".chrparams")));
-            var trackFilePath = chrparams.Animations?.FirstOrDefault(x => x.Name == "$TracksDatabase")?.Path;
+            var trackFilePath = chrparams.Animations?.FirstOrDefault(x => x.Name == "$TracksDatabase" || x.Name == "#filepath")?.Path;
             if (trackFilePath is null)
                 throw new FileNotFoundException();
-
+            if (Path.GetExtension(trackFilePath) != "dba")
+                trackFilePath = Path.ChangeExtension(trackFilePath, "dba");
             Log.D("Associated animation track database file found at {0}", trackFilePath);
             Animations.Add(Model.FromStream(trackFilePath, PackFileSystem.GetStream(trackFilePath), true));
         }

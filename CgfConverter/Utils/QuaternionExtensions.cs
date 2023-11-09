@@ -50,5 +50,12 @@ public static class QuaternionExtensions
         return rotationalMatrix;
     }
 
+    public static Vector4 ToAxisAngle(this Quaternion quaternion)
+    {
+        Vector3 axis = Vector3.Normalize(new Vector3(quaternion.X, quaternion.Y, quaternion.Z));
+        float angle = 2.0f * MathF.Acos(quaternion.W);
+        return new Vector4(axis, angle);
+    }
+
     public static List<float> ToGltfList(this Quaternion q) => new List<float>() { q.X, q.Y, q.Z, q.W };
 }

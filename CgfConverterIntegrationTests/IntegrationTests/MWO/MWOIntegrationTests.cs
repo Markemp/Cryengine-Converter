@@ -141,6 +141,36 @@ public class MWOIntegrationTests
 
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
         var gltfData = gltfRenderer.GenerateGltfObject();
+    }
+
+    [TestMethod]
+    public void HarnessCable_VerifyArmatureAndAnimations_Gltf()
+    {
+        var args = new string[] { @"D:\depot\MWO\Objects\environments\frontend\mechlab_a\mechbay_cables\harness_cable.chr", "-ddds", "-dae", "-objectdir", @"d:\depot\mwo" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        var gltfData = gltfRenderer.GenerateGltfObject();
+
+    }
+
+    [TestMethod]
+    public void HarnessCable_VerifyArmatureAndAnimations_Collada()
+    {
+        var args = new string[] { @"D:\depot\MWO\Objects\environments\frontend\mechlab_a\mechbay_cables\harness_cable.chr", "-ddds", "-dae", "-objectdir", @"d:\depot\mwo" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.Render();
+        var daeObject = colladaData.DaeObject;
 
     }
 
