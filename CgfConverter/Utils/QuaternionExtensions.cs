@@ -1,7 +1,7 @@
-﻿using System;
-using CgfConverter.Structs;
-using System.Numerics;
+﻿using CgfConverter.Structs;
+using System;
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace Extensions;
 
@@ -52,9 +52,6 @@ public static class QuaternionExtensions
 
     public static Vector4 ToAxisAngle(this Quaternion quaternion)
     {
-        //Vector3 axis = Vector3.Normalize(new Vector3(quaternion.X, quaternion.Y, quaternion.Z));
-        //float angle = 2.0f * MathF.Acos(quaternion.W);
-        //return new Vector4(axis, angle);
         // Handle the case where the quaternion is the identity quaternion.
         // This condition checks if the quaternion is close enough to the identity quaternion.
         if (MathF.Abs(quaternion.W) >= 1.0f - float.Epsilon)
@@ -74,19 +71,6 @@ public static class QuaternionExtensions
         angle *= (180.0f / MathF.PI);
 
         return new Vector4(axis, angle);
-    }
-
-    public static Vector4 ToAxisAngle2(this Quaternion quaternion)
-    {
-        if (quaternion.W > 1)
-            quaternion = Quaternion.Normalize(quaternion);
-
-        float angle = 2.0f * MathF.Acos(quaternion.W) * (180.0f / MathF.PI);
-        float s = MathF.Sqrt(1 - quaternion.W * quaternion.W);
-        if (s < 0.001f)
-            return new Vector4(-quaternion.X, -quaternion.Y, -quaternion.Z, angle); // angle is 0 and axis is arbitrary
-        else
-            return new Vector4(-quaternion.X / s, -quaternion.Y / s, -quaternion.Z / s, angle);
     }
 
     public static List<float> ToGltfList(this Quaternion q) => new List<float>() { q.X, q.Y, q.Z, q.W };

@@ -10,7 +10,7 @@ namespace CgfConverter.Collada
     public partial class Grendgine_Collada_Technique_Common_Kinematics_Model : Grendgine_Collada_Technique_Common
     {
         [XmlElement(ElementName = "newparam")]
-        public Grendgine_Collada_New_Param[] New_Param;
+        public ColladaNewParam[] New_Param;
 
         [XmlElement(ElementName = "joint")]
         public Grendgine_Collada_Joint[] Joint;

@@ -12,7 +12,7 @@ namespace CgfConverter.Collada
         public string Node;
 
         [XmlElement(ElementName = "param")]
-        public Grendgine_Collada_Param Param;
+        public ColladaParam Param;
 
         [XmlElement(ElementName = "SIDREF")]
         public string SIDREF;

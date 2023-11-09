@@ -8,7 +8,7 @@ namespace CgfConverter.Collada
     public partial class ColladaEllipse
     {
         [XmlElement(ElementName = "radius")]
-        public Grendgine_Collada_Float_Array_String Radius;
+        public ColladaFloatArrayString Radius;
 
         [XmlElement(ElementName = "extra")]
         public ColladaExtra[] Extra;

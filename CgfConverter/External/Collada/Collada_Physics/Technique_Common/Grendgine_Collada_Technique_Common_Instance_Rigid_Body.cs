@@ -11,16 +11,16 @@ namespace CgfConverter.Collada
     {
 
         [XmlElement(ElementName = "angular_velocity")]
-        public Grendgine_Collada_Float_Array_String Angular_Velocity;
+        public ColladaFloatArrayString Angular_Velocity;
 
         [XmlElement(ElementName = "velocity")]
-        public Grendgine_Collada_Float_Array_String Velocity;
+        public ColladaFloatArrayString Velocity;
 
         [XmlElement(ElementName = "dynamic")]
         public Grendgine_Collada_SID_Bool Dynamic;
 
         [XmlElement(ElementName = "mass")]
-        public Grendgine_Collada_SID_Float Mass;
+        public ColladaSIDFloat Mass;
 
         [XmlElement(ElementName = "inertia")]
         public Grendgine_Collada_SID_Float_Array_String Inertia;

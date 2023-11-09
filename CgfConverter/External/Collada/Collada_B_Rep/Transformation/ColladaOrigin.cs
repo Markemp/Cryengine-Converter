@@ -4,7 +4,7 @@ namespace CgfConverter.Collada
 {
     [Serializable]
     [XmlType(AnonymousType = true)]
-    public partial class ColladaOrigin : Grendgine_Collada_Float_Array_String
+    public partial class ColladaOrigin : ColladaFloatArrayString
     {
 
     }

@@ -9,7 +9,7 @@ namespace CgfConverter.Collada
     public partial class Grendgine_Collada_Axis_Info_Kinematics : Grendgine_Collada_Axis_Info
     {
         [XmlElement(ElementName = "newparam")]
-        public Grendgine_Collada_New_Param[] New_Param;
+        public ColladaNewParam[] New_Param;
 
         [XmlElement(ElementName = "active")]
         public Grendgine_Collada_Common_Bool_Or_Param_Type Active;

@@ -18,7 +18,7 @@ namespace CgfConverter.Collada
         public Grendgine_Collada_Bind[] Bind;
 
         [XmlElement(ElementName = "newparam")]
-        public Grendgine_Collada_New_Param[] New_Param;
+        public ColladaNewParam[] New_Param;
 
         [XmlElement(ElementName = "setparam")]
         public Grendgine_Collada_Set_Param[] Set_Param;

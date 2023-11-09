@@ -26,7 +26,7 @@ namespace CgfConverter.Collada
         public Grendgine_Collada_Technique_Common_Rigid_Constraint Technique_Common;
 
         [XmlElement(ElementName = "technique")]
-        public Grendgine_Collada_Technique[] Technique;
+        public ColladaTechnique[] Technique;
 
         [XmlElement(ElementName = "extra")]
         public ColladaExtra[] Extra;

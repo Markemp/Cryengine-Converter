@@ -12,7 +12,7 @@ namespace CgfConverter.Collada
         public string Symbol;
 
         [XmlElement(ElementName = "param")]
-        public Grendgine_Collada_Param Param;
+        public ColladaParam Param;
 
         [XmlElement(ElementName = "float")]
         public float Float;

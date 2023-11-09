@@ -25,7 +25,7 @@ namespace CgfConverter.Collada
         public Grendgine_Collada_Face Face;
 
         [XmlElement(ElementName = "param")]
-        public Grendgine_Collada_Param Param;
+        public ColladaParam Param;
 
 
         [XmlElement(ElementName = "instance_image")]

@@ -11,7 +11,7 @@ namespace CgfConverter.Collada
         public ColladaOrigin Origin;
 
         [XmlElement(ElementName = "direction")]
-        public Grendgine_Collada_Float_Array_String Direction;
+        public ColladaFloatArrayString Direction;
 
         [XmlElement(ElementName = "extra")]
         public ColladaExtra[] Extra;

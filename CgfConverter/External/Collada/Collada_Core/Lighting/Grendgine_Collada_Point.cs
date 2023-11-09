@@ -9,18 +9,18 @@ namespace CgfConverter.Collada
     {
 
         [XmlElement(ElementName = "color")]
-        public Grendgine_Collada_Color Color;
+        public ColladaColor Color;
 
         [XmlElement(ElementName = "constant_attenuation")]
         [System.ComponentModel.DefaultValueAttribute(typeof(float), "1.0")]
-        public Grendgine_Collada_SID_Float Constant_Attenuation;
+        public ColladaSIDFloat Constant_Attenuation;
 
         [XmlElement(ElementName = "linear_attenuation")]
         [System.ComponentModel.DefaultValueAttribute(typeof(float), "0.0")]
-        public Grendgine_Collada_SID_Float Linear_Attenuation;
+        public ColladaSIDFloat Linear_Attenuation;
 
         [XmlElement(ElementName = "quadratic_attenuation")]
-        public Grendgine_Collada_SID_Float Quadratic_Attenuation;
+        public ColladaSIDFloat Quadratic_Attenuation;
     }
 }
 

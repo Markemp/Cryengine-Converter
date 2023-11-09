@@ -22,7 +22,7 @@ namespace CgfConverter.Collada
         public Grendgine_Collada_Format Format;
 
         [XmlElement(ElementName = "init_from")]
-        public Grendgine_Collada_Init_From[] Init_From;
+        public ColladaInitFrom[] Init_From;
     }
 }
 

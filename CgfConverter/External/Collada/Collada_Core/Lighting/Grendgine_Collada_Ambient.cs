@@ -8,7 +8,7 @@ namespace CgfConverter.Collada
     public partial class Grendgine_Collada_Ambient
     {
         [XmlElement(ElementName = "color")]
-        public Grendgine_Collada_Color Color;
+        public ColladaColor Color;
 
     }
 }

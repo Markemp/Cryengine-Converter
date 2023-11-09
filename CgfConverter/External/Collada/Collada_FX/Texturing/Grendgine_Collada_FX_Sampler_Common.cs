@@ -37,7 +37,7 @@ namespace CgfConverter.Collada
         public Grendgine_Collada_FX_Sampler_Common_Filter_Type MipFilter;
 
         [XmlElement(ElementName = "border_color")]
-        public Grendgine_Collada_Float_Array_String Border_Color;
+        public ColladaFloatArrayString Border_Color;
 
         [XmlElement(ElementName = "mip_max_level")]
         public byte Mip_Max_Level;

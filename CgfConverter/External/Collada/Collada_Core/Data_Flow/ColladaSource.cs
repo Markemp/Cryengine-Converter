@@ -17,13 +17,13 @@ namespace CgfConverter.Collada
         [XmlElement(ElementName = "bool_array")]
         public Grendgine_Collada_Bool_Array Bool_Array;
         [XmlElement(ElementName = "float_array")]
-        public Grendgine_Collada_Float_Array Float_Array;
+        public ColladaFloatArray Float_Array;
         [XmlElement(ElementName = "IDREF_array")]
         public Grendgine_Collada_IDREF_Array IDREF_Array;
         [XmlElement(ElementName = "int_array")]
         public Grendgine_Collada_Int_Array Int_Array;
         [XmlElement(ElementName = "Name_array")]
-        public Grendgine_Collada_Name_Array Name_Array;
+        public ColladaNameArray Name_Array;
         [XmlElement(ElementName = "SIDREF_array")]
         public Grendgine_Collada_SIDREF_Array SIDREF_Array;
         [XmlElement(ElementName = "token_array")]
@@ -31,10 +31,10 @@ namespace CgfConverter.Collada
 
 
         [XmlElement(ElementName = "technique_common")]
-        public Grendgine_Collada_Technique_Common_Source Technique_Common;
+        public ColladaTechniqueCommonSource Technique_Common;
 
         [XmlElement(ElementName = "technique")]
-        public Grendgine_Collada_Technique[] Technique;
+        public ColladaTechnique[] Technique;
 
         [XmlElement(ElementName = "asset")]
         public ColladaAsset Asset;

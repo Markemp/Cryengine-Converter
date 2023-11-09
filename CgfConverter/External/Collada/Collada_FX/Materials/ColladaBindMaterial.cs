@@ -10,13 +10,13 @@ namespace CgfConverter.Collada
     {
 
         [XmlElement(ElementName = "param")]
-        public Grendgine_Collada_Param[] Param;
+        public ColladaParam[] Param;
 
         [XmlElement(ElementName = "technique_common")]
-        public Grendgine_Collada_Technique_Common_Bind_Material Technique_Common;
+        public ColladaTechniqueCommonBindMaterial Technique_Common;
 
         [XmlElement(ElementName = "technique")]
-        public Grendgine_Collada_Technique[] Technique;
+        public ColladaTechnique[] Technique;
 
         [XmlElement(ElementName = "extra")]
         public ColladaExtra[] Extra;

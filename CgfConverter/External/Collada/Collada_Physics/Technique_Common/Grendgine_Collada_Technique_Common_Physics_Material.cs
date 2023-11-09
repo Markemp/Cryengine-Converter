@@ -10,13 +10,13 @@ namespace CgfConverter.Collada
     {
 
         [XmlElement(ElementName = "dynamic_friction")]
-        public Grendgine_Collada_SID_Float Dynamic_Friction;
+        public ColladaSIDFloat Dynamic_Friction;
 
         [XmlElement(ElementName = "restitution")]
-        public Grendgine_Collada_SID_Float Restitution;
+        public ColladaSIDFloat Restitution;
 
         [XmlElement(ElementName = "static_friction")]
-        public Grendgine_Collada_SID_Float Static_Friction;
+        public ColladaSIDFloat Static_Friction;
     }
 }
 

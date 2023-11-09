@@ -1,6 +1,6 @@
 namespace CgfConverter.Collada
 {
-    public partial class Grendgine_Collada_Float_Array_String
+    public partial class ColladaFloatArrayString
     {
         public float[] Value()
         {

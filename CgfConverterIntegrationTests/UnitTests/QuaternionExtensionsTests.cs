@@ -125,19 +125,6 @@ public class QuaternionExtensionsTests
     }
 
     [TestMethod]
-    public void ToAxisAngle2_HulaGirlUpperBody()
-    {
-        var q = new Quaternion(0.102484673f, -0.0468823574f, -0.00384537759f, 0.9936217f);
-        var expectedAxisAngle = new Vector4(0.90883744f, -0.4157543f, -0.0341009349f, 12.949439f);
-
-        var actualAxisAngle = q.ToAxisAngle2();
-        Assert.AreEqual(expectedAxisAngle.X, actualAxisAngle.X, 0.0001);
-        Assert.AreEqual(expectedAxisAngle.Y, actualAxisAngle.Y, 0.0001);
-        Assert.AreEqual(expectedAxisAngle.Z, actualAxisAngle.Z, 0.0001);
-        Assert.AreEqual(expectedAxisAngle.W, actualAxisAngle.W, 0.0001);
-    }
-
-    [TestMethod]
     public void ConvertToRotationMatrix_TestQuaternion1()
     {
         // [-0.181986, 0.000000, -0.000000, 0.983301] to

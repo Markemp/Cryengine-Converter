@@ -9,19 +9,19 @@ namespace CgfConverter.Collada
     {
 
         [XmlElement(ElementName = "xmag")]
-        public Grendgine_Collada_SID_Float XMag;
+        public ColladaSIDFloat XMag;
 
         [XmlElement(ElementName = "ymag")]
-        public Grendgine_Collada_SID_Float YMag;
+        public ColladaSIDFloat YMag;
 
         [XmlElement(ElementName = "aspect_ratio")]
-        public Grendgine_Collada_SID_Float Aspect_Ratio;
+        public ColladaSIDFloat Aspect_Ratio;
 
         [XmlElement(ElementName = "znear")]
-        public Grendgine_Collada_SID_Float ZNear;
+        public ColladaSIDFloat ZNear;
 
         [XmlElement(ElementName = "zfar")]
-        public Grendgine_Collada_SID_Float ZFar;
+        public ColladaSIDFloat ZFar;
 
     }
 }

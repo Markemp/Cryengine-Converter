@@ -9,7 +9,7 @@ namespace CgfConverter.Collada
     public partial class Grendgine_Collada_Torus
     {
         [XmlElement(ElementName = "radius")]
-        public Grendgine_Collada_Float_Array_String Radius;
+        public ColladaFloatArrayString Radius;
 
 
         [XmlElement(ElementName = "extra")]

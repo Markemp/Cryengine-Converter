@@ -9,7 +9,7 @@ namespace CgfConverter.Collada
     public partial class Grendgine_Collada_Box
     {
         [XmlElement(ElementName = "half_extents")]
-        public Grendgine_Collada_Float_Array_String Half_Extents;
+        public ColladaFloatArrayString Half_Extents;
 
         [XmlElement(ElementName = "extra")]
         public ColladaExtra[] Extra;

@@ -520,7 +520,7 @@ public class MWOIntegrationTests
         Assert.AreEqual("hbr_right_torso_case", node.node[0].ID);
         Assert.AreEqual("hbr_right_torso_case", node.node[0].Name);
         Assert.AreEqual("hbr_right_torso_fx", node.node[1].Name);
-        Assert.AreEqual(Grendgine_Collada_Node_Type.NODE, node.node[0].Type);
+        Assert.AreEqual(ColladaNodeType.NODE, node.node[0].Type);
         Assert.AreEqual("1.830486 -2.444341 -1.542505", node.node[0].Translate[0].Value_As_String);
         Assert.AreEqual("1 0 0 0", node.node[1].Rotate[0].Value_As_String);
         // Instance Geometry check
@@ -606,7 +606,7 @@ public class MWOIntegrationTests
         Assert.AreEqual(1, baseNode.Rotate.Length);
 
         // Serialize the object to XML
-        XmlSerializer serializer = new(typeof(Grendgine_Collada));
+        XmlSerializer serializer = new(typeof(ColladaDoc));
         StringWriter writer = new();
         serializer.Serialize(writer, colladaData.DaeObject);
 

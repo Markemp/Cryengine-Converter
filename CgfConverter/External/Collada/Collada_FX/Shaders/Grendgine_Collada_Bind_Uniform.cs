@@ -12,7 +12,7 @@ namespace CgfConverter.Collada
         public string Symbol;
 
         [XmlElement(ElementName = "param")]
-        public Grendgine_Collada_Param Param;
+        public ColladaParam Param;
 
         /// <summary>
         /// The element is the type and the element text is the value or space delimited list of values

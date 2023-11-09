@@ -12,7 +12,7 @@ namespace CgfConverter.Collada
         public string Platform;
 
         [XmlElement(ElementName = "newparam")]
-        public Grendgine_Collada_New_Param[] New_Param;
+        public ColladaNewParam[] New_Param;
 
         [XmlElement(ElementName = "technique")]
         public Grendgine_Collada_Technique_GLSL[] Technique;

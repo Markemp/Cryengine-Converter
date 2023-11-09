@@ -19,7 +19,7 @@ namespace CgfConverter.Collada
         public ColladaAsset Asset;
 
         [XmlElement(ElementName = "technique")]
-        public Grendgine_Collada_Technique[] Technique;
+        public ColladaTechnique[] Technique;
     }
 }
 

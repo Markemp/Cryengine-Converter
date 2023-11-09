@@ -12,10 +12,10 @@ namespace CgfConverter.Collada
         public Grendgine_Collada_SID_Bool Hollow;
 
         [XmlElement(ElementName = "mass")]
-        public Grendgine_Collada_SID_Float Mass;
+        public ColladaSIDFloat Mass;
 
         [XmlElement(ElementName = "density")]
-        public Grendgine_Collada_SID_Float Density;
+        public ColladaSIDFloat Density;
 
 
         [XmlElement(ElementName = "physics_material")]

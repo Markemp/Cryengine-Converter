@@ -18,13 +18,13 @@ namespace CgfConverter.Collada
 
 
         [XmlElement(ElementName = "newparam")]
-        public Grendgine_Collada_New_Param[] New_Param;
+        public ColladaNewParam[] New_Param;
 
         [XmlElement(ElementName = "technique_common")]
         public Grendgine_Collada_Technique_Common_Formula Technique_Common;
 
         [XmlElement(ElementName = "technique")]
-        public Grendgine_Collada_Technique[] Technique;
+        public ColladaTechnique[] Technique;
 
 
         [XmlElement(ElementName = "target")]

@@ -17,7 +17,7 @@ public partial class ColladaNode
     public string Name;
 
     [XmlAttribute("type")]
-    public Grendgine_Collada_Node_Type Type;
+    public ColladaNodeType Type;
 
     [XmlAttribute("layer")]
     public string Layer;

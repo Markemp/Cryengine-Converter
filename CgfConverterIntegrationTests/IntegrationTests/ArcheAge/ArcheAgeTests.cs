@@ -1,10 +1,10 @@
 ﻿using CgfConverter;
+using CgfConverter.Renderers.Collada;
 using CgfConverterTests.TestUtilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Globalization;
 using System.Threading;
-using CgfConverter.Renderers.Collada;
 
 namespace CgfConverterTests.IntegrationTests;
 
@@ -12,7 +12,7 @@ namespace CgfConverterTests.IntegrationTests;
 public class ArcheAgeTests
 {
     private readonly TestUtils testUtils = new TestUtils();
-    string userHome; 
+    string userHome;
 
     [TestInitialize]
     public void Initialize()

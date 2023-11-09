@@ -20,7 +20,7 @@ namespace CgfConverter.Collada
         public ColladaBindMaterial[] Bind_Material;
 
         [XmlElement(ElementName = "skeleton")]
-        public Grendgine_Collada_Skeleton[] Skeleton;
+        public ColladaSkeleton[] Skeleton;
 
         [XmlElement(ElementName = "extra")]
         public ColladaExtra[] Extra;

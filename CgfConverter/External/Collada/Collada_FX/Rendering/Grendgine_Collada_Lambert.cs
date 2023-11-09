@@ -10,30 +10,30 @@ namespace CgfConverter.Collada
     {
 
         [XmlElement(ElementName = "emission")]
-        public Grendgine_Collada_FX_Common_Color_Or_Texture_Type Eission;
+        public ColladaFXCommonColorOrTextureType Eission;
 
         [XmlElement(ElementName = "ambient")]
-        public Grendgine_Collada_FX_Common_Color_Or_Texture_Type Ambient;
+        public ColladaFXCommonColorOrTextureType Ambient;
 
         [XmlElement(ElementName = "diffuse")]
-        public Grendgine_Collada_FX_Common_Color_Or_Texture_Type Diffuse;
+        public ColladaFXCommonColorOrTextureType Diffuse;
 
         [XmlElement(ElementName = "reflective")]
-        public Grendgine_Collada_FX_Common_Color_Or_Texture_Type Reflective;
+        public ColladaFXCommonColorOrTextureType Reflective;
 
         [XmlElement(ElementName = "transparent")]
-        public Grendgine_Collada_FX_Common_Color_Or_Texture_Type Transparent;
+        public ColladaFXCommonColorOrTextureType Transparent;
 
 
 
         [XmlElement(ElementName = "reflectivity")]
-        public Grendgine_Collada_FX_Common_Float_Or_Param_Type Reflectivity;
+        public ColladaFXCommonFloatOrParamType Reflectivity;
 
         [XmlElement(ElementName = "transparency")]
-        public Grendgine_Collada_FX_Common_Float_Or_Param_Type Transparency;
+        public ColladaFXCommonFloatOrParamType Transparency;
 
         [XmlElement(ElementName = "index_of_refraction")]
-        public Grendgine_Collada_FX_Common_Float_Or_Param_Type Index_Of_Refraction;
+        public ColladaFXCommonFloatOrParamType Index_Of_Refraction;
     }
 }
 

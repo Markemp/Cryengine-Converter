@@ -11,13 +11,13 @@ namespace CgfConverter.Collada
     {
 
         [XmlElement(ElementName = "stiffness")]
-        public Grendgine_Collada_SID_Float Stiffness;
+        public ColladaSIDFloat Stiffness;
 
         [XmlElement(ElementName = "damping")]
-        public Grendgine_Collada_SID_Float Damping;
+        public ColladaSIDFloat Damping;
 
         [XmlElement(ElementName = "target_value")]
-        public Grendgine_Collada_SID_Float Target_Value;
+        public ColladaSIDFloat Target_Value;
     }
 }
 

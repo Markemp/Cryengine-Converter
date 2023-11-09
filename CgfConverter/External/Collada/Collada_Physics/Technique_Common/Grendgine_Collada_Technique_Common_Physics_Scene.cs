@@ -13,7 +13,7 @@ namespace CgfConverter.Collada
         public Grendgine_Collada_SID_Float_Array_String Gravity;
 
         [XmlElement(ElementName = "time_step")]
-        public Grendgine_Collada_SID_Float Time_Step;
+        public ColladaSIDFloat Time_Step;
     }
 }
 

@@ -8,7 +8,7 @@ namespace CgfConverter.Collada
     public partial class Grendgine_Collada_Surfaces
     {
         [XmlElement(ElementName = "surface")]
-        public Grendgine_Collada_Surface[] Surface;
+        public ColladaSurface[] Surface;
 
         [XmlElement(ElementName = "extra")]
         public ColladaExtra[] Extra;

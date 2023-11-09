@@ -9,7 +9,7 @@ namespace CgfConverter.Collada
     public partial class Grendgine_Collada_Plane
     {
         [XmlElement(ElementName = "equation")]
-        public Grendgine_Collada_Float_Array_String Equation;
+        public ColladaFloatArrayString Equation;
 
         [XmlElement(ElementName = "extra")]
         public ColladaExtra[] Extra;

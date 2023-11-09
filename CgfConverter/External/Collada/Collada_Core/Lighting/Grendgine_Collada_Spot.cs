@@ -8,27 +8,27 @@ namespace CgfConverter.Collada
     public partial class Grendgine_Collada_Spot
     {
         [XmlElement(ElementName = "color")]
-        public Grendgine_Collada_Color Color;
+        public ColladaColor Color;
 
         [XmlElement(ElementName = "constant_attenuation")]
         [System.ComponentModel.DefaultValueAttribute(typeof(float), "1.0")]
-        public Grendgine_Collada_SID_Float Constant_Attenuation;
+        public ColladaSIDFloat Constant_Attenuation;
 
         [XmlElement(ElementName = "linear_attenuation")]
         [System.ComponentModel.DefaultValueAttribute(typeof(float), "0.0")]
-        public Grendgine_Collada_SID_Float Linear_Attenuation;
+        public ColladaSIDFloat Linear_Attenuation;
 
         [XmlElement(ElementName = "quadratic_attenuation")]
         [System.ComponentModel.DefaultValueAttribute(typeof(float), "0.0")]
-        public Grendgine_Collada_SID_Float Quadratic_Attenuation;
+        public ColladaSIDFloat Quadratic_Attenuation;
 
         [XmlElement(ElementName = "falloff_angle")]
         [System.ComponentModel.DefaultValueAttribute(typeof(float), "180.0")]
-        public Grendgine_Collada_SID_Float Falloff_Angle;
+        public ColladaSIDFloat Falloff_Angle;
 
         [XmlElement(ElementName = "falloff_exponent")]
         [System.ComponentModel.DefaultValueAttribute(typeof(float), "0.0")]
-        public Grendgine_Collada_SID_Float Falloff_Exponent;
+        public ColladaSIDFloat Falloff_Exponent;
 
 
     }
