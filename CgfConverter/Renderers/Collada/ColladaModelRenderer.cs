@@ -148,210 +148,198 @@ public class ColladaModelRenderer : IRenderer
             .ToList())
         {
             var names = animChunk?.Animations?.Select(x => Path.GetFileNameWithoutExtension(x.Name)).ToArray();
-            animationLibrary.Animation = new ColladaAnimation[names.Count()];
+            animationLibrary.Animation = new ColladaAnimation[animChunk?.Animations?.Count() ?? 0];
+            if (animationLibrary.Animation.Length == 0)
+                continue;
 
             for (int i = 0; i < animChunk.Animations.Count; i++)
             {
                 var animation = animChunk.Animations[i];
                 var animationName = Path.GetFileNameWithoutExtension(animation.Name);
 
-                var timeElements = animChunk.KeyTimes[i];
-                var positions = animChunk.KeyPositions[i];
-                var rotations = animChunk.KeyRotations[i];
-
-                var baseAnimation = new ColladaAnimation
+                var colladaAnimation = new ColladaAnimation  // Root animation object. Controller animations go here.
                 {
-                    Name = Path.GetFileNameWithoutExtension(animation.Name),
-                    ID = $"{Path.GetFileNameWithoutExtension(animation.Name)}_animation",
+                    Name = animationName,
+                    ID = $"{animationName}_animation",
                     Animation = new ColladaAnimation[animation.Controllers.Count]
                 };
 
                 // Add an animation for each controller
+                var controllerAnimations = new List<ColladaAnimation>();
                 for (int j = 0; j < animation.Controllers.Count; j++)
                 {
                     // Each controller can have up to 2 sub Animations, one for position and one for rotation
-                    var controller = animation.Controllers[j];
-                    var controllerBoneName = controllerIdToBoneName[controller.ControllerID];
-                    var controllerIdBase = $"{controllerBoneName}_{controller.ControllerID}";
-                    var animations = new List<ColladaAnimation>();
+                    var controllerInfo = animation.Controllers[j];
+                    var controllerBoneName = controllerIdToBoneName[controllerInfo.ControllerID];
+                    var controllerIdBase = $"{controllerBoneName}_{controllerInfo.ControllerID}";
 
                     if (animation.Controllers[j].HasPosTrack)
-                    {
-                        animations.Add(CreateAnimation(controller, controllerBoneName, "translate", animChunk));
-                        var inputSource = new ColladaSource   // Time
-                        {
-                            ID = $"{controllerIdBase}_input_translate",
-                            Name = $"{controllerIdBase}_input_translate"
-                        };
-                    }
+                        controllerAnimations.Add(CreateAnimation(controllerInfo, "translate", animChunk));
 
                     if (animation.Controllers[j].HasRotTrack)
-                    {
-                        animations.Add(CreateAnimation(controller, controllerBoneName, "rotate", animChunk));
-
-                        var inputSource = new ColladaSource   // Time
-                        {
-                            ID = $"{controllerIdBase}_input",
-                            Name = $"{controllerIdBase}_input"
-                        };
-                    }
-
-
-
-                    var outputSource = new ColladaSource     // transform matrix
-                    {
-                        ID = $"{controllerIdBase}_output",
-                        Name = $"{controllerIdBase}_output"
-                    };
-                    var interpolationSource = new ColladaSource  // interpolation
-                    {
-                        ID = $"{controllerIdBase}_interpolation",
-                        Name = $"{controllerIdBase}_interpolation"
-                    };
-                    var sampler = new ColladaSampler
-                    {
-                        ID = $"{controllerIdBase}_sampler",
-                        Input = new ColladaInputUnshared[3]
-                        {
-                            new ColladaInputUnshared
-                            {
-                                Semantic = ColladaInputSemantic.INPUT,
-                                source = $"#{controllerIdBase}_input"
-                            },
-                            new ColladaInputUnshared
-                            {
-                                Semantic = ColladaInputSemantic.OUTPUT,
-                                source = $"#{controllerIdBase}_output"
-                            },
-                            new ColladaInputUnshared
-                            {
-                                Semantic = ColladaInputSemantic.INTERPOLATION,
-                                source = $"#{controllerIdBase}_interpolation"
-                            }
-                        }
-                    };
-                    var channel = new ColladaChannel
-                    {
-                        Source = $"#{controllerIdBase}_sampler",
-                        Target = $"{controllerBoneName}/transform"
-                    };
-                    var controllerAnimation = new ColladaAnimation
+                        controllerAnimations.Add(CreateAnimation(controllerInfo, "rotate", animChunk));
+                                        
+                    colladaAnimation.Animation[j] = new ColladaAnimation
                     {
                         Name = controllerIdBase,
                         ID = $"{controllerIdBase}_animation",
-                        Source = new ColladaSource[3] { inputSource, outputSource, interpolationSource },
-                        Channel = new ColladaChannel[1] { channel },
-                        Sampler = new ColladaSampler[1] { sampler },
+                        Animation = controllerAnimations.ToArray()
                     };
-
-                    // Create the time source
-                    var timeArray = new ColladaFloatArray
-                    {
-                        ID = $"{animationName}_{controller.ControllerID}_time_array",
-                        Count = timeElements.Count,
-                        Value_As_String = string.Join(" ", timeElements.Select(x => (x - controller.RotKeyTimeTrack) / 30f))
-                    };
-                    inputSource.Float_Array = timeArray;
-                    inputSource.Technique_Common = new ColladaTechniqueCommonSource
-                    {
-                        Accessor = new ColladaAccessor
-                        {
-                            Source = $"#{animationName}_{controller.ControllerID}_time_array",
-                            Count = (uint)timeElements.Count,
-                            Stride = 1,
-                            Param = new ColladaParam[1]
-                            {
-                                new ColladaParam
-                                {
-                                    Name = "TIME",
-                                    Type = "float"
-                                }
-                            }
-                        }
-                    };
-
-                    // Create the transform source
-                    List<Matrix4x4> transformMatricies = new();
-
-                    for (int k = 0; k < rotations.Count; k++)
-                    {
-                        var rot = rotations[k];
-                        var pos = positions[0];
-                        var transform = Matrix4x4.CreateFromQuaternion(rot) * Matrix4x4.CreateTranslation(pos);
-                        transformMatricies.Add(transform);
-                    }
-                    var positionArray = new ColladaFloatArray
-                    {
-                        ID = $"{animationName}_{controller.ControllerID}_position_array",
-                        Count = positions.Count,
-                        //Value_As_String = string.Join(" ", transformMatricies.Select(x => CreateStringFromMatrix(x)))
-                    };
-                    outputSource.Float_Array = positionArray;
-                    outputSource.Technique_Common = new ColladaTechniqueCommonSource
-                    {
-                        Accessor = new ColladaAccessor
-                        {
-                            Source = $"#{animationName}_{controller.ControllerID}_time_array",
-                            Count = (uint)timeElements.Count,
-                            Stride = 1,
-                            Param = new ColladaParam[1]
-                            {
-                                new ColladaParam
-                                {
-                                    Name = "TRANSFORM",
-                                    Type = "float4x4"
-                                }
-                            }
-                        }
-                    };
-
-                    // Create the interpolation source (all LINEAR)
-                    int count = timeElements.Count;
-                    var interpolationArray = new ColladaNameArray
-                    {
-                        ID = $"{animationName}_{controller.ControllerID}_interpolation_array",
-                        Count = count,
-                        Value_Pre_Parse = string.Join(' ', Enumerable.Repeat("LINEAR", count))
-                    };
-                    interpolationSource.Name_Array = interpolationArray;
-                    interpolationSource.Technique_Common = new ColladaTechniqueCommonSource
-                    {
-                        Accessor = new ColladaAccessor
-                        {
-                            Source = $"#{animationName}_{controller.ControllerID}_interpolation_array",
-                            Count = (uint)count,
-                            Stride = 1,
-                            Param = new ColladaParam[1]
-                            {
-                                new ColladaParam
-                                {
-                                    Name = "INTERPOLATION",
-                                    Type = "name"
-                                }
-                            }
-                        }
-                    };
-
-                    baseAnimation.Animation[j] = controllerAnimation;
-                    animationLibrary.Animation[i] = baseAnimation;
+                    controllerAnimations.Clear();
                 }
+                animationLibrary.Animation[i] = colladaAnimation;
             }
-
         }
 
         DaeObject.Library_Animations = animationLibrary;
     }
 
-    private ColladaAnimation CreateAnimation(ChunkController_905.CControllerInfo controllerInfo, string controllerId, string animType, ChunkController_905 controllerChunk)
+    private ColladaAnimation CreateAnimation(
+        ChunkController_905.CControllerInfo controllerInfo,
+        string animType,
+        ChunkController_905 animationChunk)
     {
-        var animation = new ColladaAnimation();
         var controllerBoneName = controllerIdToBoneName[controllerInfo.ControllerID];
         var controllerIdBase = $"{controllerBoneName}_{controllerInfo.ControllerID}_{animType}";
+        
+        var numberOfTimeFrames = animType == "rotate"
+                ? animationChunk.KeyTimes[controllerInfo.RotKeyTimeTrack].Count
+                : animationChunk.KeyTimes[controllerInfo.PosKeyTimeTrack].Count;
 
+        var inputSource = new ColladaSource   // Time
+        {
+            ID = $"{controllerIdBase}_input",
+            Name = $"{controllerIdBase}_input"
+        };
+        var outputSource = new ColladaSource     // transform
+        {
+            ID = $"{controllerIdBase}_output",
+            Name = $"{controllerIdBase}_output"
+        };
+        var interpolationSource = new ColladaSource  // interpolation
+        {
+            ID = $"{controllerIdBase}_interpolation",
+            Name = $"{controllerIdBase}_interpolation"
+        };
+        var sampler = new ColladaSampler
+        {
+            ID = $"{controllerIdBase}_sampler_{animType}",
+            Input = new ColladaInputUnshared[3]
+            {
+                new ColladaInputUnshared
+                {
+                    Semantic = ColladaInputSemantic.INPUT,
+                    source = $"#{controllerIdBase}_input"
+                },
+                new ColladaInputUnshared
+                {
+                    Semantic = ColladaInputSemantic.OUTPUT,
+                    source = $"#{controllerIdBase}_output"
+                },
+                new ColladaInputUnshared
+                {
+                    Semantic = ColladaInputSemantic.INTERPOLATION,
+                    source = $"#{controllerIdBase}_interpolation"
+                }
+            }
+        };
+        var channel = new ColladaChannel
+        {
+            Source = $"#{controllerIdBase}_sampler_{animType}",
+            Target = $"{controllerBoneName}/{animType}"
+        };
+        var controllerAnimation = new ColladaAnimation
+        {
+            Name = controllerIdBase,
+            ID = $"{controllerIdBase}_animation",
+            Source = new ColladaSource[3] { inputSource, outputSource, interpolationSource },
+            Channel = new ColladaChannel[1] { channel },
+            Sampler = new ColladaSampler[1] { sampler },
+        };
 
+        // Create the time source
+        var timeArray = new ColladaFloatArray
+        {
+            ID = $"{controllerBoneName}_{controllerInfo.ControllerID}_{animType}_time_array",
+            Count = numberOfTimeFrames,
+            Value_As_String = string.Join(" ",
+                animType == "rotate"
+                    ? animationChunk.KeyTimes[controllerInfo.RotKeyTimeTrack].Select(x => x / 30f)
+                    : animationChunk.KeyTimes[controllerInfo.PosKeyTimeTrack].Select(x => x / 30f))
+        };
 
+        inputSource.Float_Array = timeArray;
+        inputSource.Technique_Common = new ColladaTechniqueCommonSource
+        {
+            Accessor = new ColladaAccessor
+            {
+                Source = $"#{controllerBoneName}_{controllerInfo.ControllerID}_{animType}_time_array",
+                Count = (uint)timeArray.Count,
+                Stride = 1,
+                Param = new ColladaParam[1] { new ColladaParam { Name = "TIME", Type = "float" } }
+            }
+        };
 
-        return animation;
+        // Create the transform source
+        var numberOfElements = animType == "rotate" ? 4 : 3;
+
+        var colladaParams = new ColladaParam[numberOfElements];
+        if (animType == "rotate")
+        {
+            colladaParams[0] = new ColladaParam { Name = "AXIS_X", Type = "float" };
+            colladaParams[1] = new ColladaParam { Name = "AXIS_Y", Type = "float" };
+            colladaParams[2] = new ColladaParam { Name = "AXIS_Z", Type = "float" };
+            colladaParams[3] = new ColladaParam { Name = "ANGLE", Type = "float" };
+        }
+        else
+        {
+            colladaParams[0] = new ColladaParam { Name = "X", Type = "float" };
+            colladaParams[1] = new ColladaParam { Name = "Y", Type = "float" };
+            colladaParams[2] = new ColladaParam { Name = "Z", Type = "float" };
+        }
+
+        var positionArray = new ColladaFloatArray
+        {
+            ID = $"{controllerBoneName}_{controllerInfo.ControllerID}_{animType}_array",
+            Count = numberOfTimeFrames * numberOfElements,
+            Value_As_String = string.Join(" ",
+                animType == "rotate"
+                    ? animationChunk.KeyRotations[controllerInfo.RotTrack].Select(x => CreateStringFromVector4(x.ToAxisAngle()))
+                    : animationChunk.KeyPositions[controllerInfo.PosTrack].Select(x => CreateStringFromVector3(x)))
+        };
+        outputSource.Float_Array = positionArray;
+        var paramType = animType == "rotate" ? "vector4" : "vector3";
+        outputSource.Technique_Common = new ColladaTechniqueCommonSource
+        {
+            Accessor = new ColladaAccessor
+            {
+                Source = $"#{controllerBoneName}_{controllerInfo.ControllerID}_{animType}_array",
+                Count = (uint)numberOfTimeFrames,
+                Stride = (uint)numberOfElements,
+                Param = colladaParams
+            }
+        };
+
+        // Create the interpolation source (all LINEAR)
+        var interpolationArray = new ColladaNameArray
+        {
+            ID = $"{controllerBoneName}_{controllerInfo.ControllerID}_{animType}_interpolation_array",
+            Count = numberOfTimeFrames,
+            Value_Pre_Parse = string.Join(' ', Enumerable.Repeat("LINEAR", numberOfTimeFrames))
+        };
+        interpolationSource.Name_Array = interpolationArray;
+        interpolationSource.Technique_Common = new ColladaTechniqueCommonSource
+        {
+            Accessor = new ColladaAccessor
+            {
+                Source = $"#{controllerBoneName}_{controllerInfo.ControllerID}_{animType}_interpolation_array",
+                Count = (uint)numberOfTimeFrames,
+                Stride = 1,
+                Param = new ColladaParam[1] { new ColladaParam { Name = "INTERPOLATION", Type = "name" } }
+            }
+        };
+
+        return controllerAnimation;
     }
 
     public ColladaEffect CreateColladaEffect(Material material)
