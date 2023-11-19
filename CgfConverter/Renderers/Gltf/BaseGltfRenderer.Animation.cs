@@ -16,10 +16,7 @@ public partial class BaseGltfRenderer
         IReadOnlyDictionary<int, int> keyRotationAccessors,
         IReadOnlyDictionary<uint, int> controllerIdToNodeIndex)
     {
-        newAnimation = new GltfAnimation
-        {
-            Name = anim.Name,
-        };
+        newAnimation = new GltfAnimation { Name = anim.Name };
 
         foreach (var con in anim.Controllers)
         {

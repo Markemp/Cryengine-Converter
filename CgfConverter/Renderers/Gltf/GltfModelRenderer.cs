@@ -26,9 +26,9 @@ public class GltfModelRenderer : BaseGltfRenderer, IRenderer
         }
 
         Save(_cryData.InputFile);
+
         return 1;
     }
-
 
     public GltfRoot GenerateGltfObject()
     {

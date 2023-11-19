@@ -90,8 +90,8 @@ public class ColladaModelRenderer : IRenderer
             WriteLibrary_VisualScenes();
 
         // Write animations
-        if (_cryData.Animations is not null)
-            WriteLibrary_Animations();
+        //if (_cryData.Animations is not null)
+        //    WriteLibrary_Animations();
     }
 
     protected void WriteColladaRoot(string version)
@@ -199,12 +199,15 @@ public class ColladaModelRenderer : IRenderer
         string animType,
         ChunkController_905 animationChunk)
     {
+        return null;
         var controllerBoneName = controllerIdToBoneName[controllerInfo.ControllerID];
         var controllerIdBase = $"{controllerBoneName}_{controllerInfo.ControllerID}_{animType}";
         
         var numberOfTimeFrames = animType == "rotate"
                 ? animationChunk.KeyTimes[controllerInfo.RotKeyTimeTrack].Count
                 : animationChunk.KeyTimes[controllerInfo.PosKeyTimeTrack].Count;
+
+        var pathName = animType == "rotate" ? "rotation" : "location";
 
         var inputSource = new ColladaSource   // Time
         {
@@ -246,7 +249,7 @@ public class ColladaModelRenderer : IRenderer
         var channel = new ColladaChannel
         {
             Source = $"#{controllerIdBase}_sampler_{animType}",
-            Target = $"{controllerBoneName}/{animType}"
+            Target = $"{controllerBoneName}/{pathName}"
         };
         var controllerAnimation = new ColladaAnimation
         {
@@ -283,20 +286,11 @@ public class ColladaModelRenderer : IRenderer
         // Create the transform source
         var numberOfElements = animType == "rotate" ? 4 : 3;
 
-        var colladaParams = new ColladaParam[numberOfElements];
+        var colladaParams = new ColladaParam[1];
         if (animType == "rotate")
-        {
-            colladaParams[0] = new ColladaParam { Name = "AXIS_X", Type = "float" };
-            colladaParams[1] = new ColladaParam { Name = "AXIS_Y", Type = "float" };
-            colladaParams[2] = new ColladaParam { Name = "AXIS_Z", Type = "float" };
-            colladaParams[3] = new ColladaParam { Name = "ANGLE", Type = "float" };
-        }
+            colladaParams[0] = new ColladaParam { Name = "AXISANGLE", Type = "vector4" };
         else
-        {
-            colladaParams[0] = new ColladaParam { Name = "X", Type = "float" };
-            colladaParams[1] = new ColladaParam { Name = "Y", Type = "float" };
-            colladaParams[2] = new ColladaParam { Name = "Z", Type = "float" };
-        }
+            colladaParams[0] = new ColladaParam { Name = "TRANSLATE", Type = "vector3" };
 
         var positionArray = new ColladaFloatArray
         {
@@ -308,7 +302,7 @@ public class ColladaModelRenderer : IRenderer
                     : animationChunk.KeyPositions[controllerInfo.PosTrack].Select(x => CreateStringFromVector3(x)))
         };
         outputSource.Float_Array = positionArray;
-        var paramType = animType == "rotate" ? "vector4" : "vector3";
+        //var paramType = animType == "rotate" ? "vector4" : "vector3";
         outputSource.Technique_Common = new ColladaTechniqueCommonSource
         {
             Accessor = new ColladaAccessor
@@ -1472,7 +1466,7 @@ public class ColladaModelRenderer : IRenderer
             sID = "translate",
             Value_As_String = CreateStringFromVector3(new Vector3 { X = nodeChunk.LocalTransform.M14, Y = nodeChunk.LocalTransform.M24, Z = nodeChunk.LocalTransform.M34 })
         };
-        var quat = Quaternion.CreateFromRotationMatrix(nodeChunk.LocalTransform);
+
         ColladaRotate rotate = new()
         {
             sID = "rotate",
@@ -1512,42 +1506,34 @@ public class ColladaModelRenderer : IRenderer
     private ColladaNode CreateJointNode(CompiledBone bone)
     {
         var boneName = bone.boneName.Replace(' ', '_');
+
         ColladaNode tmpNode = new()
         {
-            ID = boneName,
+            ID = boneName,      // ID, name and sID must be the same or the controller can't seem to find the bone.
             Name = boneName,
-            sID = boneName,  // Both ID and sID have to be the bonename or the import goes bad.
+            sID = boneName,
             Type = ColladaNodeType.JOINT
         };
-        controllerIdToBoneName.Add(bone.ControllerID, boneName);
+        controllerIdToBoneName.Add(bone.ControllerID, bone.boneName);
 
-        ColladaTranslate translate = new()
-        {
-            sID = "translate",
-            Value_As_String = CreateStringFromVector3(new Vector3 { X = bone.LocalTransform.M14, Y = bone.LocalTransform.M24, Z = bone.LocalTransform.M34 })
-        };
-        ColladaRotate rotate = new()
-        {
-            sID = "rotate",
-            Value_As_String = CreateStringFromVector4(Quaternion.CreateFromRotationMatrix(bone.LocalTransform).ToAxisAngle())
-        };
-        tmpNode.Translate = new ColladaTranslate[1] { translate };
-        tmpNode.Rotate = new ColladaRotate[1] { rotate };
+        ColladaMatrix matrix = new();
+        List<ColladaMatrix> matrices = new();
+        matrix.Value_As_String = CreateStringFromMatrix4x4(bone.LocalTransform);
+
+        matrices.Add(matrix);
+        tmpNode.Matrix = matrices.ToArray();
 
         // Recursively call this for each of the child bones to this bone.
         if (bone.childIDs.Count > 0)
         {
-            ColladaNode[] childNodes = new ColladaNode[bone.childIDs.Count];
-            int counter = 0;
-
+            List<ColladaNode> childNodes = new();
             foreach (CompiledBone childBone in _cryData.Bones.GetAllChildBones(bone))
             {
                 ColladaNode childNode = new();
                 childNode = CreateJointNode(childBone);
-                childNodes[counter] = childNode;
-                counter++;
+                childNodes.Add(childNode);
             }
-            tmpNode.node = childNodes;
+            tmpNode.node = childNodes.ToArray();
         }
         return tmpNode;
     }
@@ -1563,20 +1549,30 @@ public class ColladaModelRenderer : IRenderer
         // Make the lists necessary for this Node.
 
         List<ColladaBindMaterial> bindMaterials = new();
+        List<ColladaMatrix> matrices = new();
 
-        ColladaTranslate translate = new()
+        //ColladaTranslate translate = new()
+        //{
+        //    sID = "translate",
+        //    Value_As_String = CreateStringFromVector3(new Vector3 { X = nodeChunk.LocalTransform.M14, Y = nodeChunk.LocalTransform.M24, Z = nodeChunk.LocalTransform.M34 })
+        //};
+        //var quat = Quaternion.CreateFromRotationMatrix(nodeChunk.LocalTransform);
+        //ColladaRotate rotate = new()
+        //{
+        //    sID = "rotate",
+        //    Value_As_String = CreateStringFromVector4(Quaternion.CreateFromRotationMatrix(nodeChunk.LocalTransform).ToAxisAngle())
+        //};
+        //colladaNode.Translate = new ColladaTranslate[1] { translate };
+        //colladaNode.Rotate = new ColladaRotate[1] { rotate };
+
+        ColladaMatrix matrix = new()
         {
-            sID = "translate",
-            Value_As_String = CreateStringFromVector3(new Vector3 { X = nodeChunk.LocalTransform.M14, Y = nodeChunk.LocalTransform.M24, Z = nodeChunk.LocalTransform.M34 })
+            Value_As_String = CreateStringFromMatrix4x4(nodeChunk.LocalTransform),
+            sID = "transform"
         };
-        var quat = Quaternion.CreateFromRotationMatrix(nodeChunk.LocalTransform);
-        ColladaRotate rotate = new()
-        {
-            sID = "rotate",
-            Value_As_String = CreateStringFromVector4(Quaternion.CreateFromRotationMatrix(nodeChunk.LocalTransform).ToAxisAngle())
-        };
-        colladaNode.Translate = new ColladaTranslate[1] { translate };
-        colladaNode.Rotate = new ColladaRotate[1] { rotate };
+
+        matrices.Add(matrix);          // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
+        colladaNode.Matrix = matrices.ToArray();
 
         // Each node will have one instance geometry, although it could be a list.
         if (!isControllerNode)
