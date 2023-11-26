@@ -97,10 +97,7 @@ public class ColladaModelRenderer : IRenderer
     protected void WriteColladaRoot(string version)
     {
         // Blender doesn't like 1.5. :(
-        if (version == "1.4.1")
-            DaeObject.Collada_Version = "1.4.1";
-        else if (version == "1.5.0")
-            DaeObject.Collada_Version = "1.5.0";
+        DaeObject.Collada_Version = version;
     }
 
     protected void WriteAsset()
@@ -199,7 +196,6 @@ public class ColladaModelRenderer : IRenderer
         string animType,
         ChunkController_905 animationChunk)
     {
-        return null;
         var controllerBoneName = controllerIdToBoneName[controllerInfo.ControllerID];
         var controllerIdBase = $"{controllerBoneName}_{controllerInfo.ControllerID}_{animType}";
         

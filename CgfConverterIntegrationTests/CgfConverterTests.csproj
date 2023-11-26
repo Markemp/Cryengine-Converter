@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <Version>1.2.0</Version>
     <Authors>Geoff Gerber</Authors>
@@ -10,7 +9,6 @@
     <AssemblyVersion>1.3.1.0</AssemblyVersion>
     <FileVersion>1.3.1.0</FileVersion>
   </PropertyGroup>
-
   <ItemGroup>
     <Compile Remove="Properties\**" />
     <Compile Remove="ResourceFiles\**" />
@@ -19,21 +17,18 @@
     <None Remove="Properties\**" />
     <None Remove="ResourceFiles\**" />
   </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.1" />
-    <PackageReference Include="MSTest.TestAdapter" Version="3.0.1" />
-    <PackageReference Include="MSTest.TestFramework" Version="3.0.1" />
-    <PackageReference Include="NUnit" Version="3.13.3" />
-    <PackageReference Include="NUnit3TestAdapter" Version="4.3.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.1.1" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.1.1" />
+    <PackageReference Include="NUnit" Version="4.0.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
     <PackageReference Include="BCnEncoder.Net.ImageSharp" Version="1.1.1" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="2.1.3" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="2.1.6" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\CgfConverter\CgfConverter.csproj" />
   </ItemGroup>
-
   <ItemGroup>
     <None Update="Schemas\COLLADA_1_5.xsd">
       <SubType>Designer</SubType>
@@ -51,5 +46,4 @@
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
-
 </Project>
