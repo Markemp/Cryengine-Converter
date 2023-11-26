@@ -90,8 +90,8 @@ public class ColladaModelRenderer : IRenderer
             WriteLibrary_VisualScenes();
 
         // Write animations
-        //if (_cryData.Animations is not null)
-        //    WriteLibrary_Animations();
+        if (_cryData.Animations is not null)
+            WriteLibrary_Animations();
     }
 
     protected void WriteColladaRoot(string version)
@@ -148,7 +148,7 @@ public class ColladaModelRenderer : IRenderer
             .ToList())
         {
             var names = animChunk?.Animations?.Select(x => Path.GetFileNameWithoutExtension(x.Name)).ToArray();
-            animationLibrary.Animation = new ColladaAnimation[animChunk?.Animations?.Count() ?? 0];
+            animationLibrary.Animation = new ColladaAnimation[animChunk?.Animations?.Count ?? 0];
             if (animationLibrary.Animation.Length == 0)
                 continue;
 

@@ -14,6 +14,7 @@ using Extensions;
 using System.IO;
 using System.Xml.Linq;
 using System.Xml.Serialization;
+using NUnit.Framework.Interfaces;
 
 namespace CgfConverterTests.IntegrationTests;
 
@@ -303,27 +304,22 @@ public class MWOIntegrationTests
         Assert.AreEqual("Bip01", node.sID);
         Assert.AreEqual("Bip01", node.Name);
         Assert.AreEqual("JOINT", node.Type.ToString());
-        Assert.AreEqual("0 0 0", node.Translate[0].Value_As_String);
-        Assert.AreEqual("-0 -0 1 90.000008", node.Rotate[0].Value_As_String);
+        Assert.AreEqual("-0 -1 0 0 1 -0 0 0 0 0 1 0 0 0 0 1", node.Matrix[0].Value_As_String);
         var pelvisNode = node.node[0];
         Assert.AreEqual("Bip01_Pelvis", pelvisNode.ID);
         Assert.AreEqual("Bip01_Pelvis", pelvisNode.Name);
         Assert.AreEqual("Bip01_Pelvis", pelvisNode.sID);
         Assert.AreEqual("JOINT", pelvisNode.Type.ToString());
-        Assert.AreEqual("-0 0.000001 8.346858", pelvisNode.Translate[0].Value_As_String);
-        Assert.AreEqual("-0.577350 0.577350 -0.577350 239.999969", pelvisNode.Rotate[0].Value_As_String);
+        Assert.AreEqual("-0 -1 0 -0 0 -0 -1 0.000001 1 -0 0 8.346858 0 0 0 1", pelvisNode.Matrix[0].Value_As_String);
         Assert.AreEqual(3, pelvisNode.node.Length);
         var pitchNode = pelvisNode.node.Where(a => a.ID == "Bip01_Pitch").FirstOrDefault();
         var leftHipNode = pelvisNode.node.Where(a => a.ID == "Bip01_L_Hip").FirstOrDefault();
         var rightHipNode = pelvisNode.node.Where(a => a.ID == "Bip01_R_Hip").FirstOrDefault();
         Assert.IsNotNull(pitchNode);
         Assert.AreEqual("Bip01_Pitch", pitchNode.sID);
-        Assert.AreEqual("-8.346856 0 6.719837", leftHipNode.Translate[0].Value_As_String);
-        Assert.AreEqual("-8.346855 0.000001 9.973884", rightHipNode.Translate[0].Value_As_String);
-        Assert.AreEqual("-9.126455 0.000001 8.346861", pitchNode.Translate[0].Value_As_String);
-        Assert.AreEqual("0.581579 -0.568799 -0.581579 239.262253", leftHipNode.Rotate[0].Value_As_String);
-        Assert.AreEqual("-0.573027 -0.585902 -0.573026 119.267746", rightHipNode.Rotate[0].Value_As_String);
-        Assert.AreEqual("0.523339 -0.852114 -0.004222 179.702835", pitchNode.Rotate[0].Value_As_String);
+        Assert.AreEqual("-0.000001 -0.999753 -0.022216 -8.346856 -0 -0.022216 0.999753 0 -1 0.000001 -0 6.719837 0 0 0 1", leftHipNode.Matrix[0].Value_As_String);
+        Assert.AreEqual("0 0.999753 -0.022216 -8.346855 0 0.022216 0.999753 0.000001 1 -0 -0 9.973884 0 0 0 1", rightHipNode.Matrix[0].Value_As_String);
+        Assert.AreEqual("-0.452222 -0.891861 -0.008838 -9.126455 -0.891905 0.452200 0.004481 0.000001 0 0.009909 -0.999951 8.346861 0 0 0 1", pitchNode.Matrix[0].Value_As_String);
 
         // Geometry Node check
         node = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[1];
@@ -399,32 +395,18 @@ public class MWOIntegrationTests
         var scene = daeObject.Library_Visual_Scene.Visual_Scene[0];
         Assert.AreEqual(2, scene.Node.Length);
         var armature = scene.Node[0];
-        var geometryNode = scene.Node[1];
+        var instance = scene.Node[1];
         Assert.AreEqual("Bip01", armature.ID);
         Assert.AreEqual("Bip01", armature.Name);
-        Assert.IsNull(armature.Matrix);
-        Assert.AreEqual(1, armature.Rotate.Length);
-        Assert.AreEqual(1, armature.Translate.Length);
-        Assert.AreEqual("0 -0 0.023305", armature.Translate[0].Value_As_String);
-        Assert.AreEqual("0.577350 0.577350 -0.577350 120.000008", armature.Rotate[0].Value_As_String);
+        Assert.AreEqual("-0 1 -0 0 -0 -0 -1 -0 -1 -0 0 0.023305 0 0 0 1", armature.Matrix[0].Value_As_String);
         Assert.AreEqual("hang_seg1", armature.node[0].ID);
         Assert.AreEqual("hang_seg1", armature.node[0].Name);
-        Assert.AreEqual(1, armature.Rotate.Length);
-        Assert.AreEqual(1, armature.Translate.Length);
-        Assert.AreEqual("-0 0.000092 0.023305", armature.node[0].Translate[0].Value_As_String);
-        Assert.AreEqual("-0.577335 -0.577386 0.577330 119.997345", armature.node[0].Rotate[0].Value_As_String);
+        Assert.AreEqual("-0 0.000008 -1 -0 1 0.000088 -0 0.000092 0.000088 -1 -0.000008 0.023305 0 0 0 1", armature.node[0].Matrix[0].Value_As_String);
         Assert.AreEqual("hang_seg2", armature.node[0].node[0].ID);
         Assert.AreEqual("hang_seg2", armature.node[0].node[0].Name);
-        Assert.AreEqual(1, armature.Rotate.Length);
-        Assert.AreEqual(1, armature.Translate.Length);
-        Assert.AreEqual("-0 0.026455 -0.000089", armature.node[0].node[0].Translate[0].Value_As_String);
-        Assert.AreEqual("-0.577314 -0.577371 0.577365 119.994629", armature.node[0].node[0].Rotate[0].Value_As_String);
+        Assert.AreEqual("-0.000009 -0.000080 -1 -0 1 0.000091 -0.000009 0.026455 0.000091 -1 0.000080 -0.000089 0 0 0 1", armature.node[0].node[0].Matrix[0].Value_As_String);
 
-        Assert.AreEqual(2, geometryNode.Instance_Controller[0].Bind_Material[0].Technique_Common.Instance_Material.Length);
-        Assert.AreEqual(1, geometryNode.Translate.Length);
-        Assert.AreEqual(1, geometryNode.Rotate.Length);
-        Assert.AreEqual("0 0 0", geometryNode.Translate[0].Value_As_String);
-        Assert.AreEqual("1 0 0 0", geometryNode.Rotate[0].Value_As_String);
+        Assert.AreEqual(2, instance.Instance_Controller[0].Bind_Material[0].Technique_Common.Instance_Material.Length);
 
         testUtils.ValidateColladaXml(colladaData);
     }
@@ -509,20 +491,11 @@ public class MWOIntegrationTests
         Assert.AreEqual(1, daeObject.Library_Visual_Scene.Visual_Scene.Length);
         Assert.AreEqual("Scene", daeObject.Library_Visual_Scene.Visual_Scene[0].ID);
         Assert.AreEqual(1, daeObject.Library_Visual_Scene.Visual_Scene[0].Node.Length);
-        // Node check
+        // Node Matrix check
         var node = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0];
-        Assert.AreEqual("hbr_right_torso", node.ID);
-        Assert.AreEqual("hbr_right_torso", node.Name);
-        Assert.AreEqual(1, node.Instance_Geometry.Length);
-        Assert.AreEqual(2, node.node.Length);
-        Assert.IsNull(node.Matrix);
-        Assert.AreEqual(1, node.Instance_Geometry.Length);
-        Assert.AreEqual("hbr_right_torso_case", node.node[0].ID);
-        Assert.AreEqual("hbr_right_torso_case", node.node[0].Name);
-        Assert.AreEqual("hbr_right_torso_fx", node.node[1].Name);
-        Assert.AreEqual(ColladaNodeType.NODE, node.node[0].Type);
-        Assert.AreEqual("1.830486 -2.444341 -1.542505", node.node[0].Translate[0].Value_As_String);
-        Assert.AreEqual("1 0 0 0", node.node[1].Rotate[0].Value_As_String);
+        const string matrix = "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1";
+        Assert.AreEqual(matrix, node.Matrix[0].Value_As_String);
+        Assert.AreEqual("transform", node.Matrix[0].sID);
         // Instance Geometry check
         Assert.AreEqual("hbr_right_torso", node.Instance_Geometry[0].Name);
         Assert.AreEqual("#hbr_right_torso-mesh", node.Instance_Geometry[0].URL);
