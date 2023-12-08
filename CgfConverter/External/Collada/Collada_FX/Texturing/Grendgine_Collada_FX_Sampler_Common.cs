@@ -10,7 +10,7 @@ namespace CgfConverter.Collada
     {
 
         [XmlElement(ElementName = "texcoord")]
-        public Grendgine_Collada_TexCoord_Semantic TexCoord_Semantic;
+        public ColladaTexCoordSemantic TexCoord_Semantic;
 
         [XmlElement(ElementName = "wrap_s")]
         //[System.ComponentModel.DefaultValueAttribute(Grendgine_Collada_FX_Sampler_Common_Wrap_Mode.WRAP)]		

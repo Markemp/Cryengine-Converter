@@ -12,7 +12,7 @@ namespace CgfConverter.Collada
         public string Symbol;
 
         [XmlElement(ElementName = "semantic")]
-        public Grendgine_Collada_Semantic Semantic;
+        public ColladaSemantic Semantic;
     }
 }
 

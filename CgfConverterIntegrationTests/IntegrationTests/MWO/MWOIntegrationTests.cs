@@ -14,7 +14,6 @@ using Extensions;
 using System.IO;
 using System.Xml.Linq;
 using System.Xml.Serialization;
-using NUnit.Framework.Interfaces;
 
 namespace CgfConverterTests.IntegrationTests;
 

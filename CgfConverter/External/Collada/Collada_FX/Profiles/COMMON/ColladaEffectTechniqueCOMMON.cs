@@ -6,7 +6,7 @@ namespace CgfConverter.Collada
     [Serializable]
     [XmlType(AnonymousType = true)]
     [System.Xml.Serialization.XmlRootAttribute(ElementName = "technique", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-    public partial class ColladaEffectTechniqueCOMMON : Grendgine_Collada_Effect_Technique
+    public partial class ColladaEffectTechniqueCOMMON : ColladaEffectTechnique
     {
 
         [XmlElement(ElementName = "blinn")]

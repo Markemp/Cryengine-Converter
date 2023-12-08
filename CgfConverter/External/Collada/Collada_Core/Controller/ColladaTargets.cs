@@ -6,7 +6,7 @@ namespace CgfConverter.Collada;
 
 [Serializable]
 [XmlType(AnonymousType = true)]
-public partial class Grendgine_Collada_Targets
+public partial class ColladaTargets
 {
 
     [XmlElement(ElementName = "input")]

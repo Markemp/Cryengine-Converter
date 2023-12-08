@@ -6,21 +6,11 @@ namespace CgfConverter.Collada;
 
 [Serializable]
 [XmlType(AnonymousType = true)]
-public partial class ColladaController
+[XmlRootAttribute(Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
+public partial class ColladaProfile
 {
     [XmlAttribute("id")]
     public string ID;
-
-    [XmlAttribute("name")]
-    public string Name;
-
-
-    [XmlElement(ElementName = "skin")]
-    public ColladaSkin Skin;
-
-    [XmlElement(ElementName = "morph")]
-    public ColladaMorph Morph;
-
 
     [XmlElement(ElementName = "asset")]
     public ColladaAsset Asset;

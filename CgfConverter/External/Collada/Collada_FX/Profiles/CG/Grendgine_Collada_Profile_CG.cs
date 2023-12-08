@@ -6,7 +6,7 @@ namespace CgfConverter.Collada
     [Serializable]
     [XmlType(AnonymousType = true)]
     [System.Xml.Serialization.XmlRootAttribute(ElementName = "profile_CG", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-    public partial class Grendgine_Collada_Profile_CG : Grendgine_Collada_Profile
+    public partial class Grendgine_Collada_Profile_CG : ColladaProfile
     {
         [XmlAttribute("platform")]
         public string Platform;

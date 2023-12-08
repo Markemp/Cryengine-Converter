@@ -10,13 +10,13 @@ namespace CgfConverter.Collada
     {
 
         [XmlElement(ElementName = "size")]
-        public Grendgine_Collada_Size_Width_Only Size;
+        public ColladaSizeWidthOnly Size;
 
         [XmlElement(ElementName = "mips")]
-        public Grendgine_Collada_Mips_Attribute Mips;
+        public ColladaMipsAttribute Mips;
 
         [XmlElement(ElementName = "array")]
-        public Grendgine_Collada_Array_Length Array_Length;
+        public ColladaArrayLength Array_Length;
 
         [XmlElement(ElementName = "format")]
         public Grendgine_Collada_Format Format;

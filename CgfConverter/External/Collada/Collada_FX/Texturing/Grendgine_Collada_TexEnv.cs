@@ -15,7 +15,7 @@ namespace CgfConverter.Collada
         public string Sampler;
 
         [XmlElement(ElementName = "constant")]
-        public Grendgine_Collada_Constant_Attribute Constant;
+        public ColladaConstantAttribute Constant;
     }
 }
 

@@ -15,7 +15,7 @@ namespace CgfConverter.Collada
         public string[] Inline;
 
         [XmlElement(ElementName = "import")]
-        public Grendgine_Collada_Ref_String[] Import;
+        public ColladaRefString[] Import;
 
 
     }

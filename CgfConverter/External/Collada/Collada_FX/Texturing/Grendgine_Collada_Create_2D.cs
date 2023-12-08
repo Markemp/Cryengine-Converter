@@ -10,14 +10,14 @@ namespace CgfConverter.Collada
     {
 
         [XmlElement(ElementName = "size_exact")]
-        public Grendgine_Collada_Size_2D Size_Exact;
+        public ColladaSize2D Size_Exact;
 
 
         [XmlElement(ElementName = "size_ratio")]
-        public Grendgine_Collada_Size_Ratio Size_Ratio;
+        public ColladaSizeRatio Size_Ratio;
 
         [XmlElement(ElementName = "mips")]
-        public Grendgine_Collada_Mips_Attribute Mips;
+        public ColladaMipsAttribute Mips;
 
 
 
@@ -25,7 +25,7 @@ namespace CgfConverter.Collada
         public XmlElement Unnormalized;
 
         [XmlElement(ElementName = "array")]
-        public Grendgine_Collada_Array_Length Array_Length;
+        public ColladaArrayLength Array_Length;
 
 
         [XmlElement(ElementName = "format")]

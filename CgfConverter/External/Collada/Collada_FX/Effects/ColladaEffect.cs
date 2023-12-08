@@ -18,7 +18,7 @@ namespace CgfConverter.Collada
         public ColladaAsset Asset;
 
         [XmlElement(ElementName = "annotate")]
-        public Grendgine_Collada_Annotate[] Annotate;
+        public ColladaAnnotate[] Annotate;
 
         [XmlElement(ElementName = "newparam")]
         public ColladaNewParam[] New_Param;

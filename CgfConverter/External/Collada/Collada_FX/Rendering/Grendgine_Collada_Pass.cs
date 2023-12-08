@@ -12,7 +12,7 @@ namespace CgfConverter.Collada
         public string sID;
 
         [XmlElement(ElementName = "annotate")]
-        public Grendgine_Collada_Annotate[] Annotate;
+        public ColladaAnnotate[] Annotate;
 
         [XmlElement(ElementName = "extra")]
         public ColladaExtra[] Extra;

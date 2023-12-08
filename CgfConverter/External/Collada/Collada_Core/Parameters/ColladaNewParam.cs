@@ -18,7 +18,7 @@ public partial class ColladaNewParam
     public string Modifier;
 
     [XmlElement("annotate")]
-    public Grendgine_Collada_Annotate[] Annotate;
+    public ColladaAnnotate[] Annotate;
 
     /// <summary>
     /// The element is the type and the element text is the value or space delimited list of values

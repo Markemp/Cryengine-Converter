@@ -24,7 +24,7 @@ namespace CgfConverter.Collada
         public ColladaExtra[] Extra;
 
         [XmlElement(ElementName = "technique_hint")]
-        public Grendgine_Collada_Technique_Hint[] Technique_Hint;
+        public ColladaTechniqueHint[] Technique_Hint;
 
     }
 }

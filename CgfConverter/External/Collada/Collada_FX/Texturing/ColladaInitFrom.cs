@@ -33,7 +33,7 @@ namespace CgfConverter.Collada
         public string Ref;
 
         [XmlElement(ElementName = "hex")]
-        public Grendgine_Collada_Hex Hex;
+        public ColladaHex Hex;
     }
 }
 

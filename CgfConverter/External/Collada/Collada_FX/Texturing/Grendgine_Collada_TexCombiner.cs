@@ -10,7 +10,7 @@ namespace CgfConverter.Collada
     {
 
         [XmlElement(ElementName = "constant")]
-        public Grendgine_Collada_Constant_Attribute Constant;
+        public ColladaConstantAttribute Constant;
 
         [XmlElement(ElementName = "RGB")]
         public Grendgine_Collada_RGB RGB;

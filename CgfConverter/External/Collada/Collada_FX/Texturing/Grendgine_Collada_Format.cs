@@ -9,7 +9,7 @@ namespace CgfConverter.Collada
     public partial class Grendgine_Collada_Format
     {
         [XmlElement(ElementName = "hint")]
-        public Grendgine_Collada_Format_Hint Hint;
+        public ColladaFormatHint Hint;
 
         [XmlElement(ElementName = "exact")]
         public string Exact;

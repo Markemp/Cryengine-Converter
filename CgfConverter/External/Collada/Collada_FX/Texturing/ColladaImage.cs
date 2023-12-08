@@ -21,7 +21,7 @@ namespace CgfConverter.Collada
         public ColladaAsset Asset;
 
         [XmlElement(ElementName = "renderable")]
-        public Grendgine_Collada_Renderable_Share Renderable_Share;
+        public ColladaRenderableShare Renderable_Share;
 
         [XmlElement(ElementName = "init_from")]
         public ColladaInitFrom Init_From;

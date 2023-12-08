@@ -21,10 +21,10 @@ namespace CgfConverter.Collada
         public string Symbol;
 
         [XmlElement(ElementName = "bind")]
-        public Grendgine_Collada_Bind_FX[] Bind;
+        public ColladaBindFX[] Bind;
 
         [XmlElement(ElementName = "bind_vertex_input")]
-        public Grendgine_Collada_Bind_Vertex_Input[] Bind_Vertex_Input;
+        public ColladaBindVertexInput[] Bind_Vertex_Input;
 
         [XmlElement(ElementName = "extra")]
         public ColladaExtra[] Extra;

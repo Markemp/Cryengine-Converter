@@ -12,10 +12,10 @@ namespace CgfConverter.Collada
         public string URL;
 
         [XmlElement(ElementName = "technique_override")]
-        public Grendgine_Collada_Technique_Override Technique_Override;
+        public ColladaTechniqueOverride Technique_Override;
 
         [XmlElement(ElementName = "bind")]
-        public Grendgine_Collada_Bind_FX[] Bind;
+        public ColladaBindFX[] Bind;
 
         [XmlElement(ElementName = "extra")]
         public ColladaExtra[] Extra;
