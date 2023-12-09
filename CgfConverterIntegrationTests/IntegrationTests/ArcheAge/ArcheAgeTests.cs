@@ -62,14 +62,12 @@ public class ArcheAgeTests
         Assert.AreEqual("Bip01", node.sID);
         Assert.AreEqual("Bip01", node.Name);
         Assert.AreEqual("JOINT", node.Type.ToString());
-        Assert.AreEqual("0 0 0", node.Translate[0].Value_As_String);
-        Assert.AreEqual("1 0 0 0", node.Rotate[0].Value_As_String);
+        Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1", node.Matrix[0].Value_As_String);
         var locatorBone = node.node[0];
         Assert.AreEqual("Locator_Locomotion", locatorBone.ID);
         Assert.AreEqual("Locator_Locomotion", locatorBone.Name);
         Assert.AreEqual("Locator_Locomotion", locatorBone.sID);
         Assert.AreEqual("JOINT", locatorBone.Type.ToString());
-        Assert.AreEqual("0 0 0", locatorBone.Translate[0].Value_As_String);
-        Assert.AreEqual("1 0 0 0", locatorBone.Rotate[0].Value_As_String);
+        Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1", locatorBone.Matrix[0].Value_As_String);
     }
 }
