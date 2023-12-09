@@ -209,7 +209,7 @@ public partial class CryEngine
             // If Ivo file, just a single material node chunk with a library.
             if (nodeChunk._model.IsIvoFile)
             {
-                if (Chunks.FirstOrDefault(c => c.ChunkType == ChunkType.MtlNameIvo) is not ChunkMtlName ivoMatChunk)
+                if (Chunks.FirstOrDefault(c => c.ChunkType == ChunkType.MtlNameIvo || c.ChunkType == ChunkType.MtlNameIvo320) is not ChunkMtlName ivoMatChunk)
                 {
                     Log.D($"Unable to find material chunk {nodeChunk.MatID} for node {nodeChunk.ID}");
                     continue;

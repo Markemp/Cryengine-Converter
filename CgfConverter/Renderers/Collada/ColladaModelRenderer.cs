@@ -91,13 +91,9 @@ public class ColladaModelRenderer : IRenderer
         WriteAsset();
         WriteScene();
 
-        // Create Material, Effects and Textures libraries
-        ColladaLibraryMaterials libraryMaterials = new();
-        DaeObject.Library_Materials = libraryMaterials;
-        ColladaLibraryImages libraryImages = new();
-        DaeObject.Library_Images = libraryImages;
-        ColladaLibraryEffects libraryEffects = new();
-        DaeObject.Library_Effects = libraryEffects;
+        DaeObject.Library_Materials = new();
+        DaeObject.Library_Images = new();
+        DaeObject.Library_Effects = new();
 
         WriteLibrary_Geometries();
 

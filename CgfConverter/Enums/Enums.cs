@@ -88,6 +88,7 @@ public enum ChunkType : uint    // complete
     MeshIvo = 0x9293B9D8,           // SkinInfo
     MeshIvo320 = 0x92914444,
     IvoSkin = 0xB875B2D9,           // SkinMesh
+    IvoSkin2 = 0xB8757777,
     BShapesGPU = 0x57A3BEFD,
     BShapes = 0x875CCB28,
 
