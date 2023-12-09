@@ -13,10 +13,10 @@ public partial class ColladaScene
     public ColladaInstanceVisualScene Visual_Scene;
 
     [XmlElement(ElementName = "instance_physics_scene")]
-    public Grendgine_Collada_Instance_Physics_Scene[] Physics_Scene;
+    public ColladaInstancePhysicsScene[] Physics_Scene;
 
     [XmlElement(ElementName = "instance_kinematics_scene")]
-    public Grendgine_Collada_Instance_Kinematics_Scene Kinematics_Scene;
+    public ColladaInstanceKinematicsScene Kinematics_Scene;
 
     [XmlElement(ElementName = "extra")]
     public ColladaExtra[] Extra;

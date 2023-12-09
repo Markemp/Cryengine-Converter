@@ -10,13 +10,13 @@ namespace CgfConverter.Collada
     {
 
         [XmlElement(ElementName = "blinn")]
-        public Grendgine_Collada_Blinn Blinn;
+        public ColladaBlinn Blinn;
 
         [XmlElement(ElementName = "constant")]
-        public Grendgine_Collada_Constant Constant;
+        public ColladaConstant Constant;
 
         [XmlElement(ElementName = "lambert")]
-        public Grendgine_Collada_Lambert Lambert;
+        public ColladaLambert Lambert;
 
         [XmlElement(ElementName = "phong")]
         public ColladaPhong Phong;

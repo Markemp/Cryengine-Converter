@@ -8,8 +8,8 @@ namespace CgfConverter.Collada;
 [XmlRootAttribute(ElementName = "modifier", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
 public partial class ColladaModifier
 {
-    [XmlTextAttribute()]
-    [System.ComponentModel.DefaultValueAttribute(Grendgine_Collada_Modifier_Value.CONST)]
-    public Grendgine_Collada_Modifier_Value Value;
+    [XmlText()]
+    [System.ComponentModel.DefaultValueAttribute(ColladaModifierValue.CONST)]
+    public ColladaModifierValue Value;
 }
 

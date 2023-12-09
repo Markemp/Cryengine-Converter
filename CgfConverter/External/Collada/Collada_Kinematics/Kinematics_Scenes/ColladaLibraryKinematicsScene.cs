@@ -16,7 +16,7 @@ namespace CgfConverter.Collada
 
 
         [XmlElement(ElementName = "kinematics_scene")]
-        public Grendgine_Collada_Kinematics_Scene[] Kinematics_Scene;
+        public ColladaKinematicsScene[] Kinematics_Scene;
 
         [XmlElement(ElementName = "asset")]
         public ColladaAsset Asset;

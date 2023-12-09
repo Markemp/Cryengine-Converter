@@ -9,8 +9,8 @@ namespace CgfConverter.Collada;
 public partial class ColladaAssetCoverage
 {
     [XmlElement(ElementName = "geographic_location")]
-#pragma warning disable CS0169 // The field 'Grendgine_Collada_Asset_Coverage.Geographic_Location' is never used
+#pragma warning disable CS0169 // The field 'ColladaAssetCoverage.GeographicLocation' is never used
     readonly ColladaGeographicLocation Geographic_Location;
-#pragma warning restore CS0169 // The field 'Grendgine_Collada_Asset_Coverage.Geographic_Location' is never used
+#pragma warning restore CS0169 // The field 'ColladaAssetCoverage.GeographicLocation' is never used
 }
 

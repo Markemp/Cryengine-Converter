@@ -26,8 +26,8 @@ namespace CgfConverter.Collada
         //public int Depth;
 
         [XmlAttribute("face")]
-        [System.ComponentModel.DefaultValueAttribute(Grendgine_Collada_Face.POSITIVE_X)]
-        public Grendgine_Collada_Face Face;
+        [System.ComponentModel.DefaultValueAttribute(ColladaFace.POSITIVE_X)]
+        public ColladaFace Face;
 
         [XmlElement(ElementName = "ref")]
         public string Ref;

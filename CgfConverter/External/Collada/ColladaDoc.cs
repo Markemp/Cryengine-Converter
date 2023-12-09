@@ -110,7 +110,7 @@ public partial class ColladaDoc
         Library_Visual_Scene = new ColladaLibraryVisualScenes();
     }
 
-    public static ColladaDoc Grendgine_Load_File(string file_name)
+    public static ColladaDoc LoadFile(string file_name)
     {
         try
         {

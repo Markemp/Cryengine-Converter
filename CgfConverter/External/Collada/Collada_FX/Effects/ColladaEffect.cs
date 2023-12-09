@@ -24,19 +24,19 @@ namespace CgfConverter.Collada
         public ColladaNewParam[] New_Param;
 
         [XmlElement(ElementName = "profile_BRIDGE")]
-        public Grendgine_Collada_Profile_BRIDGE[] Profile_BRIDGE;
+        public ColladaProfileBRIDGE[] Profile_BRIDGE;
 
         [XmlElement(ElementName = "profile_CG")]
-        public Grendgine_Collada_Profile_CG[] Profile_CG;
+        public ColladaProfileCG[] Profile_CG;
 
         [XmlElement(ElementName = "profile_GLES")]
-        public Grendgine_Collada_Profile_GLES[] Profile_GLES;
+        public ColladaProfileGLES[] Profile_GLES;
 
         [XmlElement(ElementName = "profile_GLES2")]
-        public Grendgine_Collada_Profile_GLES2[] Profile_GLES2;
+        public ColladaProfileGLES2[] Profile_GLES2;
 
         [XmlElement(ElementName = "profile_GLSL")]
-        public Grendgine_Collada_Profile_GLSL[] Profile_GLSL;
+        public ColladaProfileGLSL[] Profile_GLSL;
 
         [XmlElement(ElementName = "profile_COMMON")]
         public ColladaProfileCOMMON[] Profile_COMMON;

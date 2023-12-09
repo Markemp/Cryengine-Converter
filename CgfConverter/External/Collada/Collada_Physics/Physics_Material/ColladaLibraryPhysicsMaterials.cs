@@ -15,7 +15,7 @@ namespace CgfConverter.Collada
         public string Name;
 
         [XmlElement(ElementName = "physics_material")]
-        public Grendgine_Collada_Physics_Material[] Physics_Material;
+        public ColladaPhysicsMaterial[] Physics_Material;
 
         [XmlElement(ElementName = "asset")]
         public ColladaAsset Asset;

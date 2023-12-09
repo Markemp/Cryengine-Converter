@@ -11,7 +11,7 @@ public partial class ColladaHex
     [XmlAttribute("format")]
     public string Format;
 
-    [XmlTextAttribute()]
+    [XmlText()]
     public string Value;
     //TODO: this is a hex array
 }

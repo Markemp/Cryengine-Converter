@@ -16,7 +16,7 @@ namespace CgfConverter.Collada
 
 
         [XmlElement(ElementName = "joint")]
-        public Grendgine_Collada_Joint[] Joint;
+        public ColladaJoint[] Joint;
 
         [XmlElement(ElementName = "asset")]
         public ColladaAsset Asset;

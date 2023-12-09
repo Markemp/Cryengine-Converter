@@ -22,7 +22,7 @@ public partial class ColladaSurface
     public ColladaCone Cone;
 
     [XmlElement(ElementName = "plane")]
-    public Grendgine_Collada_Plane Plane;
+    public ColladaPlane Plane;
 
     [XmlElement(ElementName = "cylinder")]
     public ColladaCylinderBRep Cylinder;
@@ -31,7 +31,7 @@ public partial class ColladaSurface
     public ColladaNurbsSurface Nurbs_Surface;
 
     [XmlElement(ElementName = "sphere")]
-    public Grendgine_Collada_Sphere Sphere;
+    public ColladaSphere Sphere;
 
     [XmlElement(ElementName = "torus")]
     public ColladaTorus Torus;
@@ -50,4 +50,3 @@ public partial class ColladaSurface
     public ColladaInitFrom Init_From;
 
 }
-

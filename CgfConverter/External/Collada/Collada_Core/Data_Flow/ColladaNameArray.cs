@@ -6,7 +6,7 @@ namespace CgfConverter.Collada;
 
 [Serializable]
 [XmlType(AnonymousType = true)]
-public partial class ColladaNameArray : Grendgine_Collada_String_Array_String
+public partial class ColladaNameArray : ColladaStringArrayString
 {
     [XmlAttribute("id")]
     public string ID;

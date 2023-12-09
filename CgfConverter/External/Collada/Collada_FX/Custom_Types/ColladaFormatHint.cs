@@ -8,14 +8,14 @@ namespace CgfConverter.Collada;
 public partial class ColladaFormatHint
 {
     [XmlAttribute("channels")]
-    public Grendgine_Collada_Format_Hint_Channels Channels;
+    public ColladaFormatHintChannels Channels;
 
     [XmlAttribute("range")]
-    public Grendgine_Collada_Format_Hint_Range Range;
+    public ColladaFormatHintRange Range;
 
     [XmlAttribute("precision")]
-    [System.ComponentModel.DefaultValueAttribute(Grendgine_Collada_Format_Hint_Precision.DEFAULT)]
-    public Grendgine_Collada_Format_Hint_Precision Precision;
+    [System.ComponentModel.DefaultValueAttribute(ColladaFormatHintPrecision.DEFAULT)]
+    public ColladaFormatHintPrecision Precision;
 
     [XmlAttribute("space")]
     public string Hint_Space;

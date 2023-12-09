@@ -16,7 +16,7 @@ namespace CgfConverter.Collada
         public string Name;
 
         [XmlElement(ElementName = "force_field")]
-        public Grendgine_Collada_Force_Field[] Force_Field;
+        public ColladaForceField[] Force_Field;
 
         [XmlElement(ElementName = "asset")]
         public ColladaAsset Asset;

@@ -7,7 +7,7 @@ namespace CgfConverter.Collada;
 [XmlType(AnonymousType = true)]
 public partial class ColladaSkeleton
 {
-    [XmlTextAttribute()]
+    [XmlText()]
     public string Value;
 }
 

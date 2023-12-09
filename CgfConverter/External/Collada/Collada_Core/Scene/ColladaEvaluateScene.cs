@@ -27,7 +27,7 @@ public partial class ColladaEvaluateScene
     public ColladaExtra[] Extra;
 
     [XmlElement(ElementName = "render")]
-    public Grendgine_Collada_Render[] Render;
+    public ColladaRender[] Render;
 
 }
 

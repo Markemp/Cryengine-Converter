@@ -29,7 +29,7 @@ public partial class ColladaFormula
 
 
     [XmlElement(ElementName = "target")]
-    public Grendgine_Collada_Common_Float_Or_Param_Type Target;
+    public ColladaCommonFloatOrParamType Target;
 
 }
 

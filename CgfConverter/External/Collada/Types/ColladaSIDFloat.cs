@@ -11,7 +11,7 @@ namespace CgfConverter.Collada
         [XmlAttribute("sid")]
         public string sID;
 
-        [XmlTextAttribute()]
+        [XmlText()]
         public float Value;
 
     }

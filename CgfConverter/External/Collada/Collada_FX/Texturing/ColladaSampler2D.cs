@@ -6,7 +6,7 @@ namespace CgfConverter.Collada
     [Serializable]
     [XmlType(AnonymousType = true)]
     [System.Xml.Serialization.XmlRootAttribute(ElementName = "sampler2D", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-    public partial class ColladaSampler2D : Grendgine_Collada_FX_Sampler_Common
+    public partial class ColladaSampler2D : ColladaFXSamplerCommon
     {
         [XmlElement(ElementName = "source")]
         public string Source;

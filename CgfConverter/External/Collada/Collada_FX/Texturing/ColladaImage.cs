@@ -27,13 +27,13 @@ namespace CgfConverter.Collada
         public ColladaInitFrom Init_From;
 
         [XmlElement(ElementName = "create_2d")]
-        public Grendgine_Collada_Create_2D Create_2D;
+        public ColladaCreate2D Create_2D;
 
         [XmlElement(ElementName = "create_3d")]
-        public Grendgine_Collada_Create_3D Create_3D;
+        public ColladaCreate3D Create_3D;
 
         [XmlElement(ElementName = "create_cube")]
-        public Grendgine_Collada_Create_Cube Create_Cube;
+        public ColladaCreateCube Create_Cube;
 
         [XmlElement(ElementName = "extra")]
         public ColladaExtra[] Extra;

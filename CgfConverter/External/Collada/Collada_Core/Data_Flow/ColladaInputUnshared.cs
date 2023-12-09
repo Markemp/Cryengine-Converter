@@ -10,7 +10,7 @@ public partial class ColladaInputUnshared
 {
     [XmlAttribute("semantic")]
     // Commenting out default value as it won't write.
-    //[System.ComponentModel.DefaultValueAttribute(Grendgine_Collada_Input_Semantic.NORMAL)]
+    //[System.ComponentModel.DefaultValueAttribute(ColladaInputSemantic.NORMAL)]
     public ColladaInputSemantic Semantic;
 
     [XmlAttribute("source")]
