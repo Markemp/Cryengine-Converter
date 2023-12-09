@@ -1,12 +1,12 @@
 ﻿using CgfConverter;
 using CgfConverterTests.TestUtilities;
-using CgfConverter.Collada;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
 using CgfConverter.Renderers.Collada;
+using CgfConverter.Renderers.Collada.Collada.Enums;
 
 namespace CgfConverterTests.IntegrationTests;
 

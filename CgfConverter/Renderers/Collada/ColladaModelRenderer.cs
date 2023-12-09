@@ -1,6 +1,28 @@
 ﻿using CgfConverter.Collada;
 using CgfConverter.CryEngineCore;
 using CgfConverter.Materials;
+using CgfConverter.Renderers.Collada.Collada;
+using CgfConverter.Renderers.Collada.Collada.Collada_B_Rep.Surfaces;
+using CgfConverter.Renderers.Collada.Collada.Collada_Core.Animation;
+using CgfConverter.Renderers.Collada.Collada.Collada_Core.Controller;
+using CgfConverter.Renderers.Collada.Collada.Collada_Core.Data_Flow;
+using CgfConverter.Renderers.Collada.Collada.Collada_Core.Extensibility;
+using CgfConverter.Renderers.Collada.Collada.Collada_Core.Geometry;
+using CgfConverter.Renderers.Collada.Collada.Collada_Core.Lighting;
+using CgfConverter.Renderers.Collada.Collada.Collada_Core.Metadata;
+using CgfConverter.Renderers.Collada.Collada.Collada_Core.Parameters;
+using CgfConverter.Renderers.Collada.Collada.Collada_Core.Scene;
+using CgfConverter.Renderers.Collada.Collada.Collada_Core.Technique_Common;
+using CgfConverter.Renderers.Collada.Collada.Collada_Core.Transform;
+using CgfConverter.Renderers.Collada.Collada.Collada_FX.Custom_Types;
+using CgfConverter.Renderers.Collada.Collada.Collada_FX.Effects;
+using CgfConverter.Renderers.Collada.Collada.Collada_FX.Materials;
+using CgfConverter.Renderers.Collada.Collada.Collada_FX.Profiles.COMMON;
+using CgfConverter.Renderers.Collada.Collada.Collada_FX.Rendering;
+using CgfConverter.Renderers.Collada.Collada.Collada_FX.Technique_Common;
+using CgfConverter.Renderers.Collada.Collada.Collada_FX.Texturing;
+using CgfConverter.Renderers.Collada.Collada.Enums;
+using CgfConverter.Renderers.Collada.Collada.Types;
 using Extensions;
 using System;
 using System.Collections.Generic;
@@ -37,7 +59,6 @@ public class ColladaModelRenderer : IRenderer
         _args = argsHandler;
         _cryData = cryEngine;
 
-        // File name will be "<object name>.dae"
         daeOutputFile = _args.FormatOutputFileName(".dae", _cryData.InputFile);
     }
 
@@ -1316,7 +1337,8 @@ public class ColladaModelRenderer : IRenderer
         // Check to see if there is a CompiledBones chunk.  If so, add a Node.  
         if (_cryData.Chunks.Any(a => a.ChunkType == ChunkType.CompiledBones ||
             a.ChunkType == ChunkType.CompiledBonesSC ||
-            a.ChunkType == ChunkType.CompiledBonesIvo))
+            a.ChunkType == ChunkType.CompiledBonesIvo ||
+            a.ChunkType == ChunkType.CompiledBonesIvo320))
         {
             ColladaNode boneNode = new();
             boneNode = CreateJointNode(_cryData.Bones.RootBone);
@@ -1327,7 +1349,8 @@ public class ColladaModelRenderer : IRenderer
 
         if (hasGeometry)
         {
-            var allParentNodes = _cryData.Models[_cryData.Models.Count == 2 ? 1 : 0].NodeMap.Values.Where(n => n.ParentNodeID != ~1);
+            var modelIndex = _cryData.Models.First().IsIvoFile ? 1 : 0;
+            var allParentNodes = _cryData.Models[modelIndex].NodeMap.Values.Where(n => n.ParentNodeID != ~1);
 
             foreach (var node in allParentNodes)
             {
@@ -1372,8 +1395,11 @@ public class ColladaModelRenderer : IRenderer
 
         if (_cryData.Models.Count > 1)
         {
-            meshNode = (ChunkMesh)_cryData.Models[1].ChunkMap[node.ObjectNodeID];
-            submeshNode = (ChunkMeshSubsets)_cryData.Models[1].ChunkMap[meshNode.MeshSubsetsData];
+            // Find the node in model[1] that has the same name as the node.
+            var geoNode = _cryData.Models[1].NodeMap.Values.Where(a => a.Name == node.Name).FirstOrDefault();
+            meshNode = (ChunkMesh)_cryData.Models.Last().ChunkMap[geoNode.ObjectNodeID];
+            //meshNode = (ChunkMesh)_cryData.Models.Last().ChunkMap[node.ObjectNodeID];
+            submeshNode = (ChunkMeshSubsets)_cryData.Models.Last().ChunkMap[meshNode.MeshSubsetsData];
         }
         else
         {
@@ -1402,12 +1428,13 @@ public class ColladaModelRenderer : IRenderer
         // Check to see if there is a second model file, and if the mesh chunk is actually there.
         if (_cryData.Models.Count > 1)
         {
-            // Star Citizen pair.  Get the Node and Mesh chunks from the geometry file, unless it's a Proxy node.
+            // Geometry file pair.  Get the Node and Mesh chunks from the geometry file, unless it's a Proxy node.
             string nodeName = nodeChunk.Name;
             int nodeID = nodeChunk.ID;
 
-            // make sure there is a geometry node in the geometry file
-            if (_cryData.Models[0].ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkType.Helper)
+            // make sure there is a geometry node in the geometry file.  Or with Ivo files, just use the geometry file
+            var modelIndex = nodeChunk._model.IsIvoFile ? 1 : 0;
+            if (_cryData.Models[modelIndex].ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkType.Helper)
                 colladaNode = CreateSimpleNode(nodeChunk, isControllerNode);
             else
             {
@@ -1525,9 +1552,7 @@ public class ColladaModelRenderer : IRenderer
             List<ColladaNode> childNodes = new();
             foreach (CompiledBone childBone in _cryData.Bones.GetAllChildBones(bone))
             {
-                ColladaNode childNode = new();
-                childNode = CreateJointNode(childBone);
-                childNodes.Add(childNode);
+                childNodes.Add(CreateJointNode(childBone));
             }
             tmpNode.node = childNodes.ToArray();
         }
@@ -1542,25 +1567,10 @@ public class ColladaModelRenderer : IRenderer
         colladaNode.Type = nodeType;
         colladaNode.Name = nodeChunk.Name;
         colladaNode.ID = nodeChunk.Name;
-        // Make the lists necessary for this Node.
 
+        // Make the lists necessary for this Node.
         List<ColladaBindMaterial> bindMaterials = new();
         List<ColladaMatrix> matrices = new();
-
-        //ColladaTranslate translate = new()
-        //{
-        //    sID = "translate",
-        //    Value_As_String = CreateStringFromVector3(new Vector3 { X = nodeChunk.LocalTransform.M14, Y = nodeChunk.LocalTransform.M24, Z = nodeChunk.LocalTransform.M34 })
-        //};
-        //var quat = Quaternion.CreateFromRotationMatrix(nodeChunk.LocalTransform);
-        //ColladaRotate rotate = new()
-        //{
-        //    sID = "rotate",
-        //    Value_As_String = CreateStringFromVector4(Quaternion.CreateFromRotationMatrix(nodeChunk.LocalTransform).ToAxisAngle())
-        //};
-        //colladaNode.Translate = new ColladaTranslate[1] { translate };
-        //colladaNode.Rotate = new ColladaRotate[1] { rotate };
-
         ColladaMatrix matrix = new()
         {
             Value_As_String = CreateStringFromMatrix4x4(nodeChunk.LocalTransform),
@@ -1622,7 +1632,7 @@ public class ColladaModelRenderer : IRenderer
     }
 
     /// <summary>Get the material name for a given submesh.</summary>
-    private string? GetMaterialName(ChunkNode nodeChunk, ChunkMeshSubsets meshSubsets, int index)
+    private static string? GetMaterialName(ChunkNode nodeChunk, ChunkMeshSubsets meshSubsets, int index)
     {
         var materialLibraryIndex = meshSubsets.MeshSubsets[index].MatID;
 

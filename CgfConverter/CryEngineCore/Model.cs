@@ -210,7 +210,8 @@ public class Model
             // Add Bones to the model.  We are assuming there is only one CompiledBones chunk per file.
             if (chunkHeaderItem.ChunkType == ChunkType.CompiledBones || 
                 chunkHeaderItem.ChunkType == ChunkType.CompiledBonesSC ||
-                chunkHeaderItem.ChunkType == ChunkType.CompiledBonesIvo)
+                chunkHeaderItem.ChunkType == ChunkType.CompiledBonesIvo ||
+                chunkHeaderItem.ChunkType == ChunkType.CompiledBonesIvo320)
             {
                 Bones = chunk as ChunkCompiledBones;
             }

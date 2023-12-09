@@ -1,7 +1,6 @@
 ﻿using CgfConverter;
 using CgfConverter.CryEngineCore;
 using CgfConverterTests.TestUtilities;
-using CgfConverter.Collada;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Globalization;
@@ -14,6 +13,7 @@ using Extensions;
 using System.IO;
 using System.Xml.Linq;
 using System.Xml.Serialization;
+using CgfConverter.Renderers.Collada.Collada;
 
 namespace CgfConverterTests.IntegrationTests;
 
