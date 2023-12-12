@@ -24,6 +24,8 @@ public sealed class ArgsHandler
     public string? OutputFile { get; internal set; }
     /// <summary>Directory to render to</summary>
     public string? OutputDir { get; internal set; }
+    /// <summary>Material file override</summary>
+    public string? MaterialFile { get; internal set; }
     /// <summary>Whether to preserve path, if OutputDir is set.</summary>
     public bool PreservePath { get; internal set; }
     /// <summary>Maximum number of threads to use.</summary>
@@ -223,6 +225,14 @@ public sealed class ArgsHandler
                 case "-throw":
                     Throw = true;
                     break;
+                case "-mtl":
+                    if (++i > inputArgs.Length)
+                    {
+                        PrintUsage();
+                        return 1;
+                    }
+                    MaterialFile = inputArgs[i];
+                    break;
                 case "-infile":
                 case "-inputfile":
                     if (++i > inputArgs.Length)
@@ -262,7 +272,6 @@ public sealed class ArgsHandler
             MaxThreads = Environment.ProcessorCount;
         Utilities.Log(LogLevelEnum.Info, $"Using up to {MaxThreads} threads");
         
-        // Log info now that loglevel has been set
         if (Smooth)
             Utilities.Log(LogLevelEnum.Info, "Smoothing Faces");
         if (GroupMeshes)
@@ -276,6 +285,8 @@ public sealed class ArgsHandler
             Utilities.Log(LogLevelEnum.Info, "Using TIF textures");
         else if (TgaTextures)
             Utilities.Log(LogLevelEnum.Info, "Using TGA textures");
+        if (MaterialFile is not null)
+            Utilities.Log(LogLevelEnum.Info, $"Using material file: {MaterialFile}");
 
         if (OutputWavefront)
             Utilities.Log(LogLevelEnum.Info, "Output format set to Wavefront (.obj)");

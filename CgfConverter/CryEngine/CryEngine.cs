@@ -37,6 +37,7 @@ public partial class CryEngine
     public SkinningInfo? SkinningInfo { get; set; }
     public string InputFile { get; internal set; }
     public IPackFileSystem PackFileSystem { get; internal set; }
+    public string? MaterialFile { get; set; }
 
     public List<Chunk> Chunks
     {
@@ -311,6 +312,22 @@ public partial class CryEngine
     // Gets the material file for Basic, Single and Library types.  Child materials are created from the library.
     private string? GetMaterialFile(string name)
     {
+        // If a MaterialFile is provided, use that.
+        if (MaterialFile is not null)
+        {
+            // Check if absolute material path is given
+            if (File.Exists(MaterialFile))
+                return MaterialFile;
+
+            var mtlName = FileHandlingExtensions.CombineAndNormalizePath(Path.GetDirectoryName(InputFile), MaterialFile);
+            if (PackFileSystem.Exists(mtlName))
+                return mtlName;
+
+            // Check if material file relative to object directory
+            if (PackFileSystem.Exists(MaterialFile))
+                return MaterialFile;
+        }
+
         if (name.Contains(':'))  // Need an example and test for this case.  Probably a child material?
             name = name.Split(':')[1];
 
