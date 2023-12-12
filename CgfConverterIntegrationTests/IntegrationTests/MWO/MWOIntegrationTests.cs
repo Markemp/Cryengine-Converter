@@ -1,19 +1,19 @@
 ﻿using CgfConverter;
 using CgfConverter.CryEngineCore;
+using CgfConverter.Renderers.Collada;
+using CgfConverter.Renderers.Collada.Collada;
+using CgfConverter.Renderers.Gltf;
+using CgfConverterIntegrationTests.Extensions;
 using CgfConverterTests.TestUtilities;
+using Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading;
-using CgfConverter.Renderers.Collada;
-using CgfConverter.Renderers.Gltf;
-using CgfConverterIntegrationTests.Extensions;
-using Extensions;
-using System.IO;
 using System.Xml.Linq;
 using System.Xml.Serialization;
-using CgfConverter.Renderers.Collada.Collada;
 
 namespace CgfConverterTests.IntegrationTests;
 
@@ -181,7 +181,7 @@ public class MWOIntegrationTests
     public void adr_right_torso_uac20_bh1()
     {
         // This model has 4 mtl files, all variations of mechdefault.
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\adr_right_torso_uac20_bh1.cga", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+        var args = new string[] { $@"d:\depot\mwo\objects\mechs\adder\body\adr_right_torso_uac20_bh1.cga", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
@@ -204,6 +204,12 @@ public class MWOIntegrationTests
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.Render();
+
+        var daeObject = colladaData.DaeObject;
+        Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(1, daeObject.Library_Effects.Effect.Length);
+        Assert.AreEqual(4, daeObject.Library_Images.Image.Length);
     }
 
     [TestMethod]
@@ -266,7 +272,7 @@ public class MWOIntegrationTests
     [TestMethod]
     public void MWO_industrial_wetlamp_a_MaterialFileNotFound()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\industrial_wetlamp_a.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+        var args = new string[] { $@"D:\depot\MWO\Objects\environments\frontend\mechlab_a\lights\industrial_wetlamp_a.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);

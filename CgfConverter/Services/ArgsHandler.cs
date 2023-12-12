@@ -276,6 +276,7 @@ public sealed class ArgsHandler
             Utilities.Log(LogLevelEnum.Info, "Using TIF textures");
         else if (TgaTextures)
             Utilities.Log(LogLevelEnum.Info, "Using TGA textures");
+
         if (OutputWavefront)
             Utilities.Log(LogLevelEnum.Info, "Output format set to Wavefront (.obj)");
         if (OutputCollada)
@@ -284,6 +285,7 @@ public sealed class ArgsHandler
             Utilities.Log(LogLevelEnum.Info, "Output format set to glTF (.gltf)");
         if (OutputGLB)
             Utilities.Log(LogLevelEnum.Info, "Output format set to glTF Binary (.glb)");
+
         if (AllowConflicts)
             Utilities.Log(LogLevelEnum.Info, "Allow conflicts for mtl files enabled");
         if (NoConflicts)
@@ -370,7 +372,7 @@ public sealed class ArgsHandler
         Console.WriteLine();
         Console.WriteLine("<.cgf file>:      The name of the .cgf, .cga, .chr, .anim, .dba or .skin file to process.");
         Console.WriteLine("-outputfile:      (Optional) The name of the file to write the output.");
-        Console.WriteLine("-objectdir:       (Optional but highly recommended) The name where the base Objects directory is located.");
+        Console.WriteLine("-objectdir:       (Optional but highly recommended) The name where the base Objects directory is located (i.e. where the .pak files were extracted).");
         Console.WriteLine("                  Defaults to current directory. Some packfile formats may accept additional options in the form of some.pack.file?key=value&key2=value2.");
         Console.WriteLine();
         Console.WriteLine(" Export formats.  By default -dae is used.");

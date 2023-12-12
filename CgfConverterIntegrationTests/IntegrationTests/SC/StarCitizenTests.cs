@@ -7,9 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Globalization;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CgfConverterTests.IntegrationTests;
 
