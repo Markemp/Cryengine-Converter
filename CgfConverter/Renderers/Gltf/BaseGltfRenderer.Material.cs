@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Text;
-using BCnEncoder.Decoder;
+﻿using BCnEncoder.Decoder;
 using BCnEncoder.Shared;
 using BCnEncoder.Shared.ImageFiles;
 using CgfConverter.CryEngineCore;
@@ -13,7 +7,10 @@ using CgfConverter.Renderers.Gltf.Models;
 using CgfConverter.Utils;
 using Extensions;
 using SixLabors.ImageSharp.PixelFormats;
-using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace CgfConverter.Renderers.Gltf;
 
@@ -27,7 +24,7 @@ public partial class BaseGltfRenderer
         public readonly Material Source;
         public readonly GltfMaterial? Target;
 
-        private BcDecoder decoder = new ();
+        //private BcDecoder decoder = new ();
 
         public WrittenMaterial(int index, Material source, GltfMaterial? target)
         {

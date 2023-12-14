@@ -1,6 +1,5 @@
 ﻿using CgfConverter.CryEngineCore;
 using CgfConverter.Renderers.Gltf.Models;
-using CgfConverter.Structs;
 using Extensions;
 using System;
 using System.Collections.Generic;

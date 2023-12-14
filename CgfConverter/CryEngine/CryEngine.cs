@@ -30,6 +30,7 @@ public partial class CryEngine
 
     protected readonly TaggedLogger Log;
 
+    public string Name => Path.GetFileNameWithoutExtension(InputFile).ToLower();
     public List<Model> Models { get; internal set; } = new();
     public List<Model> Animations { get; internal set; } = new();
     public ChunkNode RootNode { get; internal set; }
@@ -38,6 +39,8 @@ public partial class CryEngine
     public string InputFile { get; internal set; }
     public IPackFileSystem PackFileSystem { get; internal set; }
     public string? MaterialFile { get; set; }
+    public string? ObjectDir { get; set; }
+    public Material Materials { get; internal set; }
 
     public List<Chunk> Chunks
     {
@@ -89,11 +92,13 @@ public partial class CryEngine
     private List<Chunk>? _chunks;
     private Dictionary<string, ChunkNode>? _nodeMap;
 
-    public CryEngine(string filename, IPackFileSystem packFileSystem, TaggedLogger? parentLogger = null)
+    public CryEngine(string filename, IPackFileSystem packFileSystem, TaggedLogger? parentLogger = null, string? materialFile = null, string? objectDir = null)
     {
         Log = new TaggedLogger(Path.GetFileName(filename), parentLogger);
         InputFile = filename;
         PackFileSystem = packFileSystem;
+        MaterialFile = materialFile;
+        ObjectDir = objectDir;
     }
 
     public void ProcessCryengineFiles()
@@ -123,10 +128,8 @@ public partial class CryEngine
 
         SkinningInfo = ConsolidateSkinningInfo(Models);
 
-        foreach (var model in Models)
-        {
-            CreateMaterialsFor(model);
-        }
+        // Create materials from the first model. First model contains a link to the material file if it isn't provided.
+        CreateMaterialsFor(Models[0]);
 
         try
         {
@@ -200,184 +203,78 @@ public partial class CryEngine
         return skin;
     }
 
-    private void CreateMaterialsFor(Model model)
+    private void CreateMaterialsFor(Model model)  
     {
-        var loadedMaterialMap = new Dictionary<Chunk, Material?>();
-        foreach (var nodeChunk in model.ChunkMap.Values.OfType<ChunkNode>())
+        if (MaterialFile is not null && PackFileSystem.Exists(MaterialFile))
         {
-            Material? material;
-            
-            // If Ivo file, just a single material node chunk with a library.
-            if (nodeChunk._model.IsIvoFile)
-            {
-                if (Chunks.FirstOrDefault(c => c.ChunkType == ChunkType.MtlNameIvo || c.ChunkType == ChunkType.MtlNameIvo320) is not ChunkMtlName ivoMatChunk)
-                {
-                    Log.D($"Unable to find material chunk {nodeChunk.MatID} for node {nodeChunk.ID}");
-                    continue;
-                }
-
-                if (loadedMaterialMap.TryGetValue(ivoMatChunk, out material))
-                    nodeChunk.Materials = material;
-                else if (GetMaterialFile(ivoMatChunk.Name) is { } ivoMatFile)
-                    nodeChunk.Materials =
-                        MaterialUtilities.FromStream(PackFileSystem.GetStream(ivoMatFile), nodeChunk.Name, true);
-                
-                loadedMaterialMap[ivoMatChunk] = nodeChunk.Materials ??= CreateDefaultMaterials(nodeChunk);
-                continue;
-            }
-
-            if (model.ChunkMap.Values.FirstOrDefault(c => c.ID == nodeChunk.MatID) is not ChunkMtlName matChunk)
-            {
-                Log.D($"Unable to find material chunk {nodeChunk.MatID} for node {nodeChunk.ID}");
-                continue;
-            }
-
-            if (loadedMaterialMap.TryGetValue(matChunk, out material))
-            {
-                nodeChunk.Materials = material;
-                continue;
-            }
-
-            var name = matChunk.Name;
-            
-            if (name.Contains("mechDefault.mtl") && (matChunk.NumChildren == 5 || matChunk.NumChildren == 4))  // Edge case for MWO models
-                name = "Objects/mechs/generic/body/generic_body.mtl";
-
-            if (name.Contains("mechDefault.mtl") && matChunk.NumChildren == 11)  // Edge case for MWO models
-                name = "Objects/mechs/_mech_templates/body/mecha.mtl";
-
-            if (name.Contains("05 - Default") && matChunk.NumChildren == 5)  // Edge case for MWO models
-                name = "Objects/mechs/generic/body/generic_body.mtl";
-
-            if (GetMaterialFile(name) is { } matfile)
-                nodeChunk.Materials = MaterialUtilities.FromStream(PackFileSystem.GetStream(matfile), nodeChunk.Name, true);
-
-            loadedMaterialMap[matChunk] = nodeChunk.Materials ??= CreateDefaultMaterials(nodeChunk);
-
-            // create dummy 5th material (generic_variant) for MWO mechDefault.mtls
-            if (matChunk.Name.Equals("Objects/mechs/generic/body/generic_body.mtl", StringComparison.OrdinalIgnoreCase))
-            {
-                var source = nodeChunk.Materials!.SubMaterials;
-                var newMats = new Material[5];
-
-                Array.Copy(source, newMats, source.Length);
-                newMats[4] = nodeChunk.Materials!.SubMaterials[2];
-                nodeChunk.Materials.SubMaterials = newMats;
-            }
+            Materials = MaterialUtilities.FromStream(PackFileSystem.GetStream(MaterialFile), Name, true);
+            return;
         }
-    }
 
-    private Material? CreateDefaultMaterials(ChunkNode nodeChunk)
-    {
-        // For each child of this node chunk's material file, create a default material.
-        if (Chunks.OfType<ChunkMtlName>().FirstOrDefault(c => c.ID == nodeChunk.MatID) is not { } mtlNameChunk)
-            return null;
+        var materialLibraryFiles = model.ChunkMap.Values
+            .OfType<ChunkMtlName>()
+            .Where(x => x.MatType == MtlNameType.Library || x.MatType == MtlNameType.Basic)
+            .Select(x => x.Name);
 
-        switch (mtlNameChunk.MatType)
-        {
-            case MtlNameType.Basic:
-            case MtlNameType.Single:
-                return new Material
-                {
-                    Name = nodeChunk.Name,
-                    SubMaterials = new[] {MaterialUtilities.CreateDefaultMaterial(nodeChunk.Name)}
-                };
-            
-            case MtlNameType.Library:
-            {
-                var material = new Material {SubMaterials = new Material[mtlNameChunk.NumChildren]};
-                for (var i = 0; i < mtlNameChunk.NumChildren; i++)
-                {
-                    if (mtlNameChunk.ChildIDs is not null)
-                    {
-                        var childMaterial =
-                            (ChunkMtlName?) Chunks.FirstOrDefault(c => c.ID == mtlNameChunk.ChildIDs[i]);
-                        var mat = MaterialUtilities.CreateDefaultMaterial(childMaterial?.Name ?? $"Material-{i}",
-                            $"{i / (float) mtlNameChunk.NumChildren},0.5,0.5");
-                        material.SubMaterials[i] = mat;
-                    }
-                    else // TODO: For SC, there are no more mtlname chunks. Use node name?
-                        material.SubMaterials[i] = MaterialUtilities.CreateDefaultMaterial($"Material-{i}",
-                            $"{i / (float) mtlNameChunk.NumChildren},0.5,0.5");
-                }
-
-                return material;
-            }
-            default:
-                Log.I($"Found MtlName chunk {mtlNameChunk.ID} with unhandled MtlNameType {mtlNameChunk.MatType}.");
-                return null;
-        }
-    }
-
-    // Gets the material file for Basic, Single and Library types.  Child materials are created from the library.
-    private string? GetMaterialFile(string name)
-    {
-        // If a MaterialFile is provided, use that.
+        MaterialFile = GetMaterialFile(materialLibraryFiles);
         if (MaterialFile is not null)
+            Materials = MaterialUtilities.FromStream(PackFileSystem.GetStream(MaterialFile), Name, true);
+        
+        if (Materials is null)
         {
+            var maxNumberOfMaterials = model.ChunkMap.Values.OfType<ChunkMtlName>().Max(c => c.NumChildren);
+            Materials = CreateDefaultMaterials(maxNumberOfMaterials == 0 ? 1 : maxNumberOfMaterials);
+        }
+    }
+
+    private Material CreateDefaultMaterials(uint maxNumberOfMaterials)
+    {
+        var materials = new Material
+        {
+            SubMaterials = new Material[maxNumberOfMaterials],
+            Name = Name
+        };
+
+        for (var i = 0; i < maxNumberOfMaterials; i++)
+            materials.SubMaterials[i] = MaterialUtilities.CreateDefaultMaterial($"{Name}-material-{i}", $"{i / (float) maxNumberOfMaterials},0.5,0.5");
+
+        return materials;
+    }
+
+    // Gets the Library material file if one can be found.
+    private string? GetMaterialFile(IEnumerable<string> libraryFileNames)
+    {
+        if (libraryFileNames is not null)
+        {
+            foreach (var libraryFile in libraryFileNames)
+            {
+                if (PackFileSystem.Exists(libraryFile))
+                    return MaterialFile;
+
+                var testFile = libraryFile;
+                if (!testFile.EndsWith(".mtl"))
+                    testFile += ".mtl";
+
+                // Check if testFile + object dir exists
+                if (PackFileSystem.Exists(FileHandlingExtensions.CombineAndNormalizePath(ObjectDir, testFile)))
+                    return testFile;
+
+                // Check in current dir
+                var fullPath = FileHandlingExtensions.CombineAndNormalizePath(Path.GetDirectoryName(InputFile), $"{libraryFile}.mtl");
+                if (PackFileSystem.Exists(fullPath))
+                    return fullPath;
+            }
+
             // Check if absolute material path is given
-            if (File.Exists(MaterialFile))
+            if (PackFileSystem.Exists(MaterialFile))
                 return MaterialFile;
 
             var mtlName = FileHandlingExtensions.CombineAndNormalizePath(Path.GetDirectoryName(InputFile), MaterialFile);
             if (PackFileSystem.Exists(mtlName))
                 return mtlName;
-
-            // Check if material file relative to object directory
-            if (PackFileSystem.Exists(MaterialFile))
-                return MaterialFile;
         }
 
-        if (name.Contains(':'))  // Need an example and test for this case.  Probably a child material?
-            name = name.Split(':')[1];
-
-        if (!name.EndsWith(".mtl"))
-            name += ".mtl";
-
-        if (name.Contains("mechDefault.mtl"))
-        {
-            // For MWO models with a material called "Material #0", which is a default mat used on lots of mwo mechs.
-            // The actual material file is in objects\mechs\generic\body\generic_body.mtl
-            name = "objects\\mechs\\generic\\body\\generic_body.mtl";
-
-            if (PackFileSystem.Exists(name))
-                return name;
-        }
-
-        var dirStrings = InputFile.Split("\\");
-        for (int i = 0; i < dirStrings.Length; i++)
-        {
-            if (string.Equals(dirStrings[i], "Objects", StringComparison.OrdinalIgnoreCase))
-            {
-                var path = string.Join("\\", dirStrings.Take(i));
-                var mtlFileName = FileHandlingExtensions.CombineAndNormalizePath(path, name);
-                if (PackFileSystem.Exists(mtlFileName))
-                    return mtlFileName;
-            }
-        }
-
-        // Check if material file is in or relative to current directory
-        var fullName = FileHandlingExtensions.CombineAndNormalizePath(Path.GetDirectoryName(InputFile), name);
-        if (PackFileSystem.Exists(fullName))
-            return fullName;
-
-        // Check if material file relative to object directory
-        if (PackFileSystem.Exists(name))
-            return name;
-
-        // See if there is any .mtl file in the current directory. If so, use that.
-        var currentDir = Path.GetDirectoryName(fullName);
-        if (Directory.Exists(currentDir!))
-        {
-            var mtlFiles = Directory.GetFiles(currentDir!, "*.mtl");
-            if (mtlFiles.Length > 0)
-            {
-                Log.I("Found one ore more multiple material files in {0}. Using {1}", currentDir, mtlFiles[0]);
-                return mtlFiles[0];
-            }
-        }
-
-        Log.W("Unable to find material file for {0}", name);
+        Log.W("Unable to find material file for {0}", InputFile);
         return null;
     }
 

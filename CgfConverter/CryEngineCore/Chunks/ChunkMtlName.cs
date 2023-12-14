@@ -1,4 +1,5 @@
 ﻿using CgfConverter.Materials;
+using System;
 
 namespace CgfConverter.CryEngineCore;
 
@@ -18,6 +19,8 @@ public abstract class ChunkMtlName : Chunk
     public uint[] ChildIDs { get; internal set; }
     
     public uint NFlags2 { get; internal set; }
+
+    public Guid? AssetId { get; internal set; }
 
     /// <summary>The actual Material from the mtl file for this chunk.</summary>
     public Material? Material { get; set; }

@@ -986,7 +986,7 @@ public class ColladaModelRenderer : IRenderer
         if (DaeObject.Library_Materials.Material is null)
             DaeObject.Library_Materials.Material = Array.Empty<ColladaMaterial>();
 
-        foreach (var mat in nodeChunk.Materials.SubMaterials)
+        foreach (var mat in _cryData.Materials.SubMaterials)
         {
             // Check to see if the collada object already has a material with this name.  If not, add.
 
@@ -1628,11 +1628,11 @@ public class ColladaModelRenderer : IRenderer
     }
 
     /// <summary>Get the material name for a given submesh.</summary>
-    private static string? GetMaterialName(ChunkNode nodeChunk, ChunkMeshSubsets meshSubsets, int index)
+    private string? GetMaterialName(ChunkNode nodeChunk, ChunkMeshSubsets meshSubsets, int index)
     {
         var materialLibraryIndex = meshSubsets.MeshSubsets[index].MatID;
 
-        var materials = nodeChunk.Materials?.SubMaterials;
+        var materials = _cryData.Materials?.SubMaterials;
 
         if (materials is not null)
         {
