@@ -559,7 +559,7 @@ public class ColladaModelRenderer : IRenderer
             if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkType.Mesh)
             {
                 // Create materials collection for this node. Index of collection in meshSubSets determines which mat to use.
-                CreateMaterialsFromNodeChunk(nodeChunk);
+                //CreateMaterialsFromNodeChunk(nodeChunk); // now being created from the crydata Materials object
 
                 // Get the mesh chunk and submesh chunk for this node.
                 var meshChunk = (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID];
@@ -773,7 +773,7 @@ public class ColladaModelRenderer : IRenderer
                         triangles[j] = new ColladaTriangles
                         {
                             Count = meshSubsets.MeshSubsets[j].NumIndices / 3,
-                            Material = GetMaterialName(nodeChunk, meshSubsets, (int)j)
+                            Material = GetMaterialId(nodeChunk, meshSubsets, (int)j)
                         };
 
                         // Create the inputs.  vertex, normal, texcoord, color
@@ -1405,7 +1405,7 @@ public class ColladaModelRenderer : IRenderer
 
         for (int i = 0; i < submeshNode.MeshSubsets.Length; i++)
         {
-            var matName = GetMaterialName(node, submeshNode, i);
+            var matName = GetMaterialId(node, submeshNode, i);
 
             ColladaInstanceMaterialGeometry instanceMaterial = new();
             instanceMaterial.Target = $"#{matName}";
@@ -1628,7 +1628,7 @@ public class ColladaModelRenderer : IRenderer
     }
 
     /// <summary>Get the material name for a given submesh.</summary>
-    private string? GetMaterialName(ChunkNode nodeChunk, ChunkMeshSubsets meshSubsets, int index)
+    private string? GetMaterialId(ChunkNode nodeChunk, ChunkMeshSubsets meshSubsets, int index)
     {
         var materialLibraryIndex = meshSubsets.MeshSubsets[index].MatID;
 

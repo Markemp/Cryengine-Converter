@@ -8,6 +8,7 @@ using CgfConverterTests.TestUtilities;
 using Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -287,13 +288,13 @@ public class MWOIntegrationTests
         Assert.AreEqual("Bip01", gltfData.Nodes[1].Name);
         Assert.AreEqual("hang seg1", gltfData.Nodes[2].Name);
 
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[0].Rotation, TestUtils.delta);
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { -0.4963841f, -0.5035906f, 0.491474152f, 0.5083822f }, gltfData.Nodes[1].Rotation, TestUtils.delta);
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0.00154118659f, -0.008913527f, 0.0122360326f, 0.9998842f }, gltfData.Nodes[2].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual(new List<float> { 0, 0, 0, 1 }, gltfData.Nodes[0].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual(new List<float> { -0.4963841f, -0.5035906f, 0.491474152f, 0.5083822f }, gltfData.Nodes[1].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual(new List<float> { 0.00154118659f, -0.008913527f, 0.0122360326f, 0.9998842f }, gltfData.Nodes[2].Rotation, TestUtils.delta);
 
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0 }, gltfData.Nodes[0].Translation, TestUtils.delta);
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 2.09588125E-13f, 0.0204448365f, -8.731578E-10f }, gltfData.Nodes[1].Translation, TestUtils.delta);
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { -0.0209655762f, -8.90577E-09f, 3.4356154E-10f }, gltfData.Nodes[2].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual(new List<float> { 0, 0, 0 }, gltfData.Nodes[0].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual(new List<float> { 2.09588125E-13f, 0.0204448365f, -8.731578E-10f }, gltfData.Nodes[1].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual(new List<float> { -0.0209655762f, -8.90577E-09f, 3.4356154E-10f }, gltfData.Nodes[2].Translation, TestUtils.delta);
 
         Assert.AreEqual(0, gltfData.Nodes[0].Children.Count);
         Assert.AreEqual(1, gltfData.Nodes[1].Children.Count);
@@ -695,13 +696,13 @@ public class MWOIntegrationTests
         Assert.AreEqual("HulaGirl_LowerBody", gltfData.Nodes[2].Name);
 
         var rotationMatrix = cryData.RootNode.AllChildNodes[0].Rot.ConvertToRotationMatrix();
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[0].Rotation, TestUtils.delta);
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { -0.10248467f, 0.00384537f, -0.04688235744833946f, 0.9936217f }, gltfData.Nodes[1].Rotation, TestUtils.delta);
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[2].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual(new List<float> { 0, 0, 0, 1 }, gltfData.Nodes[0].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual(new List<float> { -0.10248467f, 0.00384537f, -0.04688235744833946f, 0.9936217f }, gltfData.Nodes[1].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual(new List<float> { 0, 0, 0, 1 }, gltfData.Nodes[2].Rotation, TestUtils.delta);
 
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0 }, gltfData.Nodes[0].Translation, TestUtils.delta);
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0.000101296f, 0.0640777f, 0f }, gltfData.Nodes[1].Translation, TestUtils.delta);
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0 }, gltfData.Nodes[2].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual(new List<float> { 0, 0, 0 }, gltfData.Nodes[0].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual(new List<float> { 0.000101296f, 0.0640777f, 0f }, gltfData.Nodes[1].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual(new List<float> { 0, 0, 0 }, gltfData.Nodes[2].Translation, TestUtils.delta);
 
         Assert.AreEqual(2, gltfData.Nodes[0].Children.Count);
         Assert.AreEqual(0, gltfData.Nodes[1].Children.Count);
