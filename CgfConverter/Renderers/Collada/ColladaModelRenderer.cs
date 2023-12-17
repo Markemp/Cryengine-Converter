@@ -95,6 +95,7 @@ public class ColladaModelRenderer : IRenderer
         DaeObject.Library_Images = new();
         DaeObject.Library_Effects = new();
 
+        CreateMaterials();
         WriteLibrary_Geometries();
 
         // If there is Skinning info, create the controller library and set up visual scene to refer to it.  Otherwise just write the Visual Scene
@@ -979,17 +980,16 @@ public class ColladaModelRenderer : IRenderer
         DaeObject.Library_Geometries = libraryGeometries;
     }
 
-    private void CreateMaterialsFromNodeChunk(ChunkNode nodeChunk)
+    private void CreateMaterials()
     {
         List<ColladaMaterial> colladaMaterials = new();
         List<ColladaEffect> colladaEffects = new();
-        if (DaeObject.Library_Materials.Material is null)
+        if (DaeObject.Library_Materials?.Material is null)
             DaeObject.Library_Materials.Material = Array.Empty<ColladaMaterial>();
 
         foreach (var mat in _cryData.Materials.SubMaterials)
         {
             // Check to see if the collada object already has a material with this name.  If not, add.
-
             var matNames = DaeObject.Library_Materials.Material.Select(c => c.Name);
             if (!matNames.Contains(mat.Name))
             {
@@ -1017,10 +1017,10 @@ public class ColladaModelRenderer : IRenderer
         ColladaMaterial material = new()
         {
             Instance_Effect = new ColladaInstanceEffect(),
-            Name = mat.Name,
-            ID = mat.Name + "-material"
+            Name = GetMaterialName(mat?.Name ?? "unknown"),
+            ID = (mat?.Name ?? "unknown") + "-material"
         };
-        material.Instance_Effect.URL = "#" + mat.Name + "-effect";
+        material.Instance_Effect.URL = "#" + (mat?.Name ?? "unknown") + "-effect";
 
         AddImagesToImagesLibrary(mat);
         return material;
@@ -1029,7 +1029,7 @@ public class ColladaModelRenderer : IRenderer
     private void AddImagesToImagesLibrary(Material mat)
     {
         List<ColladaImage> imageList = new();
-        int numberOfTextures = mat.Textures.Length;
+        int numberOfTextures = mat.Textures?.Length ?? 0;
 
         for (int i = 0; i < numberOfTextures; i++)
         {
@@ -1643,6 +1643,13 @@ public class ColladaModelRenderer : IRenderer
             Log(LogLevelEnum.Debug, $"Unable to find submaterials for node chunk ${nodeChunk.Name}");
 
         return null;
+    }
+
+    private string? GetMaterialName(string materialName)
+    {
+        var matfileName = Path.GetFileNameWithoutExtension(_cryData.MaterialFile);
+
+        return $"{matfileName}-mtl-{materialName}".Replace(' ', '_');
     }
 
     private static string CreateStringFromVector3(Vector3 vector)

@@ -56,7 +56,7 @@ public class MWOIntegrationTests
         Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
         Assert.AreEqual(1, daeObject.Library_Effects.Effect.Length);
         Assert.AreEqual(2, daeObject.Library_Images.Image.Length);
-        Assert.AreEqual("clanbanner_a", daeObject.Library_Materials.Material[0].Name);
+        Assert.AreEqual("clanbanner_a-mtl-clanbanner_a", daeObject.Library_Materials.Material[0].Name);
         Assert.AreEqual("clanbanner_a-material", daeObject.Library_Materials.Material[0].ID);
         Assert.AreEqual("#clanbanner_a-effect", daeObject.Library_Materials.Material[0].Instance_Effect.URL);
         Assert.AreEqual("clanbanner_a_Diffuse", daeObject.Library_Images.Image[0].Name);
@@ -86,7 +86,7 @@ public class MWOIntegrationTests
         Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
         Assert.AreEqual(1, daeObject.Library_Effects.Effect.Length);
         Assert.AreEqual(2, daeObject.Library_Images.Image.Length);
-        Assert.AreEqual("clanbanner_a", daeObject.Library_Materials.Material[0].Name);
+        Assert.AreEqual("clanbanner_a-mtl-clanbanner_a", daeObject.Library_Materials.Material[0].Name);
         Assert.AreEqual("clanbanner_a-material", daeObject.Library_Materials.Material[0].ID);
         Assert.AreEqual("#clanbanner_a-effect", daeObject.Library_Materials.Material[0].Instance_Effect.URL);
         Assert.AreEqual("clanbanner_a_Diffuse", daeObject.Library_Images.Image[0].Name);
@@ -99,7 +99,7 @@ public class MWOIntegrationTests
     public void AtlasBodyPart_VerifyMaterials()
     {
         var matFile = @"D:\depot\mwo\Objects\mechs\atlas\body\atlas_body.mtl";
-        var args = new string[] { $@"D:\depot\mwo\Objects\mechs\atlas\body\as7_centre_torso.cga", "-dds", "-dae", "-objectdir", objectDir   , "-mtl", matFile };
+        var args = new string[] { $@"D:\depot\mwo\Objects\mechs\atlas\body\as7_centre_torso.cga", "-dds", "-dae", "-objectdir", objectDir, "-mtl", matFile };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
@@ -112,7 +112,7 @@ public class MWOIntegrationTests
         Assert.AreEqual(5, daeObject.Library_Materials.Material.Length);
         Assert.AreEqual(5, daeObject.Library_Effects.Effect.Length);
         Assert.AreEqual(31, daeObject.Library_Images.Image.Length);
-        Assert.AreEqual("atlas_body", daeObject.Library_Materials.Material[0].Name);
+        Assert.AreEqual("atlas_body-mtl-atlas_body", daeObject.Library_Materials.Material[0].Name);
         Assert.AreEqual("atlas_body-material", daeObject.Library_Materials.Material[0].ID);
         Assert.AreEqual("#atlas_body-effect", daeObject.Library_Materials.Material[0].Instance_Effect.URL);
         Assert.AreEqual("atlas_body_Diffuse", daeObject.Library_Images.Image[0].Name);
