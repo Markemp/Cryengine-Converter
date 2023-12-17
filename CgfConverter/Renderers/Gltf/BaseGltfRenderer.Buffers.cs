@@ -7,15 +7,15 @@ using System.Runtime.InteropServices;
 using System.Text;
 using BCnEncoder.Shared;
 using CgfConverter.Renderers.Gltf.Models;
+using CgfConverter.Renderers.MaterialTextures;
 using Newtonsoft.Json;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 
 namespace CgfConverter.Renderers.Gltf;
 
 public partial class BaseGltfRenderer
 {
-    protected GltfScene CurrentScene => _gltfRoot.Scenes[_gltfRoot.Scene];
+    protected GltfScene CurrentScene => Root.Scenes[Root.Scene];
 
     private void Compile()
     {
@@ -36,7 +36,7 @@ public partial class BaseGltfRenderer
         var bytes = _bytesList.FirstOrDefault() ?? Array.Empty<byte>();
         binStream.Write(bytes);
 
-        _gltfRoot.Buffers = new List<GltfBuffer>
+        Root.Buffers = new List<GltfBuffer>
         {
             new()
             {
@@ -44,7 +44,7 @@ public partial class BaseGltfRenderer
                 Uri = binFileName,
             }
         };
-        gltfStream.Write(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(_gltfRoot)));
+        gltfStream.Write(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(Root)));
     }
 
     private void CompileToBinary(Stream stream)
@@ -53,7 +53,7 @@ public partial class BaseGltfRenderer
 
         var bytes = _bytesList.FirstOrDefault() ?? Array.Empty<byte>();
 
-        _gltfRoot.Buffers = new List<GltfBuffer>
+        Root.Buffers = new List<GltfBuffer>
         {
             new()
             {
@@ -61,7 +61,7 @@ public partial class BaseGltfRenderer
             }
         };
 
-        var json = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(_gltfRoot));
+        var json = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(Root));
         if (json.Length % 4 != 0)
         {
             var rv = new byte[(json.Length + 3) / 4 * 4];
@@ -86,44 +86,44 @@ public partial class BaseGltfRenderer
 
     protected int AddNode(GltfNode node)
     {
-        _gltfRoot.Nodes.Add(node);
-        return _gltfRoot.Nodes.Count - 1;
+        Root.Nodes.Add(node);
+        return Root.Nodes.Count - 1;
     }
 
     private int AddAnimation(GltfAnimation animation)
     {
-        _gltfRoot.Animations.Add(animation);
-        return _gltfRoot.Animations.Count - 1;
+        Root.Animations.Add(animation);
+        return Root.Animations.Count - 1;
     }
 
     private int AddSkin(GltfSkin skin)
     {
-        _gltfRoot.Skins.Add(skin);
-        return _gltfRoot.Skins.Count - 1;
+        Root.Skins.Add(skin);
+        return Root.Skins.Count - 1;
     }
 
     private int AddMesh(GltfMesh mesh)
     {
-        _gltfRoot.Meshes.Add(mesh);
-        return _gltfRoot.Meshes.Count - 1;
+        Root.Meshes.Add(mesh);
+        return Root.Meshes.Count - 1;
     }
 
     private int AddMaterial(GltfMaterial material)
     {
-        _gltfRoot.Materials.Add(material);
-        return _gltfRoot.Materials.Count - 1;
+        Root.Materials.Add(material);
+        return Root.Materials.Count - 1;
     }
 
     private int? GetBufferViewOrDefault(string baseName)
     {
         var name = $"{baseName}/bufferView";
-        var index = _gltfRoot.Accessors.FindIndex(x => x.Name == name);
+        var index = Root.Accessors.FindIndex(x => x.Name == name);
         return index == -1 ? null : index;
     }
 
     private unsafe int AddBufferView<T>(
-        string? baseName, 
-        T[] data, 
+        string? baseName,
+        T[] data,
         GltfBufferViewTarget? bufferViewTarget)
         where T : unmanaged
     {
@@ -135,7 +135,7 @@ public partial class BaseGltfRenderer
         fixed (void* dst = target)
             Buffer.MemoryCopy(src, dst, paddedSize, rawSize);
 
-        _gltfRoot.BufferViews.Add(new GltfBufferView
+        Root.BufferViews.Add(new GltfBufferView
         {
             Name = baseName is null ? null : $"{baseName}/bufferView",
             ByteOffset = _currentOffset,
@@ -145,20 +145,20 @@ public partial class BaseGltfRenderer
         _bytesList.Add(target);
         _currentOffset += paddedSize;
 
-        return _gltfRoot.BufferViews.Count - 1;
+        return Root.BufferViews.Count - 1;
     }
 
     private int? GetAccessorOrDefault(string baseName, int start, int end)
     {
         var name = $"{baseName}/accessor[{start}:{end}]";
-        var index = _gltfRoot.Accessors.FindIndex(x => x.Name == name);
+        var index = Root.Accessors.FindIndex(x => x.Name == name);
         return index == -1 ? null : index;
     }
 
     private int AddAccessor<T>(
-        string? baseName, 
-        int bufferView, 
-        GltfBufferViewTarget? bufferViewTarget, 
+        string? baseName,
+        int bufferView,
+        GltfBufferViewTarget? bufferViewTarget,
         T[] data,
         int start = 0, int end = int.MaxValue)
         where T : unmanaged
@@ -184,7 +184,7 @@ public partial class BaseGltfRenderer
         else
             throw new NotImplementedException();
 
-        _gltfRoot.Accessors.Add(new GltfAccessor
+        Root.Accessors.Add(new GltfAccessor
         {
             Name = baseName is null ? null : $"{baseName}/accessor[{start}:{end}]",
             ByteOffset = start * Marshal.SizeOf(data[0]),
@@ -195,14 +195,14 @@ public partial class BaseGltfRenderer
             Min = new List<T> {data.Skip(start).Take(end - start).Min()},
             Max = new List<T> {data.Skip(start).Take(end - start).Max()},
         });
-        return _gltfRoot.Accessors.Count - 1;
+        return Root.Accessors.Count - 1;
     }
 
     private int AddAccessor<T>(
-        string? baseName, 
-        int bufferView, 
+        string? baseName,
+        int bufferView,
         GltfBufferViewTarget? bufferViewTarget,
-        TypedVec4<T>[] data, 
+        TypedVec4<T>[] data,
         int start = 0, int end = int.MaxValue)
         where T : unmanaged
     {
@@ -227,7 +227,7 @@ public partial class BaseGltfRenderer
         else
             throw new NotImplementedException();
 
-        _gltfRoot.Accessors.Add(new GltfAccessor
+        Root.Accessors.Add(new GltfAccessor
         {
             Name = baseName is null ? null : $"{baseName}/accessor[{start}:{end}]",
             ByteOffset = start * Marshal.SizeOf(data[0]),
@@ -250,23 +250,23 @@ public partial class BaseGltfRenderer
                 data.Skip(start).Take(end - start).Max(x => x.V4),
             },
         });
-        return _gltfRoot.Accessors.Count - 1;
+        return Root.Accessors.Count - 1;
     }
 
     private int AddAccessor(
-        string? baseName, 
-        int bufferView, 
-        GltfBufferViewTarget? bufferViewTarget, 
+        string? baseName,
+        int bufferView,
+        GltfBufferViewTarget? bufferViewTarget,
         UV[] data,
         int start = 0, int end = int.MaxValue)
     {
         if (bufferView == -1)
             bufferView = AddBufferView(baseName, data, bufferViewTarget);
-        
+
         if (end == int.MaxValue)
             end = data.Length;
-        
-        _gltfRoot.Accessors.Add(new GltfAccessor
+
+        Root.Accessors.Add(new GltfAccessor
         {
             Name = baseName is null ? null : $"{baseName}/accessor[{start}:{end}]",
             ByteOffset = start * Marshal.SizeOf(data[0]),
@@ -285,13 +285,13 @@ public partial class BaseGltfRenderer
                 data.Skip(start).Take(end - start).Max(x => x.V),
             },
         });
-        return _gltfRoot.Accessors.Count - 1;
+        return Root.Accessors.Count - 1;
     }
 
     private int AddAccessor(
-        string? baseName, 
-        int bufferView, 
-        GltfBufferViewTarget? bufferViewTarget, 
+        string? baseName,
+        int bufferView,
+        GltfBufferViewTarget? bufferViewTarget,
         Vector3[] data,
         int start = 0, int end = int.MaxValue)
     {
@@ -299,7 +299,7 @@ public partial class BaseGltfRenderer
             bufferView = AddBufferView(baseName, data, bufferViewTarget);
         if (end == int.MaxValue)
             end = data.Length;
-        _gltfRoot.Accessors.Add(new GltfAccessor
+        Root.Accessors.Add(new GltfAccessor
         {
             Name = baseName is null ? null : $"{baseName}/accessor[{start}:{end}]",
             ByteOffset = start * Marshal.SizeOf(data[0]),
@@ -320,21 +320,21 @@ public partial class BaseGltfRenderer
                 data.Skip(start).Take(end - start).Max(x => x.Z),
             },
         });
-        return _gltfRoot.Accessors.Count - 1;
+        return Root.Accessors.Count - 1;
     }
 
     private int AddAccessor(
-        string? baseName, 
-        int bufferView, 
-        GltfBufferViewTarget? bufferViewTarget, 
-        Quaternion[] data,
+        string? baseName,
+        int bufferView,
+        GltfBufferViewTarget? bufferViewTarget,
+        Vector4[] data,
         int start = 0, int end = int.MaxValue)
     {
         if (bufferView == -1)
             bufferView = AddBufferView(baseName, data, bufferViewTarget);
         if (end == int.MaxValue)
             end = data.Length;
-        _gltfRoot.Accessors.Add(new GltfAccessor
+        Root.Accessors.Add(new GltfAccessor
         {
             Name = baseName is null ? null : $"{baseName}/accessor[{start}:{end}]",
             ByteOffset = start * Marshal.SizeOf(data[0]),
@@ -357,13 +357,50 @@ public partial class BaseGltfRenderer
                 data.Skip(start).Take(end - start).Max(x => x.W),
             },
         });
-        return _gltfRoot.Accessors.Count - 1;
+        return Root.Accessors.Count - 1;
     }
 
     private int AddAccessor(
-        string? baseName, 
-        int bufferView, 
-        GltfBufferViewTarget? bufferViewTarget, 
+        string? baseName,
+        int bufferView,
+        GltfBufferViewTarget? bufferViewTarget,
+        Quaternion[] data,
+        int start = 0, int end = int.MaxValue)
+    {
+        if (bufferView == -1)
+            bufferView = AddBufferView(baseName, data, bufferViewTarget);
+        if (end == int.MaxValue)
+            end = data.Length;
+        Root.Accessors.Add(new GltfAccessor
+        {
+            Name = baseName is null ? null : $"{baseName}/accessor[{start}:{end}]",
+            ByteOffset = start * Marshal.SizeOf(data[0]),
+            BufferView = bufferView,
+            ComponentType = GltfAccessorComponentTypes.f32,
+            Count = end - start,
+            Type = GltfAccessorTypes.Vec4,
+            Min = new List<float>
+            {
+                data.Skip(start).Take(end - start).Min(x => x.X),
+                data.Skip(start).Take(end - start).Min(x => x.Y),
+                data.Skip(start).Take(end - start).Min(x => x.Z),
+                data.Skip(start).Take(end - start).Min(x => x.W),
+            },
+            Max = new List<float>
+            {
+                data.Skip(start).Take(end - start).Max(x => x.X),
+                data.Skip(start).Take(end - start).Max(x => x.Y),
+                data.Skip(start).Take(end - start).Max(x => x.Z),
+                data.Skip(start).Take(end - start).Max(x => x.W),
+            },
+        });
+        return Root.Accessors.Count - 1;
+    }
+
+    private int AddAccessor(
+        string? baseName,
+        int bufferView,
+        GltfBufferViewTarget? bufferViewTarget,
         Matrix4x4[] data,
         int start = 0, int end = int.MaxValue)
     {
@@ -372,7 +409,7 @@ public partial class BaseGltfRenderer
         if (end == int.MaxValue)
             end = data.Length;
 
-        _gltfRoot.Accessors.Add(new GltfAccessor
+        Root.Accessors.Add(new GltfAccessor
         {
             Name = baseName is null ? null : $"{baseName}/accessor[{start}:{end}]",
             ByteOffset = start * Marshal.SizeOf(data[0]),
@@ -419,34 +456,7 @@ public partial class BaseGltfRenderer
                 data.Skip(start).Take(end - start).Max(x => x.M44),
             },
         });
-        return _gltfRoot.Accessors.Count - 1;
-    }
-
-    private int AddRelativeTexture(string normalizedPath)
-    {
-        var name = Path.GetFileNameWithoutExtension(normalizedPath);
-        _gltfRoot.Images.Add(new GltfImage
-        {
-            Name = $"{name}/image",
-            Uri = Path.Join(Args.DataDirs[0], normalizedPath)
-        });
-
-        _gltfRoot.Textures.Add(new GltfTexture
-        {
-            Name = name is null ? null : $"{name}/texture",
-            Source = _gltfRoot.Images.Count - 1,
-        });
-
-        return _gltfRoot.Textures.Count - 1;
-    }
-
-    private int AddTexture<TPixel>(string? baseName, int width, int height, TPixel[] raw)
-        where TPixel : unmanaged, IPixel<TPixel>
-    {
-        using var ms = new MemoryStream();
-        using (var image = Image.LoadPixelData(raw, width, height))
-            image.SaveAsPng(ms);
-        return AddTexture(baseName, "image/png", ms.ToArray());
+        return Root.Accessors.Count - 1;
     }
 
     private enum SourceAlphaModes
@@ -454,6 +464,25 @@ public partial class BaseGltfRenderer
         Disable,
         Enable,
         Automatic,
+    }
+
+    private GltfTextureInfo? AddTextureInfo(string name, MaterialTexture? materialTexture)
+    {
+        if (materialTexture is null)
+            return null;
+
+        int index = Root.Textures.FindIndex(x => x.Name == $"{name}/texture");
+        if (index == -1)
+        {
+            index = AddTexture(
+                name,
+                materialTexture.Width,
+                materialTexture.Height,
+                materialTexture.Data,
+                materialTexture.NumChannels == 4 ? SourceAlphaModes.Enable : SourceAlphaModes.Disable);
+        }
+
+        return new GltfTextureInfo { Index = index };
     }
 
     private int AddTexture(string? baseName, int width, int height, ColorRgba32[] raw, SourceAlphaModes sourceAlphaMode,
@@ -504,21 +533,34 @@ public partial class BaseGltfRenderer
 
     private int AddTexture(string? baseName, string mimeType, byte[] textureBytes)
     {
-        var bufferViewIndex = AddBufferView(baseName, textureBytes, null);
+        int? bufferViewIndex = null;
+        string? uri = null;
+        if (Args.EmbedTextures)
+        {
+            bufferViewIndex = AddBufferView(baseName, textureBytes, null);
+        }
+        else
+        {
+            baseName ??= $"file{_filesList.Count}";
+            baseName = "mat_ " + string.Join("_", baseName.Split(Path.GetInvalidFileNameChars())).TrimEnd('.');
+            uri = Path.ChangeExtension(baseName, ".png");
+            _filesList[uri] = textureBytes;
+        }
 
-        _gltfRoot.Images.Add(new GltfImage
+        Root.Images.Add(new GltfImage
         {
             Name = baseName is null ? null : $"{baseName}/image",
             MimeType = mimeType,
             BufferView = bufferViewIndex,
+            Uri = uri,
         });
 
-        _gltfRoot.Textures.Add(new GltfTexture
+        Root.Textures.Add(new GltfTexture
         {
             Name = baseName is null ? null : $"{baseName}/texture",
-            Source = _gltfRoot.Images.Count - 1,
+            Source = Root.Images.Count - 1,
         });
 
-        return _gltfRoot.Textures.Count - 1;
+        return Root.Textures.Count - 1;
     }
 }

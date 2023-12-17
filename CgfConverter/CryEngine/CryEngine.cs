@@ -115,7 +115,7 @@ public partial class CryEngine
 
         foreach (var file in inputFiles)
         {
-            // Each file (.cga and .cgam if applicable) will have its own RootNode.  
+            // Each file (.cga and .cgam if applicable) will have its own RootNode.
             // This can cause problems.  .cga files with a .cgam files won't have geometry for the one root node.
             var model = Model.FromStream(file, PackFileSystem.GetStream(file), true);
 
@@ -135,7 +135,7 @@ public partial class CryEngine
         {
             var chrparams = CryXmlSerializer.Deserialize<ChrParams.ChrParams>(
                 PackFileSystem.GetStream(Path.ChangeExtension(InputFile, ".chrparams")));
-            var trackFilePath = chrparams.Animations?.FirstOrDefault(x => x.Name == "$TracksDatabase" || x.Name == "#filepath")?.Path;
+            var trackFilePath = chrparams.Animations?.FirstOrDefault(x => x.Name == "$TracksDatabase")?.Path;
             if (trackFilePath is null)
                 throw new FileNotFoundException();
             if (Path.GetExtension(trackFilePath) != "dba")
@@ -203,7 +203,7 @@ public partial class CryEngine
         return skin;
     }
 
-    private void CreateMaterialsFor(Model model)  
+    private void CreateMaterialsFor(Model model)
     {
         if (MaterialFile is not null && PackFileSystem.Exists(MaterialFile))
         {
@@ -219,7 +219,7 @@ public partial class CryEngine
         MaterialFile = GetMaterialFile(materialLibraryFiles);
         if (MaterialFile is not null)
             Materials = MaterialUtilities.FromStream(PackFileSystem.GetStream(MaterialFile), Name, true);
-        
+
         if (Materials is null)
         {
             var maxNumberOfMaterials = model.ChunkMap.Values.OfType<ChunkMtlName>().Max(c => c.NumChildren);

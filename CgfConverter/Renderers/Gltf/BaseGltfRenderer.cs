@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using CgfConverter.Materials;
 using CgfConverter.Renderers.Gltf.Models;
+using CgfConverter.Renderers.MaterialTextures;
 using CgfConverter.Utils;
 
 namespace CgfConverter.Renderers.Gltf;
@@ -12,12 +12,13 @@ public partial class BaseGltfRenderer
     protected readonly ArgsHandler Args;
     private readonly bool _writeText;
     private readonly bool _writeBinary;
-    private readonly Dictionary<Material, int> _materialMap = new();
-    
-    protected GltfRoot _gltfRoot = new();
-    private readonly List<byte[]> _bytesList = new();
+    private readonly Dictionary<(string MaterialFile, string SubMaterialName), WrittenMaterial> _materialMap = new();
 
-    protected CryEngine _cryData;
+    private readonly List<byte[]> _bytesList = new();
+    private readonly Dictionary<string, byte[]> _filesList = new();
+    protected GltfRoot Root = new();
+
+    private MaterialTextureManager _materialTextureManager;
 
     private int _currentOffset;
 
@@ -25,6 +26,7 @@ public partial class BaseGltfRenderer
     {
         Log = new TaggedLogger(logTag);
         Args = argsHandler;
+        _materialTextureManager = new MaterialTextureManager(argsHandler);
         _writeText = writeText;
         _writeBinary = writeBinary;
     }
@@ -32,25 +34,33 @@ public partial class BaseGltfRenderer
     protected void Reset(string sceneName)
     {
         _materialMap.Clear();
-        
+
         _bytesList.Clear();
+        _materialTextureManager.Clear();
         _currentOffset = 0;
-        _gltfRoot = new GltfRoot();
-        _gltfRoot.Scenes.Add(new GltfScene
+        Root = new GltfRoot();
+        Root.Scenes.Add(new GltfScene
         {
             Name = sceneName,
         });
+        Root.ExtensionsUsed.Add("KHR_materials_specular");
+        Root.ExtensionsUsed.Add("KHR_materials_pbrSpecularGlossiness");
+        Root.ExtensionsUsed.Add("KHR_materials_emissive_strength");
     }
 
     protected void Save(string referenceName, string? layerName = null)
     {
+        string baseDir = Args.FormatOutputFileName(".glb", referenceName, layerName).DirectoryName!;
+        foreach ((string k, byte[] v) in _filesList)
+            File.WriteAllBytes(Path.Join(baseDir, k), v);
+
         if (_writeBinary)
         {
             var glbf = Args.FormatOutputFileName(".glb", referenceName, layerName);
-            
+
             using var glb = glbf.Open(FileMode.Create, FileAccess.Write);
             CompileToBinary(glb);
-            
+
             Log.I($"Saved: {glbf.Name} in {glbf.DirectoryName}");
         }
 
@@ -58,11 +68,11 @@ public partial class BaseGltfRenderer
         {
             var gltfFile = Args.FormatOutputFileName(".gltf", referenceName, layerName);
             var glbFile = Args.FormatOutputFileName(".bin", referenceName, layerName);
-            
+
             using var gltf = gltfFile.Open(FileMode.Create, FileAccess.Write);
             using var bin = glbFile.Open(FileMode.Create, FileAccess.Write);
             CompileToPair(Path.GetFileName(bin.Name), gltf, bin);
-            
+
             Log.I($"Saved: {gltfFile.Name} and {glbFile.Name} in {gltfFile.DirectoryName}");
         }
     }

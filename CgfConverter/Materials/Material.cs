@@ -40,17 +40,17 @@ public class Material
     public string? MatTemplate { get; set; }
 
     [XmlAttribute(AttributeName = "Diffuse")]
-    public string? Diffuse 
-    { 
+    public string? Diffuse
+    {
         get { return Color.Serialize(DiffuseValue); }
         set { DiffuseValue = Color.Deserialize(value); }
     }
 
     [XmlAttribute(AttributeName = "Specular")]
-    public string? Specular 
+    public string? Specular
     {
         get { return Color.Serialize(SpecularValue); }
-        set { SpecularValue = Color.Deserialize(value); } 
+        set { SpecularValue = Color.Deserialize(value); }
     }
 
     [XmlAttribute(AttributeName = "Emissive")]
@@ -64,8 +64,8 @@ public class Material
     public double Shininess { get; set; }
 
     [XmlAttribute(AttributeName = "Opacity")]
-    public string? Opacity 
-    { 
+    public string? Opacity
+    {
         get { return OpacityValue.ToString(); }
         set { OpacityValue = float.Parse(value ?? "1"); }
     }
@@ -84,7 +84,7 @@ public class Material
     public Material[]? SubMaterials { get; set; }
 
     [XmlElement(ElementName = "PublicParams")]
-    internal PublicParams? PublicParams { get; set; }
+    public PublicParams? PublicParams { get; set; }
 
     // TODO: TimeOfDay Support
 

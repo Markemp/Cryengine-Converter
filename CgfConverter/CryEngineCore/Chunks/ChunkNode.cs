@@ -20,7 +20,7 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
     public Vector3 Pos { get; internal set; }       // Obsolete
     public Quaternion Rot { get; internal set; }    // Obsolete
     public Vector3 Scale { get; internal set; }     // Obsolete
-    public int PosCtrlID { get; internal set; } 
+    public int PosCtrlID { get; internal set; }
     public int RotCtrlID { get; internal set; }
     public int SclCtrlID { get; internal set; }
     public string Properties { get; internal set; } = string.Empty;
@@ -61,33 +61,21 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
     }
 
     private Chunk? _objectChunk;
-    
+
     public Chunk? ObjectChunk
     {
         get
         {
             if (_objectChunk == null)
                 _model.ChunkMap.TryGetValue(ObjectNodeID, out _objectChunk);
-            
+
             return _objectChunk;
         }
     }
 
     public ChunkMtlName? MaterialLibraryChunk => (ChunkMtlName?)_model.ChunkMap.Values.FirstOrDefault(c => c.ID == MatID);
 
-    public List<ChunkNode>? AllChildNodes
-    {
-        get
-        {
-            if (__NumChildren == 0)
-                return null;
-            else
-            {
-                var node = _model.NodeMap.Values.Where(a => a.ParentNodeID == ID).ToList();
-                return node;
-            }
-        }
-    }
+    public IEnumerable<ChunkNode> AllChildNodes => _model.NodeMap.Values.Where(a => a.ParentNodeID == ID);
 
     public override string ToString() => $@"Chunk Type: {ChunkType}, ID: {ID:X}, Version: {Version}, Name: {Name}, Object Node ID: {ObjectNodeID:X}, Parent Node ID: {ParentNodeID:X}, Mat: {MatID:X}";
 }
