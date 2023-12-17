@@ -350,7 +350,7 @@ public class MWOIntegrationTests
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
 
-        // Visual Scene Check 
+        // Visual Scene Check
         Assert.AreEqual("Scene", daeObject.Scene.Visual_Scene.Name);
         Assert.AreEqual("#Scene", daeObject.Scene.Visual_Scene.URL);
         Assert.AreEqual(1, daeObject.Library_Visual_Scene.Visual_Scene.Length);
@@ -694,7 +694,7 @@ public class MWOIntegrationTests
         Assert.AreEqual("HulaGirl_UpperBody", gltfData.Nodes[1].Name);
         Assert.AreEqual("HulaGirl_LowerBody", gltfData.Nodes[2].Name);
 
-        var rotationMatrix = cryData.RootNode.AllChildNodes[0].Rot.ConvertToRotationMatrix();
+        var rotationMatrix = cryData.RootNode.AllChildNodes.First().Rot.ConvertToRotationMatrix();
         AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[0].Rotation, TestUtils.delta);
         AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { -0.10248467f, 0.00384537f, -0.04688235744833946f, 0.9936217f }, gltfData.Nodes[1].Rotation, TestUtils.delta);
         AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[2].Rotation, TestUtils.delta);

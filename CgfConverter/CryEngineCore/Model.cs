@@ -72,6 +72,9 @@ public class Model
         }
     }
 
+    /// <summary> Gets the root nodes. </summary>
+    public IEnumerable<ChunkNode> RootNodes => NodeMap.Values.Where(x => x.ParentNodeID == ~0);
+
     public bool HasBones => Bones != null;
 
     public bool HasGeometry
@@ -81,11 +84,11 @@ public class Model
             var types = ChunkMap.Select(n => n.Value.ChunkType);
             if (ChunkMap.Select(n => n.Value.ChunkType).Contains(ChunkType.Mesh) || ChunkMap.Select(n => n.Value.ChunkType).Contains(ChunkType.MeshIvo))
                 return true;
-            
+
             return false;
         }
     }
-    
+
     /// <summary> Load the specified stream as a Model</summary>
     public static Model FromStream(string fileName, Stream stream, bool closeStream =false)
     {
@@ -208,7 +211,7 @@ public class Model
                 RootNode = chunk as ChunkNode;
 
             // Add Bones to the model.  We are assuming there is only one CompiledBones chunk per file.
-            if (chunkHeaderItem.ChunkType == ChunkType.CompiledBones || 
+            if (chunkHeaderItem.ChunkType == ChunkType.CompiledBones ||
                 chunkHeaderItem.ChunkType == ChunkType.CompiledBonesSC ||
                 chunkHeaderItem.ChunkType == ChunkType.CompiledBonesIvo ||
                 chunkHeaderItem.ChunkType == ChunkType.CompiledBonesIvo320)

@@ -1,16 +1,6 @@
-﻿using BCnEncoder.Decoder;
-using BCnEncoder.Shared;
-using BCnEncoder.Shared.ImageFiles;
-using CgfConverter.CryEngineCore;
-using CgfConverter.Materials;
+﻿using CgfConverter.Materials;
 using CgfConverter.Renderers.Gltf.Models;
-using CgfConverter.Utils;
-using Extensions;
-using SixLabors.ImageSharp.PixelFormats;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+using CgfConverter.Renderers.MaterialTextures;
 
 namespace CgfConverter.Renderers.Gltf;
 
@@ -18,331 +8,125 @@ public partial class BaseGltfRenderer
 {
     private class WrittenMaterial
     {
+        private static readonly float[] Float4Transparent = new float[4];
+
         public const int SkippedFromArgsIndex = -1;
-        
-        public readonly int Index;
-        public readonly Material Source;
-        public readonly GltfMaterial? Target;
 
-        //private BcDecoder decoder = new ();
-
-        public WrittenMaterial(int index, Material source, GltfMaterial? target)
+        public WrittenMaterial(
+            Material source,
+            BaseGltfRenderer renderer,
+            MaterialTextureManager mtm,
+            ArgsHandler argsHandler)
         {
-            Index = index;
-            Source = source;
-            Target = target;
+            CryMaterial = source;
+            if (argsHandler.IsMaterialExcluded(CryMaterial))
+            {
+                Index = SkippedFromArgsIndex;
+                return;
+            }
+
+            // TODO: use GltfMaterialAlphaMode.Blend depending on shader type
+
+            if ((CryMaterial.MaterialFlags & MaterialFlags.NoDraw) != 0)
+            {
+                GltfMaterial = new GltfMaterial
+                {
+                    Name = CryMaterial.Name,
+                    AlphaCutoff = 1f, // Fully transparent
+                    AlphaMode = GltfMaterialAlphaMode.Mask,
+                    PbrMetallicRoughness = new GltfMaterialPbrMetallicRoughness
+                    {
+                        BaseColorFactor = Float4Transparent,
+                    },
+                };
+                GltfMaterial.AlphaMode = GltfMaterialAlphaMode.Mask;
+                GltfMaterial.AlphaCutoff = 1f; // Fully transparent
+                GltfMaterial.PbrMetallicRoughness.BaseColorFactor = Float4Transparent;
+                return;
+            }
+
+            MaterialTextureSet textures = mtm.CreateSet(CryMaterial);
+            GltfMaterial = new GltfMaterial
+            {
+                Name = CryMaterial.Name,
+                AlphaCutoff = CryMaterial.AlphaTest == 0 ? null : (float) CryMaterial.AlphaTest,
+                AlphaMode = CryMaterial.AlphaTest == 0
+                    ? GltfMaterialAlphaMode.Opaque
+                    : GltfMaterialAlphaMode.Mask,
+                DoubleSided = CryMaterial.MaterialFlags.HasFlag(MaterialFlags.TwoSided),
+                NormalTexture = renderer.AddTextureInfo($"{CryMaterial.Name}-normal", textures.Normal),
+                PbrMetallicRoughness = new GltfMaterialPbrMetallicRoughness
+                {
+                    BaseColorTexture = renderer.AddTextureInfo($"{CryMaterial.Name}-diffuse", textures.Diffuse),
+                    BaseColorFactor = new[]
+                    {
+                        CryMaterial.DiffuseValue?.Red ?? 0f,
+                        CryMaterial.DiffuseValue?.Green ?? 0f,
+                        CryMaterial.DiffuseValue?.Blue ?? 0f,
+                        float.Clamp(CryMaterial.OpacityValue ?? 1f, 0f, 1f),
+                    },
+                    MetallicFactor = float.Clamp(CryMaterial.PublicParams?.Metalness ?? 0, 0, 1),
+                    RoughnessFactor = float.Clamp((255 - (float) CryMaterial.Shininess) / 255f, 0, 1),
+                    MetallicRoughnessTexture = renderer.AddTextureInfo(
+                        $"{CryMaterial.Name}-metallicroughness",
+                        textures.MetallicRoughness),
+                },
+                Extensions = new GltfExtensions
+                {
+                    KhrMaterialsPbrSpecularGlossiness = new GltfExtensionKhrMaterialsPbrSpecularGlossiness
+                    {
+                        DiffuseFactor = new[]
+                        {
+                            CryMaterial.DiffuseValue?.Red ?? 0f,
+                            CryMaterial.DiffuseValue?.Green ?? 0f,
+                            CryMaterial.DiffuseValue?.Blue ?? 0f,
+                            float.Clamp(CryMaterial.OpacityValue ?? 0f, 0f, 1f),
+                        },
+                        DiffuseTexture = renderer.AddTextureInfo($"{CryMaterial.Name}-diffuse", textures.Diffuse),
+                        SpecularFactor = new[]
+                        {
+                            CryMaterial.SpecularValue?.Red ?? 0f,
+                            CryMaterial.SpecularValue?.Green ?? 0f,
+                            CryMaterial.SpecularValue?.Blue ?? 0f,
+                        },
+                        GlossinessFactor = float.Clamp((float) CryMaterial.Shininess / 255f, 0f, 1f),
+                        SpecularGlossinessTexture = renderer.AddTextureInfo(
+                            $"{CryMaterial.Name}-specularglossiness",
+                            textures.SpecularGlossiness),
+                    },
+                    KhrMaterialsEmissiveStrength = CryMaterial.GlowAmount <= 0
+                        ? null
+                        : new GltfExtensionMaterialsEmissiveStrength
+                        {
+                            EmissiveStrength = (float) CryMaterial.GlowAmount,
+                        },
+                },
+            };
+
+            Index = renderer.AddMaterial(GltfMaterial);
         }
 
         public bool IsSkippedFromArgs => Index == SkippedFromArgsIndex;
-    } 
-    
-    private Dictionary<int, WrittenMaterial> WriteMaterial(ChunkNode nodeChunk)
-    {
-        var materialIndices = new Dictionary<int, WrittenMaterial>();
 
-        var submats = nodeChunk.Materials?.SubMaterials;
-        if (submats is null)
-            return materialIndices;
-        
-        var materialSetName = nodeChunk.MaterialLibraryChunk?.Name ?? nodeChunk._model.FileName;
-        
-        var matIds = nodeChunk._model.ChunkMap
-            .Select(x => x.Value)
-            .OfType<ChunkMeshSubsets>()
-            .SelectMany(x => x.MeshSubsets)
-            .Select(x => x.MatID)
-            .ToHashSet();
+        public int Index { get; }
 
-        var decoder = new BcDecoder();
-        foreach (var matId in matIds)
-        {
-            if (matId >= submats.Length)
-            {
-                Log.W("Material[{0}:{1}]: Not found.", materialSetName, matId);
-                continue;
-            }
+        public Material CryMaterial { get; }
 
-            var m = submats[matId];
-
-            if ((m.Name is not null && Args.IsMeshMaterialExcluded(m.Name))
-                || (m.Shader is not null && Args.IsMeshMaterialShaderExcluded(m.Shader)))
-            {
-                materialIndices[matId] = new WrittenMaterial(WrittenMaterial.SkippedFromArgsIndex, m, null);
-                continue;
-            }
-
-            if (_materialMap.TryGetValue(m, out var existingIndex))
-            {
-                materialIndices[matId] = new WrittenMaterial(existingIndex, m, _gltfRoot.Materials[existingIndex]);
-                continue;
-            }
-
-            if ((m.MaterialFlags & MaterialFlags.NoDraw) != 0)
-            {
-                var matIndexHidden = _materialMap[m] = AddMaterial(new GltfMaterial
-                {
-                    Name = m.Name,
-                    AlphaMode = GltfMaterialAlphaMode.Mask,
-                    AlphaCutoff = 1f, // Fully transparent
-                    DoubleSided = true, // (m.MaterialFlags & MaterialFlags.TwoSided) != 0,
-                    PbrMetallicRoughness = new GltfMaterialPbrMetallicRoughness
-                    {
-                        BaseColorFactor = new[] {0f, 0f, 0f, 0f},
-                    },
-                });
-                materialIndices[matId] = new WrittenMaterial(matIndexHidden, m, _gltfRoot.Materials[matIndexHidden]);
-                continue;
-            }
-
-            var useAlphaColor = m.OpacityValue != null && Math.Abs(m.OpacityValue.Value - 1.0) > 0;
-
-            // SpecularValue seemingly has a meaningful value as opacity for characters.
-            // Not for decals.
-            var preferredAlphaColor = useAlphaColor ? m.OpacityValue : null;
-
-            var diffuse = -1;
-            // TODO: var diffuseDetail = -1;
-            var emissive = -1;
-            var normal = -1;
-            var specular = -1;
-            var metallicRoughness = -1;
-
-            foreach (var texture in m.Textures!)
-            {
-                // seems to be a sentinel value
-                if (texture.File == "nearest_cubemap" || string.IsNullOrWhiteSpace(texture.File))
-                    continue;
-
-                var texturePath = FileHandlingExtensions.ResolveTextureFile(texture.File, Args.PackFileSystem, Args.DataDirs);
-                var normalizedPath = FileHandlingExtensions.CombineAndNormalizePath(texturePath);
-
-                if (!Args.PackFileSystem.Exists(normalizedPath))
-                {
-                    Log.W("Material[{0}:{1}]: Texture file not found: {2}", materialSetName, matId, texture.File);
-                    continue;
-                }
-
-                var name = Path.GetFileNameWithoutExtension(normalizedPath);
-
-                switch (texture.Map)
-                {
-                    case Texture.MapTypeEnum.TexSlot2:
-                    case Texture.MapTypeEnum.Normals:
-                    {
-                        if (Args.EmbedTextures)
-                        {
-                            var rawDetails = GetImageFileDetails(normalizedPath, decoder);
-                            if (GltfRendererUtilities.HasMeaningfulAlphaChannel(rawDetails.raw))
-                            {
-                                // https://docs.cryengine.com/display/SDKDOC2/Detail+Maps
-                                // Red: Diffuse
-                                // Green: Normal Red
-                                // Blue: Gloss
-                                // Alpha: Normal Green
-                                var rawNormal = new Rgb24[rawDetails.raw.Length];
-                                var rawMetallicRoughness = new Rgb24[rawDetails.raw.Length];
-                                var rawDiffuseDetail = new Rgb24[rawDetails.raw.Length];
-                                for (var j = 0; j < rawDetails.raw.Length; j++)
-                                {
-                                    var r = (rawNormal[j].R = rawDetails.raw[j].g) / 255f;
-                                    var g = (rawNormal[j].G = rawDetails.raw[j].a) / 255f;
-                                    var b = Math.Sqrt(1 - Math.Pow(r * 2 - 1, 2) - Math.Pow(g * 2 - 1, 2)) / 2 + 0.5f;
-                                    rawNormal[j].B = (byte)(255 * b);
-
-                                    // Its green channel contains roughness values
-                                    rawMetallicRoughness[j].G = (byte)(255 - rawDetails.raw[j].b);
-                                    // and its blue channel contains metalness values.
-
-                                    rawDiffuseDetail[j].R = rawDiffuseDetail[j].G = rawDiffuseDetail[j].B = rawDetails.raw[j].r;
-                                }
-
-                                normal = AddTexture(name, rawDetails.width, rawDetails.height, rawNormal);
-                                metallicRoughness = AddTexture(name, rawDetails.width, rawDetails.height, rawMetallicRoughness);
-
-                                // TODO: diffuseDetail = _gltfDataBuffer.AddTexture(name, width, height, rawDiffuseDetail);
-                                Log.D("Material[{0}:{1}]: Detailed diffuse map is not implemented: {2}",
-                                    materialSetName, matId, texture.File);
-                            }
-                            else
-                            {
-                                // For normal maps, blue is usually set to 0.  Should be 255.  This
-                                // is why the normal textures look yellow instead of blue.
-                                for (int i = 0; i < rawDetails.raw.Length; i++)
-                                {
-                                    rawDetails.raw[i].b = 255;
-                                }
-                                normal = AddTexture(name, rawDetails.width, rawDetails.height, rawDetails.raw, SourceAlphaModes.Disable);
-                            }
-                        }
-                        else
-                            normal = AddRelativeTexture(normalizedPath);
-
-                        break;
-                    }
-                    case Texture.MapTypeEnum.TexSlot1:
-                    case Texture.MapTypeEnum.TexSlot9:
-                    case Texture.MapTypeEnum.Diffuse:
-                        if (Args.EmbedTextures)
-                        {
-                            var rawDetails = GetImageFileDetails(normalizedPath, decoder);
-                            if (m.GlowAmount > 0)
-                            {
-                                var rawEmissive = new Rgb24[rawDetails.raw.Length];
-                                for (var j = 0; j < rawDetails.raw.Length; j++)
-                                {
-                                    rawEmissive[j].R = (byte)(rawDetails.raw[j].r * rawDetails.raw[j].a / 255);
-                                    rawEmissive[j].G = (byte)(rawDetails.raw[j].g * rawDetails.raw[j].a / 255);
-                                    rawEmissive[j].B = (byte)(rawDetails.raw[j].b * rawDetails.raw[j].a / 255);
-                                }
-
-                                emissive = AddTexture(name, rawDetails.width, rawDetails.height, rawEmissive);
-                            }
-                            diffuse = AddTexture(name, rawDetails.width, rawDetails.height, rawDetails.raw, SourceAlphaModes.Disable,
-                                preferredAlphaColor);
-                        }
-                        else
-                            diffuse = AddRelativeTexture(normalizedPath);
-                        break;
-                    case Texture.MapTypeEnum.TexSlot4:
-                    case Texture.MapTypeEnum.TexSlot10:
-                    case Texture.MapTypeEnum.Specular:
-                        if (Args.EmbedTextures)
-                        {
-                            var rawDetails = GetImageFileDetails(normalizedPath, decoder);
-                            specular = AddTexture(name, rawDetails.width, rawDetails.height, rawDetails.raw, SourceAlphaModes.Disable);
-                        }
-                        else
-                            specular = AddRelativeTexture(normalizedPath);
-                        break;
-                    default:
-                        Log.D("Material[{0}:{1}]: Ignoring texture type {2}: {3}",
-                            materialSetName, matId, texture.MapString, texture.File);
-                        break;
-                }
-            }
-            
-            const float legacyHdrDynMult = 2.0f;
-            const float legacyIntensityScale = 10.0f;
-            const float emissiveIntensitySoftMax = 200.0f;
-            var emissionMultiplier = (float)(Math.Min(
-                Math.Pow(m.GlowAmount * legacyHdrDynMult, legacyHdrDynMult) * legacyIntensityScale,
-                emissiveIntensitySoftMax) / 65535f);
-            // TODO: How are this and m.emissiveValue related?
-
-            _gltfRoot.ExtensionsUsed.Add("KHR_materials_specular");
-            var matIndex = _materialMap[m] = AddMaterial(new GltfMaterial
-            {
-                Name = m.Name,
-                AlphaMode = useAlphaColor
-                    ? GltfMaterialAlphaMode.Blend
-                    : m.AlphaTest == 0
-                        ? GltfMaterialAlphaMode.Opaque
-                        : GltfMaterialAlphaMode.Mask,
-                AlphaCutoff = useAlphaColor || m.AlphaTest == 0 ? null : (float) m.AlphaTest,
-                DoubleSided = true, // (m.MaterialFlags & MaterialFlags.TwoSided) != 0,
-                NormalTexture = normal == -1
-                    ? null
-                    : new GltfTextureInfo
-                    {
-                        Index = normal,
-                    },
-                PbrMetallicRoughness = new GltfMaterialPbrMetallicRoughness
-                {
-                    BaseColorTexture = diffuse == -1
-                        ? null
-                        : new GltfTextureInfo
-                        {
-                            Index = diffuse,
-                        },
-                    BaseColorFactor = new[]
-                    {
-                        m.DiffuseValue?.Red ?? 1f,
-                        m.DiffuseValue?.Green ?? 1f,
-                        m.DiffuseValue?.Blue ?? 1f,
-                        (float) (m.OpacityValue ?? 1.0),
-                    },
-                    MetallicFactor = 0f,
-                    RoughnessFactor = 1f,
-                    MetallicRoughnessTexture = metallicRoughness == -1
-                        ? null
-                        : new GltfTextureInfo
-                        {
-                            Index = metallicRoughness,
-                        },
-                },
-                EmissiveFactor = new[]
-                {
-                    emissionMultiplier,
-                    emissionMultiplier,
-                    emissionMultiplier,
-                },
-                EmissiveTexture = emissive == -1
-                    ? null
-                    : new GltfTextureInfo
-                    {
-                        Index = emissive,
-                    },
-                Extensions = new GltfExtensions
-                {
-                    KhrMaterialsSpecular = new GltfExtensionKhrMaterialsSpecular
-                    {
-                        SpecularColorFactor = m.SpecularValue == null
-                            ? null
-                            : new[]
-                            {
-                                m.SpecularValue.Red,
-                                m.SpecularValue.Green,
-                                m.SpecularValue.Blue,
-                            },
-                        SpecularColorTexture = specular == -1
-                            ? null
-                            : new GltfTextureInfo
-                            {
-                                Index = specular,
-                            },
-                    },
-                },
-            });
-            materialIndices[matId] = new WrittenMaterial(matIndex, m, _gltfRoot.Materials[matIndex]);
-        }
-
-        return materialIndices;
+        public GltfMaterial? GltfMaterial { get; }
     }
 
-    private DdsFileDetails GetImageFileDetails(string normalizedPath, BcDecoder decoder)
+    protected void WriteMaterial(string materialFile, Material material)
     {
-        var ddsDetails = new DdsFileDetails();
-
-        DdsFile ddsFile;
-        if (DDSFileCombiner.IsSplitDDS(normalizedPath))
+        foreach (Material submat in material.SubMaterials!)
         {
-            using var ddsfs = DDSFileCombiner.CombineToStream(normalizedPath);
-            ddsFile = DdsFile.Load(ddsfs);
+            (string MaterialFile, string SubMaterialName) key = (materialFile, submat.Name!);
+            if (_materialMap.ContainsKey(key))
+                continue;
+            _materialMap[key] = new WrittenMaterial(
+                submat,
+                this,
+                _materialTextureManager,
+                Args);
         }
-        else
-        {
-            using var ddsfs = Args.PackFileSystem.GetStream(normalizedPath);
-            ddsFile = DdsFile.Load(ddsfs);
-        }
-
-        ddsDetails.width = (int)ddsFile.header.dwWidth;
-        ddsDetails.height = (int)ddsFile.header.dwHeight;
-
-        try
-        {
-            ddsDetails.raw = decoder.Decode(ddsFile);
-        }
-        catch (Exception e)
-        {
-            Log.E(e, "Material error: Failed to decode: {0}", normalizedPath);
-        }
-        return ddsDetails;
-    }
-
-    internal sealed class DdsFileDetails
-    {
-        internal int width { get; set; }
-        internal int height { get; set; }
-        internal ColorRgba32[] raw { get; set; }
     }
 }

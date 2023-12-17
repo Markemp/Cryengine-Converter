@@ -35,10 +35,10 @@ internal static class RendererUtilities
             outputFile = $"CryConv_{DateTime.Now.Ticks:X}_{_counter++}";
         else
             outputFile += args.NoConflicts ? "_out" : "";
-        
+
         if (!string.IsNullOrWhiteSpace(layerName))
             outputFile += "." + Regex.Replace(layerName, "[<>:\\\\\"/\\|\\?\\*]", "_");
-        
+
         outputFile += extension;
 
         Directory.CreateDirectory(outputDir);
@@ -48,6 +48,10 @@ internal static class RendererUtilities
 
     internal static bool IsNodeNameExcluded(this ArgsHandler args, string nodeName) =>
         args.ExcludeNodeNameRegexes.Any(x => x.IsMatch(nodeName));
+
+    internal static bool IsMaterialExcluded(this ArgsHandler argsHandler, Materials.Material material) =>
+        (material.Name is not null && argsHandler.IsMeshMaterialExcluded(material.Name))
+        || (material.Shader is not null && argsHandler.IsMeshMaterialShaderExcluded(material.Shader));
 
     internal static bool IsMeshMaterialExcluded(this ArgsHandler args, string materialName) =>
         args.ExcludeMaterialNameRegexes.Any(x => x.IsMatch(materialName));
