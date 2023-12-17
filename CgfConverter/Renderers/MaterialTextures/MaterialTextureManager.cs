@@ -45,7 +45,7 @@ public class MaterialTextureManager
 
             if (!_args.PackFileSystem.Exists(normalizedPath))
             {
-                // Log.W("Material[{0}:{1}]: Texture file not found: {2}", materialSetName, matId, texture.File);
+                _log.W("Texture file not found: {0}", t.File);
                 continue;
             }
 
@@ -165,20 +165,20 @@ public class MaterialTextureManager
         if (_textures.TryGetValue(key, out MaterialTexture? t))
             return t;
 
-        DdsFile ddsFile;
-        if (DDSFileCombiner.IsSplitDDS(path))
-        {
-            using Stream ddsfs = DDSFileCombiner.CombineToStream(path);
-            ddsFile = DdsFile.Load(ddsfs);
-        }
-        else
-        {
-            using Stream ddsfs = _args.PackFileSystem.GetStream(path);
-            ddsFile = DdsFile.Load(ddsfs);
-        }
-
         try
         {
+            DdsFile ddsFile;
+            if (DDSFileCombiner.IsSplitDDS(path))
+            {
+                using Stream ddsfs = DDSFileCombiner.CombineToStream(path);
+                ddsFile = DdsFile.Load(ddsfs);
+            }
+            else
+            {
+                using Stream ddsfs = _args.PackFileSystem.GetStream(path);
+                ddsFile = DdsFile.Load(ddsfs);
+            }
+
             return _textures[key] = new MaterialTexture(
                 key,
                 new BcDecoder().Decode(ddsFile),
@@ -188,7 +188,7 @@ public class MaterialTextureManager
         }
         catch (Exception e)
         {
-            // Log.E(e, "Material error: Failed to decode: {0}", normalizedPath);
+            _log.E(e, "Material error: Failed to decode: {0}", path);
             return null;
         }
     }
