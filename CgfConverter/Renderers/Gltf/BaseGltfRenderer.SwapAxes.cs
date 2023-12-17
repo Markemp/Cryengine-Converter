@@ -22,10 +22,12 @@ public partial class BaseGltfRenderer
      */
 
     // orig
-    //protected static Vector3 SwapAxesForPosition(Vector3 val) => new(-val.X, val.Z, val.Y);
-    protected static Vector3 SwapAxesForPosition(Vector3 val) => new(val.X, val.Z, -val.Y);
+    protected static Vector3 SwapAxesForPosition(Vector3 val) => new(-val.X, val.Z, val.Y);
+    // protected static Vector3 SwapAxesForPosition(Vector3 val) => new(val.X, val.Z, -val.Y);
 
     protected static Vector3 SwapAxesForScale(Vector3 val) => new(val.X, val.Z, val.Y);
+
+    protected static Vector4 SwapAxesForTangent(Vector4 val) => new(-val.X, val.Z, val.Y, val.W);
 
     protected static Quaternion SwapAxesForAnimations(Quaternion val) => new(-val.X, val.Z, val.Y, val.W);
 

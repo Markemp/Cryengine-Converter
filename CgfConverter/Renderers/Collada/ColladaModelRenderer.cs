@@ -192,7 +192,7 @@ public class ColladaModelRenderer : IRenderer
 
                     if (animation.Controllers[j].HasRotTrack)
                         controllerAnimations.Add(CreateAnimation(controllerInfo, "rotate", animChunk));
-                                        
+
                     colladaAnimation.Animation[j] = new ColladaAnimation
                     {
                         Name = controllerIdBase,
@@ -215,7 +215,7 @@ public class ColladaModelRenderer : IRenderer
     {
         var controllerBoneName = controllerIdToBoneName[controllerInfo.ControllerID];
         var controllerIdBase = $"{controllerBoneName}_{controllerInfo.ControllerID}_{animType}";
-        
+
         var numberOfTimeFrames = animType == "rotate"
                 ? animationChunk.KeyTimes[controllerInfo.RotKeyTimeTrack].Count
                 : animationChunk.KeyTimes[controllerInfo.PosKeyTimeTrack].Count;
@@ -1033,7 +1033,7 @@ public class ColladaModelRenderer : IRenderer
 
         for (int i = 0; i < numberOfTextures; i++)
         {
-            // For each texture in the material, we make a new <image> object and add it to the list. 
+            // For each texture in the material, we make a new <image> object and add it to the list.
             ColladaImage image = new()
             {
                 ID = mat.Name + "_" + mat.Textures[i].Map,
@@ -1330,7 +1330,7 @@ public class ColladaModelRenderer : IRenderer
         ColladaVisualScene visualScene = new();
         List<ColladaNode> nodes = new();
 
-        // Check to see if there is a CompiledBones chunk.  If so, add a Node.  
+        // Check to see if there is a CompiledBones chunk.  If so, add a Node.
         if (_cryData.Chunks.Any(a => a.ChunkType == ChunkType.CompiledBones ||
             a.ChunkType == ChunkType.CompiledBonesSC ||
             a.ChunkType == ChunkType.CompiledBonesIvo ||
@@ -1367,8 +1367,8 @@ public class ColladaModelRenderer : IRenderer
                 bindMaterial.Technique_Common = new ColladaTechniqueCommonBindMaterial();
                 colladaNode.Instance_Controller[0].Bind_Material[0].Technique_Common.Instance_Material = CreateInstanceMaterials(node);
 
-                if (node.AllChildNodes is not null)
-                    node.AllChildNodes.Select(child => CreateChildNodes(child, true));
+                foreach (ChunkNode child in node.AllChildNodes)
+                    CreateChildNodes(child, true);
 
                 nodes.Add(colladaNode);
             }
@@ -1502,24 +1502,19 @@ public class ColladaModelRenderer : IRenderer
     /// <summary>Used by CreateNode and CreateSimpleNodes to create all the child nodes for the given node.</summary>
     private ColladaNode[]? CreateChildNodes(ChunkNode nodeChunk, bool isControllerNode)
     {
-        if (nodeChunk.AllChildNodes is not null)
+        List<ColladaNode> childNodes = new();
+        foreach (ChunkNode childNodeChunk in nodeChunk.AllChildNodes)
         {
-            List<ColladaNode> childNodes = new();
-            foreach (var childNodeChunk in nodeChunk.AllChildNodes.ToList())
+            if (_args.IsNodeNameExcluded(childNodeChunk.Name))
             {
-                if (_args.IsNodeNameExcluded(childNodeChunk.Name))
-                {
-                    Log(LogLevelEnum.Debug, $"Excluding child node {childNodeChunk.Name}");
-                    continue;
-                }
-
-                ColladaNode childNode = CreateNode(childNodeChunk, isControllerNode); ;
-                childNodes.Add(childNode);
+                Log(LogLevelEnum.Debug, $"Excluding child node {childNodeChunk.Name}");
+                continue;
             }
-            return childNodes.ToArray();
+
+            ColladaNode childNode = CreateNode(childNodeChunk, isControllerNode); ;
+            childNodes.Add(childNode);
         }
-        else
-            return null;
+        return childNodes.ToArray();
     }
 
     private ColladaNode CreateJointNode(CompiledBone bone)
