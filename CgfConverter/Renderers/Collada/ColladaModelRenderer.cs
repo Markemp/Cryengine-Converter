@@ -1649,7 +1649,7 @@ public class ColladaModelRenderer : IRenderer
     {
         var matfileName = Path.GetFileNameWithoutExtension(_cryData.MaterialFile);
 
-        return $"{matfileName}-mtl-{materialName}".Replace(' ', '_');
+        return $"{matfileName}_mtl_{materialName}".Replace(' ', '_');
     }
 
     private static string CreateStringFromVector3(Vector3 vector)
