@@ -9,6 +9,7 @@ namespace CgfConverter.PackFileSystem;
 
 public class RealFileSystem : IPackFileSystem
 {
+    // Object dir
     private readonly string _rootPath;
 
     public RealFileSystem(string rootPath)
@@ -35,6 +36,7 @@ public class RealFileSystem : IPackFileSystem
         }
     }
 
+    // TODO: Rework this.  
     public bool Exists(string path) =>
         File.Exists(FileHandlingExtensions.CombineAndNormalizePath(_rootPath, path));
 

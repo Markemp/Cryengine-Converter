@@ -352,6 +352,7 @@ public class ColladaModelRenderer : IRenderer
 
     public ColladaEffect CreateColladaEffect(Material material)
     {
+        //TODO: Change this so that it creates an effect for each Shader type.  Parameters will need to be passed in from the material.
         ColladaEffect colladaEffect = new()
         {
             ID = material.Name + "-effect",
@@ -437,7 +438,6 @@ public class ColladaModelRenderer : IRenderer
             if (texture.Map == Texture.MapTypeEnum.Normals)
             {
                 // Bump maps go in an extra node.
-                // bump maps are added to an extra node.
                 ColladaExtra[] extras = new ColladaExtra[1];
                 ColladaExtra extra = new();
                 extras[0] = extra;
@@ -445,25 +445,19 @@ public class ColladaModelRenderer : IRenderer
                 technique.Extra = extras;
 
                 // Create the technique for the extra
-
                 ColladaTechnique[] extraTechniques = new ColladaTechnique[1];
                 ColladaTechnique extraTechnique = new();
                 extra.Technique = extraTechniques;
-                //extraTechnique.Data[0] = new XmlElement();
 
                 extraTechniques[0] = extraTechnique;
                 extraTechnique.profile = "FCOLLADA";
 
-                ColladaBumpMap bumpMap = new()
-                {
-                    Textures = new ColladaTexture[1]
-                };
+                ColladaBumpMap bumpMap = new() { Textures = new ColladaTexture[1] };
                 bumpMap.Textures[0] = new ColladaTexture
                 {
                     Texture = material.Name + "_" + texture.Map + "-sampler"
                 };
-                extraTechnique.Data = new XmlElement[1];
-                extraTechnique.Data[0] = bumpMap;
+                extraTechnique.Data = new XmlElement[1] { bumpMap };
             }
         }
 
@@ -1012,36 +1006,36 @@ public class ColladaModelRenderer : IRenderer
         }
     }
 
-    private ColladaMaterial AddMaterialToMaterialLibrary(Material mat)
+    private ColladaMaterial AddMaterialToMaterialLibrary(Material submat)
     {
         ColladaMaterial material = new()
         {
             Instance_Effect = new ColladaInstanceEffect(),
-            Name = GetMaterialName(mat?.Name ?? "unknown"),
-            ID = (mat?.Name ?? "unknown") + "-material"
+            Name = GetMaterialName(submat?.Name ?? "unknown"),
+            ID = (submat?.Name ?? "unknown") + "-material"
         };
-        material.Instance_Effect.URL = "#" + (mat?.Name ?? "unknown") + "-effect";
+        material.Instance_Effect.URL = "#" + (submat?.Name ?? "unknown") + "-effect";
 
-        AddImagesToImagesLibrary(mat);
+        AddImagesToImagesLibrary(submat);
         return material;
     }
 
-    private void AddImagesToImagesLibrary(Material mat)
+    private void AddImagesToImagesLibrary(Material submat)
     {
         List<ColladaImage> imageList = new();
-        int numberOfTextures = mat.Textures?.Length ?? 0;
+        int numberOfTextures = submat.Textures?.Length ?? 0;
 
         for (int i = 0; i < numberOfTextures; i++)
         {
             // For each texture in the material, we make a new <image> object and add it to the list.
             ColladaImage image = new()
             {
-                ID = mat.Name + "_" + mat.Textures[i].Map,
-                Name = mat.Name + "_" + mat.Textures[i].Map,
+                ID = submat.Name + "_" + submat.Textures[i].Map,
+                Name = submat.Name + "_" + submat.Textures[i].Map,
                 Init_From = new ColladaInitFrom()
             };
             // Try to resolve the texture file to a file on disk. Texture are always based on DataDir.
-            var textureFile = ResolveTextureFile(mat.Textures[i].File, _args.PackFileSystem, _args.DataDirs);
+            var textureFile = ResolveTextureFile(submat.Textures[i].File, _args.PackFileSystem, _args.DataDirs);
 
             if (_args.PngTextures && File.Exists(Path.ChangeExtension(textureFile, ".png")))
                 textureFile = Path.ChangeExtension(textureFile, ".png");
@@ -1053,9 +1047,7 @@ public class ColladaModelRenderer : IRenderer
             textureFile = Path.GetRelativePath(daeOutputFile.DirectoryName, textureFile);
 
             textureFile = textureFile.Replace(" ", @"%20");
-            // if 1.4.1, use URI.  If 1.5.0, use Ref.
-            _ = DaeObject.Collada_Version == "1.4.1" ? image.Init_From.Uri = textureFile : image.Init_From.Ref = textureFile;
-
+            image.Init_From.Uri = textureFile;
             imageList.Add(image);
         }
 
@@ -1480,21 +1472,13 @@ public class ColladaModelRenderer : IRenderer
             ID = nodeChunk.Name
         };
 
-        ColladaTranslate translate = new()
+        ColladaMatrix matrix = new()
         {
-            sID = "translate",
-            Value_As_String = CreateStringFromVector3(new Vector3 { X = nodeChunk.LocalTransform.M14, Y = nodeChunk.LocalTransform.M24, Z = nodeChunk.LocalTransform.M34 })
+            sID = "transform",
+            Value_As_String = CreateStringFromMatrix4x4(nodeChunk.LocalTransform)
         };
+        colladaNode.Matrix = new ColladaMatrix[1] { matrix };
 
-        ColladaRotate rotate = new()
-        {
-            sID = "rotate",
-            Value_As_String = CreateStringFromVector4(Quaternion.CreateFromRotationMatrix(nodeChunk.LocalTransform).ToAxisAngle())
-        };
-        colladaNode.Translate = new ColladaTranslate[1] { translate };
-        colladaNode.Rotate = new ColladaRotate[1] { rotate };
-
-        // Add childnodes
         colladaNode.node = CreateChildNodes(nodeChunk, isControllerNode);
         return colladaNode;
     }

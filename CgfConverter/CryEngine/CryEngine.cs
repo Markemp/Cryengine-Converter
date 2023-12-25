@@ -205,10 +205,36 @@ public partial class CryEngine
 
     private void CreateMaterialsFor(Model model)
     {
-        if (MaterialFile is not null && PackFileSystem.Exists(MaterialFile))
+        // if -mtl arg is used, try to find the material file, set to the full path, and create materials from it.
+        if (MaterialFile is not null)
         {
-            Materials = MaterialUtilities.FromStream(PackFileSystem.GetStream(MaterialFile), Name, true);
-            return;
+            if (!MaterialFile.EndsWith(".mtl"))
+                MaterialFile += ".mtl";
+
+            // check if file exists as provided
+            if (PackFileSystem.Exists(MaterialFile))
+            {
+                Materials = MaterialUtilities.FromStream(PackFileSystem.GetStream(MaterialFile), Name, true);
+                return;
+            }
+
+            // Check if it's in the same directory as the model file
+            var modelPath = Path.GetDirectoryName(InputFile);
+            if (modelPath is not null && PackFileSystem.Exists(FileHandlingExtensions.CombineAndNormalizePath(modelPath, MaterialFile)))
+            {
+                MaterialFile = FileHandlingExtensions.CombineAndNormalizePath(modelPath, MaterialFile);
+                Materials = MaterialUtilities.FromStream(PackFileSystem.GetStream(MaterialFile), Name, true);
+                return;
+            }
+
+            // check if relative to objectdir if provided
+            if (ObjectDir is not null && PackFileSystem.Exists(FileHandlingExtensions.CombineAndNormalizePath(ObjectDir, MaterialFile)))
+            {
+                MaterialFile = FileHandlingExtensions.CombineAndNormalizePath(ObjectDir, MaterialFile);
+                Materials = MaterialUtilities.FromStream(PackFileSystem.GetStream(MaterialFile), Name, true);
+                return;
+            }
+            Log.W("Unable to find material file {0}.  Checking material library chunks for materials.", MaterialFile);
         }
 
         var materialLibraryFiles = model.ChunkMap.Values
@@ -216,7 +242,7 @@ public partial class CryEngine
             .Where(x => x.MatType == MtlNameType.Library || x.MatType == MtlNameType.Basic)
             .Select(x => x.Name);
 
-        MaterialFile = GetMaterialFile(materialLibraryFiles);
+        MaterialFile = GetMaterialFileFromMatLibrary(materialLibraryFiles);
         if (MaterialFile is not null)
             Materials = MaterialUtilities.FromStream(PackFileSystem.GetStream(MaterialFile), Name, true);
 
@@ -241,19 +267,23 @@ public partial class CryEngine
         return materials;
     }
 
-    // Gets the Library material file if one can be found.
-    private string? GetMaterialFile(IEnumerable<string> libraryFileNames)
+    // Gets the Library material file if one can be found. File will either be relative to same dir as model file or relative
+    // to object dir.
+    private string? GetMaterialFileFromMatLibrary(IEnumerable<string> libraryFileNames)
     {
         if (libraryFileNames is not null)
         {
             foreach (var libraryFile in libraryFileNames)
             {
-                if (PackFileSystem.Exists(libraryFile))
-                    return MaterialFile;
-
                 var testFile = libraryFile;
                 if (!testFile.EndsWith(".mtl"))
                     testFile += ".mtl";
+
+                if (PackFileSystem.Exists(testFile))
+                {
+                    MaterialFile = testFile;
+                    return testFile;
+                }
 
                 // Check if testFile + object dir exists
                 if (PackFileSystem.Exists(FileHandlingExtensions.CombineAndNormalizePath(ObjectDir, testFile)))
@@ -264,14 +294,6 @@ public partial class CryEngine
                 if (PackFileSystem.Exists(fullPath))
                     return fullPath;
             }
-
-            // Check if absolute material path is given
-            if (PackFileSystem.Exists(MaterialFile))
-                return MaterialFile;
-
-            var mtlName = FileHandlingExtensions.CombineAndNormalizePath(Path.GetDirectoryName(InputFile), MaterialFile);
-            if (PackFileSystem.Exists(mtlName))
-                return mtlName;
         }
 
         Log.W("Unable to find material file for {0}", InputFile);

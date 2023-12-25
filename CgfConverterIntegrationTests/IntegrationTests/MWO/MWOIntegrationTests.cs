@@ -56,7 +56,7 @@ public class MWOIntegrationTests
         Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
         Assert.AreEqual(1, daeObject.Library_Effects.Effect.Length);
         Assert.AreEqual(2, daeObject.Library_Images.Image.Length);
-        Assert.AreEqual("clanbanner_a-mtl-clanbanner_a", daeObject.Library_Materials.Material[0].Name);
+        Assert.AreEqual("clanbanner_a_mtl_clanbanner_a", daeObject.Library_Materials.Material[0].Name);
         Assert.AreEqual("clanbanner_a-material", daeObject.Library_Materials.Material[0].ID);
         Assert.AreEqual("#clanbanner_a-effect", daeObject.Library_Materials.Material[0].Instance_Effect.URL);
         Assert.AreEqual("clanbanner_a_Diffuse", daeObject.Library_Images.Image[0].Name);
@@ -86,7 +86,7 @@ public class MWOIntegrationTests
         Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
         Assert.AreEqual(1, daeObject.Library_Effects.Effect.Length);
         Assert.AreEqual(2, daeObject.Library_Images.Image.Length);
-        Assert.AreEqual("clanbanner_a-mtl-clanbanner_a", daeObject.Library_Materials.Material[0].Name);
+        Assert.AreEqual("clanbanner_a_mtl_clanbanner_a", daeObject.Library_Materials.Material[0].Name);
         Assert.AreEqual("clanbanner_a-material", daeObject.Library_Materials.Material[0].ID);
         Assert.AreEqual("#clanbanner_a-effect", daeObject.Library_Materials.Material[0].Instance_Effect.URL);
         Assert.AreEqual("clanbanner_a_Diffuse", daeObject.Library_Images.Image[0].Name);
@@ -112,7 +112,7 @@ public class MWOIntegrationTests
         Assert.AreEqual(5, daeObject.Library_Materials.Material.Length);
         Assert.AreEqual(5, daeObject.Library_Effects.Effect.Length);
         Assert.AreEqual(31, daeObject.Library_Images.Image.Length);
-        Assert.AreEqual("atlas_body-mtl-atlas_body", daeObject.Library_Materials.Material[0].Name);
+        Assert.AreEqual("atlas_body_mtl_atlas_body", daeObject.Library_Materials.Material[0].Name);
         Assert.AreEqual("atlas_body-material", daeObject.Library_Materials.Material[0].ID);
         Assert.AreEqual("#atlas_body-effect", daeObject.Library_Materials.Material[0].Instance_Effect.URL);
         Assert.AreEqual("atlas_body_Diffuse", daeObject.Library_Images.Image[0].Name);
@@ -308,6 +308,57 @@ public class MWOIntegrationTests
         Assert.AreEqual(8, gltfData.Skins[0].Joints.Count);
         Assert.AreEqual(7, gltfData.Skins[0].InverseBindMatrices);
         Assert.AreEqual("50calnecklace_a/skin", gltfData.Skins[0].Name);
+    }
+
+    [TestMethod]
+    public void MwoFile_MtlFileWithNoDirInfo_OutputsToCorrectDir()
+    {
+        var args = new string[] { $@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.chr", "-dds", "-objectdir", objectDir, "-mtl", "50calnecklace_a.mtl" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFile: args[5]);
+        cryData.ProcessCryengineFiles();
+        Assert.AreEqual(@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.mtl", cryData.MaterialFile);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.Render();
+        var daeObject = colladaData.DaeObject;
+        Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(1, daeObject.Library_Effects.Effect.Length);
+        Assert.AreEqual(4, daeObject.Library_Images.Image.Length);
+    }
+
+    [TestMethod]
+    public void MwoFile_MtlFileWithExtraSlash_OutputsToCorrectDir()
+    {
+        var args = new string[] { $@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.chr", "-dds", "-objectdir", objectDir, "-mtl", "/50calnecklace_a.mtl" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFile: args[5]);
+        cryData.ProcessCryengineFiles();
+        Assert.AreEqual(@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.mtl", cryData.MaterialFile);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.Render();
+        var daeObject = colladaData.DaeObject;
+        Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(1, daeObject.Library_Effects.Effect.Length);
+        Assert.AreEqual(4, daeObject.Library_Images.Image.Length);
+    }
+
+    [TestMethod]
+    public void MwoFile_MtlFileWithCurrentDir_OutputsToCorrectDir()
+    {
+        var args = new string[] { $@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.chr", "-dds", "-objectdir", objectDir, "-mtl", "./50calnecklace_a.mtl" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFile: args[5]);
+        cryData.ProcessCryengineFiles();
+        Assert.AreEqual(@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.mtl", cryData.MaterialFile);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.Render();
+        var daeObject = colladaData.DaeObject;
+        Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(1, daeObject.Library_Effects.Effect.Length);
+        Assert.AreEqual(4, daeObject.Library_Images.Image.Length);
     }
 
     [TestMethod]
@@ -636,8 +687,7 @@ public class MWOIntegrationTests
         Assert.AreEqual("hulagirl_a", baseNode.Name);
         Assert.AreEqual(2, baseNode.node.Length);
         Assert.IsNull(baseNode.Instance_Geometry);
-        Assert.AreEqual(1, baseNode.Translate.Length);
-        Assert.AreEqual(1, baseNode.Rotate.Length);
+        Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1", baseNode.Matrix[0].Value_As_String);
 
         // Serialize the object to XML
         XmlSerializer serializer = new(typeof(ColladaDoc));

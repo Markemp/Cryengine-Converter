@@ -54,4 +54,11 @@ public class FileHandlingExtensionsTests
         var result = CombineAndNormalizePath("path1/path2", "path3\\path4");
         Assert.AreEqual("path1\\path2\\path3\\path4", result);
     }
+
+    [TestMethod]
+    public void CombineAndNormalizePath_DirAndMaterialFile()
+    {
+        var result = CombineAndNormalizePath("c:/dir", "material.mtl");
+        Assert.AreEqual("c:\\dir\\material.mtl", result);
+    }
 }
