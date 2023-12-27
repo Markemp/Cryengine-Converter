@@ -13,7 +13,7 @@ namespace CgfConverter.PackFileSystem;
 
 public class WiiuStreamPackFileSystem : IPackFileSystem, IDisposable
 {
-    private readonly TaggedLogger Log = new TaggedLogger("WiiuStreamPackFileSystem");
+    private readonly TaggedLogger Log = new("WiiuStreamPackFileSystem");
     public const string PackFileNameSuffix = ".wiiu.stream";
 
     private readonly Stream _stream;

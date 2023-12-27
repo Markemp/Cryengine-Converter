@@ -215,6 +215,28 @@ public class StarCitizenTests
     }
 
     [TestMethod]
+    public void CRUS_Spirit_Exterior()
+    {
+        var args = new string[] { $@"d:\depot\sc3.22\data\objects\spaceships\ships\CRUS\spirit\exterior\crus_Spirit.cga", "-dds", "-dae", "-objectdir", @"d:\depot\sc3.22\data" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var daeObject = colladaData.DaeObject;
+        colladaData.GenerateDaeObject();
+        var bodyNode = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].node[0];
+        Assert.AreEqual("body", bodyNode.ID);
+        Assert.AreEqual("wing_base_right", bodyNode.node[28].ID);
+        Assert.AreEqual("1 0 0 9.400001 0 1 0 -2.750000 0 0 1 -1.200000 0 0 0 1", bodyNode.node[28].Matrix[0].Value_As_String);
+
+        Assert.AreEqual(93, colladaData.DaeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(88, colladaData.DaeObject.Library_Images.Image.Length);
+        testUtils.ValidateColladaXml(colladaData);
+    }
+
+    [TestMethod]
     public void AEGS_Avenger_v320()
     {
         var args = new string[] { $@"d:\depot\sc3.21\data\objects\spaceships\ships\AEGS\Avenger\AEGS_Avenger.cga", "-dds", "-dae", "-objectdir", @"d:\depot\sc3.21\data" };
