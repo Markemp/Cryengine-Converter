@@ -226,6 +226,8 @@ public sealed class ArgsHandler
                     Throw = true;
                     break;
                 case "-mtl":
+                case "-mat":
+                case "-material":
                     if (++i > inputArgs.Length)
                     {
                         PrintUsage();
@@ -379,48 +381,49 @@ public sealed class ArgsHandler
         Console.WriteLine();
         Console.WriteLine($"CryEngine Converter v{Assembly.GetExecutingAssembly().GetName().Version}");
         Console.WriteLine();
-        Console.WriteLine("-usage:           Prints out the usage statement");
-        Console.WriteLine();
-        Console.WriteLine("<.cgf file>:      The name of the .cgf, .cga, .chr, .anim, .dba or .skin file to process.");
-        Console.WriteLine("-outputfile:      (Optional) The name of the file to write the output.");
-        Console.WriteLine("-objectdir:       (Optional but highly recommended) The name where the base Objects directory is located (i.e. where the .pak files were extracted).");
-        Console.WriteLine("                  Defaults to current directory. Some packfile formats may accept additional options in the form of some.pack.file?key=value&key2=value2.");
-        Console.WriteLine();
-        Console.WriteLine(" Export formats.  By default -dae is used.");
-        Console.WriteLine("-dae:             Export Collada format files."); 
-        Console.WriteLine("-glb:             Export glb (glTF binary) files.");
-        Console.WriteLine("-gltf:            Export file pairs of glTF and bin files."); 
-        Console.WriteLine("-obj:             Export Wavefront format files (Not supported).");
-        Console.WriteLine();
-        Console.WriteLine("  Texture Options.  By default the converter will look for DDS files.");
-        Console.WriteLine("-notex:           Do not include textures in outputs");
-        Console.WriteLine("-tif:             Change the materials to look for .tif files instead of .dds.");
-        Console.WriteLine("-png:             Change the materials to look for .png files instead of .dds.");
-        Console.WriteLine("-tga:             Change the materials to look for .tga files instead of .dds.");
-        Console.WriteLine("-embedtextures:   Embed textures into the glTF binary file instead of external references.");
-        Console.WriteLine();
-        Console.WriteLine("-smooth:          Smooth Faces.");
-        Console.WriteLine("-group:           Group meshes into single model.");
-        Console.WriteLine("-en/-excludenode <regular expression for node names>:");
-        Console.WriteLine("                  Exclude matching nodes from rendering. Can be listed multiple times.");
-        Console.WriteLine("-em/-excludemat <regular expression for material names>:");
-        Console.WriteLine("                  Exclude meshes with matching materials from rendering. Can be listed multiple times.");
-        Console.WriteLine("-sm/-excludeshader <material_name>:");
-        Console.WriteLine("                  Exclude meshes with the material using matching shader from rendering. Can be listed multiple times.");
-        Console.WriteLine("-noconflict:      Use non-conflicting naming scheme (<cgf File>_out.obj)");
-        Console.WriteLine("-allowconflict:   Allows conflicts in .mtl file name. (obj exports only, as not an issue in dae.)");
-        Console.WriteLine();
-        Console.WriteLine("-prefixmatnames:  Prefixes material names with the filename of the source mtl file.");
+        Console.WriteLine("-usage:            Prints out the usage statement");
+        Console.WriteLine();                        
+        Console.WriteLine("<.cgf file>:       The name of the .cgf, .cga, .chr, .anim, .dba or .skin file to process.");
+        Console.WriteLine("-outputfile:       (Optional) The name of the file to write the output.");
+        Console.WriteLine("-objectdir:        (Optional but highly recommended) The name where the base Objects directory is located (i.e. where the .pak files were extracted).");
+        Console.WriteLine("                   Defaults to current directory. Some packfile formats may accept additional options in the form of some.pack.file?key=value&key2=value2.");
+        Console.WriteLine("-mtl/mat/material:  (Optional) The material file to use.");
+        Console.WriteLine();                        
+        Console.WriteLine(" Export formats.   By default -dae is used.");
+        Console.WriteLine("-dae:              Export Collada format files."); 
+        Console.WriteLine("-glb:              Export glb (glTF binary) files.");
+        Console.WriteLine("-gltf:             Export file pairs of glTF and bin files."); 
+        Console.WriteLine("-obj:              Export Wavefront format files (Not supported).");
+        Console.WriteLine();                        
+        Console.WriteLine("  Texture Options.   By default the converter will look for DDS files.");
+        Console.WriteLine("-notex:            Do not include textures in outputs");
+        Console.WriteLine("-tif:              Change the materials to look for .tif files instead of .dds.");
+        Console.WriteLine("-png:              Change the materials to look for .png files instead of .dds.");
+        Console.WriteLine("-tga:              Change the materials to look for .tga files instead of .dds.");
+        Console.WriteLine("-embedtextures:    Embed textures into the glTF binary file instead of external references.");
+        Console.WriteLine();                        
+        Console.WriteLine("-smooth:           Smooth Faces.");
+        Console.WriteLine("-group:            Group meshes into single model.");
+        Console.WriteLine("-en/-excludenode < regular expression for node names>:");
+        Console.WriteLine("                   Exclude matching nodes from rendering. Can be listed multiple times.");
+        Console.WriteLine("-em/-excludemat <r egular expression for material names>:");
+        Console.WriteLine("                   Exclude meshes with matching materials from rendering. Can be listed multiple times.");
+        Console.WriteLine("-sm/-excludeshader  <material_name>:");
+        Console.WriteLine("                   Exclude meshes with the material using matching shader from rendering. Can be listed multiple times.");
+        Console.WriteLine("-noconflict:       Use non-conflicting naming scheme (<cgf File>_out.obj)");
+        Console.WriteLine("-allowconflict:    Allows conflicts in .mtl file name. (obj exports only, as not an issue in dae.)");
+        Console.WriteLine();                        
+        Console.WriteLine("-prefixmatnames:   Prefixes material names with the filename of the source mtl file.");
         Console.WriteLine("-pp/-preservepath:");
-        Console.WriteLine("                  Preserve the path hierarchy.");
+        Console.WriteLine("                   Preserve the path hierarchy.");
         Console.WriteLine("-mt/-maxthreads <number>");
-        Console.WriteLine("                  Set maximum number of threads to use. Specify 0 to use all cores.");
+        Console.WriteLine("                   Set maximum number of threads to use. Specify 0 to use all cores.");
         Console.WriteLine("-sl/-splitlayer(s)");
-        Console.WriteLine("                  Split into multiple layers (terrain only).");
+        Console.WriteLine("                   Split into multiple layers (terrain only).");
         Console.WriteLine();
-        Console.WriteLine("-loglevel:        Set the output log level (verbose, debug, info, warn, error, critical, none)");
-        Console.WriteLine("-throw:           Throw Exceptions to installed debugger.");
-        Console.WriteLine("-dump:            Dump missing/bad chunk info for support.");
+        Console.WriteLine("-loglevel:         Set the output log level (verbose, debug, info, warn, error, critical, none)");
+        Console.WriteLine("-throw:            Throw Exceptions to installed debugger.");
+        Console.WriteLine("-dump:             Dump missing/bad chunk info for support.");
         Console.WriteLine();
     }
 

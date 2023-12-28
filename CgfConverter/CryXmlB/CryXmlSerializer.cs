@@ -127,9 +127,9 @@ public static class CryXmlSerializer
         var referenceTableCount = br.ReadInt32();
         var referenceTableSize = 8;
 
-        var offset3 = br.ReadInt32();
-        var count3 = br.ReadInt32();
-        var length3 = 4;
+        var orderTableOffset = br.ReadInt32();
+        var orderTableCount = br.ReadInt32();
+        var orderTableLength = 4;
 
         var contentOffset = br.ReadInt32();
         var contentLength = br.ReadInt32();
@@ -142,8 +142,8 @@ public static class CryXmlSerializer
             Console.WriteLine("0x{0:X6}: {1:X8} (Dec: {1:D8})", headerLength + 0x08, nodeTableCount);
             Console.WriteLine("0x{0:X6}: {1:X8} (Dec: {1:D8})", headerLength + 0x12, referenceTableOffset);
             Console.WriteLine("0x{0:X6}: {1:X8} (Dec: {1:D8})", headerLength + 0x16, referenceTableCount);
-            Console.WriteLine("0x{0:X6}: {1:X8} (Dec: {1:D8})", headerLength + 0x20, offset3);
-            Console.WriteLine("0x{0:X6}: {1:X8} (Dec: {1:D8})", headerLength + 0x24, count3);
+            Console.WriteLine("0x{0:X6}: {1:X8} (Dec: {1:D8})", headerLength + 0x20, orderTableOffset);
+            Console.WriteLine("0x{0:X6}: {1:X8} (Dec: {1:D8})", headerLength + 0x24, orderTableCount);
             Console.WriteLine("0x{0:X6}: {1:X8} (Dec: {1:D8})", headerLength + 0x28, contentOffset);
             Console.WriteLine("0x{0:X6}: {1:X8} (Dec: {1:D8})", headerLength + 0x32, contentLength);
             Console.WriteLine("");
@@ -207,17 +207,18 @@ public static class CryXmlSerializer
             if (writeLog)
                 Console.WriteLine("0x{0:X6}: {1:X8} {2:X8}", position, value.NameOffset, value.ValueOffset);
         }
+
         if (writeLog)
             Console.Write("\nOrder Table... ");
 
-        var table3 = new List<int>();
-        br.BaseStream.Seek(offset3, SeekOrigin.Begin);
-        while (br.BaseStream.Position < offset3 + count3 * length3)
+        var orderTable = new List<int>();
+        br.BaseStream.Seek(orderTableOffset, SeekOrigin.Begin);
+        while (br.BaseStream.Position < orderTableOffset + orderTableCount * orderTableLength)
         {
             var position = br.BaseStream.Position;
             var value = br.ReadInt32();
 
-            table3.Add(value);
+            orderTable.Add(value);
 
             if (writeLog)
                 Console.WriteLine("0x{0:X6}: {1:X8}", position, value);
@@ -225,7 +226,7 @@ public static class CryXmlSerializer
 
         if (writeLog)
         {
-            Console.WriteLine("{0} entries.", table3.Count);
+            Console.WriteLine("{0} entries.", orderTable.Count);
             Console.WriteLine("\nDynamic Dictionary");
         }
 

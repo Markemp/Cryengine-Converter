@@ -44,9 +44,15 @@ public class Texture
         TexSlot2,  // Normal
         TexSlot3,
         TexSlot4,  // Specular
+        TexSlot5,
+        TexSlot6,
+        TexSlot7,
+        TexSlot8,
         TexSlot9,  // Diffuse
         TexSlot10, // Specular
+        TexSlot11,
         TexSlot12, // Blend
+        TexSlot13,
         Unknown,
     }
 
@@ -79,9 +85,15 @@ public class Texture
             "TexSlot2" => MapTypeEnum.Normals,
             "TexSlot3" => MapTypeEnum.TexSlot3,
             "TexSlot4" => MapTypeEnum.Specular,
+            "TexSlot5" => MapTypeEnum.TexSlot5,
+            "TexSlot6" => MapTypeEnum.TexSlot6,
+            "TexSlot7" => MapTypeEnum.TexSlot7,
+            "TexSlot8" => MapTypeEnum.TexSlot8,
             "TexSlot9" => MapTypeEnum.Diffuse,
             "TexSlot10" => MapTypeEnum.TexSlot10,
+            "TexSlot11" => MapTypeEnum.TexSlot11,
             "TexSlot12" => MapTypeEnum.TexSlot12,
+            "TexSlot13" => MapTypeEnum.TexSlot13,
 
             // Backwards-compatible names
             "Normal" => MapTypeEnum.Normals,

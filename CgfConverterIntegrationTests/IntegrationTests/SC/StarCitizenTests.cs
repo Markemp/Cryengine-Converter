@@ -270,27 +270,27 @@ public class StarCitizenTests
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
         var gltfData = gltfRenderer.GenerateGltfObject();
 
-        Assert.AreEqual(22, gltfData.Materials.Count);
+        Assert.AreEqual(26, gltfData.Materials.Count);
         Assert.AreEqual(34, gltfData.Meshes.Count);
 
         // Nodes check
         Assert.AreEqual(116, gltfData.Nodes.Count);
-        Assert.AreEqual("AEGS_Avenger", gltfData.Nodes[0].Name);
-        Assert.AreEqual("Nose", gltfData.Nodes[1].Name);
-        Assert.AreEqual("UI_Helper", gltfData.Nodes[2].Name);
+        Assert.AreEqual("UI_Helper", gltfData.Nodes[0].Name);
+        Assert.AreEqual("hardpoint_controller_energy", gltfData.Nodes[1].Name);
+        Assert.AreEqual("hardpoint_controller_door", gltfData.Nodes[2].Name);
 
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[0].Rotation, TestUtils.delta);
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { -0.0f, -0.0f, 0.0f, 1f }, gltfData.Nodes[1].Rotation, TestUtils.delta);
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0, 1 }, gltfData.Nodes[2].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual([0, 0, 0, 1], gltfData.Nodes[0].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual([-0.0f, -0.0f, 0.0f, 1f], gltfData.Nodes[1].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual([0, 0, 0, 1], gltfData.Nodes[2].Rotation, TestUtils.delta);
 
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0, 0, 0 }, gltfData.Nodes[0].Translation, TestUtils.delta);
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0.0f, -0.473000f, -5.702999f }, gltfData.Nodes[1].Translation, TestUtils.delta);
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0f, 0.795895f, -1.898374f }, gltfData.Nodes[2].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual([0, 0, 0], gltfData.Nodes[0].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual([0.0f, -0.473000f, -5.702999f], gltfData.Nodes[1].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual([0f, 0.795895f, -1.898374f], gltfData.Nodes[2].Translation, TestUtils.delta);
 
         // Grip.  Test loc and rotation on a node with a parent
         var grip = gltfData.Nodes.Where(x => x.Name == "Grip").FirstOrDefault();
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { -1.41231394f, 0.0213999934f, -1.660965f }, grip.Translation, TestUtils.delta);
-        AssertExtensions.AreEqual(new System.Collections.Generic.List<float> { 0.464955121f, -0.221349508f, 0.769474566f, 0.3777963f }, grip.Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual([-1.41231394f, 0.0213999934f, -1.660965f], grip.Translation, TestUtils.delta);
+        AssertExtensions.AreEqual([0.464955121f, -0.221349508f, 0.769474566f, 0.3777963f], grip.Rotation, TestUtils.delta);
 
         Assert.AreEqual(3, gltfData.Nodes[0].Children.Count); // Root
         Assert.AreEqual(44, gltfData.Nodes[1].Children.Count);
@@ -371,10 +371,10 @@ public class StarCitizenTests
             "-dds", "-dae" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        ColladaModelRenderer colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
 
         // Geometry Library checks

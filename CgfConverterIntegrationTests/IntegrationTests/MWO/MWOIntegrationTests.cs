@@ -51,7 +51,7 @@ public class MWOIntegrationTests
         Assert.AreEqual(MtlNameType.Child, ((ChunkMtlName)mtlChunks[1]).MatType);
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.Render();
+        colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
         Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
         Assert.AreEqual(1, daeObject.Library_Effects.Effect.Length);
@@ -81,7 +81,7 @@ public class MWOIntegrationTests
         Assert.AreEqual(MtlNameType.Child, ((ChunkMtlName)mtlChunks[1]).MatType);
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.Render();
+        colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
         Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
         Assert.AreEqual(1, daeObject.Library_Effects.Effect.Length);
@@ -107,7 +107,7 @@ public class MWOIntegrationTests
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.Render();
+        colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
         Assert.AreEqual(5, daeObject.Library_Materials.Material.Length);
         Assert.AreEqual(5, daeObject.Library_Effects.Effect.Length);
@@ -132,7 +132,7 @@ public class MWOIntegrationTests
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.Render();
+        colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
     }
 
@@ -147,7 +147,7 @@ public class MWOIntegrationTests
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.Render();
+        colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
     }
 
@@ -162,7 +162,7 @@ public class MWOIntegrationTests
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.Render();
+        colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
     }
 
@@ -206,7 +206,7 @@ public class MWOIntegrationTests
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.Render();
+        colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
 
     }
@@ -224,7 +224,7 @@ public class MWOIntegrationTests
         var matNameChunks = cryData.Chunks.Where(c => c.ChunkType == ChunkType.MtlName).ToList();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.Render();
+        colladaData.GenerateDaeObject();
         Assert.AreEqual(0, colladaData.DaeObject.Library_Images.Image.Length);
         Assert.AreEqual(11, colladaData.DaeObject.Library_Materials.Material.Length);  // max number of materials found in bad MtlName chunks
     }
@@ -243,7 +243,7 @@ public class MWOIntegrationTests
         var matNameChunks = cryData.Chunks.Where(c => c.ChunkType == ChunkType.MtlName).ToList();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.Render();
+        colladaData.GenerateDaeObject();
         Assert.AreEqual(28, colladaData.DaeObject.Library_Images.Image.Length);
         Assert.AreEqual(5, colladaData.DaeObject.Library_Materials.Material.Length);
     }
@@ -259,7 +259,7 @@ public class MWOIntegrationTests
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.Render();
+        colladaData.GenerateDaeObject();
 
         var daeObject = colladaData.DaeObject;
         Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
@@ -284,19 +284,19 @@ public class MWOIntegrationTests
 
         // Nodes check
         Assert.AreEqual(9, gltfData.Nodes.Count);
-        Assert.AreEqual("50calnecklace_a", gltfData.Nodes[0].Name);
-        Assert.AreEqual("Bip01", gltfData.Nodes[1].Name);
-        Assert.AreEqual("hang seg1", gltfData.Nodes[2].Name);
+        Assert.AreEqual("Bip01", gltfData.Nodes[0].Name);
+        Assert.AreEqual("hang seg1", gltfData.Nodes[1].Name);
+        Assert.AreEqual("hang seg2", gltfData.Nodes[2].Name);
 
-        AssertExtensions.AreEqual(new List<float> { 0, 0, 0, 1 }, gltfData.Nodes[0].Rotation, TestUtils.delta);
-        AssertExtensions.AreEqual(new List<float> { -0.4963841f, -0.5035906f, 0.491474152f, 0.5083822f }, gltfData.Nodes[1].Rotation, TestUtils.delta);
-        AssertExtensions.AreEqual(new List<float> { 0.00154118659f, -0.008913527f, 0.0122360326f, 0.9998842f }, gltfData.Nodes[2].Rotation, TestUtils.delta);
+        //AssertExtensions.AreEqual([0, 0, 0, 1], gltfData.Nodes[0].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual([-0.4963841f, -0.5035906f, 0.491474152f, 0.5083822f], gltfData.Nodes[0].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual([0.00154118659f, -0.008913527f, 0.0122360326f, 0.9998842f], gltfData.Nodes[1].Rotation, TestUtils.delta);
 
-        AssertExtensions.AreEqual(new List<float> { 0, 0, 0 }, gltfData.Nodes[0].Translation, TestUtils.delta);
-        AssertExtensions.AreEqual(new List<float> { 2.09588125E-13f, 0.0204448365f, -8.731578E-10f }, gltfData.Nodes[1].Translation, TestUtils.delta);
-        AssertExtensions.AreEqual(new List<float> { -0.0209655762f, -8.90577E-09f, 3.4356154E-10f }, gltfData.Nodes[2].Translation, TestUtils.delta);
+        //AssertExtensions.AreEqual([0, 0, 0], gltfData.Nodes[1].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual([2.09588125E-13f, 0.0204448365f, -8.731578E-10f], gltfData.Nodes[0].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual([-0.0209655762f, -8.90577E-09f, 3.4356154E-10f], gltfData.Nodes[1].Translation, TestUtils.delta);
 
-        Assert.AreEqual(0, gltfData.Nodes[0].Children.Count);
+        Assert.AreEqual(1, gltfData.Nodes[0].Children.Count);
         Assert.AreEqual(1, gltfData.Nodes[1].Children.Count);
         Assert.AreEqual(1, gltfData.Nodes[2].Children.Count);
 
@@ -320,7 +320,7 @@ public class MWOIntegrationTests
         cryData.ProcessCryengineFiles();
         Assert.AreEqual(@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.mtl", cryData.MaterialFile);
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.Render();
+        colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
         Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
         Assert.AreEqual(1, daeObject.Library_Effects.Effect.Length);
@@ -337,7 +337,7 @@ public class MWOIntegrationTests
         cryData.ProcessCryengineFiles();
         Assert.AreEqual(@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.mtl", cryData.MaterialFile);
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.Render();
+        colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
         Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
         Assert.AreEqual(1, daeObject.Library_Effects.Effect.Length);
@@ -354,7 +354,7 @@ public class MWOIntegrationTests
         cryData.ProcessCryengineFiles();
         Assert.AreEqual(@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.mtl", cryData.MaterialFile);
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.Render();
+        colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
         Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
         Assert.AreEqual(1, daeObject.Library_Effects.Effect.Length);

@@ -58,10 +58,7 @@ public class WiiuStreamPackFileSystem : IPackFileSystem, IDisposable
         _stream.Dispose();
     }
 
-    public Stream GetStream(string path)
-    {
-        return new MemoryStream(ReadAllBytes(path));
-    }
+    public Stream GetStream(string path) => new MemoryStream(ReadAllBytes(path));
 
     public bool Exists(string path) => _entries.ContainsKey(path.ToLowerInvariant());
 
@@ -181,9 +178,7 @@ public class WiiuStreamPackFileSystem : IPackFileSystem, IDisposable
             Offset = reader.BaseStream.Position;
         }
 
-        public int CompareTo(FileEntry other)
-        {
-            return string.Compare(InnerPath, other.InnerPath, StringComparison.InvariantCultureIgnoreCase);
-        }
+        public int CompareTo(FileEntry other) =>
+            string.Compare(InnerPath, other.InnerPath, StringComparison.InvariantCultureIgnoreCase);
     }
 }

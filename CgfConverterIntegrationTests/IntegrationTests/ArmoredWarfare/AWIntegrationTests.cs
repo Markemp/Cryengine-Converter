@@ -49,7 +49,7 @@ public class ArmoredWarfareIntegrationTests
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.Render();
+        colladaData.GenerateDaeObject();
     }
 
     [TestMethod]
@@ -64,7 +64,7 @@ public class ArmoredWarfareIntegrationTests
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.Render();
+        colladaData.GenerateDaeObject();
     }
 
     [TestMethod]
@@ -80,6 +80,6 @@ public class ArmoredWarfareIntegrationTests
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.Render();
+        colladaData.GenerateDaeObject();
     }
 }
