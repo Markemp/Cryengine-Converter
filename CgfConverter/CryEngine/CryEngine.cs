@@ -1,13 +1,13 @@
 ﻿using CgfConverter.CryEngineCore;
+using CgfConverter.CryXmlB;
 using CgfConverter.Materials;
+using CgfConverter.PackFileSystem;
+using CgfConverter.Utils;
+using Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CgfConverter.CryXmlB;
-using CgfConverter.PackFileSystem;
-using CgfConverter.Utils;
-using Extensions;
 using Material = CgfConverter.Materials.Material;
 
 namespace CgfConverter;

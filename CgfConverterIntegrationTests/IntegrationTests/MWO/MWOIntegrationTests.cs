@@ -727,10 +727,15 @@ public class MWOIntegrationTests
     [TestMethod]
     public void HulaGirl_GltfFormat()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\hulagirl__gold_a.cga" };
+        var args = new string[]
+        {
+            $@"D:\depot\MWO\Objects\purchasable\cockpit_standing\hulagirl\hulagirl__gold_a.cga",
+            "-objectdir", objectDir,
+            "-mat", "hulagirl_a.mtl"
+        };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFile: args[4]);
         cryData.ProcessCryengineFiles();
 
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
@@ -741,22 +746,22 @@ public class MWOIntegrationTests
 
         // Nodes check
         Assert.AreEqual(3, gltfData.Nodes.Count);
-        Assert.AreEqual("hulagirl_a", gltfData.Nodes[0].Name);
-        Assert.AreEqual("HulaGirl_UpperBody", gltfData.Nodes[1].Name);
-        Assert.AreEqual("HulaGirl_LowerBody", gltfData.Nodes[2].Name);
+        Assert.AreEqual("HulaGirl_UpperBody", gltfData.Nodes[0].Name);
+        Assert.AreEqual("HulaGirl_LowerBody", gltfData.Nodes[1].Name);
+        Assert.AreEqual("hulagirl_a", gltfData.Nodes[2].Name);
 
         var rotationMatrix = cryData.RootNode.AllChildNodes.First().Rot.ConvertToRotationMatrix();
-        AssertExtensions.AreEqual(new List<float> { 0, 0, 0, 1 }, gltfData.Nodes[0].Rotation, TestUtils.delta);
-        AssertExtensions.AreEqual(new List<float> { -0.10248467f, 0.00384537f, -0.04688235744833946f, 0.9936217f }, gltfData.Nodes[1].Rotation, TestUtils.delta);
-        AssertExtensions.AreEqual(new List<float> { 0, 0, 0, 1 }, gltfData.Nodes[2].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual([0, 0, 0, 1], gltfData.Nodes[1].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual([-0.10248467f, 0.00384537f, -0.04688235744833946f, 0.9936217f], gltfData.Nodes[0].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual([0, 0, 0, 1], gltfData.Nodes[2].Rotation, TestUtils.delta);
 
-        AssertExtensions.AreEqual(new List<float> { 0, 0, 0 }, gltfData.Nodes[0].Translation, TestUtils.delta);
-        AssertExtensions.AreEqual(new List<float> { 0.000101296f, 0.0640777f, 0f }, gltfData.Nodes[1].Translation, TestUtils.delta);
-        AssertExtensions.AreEqual(new List<float> { 0, 0, 0 }, gltfData.Nodes[2].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual([0, 0, 0], gltfData.Nodes[1].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual([-0.000101296f, 0.0640777f, 0f], gltfData.Nodes[0].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual([0, 0, 0], gltfData.Nodes[2].Translation, TestUtils.delta);
 
-        Assert.AreEqual(2, gltfData.Nodes[0].Children.Count);
+        Assert.AreEqual(2, gltfData.Nodes[2].Children.Count);
         Assert.AreEqual(0, gltfData.Nodes[1].Children.Count);
-        Assert.AreEqual(0, gltfData.Nodes[2].Children.Count);
+        Assert.AreEqual(0, gltfData.Nodes[0].Children.Count);
 
         // Accessors check
         Assert.AreEqual(10, gltfData.Accessors.Count);
@@ -765,16 +770,21 @@ public class MWOIntegrationTests
     [TestMethod]
     public void MechFactory_CratesA_Gltf()
     {
-        var args = new string[] { $@"d:\depot\mwo\objects\environments\mech_factory\mf_crates\mechfactory_cratesa.cgf", "-objectdir", "d:\\depot\\mwo" };
+        var args = new string[]
+        {
+            $@"d:\depot\mwo\objects\environments\mech_factory\mf_crates\mechfactory_cratesa.cgf",
+            "-objectdir", objectDir,
+            "-mat", "mf_crates.mtl"
+        };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFile: args[4]);
         cryData.ProcessCryengineFiles();
 
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
         var gltfData = gltfRenderer.GenerateGltfObject();
-        Assert.AreEqual(1, gltfData.Textures.Count);
-        Assert.AreEqual(1, gltfData.Materials.Count);
+        Assert.AreEqual(2, gltfData.Textures.Count);
+        Assert.AreEqual(2, gltfData.Materials.Count);
     }
 
     [TestMethod]

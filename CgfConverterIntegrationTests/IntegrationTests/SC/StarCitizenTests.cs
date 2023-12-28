@@ -65,9 +65,7 @@ public class StarCitizenTests
         cryData.ProcessCryengineFiles();
 
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
-        //var gltfData = gltfRenderer.GenerateGltfObject();
         gltfRenderer.Render();
-
     }
 
     [TestMethod]

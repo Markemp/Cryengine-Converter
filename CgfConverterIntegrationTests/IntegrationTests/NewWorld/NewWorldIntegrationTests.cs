@@ -61,4 +61,22 @@ public class NewWorldIntegrationTests
         var daeObject = colladaData.DaeObject;
         var nodes = daeObject.Library_Visual_Scene.Visual_Scene[0].Node;
     }
+
+    // D:\depot\NewWorld\objects\props\augertrap\augertrap.cgf
+    [TestMethod]
+    public void AugerTrap_cgf()
+    {
+        var args = new string[] { $@"D:\depot\NewWorld\objects\props\augertrap\augertrap.cgf", "-dds", "-dae", "-objectdir", objectDir };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, null);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+        var nodes = daeObject.Library_Visual_Scene.Visual_Scene[0].Node;
+    }
+
 }
