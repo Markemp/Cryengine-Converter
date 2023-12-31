@@ -5,6 +5,7 @@ namespace CgfConverter.CryEngineCore;
 
 internal sealed class ChunkCompiledBones_801 : ChunkCompiledBones
 {
+    // Archeage drug_boy01
     public override void Read(BinaryReader b)
     {
         base.Read(b);
@@ -18,14 +19,15 @@ internal sealed class ChunkCompiledBones_801 : ChunkCompiledBones
             var tempBone = new CompiledBone();
             tempBone.ReadCompiledBone_801(b);
 
-            if (RootBone == null)  // First bone read is root bone
+            if (RootBone is null)  // First bone read is root bone
                 RootBone = tempBone;
 
             if (tempBone.offsetParent != 0)
                 tempBone.ParentBone = BoneList[i + tempBone.offsetParent];
 
-            if (tempBone.ParentBone != null)
-                tempBone.parentID = tempBone.ParentBone.ControllerID;
+            if (tempBone.ParentBone is not null)
+                //tempBone.parentID = tempBone.ParentBone.ControllerID;
+                tempBone.parentID = BoneList.IndexOf(tempBone) + tempBone.offsetParent;
             else
                 tempBone.parentID = 0;
 
@@ -33,10 +35,11 @@ internal sealed class ChunkCompiledBones_801 : ChunkCompiledBones
         }
 
         // Add the ChildID to the parent bone.  This will help with navigation. Also set up the TransformSoFar
-        foreach (CompiledBone bone in BoneList)
-        {
-            AddChildIDToParent(bone);
-        }
+        //foreach (CompiledBone bone in BoneList)
+        //{
+        //    AddChildIDToParent(bone);
+        //}
+
         SkinningInfo skin = GetSkinningInfo();
         skin.CompiledBones = new List<CompiledBone>();
         skin.HasSkinningInfo = true;

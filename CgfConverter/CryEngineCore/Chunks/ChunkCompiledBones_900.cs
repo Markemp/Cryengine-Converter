@@ -29,8 +29,8 @@ internal sealed class ChunkCompiledBones_900 : ChunkCompiledBones
         for (int i = 0; i < NumBones; i++)
         {
             BoneList[i].boneName = boneNames[i];
-            SetParentBone(BoneList[i]);
-            AddChildIDToParent(BoneList[i]);
+            //SetParentBone(BoneList[i]);
+            //AddChildIDToParent(BoneList[i]);
         }
 
         SkinningInfo skin = GetSkinningInfo();
@@ -39,15 +39,15 @@ internal sealed class ChunkCompiledBones_900 : ChunkCompiledBones
         skin.CompiledBones = BoneList;
     }
 
-    void SetParentBone(CompiledBone bone)
-    {
-        // offsetParent is really parent index.
-        if (bone.offsetParent != -1)
-        {
-            bone.parentID = BoneList[bone.offsetParent].ControllerID;
-            bone.ParentBone = BoneList[bone.offsetParent];
-        }
-    }
+    //void SetParentBone(CompiledBone bone)
+    //{
+    //    // offsetParent is really parent index.
+    //    if (bone.offsetParent != -1)
+    //    {
+    //        bone.parentID = BoneList[bone.offsetParent].ControllerID;
+    //        bone.ParentBone = BoneList[bone.offsetParent];
+    //    }
+    //}
 
     internal static List<string> GetNullSeparatedStrings(int numberOfNames, BinaryReader b)
     {

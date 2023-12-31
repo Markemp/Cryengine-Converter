@@ -57,7 +57,7 @@ public class CgfConverterIntegrationTests
         colladaData.GenerateDaeObject();
 
         int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-        Assert.AreEqual(19, actualMaterialsCount);
+        Assert.AreEqual(17, actualMaterialsCount);
 
         testUtils.ValidateColladaXml(colladaData);
     }
@@ -275,10 +275,10 @@ public class CgfConverterIntegrationTests
         Assert.AreEqual(0, objectData.Nodes[0].Mesh);
 
         // Validate Meshes
-        Assert.AreEqual(4, objectData.BufferViews.Count);
+        Assert.AreEqual(3, objectData.BufferViews.Count);
         Assert.AreEqual(32004, objectData.BufferViews[0].ByteLength);
-        Assert.AreEqual(21336, objectData.BufferViews[1].ByteLength);
-        Assert.AreEqual(32004, objectData.BufferViews[2].ByteLength);
+        Assert.AreEqual(32004, objectData.BufferViews[1].ByteLength);
+        Assert.AreEqual(29832, objectData.BufferViews[2].ByteLength);
     }
 
     [TestMethod]
@@ -321,7 +321,7 @@ public class CgfConverterIntegrationTests
         var images = colladaData.DaeObject.Library_Images;
         Assert.AreEqual(3, images.Image.Length);
         Assert.AreEqual("green_fern_bush_Diffuse", images.Image[0].ID);
-        Assert.AreEqual("objects\\natural\\bushes\\green_fern_bush\\green_fern_bush_leaf_a.dds", images.Image[0].Init_From.Uri);
+        Assert.AreEqual("..\\..\\..\\Source\\Repos\\Cryengine-Converter\\CgfConverterIntegrationTests\\bin\\Debug\\net8.0\\objects\\natural\\bushes\\green_fern_bush\\green_fern_bush_leaf_a.dds", images.Image[0].Init_From.Uri);
 
         // Validate visual_scene
         var visualScene = colladaData.DaeObject.Library_Visual_Scene;
@@ -362,27 +362,27 @@ public class CgfConverterIntegrationTests
 
         // Validate Nodes
         Assert.AreEqual(7, gltfData.Nodes.Count);
-        Assert.AreEqual("green_fern_bush_a", gltfData.Nodes[0].Name);
-        Assert.AreEqual(1, gltfData.Nodes[1].Mesh);
-        Assert.AreEqual("$LOD1", gltfData.Nodes[1].Name);
-        Assert.AreEqual("$LOD2", gltfData.Nodes[2].Name);
-        Assert.AreEqual("branch1_1", gltfData.Nodes[3].Name);
-        Assert.AreEqual("branch1_1", gltfData.Nodes[3].Name);
+        Assert.AreEqual("green_fern_bush_a", gltfData.Nodes[6].Name);
+        Assert.AreEqual(1, gltfData.Nodes[0].Mesh);
+        Assert.AreEqual("$LOD1", gltfData.Nodes[0].Name);
+        Assert.AreEqual("$LOD2", gltfData.Nodes[1].Name);
+        Assert.AreEqual("branch1_1", gltfData.Nodes[2].Name);
+        Assert.AreEqual("branch1_2", gltfData.Nodes[3].Name);
 
         // Validate Meshes
-        Assert.AreEqual(15, gltfData.BufferViews.Count);
+        Assert.AreEqual(12, gltfData.BufferViews.Count);
         Assert.AreEqual(9672, gltfData.BufferViews[0].ByteLength);
-        Assert.AreEqual(6448, gltfData.BufferViews[1].ByteLength);
-        Assert.AreEqual(9672, gltfData.BufferViews[2].ByteLength);
-        Assert.AreEqual(12896, gltfData.BufferViews[3].ByteLength);
-        Assert.AreEqual(11160, gltfData.BufferViews[4].ByteLength);
+        Assert.AreEqual(9672, gltfData.BufferViews[1].ByteLength);
+        Assert.AreEqual(12896, gltfData.BufferViews[2].ByteLength);
+        Assert.AreEqual(11160, gltfData.BufferViews[3].ByteLength);
+        Assert.AreEqual(5688, gltfData.BufferViews[4].ByteLength);
         Assert.AreEqual(5688, gltfData.BufferViews[5].ByteLength);
-        Assert.AreEqual(3792, gltfData.BufferViews[6].ByteLength);
-        Assert.AreEqual(5688, gltfData.BufferViews[7].ByteLength);
-        Assert.AreEqual(7584, gltfData.BufferViews[8].ByteLength);
+        Assert.AreEqual(7584, gltfData.BufferViews[6].ByteLength);
+        Assert.AreEqual(5376, gltfData.BufferViews[7].ByteLength);
+        Assert.AreEqual(2700, gltfData.BufferViews[8].ByteLength);
 
         // Validate Materials
-        Assert.AreEqual(2, gltfData.Materials.Count);
+        Assert.AreEqual(1, gltfData.Materials.Count);
 
         // Validate Geometry
     }

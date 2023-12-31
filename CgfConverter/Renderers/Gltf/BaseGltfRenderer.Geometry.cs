@@ -63,7 +63,7 @@ public partial class BaseGltfRenderer
             return false;
         }
 
-        var controllerIdToNodeIndex = new Dictionary<uint, int>();
+        var controllerIdToNodeIndex = new Dictionary<int, int>();
 
         // Create this node and add to GltfRoot.Nodes
         var rotationQuat = Quaternion.CreateFromRotationMatrix(cryNode.LocalTransform);
@@ -123,7 +123,7 @@ public partial class BaseGltfRenderer
         return true;
     }
 
-    private void AddMesh(CryEngine cryData, ChunkNode cryNode, GltfNode gltfNode, Dictionary<uint, int> controllerIdToNodeIndex, bool omitSkins)
+    private void AddMesh(CryEngine cryData, ChunkNode cryNode, GltfNode gltfNode, Dictionary<int, int> controllerIdToNodeIndex, bool omitSkins)
     {
         var accessors = new GltfMeshPrimitiveAttributes();
         var meshChunk = cryNode.ObjectChunk as ChunkMesh;
@@ -157,7 +157,7 @@ public partial class BaseGltfRenderer
         out int joints,
         GltfNode rootNode,
         SkinningInfo skinningInfo,
-        IDictionary<uint, int> controllerIdToNodeIndex)
+        IDictionary<int, int> controllerIdToNodeIndex)
     {
         if (!skinningInfo.HasSkinningInfo)
             throw new ArgumentException("HasSkinningInfo must be true", nameof(skinningInfo));
@@ -182,13 +182,20 @@ public partial class BaseGltfRenderer
                             x.Weights[0], x.Weights[1], x.Weights[2], x.Weights[3]))
                         .ToArray());
 
-        var boneIdToBindPoseMatrices = new Dictionary<uint, Matrix4x4>();
+        var boneIdToBindPoseMatrices = new Dictionary<int, Matrix4x4>();
         foreach (var bone in skinningInfo.CompiledBones)
         {
-            var matrix = boneIdToBindPoseMatrices[bone.ControllerID] = bone.BindPoseMatrix;
-            if (bone.parentID != 0)
+            // BoneId is the index of the bone.  Every bone has a controller Id, but controller id is not necessarily unique
+            var boneId = skinningInfo.CompiledBones.IndexOf(bone);
+            var parentBone = skinningInfo.CompiledBones[boneId + bone.offsetParent];
+            //var matrix = boneIdToBindPoseMatrices[bone.ControllerID] = bone.BindPoseMatrix;
+            var matrix = boneIdToBindPoseMatrices[skinningInfo.CompiledBones.IndexOf(bone)] = bone.BindPoseMatrix;
+            if (bone.offsetParent != 0)
             {
-                if (!Matrix4x4.Invert(boneIdToBindPoseMatrices[bone.parentID], out var parentMat))
+                //var parentBoneId = skinningInfo.CompiledBones[boneId + bone.offsetParent].ControllerID;
+                
+                var parentBoneId = skinningInfo.CompiledBones.IndexOf(parentBone);
+                if (!Matrix4x4.Invert(boneIdToBindPoseMatrices[parentBoneId], out var parentMat))
                     return Log.E<bool>("CompiledBone[{0}/{1}]: Failed to invert BindPoseMatrix.",
                         rootNode.Name, bone.ParentBone?.boneName);
 
@@ -223,7 +230,7 @@ public partial class BaseGltfRenderer
             if (bone.parentID == 0)
                 CurrentScene.Nodes.Add(controllerIdToNodeIndex[bone.ControllerID]);
             else
-                Root.Nodes[controllerIdToNodeIndex[bone.parentID]].Children
+                Root.Nodes[controllerIdToNodeIndex[parentBone.ControllerID]].Children
                     .Add(controllerIdToNodeIndex[bone.ControllerID]);
         }
 

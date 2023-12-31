@@ -44,9 +44,8 @@ public class NewWorldIntegrationTests
         Assert.AreEqual("Pelvis", nodes[0].node[0].Name);
     }
 
-    // D:\depot\newworld\objects\characters\npc\natural\adiana\adiana_body.skin
     [TestMethod]
-    public void Adiana_Body()
+    public void Adiana_Body_Skin()
     {
         var args = new string[] { $@"D:\depot\newworld\objects\characters\npc\natural\adiana\adiana_body.skin", "-dds", "-dae", "-objectdir", objectDir };
 
@@ -62,7 +61,6 @@ public class NewWorldIntegrationTests
         var nodes = daeObject.Library_Visual_Scene.Visual_Scene[0].Node;
     }
 
-    // D:\depot\NewWorld\objects\props\augertrap\augertrap.cgf
     [TestMethod]
     public void AugerTrap_cgf()
     {

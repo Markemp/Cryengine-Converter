@@ -19,7 +19,7 @@ public class SkinningInfo
     public List<MorphTargets> MorphTargets { get; set; }
     public List<TFace> IntFaces { get; set; }
     public List<IntSkinVertex>? IntVertices { get; set; }
-    public List<UInt16> Ext2IntMap { get; set; }
+    public List<ushort> Ext2IntMap { get; set; }
     public List<MeshCollisionInfo> Collisions { get; set; }
     public List<MeshBoneMapping> BoneMapping { get; set; }                  // Bone Mappings are read from a Datastream chunk
 

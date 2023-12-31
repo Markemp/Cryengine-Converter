@@ -239,7 +239,7 @@ public partial class CryEngine
 
         var materialLibraryFiles = model.ChunkMap.Values
             .OfType<ChunkMtlName>()
-            .Where(x => x.MatType == MtlNameType.Library || x.MatType == MtlNameType.Basic)
+            .Where(x => x.MatType == MtlNameType.Library || x.MatType == MtlNameType.Basic  || x.MatType == MtlNameType.Single)
             .Select(x => x.Name);
 
         MaterialFile = GetMaterialFileFromMatLibrary(materialLibraryFiles);

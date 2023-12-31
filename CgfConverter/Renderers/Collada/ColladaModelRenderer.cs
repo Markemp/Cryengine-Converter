@@ -52,7 +52,7 @@ public class ColladaModelRenderer : IRenderer
 
     /// <summary>Dictionary of all material libraries in the model, with the key being the library from mtlname chunk.</summary>
     private readonly Dictionary<string, Material> createdMaterialLibraries = new();
-    private readonly Dictionary<uint, string> controllerIdToBoneName = new();
+    private readonly Dictionary<int, string> controllerIdToBoneName = new();
 
     public ColladaModelRenderer(ArgsHandler argsHandler, CryEngine cryEngine)
     {
@@ -1512,7 +1512,8 @@ public class ColladaModelRenderer : IRenderer
             sID = boneName,
             Type = ColladaNodeType.JOINT
         };
-        controllerIdToBoneName.Add(bone.ControllerID, bone.boneName);
+        if (bone.ControllerID != -1)
+            controllerIdToBoneName.Add(bone.ControllerID, bone.boneName);
 
         ColladaMatrix matrix = new();
         List<ColladaMatrix> matrices = new();
@@ -1522,7 +1523,7 @@ public class ColladaModelRenderer : IRenderer
         tmpNode.Matrix = matrices.ToArray();
 
         // Recursively call this for each of the child bones to this bone.
-        if (bone.childIDs.Count > 0)
+        if (bone.numChildren > 0)
         {
             List<ColladaNode> childNodes = new();
             foreach (CompiledBone childBone in _cryData.Bones.GetAllChildBones(bone))

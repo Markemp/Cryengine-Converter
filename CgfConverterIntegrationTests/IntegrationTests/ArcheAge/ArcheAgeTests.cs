@@ -11,7 +11,8 @@ namespace CgfConverterTests.IntegrationTests;
 [TestClass]
 public class ArcheAgeTests
 {
-    private readonly TestUtils testUtils = new TestUtils();
+    private readonly TestUtils testUtils = new();
+    private readonly string objectDir = @"d:\depot\archeage\ame";
     string userHome;
 
     [TestInitialize]
@@ -28,26 +29,31 @@ public class ArcheAgeTests
     [TestMethod]
     public void ArcheAge_ChrFileTest()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\ArcheAge\coupleduckship_foot.chr", "-dds", "-dae" };
+        var args = new string[]
+        {
+            @"d:\depot\archeage\game\objects\characters\animals\bird\bird_a.chr",
+            "-dds",
+            "-obj", objectDir,
+            "-mtl", "bird_a.mtl"
+        };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, materialFile: args[5]);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
         int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
-        Assert.AreEqual(6, actualMaterialsCount);
+        Assert.AreEqual(2, actualMaterialsCount);
 
         // Controller check
         var controller = daeObject.Library_Controllers.Controller;
-        var expectedBones = "Bip01 Locator_Locomotion bone_coupleduckship_fix bone_coupleduckship_pedal_r_01_FirstBone";
+        var expectedBones = "Bone04 Bone05 Bone01 Bone06 Bone06(mirrored) Bone02 Bone07 Bone08 Bone07(mirrored) Bone08(mirrored)";
         Assert.IsTrue(controller[0].Skin.Source[0].Name_Array.Value_Pre_Parse.StartsWith(expectedBones));
-        var expectedBpm = "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 1 0 -0 0 -0 1 0 0 0 0 1 0 0 0 0 1 1 0 0 0 0 1 0 " +
-            "0 0 0 1 0 0 0 0 1 0.116992 -0.048410 0.991952 0.418401 -0.916581 0.379274 0.126612 -2.546408";
+        var expectedBpm = "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 1 0 0 0.100000 0 1 0 0 0 0 1 0 0 0 0 1 -0 0 -1 -0 -0.999108 0.042216 0 -0.071707 0.042216 0.999108 0 0.018175 0 0 0 1 0.967510 -0.183784 -0.173634 0.007351 0.186228 0.982504 -0.002255 -0.008423 0.171010 -0.030154 0.984808 0.026689";
         Assert.IsTrue(controller[0].Skin.Source[1].Float_Array.Value_As_String.StartsWith(expectedBpm));
-        Assert.AreEqual(368, controller[0].Skin.Source[1].Float_Array.Count);
+        Assert.AreEqual(160, controller[0].Skin.Source[1].Float_Array.Count);
 
         // Visual Scene Check 
         Assert.AreEqual("Scene", daeObject.Scene.Visual_Scene.Name);
@@ -58,16 +64,57 @@ public class ArcheAgeTests
 
         // Armature Node check 
         var node = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0];
-        Assert.AreEqual("Bip01", node.ID);
-        Assert.AreEqual("Bip01", node.sID);
-        Assert.AreEqual("Bip01", node.Name);
+        Assert.AreEqual("Bone04", node.ID);
+        Assert.AreEqual("Bone04", node.sID);
+        Assert.AreEqual("Bone04", node.Name);
         Assert.AreEqual("JOINT", node.Type.ToString());
         Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1", node.Matrix[0].Value_As_String);
         var locatorBone = node.node[0];
-        Assert.AreEqual("Locator_Locomotion", locatorBone.ID);
-        Assert.AreEqual("Locator_Locomotion", locatorBone.Name);
-        Assert.AreEqual("Locator_Locomotion", locatorBone.sID);
+        Assert.AreEqual("Bone05", locatorBone.ID);
+        Assert.AreEqual("Bone05", locatorBone.Name);
+        Assert.AreEqual("Bone05", locatorBone.sID);
         Assert.AreEqual("JOINT", locatorBone.Type.ToString());
         Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1", locatorBone.Matrix[0].Value_As_String);
+    }
+
+    [TestMethod]
+    public void ArcheAge_ChrFileTest_VerifyMaterials()
+    {
+        var args = new string[]
+        {
+            @"d:\depot\archeage\game\objects\characters\animals\bird\bird_a.chr",
+            "-dds",
+            "-obj", objectDir
+        };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var daeObject = colladaData.DaeObject;
+        colladaData.GenerateDaeObject();
+        int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
+        Assert.AreEqual(2, actualMaterialsCount);
+    }
+
+    [TestMethod]
+    public void DrugBoy_Chr()
+    {
+        var args = new string[]
+        {
+            @"D:\depot\archeage\game\objects\characters\people\drug_boy01\face\drug_boy01_face01\drug_boy01_face01.chr",
+            "-dds",
+            "-obj", objectDir,
+        };
+
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var daeObject = colladaData.DaeObject;
+        colladaData.GenerateDaeObject();
     }
 }

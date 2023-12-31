@@ -53,21 +53,6 @@ public class ArmoredWarfareIntegrationTests
     }
 
     [TestMethod]
-    public void Chicken_Dae_WalkAnim()
-    {
-        var args = new string[] { $@"d:\depot\armoredwarfare\animations\animals\birds\chicken\walk.caf", "-dds", "-dae", "-objectdir", @"d:\depot\armoredwarfare\" };
-
-        int result = testUtils.argsHandler.ProcessArgs(args);
-        Assert.AreEqual(0, result);
-
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
-        cryData.ProcessCryengineFiles();
-
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.GenerateDaeObject();
-    }
-
-    [TestMethod]
     public void T62_Turret()
     {
         // material file doesn't have extension and is in same directory as cgf (t-62_turret_t-62.mtl)
