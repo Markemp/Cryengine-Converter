@@ -11,8 +11,11 @@ namespace CgfConverterTests.IntegrationTests;
 [TestClass]
 public class ArcheAgeTests
 {
+    // Archeage tests have the objectdir at the game directory level instead of object dir.  So although the
+    // game files are under d:\depot\archeage\game, the object dir is d:\depot\archeage.  The material files
+    // are referencing the game directory.
     private readonly TestUtils testUtils = new();
-    private readonly string objectDir = @"d:\depot\archeage\ame";
+    private readonly string objectDir = @"d:\depot\archeage";
     string userHome;
 
     [TestInitialize]

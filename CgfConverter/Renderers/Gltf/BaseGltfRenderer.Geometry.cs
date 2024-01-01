@@ -188,13 +188,11 @@ public partial class BaseGltfRenderer
             // BoneId is the index of the bone.  Every bone has a controller Id, but controller id is not necessarily unique
             var boneId = skinningInfo.CompiledBones.IndexOf(bone);
             var parentBone = skinningInfo.CompiledBones[boneId + bone.offsetParent];
-            //var matrix = boneIdToBindPoseMatrices[bone.ControllerID] = bone.BindPoseMatrix;
+            var parentBoneId = skinningInfo.CompiledBones.IndexOf(parentBone);
             var matrix = boneIdToBindPoseMatrices[skinningInfo.CompiledBones.IndexOf(bone)] = bone.BindPoseMatrix;
+
             if (bone.offsetParent != 0)
             {
-                //var parentBoneId = skinningInfo.CompiledBones[boneId + bone.offsetParent].ControllerID;
-                
-                var parentBoneId = skinningInfo.CompiledBones.IndexOf(parentBone);
                 if (!Matrix4x4.Invert(boneIdToBindPoseMatrices[parentBoneId], out var parentMat))
                     return Log.E<bool>("CompiledBone[{0}/{1}]: Failed to invert BindPoseMatrix.",
                         rootNode.Name, bone.ParentBone?.boneName);

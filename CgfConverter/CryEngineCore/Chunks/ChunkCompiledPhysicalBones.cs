@@ -24,16 +24,6 @@ namespace CgfConverter.CryEngineCore
             }
         }
 
-        public List<CompiledPhysicalBone> GetAllChildBones(CompiledPhysicalBone bone)
-        {
-            if (bone.NumChildren > 0)
-            {
-                return PhysicalBoneList.Where(a => bone.childIDs.Contains(a.ControllerID)).ToList();
-            }
-            else
-                return null;
-        }
-
         protected Matrix4x4 GetTransformFromParts(Vector3 localTranslation, Matrix3x3 localRotation)
         {
             Matrix4x4 transform = new Matrix4x4
@@ -61,10 +51,6 @@ namespace CgfConverter.CryEngineCore
             return transform;
         }
 
-        public override string ToString()
-        {
-            return $@"Chunk Type: {ChunkType}, ID: {ID:X}";
-        }
+        public override string ToString() => $@"Chunk Type: {ChunkType}, ID: {ID:X}";
     }
-
 }
