@@ -35,12 +35,6 @@ internal sealed class ChunkCompiledBones_800 : ChunkCompiledBones
             BoneList.Add(tempBone);
         }
 
-        // Add the ChildID to the parent bone.  This will help with navigation. Also set up the TransformSoFar
-        //foreach (CompiledBone bone in BoneList)
-        //{
-        //    AddChildIDToParent(bone);
-        //}
-
         SkinningInfo skin = GetSkinningInfo();
         skin.CompiledBones = new List<CompiledBone>();
         skin.HasSkinningInfo = true;

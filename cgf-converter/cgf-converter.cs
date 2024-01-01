@@ -112,7 +112,6 @@ public class Program
 
     private void ExportSingleModel(string inputFile)
     {
-        // Read CryEngine Files
         var data = new CryEngine(inputFile, _args.PackFileSystem)
         {
             MaterialFile = _args.MaterialFile

@@ -108,7 +108,29 @@ public class ArcheAgeTests
         {
             @"D:\depot\archeage\game\objects\characters\people\drug_boy01\face\drug_boy01_face01\drug_boy01_face01.chr",
             "-dds",
+            "-obj", objectDir
+        };
+
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var daeObject = colladaData.DaeObject;
+        colladaData.GenerateDaeObject();
+    }
+
+    [TestMethod]
+    public void Basket_Mix_Ani_Cga()
+    {
+        // 2 material files used in this model.  Make sure both are loaded.
+        var args = new string[]
+        {
+            @"D:\depot\archeage\game\objects\env\01_nuia\001_housing\01_tools\basket_mix_ani.cga",
+            "-dds",
             "-obj", objectDir,
+            "-mtl", "basket_mix.mtl,tool_farm_d.mtl"
         };
 
         int result = testUtils.argsHandler.ProcessArgs(args);

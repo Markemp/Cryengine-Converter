@@ -94,10 +94,3 @@ public class Material
 
     public override string ToString() => $"Name: {Name}, Shader: {Shader}, Submaterials: {SubMaterials?.Length ?? 0}";
 }
-
-//[XmlRoot(ElementName = "xml")]
-//public class Xml
-//{
-//    [XmlElement(ElementName = "Material")]
-//    public Material? Material { get; set; }
-//}

@@ -33,7 +33,7 @@ public class SkinningInfo
         int numJoints = CompiledBones.Count;
         for (int i = 0; i < numJoints; i++)
         {
-            if (string.Equals(CompiledBones[i], jointName))
+            if (Equals(CompiledBones[i], jointName))
             {
                 return i;
             }

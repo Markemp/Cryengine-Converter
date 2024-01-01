@@ -38,7 +38,7 @@ public partial class CryEngine
     public SkinningInfo? SkinningInfo { get; set; }
     public string InputFile { get; internal set; }
     public IPackFileSystem PackFileSystem { get; internal set; }
-    public string? MaterialFile { get; set; }
+    public string? MaterialFile { get; set; } // TODO: There can be multiple material files.  Need to handle this.
     public string? ObjectDir { get; set; }
     public Material Materials { get; internal set; }
 
@@ -241,6 +241,11 @@ public partial class CryEngine
             .OfType<ChunkMtlName>()
             .Where(x => x.MatType == MtlNameType.Library || x.MatType == MtlNameType.Basic  || x.MatType == MtlNameType.Single)
             .Select(x => x.Name);
+
+        Log.I("Found following potential material files.  If you are not specifying a material file and the materials don't" +
+            " look right, trying one of the following files:");
+        foreach (var file in materialLibraryFiles)
+            Log.I(file);
 
         MaterialFile = GetMaterialFileFromMatLibrary(materialLibraryFiles);
         if (MaterialFile is not null)
