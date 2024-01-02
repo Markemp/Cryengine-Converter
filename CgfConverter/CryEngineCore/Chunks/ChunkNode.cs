@@ -26,13 +26,10 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
     public string Properties { get; internal set; } = string.Empty;
     public int PropertyStringLength { get; internal set; }
 
-    /// <summary>Computed from material file. Not set for helper nodes, etc.  Flattened with all mats under Submaterial</summary>
+    /// <summary>Computed from material file. Not set for helper nodes, etc.</summary>
     public Material? Materials { get; internal set; }
 
-    public Matrix4x4 LocalTransform
-    {
-        get { return Matrix4x4.Transpose(Transform); }
-    }
+    public Matrix4x4 LocalTransform => Matrix4x4.Transpose(Transform);
 
     private ChunkNode? _parentNode;
 
@@ -66,7 +63,7 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
     {
         get
         {
-            if (_objectChunk == null)
+            if (_objectChunk is null)
                 _model.ChunkMap.TryGetValue(ObjectNodeID, out _objectChunk);
 
             return _objectChunk;

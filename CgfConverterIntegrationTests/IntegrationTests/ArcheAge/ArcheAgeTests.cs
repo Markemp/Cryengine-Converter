@@ -41,7 +41,7 @@ public class ArcheAgeTests
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, materialFile: args[5]);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[5]);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);

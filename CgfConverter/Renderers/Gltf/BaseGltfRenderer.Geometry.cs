@@ -14,8 +14,8 @@ public partial class BaseGltfRenderer
 {
     protected void CreateGltfNodeInto(List<int> nodes, CryEngine cryData, bool omitSkins = false)
     {
-        if (cryData.MaterialFile is not null)
-            WriteMaterial(cryData.MaterialFile, cryData.Materials);
+        if (cryData.MaterialFiles is not null)
+            WriteMaterial(cryData.MaterialFiles.FirstOrDefault(), cryData.Materials.Values.FirstOrDefault());
 
         foreach (ChunkNode cryNode in cryData.Models[0].RootNodes)
         {
@@ -433,14 +433,20 @@ public partial class BaseGltfRenderer
 
         WrittenMaterial? FindMaterial(int matId)
         {
-            if (cryData.Materials?.SubMaterials is not {} submats)
+            // TODO: This only works for models with a single material file. Should be almost all models, but some may fail here.
+            var allSubMaterials = cryData.Materials.Values
+                .Where(material => material?.SubMaterials != null)
+                .SelectMany(material => material.SubMaterials);
+
+
+            if (cryData.Materials?.First().Value.SubMaterials is not {} submats)
                 return null;
             if (matId >= submats.Length || matId < 0)
                 return null;
             string? subMatName = submats[matId].Name;
-            return subMatName is null || cryData.MaterialFile is null
+            return subMatName is null || cryData.MaterialFiles is null
                 ? null
-                : _materialMap.GetValueOrDefault((cryData.MaterialFile, subMatName));
+                : _materialMap.GetValueOrDefault((MaterialFile: cryData.MaterialFiles.FirstOrDefault(), subMatName));
         }
     }
 }

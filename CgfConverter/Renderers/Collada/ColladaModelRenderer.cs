@@ -981,14 +981,17 @@ public class ColladaModelRenderer : IRenderer
         if (DaeObject.Library_Materials?.Material is null)
             DaeObject.Library_Materials.Material = Array.Empty<ColladaMaterial>();
 
-        foreach (var mat in _cryData.Materials.SubMaterials)
+        foreach (var matKey in _cryData.Materials.Keys)
         {
-            // Check to see if the collada object already has a material with this name.  If not, add.
-            var matNames = DaeObject.Library_Materials.Material.Select(c => c.Name);
-            if (!matNames.Contains(mat.Name))
+            foreach (var mat in _cryData.Materials[matKey].SubMaterials)
             {
-                colladaMaterials.Add(AddMaterialToMaterialLibrary(mat));
-                colladaEffects.Add(CreateColladaEffect(mat));
+                // Check to see if the collada object already has a material with this name.  If not, add.
+                var matNames = DaeObject.Library_Materials.Material.Select(c => c.Name);
+                if (!matNames.Contains(mat.Name))
+                {
+                    colladaMaterials.Add(AddMaterialToMaterialLibrary(matKey, mat));
+                    colladaEffects.Add(CreateColladaEffect(mat));
+                }
             }
         }
 
@@ -1006,12 +1009,12 @@ public class ColladaModelRenderer : IRenderer
         }
     }
 
-    private ColladaMaterial AddMaterialToMaterialLibrary(Material submat)
+    private ColladaMaterial AddMaterialToMaterialLibrary(string matKey, Material submat)
     {
         ColladaMaterial material = new()
         {
             Instance_Effect = new ColladaInstanceEffect(),
-            Name = GetMaterialName(submat?.Name ?? "unknown"),
+            Name = GetMaterialName(matKey, submat?.Name ?? "unknown"),
             ID = (submat?.Name ?? "unknown") + "-material"
         };
         material.Instance_Effect.URL = "#" + (submat?.Name ?? "unknown") + "-effect";
@@ -1610,9 +1613,13 @@ public class ColladaModelRenderer : IRenderer
     /// <summary>Get the material name for a given submesh.</summary>
     private string? GetMaterialId(ChunkNode nodeChunk, ChunkMeshSubsets meshSubsets, int index)
     {
-        var materialLibraryIndex = meshSubsets.MeshSubsets[index].MatID;
+        // Nodechunk has the chunk id of the material name chunk.  Get the name from the material name chunk.
+        
+        var materialName = nodeChunk.MaterialLibraryChunk?.Name; //  ((ChunkMtlName)nodeChunk._model.ChunkMap[nodeChunk.MatID]).Name;
+        var key = Path.GetFileNameWithoutExtension(materialName);
+        var materials = _cryData.Materials[key].SubMaterials;
 
-        var materials = _cryData.Materials?.SubMaterials;
+        var materialLibraryIndex = meshSubsets.MeshSubsets[index].MatID;
 
         if (materials is not null)
         {
@@ -1630,9 +1637,9 @@ public class ColladaModelRenderer : IRenderer
         return null;
     }
 
-    private string? GetMaterialName(string materialName)
+    private string? GetMaterialName(string matKey, string materialName)
     {
-        var matfileName = Path.GetFileNameWithoutExtension(_cryData.MaterialFile);
+        var matfileName = Path.GetFileNameWithoutExtension(matKey);
 
         return $"{matfileName}_mtl_{materialName}".Replace(' ', '_');
     }

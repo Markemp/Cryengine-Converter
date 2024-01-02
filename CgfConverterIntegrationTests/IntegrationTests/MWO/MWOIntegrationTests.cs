@@ -316,9 +316,9 @@ public class MWOIntegrationTests
         var args = new string[] { $@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.chr", "-dds", "-objectdir", objectDir, "-mtl", "50calnecklace_a.mtl" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFile: args[5]);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[5]);
         cryData.ProcessCryengineFiles();
-        Assert.AreEqual(@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.mtl", cryData.MaterialFile);
+        Assert.AreEqual(@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.mtl", cryData.MaterialFiles.First());
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
@@ -333,9 +333,9 @@ public class MWOIntegrationTests
         var args = new string[] { $@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.chr", "-dds", "-objectdir", objectDir, "-mtl", "/50calnecklace_a.mtl" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFile: args[5]);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[5]);
         cryData.ProcessCryengineFiles();
-        Assert.AreEqual(@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.mtl", cryData.MaterialFile);
+        Assert.AreEqual(@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.mtl", cryData.MaterialFiles.First());
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
@@ -350,9 +350,9 @@ public class MWOIntegrationTests
         var args = new string[] { $@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.chr", "-dds", "-objectdir", objectDir, "-mtl", "./50calnecklace_a.mtl" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFile: args[5]);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[5]);
         cryData.ProcessCryengineFiles();
-        Assert.AreEqual(@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.mtl", cryData.MaterialFile);
+        Assert.AreEqual(@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.mtl", cryData.MaterialFiles.First());
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
@@ -735,7 +735,7 @@ public class MWOIntegrationTests
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFile: args[4]);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[4]);
         cryData.ProcessCryengineFiles();
 
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
@@ -778,7 +778,7 @@ public class MWOIntegrationTests
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFile: args[4]);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[4]);
         cryData.ProcessCryengineFiles();
 
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
