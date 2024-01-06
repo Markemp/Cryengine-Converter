@@ -1529,7 +1529,8 @@ public class ColladaModelRenderer : IRenderer
         if (bone.numChildren > 0)
         {
             List<ColladaNode> childNodes = new();
-            foreach (CompiledBone childBone in _cryData.Bones.GetAllChildBones(bone))
+            var allChildBones = _cryData.Bones.GetAllChildBones(bone);
+            foreach (CompiledBone childBone in allChildBones)
             {
                 childNodes.Add(CreateJointNode(childBone));
             }
@@ -1613,9 +1614,7 @@ public class ColladaModelRenderer : IRenderer
     /// <summary>Get the material name for a given submesh.</summary>
     private string? GetMaterialId(ChunkNode nodeChunk, ChunkMeshSubsets meshSubsets, int index)
     {
-        // Nodechunk has the chunk id of the material name chunk.  Get the name from the material name chunk.
-        
-        var materialName = nodeChunk.MaterialLibraryChunk?.Name; //  ((ChunkMtlName)nodeChunk._model.ChunkMap[nodeChunk.MatID]).Name;
+        var materialName = _cryData.MaterialFiles.First();   //  TODO:  Fix this.  Find the right mtl chunk.
         var key = Path.GetFileNameWithoutExtension(materialName);
         var materials = _cryData.Materials[key].SubMaterials;
 

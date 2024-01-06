@@ -203,7 +203,6 @@ public partial class CryEngine
     private void CreateMaterials()
     {
         // if -mtl arg is used, try to find the material files, set to the full path, and create materials from it.
-        // Return whether any material files were found.
         if (MaterialFiles is not null)
         {
             foreach (var materialFile in MaterialFiles)
@@ -229,7 +228,7 @@ public partial class CryEngine
         foreach (var file in materialLibraryFiles)
             Log.I($"   {file}");
 
-        MaterialFiles = GetMaterialFilesFromMatLibraryChunks(materialLibraryFiles);
+        MaterialFiles = GetMaterialFilesFromMatLibraryChunks(materialLibraryFiles)?.ToList();
 
         if (MaterialFiles is not null)
         {
@@ -245,12 +244,11 @@ public partial class CryEngine
         if (Materials.Count == 0)
         {
             var maxNumberOfMaterials = Models[0].ChunkMap.Values.OfType<ChunkMtlName>().Max(c => c.NumChildren);
-            foreach (var matFile in materialLibraryFiles)
+            foreach (var matFile in MaterialFiles)
             {
                 var key = Path.GetFileNameWithoutExtension(matFile);
-                Materials.Add(key, CreateDefaultMaterials(1));
+                Materials.Add(key, CreateDefaultMaterials(maxNumberOfMaterials));
             }
-                
         }
     }
 
@@ -291,9 +289,9 @@ public partial class CryEngine
     }
 
     // Gets the Library material file if one can be found. File will be the name in the library as it's the dictionary key.
-    private List<string>? GetMaterialFilesFromMatLibraryChunks(IEnumerable<string> libraryFileNames)
+    private HashSet<string>? GetMaterialFilesFromMatLibraryChunks(IEnumerable<string> libraryFileNames)
     {
-        List<string> materialFiles = new();
+        HashSet<string> materialFiles = new();
         if (libraryFileNames is not null)
         {
             foreach (var libraryFile in libraryFileNames)

@@ -16,11 +16,22 @@ public abstract class ChunkCompiledBones : Chunk     //  0xACDC0000:  Bones info
     //public List<CompiledBone> GetAllChildBones(CompiledBone bone) => BoneList.Where(a => bone.childIDs.Contains(a.ControllerID)).ToList();
     public List<CompiledBone> GetAllChildBones(CompiledBone bone)
     {
-        var boneIndex = BoneList.IndexOf(bone);
-        var startIndex = boneIndex + bone.offsetChild;
-        var endIndex = startIndex + bone.numChildren;
+        List<CompiledBone> childBones = new();
+        foreach (var bone1 in BoneList)
+        {
+            if (bone1.ParentBone == bone)
+                childBones.Add(bone1);
+        }
+        return childBones;
 
-        return BoneList.Skip(startIndex).Take(bone.numChildren).ToList();
+
+        //var childBones = BoneList.Where(x => x.childIDs)
+
+
+        //var boneIndex = BoneList.IndexOf(bone);
+        //var startIndex = boneIndex + bone.offsetChild;
+
+        //return BoneList.Skip(startIndex).Take(bone.numChildren).ToList();
     }
 
     public List<string> GetBoneNames() => BoneList.Select(a => a.boneName).ToList();

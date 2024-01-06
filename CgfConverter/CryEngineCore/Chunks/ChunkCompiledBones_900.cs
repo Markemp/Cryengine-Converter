@@ -29,7 +29,16 @@ internal sealed class ChunkCompiledBones_900 : ChunkCompiledBones
         for (int i = 0; i < NumBones; i++)
         {
             BoneList[i].boneName = boneNames[i];
+            if (BoneList[i].offsetParent != -1)
+            {
+                BoneList[i].ParentBone = BoneList[BoneList[i].offsetParent];
+                BoneList[i].parentID = BoneList[i].offsetParent;
+                BoneList[i].ParentBone.childIDs.Add(i);
+                BoneList[i].ParentBone.numChildren++;
+            }
         }
+
+        // Calculate number of children for each bone.
 
         SkinningInfo skin = GetSkinningInfo();
         skin.CompiledBones = new List<CompiledBone>();

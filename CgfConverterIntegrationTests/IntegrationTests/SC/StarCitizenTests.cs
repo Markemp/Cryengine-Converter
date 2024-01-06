@@ -127,6 +127,20 @@ public class StarCitizenTests
     }
 
     [TestMethod]
+    public void Avenger_LandingGear_SkinFile_322()
+    {
+        var args = new string[] { @"D:\depot\SC3.22\Data\Objects\Spaceships\Ships\AEGS\LandingGear\Avenger\AEGS_Avenger_LandingGear_Back.skin", "-dds", "-dae", "-objectdir", @"d:\depot\sc3.22\data" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+    }
+
+    [TestMethod]
     public void BehrRifle_312IvoChrFile()
     {
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\3.12.0\brfl_fps_behr_p4ar.chr", "-dds", "-dae" };
