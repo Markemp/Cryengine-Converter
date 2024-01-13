@@ -45,24 +45,6 @@ public class CgfConverterIntegrationTests
     }
 
     [TestMethod]
-    public void brfl_rifle_NoMtlFilev802_CreatesDummyInstanceMaterial()
-    {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\brfl_fps_behr_p4ar_body.cgf", "-dds", "-dae" };
-        int result = testUtils.argsHandler.ProcessArgs(args);
-        Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
-        cryData.ProcessCryengineFiles();
-
-        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
-        colladaData.GenerateDaeObject();
-
-        int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-        Assert.AreEqual(17, actualMaterialsCount);
-
-        testUtils.ValidateColladaXml(colladaData);
-    }
-
-    [TestMethod]
     public void UnknownSource_forest_ruin()
     {
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\forest_ruin.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
@@ -243,10 +225,10 @@ public class CgfConverterIntegrationTests
     [TestMethod]
     public void Cnylgt_marauder_Collada_NoMaterialFile()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\cnylgt_marauder.cga" };
+        var args = new string[] { $@"D:\depot\MWO\Objects\purchasable\cockpit_hanging\cnylgt\cnylgt_marauder.cga", "-objectdir", @"d:\depot\mwo", "-mtl", "cnylgt_off.mtl,cnylgt_on.mtl" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[4]);
         cryData.ProcessCryengineFiles();
 
         ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);

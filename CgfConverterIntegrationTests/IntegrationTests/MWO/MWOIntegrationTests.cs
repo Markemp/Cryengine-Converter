@@ -57,12 +57,12 @@ public class MWOIntegrationTests
         Assert.AreEqual(1, daeObject.Library_Effects.Effect.Length);
         Assert.AreEqual(2, daeObject.Library_Images.Image.Length);
         Assert.AreEqual("clanbanner_a_mtl_clanbanner_a", daeObject.Library_Materials.Material[0].Name);
-        Assert.AreEqual("clanbanner_a-material", daeObject.Library_Materials.Material[0].ID);
-        Assert.AreEqual("#clanbanner_a-effect", daeObject.Library_Materials.Material[0].Instance_Effect.URL);
-        Assert.AreEqual("clanbanner_a_Diffuse", daeObject.Library_Images.Image[0].Name);
-        Assert.AreEqual("clanbanner_a_Diffuse", daeObject.Library_Images.Image[0].ID);
-        Assert.AreEqual("clanbanner_a_Normals", daeObject.Library_Images.Image[1].Name);
-        Assert.AreEqual("clanbanner_a_Normals", daeObject.Library_Images.Image[1].ID);
+        Assert.AreEqual("clanbanner_a_mtl_clanbanner_a-material", daeObject.Library_Materials.Material[0].ID);
+        Assert.AreEqual("#clanbanner_a_mtl_clanbanner_a-effect", daeObject.Library_Materials.Material[0].Instance_Effect.URL);
+        Assert.AreEqual("clanbanner_a_mtl_clanbanner_a_Diffuse", daeObject.Library_Images.Image[0].Name);
+        Assert.AreEqual("clanbanner_a_mtl_clanbanner_a_Diffuse", daeObject.Library_Images.Image[0].ID);
+        Assert.AreEqual("clanbanner_a_mtl_clanbanner_a_Normals", daeObject.Library_Images.Image[1].Name);
+        Assert.AreEqual("clanbanner_a_mtl_clanbanner_a_Normals", daeObject.Library_Images.Image[1].ID);
     }
 
     [TestMethod]
@@ -87,12 +87,12 @@ public class MWOIntegrationTests
         Assert.AreEqual(1, daeObject.Library_Effects.Effect.Length);
         Assert.AreEqual(2, daeObject.Library_Images.Image.Length);
         Assert.AreEqual("clanbanner_a_mtl_clanbanner_a", daeObject.Library_Materials.Material[0].Name);
-        Assert.AreEqual("clanbanner_a-material", daeObject.Library_Materials.Material[0].ID);
-        Assert.AreEqual("#clanbanner_a-effect", daeObject.Library_Materials.Material[0].Instance_Effect.URL);
-        Assert.AreEqual("clanbanner_a_Diffuse", daeObject.Library_Images.Image[0].Name);
-        Assert.AreEqual("clanbanner_a_Diffuse", daeObject.Library_Images.Image[0].ID);
-        Assert.AreEqual("clanbanner_a_Normals", daeObject.Library_Images.Image[1].Name);
-        Assert.AreEqual("clanbanner_a_Normals", daeObject.Library_Images.Image[1].ID);
+        Assert.AreEqual("clanbanner_a_mtl_clanbanner_a-material", daeObject.Library_Materials.Material[0].ID);
+        Assert.AreEqual("#clanbanner_a_mtl_clanbanner_a-effect", daeObject.Library_Materials.Material[0].Instance_Effect.URL);
+        Assert.AreEqual("clanbanner_a_mtl_clanbanner_a_Diffuse", daeObject.Library_Images.Image[0].Name);
+        Assert.AreEqual("clanbanner_a_mtl_clanbanner_a_Diffuse", daeObject.Library_Images.Image[0].ID);
+        Assert.AreEqual("clanbanner_a_mtl_clanbanner_a_Normals", daeObject.Library_Images.Image[1].Name);
+        Assert.AreEqual("clanbanner_a_mtl_clanbanner_a_Normals", daeObject.Library_Images.Image[1].ID);
     }
 
     [TestMethod]
@@ -113,12 +113,12 @@ public class MWOIntegrationTests
         Assert.AreEqual(5, daeObject.Library_Effects.Effect.Length);
         Assert.AreEqual(31, daeObject.Library_Images.Image.Length);
         Assert.AreEqual("atlas_body_mtl_atlas_body", daeObject.Library_Materials.Material[0].Name);
-        Assert.AreEqual("atlas_body-material", daeObject.Library_Materials.Material[0].ID);
-        Assert.AreEqual("#atlas_body-effect", daeObject.Library_Materials.Material[0].Instance_Effect.URL);
-        Assert.AreEqual("atlas_body_Diffuse", daeObject.Library_Images.Image[0].Name);
-        Assert.AreEqual("atlas_body_Diffuse", daeObject.Library_Images.Image[0].ID);
-        Assert.AreEqual("atlas_body_Specular", daeObject.Library_Images.Image[1].Name);
-        Assert.AreEqual("atlas_body_Specular", daeObject.Library_Images.Image[1].ID);
+        Assert.AreEqual("atlas_body_mtl_atlas_body-material", daeObject.Library_Materials.Material[0].ID);
+        Assert.AreEqual("#atlas_body_mtl_atlas_body-effect", daeObject.Library_Materials.Material[0].Instance_Effect.URL);
+        Assert.AreEqual("atlas_body_mtl_atlas_body_Diffuse", daeObject.Library_Images.Image[0].Name);
+        Assert.AreEqual("atlas_body_mtl_atlas_body_Diffuse", daeObject.Library_Images.Image[0].ID);
+        Assert.AreEqual("atlas_body_mtl_atlas_body_Specular", daeObject.Library_Images.Image[1].Name);
+        Assert.AreEqual("atlas_body_mtl_atlas_body_Specular", daeObject.Library_Images.Image[1].ID);
     }
 
     [TestMethod]
@@ -233,6 +233,40 @@ public class MWOIntegrationTests
         Assert.AreEqual("mechDefault_mtl_material0", colladaData.DaeObject.Library_Effects.Effect[0].Name);
         Assert.AreEqual("mechDefault_mtl_material0-effect", colladaData.DaeObject.Library_Effects.Effect[0].ID);
         Assert.AreEqual("05_-_Default_mtl_material0", colladaData.DaeObject.Library_Effects.Effect[11].Name);
+
+        var visualSceneLibrary = colladaData.DaeObject.Library_Visual_Scene.Visual_Scene[0];
+        var imageLibrary = colladaData.DaeObject.Library_Images;
+
+        Assert.AreEqual(0, colladaData.DaeObject.Library_Images.Image.Length);
+        Assert.AreEqual("mechDefault_mtl_material0", colladaData.DaeObject.Library_Materials.Material[0].Name);
+        Assert.AreEqual("mechDefault_mtl_material0-material", colladaData.DaeObject.Library_Materials.Material[0].ID);
+        Assert.AreEqual(16, colladaData.DaeObject.Library_Materials.Material.Length);
+        // library_effects
+        Assert.AreEqual("mechDefault_mtl_material0", colladaData.DaeObject.Library_Effects.Effect[0].Name);
+        Assert.AreEqual("mechDefault_mtl_material1", colladaData.DaeObject.Library_Effects.Effect[1].Name);
+        Assert.AreEqual("mechDefault_mtl_material0-effect", colladaData.DaeObject.Library_Effects.Effect[0].ID);
+
+        // library_geometries
+        Assert.AreEqual("mechDefault_mtl_material4-material", colladaData.DaeObject.Library_Geometries.Geometry[0].Mesh.Triangles[0].Material);
+        Assert.AreEqual("05_-_Default_mtl_material4-material", colladaData.DaeObject.Library_Geometries.Geometry[1].Mesh.Triangles[0].Material);
+        Assert.AreEqual("mechDefault_mtl_material2-material", colladaData.DaeObject.Library_Geometries.Geometry[2].Mesh.Triangles[0].Material);
+        Assert.AreEqual("05_-_Default_mtl_material4-material", colladaData.DaeObject.Library_Geometries.Geometry[1].Mesh.Triangles[0].Material);
+        Assert.AreEqual("mechDefault_mtl_material2-material", colladaData.DaeObject.Library_Geometries.Geometry[2].Mesh.Triangles[0].Material);
+
+        // Verify visual scene material ids are set right
+        // bh1
+        Assert.AreEqual("adr_right_torso_uac20_bh1", visualSceneLibrary.Node[0].Name);
+        Assert.AreEqual("mechDefault_mtl_material4-material", visualSceneLibrary.Node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+        Assert.AreEqual("#mechDefault_mtl_material4-material", visualSceneLibrary.Node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
+        // mount
+        Assert.AreEqual("adr_right_torso_uac20_bh1_mount", visualSceneLibrary.Node[0].node[3].Name);
+        Assert.AreEqual("mechDefault_mtl_material2-material", visualSceneLibrary.Node[0].node[3].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+        // barrel
+        Assert.AreEqual("barrel013", visualSceneLibrary.Node[0].node[0].node[0].Name);
+        Assert.AreEqual("05_-_Default_mtl_material4-material", visualSceneLibrary.Node[0].node[0].node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+        // animations (no bind_mat)
+        Assert.AreEqual("animation068", visualSceneLibrary.Node[0].node[0].Name);
+        Assert.IsNull(visualSceneLibrary.Node[0].node[0].Instance_Geometry);
     }
 
     [TestMethod]
@@ -357,7 +391,7 @@ public class MWOIntegrationTests
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[5]);
         cryData.ProcessCryengineFiles();
-        Assert.AreEqual(@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.mtl", cryData.MaterialFiles.First());
+        Assert.AreEqual(@"50calnecklace_a.mtl", cryData.MaterialFiles.First());
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
@@ -374,7 +408,7 @@ public class MWOIntegrationTests
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[5]);
         cryData.ProcessCryengineFiles();
-        Assert.AreEqual(@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.mtl", cryData.MaterialFiles.First());
+        Assert.AreEqual(@"/50calnecklace_a.mtl", cryData.MaterialFiles.First());
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
@@ -391,7 +425,7 @@ public class MWOIntegrationTests
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[5]);
         cryData.ProcessCryengineFiles();
-        Assert.AreEqual(@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.mtl", cryData.MaterialFiles.First());
+        Assert.AreEqual(@"./50calnecklace_a.mtl", cryData.MaterialFiles.First());
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
@@ -652,18 +686,8 @@ public class MWOIntegrationTests
         Assert.AreEqual("#hbr_right_torso-mesh", node.Instance_Geometry[0].URL);
         Assert.AreEqual(1, node.Instance_Geometry[0].Bind_Material.Length);
         Assert.AreEqual(1, node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material.Length);
-        Assert.AreEqual("mechDefault_mtl_material0", node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
-        Assert.AreEqual("#mechDefault_mtl_material0", node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
-        // library_materials Check
-        int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-        var materials = colladaData.DaeObject.Library_Materials;
-        Assert.AreEqual(5, actualMaterialsCount);
-        Assert.AreEqual("material0-material", materials.Material[0].ID);
-        Assert.AreEqual("material1-material", materials.Material[1].ID);
-        Assert.AreEqual("material2-material", materials.Material[2].ID);
-        Assert.AreEqual("#material0-effect", materials.Material[0].Instance_Effect.URL);
-        Assert.AreEqual("#material1-effect", materials.Material[1].Instance_Effect.URL);
-        Assert.AreEqual("#material4-effect", materials.Material[4].Instance_Effect.URL);
+        Assert.AreEqual("mechDefault_mtl_material0-material", node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+        Assert.AreEqual("#mechDefault_mtl_material0-material", node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
 
         // library_geometries check
         Assert.AreEqual(1, colladaData.DaeObject.Library_Geometries.Geometry.Length);
@@ -678,7 +702,7 @@ public class MWOIntegrationTests
         var vertices = geometry.Mesh.Vertices;
         var triangles = geometry.Mesh.Triangles;
         // Triangles check
-        Assert.AreEqual("mechDefault_mtl_material0", triangles[0].Material);
+        Assert.AreEqual("mechDefault_mtl_material0-material", triangles[0].Material);
         Assert.AreEqual("#hbr_right_torso-mesh-pos", vertices.Input[0].source);
         Assert.IsTrue(triangles[0].P.Value_As_String.StartsWith("0 0 0 1 1 1 2 2 2 3 3 3 4 4 4 5 5 5 5 5 5 6 6 6 3 3 3 7 7 7 8 8 8 9 9 9 9 9 9"));
         // Source check

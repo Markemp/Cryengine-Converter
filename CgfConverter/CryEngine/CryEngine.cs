@@ -216,11 +216,12 @@ public partial class CryEngine
                 {
                     var materials = MaterialUtilities.FromStream(PackFileSystem.GetStream(fullyQualifiedMaterialFile), materialFile, true);
                     Materials.Add(key, materials);
-                    AssignMaterialToNodes(key, materials);
+                
                 }
                 else
                     Log.W("Unable to find provided material file {0}.  Checking material library chunks for materials.", materialFile);
             }
+            AssignMaterialsToNodes();
             return;
         }
 
@@ -247,7 +248,6 @@ public partial class CryEngine
                 {
                     var materials = MaterialUtilities.FromStream(PackFileSystem.GetStream(fullyQualifiedMaterialFile), materialFile, true);
                     Materials.Add(key, MaterialUtilities.FromStream(PackFileSystem.GetStream(fullyQualifiedMaterialFile), materialFile, true));
-                    AssignMaterialToNodes(key, materials);
                 }
             }
         }
@@ -266,22 +266,61 @@ public partial class CryEngine
                     MaterialFiles.Add(materialFile);
                     var materials = CreateDefaultMaterials(numberOfMaterials);
                     Materials.Add(key, materials);
-                    AssignMaterialToNodes(key, materials);
                 }
             }
         }
+        AssignMaterialsToNodes(false);
     }
 
-    private void AssignMaterialToNodes(string key, Material materials)
+    private void AssignMaterialsToNodes(bool mtlFilesProvided = true)
     {
-        foreach (var node in NodeMap.Values)
+        if (mtlFilesProvided)
         {
-            var mtlNameChunk = Chunks.OfType<ChunkMtlName>().Where(x => x.ID == node.MatID).FirstOrDefault();
-            var mtlNameKey = mtlNameChunk?.Name ?? "default";
+            foreach (var node in NodeMap.Values.Where(x => x.MatID != 0))
+            {
+                if (MaterialFiles.Count == 1)
+                {
+                    node.MaterialFileName = Path.GetFileNameWithoutExtension(MaterialFiles[0]);
+                    node.Materials = Materials.Values.First();
+                    continue;
+                }
 
-            node.MaterialFileName = key;
-            node.Materials = materials;
+                var mtlNameChunk = Chunks.OfType<ChunkMtlName>().Where(x => x.ID == node.MatID).FirstOrDefault();
+                var mtlNameKey = Path.GetFileNameWithoutExtension(mtlNameChunk?.Name) ?? "default";
+
+                if (Materials.ContainsKey(mtlNameKey))
+                {
+                    node.MaterialFileName = mtlNameKey;
+                    node.Materials = Materials[mtlNameKey];
+                }
+                else
+                {
+                    node.MaterialFileName = Materials.FirstOrDefault().Key;
+                    node.Materials = Materials.FirstOrDefault().Value;
+                }
+            }
         }
+        else
+        {
+            foreach (var node in NodeMap.Values.Where(x => x.MatID != 0))
+            {
+                var mtlNameChunk = Chunks.OfType<ChunkMtlName>().Where(x => x.ID == node.MatID).FirstOrDefault();
+                var mtlNameKey = Path.GetFileNameWithoutExtension(mtlNameChunk?.Name) ?? "default";
+
+                if (Materials.ContainsKey(mtlNameKey))
+                {
+                    node.MaterialFileName = mtlNameKey;
+                    node.Materials = Materials[mtlNameKey];
+                }
+                else
+                {
+                    node.MaterialFileName = Materials.FirstOrDefault().Key;
+                    node.Materials = Materials.FirstOrDefault().Value;
+                }
+                
+            }
+        }
+
     }
 
     private string? GetFullMaterialFilePath(string materialFile)

@@ -126,20 +126,14 @@ public class ColladaModelRenderer : IRenderer
         {
             Revision = Assembly.GetExecutingAssembly().GetName().Version.ToString()
         };
-        ColladaAssetContributor[] contributors = new ColladaAssetContributor[2];
-        contributors[0] = new ColladaAssetContributor
-        {
-            Author = "Heffay",
-            Author_Website = "https://github.com/Markemp/Cryengine-Converter",
-            Author_Email = "markemp@gmail.com",
-            Source_Data = _cryData.RootNode?.Name ?? Path.GetFileNameWithoutExtension(_cryData.InputFile)
-        };
+        ColladaAssetContributor[] contributors = new ColladaAssetContributor[1];
         // Get the actual file creators from the Source Chunk
-        contributors[1] = new ColladaAssetContributor();
+        contributors[0] = new ColladaAssetContributor();
         foreach (ChunkSourceInfo sourceInfo in _cryData.Chunks.Where(a => a.ChunkType == ChunkType.SourceInfo))
         {
-            contributors[1].Author = sourceInfo.Author;
-            contributors[1].Source_Data = sourceInfo.SourceFile;
+            contributors[0].Author = sourceInfo.Author;
+            contributors[0].Source_Data = sourceInfo.SourceFile;
+            contributors[0].Source_Data = _cryData.RootNode?.Name ?? Path.GetFileNameWithoutExtension(_cryData.InputFile);
         }
         asset.Created = fileCreated;
         asset.Modified = fileModified;

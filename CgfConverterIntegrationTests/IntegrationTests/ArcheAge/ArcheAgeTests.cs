@@ -4,6 +4,7 @@ using CgfConverterTests.TestUtilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Globalization;
+using System.Linq;
 using System.Threading;
 
 namespace CgfConverterTests.IntegrationTests;
@@ -125,6 +126,7 @@ public class ArcheAgeTests
     public void Basket_Mix_Ani_Cga()
     {
         // 2 material files used in this model.  Make sure both are loaded.
+        // THe textures for the basket mtl file are missing.
         var args = new string[]
         {
             @"D:\depot\archeage\game\objects\env\01_nuia\001_housing\01_tools\basket_mix_ani.cga",
@@ -135,11 +137,82 @@ public class ArcheAgeTests
 
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[5]);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+        var imageLibrary = daeObject.Library_Images;
+        var materialLibrary = daeObject.Library_Materials;
+        var effectLibrary = daeObject.Library_Effects;
+        var visualSceneLibrary = daeObject.Library_Visual_Scene;
+
+        // Material library checks
+        Assert.AreEqual(5, materialLibrary.Material.Length);
+        Assert.AreEqual("basket_mix_mtl_basket_mix-material", materialLibrary.Material[0].ID);
+        Assert.AreEqual("#basket_mix_mtl_basket_mix-effect", materialLibrary.Material[0].Instance_Effect.URL);
+        // Library images checks
+        Assert.AreEqual(7, imageLibrary.Image.Length);
+        Assert.AreEqual("tool_farm_d_mtl_wood_Diffuse", imageLibrary.Image[3].Name);
+        //Assert.AreEqual(@"game\objects\env\01_nuia\001_housing\01_tools\basket_mix_df.dds", imageLibrary.Image[0].Init_From.Uri);
+        // Library effects checks
+        Assert.AreEqual(5, effectLibrary.Effect.Length);
+        Assert.AreEqual("basket_mix_mtl_basket_mix-effect", effectLibrary.Effect[0].ID);
+        Assert.AreEqual("basket_mix_mtl_basket_mix_Diffuse-sampler", effectLibrary.Effect[0].Profile_COMMON[0].Technique.Phong.Diffuse.Texture.Texture);
+        Assert.AreEqual(6, effectLibrary.Effect[0].Profile_COMMON[0].New_Param.Length);
+        // Library visual scenes checks
+        Assert.AreEqual(1, visualSceneLibrary.Visual_Scene.Length);
+        Assert.AreEqual("basket_mix_ani", visualSceneLibrary.Visual_Scene[0].Node[0].Name);
+        Assert.AreEqual("basket_mix_ani", visualSceneLibrary.Visual_Scene[0].Node[0].Instance_Geometry[0].Name);
+        Assert.AreEqual("#basket_mix_ani-mesh", visualSceneLibrary.Visual_Scene[0].Node[0].Instance_Geometry[0].URL);
+        Assert.AreEqual("#basket_mix_mtl_basket_mix-material", visualSceneLibrary.Visual_Scene[0].Node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
+        Assert.AreEqual("#basket_mix_mtl_proxy-material", visualSceneLibrary.Visual_Scene[0].Node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[1].Target);
+    }
+
+    [TestMethod]
+    public void Basket_Mix_Ani_Cga_NoMtlFileProvided()
+    {
+        // 2 material files used in this model.  Make sure both are loaded.
+        var args = new string[]
+        {
+            @"D:\depot\archeage\game\objects\env\01_nuia\001_housing\01_tools\basket_mix_ani.cga",
+            "-dds",
+            "-obj", objectDir
+        };
+
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
         var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+        var imageLibrary = daeObject.Library_Images;
+        var materialLibrary = daeObject.Library_Materials;
+        var effectLibrary = daeObject.Library_Effects;
+        var visualSceneLibrary = daeObject.Library_Visual_Scene;
+
+        // Material library checks
+        Assert.AreEqual(5, materialLibrary.Material.Length);
+        Assert.AreEqual("basket_mix_mtl_basket_mix-material", materialLibrary.Material[0].ID);
+        Assert.AreEqual("#basket_mix_mtl_basket_mix-effect", materialLibrary.Material[0].Instance_Effect.URL);
+        // Library images checks
+        Assert.AreEqual(7, imageLibrary.Image.Length);
+        Assert.AreEqual("tool_farm_d_mtl_wood_Diffuse", imageLibrary.Image[3].Name);
+        //Assert.AreEqual(@"game\objects\env\01_nuia\001_housing\01_tools\basket_mix_df.dds", imageLibrary.Image[0].Init_From.Uri);
+        // Library effects checks
+        Assert.AreEqual(5, effectLibrary.Effect.Length);
+        Assert.AreEqual("basket_mix_mtl_basket_mix-effect", effectLibrary.Effect[0].ID);
+        Assert.AreEqual("basket_mix_mtl_basket_mix_Diffuse-sampler", effectLibrary.Effect[0].Profile_COMMON[0].Technique.Phong.Diffuse.Texture.Texture);
+        Assert.AreEqual(6, effectLibrary.Effect[0].Profile_COMMON[0].New_Param.Length);
+        // Library visual scenes checks
+        Assert.AreEqual(1, visualSceneLibrary.Visual_Scene.Length);
+        Assert.AreEqual("basket_mix_ani", visualSceneLibrary.Visual_Scene[0].Node[0].Name);
+        Assert.AreEqual("basket_mix_ani", visualSceneLibrary.Visual_Scene[0].Node[0].Instance_Geometry[0].Name);
+        Assert.AreEqual("#basket_mix_ani-mesh", visualSceneLibrary.Visual_Scene[0].Node[0].Instance_Geometry[0].URL);
+        Assert.AreEqual("#basket_mix_mtl_basket_mix-material", visualSceneLibrary.Visual_Scene[0].Node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
+        Assert.AreEqual("#basket_mix_mtl_proxy-material", visualSceneLibrary.Visual_Scene[0].Node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[1].Target);
     }
 }
