@@ -350,29 +350,31 @@ public class ColladaModelRenderer : IRenderer
         return controllerAnimation;
     }
 
-    public ColladaEffect CreateColladaEffect(Material material)
+    public ColladaEffect CreateColladaEffect(string matKey, Material subMat)
     {
         //TODO: Change this so that it creates an effect for each Shader type.  Parameters will need to be passed in from the material.
+        var effectName = GetMaterialName(matKey, subMat.Name);
+
         ColladaEffect colladaEffect = new()
         {
-            ID = material.Name + "-effect",
-            Name = material.Name
+            ID = effectName + "-effect",
+            Name = effectName
         };
 
         // create the profile_common for the effect
         List<ColladaProfileCOMMON> profiles = new();
         ColladaProfileCOMMON profile = new();
-        profile.Technique = new() { sID = material.Name + "-technique" };
+        profile.Technique = new() { sID = effectName + "-technique" };
         profiles.Add(profile);
 
         // Create a list for the new_params
         List<ColladaNewParam> newparams = new();
-        for (int j = 0; j < material.Textures.Length; j++)
+        for (int j = 0; j < subMat.Textures.Length; j++)
         {
             // Add the Surface node
             ColladaNewParam texSurface = new()
             {
-                sID = material.Name + "_" + material.Textures[j].Map + "-surface"
+                sID = effectName + "_" + subMat.Textures[j].Map + "-surface"
             };
             ColladaSurface surface = new();
             texSurface.Surface = surface;
@@ -380,13 +382,13 @@ public class ColladaModelRenderer : IRenderer
             texSurface.Surface.Type = "2D";
             texSurface.Surface.Init_From = new ColladaInitFrom
             {
-                Uri = material.Name + "_" + material.Textures[j].Map
+                Uri = effectName + "_" + subMat.Textures[j].Map
             };
 
             // Add the Sampler node
             ColladaNewParam texSampler = new()
             {
-                sID = material.Name + "_" + material.Textures[j].Map + "-sampler"
+                sID = effectName + "_" + subMat.Textures[j].Map + "-sampler"
             };
             ColladaSampler2D sampler2D = new();
             texSampler.Sampler2D = sampler2D;
@@ -401,7 +403,7 @@ public class ColladaModelRenderer : IRenderer
         ColladaEffectTechniqueCOMMON technique = new();
         ColladaPhong phong = new();
         technique.Phong = phong;
-        technique.sID = material.Name + "-technique";
+        technique.sID = effectName + "-technique";
         profile.Technique = technique;
 
         phong.Diffuse = new ColladaFXCommonColorOrTextureType();
@@ -412,7 +414,7 @@ public class ColladaModelRenderer : IRenderer
         bool diffuseFound = false;
         bool specularFound = false;
 
-        foreach (var texture in material.Textures)
+        foreach (var texture in subMat.Textures)
         {
             if (texture.Map == Texture.MapTypeEnum.Diffuse)
             {
@@ -420,7 +422,7 @@ public class ColladaModelRenderer : IRenderer
                 phong.Diffuse.Texture = new ColladaTexture
                 {
                     // Texcoord is the ID of the UV source in geometries.  Not needed.
-                    Texture = material.Name + "_" + texture.Map + "-sampler",
+                    Texture = effectName + "_" + texture.Map + "-sampler",
                     TexCoord = ""
                 };
             }
@@ -430,7 +432,7 @@ public class ColladaModelRenderer : IRenderer
                 specularFound = true;
                 phong.Specular.Texture = new ColladaTexture
                 {
-                    Texture = material.Name + "_" + texture.Map + "-sampler",
+                    Texture = effectName + "_" + texture.Map + "-sampler",
                     TexCoord = ""
                 };
             }
@@ -455,7 +457,7 @@ public class ColladaModelRenderer : IRenderer
                 ColladaBumpMap bumpMap = new() { Textures = new ColladaTexture[1] };
                 bumpMap.Textures[0] = new ColladaTexture
                 {
-                    Texture = material.Name + "_" + texture.Map + "-sampler"
+                    Texture = effectName + "_" + texture.Map + "-sampler"
                 };
                 extraTechnique.Data = new XmlElement[1] { bumpMap };
             }
@@ -465,15 +467,15 @@ public class ColladaModelRenderer : IRenderer
         {
             phong.Diffuse.Color = new ColladaColor
             {
-                Value_As_String = material.Diffuse ?? string.Empty,
+                Value_As_String = subMat.Diffuse ?? string.Empty,
                 sID = "diffuse"
             };
         }
         if (specularFound == false)
         {
             phong.Specular.Color = new ColladaColor { sID = "specular" };
-            if (material.Specular != null)
-                phong.Specular.Color.Value_As_String = material.Specular ?? string.Empty;
+            if (subMat.Specular != null)
+                phong.Specular.Color.Value_As_String = subMat.Specular ?? string.Empty;
             else
                 phong.Specular.Color.Value_As_String = "1 1 1";
         }
@@ -483,12 +485,12 @@ public class ColladaModelRenderer : IRenderer
             Color = new ColladaColor
             {
                 sID = "emission",
-                Value_As_String = material.Emissive ?? string.Empty
+                Value_As_String = subMat.Emissive ?? string.Empty
             }
         };
         phong.Shininess = new ColladaFXCommonFloatOrParamType { Float = new ColladaSIDFloat() };
         phong.Shininess.Float.sID = "shininess";
-        phong.Shininess.Float.Value = (float)material.Shininess;
+        phong.Shininess.Float.Value = (float)subMat.Shininess;
         phong.Index_Of_Refraction = new ColladaFXCommonFloatOrParamType { Float = new ColladaSIDFloat() };
 
         phong.Transparent = new ColladaFXCommonColorOrTextureType
@@ -496,7 +498,7 @@ public class ColladaModelRenderer : IRenderer
             Color = new ColladaColor(),
             Opaque = new ColladaFXOpaqueChannel()
         };
-        phong.Transparent.Color.Value_As_String = (1 - double.Parse((material.Opacity == string.Empty ? "1" : material.Opacity) ?? "1")).ToString();  // Subtract from 1 for proper value.
+        phong.Transparent.Color.Value_As_String = (1 - double.Parse((subMat.Opacity == string.Empty ? "1" : subMat.Opacity) ?? "1")).ToString();  // Subtract from 1 for proper value.
 
         #endregion
 
@@ -765,10 +767,27 @@ public class ColladaModelRenderer : IRenderer
 
                     for (uint j = 0; j < meshSubsets.NumMeshSubset; j++) // Need to make a new Triangles entry for each submesh.
                     {
+                        // Find the material associated with this meshsubset and index.  Normally the nodechunk points to the mtlnamechunk, but
+                        // in mwo models it can point to mechDefault.  First check to see if the material key for the nodechunk's mtlname chunk exists.
+                        // If it does, use that material.  If not, assume just a single materialfile and use that.
+
+                        var mtlNameChunk = (ChunkMtlName)_cryData.Models[0].ChunkMap[nodeChunk.MatID];
+                        var mtlFileName = mtlNameChunk.Name;
+                        var key = Path.GetFileNameWithoutExtension(mtlFileName);
+                        Material[] submats;
+                        if (_cryData.Materials.ContainsKey(key))
+                            submats = _cryData.Materials[key].SubMaterials;
+                        else
+                        {
+                            submats = _cryData.Materials.FirstOrDefault().Value.SubMaterials;
+                            mtlFileName = Path.GetFileNameWithoutExtension(_cryData.MaterialFiles.FirstOrDefault());
+                        }
+
                         triangles[j] = new ColladaTriangles
                         {
                             Count = meshSubsets.MeshSubsets[j].NumIndices / 3,
-                            Material = GetMaterialId(nodeChunk, meshSubsets, (int)j)
+                            Material = GetMaterialName(mtlFileName, submats[meshSubsets.MeshSubsets[j].MatID].Name) + "-material"
+                            //Material = GetMaterialId(nodeChunk, meshSubsets, (int)j)
                         };
 
                         // Create the inputs.  vertex, normal, texcoord, color
@@ -983,14 +1002,14 @@ public class ColladaModelRenderer : IRenderer
 
         foreach (var matKey in _cryData.Materials.Keys)
         {
-            foreach (var mat in _cryData.Materials[matKey].SubMaterials)
+            foreach (var subMat in _cryData.Materials[matKey].SubMaterials)
             {
                 // Check to see if the collada object already has a material with this name.  If not, add.
                 var matNames = DaeObject.Library_Materials.Material.Select(c => c.Name);
-                if (!matNames.Contains(mat.Name))
+                if (!matNames.Contains(subMat.Name))
                 {
-                    colladaMaterials.Add(AddMaterialToMaterialLibrary(matKey, mat));
-                    colladaEffects.Add(CreateColladaEffect(mat));
+                    colladaMaterials.Add(AddMaterialToMaterialLibrary(matKey, subMat));
+                    colladaEffects.Add(CreateColladaEffect(matKey, subMat));
                 }
             }
         }
@@ -1011,19 +1030,20 @@ public class ColladaModelRenderer : IRenderer
 
     private ColladaMaterial AddMaterialToMaterialLibrary(string matKey, Material submat)
     {
+        var matName = GetMaterialName(matKey, submat?.Name ?? "unknown");
         ColladaMaterial material = new()
         {
             Instance_Effect = new ColladaInstanceEffect(),
-            Name = GetMaterialName(matKey, submat?.Name ?? "unknown"),
-            ID = (submat?.Name ?? "unknown") + "-material"
+            Name = matName,
+            ID = matName + "-material"
         };
-        material.Instance_Effect.URL = "#" + (submat?.Name ?? "unknown") + "-effect";
+        material.Instance_Effect.URL = "#" + matName + "-effect";
 
-        AddImagesToImagesLibrary(submat);
+        AddTexturesToTextureLibrary(matKey, submat);
         return material;
     }
 
-    private void AddImagesToImagesLibrary(Material submat)
+    private void AddTexturesToTextureLibrary(string matKey, Material submat)
     {
         List<ColladaImage> imageList = new();
         int numberOfTextures = submat.Textures?.Length ?? 0;
@@ -1031,13 +1051,14 @@ public class ColladaModelRenderer : IRenderer
         for (int i = 0; i < numberOfTextures; i++)
         {
             // For each texture in the material, we make a new <image> object and add it to the list.
+            var name = GetMaterialName(matKey, submat.Name);
             ColladaImage image = new()
             {
-                ID = submat.Name + "_" + submat.Textures[i].Map,
-                Name = submat.Name + "_" + submat.Textures[i].Map,
+                ID = name + "_" + submat.Textures[i].Map,
+                Name = name + "_" + submat.Textures[i].Map,
                 Init_From = new ColladaInitFrom()
             };
-            // Try to resolve the texture file to a file on disk. Texture are always based on DataDir.
+            // TODO: Refactor to use fully qualified path, and to use Pack File System.
             var textureFile = ResolveTextureFile(submat.Textures[i].File, _args.PackFileSystem, _args.DataDirs);
 
             if (_args.PngTextures && File.Exists(Path.ChangeExtension(textureFile, ".png")))
@@ -1384,12 +1405,13 @@ public class ColladaModelRenderer : IRenderer
         ChunkMesh meshNode;
         ChunkMeshSubsets submeshNode;
 
+        ChunkMtlName mtlNameChunk = (ChunkMtlName)_cryData.Models[0].ChunkMap[node.MatID];
+        
         if (_cryData.Models.Count > 1)
         {
             // Find the node in model[1] that has the same name as the node.
             var geoNode = _cryData.Models[1].NodeMap.Values.Where(a => a.Name == node.Name).FirstOrDefault();
             meshNode = (ChunkMesh)_cryData.Models.Last().ChunkMap[geoNode.ObjectNodeID];
-            //meshNode = (ChunkMesh)_cryData.Models.Last().ChunkMap[node.ObjectNodeID];
             submeshNode = (ChunkMeshSubsets)_cryData.Models.Last().ChunkMap[meshNode.MeshSubsetsData];
         }
         else
@@ -1403,8 +1425,8 @@ public class ColladaModelRenderer : IRenderer
             var matName = GetMaterialId(node, submeshNode, i);
 
             ColladaInstanceMaterialGeometry instanceMaterial = new();
-            instanceMaterial.Target = $"#{matName}";
-            instanceMaterial.Symbol = matName;
+            instanceMaterial.Target = $"#{matName}-material";
+            instanceMaterial.Symbol = $"{matName}-material";
             instanceMaterials.Add(instanceMaterial);
         }
 
@@ -1614,33 +1636,48 @@ public class ColladaModelRenderer : IRenderer
     /// <summary>Get the material name for a given submesh.</summary>
     private string? GetMaterialId(ChunkNode nodeChunk, ChunkMeshSubsets meshSubsets, int index)
     {
-        var materialName = _cryData.MaterialFiles.First();   //  TODO:  Fix this.  Find the right mtl chunk.
-        var key = Path.GetFileNameWithoutExtension(materialName);
-        var materials = _cryData.Materials[key].SubMaterials;
+        // material id is <node.MaterialFileName>_mtl_<submatName>
+        var materialFileName = nodeChunk.MaterialFileName;  // also the key in Materials
+        var matindex = meshSubsets.MeshSubsets[index].MatID;
 
-        var materialLibraryIndex = meshSubsets.MeshSubsets[index].MatID;
+        var materialName = _cryData.Materials[materialFileName].SubMaterials?[matindex].Name;
+        return GetMaterialName(materialFileName, materialName ?? "unknown");
 
-        if (materials is not null)
-        {
-            if (materialLibraryIndex >= materials.Length)
-            {
-                Log(LogLevelEnum.Warning, $"Attempting to assign material beyond the list of given materials for node ${nodeChunk.Name} with id {nodeChunk.ID}.  Assigning first material.\nCheck if material file is missing.");
-                return materials[0].Name + "-material";
-            }
-            var material = materials[materialLibraryIndex];
-            return material.Name + "-material";
-        }
-        else
-            Log(LogLevelEnum.Debug, $"Unable to find submaterials for node chunk ${nodeChunk.Name}");
+        //var mtlNameChunkId = nodeChunk.MatID;
+        //var mtlNameChunk = (ChunkMtlName)_cryData.Models[0].ChunkMap[mtlNameChunkId];
+        //var mtlName = mtlNameChunk.Name;
 
-        return null;
+        //var materialName = _cryData.MaterialFiles?.FirstOrDefault() ?? _cryData.Name; // default mtls use model name
+        //if (materialName is null)
+        //    return null;
+
+        //var key = Path.GetFileNameWithoutExtension(mtlName);
+        //var submats = _cryData.Materials[key].SubMaterials;
+
+        //var materialLibraryIndex = meshSubsets.MeshSubsets[index].MatID;
+
+        //if (submats is not null)
+        //{
+        //    if (materialLibraryIndex >= submats.Length)
+        //    {
+        //        Log(LogLevelEnum.Warning, $"Attempting to assign material beyond the list of given materials for node ${nodeChunk.Name} with id {nodeChunk.ID}.  Assigning first material.\nCheck if material file is missing.");
+        //        return submats[0].Name + "-material";
+        //    }
+        //    var material = submats[materialLibraryIndex];
+        //    return GetMaterialName(key, material.Name);
+        //}
+        //else
+        //    Log(LogLevelEnum.Debug, $"Unable to find submaterials for node chunk ${nodeChunk.Name}");
+
+        //return null;
     }
 
-    private string? GetMaterialName(string matKey, string materialName)
+    private string GetMaterialName(string matKey, string submatName)
     {
+        // material name is <mtlChunkName>_mtl_<submatName>
         var matfileName = Path.GetFileNameWithoutExtension(matKey);
 
-        return $"{matfileName}_mtl_{materialName}".Replace(' ', '_');
+        return $"{matfileName}_mtl_{submatName}".Replace(' ', '_');
     }
 
     private static string CreateStringFromVector3(Vector3 vector)

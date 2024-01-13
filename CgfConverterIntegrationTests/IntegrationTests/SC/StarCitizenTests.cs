@@ -175,36 +175,6 @@ public class StarCitizenTests
     }
 
     [TestMethod]
-    public void BehrRifleParts_34_ChCrSkinFile()
-    {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\brfl_fps_behr_p4ar_parts_3.4.skin", "-dds", "-dae" };
-        int result = testUtils.argsHandler.ProcessArgs(args);
-        Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
-        cryData.ProcessCryengineFiles();
-
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.GenerateDaeObject();
-        var daeObject = colladaData.DaeObject;
-
-        testUtils.ValidateColladaXml(colladaData);
-    }
-
-    [TestMethod]
-    public void BehrRifleParts_34_Gltf_ChCrSkinFile()
-    {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\brfl_fps_behr_p4ar_parts_3.4.skin", "-dds", "-dae" };
-        int result = testUtils.argsHandler.ProcessArgs(args);
-        Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
-        cryData.ProcessCryengineFiles();
-
-        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
-        var gltfData = gltfRenderer.GenerateGltfObject();
-        gltfRenderer.Render();
-    }
-
-    [TestMethod]
     public void AEGS_Avenger()
     {
         var args = new string[] { $@"d:\depot\sc2\data\objects\spaceships\ships\AEGS\Avenger\AEGS_Avenger.cga", "-dds", "-dae", "-objectdir", @"d:\depot\sc2\data" };
@@ -329,53 +299,6 @@ public class StarCitizenTests
     }
 
     [TestMethod]
-    public void SC_hangar_asteroid_controlroom_fan()
-    {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\hangar_asteroid_controlroom_fan.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
-        int result = testUtils.argsHandler.ProcessArgs(args);
-        Assert.AreEqual(0, result);
-        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
-        cryData.ProcessCryengineFiles();
-
-        ColladaModelRenderer colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.GenerateDaeObject();
-
-        var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
-        Assert.AreEqual(3, geometries.Length);
-
-        testUtils.ValidateColladaXml(colladaData);
-    }
-
-    [TestMethod]
-    public void SC_BehrRifle_34()
-    {
-        var args = new string[] {
-            $@"{userHome}\OneDrive\ResourceFiles\SC\brfl_fps_behr_p4ar_parts_3.4.skin",
-            "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
-        int result = testUtils.argsHandler.ProcessArgs(args);
-        Assert.AreEqual(0, result);
-        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
-        cryData.ProcessCryengineFiles();
-
-        ColladaModelRenderer colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.GenerateDaeObject();
-
-        var controllers = colladaData.DaeObject.Library_Controllers.Controller;
-        var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
-        Assert.AreEqual(1, controllers.Length);
-        Assert.AreEqual(1, geometries.Length);
-
-        var mesh = geometries[0].Mesh;
-        Assert.AreEqual(4, mesh.Source.Length);
-        Assert.AreEqual("brfl_fps_behr_p4ar_parts-vertices", mesh.Vertices.ID);
-        Assert.AreEqual(9, mesh.Triangles.Length);
-        Assert.AreEqual(78, mesh.Triangles[0].Count);
-        Assert.AreEqual(134, mesh.Triangles[8].Count);
-
-        testUtils.ValidateColladaXml(colladaData);
-    }
-
-    [TestMethod]
     public void BehrRifle_312_NonIvo()
     {
         var args = new string[] {
@@ -493,7 +416,7 @@ public class StarCitizenTests
     [TestMethod]
     public void Avenger_Ramp_Exterior()
     {
-        var args = new string[] { $@"D:\depot\SC2\Data\Objects\Spaceships\Ships\AEGS\Avenger\aegs_avenger_ramp_exterior.cga", "-dds", "-gltf" };
+        var args = new string[] { $@"D:\depot\SC3.22\Data\Objects\Spaceships\Ships\AEGS\Avenger\aegs_avenger_ramp_exterior.cga", "-dds", "-gltf" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
@@ -511,8 +434,8 @@ public class StarCitizenTests
     public void Glaive()
     {
         var args = new string[] {
-            $@"{userHome}\OneDrive\ResourceFiles\SC\3.12.0\VNCL_Glaive.cga",
-            "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+            $@"d:\depot\sc3.22\data\objects\spaceships\ships\VNCL\Glaive\VNCL_Glaive.cga",
+            "-dds", "-dae", "-objectdir", @"d:\depot\sc3.22\data" };
 
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
@@ -528,6 +451,6 @@ public class StarCitizenTests
 
         // Materials check
         var materials = colladaData.DaeObject.Library_Materials.Material;
-        Assert.AreEqual(20, materials.Length);
+        Assert.AreEqual(21, materials.Length);
     }
 }

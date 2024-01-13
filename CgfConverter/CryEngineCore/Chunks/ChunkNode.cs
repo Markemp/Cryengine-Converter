@@ -27,7 +27,9 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
     public int PropertyStringLength { get; internal set; }
 
     /// <summary>Computed from material file. Not set for helper nodes, etc.</summary>
-    public Material? Materials { get; internal set; }
+    public Material Materials { get; internal set; } = new();
+    /// <summary>Name of the material library file.</summary>
+    public string MaterialFileName { get; internal set; } = string.Empty;
 
     public Matrix4x4 LocalTransform => Matrix4x4.Transpose(Transform);
 
@@ -69,8 +71,6 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
             return _objectChunk;
         }
     }
-
-    public ChunkMtlName? MaterialLibraryChunk => (ChunkMtlName?)_model.ChunkMap.Values.FirstOrDefault(c => c.ID == MatID);
 
     public IEnumerable<ChunkNode> AllChildNodes => _model.NodeMap.Values.Where(a => a.ParentNodeID == ID);
 

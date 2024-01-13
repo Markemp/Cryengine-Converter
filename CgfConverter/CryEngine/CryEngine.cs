@@ -40,6 +40,9 @@ public partial class CryEngine
     public IPackFileSystem PackFileSystem { get; internal set; }
     public List<string>? MaterialFiles { get; set; }
     public string? ObjectDir { get; set; }
+
+    /// <summary>Dictionary of Materials.  Key is the mtlName chunk Name property (stripped of path and
+    /// extension info), or the material file if provided.</summary>
     public Dictionary<string, Material> Materials { get; internal set; } = new();
 
     public List<Chunk> Chunks {
@@ -210,7 +213,11 @@ public partial class CryEngine
                 var key = Path.GetFileNameWithoutExtension(materialFile);
                 var fullyQualifiedMaterialFile = GetFullMaterialFilePath(materialFile);
                 if (fullyQualifiedMaterialFile is not null)
-                    Materials.Add(key, MaterialUtilities.FromStream(PackFileSystem.GetStream(fullyQualifiedMaterialFile), materialFile, true));
+                {
+                    var materials = MaterialUtilities.FromStream(PackFileSystem.GetStream(fullyQualifiedMaterialFile), materialFile, true);
+                    Materials.Add(key, materials);
+                    AssignMaterialToNodes(key, materials);
+                }
                 else
                     Log.W("Unable to find provided material file {0}.  Checking material library chunks for materials.", materialFile);
             }
@@ -236,19 +243,44 @@ public partial class CryEngine
             {
                 var key = Path.GetFileNameWithoutExtension(materialFile);
                 var fullyQualifiedMaterialFile = GetFullMaterialFilePath(materialFile);
-                Materials.Add(key, MaterialUtilities.FromStream(PackFileSystem.GetStream(fullyQualifiedMaterialFile), materialFile, true));
+                if (fullyQualifiedMaterialFile is not null)
+                {
+                    var materials = MaterialUtilities.FromStream(PackFileSystem.GetStream(fullyQualifiedMaterialFile), materialFile, true);
+                    Materials.Add(key, MaterialUtilities.FromStream(PackFileSystem.GetStream(fullyQualifiedMaterialFile), materialFile, true));
+                    AssignMaterialToNodes(key, materials);
+                }
             }
         }
 
         // Unable to find any materials.  Create default mats for each library file.
         if (Materials.Count == 0)
         {
-            var maxNumberOfMaterials = Models[0].ChunkMap.Values.OfType<ChunkMtlName>().Max(c => c.NumChildren);
-            foreach (var matFile in MaterialFiles)
+            foreach (var materialFile in materialLibraryFiles)
             {
-                var key = Path.GetFileNameWithoutExtension(matFile);
-                Materials.Add(key, CreateDefaultMaterials(maxNumberOfMaterials));
+                var key = Path.GetFileNameWithoutExtension(materialFile);
+                var numberOfMaterials =(uint)Models[0].ChunkMap.Values.OfType<ChunkMtlName>()
+                    .Where(c => c.Name == materialFile)
+                    .Select(x => x.NumChildren).Max();
+                if (numberOfMaterials != 0 && !Materials.ContainsKey(key))
+                {
+                    MaterialFiles.Add(materialFile);
+                    var materials = CreateDefaultMaterials(numberOfMaterials);
+                    Materials.Add(key, materials);
+                    AssignMaterialToNodes(key, materials);
+                }
             }
+        }
+    }
+
+    private void AssignMaterialToNodes(string key, Material materials)
+    {
+        foreach (var node in NodeMap.Values)
+        {
+            var mtlNameChunk = Chunks.OfType<ChunkMtlName>().Where(x => x.ID == node.MatID).FirstOrDefault();
+            var mtlNameKey = mtlNameChunk?.Name ?? "default";
+
+            node.MaterialFileName = key;
+            node.Materials = materials;
         }
     }
 
@@ -283,7 +315,7 @@ public partial class CryEngine
         };
 
         for (var i = 0; i < maxNumberOfMaterials; i++)
-            materials.SubMaterials[i] = MaterialUtilities.CreateDefaultMaterial($"{Name}-material-{i}", $"{i / (float)maxNumberOfMaterials},0.5,0.5");
+            materials.SubMaterials[i] = MaterialUtilities.CreateDefaultMaterial($"material{i}", $"{i / (float)maxNumberOfMaterials},0.5,0.5");
 
         return materials;
     }

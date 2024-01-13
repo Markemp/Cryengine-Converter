@@ -214,7 +214,7 @@ public class MWOIntegrationTests
     [TestMethod]
     public void adr_right_torso_uac20_bh1()
     {
-        // This model has 4 mtl files, all variations of mechdefault.  Only default materials are created since no mtl can be found or is provided.
+        // This model has 4 mtl files, all variations of mechdefault.  No mtl file provided, so it should create default materials only.
         var args = new string[] { $@"d:\depot\mwo\objects\mechs\adder\body\adr_right_torso_uac20_bh1.cga", "-dds", "-dae", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
@@ -226,7 +226,13 @@ public class MWOIntegrationTests
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         Assert.AreEqual(0, colladaData.DaeObject.Library_Images.Image.Length);
-        Assert.AreEqual(11, colladaData.DaeObject.Library_Materials.Material.Length);  // max number of materials found in bad MtlName chunks
+        Assert.AreEqual(16, colladaData.DaeObject.Library_Materials.Material.Length); // default materials
+        Assert.AreEqual("mechDefault_mtl_material0", colladaData.DaeObject.Library_Materials.Material[0].Name);
+        Assert.AreEqual("05_-_Default_mtl_material0", colladaData.DaeObject.Library_Materials.Material[11].Name);
+        Assert.AreEqual(0, colladaData.DaeObject.Library_Images.Image.Length);
+        Assert.AreEqual("mechDefault_mtl_material0", colladaData.DaeObject.Library_Effects.Effect[0].Name);
+        Assert.AreEqual("mechDefault_mtl_material0-effect", colladaData.DaeObject.Library_Effects.Effect[0].ID);
+        Assert.AreEqual("05_-_Default_mtl_material0", colladaData.DaeObject.Library_Effects.Effect[11].Name);
     }
 
     [TestMethod]
@@ -244,8 +250,41 @@ public class MWOIntegrationTests
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
+
+        var visualSceneLibrary = colladaData.DaeObject.Library_Visual_Scene.Visual_Scene[0];
+        var imageLibrary = colladaData.DaeObject.Library_Images;
+
         Assert.AreEqual(28, colladaData.DaeObject.Library_Images.Image.Length);
+        Assert.AreEqual("adder_body_mtl_adder_body", colladaData.DaeObject.Library_Materials.Material[0].Name);
+        Assert.AreEqual("adder_body_mtl_adder_body-material", colladaData.DaeObject.Library_Materials.Material[0].ID);
         Assert.AreEqual(5, colladaData.DaeObject.Library_Materials.Material.Length);
+        // library_effects
+        Assert.AreEqual("adder_body_mtl_adder_body", colladaData.DaeObject.Library_Effects.Effect[0].Name);
+        Assert.AreEqual("adder_body_mtl_decals", colladaData.DaeObject.Library_Effects.Effect[1].Name);
+        Assert.AreEqual("adder_body_mtl_adder_body-effect", colladaData.DaeObject.Library_Effects.Effect[0].ID);
+
+        // library_geometries
+        Assert.AreEqual("adder_body_mtl_generic-material", colladaData.DaeObject.Library_Geometries.Geometry[0].Mesh.Triangles[0].Material);
+        Assert.AreEqual("adder_body_mtl_generic-material", colladaData.DaeObject.Library_Geometries.Geometry[1].Mesh.Triangles[0].Material);
+        Assert.AreEqual("adder_body_mtl_adder_variant-material", colladaData.DaeObject.Library_Geometries.Geometry[2].Mesh.Triangles[0].Material);
+        Assert.AreEqual("adder_body_mtl_generic-material", colladaData.DaeObject.Library_Geometries.Geometry[1].Mesh.Triangles[0].Material);
+        Assert.AreEqual("adder_body_mtl_adder_variant-material", colladaData.DaeObject.Library_Geometries.Geometry[2].Mesh.Triangles[0].Material);
+
+        // Verify visual scene material ids are set right
+        // bh1
+        Assert.AreEqual("adr_right_torso_uac20_bh1", visualSceneLibrary.Node[0].Name);
+        Assert.AreEqual("adder_body_mtl_generic-material", visualSceneLibrary.Node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+        Assert.AreEqual("#adder_body_mtl_generic-material", visualSceneLibrary.Node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
+        Assert.AreEqual("adder_body_mtl_generic_Diffuse", imageLibrary.Image[19].ID);
+        // mount
+        Assert.AreEqual("adr_right_torso_uac20_bh1_mount", visualSceneLibrary.Node[0].node[3].Name);
+        Assert.AreEqual("adder_body_mtl_adder_variant-material", visualSceneLibrary.Node[0].node[3].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+        // barrel
+        Assert.AreEqual("barrel013", visualSceneLibrary.Node[0].node[0].node[0].Name);
+        Assert.AreEqual("adder_body_mtl_generic-material", visualSceneLibrary.Node[0].node[0].node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+        // animations (no bind_mat)
+        Assert.AreEqual("animation068", visualSceneLibrary.Node[0].node[0].Name);
+        Assert.IsNull(visualSceneLibrary.Node[0].node[0].Instance_Geometry);
     }
 
     [TestMethod]
@@ -613,22 +652,18 @@ public class MWOIntegrationTests
         Assert.AreEqual("#hbr_right_torso-mesh", node.Instance_Geometry[0].URL);
         Assert.AreEqual(1, node.Instance_Geometry[0].Bind_Material.Length);
         Assert.AreEqual(1, node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material.Length);
-        Assert.AreEqual("hbr_right_torso-material-0-material", node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
-        Assert.AreEqual("#hbr_right_torso-material-0-material", node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
+        Assert.AreEqual("mechDefault_mtl_material0", node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+        Assert.AreEqual("#mechDefault_mtl_material0", node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
         // library_materials Check
         int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
         var materials = colladaData.DaeObject.Library_Materials;
         Assert.AreEqual(5, actualMaterialsCount);
-        Assert.AreEqual("hbr_right_torso-material-0-material", materials.Material[0].ID);
-        Assert.AreEqual("hbr_right_torso-material-1-material", materials.Material[1].ID);
-        Assert.AreEqual("hbr_right_torso-material-2-material", materials.Material[2].ID);
-        Assert.AreEqual("hbr_right_torso-material-3-material", materials.Material[3].ID);
-        Assert.AreEqual("hbr_right_torso-material-4-material", materials.Material[4].ID);
-        Assert.AreEqual("#hbr_right_torso-material-0-effect", materials.Material[0].Instance_Effect.URL);
-        Assert.AreEqual("#hbr_right_torso-material-1-effect", materials.Material[1].Instance_Effect.URL);
-        Assert.AreEqual("#hbr_right_torso-material-2-effect", materials.Material[2].Instance_Effect.URL);
-        Assert.AreEqual("#hbr_right_torso-material-3-effect", materials.Material[3].Instance_Effect.URL);
-        Assert.AreEqual("#hbr_right_torso-material-4-effect", materials.Material[4].Instance_Effect.URL);
+        Assert.AreEqual("material0-material", materials.Material[0].ID);
+        Assert.AreEqual("material1-material", materials.Material[1].ID);
+        Assert.AreEqual("material2-material", materials.Material[2].ID);
+        Assert.AreEqual("#material0-effect", materials.Material[0].Instance_Effect.URL);
+        Assert.AreEqual("#material1-effect", materials.Material[1].Instance_Effect.URL);
+        Assert.AreEqual("#material4-effect", materials.Material[4].Instance_Effect.URL);
 
         // library_geometries check
         Assert.AreEqual(1, colladaData.DaeObject.Library_Geometries.Geometry.Length);
@@ -643,7 +678,7 @@ public class MWOIntegrationTests
         var vertices = geometry.Mesh.Vertices;
         var triangles = geometry.Mesh.Triangles;
         // Triangles check
-        Assert.AreEqual("hbr_right_torso-material-0-material", triangles[0].Material);
+        Assert.AreEqual("mechDefault_mtl_material0", triangles[0].Material);
         Assert.AreEqual("#hbr_right_torso-mesh-pos", vertices.Input[0].source);
         Assert.IsTrue(triangles[0].P.Value_As_String.StartsWith("0 0 0 1 1 1 2 2 2 3 3 3 4 4 4 5 5 5 5 5 5 6 6 6 3 3 3 7 7 7 8 8 8 9 9 9 9 9 9"));
         // Source check
@@ -668,7 +703,7 @@ public class MWOIntegrationTests
     [TestMethod]
     public void HulaGirl_ColladaFormat()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\hulagirl__gold_a.cga" };
+        var args = new string[] { @"d:\depot\MWO\objects\purchasable\cockpit_standing\hulagirl\hulagirl__gold_a.cga", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
