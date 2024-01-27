@@ -16,16 +16,18 @@ public abstract class Chunk : IBinaryChunk
     internal ChunkHeader _header;
     internal Model _model;
 
-    public uint Offset { get; internal set; }
-    public ChunkType ChunkType { get; internal set; }
+
     internal uint VersionRaw;
     internal bool IsBigEndian => (VersionRaw & 0x80000000u) != 0;
     internal uint Version => VersionRaw & 0x7fffffffu;
     internal int ID;
     internal uint Size;
+
+    public uint Offset { get; internal set; }
+    public ChunkType ChunkType { get; internal set; }
     public uint DataSize { get; set; }
 
-    internal Dictionary<long, byte> SkippedBytes = new Dictionary<long, byte> { };
+    internal Dictionary<long, byte> SkippedBytes = new() { };
 
     public static Chunk New(ChunkType chunkType, uint version)
     {
@@ -186,7 +188,6 @@ public abstract class Chunk : IBinaryChunk
     }
 
     /// <summary>Gets a link to the SkinningInfo model.</summary>
-    /// <returns>Link to the SkinningInfo model.</returns>
     public SkinningInfo GetSkinningInfo()
     {
         if (_model.SkinningInfo is null)

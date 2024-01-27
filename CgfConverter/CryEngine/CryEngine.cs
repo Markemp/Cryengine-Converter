@@ -34,11 +34,12 @@ public partial class CryEngine
     public List<Model> Models { get; internal set; } = new();
     public List<Model> Animations { get; internal set; } = new();
     public ChunkNode RootNode { get; internal set; }
+    public GeometryInfo GeometryInfo { get; internal set; }
     public ChunkCompiledBones Bones { get; internal set; }
     public SkinningInfo? SkinningInfo { get; set; }
     public string InputFile { get; internal set; }
     public IPackFileSystem PackFileSystem { get; internal set; }
-    public List<string>? MaterialFiles { get; set; }
+    public List<string> MaterialFiles { get; set; } = new();
     public string? ObjectDir { get; set; }
 
     /// <summary>Dictionary of Materials.  Key is the mtlName chunk Name property (stripped of path and
@@ -255,16 +256,18 @@ public partial class CryEngine
         // Unable to find any materials.  Create default mats for each library file.
         if (Materials.Count == 0)
         {
+            var meshSubsets = Models.Last().ChunkMap.Values.OfType<ChunkMeshSubsets>()
+                .SelectMany(c => c.MeshSubsets);
+            var maxMats = (uint)meshSubsets.Select(x => x.MatID).Max() + 1;
+
             foreach (var materialFile in materialLibraryFiles)
             {
                 var key = Path.GetFileNameWithoutExtension(materialFile);
-                var numberOfMaterials =(uint)Models[0].ChunkMap.Values.OfType<ChunkMtlName>()
-                    .Where(c => c.Name == materialFile)
-                    .Select(x => x.NumChildren).Max();
-                if (numberOfMaterials != 0 && !Materials.ContainsKey(key))
+
+                if (!Materials.ContainsKey(key))
                 {
                     MaterialFiles.Add(materialFile);
-                    var materials = CreateDefaultMaterials(numberOfMaterials);
+                    var materials = CreateDefaultMaterials(maxMats);
                     Materials.Add(key, materials);
                 }
             }

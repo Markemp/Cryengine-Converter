@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace CgfConverter.CryEngineCore;
 
-public abstract class ChunkCompiledBones : Chunk     //  0xACDC0000:  Bones info
+public abstract class ChunkCompiledBones : Chunk     //  Bones info
 {
     public string RootBoneName;         // Controller ID?  Name?  Not sure yet.
     public CompiledBone RootBone;       // First bone in the data structure.
@@ -23,15 +23,6 @@ public abstract class ChunkCompiledBones : Chunk     //  0xACDC0000:  Bones info
                 childBones.Add(bone1);
         }
         return childBones;
-
-
-        //var childBones = BoneList.Where(x => x.childIDs)
-
-
-        //var boneIndex = BoneList.IndexOf(bone);
-        //var startIndex = boneIndex + bone.offsetChild;
-
-        //return BoneList.Skip(startIndex).Take(bone.numChildren).ToList();
     }
 
     public List<string> GetBoneNames() => BoneList.Select(a => a.boneName).ToList();

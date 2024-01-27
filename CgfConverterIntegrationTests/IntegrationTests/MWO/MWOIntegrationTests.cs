@@ -226,13 +226,11 @@ public class MWOIntegrationTests
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         Assert.AreEqual(0, colladaData.DaeObject.Library_Images.Image.Length);
-        Assert.AreEqual(16, colladaData.DaeObject.Library_Materials.Material.Length); // default materials
+        Assert.AreEqual(10, colladaData.DaeObject.Library_Materials.Material.Length); // default materials
         Assert.AreEqual("mechDefault_mtl_material0", colladaData.DaeObject.Library_Materials.Material[0].Name);
-        Assert.AreEqual("05_-_Default_mtl_material0", colladaData.DaeObject.Library_Materials.Material[11].Name);
         Assert.AreEqual(0, colladaData.DaeObject.Library_Images.Image.Length);
         Assert.AreEqual("mechDefault_mtl_material0", colladaData.DaeObject.Library_Effects.Effect[0].Name);
         Assert.AreEqual("mechDefault_mtl_material0-effect", colladaData.DaeObject.Library_Effects.Effect[0].ID);
-        Assert.AreEqual("05_-_Default_mtl_material0", colladaData.DaeObject.Library_Effects.Effect[11].Name);
 
         var visualSceneLibrary = colladaData.DaeObject.Library_Visual_Scene.Visual_Scene[0];
         var imageLibrary = colladaData.DaeObject.Library_Images;
@@ -240,7 +238,7 @@ public class MWOIntegrationTests
         Assert.AreEqual(0, colladaData.DaeObject.Library_Images.Image.Length);
         Assert.AreEqual("mechDefault_mtl_material0", colladaData.DaeObject.Library_Materials.Material[0].Name);
         Assert.AreEqual("mechDefault_mtl_material0-material", colladaData.DaeObject.Library_Materials.Material[0].ID);
-        Assert.AreEqual(16, colladaData.DaeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(10, colladaData.DaeObject.Library_Materials.Material.Length);
         // library_effects
         Assert.AreEqual("mechDefault_mtl_material0", colladaData.DaeObject.Library_Effects.Effect[0].Name);
         Assert.AreEqual("mechDefault_mtl_material1", colladaData.DaeObject.Library_Effects.Effect[1].Name);
