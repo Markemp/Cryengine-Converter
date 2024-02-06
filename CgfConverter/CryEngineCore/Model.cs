@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using CgfConverter.Models;
 using CgfConverter.Services;
 
 namespace CgfConverter.CryEngineCore;
@@ -11,6 +12,9 @@ public class Model
 {
     /// <summary> The Root of the loaded object </summary>
     public ChunkNode? RootNode { get; internal set; }
+
+    /// <summary> Gets the root nodes. </summary>
+    public IEnumerable<ChunkNode> RootNodes => NodeMap.Values.Where(x => x.ParentNodeID == ~0);
 
     /// <summary> Lookup Table for Chunks, indexed by ChunkID </summary>
     public Dictionary<int, Chunk> ChunkMap { get; internal set; } = new();
@@ -71,9 +75,6 @@ public class Model
             return nodeMap;
         }
     }
-
-    /// <summary> Gets the root nodes. </summary>
-    public IEnumerable<ChunkNode> RootNodes => NodeMap.Values.Where(x => x.ParentNodeID == ~0);
 
     public bool HasBones => Bones != null;
 
@@ -163,8 +164,8 @@ public class Model
             Name = Path.GetFileNameWithoutExtension(FileName!),
             ObjectNodeID = 2,      // No node IDs in #ivo files.  The actual mesh is the only node in the m file.
             ParentNodeID = ~0,     // No parent
-            __NumChildren = 0,     // Single object
-            MatID = 0,
+            NumChildren = 0,     // Single object
+            MaterialID = 11,
             Transform = Matrix4x4.Identity,
             ChunkType = ChunkType.Node,
             ID = 1

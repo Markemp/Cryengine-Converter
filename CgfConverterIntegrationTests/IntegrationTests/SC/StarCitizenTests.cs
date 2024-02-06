@@ -1,5 +1,6 @@
 ﻿using CgfConverter;
 using CgfConverter.Renderers.Collada;
+using CgfConverter.Renderers.Collada.Collada.Enums;
 using CgfConverter.Renderers.Gltf;
 using CgfConverterIntegrationTests.Extensions;
 using CgfConverterTests.TestUtilities;
@@ -374,6 +375,7 @@ public class StarCitizenTests
         Assert.AreEqual(25, materials.Length);
     }
 
+    //D:\depot\SC3.22\Data\Objects\Characters\Mobiglas
     [TestMethod]
     public void Mobiglass()
     {
@@ -395,6 +397,54 @@ public class StarCitizenTests
         // Materials check
         var materials = colladaData.DaeObject.Library_Materials.Material;
         Assert.AreEqual(5, materials.Length);
+    }
+
+    [TestMethod]
+    public void Mobiglass_Collada_InDirectory()
+    {
+        var args = new string[] {
+            $@"D:\depot\SC3.22\Data\Objects\Characters\Mobiglas\f_mobiglas_civilian_01.skin",
+            "-dds", "-dae", "-objectdir", @"d:\depot\sc3.22\data" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+
+        // Geometry Library checks
+        var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
+        Assert.AreEqual(1, geometries.Length);
+
+        // Materials check
+        var materials = colladaData.DaeObject.Library_Materials.Material;
+        Assert.AreEqual(5, materials.Length);
+
+        // Visual scene checks
+        var visualScene = colladaData.DaeObject.Library_Visual_Scene.Visual_Scene[0];
+        Assert.AreEqual(2, visualScene.Node.Length);
+        Assert.AreEqual(ColladaNodeType.JOINT, visualScene.Node[0].Type);
+        Assert.AreEqual(ColladaNodeType.NODE, visualScene.Node[1].Type);
+        Assert.AreEqual("World", visualScene.Node[0].Name);
+        Assert.AreEqual("f_mobiglas_civilian_01", visualScene.Node[1].Name);
+        var node0 = visualScene.Node[0];
+        var node1 = visualScene.Node[1];
+        Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1", node1.Matrix[0].Value_As_String);
+        Assert.AreEqual(5, node0.node.Length);
+        var hipNode = node0.node[2];
+        Assert.AreEqual("Hips", hipNode.Name);
+        Assert.AreEqual("Hips", hipNode.ID);
+        Assert.AreEqual(13, hipNode.node.Length);
+        Assert.AreEqual("-0 -0.000002 -1 -0 -0 1 -0.000002 -0.014728 1 0 -0 1.005547 0 0 0 1", hipNode.Matrix[0].Value_As_String);
+        Assert.AreEqual("RItemPort_IKTarget", hipNode.node[0].Name);
+        Assert.AreEqual("1 0 -0.000002 -0.971578 0.000002 -0.000002 1 -0.014770 0 -1 -0.000002 1.250977 0 0 0 1", hipNode.node[0].Matrix[0].Value_As_String);
+
+        // Controller checks
+        var controller = colladaData.DaeObject.Library_Controllers.Controller[0];
+        Assert.AreEqual("#f_mobiglas_civilian_01-mesh", controller.Skin.source);
+        Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1", controller.Skin.Bind_Shape_Matrix.Value_As_String);
+        Assert.IsTrue(controller.Skin.Source[1].Float_Array.Value_As_String.StartsWith("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 1 -0 -0 0 0 1 -0 0 0 0 1 -0 -0 0 0 1 -0 -0.000002 -1 1.005547 -0 1 -0.000002 0.014730 1 0 -0 0 0 0 0 1 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 -0 -1 -0.000002 -0.000038 -0 -0.000002 1 -0.971578 -1 0 -0 0.245430 0 0 0 1 -0 -0.000002 -1 1.005547 -0 1 -0.000002 0.014730 1 0 -0 0 0 0 0 1 0.949039"));
     }
 
     [TestMethod]

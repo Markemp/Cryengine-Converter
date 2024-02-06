@@ -1,6 +1,6 @@
 ﻿using CgfConverter.CryEngineCore;
 using CgfConverter.CryXmlB;
-using CgfConverter.Materials;
+using CgfConverter.Models;
 using CgfConverter.PackFileSystem;
 using CgfConverter.Utils;
 using Extensions;
@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Material = CgfConverter.Materials.Material;
+using Material = CgfConverter.Models.Materials.Material;
 
 namespace CgfConverter;
 
@@ -34,12 +34,11 @@ public partial class CryEngine
     public List<Model> Models { get; internal set; } = new();
     public List<Model> Animations { get; internal set; } = new();
     public ChunkNode RootNode { get; internal set; }
-    public GeometryInfo GeometryInfo { get; internal set; }
-    public ChunkCompiledBones Bones { get; internal set; }
+    public ChunkCompiledBones Bones { get; internal set; }  // move to skinning info
     public SkinningInfo? SkinningInfo { get; set; }
     public string InputFile { get; internal set; }
     public IPackFileSystem PackFileSystem { get; internal set; }
-    public List<string> MaterialFiles { get; set; } = new();
+    public List<string>? MaterialFiles { get; set; } = new();
     public string? ObjectDir { get; set; }
 
     /// <summary>Dictionary of Materials.  Key is the mtlName chunk Name property (stripped of path and
@@ -98,7 +97,7 @@ public partial class CryEngine
         Log = new TaggedLogger(Path.GetFileName(filename), parentLogger);
         InputFile = filename;
         PackFileSystem = packFileSystem;
-        MaterialFiles = materialFiles is not null ? materialFiles.Split(',').ToList() : null;
+        MaterialFiles = materialFiles?.Split(',').ToList();
         ObjectDir = objectDir;
     }
 
@@ -160,13 +159,12 @@ public partial class CryEngine
         }
     }
 
-    private static SkinningInfo ConsolidateSkinningInfo(List<Model> models)
+    private static SkinningInfo? ConsolidateSkinningInfo(List<Model> models)
     {
-        SkinningInfo skin = new()
-        {
-            HasSkinningInfo = models.Any(a => a.SkinningInfo.HasSkinningInfo == true),
-            HasBoneMapDatastream = models.Any(a => a.SkinningInfo.HasBoneMapDatastream == true)
-        };
+        if (!models.Any(model => model.ChunkMap.Values.Any(chunk => chunk is ChunkCompiledBones)))
+            return null;
+
+        SkinningInfo skin = new();
 
         foreach (Model model in models)
         {
@@ -258,7 +256,15 @@ public partial class CryEngine
         {
             var meshSubsets = Models.Last().ChunkMap.Values.OfType<ChunkMeshSubsets>()
                 .SelectMany(c => c.MeshSubsets);
+
+            var maxChildren = Models
+                .SelectMany(x => x.ChunkMap.Values.OfType<ChunkMtlName>())
+                .Select(x => x.NumChildren)
+                .Max();
+
             var maxMats = (uint)meshSubsets.Select(x => x.MatID).Max() + 1;
+            // set maxMats to the max of maxMats and maxChildren
+            maxMats = Math.Max(maxMats, maxChildren);
 
             foreach (var materialFile in materialLibraryFiles)
             {
@@ -279,7 +285,7 @@ public partial class CryEngine
     {
         if (mtlFilesProvided)
         {
-            foreach (var node in NodeMap.Values.Where(x => x.MatID != 0))
+            foreach (var node in NodeMap.Values.Where(x => x.MaterialID != 0))
             {
                 if (MaterialFiles.Count == 1)
                 {
@@ -288,7 +294,7 @@ public partial class CryEngine
                     continue;
                 }
 
-                var mtlNameChunk = Chunks.OfType<ChunkMtlName>().Where(x => x.ID == node.MatID).FirstOrDefault();
+                var mtlNameChunk = Chunks.OfType<ChunkMtlName>().Where(x => x.ID == node.MaterialID).FirstOrDefault();
                 var mtlNameKey = Path.GetFileNameWithoutExtension(mtlNameChunk?.Name) ?? "default";
 
                 if (Materials.ContainsKey(mtlNameKey))
@@ -305,9 +311,9 @@ public partial class CryEngine
         }
         else
         {
-            foreach (var node in NodeMap.Values.Where(x => x.MatID != 0))
+            foreach (var node in NodeMap.Values.Where(x => x.MaterialID != 0))
             {
-                var mtlNameChunk = Chunks.OfType<ChunkMtlName>().Where(x => x.ID == node.MatID).FirstOrDefault();
+                var mtlNameChunk = Chunks.OfType<ChunkMtlName>().Where(x => x.ID == node.MaterialID).FirstOrDefault();
                 var mtlNameKey = Path.GetFileNameWithoutExtension(mtlNameChunk?.Name) ?? "default";
 
                 if (Materials.ContainsKey(mtlNameKey))
@@ -320,10 +326,8 @@ public partial class CryEngine
                     node.MaterialFileName = Materials.FirstOrDefault().Key;
                     node.Materials = Materials.FirstOrDefault().Value;
                 }
-                
             }
         }
-
     }
 
     private string? GetFullMaterialFilePath(string materialFile)

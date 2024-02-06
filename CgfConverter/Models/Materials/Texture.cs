@@ -2,7 +2,7 @@
 using System.Xml.Serialization;
 using System;
 
-namespace CgfConverter.Materials;
+namespace CgfConverter.Models.Materials;
 
 /// <summary>The texture object</summary>
 [XmlRoot(ElementName = "Texture")]
@@ -61,8 +61,7 @@ public class Texture
 
     /// <summary>Diffuse, Specular, Bumpmap, Environment, HeightMamp or Custom</summary>
     [XmlIgnore]
-    public MapTypeEnum Map
-    {
+    public MapTypeEnum Map {
         get => MapString switch
         {
             "Diffuse" => MapTypeEnum.Diffuse,

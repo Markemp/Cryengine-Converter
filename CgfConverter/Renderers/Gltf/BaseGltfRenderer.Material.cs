@@ -1,4 +1,4 @@
-﻿using CgfConverter.Materials;
+﻿using CgfConverter.Models.Materials;
 using CgfConverter.Renderers.Gltf.Models;
 using CgfConverter.Renderers.MaterialTextures;
 

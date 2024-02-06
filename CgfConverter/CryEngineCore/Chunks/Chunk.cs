@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using CgfConverter.Models;
 using CgfConverter.Services;
 
 namespace CgfConverter.CryEngineCore;
@@ -15,7 +16,6 @@ public abstract class Chunk : IBinaryChunk
 
     internal ChunkHeader _header;
     internal Model _model;
-
 
     internal uint VersionRaw;
     internal bool IsBigEndian => (VersionRaw & 0x80000000u) != 0;
@@ -192,13 +192,25 @@ public abstract class Chunk : IBinaryChunk
     {
         if (_model.SkinningInfo is null)
             _model.SkinningInfo = new SkinningInfo();
-        
+
         return _model.SkinningInfo;
     }
 
     public virtual void Write(BinaryWriter writer) { throw new NotImplementedException(); }
 
     public override string ToString() => $@"Chunk Type: {ChunkType}, Ver: {Version:X}, Offset: {Offset:X}, ID: {ID:X}, Size: {Size}";
+
+    //public static IvoNodeId GetIvoNodeId(ChunkType chunkType)
+    //{
+    //    if (chunkType == ChunkType.Node)
+    //        return IvoNodeId.NodeChunk;
+    //    if (chunkType == ChunkType.Mesh)
+    //        return IvoNodeId.MeshChunk;
+    //    if (chunkType == ChunkType.MeshSubsets)
+    //        return IvoNodeId.MeshSubsets;
+    //    if (chunkType == ChunkType.Data)
+
+    //}
 
     public static int GetNextRandom()
     {

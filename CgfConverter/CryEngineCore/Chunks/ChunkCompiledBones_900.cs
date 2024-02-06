@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using CgfConverter.Models;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -38,11 +39,8 @@ internal sealed class ChunkCompiledBones_900 : ChunkCompiledBones
             }
         }
 
-        // Calculate number of children for each bone.
-
         SkinningInfo skin = GetSkinningInfo();
         skin.CompiledBones = new List<CompiledBone>();
-        skin.HasSkinningInfo = true;
         skin.CompiledBones = BoneList;
     }
 

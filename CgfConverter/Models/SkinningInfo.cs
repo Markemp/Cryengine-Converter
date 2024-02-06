@@ -1,13 +1,11 @@
 ﻿using System.Collections.Generic;
 
-namespace CgfConverter.CryEngineCore;
+namespace CgfConverter.Models;
 
 public class SkinningInfo
 {
     /// <summary> If there is skinning info in the model, set to true. </summary>
-    public bool HasSkinningInfo { get; set; }
-    /// <summary> If there is a BoneMap datastream, set to true </summary>
-    public bool HasBoneMapDatastream { get; internal set; }
+    public bool HasSkinningInfo => CompiledBones is not null ? CompiledBones.Count > 0 : false;
     /// <summary> If there is an internal vertex to external vertex mapping, set to true. </summary>
     public bool HasIntToExtMapping { get; internal set; }
     /// <summary> BoneEntities are the list of the bones in the object.  Contains the info to find each of the necessary skinning components. </summary>
@@ -23,34 +21,23 @@ public class SkinningInfo
     public List<MeshBoneMapping>? BoneMapping { get; set; }                  // Bone Mappings are read from a Datastream chunk
 
     /// <summary>
-    /// Given a bone name, get the Controller ID.
+    /// Given a bone name, get the bone index.
     /// </summary>
     /// <param name="jointName">Bone name</param>
-    /// <returns>Controller ID of the bone.</returns>
-    public int GetJointIDByName(string jointName)
-    {
-        int numJoints = CompiledBones.Count;
-        for (int i = 0; i < numJoints; i++)
-        {
-            if (Equals(CompiledBones[i], jointName))
-                return i;
-        }
-        return -1;
-    }
+    /// <returns>Index of the bone.</returns>
+    public int GetBoneIndexByName(string jointName) => CompiledBones.FindIndex(joint => Equals(joint, jointName));
 
     /// <summary>
-    /// Given a joint ID, get the name of the bone.
+    /// Given a bone index, get the name of the bone.
     /// </summary>
-    /// <param name="jointID">ID of the bone.</param>
+    /// <param name="boneIndex">Index of the bone.</param>
     /// <returns>Name of the bone.</returns>
-    public string GetJointNameByID(int jointID)
+    public string GetJointNameByID(int boneIndex)
     {
         int numJoints = CompiledBones.Count;
-        if (jointID >= 0 && jointID < numJoints)
-        {
-            return CompiledBones[jointID].boneName;
-        }
+        if (boneIndex >= 0 && boneIndex < numJoints)
+            return CompiledBones[boneIndex].boneName;
+
         return string.Empty;        // Invalid bone ID
     }
-
 }

@@ -7,6 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using CgfConverter.Renderers.MaterialTextures;
+using CgfConverter.Models;
 
 namespace CgfConverter.Renderers.Gltf;
 
@@ -134,7 +135,7 @@ public partial class BaseGltfRenderer
         if (omitSkins)
             return;
 
-        if (cryNode.GetSkinningInfo() is { HasSkinningInfo: true } skinningInfo)
+        if (cryData.SkinningInfo is { HasSkinningInfo: true } skinningInfo)
         {
             if (WriteSkinOrLogError(out var newSkin, out var weights, out var joints, gltfNode, skinningInfo,
                 controllerIdToNodeIndex))
@@ -185,7 +186,6 @@ public partial class BaseGltfRenderer
         var boneIdToBindPoseMatrices = new Dictionary<int, Matrix4x4>();
         foreach (var bone in skinningInfo.CompiledBones)
         {
-            // BoneId is the index of the bone.  Every bone has a controller Id, but controller id is not necessarily unique
             var boneId = skinningInfo.CompiledBones.IndexOf(bone);
             var parentBone = skinningInfo.CompiledBones[boneId + bone.offsetParent];
             var parentBoneId = skinningInfo.CompiledBones.IndexOf(parentBone);

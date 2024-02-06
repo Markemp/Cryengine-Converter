@@ -12,9 +12,7 @@ public abstract class ChunkCompiledBones : Chunk     //  Bones info
     // Bones are a bit different than Node Chunks, since there is only one CompiledBones Chunk, and it contains all the bones in the model.
     public List<CompiledBone> BoneList = new();
 
-    // This is wrong.  All child bones are based off the index of the bone and the child bone offsets
-    //public List<CompiledBone> GetAllChildBones(CompiledBone bone) => BoneList.Where(a => bone.childIDs.Contains(a.ControllerID)).ToList();
-    public List<CompiledBone> GetAllChildBones(CompiledBone bone)
+    public List<CompiledBone> GetChildBones(CompiledBone bone)
     {
         List<CompiledBone> childBones = new();
         foreach (var bone1 in BoneList)

@@ -2,7 +2,7 @@
 using System.Xml.Serialization;
 using CgfConverter.Utils;
 
-namespace CgfConverter.Materials;
+namespace CgfConverter.Models.Materials;
 
 [XmlRoot(ElementName = "PublicParams")]
 public class PublicParams

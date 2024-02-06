@@ -18,7 +18,5 @@ internal sealed class ChunkCompiledMorphTargets_801 : ChunkCompiledMorphTargets
         //    }
 
         //}
-        //SkinningInfo skin = GetSkinningInfo();
-        //skin.MorphTargets = MorphTargetVertices.ToList();
     }
 }

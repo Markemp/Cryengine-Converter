@@ -1,4 +1,4 @@
-﻿namespace CgfConverter.Materials;
+﻿namespace CgfConverter.Models.Materials;
 
 public enum ETexModMoveType
 {

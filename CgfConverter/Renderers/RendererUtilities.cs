@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using CgfConverter.Models.Materials;
 using Extensions;
 
 namespace CgfConverter.Renderers;
@@ -50,7 +51,7 @@ internal static class RendererUtilities
     internal static bool IsNodeNameExcluded(this ArgsHandler args, string nodeName) =>
         args.ExcludeNodeNameRegexes.Any(x => x.IsMatch(nodeName));
 
-    internal static bool IsMaterialExcluded(this ArgsHandler argsHandler, Materials.Material material) =>
+    internal static bool IsMaterialExcluded(this ArgsHandler argsHandler, Material material) =>
         (material.Name is not null && argsHandler.IsMeshMaterialExcluded(material.Name))
         || (material.Shader is not null && argsHandler.IsMeshMaterialShaderExcluded(material.Shader));
 

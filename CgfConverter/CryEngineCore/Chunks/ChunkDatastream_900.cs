@@ -1,4 +1,5 @@
-﻿using Extensions;
+﻿using CgfConverter.Models;
+using Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -170,7 +171,6 @@ internal sealed class ChunkDataStream_900 : ChunkDataStream
             case IvoDatastreamType.IVOBONEMAP32:
             case IvoDatastreamType.IVOBONEMAP:
                 SkinningInfo skin = GetSkinningInfo();
-                skin.HasBoneMapDatastream = true;
                 skin.BoneMapping = new List<MeshBoneMapping>();
 
                 switch (BytesPerElement)
@@ -185,7 +185,6 @@ internal sealed class ChunkDataStream_900 : ChunkDataStream
                             for (int j = 0; j < 4; j++)         // read the 4 bone indexes first
                             {
                                 tmpMap.BoneIndex[j] = b.ReadUInt16();
-
                             }
                             for (int j = 0; j < 4; j++)           // read the weights.
                             {

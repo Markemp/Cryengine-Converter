@@ -295,14 +295,14 @@ public class CgfConverterIntegrationTests
 
         // Validate Triangles
         Assert.AreEqual(918, mesh.Triangles[0].Count);
-        Assert.AreEqual("green_fern_bush-material", mesh.Triangles[0].Material);
+        Assert.AreEqual("green_fern_bush_mtl_green_fern_bush-material", mesh.Triangles[0].Material);
         Assert.IsTrue(mesh.Triangles[0].P.Value_As_String.StartsWith("0 0 0 0 1 1 1 1 2 2 2 2 3 3 3 3 4 4 4 4 1 1 1 1 1 1 1 1 0 0 0 0 3 3 3 3 5"));
         Assert.AreEqual(4, mesh.Triangles[0].Input.Length);
 
         // Validate image library
         var images = colladaData.DaeObject.Library_Images;
         Assert.AreEqual(3, images.Image.Length);
-        Assert.AreEqual("green_fern_bush_Diffuse", images.Image[0].ID);
+        Assert.AreEqual("green_fern_bush_mtl_green_fern_bush_Diffuse", images.Image[0].ID);
         Assert.AreEqual("..\\..\\..\\Source\\Repos\\Cryengine-Converter\\CgfConverterIntegrationTests\\bin\\Debug\\net8.0\\objects\\natural\\bushes\\green_fern_bush\\green_fern_bush_leaf_a.dds", images.Image[0].Init_From.Uri);
 
         // Validate visual_scene
@@ -318,10 +318,10 @@ public class CgfConverterIntegrationTests
         Assert.AreEqual("0.993981 0.109553 -0 0 -0.109553 0.993981 -0 0 -0 0 1 0 0 0 0 1", nodes[0].Matrix[0].Value_As_String);
         Assert.AreEqual("green_fern_bush_a", nodes[0].Instance_Geometry[0].Name);
         Assert.AreEqual("#green_fern_bush_a-mesh", nodes[0].Instance_Geometry[0].URL);
-        Assert.AreEqual("#green_fern_bush-material", nodes[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
-        Assert.AreEqual("green_fern_bush-material", nodes[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
-        Assert.AreEqual("#proxy_AI-material", nodes[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[1].Target);
-        Assert.AreEqual("proxy_AI-material", nodes[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[1].Symbol);
+        Assert.AreEqual("#green_fern_bush_mtl_green_fern_bush-material", nodes[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
+        Assert.AreEqual("green_fern_bush_mtl_green_fern_bush-material", nodes[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+        Assert.AreEqual("#green_fern_bush_mtl_proxy_AI-material", nodes[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[1].Target);
+        Assert.AreEqual("green_fern_bush_mtl_proxy_AI-material", nodes[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[1].Symbol);
 
         testUtils.ValidateColladaXml(colladaData);
     }

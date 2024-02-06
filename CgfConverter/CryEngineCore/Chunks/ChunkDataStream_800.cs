@@ -1,4 +1,5 @@
-﻿using Extensions;
+﻿using CgfConverter.Models;
+using Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -283,7 +284,6 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
             #region case DataStreamTypeEnum.BONEMAP:
             case DatastreamType.BONEMAP:
                 SkinningInfo skin = GetSkinningInfo();
-                skin.HasBoneMapDatastream = true;
                 skin.BoneMapping = new List<MeshBoneMapping>();
 
                 switch (BytesPerElement)
@@ -298,7 +298,6 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                             for (int j = 0; j < 4; j++)         // read the 4 bone indexes first
                             {
                                 tmpMap.BoneIndex[j] = b.ReadByte();
-
                             }
                             for (int j = 0; j < 4; j++)           // read the weights.
                             {

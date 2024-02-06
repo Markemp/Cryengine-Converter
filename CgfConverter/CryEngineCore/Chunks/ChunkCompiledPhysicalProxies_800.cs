@@ -1,4 +1,5 @@
-﻿using Extensions;
+﻿using CgfConverter.Models;
+using Extensions;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -10,7 +11,6 @@ internal sealed class ChunkCompiledPhysicalProxies_800 : ChunkCompiledPhysicalPr
     public override void Read(BinaryReader b)
     {
         base.Read(b);
-        SkinningInfo skin = GetSkinningInfo();
 
         NumPhysicalProxies = b.ReadUInt32(); // number of Bones in this chunk.
         PhysicalProxies = new PhysicalProxy[NumPhysicalProxies];    // now have an array of physical proxies
@@ -40,6 +40,8 @@ internal sealed class ChunkCompiledPhysicalProxies_800 : ChunkCompiledPhysicalPr
                 b.ReadByte();
             }
         }
+
+        SkinningInfo skin = GetSkinningInfo();
         skin.PhysicalBoneMeshes = PhysicalProxies.ToList();
     }
 }

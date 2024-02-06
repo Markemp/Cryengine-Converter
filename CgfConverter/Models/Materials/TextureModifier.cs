@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Xml.Serialization;
 
-namespace CgfConverter.Materials;
+namespace CgfConverter.Models.Materials;
 
 /// <summary>The texture modifier</summary>
 [XmlRoot(ElementName = "TexMod")]
@@ -25,8 +25,7 @@ public class TextureModifier
 
     [XmlAttribute(AttributeName = "TexMod_bTexGenProjected")]
     [DefaultValue(1)]
-    public int __Projected
-    {
+    public int __Projected {
         get => Projected ? 1 : 0;
         set => Projected = value == 1;
     }
@@ -38,40 +37,36 @@ public class TextureModifier
     [DefaultValue(0)]
     public int __UOscillatorType;
 
-    public ETexModMoveType UOscillatorType
-    {
-        get => (ETexModMoveType) __UOscillatorType;
-        set => __UOscillatorType = (int) value;
+    public ETexModMoveType UOscillatorType {
+        get => (ETexModMoveType)__UOscillatorType;
+        set => __UOscillatorType = (int)value;
     }
-    
+
     [XmlAttribute(AttributeName = "TexMod_VOscillatorType")]
     [DefaultValue(0)]
     public int __VOscillatorType;
-    
-    public ETexModMoveType VOscillatorType
-    {
-        get => (ETexModMoveType) __VOscillatorType;
-        set => __VOscillatorType = (int) value;
+
+    public ETexModMoveType VOscillatorType {
+        get => (ETexModMoveType)__VOscillatorType;
+        set => __VOscillatorType = (int)value;
     }
-    
+
     [XmlAttribute(AttributeName = "TexMod_RotateType")]
     [DefaultValue(ETexModRotateType.NoChange)]
     public int __RotateType { get; set; }
-    
-    public ETexModRotateType RotateType
-    {
-        get => (ETexModRotateType) __RotateType;
-        set => __RotateType = (int) value;
+
+    public ETexModRotateType RotateType {
+        get => (ETexModRotateType)__RotateType;
+        set => __RotateType = (int)value;
     }
 
     [XmlAttribute(AttributeName = "TexMod_TexGenType")]
     [DefaultValue(ETexGenType.Stream)]
     public int __GenType { get; set; }
-    
-    public ETexGenType GenType
-    {
-        get => (ETexGenType) __GenType;
-        set => __GenType = (int) value;
+
+    public ETexGenType GenType {
+        get => (ETexGenType)__GenType;
+        set => __GenType = (int)value;
     }
 
     [XmlAttribute(AttributeName = "RotateU")]

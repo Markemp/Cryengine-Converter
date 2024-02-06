@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
+using CgfConverter.Models;
 using Extensions;
 using static Extensions.BinaryReaderExtensions;
 
@@ -261,8 +262,6 @@ internal sealed class ChunkDataStream_801 : ChunkDataStream
             #region case DataStreamTypeEnum.BONEMAP:
             case DatastreamType.BONEMAP:
                 SkinningInfo skin = GetSkinningInfo();
-                skin.HasBoneMapDatastream = true;
-
                 skin.BoneMapping = new List<MeshBoneMapping>();
 
                 // Bones should have 4 bone IDs (index) and 4 weights.
@@ -305,12 +304,9 @@ internal sealed class ChunkDataStream_801 : ChunkDataStream
                         default:
                             Utilities.Log("Unknown BoneMapping structure");
                             break;
-
                     }
                 }
-
                 break;
-
 
             #endregion
             #region DataStreamTypeEnum.QTANGENTS

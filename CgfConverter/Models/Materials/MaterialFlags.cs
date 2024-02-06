@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CgfConverter.Materials;
+namespace CgfConverter.Models.Materials;
 
 [Flags]
 public enum MaterialFlags

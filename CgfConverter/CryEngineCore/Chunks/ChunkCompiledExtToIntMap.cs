@@ -1,16 +1,10 @@
-﻿using System;
+﻿namespace CgfConverter.CryEngineCore;
 
-namespace CgfConverter.CryEngineCore
+public abstract class ChunkCompiledExtToIntMap : Chunk
 {
-    public abstract class ChunkCompiledExtToIntMap : Chunk
-    {
-        public int Reserved;
-        public uint NumExtVertices;
-        public UInt16[] Source;
+    public int Reserved;
+    public uint NumExtVertices;
+    public ushort[]? Source;
 
-        public override string ToString()
-        {
-            return $@"Chunk Type: {ChunkType}, ID: {ID:X}";
-        }
-    }
+    public override string ToString() => $@"Chunk Type: {ChunkType}, ID: {ID:X}";
 }

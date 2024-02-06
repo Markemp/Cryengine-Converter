@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
+using CgfConverter.CryEngineCore;
 
-namespace CgfConverter.CryEngineCore;
+namespace CgfConverter.Models;
 
 /// <summary>
 /// Geometry info contains all the vertex, color, normal, UV, tangent, index, etc.  Basically if you have a Node chunk with a Mesh and Submesh, 
@@ -15,9 +16,11 @@ public sealed class GeometryInfo
     public IRGBA[]? Colors { get; set; }
     public uint[] Indices { get; set; }
     public Tangent[,] Tangents { get; set; }
-    public byte[,] ShCoeffs { get; set; }
-    public byte[,] ShapeDeformation { get; set; }
-    public byte[,]? BoneMap { get; set; }
-    public byte[,]? FaceMap { get; set; }
-    public byte[,]? VertMats { get; set; }
+
+
+    //public byte[,] ShCoeffs { get; set; }
+    //public byte[,] ShapeDeformation { get; set; }
+    //public byte[,]? BoneMap { get; set; }
+    //public byte[,]? FaceMap { get; set; }
+    //public byte[,]? VertMats { get; set; }
 }

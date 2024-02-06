@@ -5,7 +5,7 @@ using System.Linq;
 using BCnEncoder.Decoder;
 using BCnEncoder.Shared;
 using BCnEncoder.Shared.ImageFiles;
-using CgfConverter.Materials;
+using CgfConverter.Models.Materials;
 using CgfConverter.Utils;
 using Extensions;
 

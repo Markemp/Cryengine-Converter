@@ -17,8 +17,8 @@ internal sealed class ChunkNode_824 : ChunkNode
 
         ObjectNodeID = b.ReadInt32(); // Object reference ID
         ParentNodeID = b.ReadInt32();
-        __NumChildren = b.ReadInt32();
-        MatID = b.ReadInt32();  // Material ID?
+        NumChildren = b.ReadInt32();
+        MaterialID = b.ReadInt32();  // Material ID?
         SkipBytes(b, 4);
 
         // Read the 4x4 transform matrix.

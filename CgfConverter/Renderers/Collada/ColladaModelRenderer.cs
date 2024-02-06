@@ -1,6 +1,6 @@
 ﻿using CgfConverter.Collada;
 using CgfConverter.CryEngineCore;
-using CgfConverter.Materials;
+using CgfConverter.Models.Materials;
 using CgfConverter.Renderers.Collada.Collada;
 using CgfConverter.Renderers.Collada.Collada.Collada_B_Rep.Surfaces;
 using CgfConverter.Renderers.Collada.Collada.Collada_Core.Animation;
@@ -50,8 +50,6 @@ public class ColladaModelRenderer : IRenderer
     private readonly XmlSerializer serializer = new(typeof(ColladaDoc));
     private readonly FileInfo daeOutputFile;
 
-    /// <summary>Dictionary of all material libraries in the model, with the key being the library from mtlname chunk.</summary>
-    private readonly Dictionary<string, Material> createdMaterialLibraries = new();
     private readonly Dictionary<int, string> controllerIdToBoneName = new();
 
     public ColladaModelRenderer(ArgsHandler argsHandler, CryEngine cryEngine)
@@ -99,7 +97,7 @@ public class ColladaModelRenderer : IRenderer
         WriteLibrary_Geometries();
 
         // If there is Skinning info, create the controller library and set up visual scene to refer to it.  Otherwise just write the Visual Scene
-        if (_cryData.SkinningInfo.HasSkinningInfo)
+        if (_cryData.SkinningInfo?.HasSkinningInfo ?? false)
         {
             WriteLibrary_Controllers();
             WriteLibrary_VisualScenesWithSkeleton();
@@ -765,7 +763,11 @@ public class ColladaModelRenderer : IRenderer
                         // in mwo models it can point to mechDefault.  First check to see if the material key for the nodechunk's mtlname chunk exists.
                         // If it does, use that material.  If not, assume just a single materialfile and use that.
 
-                        var mtlNameChunk = (ChunkMtlName)_cryData.Models[0].ChunkMap[nodeChunk.MatID];
+                        //var mtlNameChunk = nodeChunk.MaterialID == 0
+                        //    ? 
+                        //    :
+                        //    ;
+                        var mtlNameChunk = (ChunkMtlName)_cryData.Models.Last().ChunkMap[nodeChunk.MaterialID];
                         var mtlFileName = mtlNameChunk.Name;
                         var key = Path.GetFileNameWithoutExtension(mtlFileName);
                         Material[] submats;
@@ -1256,11 +1258,10 @@ public class ColladaModelRenderer : IRenderer
             StringBuilder vertices = new();
             //for (int i = 0; i < CryData.Models[0].SkinningInfo.IntVertices.Count * 4; i++)
             int index = 0;
-            if (!_cryData.Models[0].SkinningInfo.HasIntToExtMapping)
+            if (!_cryData.SkinningInfo.HasIntToExtMapping)
             {
                 for (int i = 0; i < _cryData.SkinningInfo.BoneMapping.Count; i++)
                 {
-                    int wholePart = (int)i / 4;
                     vertices.Append(_cryData.SkinningInfo.BoneMapping[i].BoneIndex[0] + " " + index + " ");
                     vertices.Append(_cryData.SkinningInfo.BoneMapping[i].BoneIndex[1] + " " + (index + 1) + " ");
                     vertices.Append(_cryData.SkinningInfo.BoneMapping[i].BoneIndex[2] + " " + (index + 2) + " ");
@@ -1272,7 +1273,6 @@ public class ColladaModelRenderer : IRenderer
             {
                 for (int i = 0; i < _cryData.SkinningInfo.Ext2IntMap.Count; i++)
                 {
-                    int wholePart = (int)i / 4;
                     vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[0] + " " + index + " ");
                     vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[1] + " " + (index + 1) + " ");
                     vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[2] + " " + (index + 2) + " ");
@@ -1281,10 +1281,7 @@ public class ColladaModelRenderer : IRenderer
                     index += 4;
                 }
             }
-            vertexWeights.V = new ColladaIntArrayString
-            {
-                Value_As_String = vertices.ToString().TrimEnd()
-            };
+            vertexWeights.V = new ColladaIntArrayString { Value_As_String = vertices.ToString().TrimEnd() };
             #endregion
 
             // create the extra element for the FCOLLADA profile
@@ -1399,7 +1396,7 @@ public class ColladaModelRenderer : IRenderer
         ChunkMesh meshNode;
         ChunkMeshSubsets submeshNode;
 
-        ChunkMtlName mtlNameChunk = (ChunkMtlName)_cryData.Models[0].ChunkMap[node.MatID];
+        //ChunkMtlName mtlNameChunk = (ChunkMtlName)_cryData.Models[0].ChunkMap[node.MaterialID];
         
         if (_cryData.Models.Count > 1)
         {
@@ -1545,7 +1542,7 @@ public class ColladaModelRenderer : IRenderer
         if (bone.numChildren > 0)
         {
             List<ColladaNode> childNodes = new();
-            var allChildBones = _cryData.Bones.GetAllChildBones(bone);
+            var allChildBones = _cryData.Bones.GetChildBones(bone);
             foreach (CompiledBone childBone in allChildBones)
             {
                 childNodes.Add(CreateJointNode(childBone));
@@ -1632,38 +1629,15 @@ public class ColladaModelRenderer : IRenderer
     {
         // material id is <node.MaterialFileName>_mtl_<submatName>
         var materialFileName = nodeChunk.MaterialFileName;  // also the key in Materials
+        if (string.IsNullOrWhiteSpace(materialFileName) && _cryData.Models.Count == 2)
+        {
+            var geometryNodeChunk = _cryData.Models[1].NodeMap.Values.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
+            materialFileName = geometryNodeChunk?.MaterialFileName ?? string.Empty;
+        }
         var matindex = meshSubsets.MeshSubsets[index].MatID;
 
-        var materialName = _cryData.Materials[materialFileName].SubMaterials?[matindex].Name;
+        var materialName = _cryData.Materials[materialFileName]?.SubMaterials?[matindex].Name;
         return GetMaterialName(materialFileName, materialName ?? "unknown");
-
-        //var mtlNameChunkId = nodeChunk.MatID;
-        //var mtlNameChunk = (ChunkMtlName)_cryData.Models[0].ChunkMap[mtlNameChunkId];
-        //var mtlName = mtlNameChunk.Name;
-
-        //var materialName = _cryData.MaterialFiles?.FirstOrDefault() ?? _cryData.Name; // default mtls use model name
-        //if (materialName is null)
-        //    return null;
-
-        //var key = Path.GetFileNameWithoutExtension(mtlName);
-        //var submats = _cryData.Materials[key].SubMaterials;
-
-        //var materialLibraryIndex = meshSubsets.MeshSubsets[index].MatID;
-
-        //if (submats is not null)
-        //{
-        //    if (materialLibraryIndex >= submats.Length)
-        //    {
-        //        Log(LogLevelEnum.Warning, $"Attempting to assign material beyond the list of given materials for node ${nodeChunk.Name} with id {nodeChunk.ID}.  Assigning first material.\nCheck if material file is missing.");
-        //        return submats[0].Name + "-material";
-        //    }
-        //    var material = submats[materialLibraryIndex];
-        //    return GetMaterialName(key, material.Name);
-        //}
-        //else
-        //    Log(LogLevelEnum.Debug, $"Unable to find submaterials for node chunk ${nodeChunk.Name}");
-
-        //return null;
     }
 
     private string GetMaterialName(string matKey, string submatName)

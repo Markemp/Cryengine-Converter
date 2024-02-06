@@ -1,4 +1,4 @@
-﻿using CgfConverter.Materials;
+﻿using CgfConverter.Models.Materials;
 using System;
 
 namespace CgfConverter.CryEngineCore;

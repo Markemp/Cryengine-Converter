@@ -2,14 +2,15 @@
 using System.IO;
 using System;
 using CgfConverter.CryXmlB;
+using CgfConverter.Models.Materials;
 
-namespace CgfConverter.Materials;
+namespace CgfConverter.Utils;
 
 public static class MaterialUtilities
 {
     public static Material? FromFile(string path, string? materialName) =>
         FromStream(new FileStream(path, FileMode.Open, FileAccess.Read), materialName, true);
-    
+
     public static Material? FromStream(Stream stream, string? materialName, bool closeAfter = false)
     {
         try

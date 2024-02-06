@@ -1,4 +1,4 @@
-﻿namespace CgfConverter.Materials;
+﻿namespace CgfConverter.Models.Materials;
 
 public class Color
 {
@@ -28,8 +28,8 @@ public class Color
     }
 
     /// <summary>Serialize a Color object into a space separated string list</summary>
-    public static string? Serialize(Color input, char separator = ' ') => 
-        (input == null) ? null : $"{input.Red:0.########}{separator}{input.Green:0.########}{separator}{input.Blue:0.########}";
-    
+    public static string? Serialize(Color input, char separator = ' ') =>
+        input == null ? null : $"{input.Red:0.########}{separator}{input.Green:0.########}{separator}{input.Blue:0.########}";
+
     public override string ToString() => $@"R: {Red}, G: {Green}, B: {Blue}";
 }

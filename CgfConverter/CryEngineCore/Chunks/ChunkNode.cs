@@ -1,4 +1,4 @@
-﻿using CgfConverter.Materials;
+﻿using CgfConverter.Models.Materials;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -12,10 +12,8 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
     public string Name { get; internal set; } = string.Empty;
     public int ObjectNodeID { get; internal set; }
     public int ParentNodeID { get; internal set; }  // Parent nodeID
-    public int __NumChildren { get; internal set; }
-    public int MatID { get; internal set; }         // Chunk Id of the material for this node
-    public bool IsGroupHead { get; internal set; }
-    public bool IsGroupMember { get; internal set; }
+    public int NumChildren { get; internal set; }
+    public int MaterialID { get; internal set; }         // Chunk Id of the material for this node
     public Matrix4x4 Transform { get; internal set; }
     public Vector3 Pos { get; internal set; }       // Obsolete
     public Quaternion Rot { get; internal set; }    // Obsolete
@@ -74,5 +72,5 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
 
     public IEnumerable<ChunkNode> AllChildNodes => _model.NodeMap.Values.Where(a => a.ParentNodeID == ID);
 
-    public override string ToString() => $@"Chunk Type: {ChunkType}, ID: {ID:X}, Version: {Version}, Name: {Name}, Object Node ID: {ObjectNodeID:X}, Parent Node ID: {ParentNodeID:X}, Mat: {MatID:X}";
+    public override string ToString() => $@"Chunk Type: {ChunkType}, ID: {ID:X}, Version: {Version}, Name: {Name}, Object Node ID: {ObjectNodeID:X}, Parent Node ID: {ParentNodeID:X}, Mat: {MaterialID:X}";
 }

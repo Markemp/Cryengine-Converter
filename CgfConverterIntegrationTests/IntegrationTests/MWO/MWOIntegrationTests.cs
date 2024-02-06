@@ -226,7 +226,7 @@ public class MWOIntegrationTests
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         Assert.AreEqual(0, colladaData.DaeObject.Library_Images.Image.Length);
-        Assert.AreEqual(10, colladaData.DaeObject.Library_Materials.Material.Length); // default materials
+        Assert.AreEqual(22, colladaData.DaeObject.Library_Materials.Material.Length); // default materials
         Assert.AreEqual("mechDefault_mtl_material0", colladaData.DaeObject.Library_Materials.Material[0].Name);
         Assert.AreEqual(0, colladaData.DaeObject.Library_Images.Image.Length);
         Assert.AreEqual("mechDefault_mtl_material0", colladaData.DaeObject.Library_Effects.Effect[0].Name);
@@ -238,7 +238,7 @@ public class MWOIntegrationTests
         Assert.AreEqual(0, colladaData.DaeObject.Library_Images.Image.Length);
         Assert.AreEqual("mechDefault_mtl_material0", colladaData.DaeObject.Library_Materials.Material[0].Name);
         Assert.AreEqual("mechDefault_mtl_material0-material", colladaData.DaeObject.Library_Materials.Material[0].ID);
-        Assert.AreEqual(10, colladaData.DaeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(22, colladaData.DaeObject.Library_Materials.Material.Length);
         // library_effects
         Assert.AreEqual("mechDefault_mtl_material0", colladaData.DaeObject.Library_Effects.Effect[0].Name);
         Assert.AreEqual("mechDefault_mtl_material1", colladaData.DaeObject.Library_Effects.Effect[1].Name);
@@ -545,7 +545,7 @@ public class MWOIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\NoMats\candycane_a.chr", "-dds", "-dae" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
