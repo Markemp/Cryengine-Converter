@@ -166,4 +166,16 @@ public static class Matrix4x4Extensions    // Extensions for System.Numerics Mat
             M44 = 1,
         };
     }
+
+    public static Vector3 ToTranslationVector(this Matrix4x4 matrix)
+    {
+        // Extracts the translation component from the 4x4 matrix.
+        return new Vector3(matrix.M14, matrix.M24, matrix.M34);
+    }
+
+    public static Vector4 ToAxisAngleDegrees(this Matrix4x4 matrix)
+    {
+        Quaternion quaternion = Quaternion.CreateFromRotationMatrix(matrix);
+        return quaternion.ToAxisAngle();
+    }
 }

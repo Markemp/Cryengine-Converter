@@ -1531,9 +1531,11 @@ public class ColladaModelRenderer : IRenderer
         if (bone.ControllerID != -1)
             controllerIdToBoneName.Add(bone.ControllerID, bone.boneName);
 
+        // Matrix code
         ColladaMatrix matrix = new();
         List<ColladaMatrix> matrices = new();
-        matrix.Value_As_String = CreateStringFromMatrix4x4(bone.LocalTransform);
+        Matrix4x4 localMatrix = bone.LocalTransformMatrix.ConvertToTransformMatrix();
+        matrix.Value_As_String = CreateStringFromMatrix4x4(localMatrix);
 
         matrices.Add(matrix);
         tmpNode.Matrix = matrices.ToArray();

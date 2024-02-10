@@ -55,7 +55,7 @@ public class HuntIntegrationTests
         Assert.AreEqual("root", node.sID);
         Assert.AreEqual("root", node.Name);
         Assert.AreEqual("JOINT", node.Type.ToString());
-        Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1", node.Matrix[0].Value_As_String);
+        Assert.AreEqual("1 0 0 -0 0 1 0 -0 0 0 1 -0 0 0 0 1", node.Matrix[0].Value_As_String);
 
         // Geometry Node check
         node = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[1];
@@ -118,7 +118,7 @@ public class HuntIntegrationTests
         Assert.AreEqual("root", node.sID);
         Assert.AreEqual("root", node.Name);
         Assert.AreEqual("JOINT", node.Type.ToString());
-        Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1", node.Matrix[0].Value_As_String);
+        Assert.AreEqual("1 0 0 -0 0 1 0 -0 0 0 1 -0 0 0 0 1", node.Matrix[0].Value_As_String);
 
         // Geometry Node check
         node = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[1];

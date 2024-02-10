@@ -78,7 +78,7 @@ public class ArcheAgeTests
         Assert.AreEqual("Bone05", locatorBone.Name);
         Assert.AreEqual("Bone05", locatorBone.sID);
         Assert.AreEqual("JOINT", locatorBone.Type.ToString());
-        Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1", locatorBone.Matrix[0].Value_As_String);
+        Assert.AreEqual("1 0 0 0.100000 0 1 0 0 0 0 1 0 0 0 0 1", locatorBone.Matrix[0].Value_As_String);
     }
 
     [TestMethod]

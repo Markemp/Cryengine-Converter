@@ -40,7 +40,7 @@ public class NewWorldIntegrationTests
         var nodes = daeObject.Library_Visual_Scene.Visual_Scene[0].Node;
         Assert.AreEqual(2, nodes.Length);
 
-        Assert.AreEqual("1 0 0 0 0 1 0 -0.022861 0 0 1 1.073091 0 0 0 1", nodes[0].node[0].Matrix[0].Value_As_String);
+        Assert.AreEqual("1 0 0 -0 0 1 0 0.022861 0 0 1 -1.073091 0 0 0 1", nodes[0].node[0].Matrix[0].Value_As_String);
         Assert.AreEqual("Pelvis", nodes[0].node[0].Name);
     }
 

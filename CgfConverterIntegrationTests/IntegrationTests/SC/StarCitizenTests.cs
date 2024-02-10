@@ -114,9 +114,27 @@ public class StarCitizenTests
     }
 
     [TestMethod]
+    public void ANVL_Hurricane_Front_LandingGear_IvoCHR()
+    {
+        var args = new string[] {
+            @"D:\depot\SC3.22\Data\Objects\Spaceships\Ships\ANVL\LandingGear\Hurricane\anvl_hurricane_landing_gear_front_chr.chr",
+            "-dds", "-dae",
+            "-objectdir", @"d:\depot\sc3.22\data" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+    }
+
+    [TestMethod]
     public void M_ccc_bear_helmet_01_320IvoSkinFile()
     {
-        var args = new string[] { @"D:\depot\SC3.21\Data\Objects\Characters\Human\male_v7\armor\ccc\m_ccc_bear_helmet_01.skin", "-dds", "-dae" };
+        var args = new string[] {
+            @"D:\depot\SC3.22\Data\Objects\Characters\Human\male_v7\armor\ccc\m_ccc_bear_helmet_01.skin", "-dds", "-dae" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
@@ -222,7 +240,10 @@ public class StarCitizenTests
     [TestMethod]
     public void AEGS_Avenger_v320()
     {
-        var args = new string[] { $@"d:\depot\sc3.21\data\objects\spaceships\ships\AEGS\Avenger\AEGS_Avenger.cga", "-dds", "-dae", "-objectdir", @"d:\depot\sc3.21\data" };
+        var args = new string[] {
+            $@"d:\depot\sc3.22\data\objects\spaceships\ships\AEGS\Avenger\AEGS_Avenger.cga",
+            "-dds", "-dae",
+            "-objectdir", @"d:\depot\sc3.22\data" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
@@ -237,7 +258,7 @@ public class StarCitizenTests
         Assert.AreEqual("1 0 0 -0.300001 0 -0.938131 -0.346280 0.512432 0 0.346280 -0.938131 -1.835138 0 0 0 1", noseNode.node[28].Matrix[0].Value_As_String);
 
         Assert.AreEqual(31, colladaData.DaeObject.Library_Materials.Material.Length);
-        Assert.AreEqual(54, colladaData.DaeObject.Library_Images.Image.Length);
+        Assert.AreEqual(53, colladaData.DaeObject.Library_Images.Image.Length);
         testUtils.ValidateColladaXml(colladaData);
     }
 
@@ -438,7 +459,7 @@ public class StarCitizenTests
         Assert.AreEqual(13, hipNode.node.Length);
         Assert.AreEqual("-0 -0.000002 -1 -0 -0 1 -0.000002 -0.014728 1 0 -0 1.005547 0 0 0 1", hipNode.Matrix[0].Value_As_String);
         Assert.AreEqual("RItemPort_IKTarget", hipNode.node[0].Name);
-        Assert.AreEqual("1 0 -0.000002 -0.971578 0.000002 -0.000002 1 -0.014770 0 -1 -0.000002 1.250977 0 0 0 1", hipNode.node[0].Matrix[0].Value_As_String);
+        Assert.AreEqual("-1 0 -0 -0.033969 -0 0 1 0.014687 0 1 0 -0.245430 0 0 0 1", hipNode.node[0].Matrix[0].Value_As_String);
 
         // Controller checks
         var controller = colladaData.DaeObject.Library_Controllers.Controller[0];

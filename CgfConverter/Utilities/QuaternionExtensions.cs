@@ -58,7 +58,8 @@ public static class QuaternionExtensions
             return new Vector4(1, 0, 0, 0); // Arbitrary axis with 0 angle.
 
         // TODO:  Figure out why this is inverted.
-        Vector3 axis = new(-quaternion.X, -quaternion.Y, -quaternion.Z);
+        //Vector3 axis = new(-quaternion.X, -quaternion.Y, -quaternion.Z);
+        Vector3 axis = new(quaternion.X, quaternion.Y, quaternion.Z);
         float scale = axis.Length();
 
         // Avoid division by zero when normalizing the axis.

@@ -115,7 +115,7 @@ public class QuaternionExtensionsTests
     public void ToAxisAngle_HulaGirlUpperBody()
     {
         var q = new Quaternion(0.102484673f, -0.0468823574f, -0.00384537759f, 0.9936217f);
-        var expectedAxisAngle = new Vector4(-0.90883744f, 0.4157543f, 0.0341009349f, 12.949439f);
+        var expectedAxisAngle = new Vector4(0.90883744f, -0.4157543f, -0.0341009349f, 12.949439f);
 
         var actualAxisAngle = q.ToAxisAngle();
         Assert.AreEqual(expectedAxisAngle.X, actualAxisAngle.X, 0.0001);
