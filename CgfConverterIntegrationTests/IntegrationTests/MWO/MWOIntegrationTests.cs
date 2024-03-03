@@ -198,7 +198,9 @@ public class MWOIntegrationTests
     [TestMethod]
     public void HarnessCable_VerifyArmatureAndAnimations_Collada()
     {
-        var args = new string[] { @"D:\depot\MWO\Objects\environments\frontend\mechlab_a\mechbay_cables\harness_cable.chr", "-dds", "-dae", "-objectdir", objectDir };
+        var args = new string[] { @"D:\depot\MWO\Objects\environments\frontend\mechlab_a\mechbay_cables\harness_cable.chr",
+            "-dds", "-dae",
+            "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 

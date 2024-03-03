@@ -106,8 +106,8 @@ public class ColladaModelRenderer : IRenderer
             WriteLibrary_VisualScenes();
 
         // Write animations
-        if (_cryData.Animations is not null)
-            WriteLibrary_Animations();
+        //if (_cryData.Animations is not null)
+        //    WriteLibrary_Animations();
     }
 
     protected void WriteColladaRoot(string version)
@@ -255,7 +255,7 @@ public class ColladaModelRenderer : IRenderer
         var channel = new ColladaChannel
         {
             Source = $"#{controllerIdBase}_sampler_{animType}",
-            Target = $"{controllerBoneName}/{pathName}"
+            Target = $"{controllerBoneName}/matrix"
         };
         var controllerAnimation = new ColladaAnimation
         {
@@ -1531,12 +1531,27 @@ public class ColladaModelRenderer : IRenderer
         if (bone.ControllerID != -1)
             controllerIdToBoneName.Add(bone.ControllerID, bone.boneName);
 
+        Matrix4x4 localMatrix = bone.LocalTransformMatrix.ConvertToTransformMatrix();
+
+        // Rotate and translate code.
+        //ColladaRotate rotate = new()
+        //{
+        //    sID = "rotate",
+        //    Value_As_String = CreateStringFromVector4(localMatrix.ToAxisAngleDegrees())
+        //};
+        //ColladaTranslate translate = new()
+        //{
+        //    sID = "translate",
+        //    Value_As_String = CreateStringFromVector3(localMatrix.GetTranslation())
+        //};
+        //tmpNode.Rotate = new ColladaRotate[1] { rotate };
+        //tmpNode.Translate = new ColladaTranslate[1] { translate };
+
         // Matrix code
         ColladaMatrix matrix = new();
         List<ColladaMatrix> matrices = new();
-        Matrix4x4 localMatrix = bone.LocalTransformMatrix.ConvertToTransformMatrix();
         matrix.Value_As_String = CreateStringFromMatrix4x4(localMatrix);
-
+        matrix.sID = "matrix";
         matrices.Add(matrix);
         tmpNode.Matrix = matrices.ToArray();
 

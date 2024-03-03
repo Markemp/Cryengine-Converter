@@ -135,7 +135,7 @@ public partial class CryEngine
         {
             var chrparams = CryXmlSerializer.Deserialize<ChrParams.ChrParams>(
                 PackFileSystem.GetStream(Path.ChangeExtension(InputFile, ".chrparams")));
-            var trackFilePath = chrparams.Animations?.FirstOrDefault(x => x.Name == "$TracksDatabase")?.Path;
+            var trackFilePath = chrparams.Animations?.FirstOrDefault(x => x.Name == "$TracksDatabase" || x.Name == "#filepath")?.Path;
             if (trackFilePath is null)
                 throw new FileNotFoundException();
             if (Path.GetExtension(trackFilePath) != "dba")
