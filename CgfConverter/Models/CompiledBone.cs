@@ -9,23 +9,23 @@ namespace CgfConverter;
 
 public class CompiledBone
 {
-    public uint ControllerID { get; set; }
-    public PhysicsGeometry[] physicsGeometry;  // 2 of these.  One for live objects, other for dead (ragdoll?)
+    public int ControllerID { get; set; }
+    public PhysicsGeometry[]? physicsGeometry; // 2 of these.  One for live objects, other for dead (ragdoll?)
     public double mass;                        // 0xD8 ?
     public Matrix3x4 LocalTransformMatrix;     // WORLDTOBONE is also the Bind Pose Matrix (BPM) in Collada
     public Matrix3x4 WorldTransformMatrix;
-    public string boneName;                    // String256 in old terms; convert to a real null terminated string.
-    public uint limbID;                         // ID of this limb... usually just 0xFFFFFFFF
+    public string? boneName;                   // String256 in old terms; convert to a real null terminated string.
+    public uint limbID;                        // ID of this limb... usually just 0xFFFFFFFF
     public int offsetParent;                   // offset to the parent in number of CompiledBone structs (584 bytes)
-    public int offsetChild;                    // Offset to the first child to this bone in number of CompiledBone structs
-    public uint numChildren;                   // Number of children to this bone
+    public int offsetChild;                    // Offset to the first child to this bone in number of CompiledBone structs. Don't use this. Not in Ivo files.
+    public int numChildren;                    // Number of children to this bone
 
     public Matrix4x4 BindPoseMatrix;           // This is the WorldToBone matrix for library_controllers
     
     public long offset;                        // Calculated position in the file where this bone started.
     
-    public uint parentID;                      // Calculated controllerID of the parent bone put into the Bone Dictionary (the key)
-    public List<uint> childIDs = new();        // Calculated controllerIDs of the children to this bone.
+    public int parentID;                       // Calculated controllerID of the parent bone put into the Bone Dictionary (the key)
+    public List<int> childIDs = new();         // Calculated controllerIDs of the children to this bone.
 
     public CompiledBone? ParentBone;
 
@@ -43,7 +43,7 @@ public class CompiledBone
     public void ReadCompiledBone_800(BinaryReader b)
     {
         // Reads just a single 584 byte entry of a bone.
-        ControllerID = b.ReadUInt32();                 // unique id of bone (generated from bone name)
+        ControllerID = b.ReadInt32();                  // Bone controller.  Can be 0xFFFFFFFF
         physicsGeometry = new PhysicsGeometry[2];
         physicsGeometry[0].ReadPhysicsGeometry(b);     // LOD 0 is the physics of alive body, 
         physicsGeometry[1].ReadPhysicsGeometry(b);     // LOD 1 is the physics of a dead body
@@ -54,31 +54,31 @@ public class CompiledBone
         boneName = b.ReadFString(256);
         limbID = b.ReadUInt32();
         offsetParent = b.ReadInt32();
-        numChildren = b.ReadUInt32();
+        numChildren = b.ReadInt32();
         offsetChild = b.ReadInt32();
     }
 
     public void ReadCompiledBone_801(BinaryReader b)
     {
         // Reads just a single 3xx byte entry of a bone.
-        ControllerID = b.ReadUInt32();                 // unique id of bone (generated from bone name)
+        ControllerID = b.ReadInt32();                 // Bone controller.  Can be 0xFFFFFFFF
         limbID = b.ReadUInt32();
         b.BaseStream.Seek(208, SeekOrigin.Current);
         boneName = b.ReadFString(48);
         offsetParent = b.ReadInt32();
-        numChildren = b.ReadUInt32();
+        numChildren = b.ReadInt32();
         offsetChild = b.ReadInt32();
         // TODO:  This may be quaternion and translation vectors. 
         LocalTransformMatrix = b.ReadMatrix3x4();
         BindPoseMatrix = LocalTransformMatrix.ConvertToTransformMatrix();
         WorldTransformMatrix = new(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0);
 
-        childIDs = new List<uint>();                    // Calculated
+        childIDs = new List<int>();                    // Calculated
     }
 
     public void ReadCompiledBone_900(BinaryReader b)
     {
-        ControllerID = b.ReadUInt32();                 // unique id of bone (generated from bone name)
+        ControllerID = b.ReadInt32();                 // unique id of bone (generated from bone name)
         limbID = b.ReadUInt32();
         offsetParent = b.ReadInt32();
         Quaternion relativeQuat = b.ReadQuaternion();

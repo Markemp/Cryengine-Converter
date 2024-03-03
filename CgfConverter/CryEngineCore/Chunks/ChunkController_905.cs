@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -6,33 +7,62 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using CgfConverter.Services;
+using CgfConverter.Utils;
 using Extensions;
 
 namespace CgfConverter.CryEngineCore;
 
 internal sealed class ChunkController_905 : ChunkController
 {
+    private readonly TaggedLogger Log = new TaggedLogger(nameof(ChunkController_905));
+
     public uint NumKeyPos { get; internal set; }
     public uint NumKeyRot { get; internal set; }
     public uint NumKeyTime { get; internal set; }
     public uint NumAnims { get; internal set; }
 
-    public List<List<float>> KeyTimes { get; internal set; }
-    public List<List<Vector3>> KeyPositions { get; internal set; }
-    public List<List<Quaternion>> KeyRotations { get; internal set; }
-    public List<Animation> Animations { get; internal set; }
+    public List<List<float>>? KeyTimes { get; internal set; }
+    public List<List<Vector3>>? KeyPositions { get; internal set; }
+    public List<List<Quaternion>>? KeyRotations { get; internal set; }
+    public List<Animation>? Animations { get; internal set; }
 
     public override void Read(BinaryReader b)
     {
         base.Read(b);
 
-        // TODO: detect shit
-        ((EndiannessChangeableBinaryReader) b).IsBigEndian = true;
+        // Assume little endian for now
+        ((EndiannessChangeableBinaryReader) b).IsBigEndian = false;
 
         NumKeyPos = b.ReadUInt32();
         NumKeyRot = b.ReadUInt32();
         NumKeyTime = b.ReadUInt32();
         NumAnims = b.ReadUInt32();
+
+        // Test: if there exists a number that exceeds 0x10000, it may not be in little endian.
+        var endianCheck =
+            (NumKeyPos >= 0x10000 ? 1 : 0) |
+            (NumKeyRot >= 0x10000 ? 2 : 0) |
+            (NumKeyTime >= 0x10000 ? 4 : 0) |
+            (NumAnims >= 0x10000 ? 8 : 0);
+
+        switch (endianCheck)
+        {
+            case 0: // most likely to be little endian
+                break; // do nothing
+
+            case 15: // most likely to be big endian
+                NumKeyPos = BinaryPrimitives.ReverseEndianness(NumKeyPos);
+                NumKeyRot = BinaryPrimitives.ReverseEndianness(NumKeyRot);
+                NumKeyTime = BinaryPrimitives.ReverseEndianness(NumKeyTime);
+                NumAnims = BinaryPrimitives.ReverseEndianness(NumAnims);
+                ((EndiannessChangeableBinaryReader) b).IsBigEndian = true;
+                Log.I($"Assuming big endian: {this}");
+                break;
+
+            default:
+                Log.W($"Could not deduce endianness(endianCheck={endianCheck}); assuming little endian: {this}");
+                break;
+        }
 
         var keyTimeLengths = Enumerable.Range(0, (int) NumKeyTime).Select(_ => b.ReadUInt16()).ToList();
         var keyTimeFormats = Enumerable.Range(0, (int) EKeyTimesFormat.eBitset + 1).Select(_ => b.ReadUInt32()).ToList();
@@ -114,9 +144,7 @@ internal sealed class ChunkController_905 : ChunkController
                     Utilities.Log(LogLevelEnum.Warning, "eBitset: Expected last as {0}, got {1}", end, data[^1]);
             }
             else
-            {
                 throw new Exception("sum(count per format) != count of keytimes");
-            }
             
             // Get rid of decreasing entries at end (zero-pads)
             while (data.Count >= 2 && data[^2] > data[^1])
@@ -171,9 +199,7 @@ internal sealed class ChunkController_905 : ChunkController
                 data = Enumerable.Range(0, length).Select(_ => ((Quaternion)b.ReadSmallTree64BitExtQuat()).DropW()).ToList();
             }
             else
-            {
                 throw new Exception("sum(count per format) != count of keypos");
-            }
             
             KeyPositions.Add(data);
         }
@@ -368,7 +394,7 @@ internal sealed class ChunkController_905 : ChunkController
     public struct CControllerInfo
     {
         public const int InvalidTrack = -1;
-        public uint ControllerID;
+        public int ControllerID;
         public int PosKeyTimeTrack;
         public int PosTrack;
         public int RotKeyTimeTrack;
@@ -379,13 +405,13 @@ internal sealed class ChunkController_905 : ChunkController
 
         public CControllerInfo()
         {
-            ControllerID = uint.MaxValue;
+            ControllerID = int.MaxValue;
             PosKeyTimeTrack = PosTrack = RotKeyTimeTrack = RotTrack = InvalidTrack;
         }
 
         public CControllerInfo(BinaryReader r)
         {
-            ControllerID = r.ReadUInt32();
+            ControllerID = r.ReadInt32();
             PosKeyTimeTrack = r.ReadInt32();
             PosTrack = r.ReadInt32();
             RotKeyTimeTrack = r.ReadInt32();

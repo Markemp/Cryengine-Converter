@@ -22,7 +22,7 @@ public class CascadedPackFileSystem : IPackFileSystem, IDisposable
             {
                 return x.GetStream(path);
             }
-            catch (FileNotFoundException)
+            catch (IOException)
             {
                 // pass
             }
@@ -41,7 +41,7 @@ public class CascadedPackFileSystem : IPackFileSystem, IDisposable
         var temporaryRootDir = Path.IsPathRooted(pattern)
             ? Path.GetPathRoot(pattern)!
             : Path.GetPathRoot(Path.GetFullPath("."))!;
-        
+
         return _underlying.SelectMany(x => x.Glob(pattern))
             .Concat(new RealFileSystem(temporaryRootDir)
                 .Glob(Path.Combine(Path.GetFullPath("."), pattern)[temporaryRootDir.Length..])

@@ -1,4 +1,4 @@
-﻿using CgfConverter.Materials;
+﻿using CgfConverter.Models.Materials;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CgfConverterTests.UnitTests;

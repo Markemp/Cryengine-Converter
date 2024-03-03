@@ -6,7 +6,7 @@ using System.Globalization;
 using System.Threading;
 using CgfConverter.Renderers.Collada;
 
-namespace CgfConverterTests.IntegrationTests.Crysis;
+namespace CgfConverterTests.IntegrationTests;
 
 [TestClass]
 public class CrysisIntegrationTests
@@ -34,7 +34,7 @@ public class CrysisIntegrationTests
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.Render();
+        colladaData.GenerateDaeObject();
     }
 
     [TestMethod]
@@ -48,6 +48,6 @@ public class CrysisIntegrationTests
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.Render();
+        colladaData.GenerateDaeObject();
     }
 }

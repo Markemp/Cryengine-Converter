@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Threading;
 using System;
 
-namespace CgfConverterTests.IntegrationTests.MWLL;
+namespace CgfConverterTests.IntegrationTests;
 
 [TestClass]
 public class MwllIntegrationTests
@@ -20,6 +20,4 @@ public class MwllIntegrationTests
         Thread.CurrentThread.CurrentCulture = customCulture;
         testUtils.GetSchemaSet();
     }
-
-     
 }

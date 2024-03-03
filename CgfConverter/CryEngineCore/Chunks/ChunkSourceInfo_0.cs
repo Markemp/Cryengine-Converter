@@ -40,8 +40,6 @@ internal sealed class ChunkSourceInfo_0 : ChunkSourceInfo
             Date = Date.Split('\n')[0];
         }
         else
-        {
             Author = reader.ReadCString();
-        }
     }
 }

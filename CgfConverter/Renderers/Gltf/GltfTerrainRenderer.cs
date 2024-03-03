@@ -69,7 +69,7 @@ public class GltfTerrainRenderer : BaseGltfRenderer, IRenderer
             if (!terrain.Objects.TryGetValue(name, out var cryObject))
                 continue;
 
-            if (!CreateModelNode(out var node, cryObject, true))
+            if (!CreateGltfNode(out var node, cryObject, true))
                 continue;
 
             newNode.Children.Add(AddNode(node));
@@ -133,7 +133,7 @@ public class GltfTerrainRenderer : BaseGltfRenderer, IRenderer
             if (!terrain.Objects.TryGetValue(name, out var cryObject))
                 continue;
 
-            if (!CreateModelNode(out var node, cryObject, true))
+            if (!CreateGltfNode(out var node, cryObject, true))
                 continue;
 
             if (translation != Vector3.Zero)

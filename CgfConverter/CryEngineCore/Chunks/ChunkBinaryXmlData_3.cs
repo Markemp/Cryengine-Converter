@@ -7,7 +7,7 @@ namespace CgfConverter.CryEngineCore;
 
 internal sealed class ChunkBinaryXmlData_3 : ChunkBinaryXmlData     //  0xCCCBF004:  Binary XML Data
 {
-    public XmlDocument Data { get; private set; }
+    public XmlDocument? Data { get; private set; }
 
     public override void Read(BinaryReader b)
     {

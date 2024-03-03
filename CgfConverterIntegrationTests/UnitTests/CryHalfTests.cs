@@ -17,7 +17,7 @@ public class CryHalfTests
         ushort value = 0x4DE2;
         float expectedResult = 23.53125f;
 
-        Assert.AreEqual(expectedResult, CryHalf.ConvertCryHalfToFloat(value), TestUtils.delta);
+        Assert.That(CryHalf.ConvertCryHalfToFloat(value), Is.EqualTo(expectedResult).Within(TestUtils.delta));
     }
 
     [Test]
@@ -26,7 +26,7 @@ public class CryHalfTests
         ushort value = 0x4DE2;
         float expectedResult = 0.6132504940032959f;
 
-        Assert.AreEqual(expectedResult, CryHalf.ConvertDymekHalfToFloat(value), TestUtils.delta);
+        Assert.That(CryHalf.ConvertDymekHalfToFloat(value), Is.EqualTo(expectedResult).Within(TestUtils.delta));
     }
 
     [Test]
@@ -35,7 +35,7 @@ public class CryHalfTests
         ushort value = 0x01D2;
         float expectedResult = 0.0000277757644653f;
 
-        Assert.AreEqual(expectedResult, CryHalf.ConvertCryHalfToFloat(value), TestUtils.delta);
+        Assert.That(CryHalf.ConvertCryHalfToFloat(value), Is.EqualTo(expectedResult).Within(TestUtils.delta));
     }
 
     [Test]
@@ -44,7 +44,7 @@ public class CryHalfTests
         ushort value = 0x01D2;
         float expectedResult = 0.014333168976008892f;
 
-        Assert.AreEqual(expectedResult, CryHalf.ConvertDymekHalfToFloat(value), TestUtils.delta);
+        Assert.That(CryHalf.ConvertDymekHalfToFloat(value), Is.EqualTo(expectedResult).Within(TestUtils.delta));
     }
 
     [Test]
@@ -53,7 +53,7 @@ public class CryHalfTests
         ushort value = 0x0000;
         float expectedResult = 0f;
 
-        Assert.AreEqual(expectedResult, CryHalf.ConvertCryHalfToFloat(value), TestUtils.delta);
+        Assert.That(CryHalf.ConvertCryHalfToFloat(value), Is.EqualTo(expectedResult).Within(TestUtils.delta));
     }
 
     [Test]
@@ -62,7 +62,7 @@ public class CryHalfTests
         ushort value = 0x0000;
         float expectedResult = 0f;
 
-        Assert.AreEqual(expectedResult, CryHalf.ConvertDymekHalfToFloat(value), TestUtils.delta);
+        Assert.That(CryHalf.ConvertDymekHalfToFloat(value), Is.EqualTo(expectedResult).Within(TestUtils.delta));
     }
 
     [Test]
@@ -72,7 +72,7 @@ public class CryHalfTests
 
         float result = CryHalf.ConvertCryHalfToFloat(half);
 
-        Assert.AreEqual(131008.0f, result, TestUtils.delta);
+        Assert.That(result, Is.EqualTo(131008.0f).Within(TestUtils.delta));
     }
 
     [Test]
@@ -82,7 +82,7 @@ public class CryHalfTests
 
         float result = CryHalf.ConvertDymekHalfToFloat(half);
 
-        Assert.AreEqual(1.0078432559967041d, result, TestUtils.delta);
+        Assert.That(result, Is.EqualTo(1.0078432559967041d).Within(TestUtils.delta));
     }
 
 
@@ -93,7 +93,7 @@ public class CryHalfTests
 
         float result = CryHalf.ConvertCryHalfToFloat(half);
 
-        Assert.AreEqual(0.0004396, result, TestUtils.delta);
+        Assert.That(result, Is.EqualTo(0.0004396).Within(TestUtils.delta));
     }
 
     [Test]
@@ -103,7 +103,7 @@ public class CryHalfTests
 
         float result = CryHalf.ConvertDymekHalfToFloat(half);
 
-        Assert.AreEqual(0.11970964819192886d, result, TestUtils.delta);
+        Assert.That(result, Is.EqualTo(0.11970964819192886d).Within(TestUtils.delta));
     }
 
     [Test]
@@ -113,7 +113,7 @@ public class CryHalfTests
 
         float result = CryHalf.ConvertCryHalfToFloat(half);
 
-        Assert.AreEqual(2.017578125d, result, TestUtils.delta);
+        Assert.That(result, Is.EqualTo(2.017578125d).Within(TestUtils.delta));
     }
     
     [Test]
@@ -123,7 +123,7 @@ public class CryHalfTests
 
         float result = CryHalf.ConvertDymekHalfToFloat(half);
 
-        Assert.AreEqual(0.50421380996704102d, result, TestUtils.delta);
+        Assert.That(result, Is.EqualTo(0.50421380996704102d).Within(TestUtils.delta));
     }
 
     [Test]
@@ -133,7 +133,7 @@ public class CryHalfTests
 
         float result = CryHalf.ConvertCryHalfToFloat(half);
 
-        Assert.AreEqual(54.0625f, result, TestUtils.delta);
+        Assert.That(result, Is.EqualTo(54.0625f).Within(TestUtils.delta));
     }
 
     [Test]
@@ -143,7 +143,7 @@ public class CryHalfTests
 
         float result = CryHalf.ConvertDymekHalfToFloat(half);
 
-        Assert.AreEqual(0.651636302f, result, TestUtils.delta);
+        Assert.That(result, Is.EqualTo(0.651636302f).Within(TestUtils.delta));
     }
 
     [Test]
@@ -153,7 +153,7 @@ public class CryHalfTests
 
         float result = CryHalf.ConvertCryHalfToFloat(half);
 
-        Assert.AreEqual(1.0f, result, TestUtils.delta);
+        Assert.That(result, Is.EqualTo(1.0f).Within(TestUtils.delta));
     }
 
     [Test]
@@ -163,7 +163,7 @@ public class CryHalfTests
 
         float result = CryHalf.ConvertDymekHalfToFloat(half);
 
-        Assert.AreEqual(0.47244095802307129d, result, TestUtils.delta);
+        Assert.That(result, Is.EqualTo(0.47244095802307129d).Within(TestUtils.delta));
     }
 
     [Test]
@@ -173,7 +173,7 @@ public class CryHalfTests
 
         float result = CryHalf.ConvertCryHalfToFloat(half);
 
-        Assert.AreEqual(1.5f, result, TestUtils.delta);
+        Assert.That(result, Is.EqualTo(1.5f).Within(TestUtils.delta));
     }
 
     [Test]
@@ -183,7 +183,7 @@ public class CryHalfTests
 
         float result = CryHalf.ConvertDymekHalfToFloat(half);
 
-        Assert.AreEqual(0.4881889820098877d, result, TestUtils.delta);
+        Assert.That(result, Is.EqualTo(0.4881889820098877d).Within(TestUtils.delta));
     }
 
     [Test]
@@ -193,7 +193,7 @@ public class CryHalfTests
 
         float result = CryHalf.ConvertCryHalfToFloat(half);
 
-        Assert.AreEqual(4f, result, TestUtils.delta);
+        Assert.That(result, Is.EqualTo(4f).Within(TestUtils.delta));
     }
     [Test]
     public void DymekHalfToFloat_Four_ReturnsCorrectResult()
@@ -202,7 +202,7 @@ public class CryHalfTests
 
         float result = CryHalf.ConvertDymekHalfToFloat(half);
 
-        Assert.AreEqual(0.53543305397033691d, result, TestUtils.delta);
+        Assert.That(result, Is.EqualTo(0.53543305397033691d).Within(TestUtils.delta));
     }
 
     [Test]
@@ -212,7 +212,7 @@ public class CryHalfTests
 
         float result = CryHalf.ConvertCryHalfToFloat(half);
 
-        Assert.AreEqual(0.00044226646423339844d, result, TestUtils.delta);
+        Assert.That(result, Is.EqualTo(0.00044226646423339844d).Within(TestUtils.delta));
     }
     
     [Test]
@@ -222,6 +222,6 @@ public class CryHalfTests
 
         float result = CryHalf.ConvertDymekHalfToFloat(half);
 
-        Assert.AreEqual(0.120047979f, result, TestUtils.delta);
+        Assert.That(result, Is.EqualTo(0.120047979f).Within(TestUtils.delta));
     }
 }

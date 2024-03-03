@@ -6,7 +6,7 @@ namespace CgfConverter.CryEngineCore;
 internal sealed class ChunkController_826 : ChunkController
 {
     public CtrlType ControllerType { get; internal set; }
-    public uint NumKeys { get; internal set; }
+    public int NumKeys { get; internal set; }
     public uint ControllerFlags { get; internal set; }        // technically a bitstruct to identify a cycle or a loop.
     public uint ControllerID { get; internal set; }           // Unique id based on CRC32 of bone name.  Ver 827 only?
     public Key[] Keys { get; internal set; }                    // array length NumKeys.  Ver 827?
@@ -19,7 +19,7 @@ internal sealed class ChunkController_826 : ChunkController
 
         //Utils.Log(LogLevelEnum.Debug, "ID is:  {0}", id);
         ControllerType = (CtrlType)b.ReadUInt32();
-        NumKeys = b.ReadUInt32();
+        NumKeys = b.ReadInt32();
         ControllerFlags = b.ReadUInt32();
         ControllerID = b.ReadUInt32();
         Keys = new Key[NumKeys];
@@ -28,7 +28,6 @@ internal sealed class ChunkController_826 : ChunkController
         {
             // Will implement fully later.  Not sure I understand the structure, or if it's necessary.
             Keys[i].Time = b.ReadInt32();
-            // Utils.Log(LogLevelEnum.Debug, "Time {0}", Keys[i].Time);
             Keys[i].AbsPos = b.ReadVector3();
             Keys[i].RelPos = b.ReadVector3();
         }

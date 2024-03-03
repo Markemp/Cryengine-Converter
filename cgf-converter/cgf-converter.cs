@@ -1,21 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using CgfConverter.Renderers;
+﻿using CgfConverter.Renderers;
 using CgfConverter.Renderers.Collada;
 using CgfConverter.Renderers.Gltf;
 using CgfConverter.Renderers.Wavefront;
 using CgfConverter.Terrain;
 using CgfConverter.Utils;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CgfConverter;
 
 public class Program
 {
-    private readonly TaggedLogger Log = new TaggedLogger("Program");
+    private readonly TaggedLogger Log = new("Program");
     private readonly ArgsHandler _args;
 
     private Program(ArgsHandler args)
@@ -32,7 +32,7 @@ public class Program
         Utilities.LogLevel = LogLevelEnum.Info;
         Utilities.DebugLevel = LogLevelEnum.Debug;
 
-        var customCulture = (CultureInfo) Thread.CurrentThread.CurrentCulture.Clone();
+        var customCulture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
         customCulture.NumberFormat.NumberDecimalSeparator = ".";
         Thread.CurrentThread.CurrentCulture = customCulture;
 
@@ -57,7 +57,7 @@ public class Program
             Log.I(
                 $"[{i + 1}/{_args.InputFiles.Count} {100f * i / _args.InputFiles.Count:0.00}%] " +
                 inputFile);
-            
+
             if (CryEngine.SupportsFile(inputFile))
                 ExportSingleModel(inputFile);
             else if (CryTerrain.SupportsFile(inputFile))
@@ -65,7 +65,7 @@ public class Program
         }
 
         Log.I("Finished.");
-        
+
         return 0;
     }
 #else
@@ -113,8 +113,10 @@ public class Program
 
     private void ExportSingleModel(string inputFile)
     {
-        // Read CryEngine Files
-        var data = new CryEngine(inputFile, _args.PackFileSystem);
+        var data = new CryEngine(
+            inputFile,
+            _args.PackFileSystem,
+            materialFiles: _args.MaterialFile);
 
         data.ProcessCryengineFiles();
 
@@ -132,11 +134,11 @@ public class Program
     private void ExportSingleTerrain(string inputFile)
     {
         var data = new CryTerrain(inputFile, _args.PackFileSystem);
-        
+
         var renderers = new List<IRenderer>();
         if (_args.OutputGLB || _args.OutputGLTF)
             renderers.Add(new GltfTerrainRenderer(_args, data, _args.OutputGLTF, _args.OutputGLB));
-        
+
         RunRenderersAndThrowAggregateExceptionIfAny(renderers);
     }
 

@@ -14,12 +14,9 @@ public partial class BaseGltfRenderer
         IReadOnlyDictionary<int, int> keyTimeAccessors,
         IReadOnlyDictionary<int, int> keyPositionAccessors,
         IReadOnlyDictionary<int, int> keyRotationAccessors,
-        IReadOnlyDictionary<uint, int> controllerIdToNodeIndex)
+        IReadOnlyDictionary<int, int> controllerIdToNodeIndex)
     {
-        newAnimation = new GltfAnimation
-        {
-            Name = anim.Name,
-        };
+        newAnimation = new GltfAnimation { Name = anim.Name };
 
         foreach (var con in anim.Controllers)
         {
@@ -92,7 +89,7 @@ public partial class BaseGltfRenderer
 
     private int WriteAnimations(
         IEnumerable<Model> animationContainers,
-        IReadOnlyDictionary<uint, int> controllerIdToNodeIndex)
+        IReadOnlyDictionary<int, int> controllerIdToNodeIndex)
     {
         var numAnimationsWritten = 0;
         var animChunks = animationContainers
@@ -101,7 +98,9 @@ public partial class BaseGltfRenderer
         foreach (var animChunk in animChunks)
         {
             var keyTimeAccessors = animChunk.Animations.SelectMany(x =>
-                    x.Controllers.Where(y => y.HasPosTrack).Select(y => y.PosKeyTimeTrack)
+                    x.Controllers
+                        .Where(y => y.HasPosTrack)
+                        .Select(y => y.PosKeyTimeTrack)
                         .Concat(x.Controllers.Where(y => y.HasRotTrack).Select(y => y.RotKeyTimeTrack)))
                 .Distinct()
                 .ToDictionary(i => i, i =>

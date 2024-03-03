@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace CgfConverter.CryEngineCore;
 
-public abstract class ChunkCompiledBones : Chunk     //  0xACDC0000:  Bones info
+public abstract class ChunkCompiledBones : Chunk     //  Bones info
 {
     public string RootBoneName;         // Controller ID?  Name?  Not sure yet.
     public CompiledBone RootBone;       // First bone in the data structure.
@@ -12,18 +12,18 @@ public abstract class ChunkCompiledBones : Chunk     //  0xACDC0000:  Bones info
     // Bones are a bit different than Node Chunks, since there is only one CompiledBones Chunk, and it contains all the bones in the model.
     public List<CompiledBone> BoneList = new();
 
-    public List<CompiledBone> GetAllChildBones(CompiledBone bone) => BoneList.Where(a => bone.childIDs.Contains(a.ControllerID)).ToList();
+    public List<CompiledBone> GetChildBones(CompiledBone bone)
+    {
+        List<CompiledBone> childBones = new();
+        foreach (var bone1 in BoneList)
+        {
+            if (bone1.ParentBone == bone)
+                childBones.Add(bone1);
+        }
+        return childBones;
+    }
 
     public List<string> GetBoneNames() => BoneList.Select(a => a.boneName).ToList();
-
-    protected void AddChildIDToParent(CompiledBone bone)
-    {
-        if (bone.parentID != 0)
-        {
-            CompiledBone parent = BoneList.FirstOrDefault(a => a.ControllerID == bone.parentID);  // Should only be one parent.
-            parent.childIDs.Add(bone.ControllerID);
-        }
-    }
 
     public override string ToString() => $@"Chunk Type: {ChunkType}, ID: {ID:X}";
 }

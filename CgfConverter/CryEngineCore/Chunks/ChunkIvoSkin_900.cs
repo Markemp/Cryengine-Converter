@@ -16,6 +16,7 @@ internal sealed class ChunkIvoSkin_900 : ChunkIvoSkin
      * 8: Bonemap  (assume all #ivo files have armatures)
      * 9: Colors
      * 10: Colors2
+     * 11: MtlName
      */
 
     public override void Read(BinaryReader b)
@@ -46,6 +47,15 @@ internal sealed class ChunkIvoSkin_900 : ChunkIvoSkin
         subsetsChunk.ChunkType = ChunkType.MeshSubsets;
         subsetsChunk.ID = 3;
         model.ChunkMap.Add(subsetsChunk.ID, subsetsChunk);
+
+        // Create dummy mtlName chunk
+        ChunkMtlName_800 mtlName = new();
+        mtlName._model = _model;
+        mtlName._header = _header;
+        mtlName._header.Offset = (uint)b.BaseStream.Position;
+        mtlName.ChunkType = ChunkType.MtlName;
+        mtlName.ID = 11;
+        model.ChunkMap.Add(mtlName.ID, mtlName);
 
         while (b.BaseStream.Position != b.BaseStream.Length)
         {

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using CgfConverter.Models;
+using System.Collections.Generic;
 using System.IO;
 
 namespace CgfConverter.CryEngineCore;
@@ -27,22 +28,16 @@ internal sealed class ChunkCompiledBones_800 : ChunkCompiledBones
                 tempBone.ParentBone = BoneList[i + tempBone.offsetParent];
             
             if (tempBone.ParentBone is not null)
-                tempBone.parentID = tempBone.ParentBone.ControllerID;
+                //tempBone.parentID = tempBone.ParentBone.ControllerID;
+                tempBone.parentID = BoneList.IndexOf(tempBone) + tempBone.offsetParent;
             else
                 tempBone.parentID = 0;
 
             BoneList.Add(tempBone);
         }
 
-        // Add the ChildID to the parent bone.  This will help with navigation. Also set up the TransformSoFar
-        foreach (CompiledBone bone in BoneList)
-        {
-            AddChildIDToParent(bone);
-        }
-
         SkinningInfo skin = GetSkinningInfo();
         skin.CompiledBones = new List<CompiledBone>();
-        skin.HasSkinningInfo = true;
         skin.CompiledBones = BoneList;
     }
 }

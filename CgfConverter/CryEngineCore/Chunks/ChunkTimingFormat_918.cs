@@ -9,10 +9,10 @@ internal sealed class ChunkTimingFormat_918 : ChunkTimingFormat
     {
         base.Read(reader);
 
-        this.SecsPerTick = reader.ReadSingle();
-        this.TicksPerFrame = reader.ReadInt32();
-        this.GlobalRange.Name = reader.ReadFString(32);  // Name is technically a String32, but F those structs
-        this.GlobalRange.Start = reader.ReadInt32();
-        this.GlobalRange.End = reader.ReadInt32();
+        SecsPerTick = reader.ReadSingle();
+        TicksPerFrame = reader.ReadInt32();
+        GlobalRange.Name = reader.ReadFString(32);  // Name is technically a String32, but F those structs
+        GlobalRange.Start = reader.ReadInt32();
+        GlobalRange.End = reader.ReadInt32();
     }
 }

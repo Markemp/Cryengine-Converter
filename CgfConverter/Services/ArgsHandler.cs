@@ -24,6 +24,8 @@ public sealed class ArgsHandler
     public string? OutputFile { get; internal set; }
     /// <summary>Directory to render to</summary>
     public string? OutputDir { get; internal set; }
+    /// <summary>Material file override</summary>
+    public string? MaterialFile { get; internal set; }
     /// <summary>Whether to preserve path, if OutputDir is set.</summary>
     public bool PreservePath { get; internal set; }
     /// <summary>Maximum number of threads to use.</summary>
@@ -42,7 +44,7 @@ public sealed class ArgsHandler
     public bool OutputCollada { get; internal set; }
     /// <summary>Render glTF</summary>
     public bool OutputGLTF { get; internal set; }
-    /// <summary>Render glTF binary</summary>
+    /// <summary>Render glTF binary (default behavior)</summary>
     public bool OutputGLB { get; internal set; }
     /// <summary>Smooth Faces</summary>
     public bool Smooth { get; internal set; }
@@ -54,6 +56,8 @@ public sealed class ArgsHandler
     public bool TgaTextures { get; internal set; }
     /// <summary>Flag used to indicate that textures should not be included in the output file</summary>
     public bool NoTextures { get; internal set; }
+    /// <summary>For glTF exports, embed textures into the glTF file instead of external references.</summary>
+    public bool EmbedTextures { get; internal set; }
     /// <summary>Split each layer into different files, if a file does contain multiple layers.</summary>
     public bool SplitLayers { get; internal set; }
     /// <summary>List of node names to skip when rendering</summary>
@@ -87,8 +91,6 @@ public sealed class ArgsHandler
         {
             switch (inputArgs[i].ToLowerInvariant())
             {
-                #region case "-objectdir" / "-datadir"...
-
                 // Next item in list will be the Object directory
                 case "-datadir":
                 case "-objectdir":
@@ -100,8 +102,6 @@ public sealed class ArgsHandler
                     
                     lookupDataDirs.Add(inputArgs[i]);
                     break;
-                #endregion
-                #region case "-out" / "-outdir" / "-outputdir"...
                 // Next item in list will be the output directory
                 case "-out":
                 case "-outdir":
@@ -113,14 +113,10 @@ public sealed class ArgsHandler
                     }
                     OutputDir = new DirectoryInfo(inputArgs[i]).FullName;
                     break;
-                #endregion
-                #region case "-pp" / "-preservepath"...
                 case "-pp":
                 case "-preservepath":
                     PreservePath = true;
                     break;
-                #endregion
-                #region case "-mt" / "-maxthreads"...
                 case "-mt":
                 case "-maxthreads":
                     if (++i > inputArgs.Length)
@@ -139,15 +135,11 @@ public sealed class ArgsHandler
                         MaxThreads = 1;
                     }
                     break;
-                #endregion
-                #region case "-sl" / "-splitlayer" / "-splitlayers"...
                 case "-sl":
                 case "-splitlayer":
                 case "-splitlayers":
                     SplitLayers = true;
                     break;
-                #endregion
-                #region case "-loglevel"...
                 case "-loglevel":
                     if (++i > inputArgs.Length)
                     {
@@ -156,73 +148,50 @@ public sealed class ArgsHandler
                     }
 
                     if (Enum.TryParse(inputArgs[i], true, out LogLevelEnum level))
-                    {
                         Utilities.LogLevel = level;
-                    }
                     else
                     {
                         Console.Error.WriteLine("Invalid log level {0}, defaulting to warn", inputArgs[i]);
                         Utilities.LogLevel = LogLevelEnum.Warning;
                     }
                     break;
-                #endregion
-                #region case "-usage"...
                 case "-usage":
                     PrintUsage();
                     return 1;
-                #endregion
-                #region case "-smooth"...
                 case "-smooth":
                     Smooth = true;
                     break;
-                #endregion
-                #region case "-obj" / "-object" / "wavefront"...
-
                 case "-obj":
                 case "-object":
                 case "-wavefront":
                     OutputWavefront = true;
                     break;
-                #endregion
-                #region case "-gltf"
                 case "-gltf":
                     OutputGLTF = true;
                     break;
-                #endregion
-                #region case "-glb"
                 case "-glb":
                     OutputGLB = true;
                     break;
-                #endregion
-                #region case "-dae" / "-collada"...
                 case "-dae":
                 case "-collada":
                     OutputCollada = true;
                     break;
-                #endregion
-                #region case "-tif" / "-tiff"...
                 case "-tif":
                 case "-tiff":
                     TiffTextures = true;
                     break;
-                #endregion
-                #region case "-png" ...
                 case "-png":
                     PngTextures = true;
                     break;
-                #endregion
-                #region case "-tga" ...
+                case "-embedtextures":
+                    EmbedTextures = true;
+                    break;
                 case "-tga":
                     TgaTextures = true;
                     break;
-                #endregion
-                #region case "-notex" ...
                 case "-notex":
                     NoTextures = true;
                     break;
-                #endregion
-                #region case "-en" / "-excludenode"...
-
                 case "-en":
                 case "-excludenode":
                     if (++i > inputArgs.Length)
@@ -232,10 +201,6 @@ public sealed class ArgsHandler
                     }
                     ExcludeNodeNames.Add(inputArgs[i]);
                     break;
-
-                #endregion
-                #region case "-em" / "-excludemat"...
-
                 case "-em":
                 case "-excludemat":
                     if (++i > inputArgs.Length)
@@ -245,9 +210,6 @@ public sealed class ArgsHandler
                     }
                     ExcludeMaterialNames.Add(inputArgs[i]);
                     break;
-
-                #endregion
-                #region case "-es" / "-excludeshader"...
                 case "-es":
                 case "-excludeshader":
                     if (++i > inputArgs.Length)
@@ -257,25 +219,22 @@ public sealed class ArgsHandler
                     }
                     ExcludeShaderNames.Add(inputArgs[i]);
                     break;
-
-                #endregion
-                #region case "-group"...
-
                 case "-group":
                     GroupMeshes = true;
                     break;
-
-                #endregion
-                #region case "-throw"...
-
                 case "-throw":
                     Throw = true;
-
                     break;
-
-                #endregion
-                #region case "-infile" / "-inputfile"...
-
+                case "-mtl":
+                case "-mat":
+                case "-material":
+                    if (++i > inputArgs.Length)
+                    {
+                        PrintUsage();
+                        return 1;
+                    }
+                    MaterialFile = inputArgs[i];
+                    break;
                 case "-infile":
                 case "-inputfile":
                     if (++i > inputArgs.Length)
@@ -285,33 +244,22 @@ public sealed class ArgsHandler
                     }
                     lookupInputs.Add(inputArgs[i]);
                     break;
-
-                #endregion
-                #region case "-allowconflict"...
                 case "-allowconflicts":
                 case "-allowconflict":
                     AllowConflicts = true;
                     break;
-                #endregion
-                #region case "-noconflict"...
                 case "-noconflict":
                 case "-noconflicts":
                     NoConflicts = true;
                     break;
-                #endregion
-                #region case "-dumpchunkinfo"...
                 case "-dump":
                 case "-dumpchunk":
                 case "-dumpchunkinfo":
                     DumpChunkInfo = true;
                     break;
-                #endregion
-                #region default...
-
                 default:
                     lookupInputs.Add(inputArgs[i]);
                     break;
-                    #endregion
             }
         }
 
@@ -326,7 +274,6 @@ public sealed class ArgsHandler
             MaxThreads = Environment.ProcessorCount;
         Utilities.Log(LogLevelEnum.Info, $"Using up to {MaxThreads} threads");
         
-        // Log info now that loglevel has been set
         if (Smooth)
             Utilities.Log(LogLevelEnum.Info, "Smoothing Faces");
         if (GroupMeshes)
@@ -340,6 +287,9 @@ public sealed class ArgsHandler
             Utilities.Log(LogLevelEnum.Info, "Using TIF textures");
         else if (TgaTextures)
             Utilities.Log(LogLevelEnum.Info, "Using TGA textures");
+        if (MaterialFile is not null)
+            Utilities.Log(LogLevelEnum.Info, $"Using material file: {MaterialFile}");
+
         if (OutputWavefront)
             Utilities.Log(LogLevelEnum.Info, "Output format set to Wavefront (.obj)");
         if (OutputCollada)
@@ -348,6 +298,7 @@ public sealed class ArgsHandler
             Utilities.Log(LogLevelEnum.Info, "Output format set to glTF (.gltf)");
         if (OutputGLB)
             Utilities.Log(LogLevelEnum.Info, "Output format set to glTF Binary (.glb)");
+
         if (AllowConflicts)
             Utilities.Log(LogLevelEnum.Info, "Allow conflicts for mtl files enabled");
         if (NoConflicts)
@@ -371,7 +322,7 @@ public sealed class ArgsHandler
             var dirAndOptionStrings = dirAndOptions.Split("?", 2);
             var dir = dirAndOptionStrings[0].Trim();
             var packFileSystemOptions = dirAndOptionStrings.Length == 2
-                ? dirAndOptionStrings[1].Split("&").Select(x => x.Split("=", 2)).ToDictionary(x => x[0].ToLowerInvariant(), x => x.Length == 2 ? x[1] : "")
+                ? dirAndOptionStrings[1].Split('&').Select(x => x.Split('=', 2)).ToDictionary(x => x[0].ToLowerInvariant(), x => x.Length == 2 ? x[1] : string.Empty)
                 : new Dictionary<string, string>();
             
             if (Directory.Exists(dir))
@@ -416,7 +367,7 @@ public sealed class ArgsHandler
         ExcludeMaterialNameRegexes.AddRange(ExcludeMaterialNames.Select(x => new Regex(x, RegexOptions.Compiled | RegexOptions.IgnoreCase)));
         ExcludeShaderNameRegexes.AddRange(ExcludeShaderNames.Select(x => new Regex(x, RegexOptions.Compiled | RegexOptions.IgnoreCase)));
         
-        // Default to Collada (.dae) format
+        // Default to Collada format
         if (!OutputCollada && !OutputWavefront && !OutputGLB && !OutputGLTF)
             OutputCollada = true;
 
@@ -426,49 +377,55 @@ public sealed class ArgsHandler
     public static void PrintUsage()
     {
         Console.WriteLine();
-        Console.WriteLine("cgf-converter [-usage] | <.cgf file> [-outputfile <output file>] [-dae] [-obj] [-notex/-png/-tif/-tga] [-group] [-excludenode <nodename>] [-excludemat <matname>] [-loglevel <LogLevel>] [-throw] [-dump] [-objectdir <ObjectDir>]");
+        Console.WriteLine("cgf-converter [-usage] | <.cgf file> [-outputfile <output file>] [-dae] [-obj] [-glb] [-gltf] [-notex/-png/-tif/-tga] [-group] [-excludenode <nodename>] [-excludemat <matname>] [-loglevel <LogLevel>] [-throw] [-dump] [-objectdir <ObjectDir>]");
         Console.WriteLine();
         Console.WriteLine($"CryEngine Converter v{Assembly.GetExecutingAssembly().GetName().Version}");
         Console.WriteLine();
-        Console.WriteLine("-usage:           Prints out the usage statement");
-        Console.WriteLine();
-        Console.WriteLine("<.cgf file>:      The name of the .cgf, .cga or .skin file to process.");
-        Console.WriteLine("-outputfile:      The name of the file to write the output.  Default is [root].dae");
-        Console.WriteLine("-objectdir:       The name where the base Objects directory is located.  Used to read mtl file.");
-        Console.WriteLine("                  Defaults to current directory. Some packfile formats may accept additional options in the form of some.pack.file?key=value&key2=value2.");
+        Console.WriteLine("-usage:            Prints out the usage statement");
+        Console.WriteLine();                        
+        Console.WriteLine("<.cgf file>:       The name of the .cgf, .cga, .chr, .anim, .dba or .skin file to process.");
+        Console.WriteLine("-outputfile:       (Optional) The name of the file to write the output.");
+        Console.WriteLine("-objectdir:        (Optional but highly recommended) The name where the base Objects directory is located (i.e. where the .pak files were extracted).");
+        Console.WriteLine("                   Defaults to current directory. Some packfile formats may accept additional options in the form of some.pack.file?key=value&key2=value2.");
+        Console.WriteLine("-mtl/mat/material:  (Optional) The material file to use.");
+        Console.WriteLine();                        
+        Console.WriteLine(" Export formats.   By default -dae is used.");
+        Console.WriteLine("-dae:              Export Collada format files."); 
+        Console.WriteLine("-glb:              Export glb (glTF binary) files.");
+        Console.WriteLine("-gltf:             Export file pairs of glTF and bin files."); 
+        Console.WriteLine("-obj:              Export Wavefront format files (Not supported).");
+        Console.WriteLine();                        
+        Console.WriteLine("  Texture Options.   By default the converter will look for DDS files.");
+        Console.WriteLine("-notex:            Do not include textures in outputs");
+        Console.WriteLine("-tif:              Change the materials to look for .tif files instead of .dds.");
+        Console.WriteLine("-png:              Change the materials to look for .png files instead of .dds.");
+        Console.WriteLine("-tga:              Change the materials to look for .tga files instead of .dds.");
+        Console.WriteLine("-embedtextures:    Embed textures into the glTF binary file instead of external references.");
+        Console.WriteLine();                        
+        Console.WriteLine("-smooth:           Smooth Faces.");
+        Console.WriteLine("-group:            Group meshes into single model.");
+        Console.WriteLine("-en/-excludenode < regular expression for node names>:");
+        Console.WriteLine("                   Exclude matching nodes from rendering. Can be listed multiple times.");
+        Console.WriteLine("-em/-excludemat <r egular expression for material names>:");
+        Console.WriteLine("                   Exclude meshes with matching materials from rendering. Can be listed multiple times.");
+        Console.WriteLine("-sm/-excludeshader  <material_name>:");
+        Console.WriteLine("                   Exclude meshes with the material using matching shader from rendering. Can be listed multiple times.");
+        Console.WriteLine("-noconflict:       Use non-conflicting naming scheme (<cgf File>_out.obj)");
+        Console.WriteLine("-allowconflict:    Allows conflicts in .mtl file name. (obj exports only, as not an issue in dae.)");
+        Console.WriteLine();                        
+        Console.WriteLine("-prefixmatnames:   Prefixes material names with the filename of the source mtl file.");
         Console.WriteLine("-pp/-preservepath:");
-        Console.WriteLine("                  Preserve the path hierarchy.");
+        Console.WriteLine("                   Preserve the path hierarchy.");
         Console.WriteLine("-mt/-maxthreads <number>");
-        Console.WriteLine("                  Set maximum number of threads to use. Specify 0 to use all cores.");
+        Console.WriteLine("                   Set maximum number of threads to use. Specify 0 to use all cores.");
         Console.WriteLine("-sl/-splitlayer(s)");
-        Console.WriteLine("                  Split into multiple layers (terrain only).");
-        Console.WriteLine("-dae:             Export Collada format files (Default).");
-        Console.WriteLine("-obj:             Export Wavefront format files (Not supported).");
-        Console.WriteLine("-gltf:            Export file pairs of glTF and bin files.");
-        Console.WriteLine("-glb:             Export glb (glTF binary) files.");
+        Console.WriteLine("                   Split into multiple layers (terrain only).");
         Console.WriteLine();
-        Console.WriteLine("-smooth:          Smooth Faces.");
-        Console.WriteLine("-group:           Group meshes into single model.");
-        Console.WriteLine("-en/-excludenode <regular expression for node names>:");
-        Console.WriteLine("                  Exclude matching nodes from rendering. Can be listed multiple times.");
-        Console.WriteLine("-em/-excludemat <regular expression for material names>:");
-        Console.WriteLine("                  Exclude meshes with matching materials from rendering. Can be listed multiple times.");
-        Console.WriteLine("-sm/-excludeshader <material_name>:");
-        Console.WriteLine("                  Exclude meshes with the material using matching shader from rendering. Can be listed multiple times.");
-        Console.WriteLine("-noconflict:      Use non-conflicting naming scheme (<cgf File>_out.obj)");
-        Console.WriteLine("-allowconflict:   Allows conflicts in .mtl file name. (obj exports only, as not an issue in dae.)");
-        Console.WriteLine();
-        Console.WriteLine("-prefixmatnames:  Prefixes material names with the filename of the source mtl file.");
-        Console.WriteLine("-notex:           Do not include textures in outputs");
-        Console.WriteLine("-tif:             Change the materials to look for .tif files instead of .dds.");
-        Console.WriteLine("-png:             Change the materials to look for .png files instead of .dds.");
-        Console.WriteLine("-tga:             Change the materials to look for .tga files instead of .dds.");
-        Console.WriteLine();
-        Console.WriteLine("-loglevel:        Set the output log level (verbose, debug, info, warn, error, critical, none)");
-        Console.WriteLine("-throw:           Throw Exceptions to installed debugger.");
-        Console.WriteLine("-dump:            Dump missing/bad chunk info for support.");
+        Console.WriteLine("-loglevel:         Set the output log level (verbose, debug, info, warn, error, critical, none)");
+        Console.WriteLine("-throw:            Throw Exceptions to installed debugger.");
+        Console.WriteLine("-dump:             Dump missing/bad chunk info for support.");
         Console.WriteLine();
     }
 
-    public override string ToString() => $@"Input file: {InputFiles}, Obj Dir: {DataDirs}, Output file: {OutputFile}";
+    public override string ToString() => $@"Input file: {InputFiles}, Object Dir: {string.Join(',', DataDirs)}, Output file: {OutputFile}";
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using CgfConverter.Models;
 using CgfConverter.Services;
 
 namespace CgfConverter.CryEngineCore;
@@ -11,6 +12,9 @@ public class Model
 {
     /// <summary> The Root of the loaded object </summary>
     public ChunkNode? RootNode { get; internal set; }
+
+    /// <summary> Gets the root nodes. </summary>
+    public IEnumerable<ChunkNode> RootNodes => NodeMap.Values.Where(x => x.ParentNodeID == ~0);
 
     /// <summary> Lookup Table for Chunks, indexed by ChunkID </summary>
     public Dictionary<int, Chunk> ChunkMap { get; internal set; } = new();
@@ -81,11 +85,11 @@ public class Model
             var types = ChunkMap.Select(n => n.Value.ChunkType);
             if (ChunkMap.Select(n => n.Value.ChunkType).Contains(ChunkType.Mesh) || ChunkMap.Select(n => n.Value.ChunkType).Contains(ChunkType.MeshIvo))
                 return true;
-            
+
             return false;
         }
     }
-    
+
     /// <summary> Load the specified stream as a Model</summary>
     public static Model FromStream(string fileName, Stream stream, bool closeStream =false)
     {
@@ -157,11 +161,11 @@ public class Model
     {
         ChunkNode rootNode = new ChunkNode_823
         {
-            Name = FileName,
+            Name = Path.GetFileNameWithoutExtension(FileName!),
             ObjectNodeID = 2,      // No node IDs in #ivo files.  The actual mesh is the only node in the m file.
             ParentNodeID = ~0,     // No parent
-            __NumChildren = 0,     // Single object
-            MatID = 0,
+            NumChildren = 0,     // Single object
+            MaterialID = 11,
             Transform = Matrix4x4.Identity,
             ChunkType = ChunkType.Node,
             ID = 1
@@ -208,9 +212,10 @@ public class Model
                 RootNode = chunk as ChunkNode;
 
             // Add Bones to the model.  We are assuming there is only one CompiledBones chunk per file.
-            if (chunkHeaderItem.ChunkType == ChunkType.CompiledBones || 
+            if (chunkHeaderItem.ChunkType == ChunkType.CompiledBones ||
                 chunkHeaderItem.ChunkType == ChunkType.CompiledBonesSC ||
-                chunkHeaderItem.ChunkType == ChunkType.CompiledBonesIvo)
+                chunkHeaderItem.ChunkType == ChunkType.CompiledBonesIvo ||
+                chunkHeaderItem.ChunkType == ChunkType.CompiledBonesIvo320)
             {
                 Bones = chunk as ChunkCompiledBones;
             }

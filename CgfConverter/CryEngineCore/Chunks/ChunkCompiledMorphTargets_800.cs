@@ -16,9 +16,6 @@ internal sealed class ChunkCompiledMorphTargets_800 : ChunkCompiledMorphTargets
             {
                 MorphTargetVertices[i] = MeshMorphTargetVertex.Read(b);
             }
-
         }
-        SkinningInfo skin = GetSkinningInfo();
-        //skin.MorphTargets = MorphTargetVertices.ToList();
     }
 }

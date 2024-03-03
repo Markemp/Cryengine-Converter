@@ -58,6 +58,11 @@ internal static class GltfRendererUtilities
         return names.ToImmutableList();
     }
 
+    /// <summary>
+    /// Determines if the alpha channel is all 0 or all 255.
+    /// </summary>
+    /// <param name="raw">Color array</param>
+    /// <returns>True if the alpha channel has image data</returns>
     internal static bool HasMeaningfulAlphaChannel(ColorRgba32[] raw)
     {
         var allMin = true;
