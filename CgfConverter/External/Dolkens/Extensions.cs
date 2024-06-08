@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 using System.Text;
 using System.Xml;
@@ -106,171 +105,6 @@ namespace Dolkens.Framework.Extensions
             Object buffer = DDRIT.FromXML(input, typeof(TResult));
 
             return (buffer == null) ? default(TResult) : (TResult)buffer;
-        }
-
-        #endregion
-
-        #region Base64
-
-        public static String ToBase64(this Object input, Base64FormattingOptions base64FormattingOptions = Base64FormattingOptions.None)
-        {
-            if (input == null)
-                return String.Empty;
-
-            Type type = input.GetType();
-            // typeof(TObject);
-
-            // Add support for Nullable types
-            if (type.IsNullable())
-                type = type.GetGenericArguments()[0];
-
-            MethodInfo methodInfo;
-
-            // Throw in a little static reflection caching
-            if (!DDRIT._byteArrayMap.TryGetValue(type, out methodInfo))
-            {
-                // Attempt to find inbuilt ToByteArray methods
-                methodInfo = type.GetMethod("ToByteArray", new Type[] { });
-
-                // Null the mapping if the return type is wrong
-                if ((methodInfo == null) || (methodInfo.ReturnType != typeof(Byte[])))
-                    DDRIT._byteArrayMap[type] = null;
-                else
-                    DDRIT._byteArrayMap[type] = methodInfo;
-            }
-
-            // Then use the inbuilt methods
-            if (methodInfo != null)
-                return Convert.ToBase64String((Byte[])methodInfo.Invoke(input, null), base64FormattingOptions);
-
-            // Throw in a little static reflection caching
-            if (!DDRIT._parserMap.TryGetValue(type, out methodInfo))
-            {
-                // Attempt to find inbuilt parsing methods
-                methodInfo = type.GetMethod("Parse", new Type[] { typeof(String) });
-
-                DDRIT._parserMap[type] = methodInfo;
-            }
-
-            // If there's inbuilt parsing methods, assume there is a useful ToString method
-            if (methodInfo != null)
-                return Convert.ToBase64String(Encoding.UTF8.GetBytes(input.ToString()), base64FormattingOptions);
-
-            return input.ToBinary(base64FormattingOptions);
-        }
-
-        public static TResult FromBase64<TResult>(this String input)
-        {
-            Type type = typeof(TResult);
-
-            Object buffer = DDRIT.FromBase64(input, type);
-
-            return (buffer == null) ? default(TResult) : (TResult)buffer;
-        }
-
-        public static Object FromBase64(this String input, Type type)
-        {
-            // Early exit for empty values
-            if (String.IsNullOrEmpty(input))
-                return null;
-
-            // Add support for Nullable types
-            if (type.IsNullable())
-                type = type.GetGenericArguments()[0];
-
-            // Early exit for Byte arrays
-            if (type == typeof(Byte[]))
-                return Convert.FromBase64String(input);
-
-            ConstructorInfo constructorInfo;
-
-            // Throw in a little static reflection caching
-            if (!DDRIT._byteConstructorMap.TryGetValue(type, out constructorInfo))
-            {
-                // Attempt to find inbuilt constructor that takes a byte array
-                constructorInfo = type.GetConstructor(new Type[] { typeof(Byte[]) });
-
-                // And if they return Byte[]
-                DDRIT._byteConstructorMap[type] = constructorInfo;
-            }
-
-            // Early exit for ByteArray friendly objects
-            if (constructorInfo != null)
-                return Activator.CreateInstance(type, Convert.FromBase64String(input));
-
-            MethodInfo parseMethod;
-
-            // Throw in a little static reflection caching
-            if (!DDRIT._parserMap.TryGetValue(type, out parseMethod))
-            {
-                // Attempt to find inbuilt parsing methods
-                parseMethod = type.GetMethod("Parse", new Type[] { typeof(String) });
-
-                DDRIT._parserMap[type] = parseMethod;
-            }
-
-            // If there's inbuilt parsing methods, assume there is a useful ToString method
-            if (parseMethod != null)
-                return parseMethod.Invoke(null, new Object[] { Encoding.UTF8.GetString(Convert.FromBase64String(input)) });
-
-            return input.FromBinary();
-        }
-
-        #endregion
-
-        #region Binary
-
-        /// <summary>
-        /// Attempt to serialize any object into a Binary Encoded string.
-        /// </summary>
-        /// <param name="input">The object to serialize.</param>
-        /// <returns>A string containing the serialized object.</returns>
-        public static String ToBinary(this Object input, Base64FormattingOptions base64FormattingOptions = Base64FormattingOptions.None)
-        {
-            if (input == null)
-                return String.Empty;
-
-            BinaryFormatter binaryFormatter = new BinaryFormatter();
-            using (MemoryStream ms = new MemoryStream())
-            {
-                binaryFormatter.Serialize(ms, input);
-
-                return Convert.ToBase64String(ms.ToArray(), base64FormattingOptions);
-            }
-        }
-
-        /// <summary>
-        /// Attempt to deserialize any Binary Encoded string into an object.
-        /// </summary>
-        /// <param name="input">The string to deserialize to an object.</param>
-        /// <param name="type">The type to convert to.</param>
-        /// <returns>An Object deserialized from the string.</returns>
-        public static Object FromBinary(this String input)
-        {
-            if (String.IsNullOrWhiteSpace(input))
-                return String.Empty;
-
-            BinaryFormatter binaryFormatter = new BinaryFormatter();
-            Byte[] bytes = Convert.FromBase64String(input);
-
-            using (MemoryStream stream = new MemoryStream(bytes))
-            {
-                return binaryFormatter.Deserialize(stream);
-            }
-        }
-
-        /// <summary>
-        /// Attempt to deserialize any Binary Encoded string into an object.
-        /// </summary>
-        /// <typeparam name="TResult">The type to convert to.</typeparam>
-        /// <param name="input">The string to deserialize to an object.</param>
-        /// <returns>An Object of type T deserialized from the string.</returns>
-        public static TResult FromBinary<TResult>(this String input)
-        {
-            Object buffer = DDRIT.FromBinary(input);
-
-            return (buffer == null) ? default(TResult) : (TResult)buffer;
-
         }
 
         #endregion
@@ -518,7 +352,7 @@ namespace Dolkens.Framework.Extensions
         public static Dictionary<Object, Object> ToDictionary(this Object[] input)
         {
             Int32 i = 0;
-            Dictionary<Object, Object> buffer = new Dictionary<Object, Object>();
+            Dictionary<Object, Object> buffer = new();
 
             if (input == null)
                 return buffer;
@@ -541,7 +375,7 @@ namespace Dolkens.Framework.Extensions
         public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(this Object[] args)
         {
             Int32 i = 0;
-            Dictionary<TKey, TValue> buffer = new Dictionary<TKey, TValue>();
+            Dictionary<TKey, TValue> buffer = new();
 
             if (args == null)
                 return buffer;
@@ -1255,42 +1089,7 @@ namespace System
         /// <returns>An Object of type T deserialized from the string.</returns>
         public static TResult FromXML<TResult>(this String input) { return DDRIT.FromXML<TResult>(input); }
 
-        /// <summary>
-        /// Attempts to serialize any object into a Binary Encoded string.
-        /// Produces slightly shorter output for types that implement a Parse and ToString method, and objects of type Byte[].
-        /// </summary>
-        /// <param name="input"></param>
-        /// <returns></returns>
-        public static String ToBase64(this Object input) { return DDRIT.ToBase64(input); }
-
-        public static TResult FromBase64<TResult>(this String input) { return DDRIT.FromBase64<TResult>(input); }
-
-        public static Object FromBase64(this String input, Type type) { return DDRIT.FromBase64(input, type); }
-
         public static String ToHex(this Byte[] bytes) { return DDRIT.ToHex(bytes); }
-
-        /// <summary>
-        /// Attempt to serialize any object into a Binary Encoded string.
-        /// </summary>
-        /// <param name="input">The object to serialize.</param>
-        /// <returns>A string containing the serialized object.</returns>
-        public static String ToBinary(this Object input) { return DDRIT.ToBinary(input); }
-
-        /// <summary>
-        /// Attempt to deserialize any Binary Encoded string into an object.
-        /// </summary>
-        /// <param name="input">The string to deserialize to an object.</param>
-        /// <param name="type">The type to convert to.</param>
-        /// <returns>An Object deserialized from the string.</returns>
-        public static Object FromBinary(this String input) { return DDRIT.FromBinary(input); }
-
-        /// <summary>
-        /// Attempt to deserialize any Binary Encoded string into an object.
-        /// </summary>
-        /// <typeparam name="TResult">The type to convert to.</typeparam>
-        /// <param name="input">The string to deserialize to an object.</param>
-        /// <returns>An Object of type T deserialized from the string.</returns>
-        public static TResult FromBinary<TResult>(this String input) { return DDRIT.FromBinary<TResult>(input); }
 
         /// <summary>
         /// Strip HTML/XML tags from any string.

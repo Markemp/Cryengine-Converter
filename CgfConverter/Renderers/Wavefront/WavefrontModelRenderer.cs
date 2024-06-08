@@ -179,7 +179,7 @@ public class WavefrontModelRenderer : IRenderer
 
         // Going to assume that there is only one VerticesData datastream for now.  Need to watch for this.   
         // Some 801 types have vertices and not VertsUVs.
-        CryEngineCore.ChunkMtlName tmpMtlName = chunkNode._model.ChunkMap.GetValue(chunkNode.MatID, null) as CryEngineCore.ChunkMtlName;
+        CryEngineCore.ChunkMtlName tmpMtlName = chunkNode._model.ChunkMap.GetValue(chunkNode.MaterialID, null) as CryEngineCore.ChunkMtlName;
         CryEngineCore.ChunkMeshSubsets tmpMeshSubsets = tmpMesh._model.ChunkMap.GetValue(tmpMesh.MeshSubsetsData, null) as CryEngineCore.ChunkMeshSubsets; // Listed as Object ID for the Node
         CryEngineCore.ChunkDataStream tmpIndices = tmpMesh._model.ChunkMap.GetValue(tmpMesh.IndicesData, null) as CryEngineCore.ChunkDataStream;
         CryEngineCore.ChunkDataStream tmpVertices = tmpMesh._model.ChunkMap.GetValue(tmpMesh.VerticesData, null) as CryEngineCore.ChunkDataStream;
@@ -189,7 +189,7 @@ public class WavefrontModelRenderer : IRenderer
 
         // We only use 3 things in obj files:  vertices, normals and UVs.  No need to process the Tangents.
 
-        int numChildren = chunkNode.__NumChildren;           // use in a for loop to print the mesh for each child
+        int numChildren = chunkNode.NumChildren;           // use in a for loop to print the mesh for each child
 
         var tempVertexPosition = CurrentVertexPosition;
         var tempIndicesPosition = CurrentIndicesPosition;

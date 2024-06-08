@@ -1,4 +1,5 @@
-﻿using Extensions;
+﻿using CgfConverter.Models;
+using Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -49,7 +50,7 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                             Vertices[i].Z = b.ReadSingle();
                         }
                         break;
-                    case 8:  // Prey files, and old Star Citizen files
+                    case 8:  // Prey files, and old Star Citizen files, Evolve
                         for (int i = 0; i < NumElements; i++)
                         {
                             Vertices[i] = b.ReadVector3(InputType.Half);
@@ -69,7 +70,7 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
             #endregion
             #region case DataStreamTypeEnum.INDICES:
 
-            case DatastreamType.INDICES:  // Ref is 
+            case DatastreamType.INDICES:
                 Indices = new uint[NumElements];
 
                 if (BytesPerElement == 2)
@@ -93,10 +94,22 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
 
             case DatastreamType.NORMALS:
                 Normals = new Vector3[NumElements];
-                for (int i = 0; i < NumElements; i++)
+                if (BytesPerElement == 4)
                 {
-                    Normals[i] = b.ReadVector3();
+                    for (int i = 0; i < NumElements; i++)
+                    {
+                        SkipBytes(b, 4);
+                        Normals[i] = new Vector3();
+                    }
                 }
+                else
+                {
+                    for (int i = 0; i < NumElements; i++)
+                    {
+                        Normals[i] = b.ReadVector3();
+                    }
+                }
+
                 break;
 
             #endregion
@@ -271,7 +284,6 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
             #region case DataStreamTypeEnum.BONEMAP:
             case DatastreamType.BONEMAP:
                 SkinningInfo skin = GetSkinningInfo();
-                skin.HasBoneMapDatastream = true;
                 skin.BoneMapping = new List<MeshBoneMapping>();
 
                 switch (BytesPerElement)
@@ -286,7 +298,6 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                             for (int j = 0; j < 4; j++)         // read the 4 bone indexes first
                             {
                                 tmpMap.BoneIndex[j] = b.ReadByte();
-
                             }
                             for (int j = 0; j < 4; j++)           // read the weights.
                             {

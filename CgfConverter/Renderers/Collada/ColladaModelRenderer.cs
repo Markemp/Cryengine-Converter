@@ -1,4 +1,30 @@
-﻿using System;
+﻿using CgfConverter.Collada;
+using CgfConverter.CryEngineCore;
+using CgfConverter.Models.Materials;
+using CgfConverter.Renderers.Collada.Collada;
+using CgfConverter.Renderers.Collada.Collada.Collada_B_Rep.Surfaces;
+using CgfConverter.Renderers.Collada.Collada.Collada_Core.Animation;
+using CgfConverter.Renderers.Collada.Collada.Collada_Core.Controller;
+using CgfConverter.Renderers.Collada.Collada.Collada_Core.Data_Flow;
+using CgfConverter.Renderers.Collada.Collada.Collada_Core.Extensibility;
+using CgfConverter.Renderers.Collada.Collada.Collada_Core.Geometry;
+using CgfConverter.Renderers.Collada.Collada.Collada_Core.Lighting;
+using CgfConverter.Renderers.Collada.Collada.Collada_Core.Metadata;
+using CgfConverter.Renderers.Collada.Collada.Collada_Core.Parameters;
+using CgfConverter.Renderers.Collada.Collada.Collada_Core.Scene;
+using CgfConverter.Renderers.Collada.Collada.Collada_Core.Technique_Common;
+using CgfConverter.Renderers.Collada.Collada.Collada_Core.Transform;
+using CgfConverter.Renderers.Collada.Collada.Collada_FX.Custom_Types;
+using CgfConverter.Renderers.Collada.Collada.Collada_FX.Effects;
+using CgfConverter.Renderers.Collada.Collada.Collada_FX.Materials;
+using CgfConverter.Renderers.Collada.Collada.Collada_FX.Profiles.COMMON;
+using CgfConverter.Renderers.Collada.Collada.Collada_FX.Rendering;
+using CgfConverter.Renderers.Collada.Collada.Collada_FX.Technique_Common;
+using CgfConverter.Renderers.Collada.Collada.Collada_FX.Texturing;
+using CgfConverter.Renderers.Collada.Collada.Enums;
+using CgfConverter.Renderers.Collada.Collada.Types;
+using Extensions;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -8,34 +34,30 @@ using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-using CgfConverter.CryEngineCore;
-using CgfConverter.Materials;
-using grendgine_collada;
-using static Extensions.FileHandlingExtensions;
 using static CgfConverter.Utilities;
+using static Extensions.FileHandlingExtensions;
 
 namespace CgfConverter.Renderers.Collada;
 
 public class ColladaModelRenderer : IRenderer
 {
-    protected readonly ArgsHandler Args;
-    protected readonly CryEngine CryData;
-    public readonly Grendgine_Collada DaeObject = new();
+    protected readonly ArgsHandler _args;
+    protected readonly CryEngine _cryData;
+    public readonly ColladaDoc DaeObject = new();
 
     private readonly CultureInfo culture = CultureInfo.CreateSpecificCulture("en-US");
     private const string colladaVersion = "1.4.1";
-    private readonly XmlSerializer serializer = new(typeof(Grendgine_Collada));
+    private readonly XmlSerializer serializer = new(typeof(ColladaDoc));
     private readonly FileInfo daeOutputFile;
 
-    /// <summary>Dictionary of all material libraries in the model, with the key being the library from mtlname chunk.</summary>
-    private readonly Dictionary<string, Material> createdMaterialLibraries = new();
+    private readonly Dictionary<int, string> controllerIdToBoneName = new();
 
-    public ColladaModelRenderer(ArgsHandler argsHandler, CryEngine cryEngine) {
-        Args = argsHandler;
-        CryData = cryEngine;
+    public ColladaModelRenderer(ArgsHandler argsHandler, CryEngine cryEngine)
+    {
+        _args = argsHandler;
+        _cryData = cryEngine;
 
-        // File name will be "<object name>.dae"
-        daeOutputFile = Args.FormatOutputFileName(".dae", CryData.InputFile);
+        daeOutputFile = _args.FormatOutputFileName(".dae", _cryData.InputFile);
     }
 
     public int Render()
@@ -43,134 +65,324 @@ public class ColladaModelRenderer : IRenderer
         GenerateDaeObject();
 
         // At this point, we should have a cryData.Asset object, fully populated.
-        Utilities.Log(LogLevelEnum.Debug);
-        Utilities.Log(LogLevelEnum.Debug, "*** Starting WriteCOLLADA() ***");
-        Utilities.Log(LogLevelEnum.Debug);
+        Log(LogLevelEnum.Debug);
+        Log(LogLevelEnum.Debug, "*** Starting WriteCOLLADA() ***");
+        Log(LogLevelEnum.Debug);
 
         TextWriter writer = new StreamWriter(daeOutputFile.FullName);
         serializer.Serialize(writer, DaeObject);
 
         writer.Close();
-        Utilities.Log(LogLevelEnum.Debug, "End of Write Collada.  Export complete.");
+        Log(LogLevelEnum.Debug, "End of Write Collada.  Export complete.");
         return 1;
     }
 
     public void GenerateDaeObject()
     {
-        Utilities.Log(LogLevelEnum.Debug, "Number of models: {0}", CryData.Models.Count);
-        for (int i = 0; i < CryData.Models.Count; i++)
+        Log(LogLevelEnum.Debug, "Number of models: {0}", _cryData.Models.Count);
+        for (int i = 0; i < _cryData.Models.Count; i++)
         {
-            Utilities.Log(LogLevelEnum.Debug, "\tNumber of nodes in model: {0}", CryData.Models[i].NodeMap.Count);
+            Log(LogLevelEnum.Debug, "\tNumber of nodes in model: {0}", _cryData.Models[i].NodeMap.Count);
         }
 
         WriteColladaRoot(colladaVersion);
         WriteAsset();
         WriteScene();
 
-        // Create Material, Effects and Textures libraries
-        Grendgine_Collada_Library_Materials libraryMaterials = new();
-        DaeObject.Library_Materials = libraryMaterials;
-        Grendgine_Collada_Library_Images libraryImages = new();
-        DaeObject.Library_Images = libraryImages;
-        Grendgine_Collada_Library_Effects libraryEffects = new();
-        DaeObject.Library_Effects = libraryEffects;
+        DaeObject.Library_Materials = new();
+        DaeObject.Library_Images = new();
+        DaeObject.Library_Effects = new();
 
-        //WriteLibrary_Geometries();
+        CreateMaterials();
         WriteLibrary_Geometries();
 
         // If there is Skinning info, create the controller library and set up visual scene to refer to it.  Otherwise just write the Visual Scene
-        if (CryData.SkinningInfo.HasSkinningInfo)
+        if (_cryData.SkinningInfo?.HasSkinningInfo ?? false)
         {
             WriteLibrary_Controllers();
             WriteLibrary_VisualScenesWithSkeleton();
         }
         else
             WriteLibrary_VisualScenes();
+
+        // Write animations
+        //if (_cryData.Animations is not null)
+        //    WriteLibrary_Animations();
     }
 
     protected void WriteColladaRoot(string version)
     {
         // Blender doesn't like 1.5. :(
-        if (version == "1.4.1")
-            DaeObject.Collada_Version = "1.4.1";
-        else if (version == "1.5.0")
-            DaeObject.Collada_Version = "1.5.0";
+        DaeObject.Collada_Version = version;
     }
 
     protected void WriteAsset()
     {
         var fileCreated = DateTime.Now;
         var fileModified = DateTime.Now;
-        Grendgine_Collada_Asset asset = new()
+        ColladaAsset asset = new()
         {
             Revision = Assembly.GetExecutingAssembly().GetName().Version.ToString()
         };
-        Grendgine_Collada_Asset_Contributor[] contributors = new Grendgine_Collada_Asset_Contributor[2];
-        contributors[0] = new Grendgine_Collada_Asset_Contributor
-        {
-            Author = "Heffay",
-            Author_Website = "https://github.com/Markemp/Cryengine-Converter",
-            Author_Email = "markemp@gmail.com",
-            Source_Data = CryData.RootNode.Name                    // The cgf/cga/skin/whatever file we read
-        };
+        ColladaAssetContributor[] contributors = new ColladaAssetContributor[1];
         // Get the actual file creators from the Source Chunk
-        contributors[1] = new Grendgine_Collada_Asset_Contributor();
-        foreach (ChunkSourceInfo sourceInfo in CryData.Chunks.Where(a => a.ChunkType == ChunkType.SourceInfo))
+        contributors[0] = new ColladaAssetContributor();
+        foreach (ChunkSourceInfo sourceInfo in _cryData.Chunks.Where(a => a.ChunkType == ChunkType.SourceInfo))
         {
-            contributors[1].Author = sourceInfo.Author;
-            contributors[1].Source_Data = sourceInfo.SourceFile;
+            contributors[0].Author = sourceInfo.Author;
+            contributors[0].Source_Data = sourceInfo.SourceFile;
+            contributors[0].Source_Data = _cryData.RootNode?.Name ?? Path.GetFileNameWithoutExtension(_cryData.InputFile);
         }
         asset.Created = fileCreated;
         asset.Modified = fileModified;
         asset.Up_Axis = "Z_UP";
-        asset.Unit = new Grendgine_Collada_Asset_Unit()
+        asset.Unit = new ColladaAssetUnit()
         {
             Meter = 1.0,
             Name = "meter"
         };
-        asset.Title = CryData.RootNode.Name;
+        asset.Title = _cryData.RootNode?.Name ?? Path.GetFileNameWithoutExtension(_cryData.InputFile);
         DaeObject.Asset = asset;
         DaeObject.Asset.Contributor = contributors;
     }
 
-    public Grendgine_Collada_Effect CreateColladaEffect(Material material)
+    public void WriteLibrary_Animations()
     {
-        Grendgine_Collada_Effect colladaEffect = new()
+        var animationLibrary = new ColladaLibraryAnimations();
+        // Find all the 905 controller chunks
+        foreach (var animChunk in _cryData.Animations
+            .SelectMany(x => x.ChunkMap.Values.OfType<ChunkController_905>())
+            .ToList())
         {
-            ID = material.Name + "-effect",
-            Name = material.Name
+            var names = animChunk?.Animations?.Select(x => Path.GetFileNameWithoutExtension(x.Name)).ToArray();
+            animationLibrary.Animation = new ColladaAnimation[animChunk?.Animations?.Count ?? 0];
+            if (animationLibrary.Animation.Length == 0)
+                continue;
+
+            for (int i = 0; i < animChunk.Animations.Count; i++)
+            {
+                var animation = animChunk.Animations[i];
+                var animationName = Path.GetFileNameWithoutExtension(animation.Name);
+
+                var colladaAnimation = new ColladaAnimation  // Root animation object. Controller animations go here.
+                {
+                    Name = animationName,
+                    ID = $"{animationName}_animation",
+                    Animation = new ColladaAnimation[animation.Controllers.Count]
+                };
+
+                // Add an animation for each controller
+                var controllerAnimations = new List<ColladaAnimation>();
+                for (int j = 0; j < animation.Controllers.Count; j++)
+                {
+                    // Each controller can have up to 2 sub Animations, one for position and one for rotation
+                    var controllerInfo = animation.Controllers[j];
+                    var controllerBoneName = controllerIdToBoneName[controllerInfo.ControllerID];
+                    var controllerIdBase = $"{controllerBoneName}_{controllerInfo.ControllerID}";
+
+                    if (animation.Controllers[j].HasPosTrack)
+                        controllerAnimations.Add(CreateAnimation(controllerInfo, "translate", animChunk));
+
+                    if (animation.Controllers[j].HasRotTrack)
+                        controllerAnimations.Add(CreateAnimation(controllerInfo, "rotate", animChunk));
+
+                    colladaAnimation.Animation[j] = new ColladaAnimation
+                    {
+                        Name = controllerIdBase,
+                        ID = $"{controllerIdBase}_animation",
+                        Animation = controllerAnimations.ToArray()
+                    };
+                    controllerAnimations.Clear();
+                }
+                animationLibrary.Animation[i] = colladaAnimation;
+            }
+        }
+
+        DaeObject.Library_Animations = animationLibrary;
+    }
+
+    private ColladaAnimation CreateAnimation(
+        ChunkController_905.CControllerInfo controllerInfo,
+        string animType,
+        ChunkController_905 animationChunk)
+    {
+        var controllerBoneName = controllerIdToBoneName[controllerInfo.ControllerID];
+        var controllerIdBase = $"{controllerBoneName}_{controllerInfo.ControllerID}_{animType}";
+
+        var numberOfTimeFrames = animType == "rotate"
+                ? animationChunk.KeyTimes[controllerInfo.RotKeyTimeTrack].Count
+                : animationChunk.KeyTimes[controllerInfo.PosKeyTimeTrack].Count;
+
+        var pathName = animType == "rotate" ? "rotation" : "location";
+
+        var inputSource = new ColladaSource   // Time
+        {
+            ID = $"{controllerIdBase}_input",
+            Name = $"{controllerIdBase}_input"
+        };
+        var outputSource = new ColladaSource     // transform
+        {
+            ID = $"{controllerIdBase}_output",
+            Name = $"{controllerIdBase}_output"
+        };
+        var interpolationSource = new ColladaSource  // interpolation
+        {
+            ID = $"{controllerIdBase}_interpolation",
+            Name = $"{controllerIdBase}_interpolation"
+        };
+        var sampler = new ColladaSampler
+        {
+            ID = $"{controllerIdBase}_sampler_{animType}",
+            Input = new ColladaInputUnshared[3]
+            {
+                new ColladaInputUnshared
+                {
+                    Semantic = ColladaInputSemantic.INPUT,
+                    source = $"#{controllerIdBase}_input"
+                },
+                new ColladaInputUnshared
+                {
+                    Semantic = ColladaInputSemantic.OUTPUT,
+                    source = $"#{controllerIdBase}_output"
+                },
+                new ColladaInputUnshared
+                {
+                    Semantic = ColladaInputSemantic.INTERPOLATION,
+                    source = $"#{controllerIdBase}_interpolation"
+                }
+            }
+        };
+        var channel = new ColladaChannel
+        {
+            Source = $"#{controllerIdBase}_sampler_{animType}",
+            Target = $"{controllerBoneName}/matrix"
+        };
+        var controllerAnimation = new ColladaAnimation
+        {
+            Name = controllerIdBase,
+            ID = $"{controllerIdBase}_animation",
+            Source = new ColladaSource[3] { inputSource, outputSource, interpolationSource },
+            Channel = new ColladaChannel[1] { channel },
+            Sampler = new ColladaSampler[1] { sampler },
+        };
+
+        // Create the time source
+        var timeArray = new ColladaFloatArray
+        {
+            ID = $"{controllerBoneName}_{controllerInfo.ControllerID}_{animType}_time_array",
+            Count = numberOfTimeFrames,
+            Value_As_String = string.Join(" ",
+                animType == "rotate"
+                    ? animationChunk.KeyTimes[controllerInfo.RotKeyTimeTrack].Select(x => x / 30f)
+                    : animationChunk.KeyTimes[controllerInfo.PosKeyTimeTrack].Select(x => x / 30f))
+        };
+
+        inputSource.Float_Array = timeArray;
+        inputSource.Technique_Common = new ColladaTechniqueCommonSource
+        {
+            Accessor = new ColladaAccessor
+            {
+                Source = $"#{controllerBoneName}_{controllerInfo.ControllerID}_{animType}_time_array",
+                Count = (uint)timeArray.Count,
+                Stride = 1,
+                Param = new ColladaParam[1] { new ColladaParam { Name = "TIME", Type = "float" } }
+            }
+        };
+
+        // Create the transform source
+        var numberOfElements = animType == "rotate" ? 4 : 3;
+
+        var colladaParams = new ColladaParam[1];
+        if (animType == "rotate")
+            colladaParams[0] = new ColladaParam { Name = "AXISANGLE", Type = "vector4" };
+        else
+            colladaParams[0] = new ColladaParam { Name = "TRANSLATE", Type = "vector3" };
+
+        var positionArray = new ColladaFloatArray
+        {
+            ID = $"{controllerBoneName}_{controllerInfo.ControllerID}_{animType}_array",
+            Count = numberOfTimeFrames * numberOfElements,
+            Value_As_String = string.Join(" ",
+                animType == "rotate"
+                    ? animationChunk.KeyRotations[controllerInfo.RotTrack].Select(x => CreateStringFromVector4(x.ToAxisAngle()))
+                    : animationChunk.KeyPositions[controllerInfo.PosTrack].Select(x => CreateStringFromVector3(x)))
+        };
+        outputSource.Float_Array = positionArray;
+        //var paramType = animType == "rotate" ? "vector4" : "vector3";
+        outputSource.Technique_Common = new ColladaTechniqueCommonSource
+        {
+            Accessor = new ColladaAccessor
+            {
+                Source = $"#{controllerBoneName}_{controllerInfo.ControllerID}_{animType}_array",
+                Count = (uint)numberOfTimeFrames,
+                Stride = (uint)numberOfElements,
+                Param = colladaParams
+            }
+        };
+
+        // Create the interpolation source (all LINEAR)
+        var interpolationArray = new ColladaNameArray
+        {
+            ID = $"{controllerBoneName}_{controllerInfo.ControllerID}_{animType}_interpolation_array",
+            Count = numberOfTimeFrames,
+            Value_Pre_Parse = string.Join(' ', Enumerable.Repeat("LINEAR", numberOfTimeFrames))
+        };
+        interpolationSource.Name_Array = interpolationArray;
+        interpolationSource.Technique_Common = new ColladaTechniqueCommonSource
+        {
+            Accessor = new ColladaAccessor
+            {
+                Source = $"#{controllerBoneName}_{controllerInfo.ControllerID}_{animType}_interpolation_array",
+                Count = (uint)numberOfTimeFrames,
+                Stride = 1,
+                Param = new ColladaParam[1] { new ColladaParam { Name = "INTERPOLATION", Type = "name" } }
+            }
+        };
+
+        return controllerAnimation;
+    }
+
+    public ColladaEffect CreateColladaEffect(string matKey, Material subMat)
+    {
+        //TODO: Change this so that it creates an effect for each Shader type.  Parameters will need to be passed in from the material.
+        var effectName = GetMaterialName(matKey, subMat.Name);
+
+        ColladaEffect colladaEffect = new()
+        {
+            ID = effectName + "-effect",
+            Name = effectName
         };
 
         // create the profile_common for the effect
-        List<Grendgine_Collada_Profile_COMMON> profiles = new();
-        Grendgine_Collada_Profile_COMMON profile = new();
-        profile.Technique = new() { sID = material.Name + "-technique" };
+        List<ColladaProfileCOMMON> profiles = new();
+        ColladaProfileCOMMON profile = new();
+        profile.Technique = new() { sID = effectName + "-technique" };
         profiles.Add(profile);
 
         // Create a list for the new_params
-        List<Grendgine_Collada_New_Param> newparams = new();
-        for (int j = 0; j < material.Textures.Length; j++)
+        List<ColladaNewParam> newparams = new();
+        for (int j = 0; j < subMat.Textures.Length; j++)
         {
             // Add the Surface node
-            Grendgine_Collada_New_Param texSurface = new()
+            ColladaNewParam texSurface = new()
             {
-                sID = material.Name + "_" + material.Textures[j].Map + "-surface" // CleanTextureFileName(material.Textures[j].File) + "-surface"
+                sID = effectName + "_" + subMat.Textures[j].Map + "-surface"
             };
-            Grendgine_Collada_Surface surface = new();
+            ColladaSurface surface = new();
             texSurface.Surface = surface;
-            surface.Init_From = new Grendgine_Collada_Init_From();
+            surface.Init_From = new ColladaInitFrom();
             texSurface.Surface.Type = "2D";
-            texSurface.Surface.Init_From = new Grendgine_Collada_Init_From
+            texSurface.Surface.Init_From = new ColladaInitFrom
             {
-                Uri = material.Name + "_" + material.Textures[j].Map
+                Uri = effectName + "_" + subMat.Textures[j].Map
             };
 
             // Add the Sampler node
-            Grendgine_Collada_New_Param texSampler = new()
+            ColladaNewParam texSampler = new()
             {
-                sID = material.Name + "_" + material.Textures[j].Map + "-sampler" // CleanTextureFileName(material.Textures[j].File) + "-sampler"
+                sID = effectName + "_" + subMat.Textures[j].Map + "-sampler"
             };
-            Grendgine_Collada_Sampler2D sampler2D = new();
+            ColladaSampler2D sampler2D = new();
             texSampler.Sampler2D = sampler2D;
             texSampler.Sampler2D.Source = texSurface.sID;
 
@@ -180,29 +392,29 @@ public class ColladaModelRenderer : IRenderer
 
         #region Create the Technique
         // Make the techniques for the profile
-        Grendgine_Collada_Effect_Technique_COMMON technique = new();
-        Grendgine_Collada_Phong phong = new();
+        ColladaEffectTechniqueCOMMON technique = new();
+        ColladaPhong phong = new();
         technique.Phong = phong;
-        technique.sID = material.Name + "-technique";
+        technique.sID = effectName + "-technique";
         profile.Technique = technique;
 
-        phong.Diffuse = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type();
-        phong.Specular = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type();
+        phong.Diffuse = new ColladaFXCommonColorOrTextureType();
+        phong.Specular = new ColladaFXCommonColorOrTextureType();
 
         // Add all the emissive, etc features to the phong
         // Need to check if a texture exists.  If so, refer to the sampler.  Should be a <Texture Map="Diffuse" line if there is a map.
         bool diffuseFound = false;
         bool specularFound = false;
 
-        foreach (var texture in material.Textures)
+        foreach (var texture in subMat.Textures)
         {
             if (texture.Map == Texture.MapTypeEnum.Diffuse)
             {
                 diffuseFound = true;
-                phong.Diffuse.Texture = new Grendgine_Collada_Texture
+                phong.Diffuse.Texture = new ColladaTexture
                 {
                     // Texcoord is the ID of the UV source in geometries.  Not needed.
-                    Texture = material.Name + "_" + texture.Map + "-sampler",
+                    Texture = effectName + "_" + texture.Map + "-sampler",
                     TexCoord = ""
                 };
             }
@@ -210,9 +422,9 @@ public class ColladaModelRenderer : IRenderer
             if (texture.Map == Texture.MapTypeEnum.Specular)
             {
                 specularFound = true;
-                phong.Specular.Texture = new Grendgine_Collada_Texture
+                phong.Specular.Texture = new ColladaTexture
                 {
-                    Texture = material.Name + "_" + texture.Map + "-sampler",
+                    Texture = effectName + "_" + texture.Map + "-sampler",
                     TexCoord = ""
                 };
             }
@@ -220,77 +432,70 @@ public class ColladaModelRenderer : IRenderer
             if (texture.Map == Texture.MapTypeEnum.Normals)
             {
                 // Bump maps go in an extra node.
-                // bump maps are added to an extra node.
-                Grendgine_Collada_Extra[] extras = new Grendgine_Collada_Extra[1];
-                Grendgine_Collada_Extra extra = new();
+                ColladaExtra[] extras = new ColladaExtra[1];
+                ColladaExtra extra = new();
                 extras[0] = extra;
 
                 technique.Extra = extras;
 
                 // Create the technique for the extra
-
-                Grendgine_Collada_Technique[] extraTechniques = new Grendgine_Collada_Technique[1];
-                Grendgine_Collada_Technique extraTechnique = new();
+                ColladaTechnique[] extraTechniques = new ColladaTechnique[1];
+                ColladaTechnique extraTechnique = new();
                 extra.Technique = extraTechniques;
-                //extraTechnique.Data[0] = new XmlElement();
 
                 extraTechniques[0] = extraTechnique;
                 extraTechnique.profile = "FCOLLADA";
 
-                Grendgine_Collada_BumpMap bumpMap = new()
+                ColladaBumpMap bumpMap = new() { Textures = new ColladaTexture[1] };
+                bumpMap.Textures[0] = new ColladaTexture
                 {
-                    Textures = new Grendgine_Collada_Texture[1]
+                    Texture = effectName + "_" + texture.Map + "-sampler"
                 };
-                bumpMap.Textures[0] = new Grendgine_Collada_Texture
-                {
-                    Texture = material.Name + "_" + texture.Map + "-sampler"
-                };
-                extraTechnique.Data = new XmlElement[1];
-                extraTechnique.Data[0] = bumpMap;
+                extraTechnique.Data = new XmlElement[1] { bumpMap };
             }
         }
 
         if (diffuseFound == false)
         {
-            phong.Diffuse.Color = new Grendgine_Collada_Color
+            phong.Diffuse.Color = new ColladaColor
             {
-                Value_As_String = material.Diffuse ?? string.Empty,
+                Value_As_String = subMat.Diffuse ?? string.Empty,
                 sID = "diffuse"
             };
         }
         if (specularFound == false)
         {
-            phong.Specular.Color = new Grendgine_Collada_Color { sID = "specular" };
-            if (material.Specular != null)
-                phong.Specular.Color.Value_As_String = material.Specular ?? string.Empty;
+            phong.Specular.Color = new ColladaColor { sID = "specular" };
+            if (subMat.Specular != null)
+                phong.Specular.Color.Value_As_String = subMat.Specular ?? string.Empty;
             else
                 phong.Specular.Color.Value_As_String = "1 1 1";
         }
 
-        phong.Emission = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type
+        phong.Emission = new ColladaFXCommonColorOrTextureType
         {
-            Color = new Grendgine_Collada_Color
+            Color = new ColladaColor
             {
                 sID = "emission",
-                Value_As_String = material.Emissive ?? string.Empty
+                Value_As_String = subMat.Emissive ?? string.Empty
             }
         };
-        phong.Shininess = new Grendgine_Collada_FX_Common_Float_Or_Param_Type { Float = new Grendgine_Collada_SID_Float() };
+        phong.Shininess = new ColladaFXCommonFloatOrParamType { Float = new ColladaSIDFloat() };
         phong.Shininess.Float.sID = "shininess";
-        phong.Shininess.Float.Value = (float)material.Shininess;
-        phong.Index_Of_Refraction = new Grendgine_Collada_FX_Common_Float_Or_Param_Type { Float = new Grendgine_Collada_SID_Float() };
+        phong.Shininess.Float.Value = (float)subMat.Shininess;
+        phong.Index_Of_Refraction = new ColladaFXCommonFloatOrParamType { Float = new ColladaSIDFloat() };
 
-        phong.Transparent = new Grendgine_Collada_FX_Common_Color_Or_Texture_Type
+        phong.Transparent = new ColladaFXCommonColorOrTextureType
         {
-            Color = new Grendgine_Collada_Color(),
-            Opaque = new Grendgine_Collada_FX_Opaque_Channel()
+            Color = new ColladaColor(),
+            Opaque = new ColladaFXOpaqueChannel()
         };
-        phong.Transparent.Color.Value_As_String = (1 - double.Parse((material.Opacity == string.Empty ? "1" : material.Opacity) ?? "1")).ToString();  // Subtract from 1 for proper value.
+        phong.Transparent.Color.Value_As_String = (1 - double.Parse((subMat.Opacity == string.Empty ? "1" : subMat.Opacity) ?? "1")).ToString();  // Subtract from 1 for proper value.
 
         #endregion
 
         colladaEffect.Profile_COMMON = profiles.ToArray();
-        profile.New_Param = new Grendgine_Collada_New_Param[newparams.Count];
+        profile.New_Param = new ColladaNewParam[newparams.Count];
         profile.New_Param = newparams.ToArray();
 
         return colladaEffect;
@@ -298,19 +503,19 @@ public class ColladaModelRenderer : IRenderer
 
     public void WriteLibrary_Geometries()
     {
-        if (CryData.Models.Count == 1)  // Single file model
-            WriteGeometries(CryData.Models[0]);
+        if (_cryData.Models.Count == 1)  // Single file model
+            WriteGeometries(_cryData.Models[0]);
         else
-            WriteGeometries(CryData.Models[1]);
+            WriteGeometries(_cryData.Models[1]);
     }
 
     public void WriteGeometries(Model model)
     {
-        Grendgine_Collada_Library_Geometries libraryGeometries = new();
+        ColladaLibraryGeometries libraryGeometries = new();
 
         // Make a list for all the geometries objects we will need. Will convert to array at end.  Define the array here as well
         // We have to define a Geometry for EACH meshsubset in the meshsubsets, since the mesh can contain multiple materials
-        List<Grendgine_Collada_Geometry> geometryList = new();
+        List<ColladaGeometry> geometryList = new();
 
         // For each of the nodes, we need to write the geometry.
         foreach (ChunkNode nodeChunk in model.ChunkMap.Values.Where(a => a.ChunkType == ChunkType.Node))
@@ -328,22 +533,22 @@ public class ColladaModelRenderer : IRenderer
             ChunkDataStream? colors = null;
             ChunkDataStream? tangents = null;
 
-            if (Args.IsNodeNameExcluded(nodeChunk.Name))
+            if (_args.IsNodeNameExcluded(nodeChunk.Name))
             {
-                Utilities.Log(LogLevelEnum.Debug, $"Excluding node {nodeChunk.Name}");
+                Log(LogLevelEnum.Debug, $"Excluding node {nodeChunk.Name}");
                 continue;
             }
 
             if (nodeChunk.ObjectChunk is null)
             {
-                Utilities.Log(LogLevelEnum.Warning, "Skipped node with missing Object {0}", nodeChunk.Name);
+                Log(LogLevelEnum.Warning, "Skipped node with missing Object {0}", nodeChunk.Name);
                 continue;
             }
 
             if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkType.Mesh)
             {
                 // Create materials collection for this node. Index of collection in meshSubSets determines which mat to use.
-                CreateMaterialsFromNodeChunk(nodeChunk);
+                //CreateMaterialsFromNodeChunk(nodeChunk); // now being created from the crydata Materials object
 
                 // Get the mesh chunk and submesh chunk for this node.
                 var meshChunk = (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID];
@@ -352,7 +557,7 @@ public class ColladaModelRenderer : IRenderer
                 //if (meshChunk.MeshPhysicsData != 0)
                 // TODO:  Implement this chunk
 
-                if (meshChunk.MeshSubsetsData != 0)   // For the SC files, you can have Mesh chunks with no Mesh Subset.  Need to skip these.  They are in the .cga file and contain no geometry.
+                if (meshChunk.MeshSubsetsData != 0)   // You can have Mesh chunks with no Mesh Subset.  Need to skip these.  They are in the .cga file and contain no geometry.
                 {
                     var meshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[meshChunk.MeshSubsetsData];  // Listed as Object ID for the Node
 
@@ -381,20 +586,20 @@ public class ColladaModelRenderer : IRenderer
                         tangents = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.TangentsData];
 
                     // geometry is a Geometry object for each meshsubset.  Name will be "Nodechunk name_matID".
-                    Grendgine_Collada_Geometry geometry = new()
+                    ColladaGeometry geometry = new()
                     {
                         Name = nodeChunk.Name,
                         ID = nodeChunk.Name + "-mesh"
                     };
-                    Grendgine_Collada_Mesh colladaMesh = new();
+                    ColladaMesh colladaMesh = new();
                     geometry.Mesh = colladaMesh;
 
                     // TODO:  Move the source creation to a separate function.  Too much retyping.
-                    Grendgine_Collada_Source[] source = new Grendgine_Collada_Source[4];   // 4 possible source types.
-                    Grendgine_Collada_Source posSource = new();
-                    Grendgine_Collada_Source normSource = new();
-                    Grendgine_Collada_Source uvSource = new();
-                    Grendgine_Collada_Source colorSource = new();
+                    ColladaSource[] source = new ColladaSource[4];   // 4 possible source types.
+                    ColladaSource posSource = new();
+                    ColladaSource normSource = new();
+                    ColladaSource uvSource = new();
+                    ColladaSource colorSource = new();
                     source[0] = posSource;
                     source[1] = normSource;
                     source[2] = uvSource;
@@ -408,15 +613,15 @@ public class ColladaModelRenderer : IRenderer
                     colorSource.ID = nodeChunk.Name + "-mesh-color";
                     colorSource.Name = nodeChunk.Name + "-color";
 
-                    Grendgine_Collada_Vertices vertices = new() { ID = nodeChunk.Name + "-vertices" };
+                    ColladaVertices vertices = new() { ID = nodeChunk.Name + "-vertices" };
                     geometry.Mesh.Vertices = vertices;
-                    Grendgine_Collada_Input_Unshared[] inputshared = new Grendgine_Collada_Input_Unshared[4];
-                    Grendgine_Collada_Input_Unshared posInput = new() { Semantic = Grendgine_Collada_Input_Semantic.POSITION };
+                    ColladaInputUnshared[] inputshared = new ColladaInputUnshared[4];
+                    ColladaInputUnshared posInput = new() { Semantic = ColladaInputSemantic.POSITION };
                     vertices.Input = inputshared;
 
-                    Grendgine_Collada_Input_Unshared normInput = new() { Semantic = Grendgine_Collada_Input_Semantic.NORMAL };
-                    Grendgine_Collada_Input_Unshared uvInput = new() { Semantic = Grendgine_Collada_Input_Semantic.TEXCOORD };
-                    Grendgine_Collada_Input_Unshared colorInput = new() { Semantic = Grendgine_Collada_Input_Semantic.COLOR };
+                    ColladaInputUnshared normInput = new() { Semantic = ColladaInputSemantic.NORMAL };
+                    ColladaInputUnshared uvInput = new() { Semantic = ColladaInputSemantic.TEXCOORD };
+                    ColladaInputUnshared colorInput = new() { Semantic = ColladaInputSemantic.COLOR };
 
                     posInput.source = "#" + posSource.ID;
                     normInput.source = "#" + normSource.ID;
@@ -424,11 +629,11 @@ public class ColladaModelRenderer : IRenderer
                     colorInput.source = "#" + colorSource.ID;
                     inputshared[0] = posInput;
 
-                    Grendgine_Collada_Float_Array floatArrayVerts = new();
-                    Grendgine_Collada_Float_Array floatArrayNormals = new();
-                    Grendgine_Collada_Float_Array floatArrayUVs = new();
-                    Grendgine_Collada_Float_Array floatArrayColors = new();
-                    Grendgine_Collada_Float_Array floatArrayTangents = new();
+                    ColladaFloatArray floatArrayVerts = new();
+                    ColladaFloatArray floatArrayNormals = new();
+                    ColladaFloatArray floatArrayUVs = new();
+                    ColladaFloatArray floatArrayColors = new();
+                    ColladaFloatArray floatArrayTangents = new();
 
                     StringBuilder vertString = new();
                     StringBuilder normString = new();
@@ -496,7 +701,7 @@ public class ColladaModelRenderer : IRenderer
                         floatArrayColors.ID = colorSource.ID + "-array";
                         floatArrayColors.Digits = 6;
                         floatArrayColors.Magnitude = 38;
-                        if (vertsUvs.Colors != null)
+                        if (vertsUvs.Colors is not null)
                         {
                             floatArrayColors.Count = vertsUvs.Colors.Length * 4;
                             for (uint j = 0; j < vertsUvs.Colors.Length; j++)  // Create Colors string
@@ -510,6 +715,7 @@ public class ColladaModelRenderer : IRenderer
                         }
 
                         // Dymek's code to rescale by bounding box.  Only apply to geometry (cga or cgf), and not skin or chr objects.
+                        // TODO: Move this to the cryengine data.
                         var multiplerVector = Vector3.Abs((meshChunk.MinBound - meshChunk.MaxBound) / 2f);
                         if (multiplerVector.X < 1) { multiplerVector.X = 1; }
                         if (multiplerVector.Y < 1) { multiplerVector.Y = 1; }
@@ -521,7 +727,7 @@ public class ColladaModelRenderer : IRenderer
                         {
                             Vector3 vertex = vertsUvs.Vertices[j];
                             // Rotate/translate the vertex
-                            if (!CryData.InputFile.EndsWith("skin") && !CryData.InputFile.EndsWith("chr"))
+                            if (!_cryData.InputFile.EndsWith("skin") && !_cryData.InputFile.EndsWith("chr"))
                                 vertex = (vertex * multiplerVector) + boundaryBoxCenter;
 
                             vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(vertex.X), Safe(vertex.Y), Safe(vertex.Z));
@@ -529,9 +735,9 @@ public class ColladaModelRenderer : IRenderer
                             // TODO:  This isn't right?  VertsUvs may always have color as the 3rd element.
                             // Normals depend on the data size.  16 byte structures have the normals in the Tangents.  20 byte structures are in the VertsUV.
                             Vector3 normal = new();
-                            if (vertsUvs.Normals != null)
+                            if (vertsUvs.Normals is not null)
                                 normal = vertsUvs.Normals[j];
-                            else if (tangents != null && tangents.Normals != null)
+                            else if (tangents is not null && tangents.Normals is not null)
                                 normal = tangents.Normals[j];
 
                             normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(normal.X), Safe(normal.Y), Safe(normal.Z));
@@ -548,15 +754,36 @@ public class ColladaModelRenderer : IRenderer
                     CleanNumbers(colorString);
 
                     #region Create the triangles node.
-                    var triangles = new Grendgine_Collada_Triangles[meshSubsets.NumMeshSubset];
+                    var triangles = new ColladaTriangles[meshSubsets.NumMeshSubset];
                     geometry.Mesh.Triangles = triangles;
 
                     for (uint j = 0; j < meshSubsets.NumMeshSubset; j++) // Need to make a new Triangles entry for each submesh.
                     {
-                        triangles[j] = new Grendgine_Collada_Triangles
+                        // Find the material associated with this meshsubset and index.  Normally the nodechunk points to the mtlnamechunk, but
+                        // in mwo models it can point to mechDefault.  First check to see if the material key for the nodechunk's mtlname chunk exists.
+                        // If it does, use that material.  If not, assume just a single materialfile and use that.
+
+                        //var mtlNameChunk = nodeChunk.MaterialID == 0
+                        //    ? 
+                        //    :
+                        //    ;
+                        var mtlNameChunk = (ChunkMtlName)_cryData.Models.Last().ChunkMap[nodeChunk.MaterialID];
+                        var mtlFileName = mtlNameChunk.Name;
+                        var key = Path.GetFileNameWithoutExtension(mtlFileName);
+                        Material[] submats;
+                        if (_cryData.Materials.ContainsKey(key))
+                            submats = _cryData.Materials[key].SubMaterials;
+                        else
+                        {
+                            submats = _cryData.Materials.FirstOrDefault().Value.SubMaterials;
+                            mtlFileName = Path.GetFileNameWithoutExtension(_cryData.MaterialFiles.FirstOrDefault());
+                        }
+
+                        triangles[j] = new ColladaTriangles
                         {
                             Count = meshSubsets.MeshSubsets[j].NumIndices / 3,
-                            Material = GetMaterialName(nodeChunk, meshSubsets, (int)j)
+                            Material = GetMaterialName(mtlFileName, submats[meshSubsets.MeshSubsets[j].MatID].Name) + "-material"
+                            //Material = GetMaterialId(nodeChunk, meshSubsets, (int)j)
                         };
 
                         // Create the inputs.  vertex, normal, texcoord, color
@@ -564,24 +791,24 @@ public class ColladaModelRenderer : IRenderer
                         if (colors != null || vertsUvs?.Colors != null)
                             inputCount++;
 
-                        triangles[j].Input = new Grendgine_Collada_Input_Shared[inputCount];
+                        triangles[j].Input = new ColladaInputShared[inputCount];
 
-                        triangles[j].Input[0] = new Grendgine_Collada_Input_Shared
+                        triangles[j].Input[0] = new ColladaInputShared
                         {
-                            Semantic = new Grendgine_Collada_Input_Semantic()
+                            Semantic = new ColladaInputSemantic()
                         };
-                        triangles[j].Input[0].Semantic = Grendgine_Collada_Input_Semantic.VERTEX;
+                        triangles[j].Input[0].Semantic = ColladaInputSemantic.VERTEX;
                         triangles[j].Input[0].Offset = 0;
                         triangles[j].Input[0].source = "#" + vertices.ID;
-                        triangles[j].Input[1] = new Grendgine_Collada_Input_Shared
+                        triangles[j].Input[1] = new ColladaInputShared
                         {
-                            Semantic = Grendgine_Collada_Input_Semantic.NORMAL,
+                            Semantic = ColladaInputSemantic.NORMAL,
                             Offset = 1,
                             source = "#" + normSource.ID
                         };
-                        triangles[j].Input[2] = new Grendgine_Collada_Input_Shared
+                        triangles[j].Input[2] = new ColladaInputShared
                         {
-                            Semantic = Grendgine_Collada_Input_Semantic.TEXCOORD,
+                            Semantic = ColladaInputSemantic.TEXCOORD,
                             Offset = 2,
                             source = "#" + uvSource.ID
                         };
@@ -589,9 +816,9 @@ public class ColladaModelRenderer : IRenderer
                         int nextInputID = 3;
                         if (colors != null || vertsUvs?.Colors != null)
                         {
-                            triangles[j].Input[nextInputID] = new Grendgine_Collada_Input_Shared
+                            triangles[j].Input[nextInputID] = new ColladaInputShared
                             {
-                                Semantic = Grendgine_Collada_Input_Semantic.COLOR,
+                                Semantic = ColladaInputSemantic.COLOR,
                                 Offset = nextInputID,
                                 source = "#" + colorSource.ID
                             };
@@ -635,7 +862,7 @@ public class ColladaModelRenderer : IRenderer
                             p.AppendFormat(finalformat, indices.Indices[k], indices.Indices[k + 1], indices.Indices[k + 2]);
                             k += 2;
                         }
-                        triangles[j].P = new Grendgine_Collada_Int_Array_String
+                        triangles[j].P = new ColladaIntArrayString
                         {
                             Value_As_String = p.ToString().TrimEnd()
                         };
@@ -657,17 +884,17 @@ public class ColladaModelRenderer : IRenderer
                     geometry.Mesh.Source = source;
 
                     // create the technique_common for each of these
-                    posSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
+                    posSource.Technique_Common = new ColladaTechniqueCommonSource
                     {
-                        Accessor = new Grendgine_Collada_Accessor()
+                        Accessor = new ColladaAccessor()
                     };
                     posSource.Technique_Common.Accessor.Source = "#" + floatArrayVerts.ID;
                     posSource.Technique_Common.Accessor.Stride = 3;
                     posSource.Technique_Common.Accessor.Count = (uint)meshChunk.NumVertices;
-                    Grendgine_Collada_Param[] paramPos = new Grendgine_Collada_Param[3];
-                    paramPos[0] = new Grendgine_Collada_Param();
-                    paramPos[1] = new Grendgine_Collada_Param();
-                    paramPos[2] = new Grendgine_Collada_Param();
+                    ColladaParam[] paramPos = new ColladaParam[3];
+                    paramPos[0] = new ColladaParam();
+                    paramPos[1] = new ColladaParam();
+                    paramPos[2] = new ColladaParam();
                     paramPos[0].Name = "X";
                     paramPos[0].Type = "float";
                     paramPos[1].Name = "Y";
@@ -676,19 +903,19 @@ public class ColladaModelRenderer : IRenderer
                     paramPos[2].Type = "float";
                     posSource.Technique_Common.Accessor.Param = paramPos;
 
-                    normSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
+                    normSource.Technique_Common = new ColladaTechniqueCommonSource
                     {
-                        Accessor = new Grendgine_Collada_Accessor
+                        Accessor = new ColladaAccessor
                         {
                             Source = "#" + floatArrayNormals.ID,
                             Stride = 3,
                             Count = (uint)meshChunk.NumVertices
                         }
                     };
-                    Grendgine_Collada_Param[] paramNorm = new Grendgine_Collada_Param[3];
-                    paramNorm[0] = new Grendgine_Collada_Param();
-                    paramNorm[1] = new Grendgine_Collada_Param();
-                    paramNorm[2] = new Grendgine_Collada_Param();
+                    ColladaParam[] paramNorm = new ColladaParam[3];
+                    paramNorm[0] = new ColladaParam();
+                    paramNorm[1] = new ColladaParam();
+                    paramNorm[2] = new ColladaParam();
                     paramNorm[0].Name = "X";
                     paramNorm[0].Type = "float";
                     paramNorm[1].Name = "Y";
@@ -697,9 +924,9 @@ public class ColladaModelRenderer : IRenderer
                     paramNorm[2].Type = "float";
                     normSource.Technique_Common.Accessor.Param = paramNorm;
 
-                    uvSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
+                    uvSource.Technique_Common = new ColladaTechniqueCommonSource
                     {
-                        Accessor = new Grendgine_Collada_Accessor
+                        Accessor = new ColladaAccessor
                         {
                             Source = "#" + floatArrayUVs.ID,
                             Stride = 2
@@ -711,9 +938,9 @@ public class ColladaModelRenderer : IRenderer
                     else
                         uvSource.Technique_Common.Accessor.Count = vertsUvs.NumElements;
 
-                    Grendgine_Collada_Param[] paramUV = new Grendgine_Collada_Param[2];
-                    paramUV[0] = new Grendgine_Collada_Param();
-                    paramUV[1] = new Grendgine_Collada_Param();
+                    ColladaParam[] paramUV = new ColladaParam[2];
+                    paramUV[0] = new ColladaParam();
+                    paramUV[1] = new ColladaParam();
                     paramUV[0].Name = "S";
                     paramUV[0].Type = "float";
                     paramUV[1].Name = "T";
@@ -728,18 +955,18 @@ public class ColladaModelRenderer : IRenderer
                         else
                             numberOfElements = (uint)vertsUvs.Colors.Length;
 
-                        colorSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
+                        colorSource.Technique_Common = new ColladaTechniqueCommonSource
                         {
-                            Accessor = new Grendgine_Collada_Accessor()
+                            Accessor = new ColladaAccessor()
                         };
                         colorSource.Technique_Common.Accessor.Source = "#" + floatArrayColors.ID;
                         colorSource.Technique_Common.Accessor.Stride = 4;
                         colorSource.Technique_Common.Accessor.Count = numberOfElements;
-                        Grendgine_Collada_Param[] paramColor = new Grendgine_Collada_Param[4];
-                        paramColor[0] = new Grendgine_Collada_Param();
-                        paramColor[1] = new Grendgine_Collada_Param();
-                        paramColor[2] = new Grendgine_Collada_Param();
-                        paramColor[3] = new Grendgine_Collada_Param();
+                        ColladaParam[] paramColor = new ColladaParam[4];
+                        paramColor[0] = new ColladaParam();
+                        paramColor[1] = new ColladaParam();
+                        paramColor[2] = new ColladaParam();
+                        paramColor[3] = new ColladaParam();
                         paramColor[0].Name = "R";
                         paramColor[0].Type = "float";
                         paramColor[1].Name = "G";
@@ -762,22 +989,24 @@ public class ColladaModelRenderer : IRenderer
         DaeObject.Library_Geometries = libraryGeometries;
     }
 
-    private void CreateMaterialsFromNodeChunk(ChunkNode nodeChunk)
+    private void CreateMaterials()
     {
-        List<Grendgine_Collada_Material> colladaMaterials = new();
-        List<Grendgine_Collada_Effect> colladaEffects = new();
-        if (DaeObject.Library_Materials.Material is null)
-            DaeObject.Library_Materials.Material = Array.Empty<Grendgine_Collada_Material>();
+        List<ColladaMaterial> colladaMaterials = new();
+        List<ColladaEffect> colladaEffects = new();
+        if (DaeObject.Library_Materials?.Material is null)
+            DaeObject.Library_Materials.Material = Array.Empty<ColladaMaterial>();
 
-        foreach (var mat in nodeChunk.Materials.SubMaterials)
+        foreach (var matKey in _cryData.Materials.Keys)
         {
-            // Check to see if the collada object already has a material with this name.  If not, add.
-
-            var matNames = DaeObject.Library_Materials.Material.Select(c => c.Name);
-            if (!matNames.Contains(mat.Name))
+            foreach (var subMat in _cryData.Materials[matKey].SubMaterials)
             {
-                colladaMaterials.Add(AddMaterialToMaterialLibrary(mat));
-                colladaEffects.Add(CreateColladaEffect(mat));
+                // Check to see if the collada object already has a material with this name.  If not, add.
+                var matNames = DaeObject.Library_Materials.Material.Select(c => c.Name);
+                if (!matNames.Contains(subMat.Name))
+                {
+                    colladaMaterials.Add(AddMaterialToMaterialLibrary(matKey, subMat));
+                    colladaEffects.Add(CreateColladaEffect(matKey, subMat));
+                }
             }
         }
 
@@ -795,54 +1024,54 @@ public class ColladaModelRenderer : IRenderer
         }
     }
 
-    private Grendgine_Collada_Material AddMaterialToMaterialLibrary(Material mat)
+    private ColladaMaterial AddMaterialToMaterialLibrary(string matKey, Material submat)
     {
-        Grendgine_Collada_Material material = new()
+        var matName = GetMaterialName(matKey, submat?.Name ?? "unknown");
+        ColladaMaterial material = new()
         {
-            Instance_Effect = new Grendgine_Collada_Instance_Effect(),
-            Name = mat.Name,
-            ID = mat.Name + "-material"
+            Instance_Effect = new ColladaInstanceEffect(),
+            Name = matName,
+            ID = matName + "-material"
         };
-        material.Instance_Effect.URL = "#" + mat.Name + "-effect";
+        material.Instance_Effect.URL = "#" + matName + "-effect";
 
-        AddImagesToImagesLibrary(mat);
+        AddTexturesToTextureLibrary(matKey, submat);
         return material;
     }
 
-    private void AddImagesToImagesLibrary(Material mat)
+    private void AddTexturesToTextureLibrary(string matKey, Material submat)
     {
-        List<Grendgine_Collada_Image> imageList = new();
-        int numberOfTextures = mat.Textures.Length;
+        List<ColladaImage> imageList = new();
+        int numberOfTextures = submat.Textures?.Length ?? 0;
 
         for (int i = 0; i < numberOfTextures; i++)
         {
-            // For each texture in the material, we make a new <image> object and add it to the list. 
-            Grendgine_Collada_Image image = new()
+            // For each texture in the material, we make a new <image> object and add it to the list.
+            var name = GetMaterialName(matKey, submat.Name);
+            ColladaImage image = new()
             {
-                ID = mat.Name + "_" + mat.Textures[i].Map,
-                Name = mat.Name + "_" + mat.Textures[i].Map,
-                Init_From = new Grendgine_Collada_Init_From()
+                ID = name + "_" + submat.Textures[i].Map,
+                Name = name + "_" + submat.Textures[i].Map,
+                Init_From = new ColladaInitFrom()
             };
-            // Try to resolve the texture file to a file on disk. Texture are always based on DataDir.
-            var textureFile = ResolveTextureFile(mat.Textures[i].File, Args.PackFileSystem);
+            // TODO: Refactor to use fully qualified path, and to use Pack File System.
+            var textureFile = ResolveTextureFile(submat.Textures[i].File, _args.PackFileSystem, _args.DataDirs);
 
-            if (Args.PngTextures && File.Exists(Path.ChangeExtension(textureFile, ".png")))
+            if (_args.PngTextures && File.Exists(Path.ChangeExtension(textureFile, ".png")))
                 textureFile = Path.ChangeExtension(textureFile, ".png");
-            else if (Args.TgaTextures && File.Exists(Path.ChangeExtension(textureFile, ".tga")))
+            else if (_args.TgaTextures && File.Exists(Path.ChangeExtension(textureFile, ".tga")))
                 textureFile = Path.ChangeExtension(textureFile, ".tga");
-            else if (Args.TiffTextures && File.Exists(Path.ChangeExtension(textureFile, ".tif")))
+            else if (_args.TiffTextures && File.Exists(Path.ChangeExtension(textureFile, ".tif")))
                 textureFile = Path.ChangeExtension(textureFile, ".tif");
 
             textureFile = Path.GetRelativePath(daeOutputFile.DirectoryName, textureFile);
 
             textureFile = textureFile.Replace(" ", @"%20");
-            // if 1.4.1, use URI.  If 1.5.0, use Ref.
-            _ = DaeObject.Collada_Version == "1.4.1" ? image.Init_From.Uri = textureFile : image.Init_From.Ref = textureFile;
-
+            image.Init_From.Uri = textureFile;
             imageList.Add(image);
         }
 
-        Grendgine_Collada_Image[] images = imageList.ToArray();
+        ColladaImage[] images = imageList.ToArray();
         if (DaeObject.Library_Images.Image is null)
             DaeObject.Library_Images.Image = images;
         else
@@ -857,45 +1086,46 @@ public class ColladaModelRenderer : IRenderer
     {
         if (DaeObject.Library_Geometries.Geometry.Length != 0)
         {
-            Grendgine_Collada_Library_Controllers libraryController = new();
+            ColladaLibraryControllers libraryController = new();
 
             // There can be multiple controllers in the controller library.  But for Cryengine files, there is only one rig.
             // So if a rig exists, make that the controller.  This applies mostly to .chr files, which will have a rig and may have geometry.
-            Grendgine_Collada_Controller controller = new() { ID = "Controller" };
+            ColladaController controller = new() { ID = "Controller" };
             // Create the skin object and assign to the controller
-            Grendgine_Collada_Skin skin = new()
+            ColladaSkin skin = new()
             {
                 source = "#" + DaeObject.Library_Geometries.Geometry[0].ID,
-                Bind_Shape_Matrix = new Grendgine_Collada_Float_Array_String()
+                Bind_Shape_Matrix = new ColladaFloatArrayString()
             };
             skin.Bind_Shape_Matrix.Value_As_String = CreateStringFromMatrix4x4(Matrix4x4.Identity);  // We will assume the BSM is the identity matrix for now
-                                                                                                     // Create the 3 sources for this controller:  joints, bind poses, and weights
-            skin.Source = new Grendgine_Collada_Source[3];
+
+            // Create the 3 sources for this controller:  joints, bind poses, and weights
+            skin.Source = new ColladaSource[3];
 
             // Populate the data.
             // Need to map the exterior vertices (geometry) to the int vertices.  Or use the Bone Map datastream if it exists (check HasBoneMapDatastream).
             #region Joints Source
-            Grendgine_Collada_Source jointsSource = new()
+            ColladaSource jointsSource = new()
             {
-                ID = "Controller-joints"
-            };
-            jointsSource.Name_Array = new Grendgine_Collada_Name_Array()
-            {
-                ID = "Controller-joints-array",
-                Count = CryData.SkinningInfo.CompiledBones.Count,
+                ID = "Controller-joints",
+                Name_Array = new ColladaNameArray()
+                {
+                    ID = "Controller-joints-array",
+                    Count = _cryData.SkinningInfo.CompiledBones.Count,
+                }
             };
             StringBuilder boneNames = new();
-            for (int i = 0; i < CryData.SkinningInfo.CompiledBones.Count; i++)
+            for (int i = 0; i < _cryData.SkinningInfo.CompiledBones.Count; i++)
             {
-                boneNames.Append(CryData.SkinningInfo.CompiledBones[i].boneName.Replace(' ', '_') + " ");
+                boneNames.Append(_cryData.SkinningInfo.CompiledBones[i].boneName.Replace(' ', '_') + " ");
             }
             jointsSource.Name_Array.Value_Pre_Parse = boneNames.ToString().TrimEnd();
-            jointsSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
+            jointsSource.Technique_Common = new ColladaTechniqueCommonSource
             {
-                Accessor = new Grendgine_Collada_Accessor
+                Accessor = new ColladaAccessor
                 {
                     Source = "#Controller-joints-array",
-                    Count = (uint)CryData.SkinningInfo.CompiledBones.Count,
+                    Count = (uint)_cryData.SkinningInfo.CompiledBones.Count,
                     Stride = 1
                 }
             };
@@ -903,27 +1133,27 @@ public class ColladaModelRenderer : IRenderer
             #endregion
 
             #region Bind Pose Array Source
-            Grendgine_Collada_Source bindPoseArraySource = new()
+            ColladaSource bindPoseArraySource = new()
             {
                 ID = "Controller-bind_poses",
                 Float_Array = new()
                 {
                     ID = "Controller-bind_poses-array",
-                    Count = CryData.SkinningInfo.CompiledBones.Count * 16,
-                    Value_As_String = GetBindPoseArray(CryData.SkinningInfo.CompiledBones)
+                    Count = _cryData.SkinningInfo.CompiledBones.Count * 16,
+                    Value_As_String = GetBindPoseArray(_cryData.SkinningInfo.CompiledBones)
                 },
-                Technique_Common = new Grendgine_Collada_Technique_Common_Source
+                Technique_Common = new ColladaTechniqueCommonSource
                 {
-                    Accessor = new Grendgine_Collada_Accessor
+                    Accessor = new ColladaAccessor
                     {
                         Source = "#Controller-bind_poses-array",
-                        Count = (uint)CryData.SkinningInfo.CompiledBones.Count,
+                        Count = (uint)_cryData.SkinningInfo.CompiledBones.Count,
                         Stride = 16,
                     }
                 }
             };
-            bindPoseArraySource.Technique_Common.Accessor.Param = new Grendgine_Collada_Param[1];
-            bindPoseArraySource.Technique_Common.Accessor.Param[0] = new Grendgine_Collada_Param
+            bindPoseArraySource.Technique_Common.Accessor.Param = new ColladaParam[1];
+            bindPoseArraySource.Technique_Common.Accessor.Param[0] = new ColladaParam
             {
                 Name = "TRANSFORM",
                 Type = "float4x4"
@@ -932,41 +1162,41 @@ public class ColladaModelRenderer : IRenderer
             #endregion
 
             #region Weights Source
-            Grendgine_Collada_Source weightArraySource = new()
+            ColladaSource weightArraySource = new()
             {
                 ID = "Controller-weights",
-                Technique_Common = new Grendgine_Collada_Technique_Common_Source()
+                Technique_Common = new ColladaTechniqueCommonSource()
             };
-            Grendgine_Collada_Accessor accessor = weightArraySource.Technique_Common.Accessor = new Grendgine_Collada_Accessor();
+            ColladaAccessor accessor = weightArraySource.Technique_Common.Accessor = new ColladaAccessor();
 
-            weightArraySource.Float_Array = new Grendgine_Collada_Float_Array()
+            weightArraySource.Float_Array = new ColladaFloatArray()
             {
                 ID = "Controller-weights-array",
             };
             StringBuilder weights = new();
 
-            if (CryData.SkinningInfo.IntVertices is null)       // This is a case where there are bones, and only Bone Mapping data from a datastream chunk.  Skin files.
+            if (_cryData.SkinningInfo.IntVertices is null)       // This is a case where there are bones, and only Bone Mapping data from a datastream chunk.  Skin files.
             {
-                weightArraySource.Float_Array.Count = CryData.SkinningInfo.BoneMapping.Count;
-                for (int i = 0; i < CryData.SkinningInfo.BoneMapping.Count; i++)
+                weightArraySource.Float_Array.Count = _cryData.SkinningInfo.BoneMapping.Count;
+                for (int i = 0; i < _cryData.SkinningInfo.BoneMapping.Count; i++)
                 {
                     for (int j = 0; j < 4; j++)
                     {
-                        weights.Append(((float)CryData.SkinningInfo.BoneMapping[i].Weight[j] / 255).ToString() + " ");
+                        weights.Append(((float)_cryData.SkinningInfo.BoneMapping[i].Weight[j] / 255).ToString() + " ");
                     }
                 };
-                accessor.Count = (uint)CryData.SkinningInfo.BoneMapping.Count * 4;
+                accessor.Count = (uint)_cryData.SkinningInfo.BoneMapping.Count * 4;
             }
             else                                                // Bones and int verts.  Will use int verts for weights, but this doesn't seem perfect either.
             {
-                weightArraySource.Float_Array.Count = CryData.SkinningInfo.Ext2IntMap.Count;
-                for (int i = 0; i < CryData.SkinningInfo.Ext2IntMap.Count; i++)
+                weightArraySource.Float_Array.Count = _cryData.SkinningInfo.Ext2IntMap.Count;
+                for (int i = 0; i < _cryData.SkinningInfo.Ext2IntMap.Count; i++)
                 {
                     for (int j = 0; j < 4; j++)
                     {
-                        weights.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].Weights[j] + " ");
+                        weights.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].Weights[j] + " ");
                     }
-                    accessor.Count = (uint)CryData.SkinningInfo.Ext2IntMap.Count * 4;
+                    accessor.Count = (uint)_cryData.SkinningInfo.Ext2IntMap.Count * 4;
                 };
             }
             CleanNumbers(weights);
@@ -974,8 +1204,8 @@ public class ColladaModelRenderer : IRenderer
             // Add technique_common part.
             accessor.Source = "#Controller-weights-array";
             accessor.Stride = 1;
-            accessor.Param = new Grendgine_Collada_Param[1];
-            accessor.Param[0] = new Grendgine_Collada_Param
+            accessor.Param = new ColladaParam[1];
+            accessor.Param[0] = new ColladaParam
             {
                 Name = "WEIGHT",
                 Type = "float"
@@ -985,87 +1215,82 @@ public class ColladaModelRenderer : IRenderer
             #endregion
 
             #region Joints
-            skin.Joints = new Grendgine_Collada_Joints
+            skin.Joints = new ColladaJoints
             {
-                Input = new Grendgine_Collada_Input_Unshared[2]
+                Input = new ColladaInputUnshared[2]
             };
-            skin.Joints.Input[0] = new Grendgine_Collada_Input_Unshared
+            skin.Joints.Input[0] = new ColladaInputUnshared
             {
-                Semantic = new Grendgine_Collada_Input_Semantic()
+                Semantic = new ColladaInputSemantic()
             };
-            skin.Joints.Input[0].Semantic = Grendgine_Collada_Input_Semantic.JOINT;
+            skin.Joints.Input[0].Semantic = ColladaInputSemantic.JOINT;
             skin.Joints.Input[0].source = "#Controller-joints";
-            skin.Joints.Input[1] = new Grendgine_Collada_Input_Unshared
+            skin.Joints.Input[1] = new ColladaInputUnshared
             {
-                Semantic = new Grendgine_Collada_Input_Semantic()
+                Semantic = new ColladaInputSemantic()
             };
-            skin.Joints.Input[1].Semantic = Grendgine_Collada_Input_Semantic.INV_BIND_MATRIX;
+            skin.Joints.Input[1].Semantic = ColladaInputSemantic.INV_BIND_MATRIX;
             skin.Joints.Input[1].source = "#Controller-bind_poses";
             #endregion
 
             #region Vertex Weights
-            Grendgine_Collada_Vertex_Weights vertexWeights = skin.Vertex_Weights = new Grendgine_Collada_Vertex_Weights();
-            vertexWeights.Count = CryData.SkinningInfo.BoneMapping.Count;
-            skin.Vertex_Weights.Input = new Grendgine_Collada_Input_Shared[2];
-            Grendgine_Collada_Input_Shared jointSemantic = skin.Vertex_Weights.Input[0] = new Grendgine_Collada_Input_Shared();
-            jointSemantic.Semantic = Grendgine_Collada_Input_Semantic.JOINT;
+            ColladaVertexWeights vertexWeights = skin.Vertex_Weights = new();
+            vertexWeights.Count = _cryData.SkinningInfo.BoneMapping.Count;
+            skin.Vertex_Weights.Input = new ColladaInputShared[2];
+            ColladaInputShared jointSemantic = skin.Vertex_Weights.Input[0] = new();
+            jointSemantic.Semantic = ColladaInputSemantic.JOINT;
             jointSemantic.source = "#Controller-joints";
             jointSemantic.Offset = 0;
-            Grendgine_Collada_Input_Shared weightSemantic = skin.Vertex_Weights.Input[1] = new Grendgine_Collada_Input_Shared();
-            weightSemantic.Semantic = Grendgine_Collada_Input_Semantic.WEIGHT;
+            ColladaInputShared weightSemantic = skin.Vertex_Weights.Input[1] = new();
+            weightSemantic.Semantic = ColladaInputSemantic.WEIGHT;
             weightSemantic.source = "#Controller-weights";
             weightSemantic.Offset = 1;
             StringBuilder vCount = new();
             //for (int i = 0; i < CryData.Models[0].SkinningInfo.IntVertices.Count; i++)
-            for (int i = 0; i < CryData.SkinningInfo.BoneMapping.Count; i++)
+            for (int i = 0; i < _cryData.SkinningInfo.BoneMapping.Count; i++)
             {
                 vCount.Append("4 ");
             };
-            vertexWeights.VCount = new Grendgine_Collada_Int_Array_String
+            vertexWeights.VCount = new ColladaIntArrayString
             {
                 Value_As_String = vCount.ToString().TrimEnd()
             };
             StringBuilder vertices = new();
             //for (int i = 0; i < CryData.Models[0].SkinningInfo.IntVertices.Count * 4; i++)
             int index = 0;
-            if (!CryData.Models[0].SkinningInfo.HasIntToExtMapping)
+            if (!_cryData.SkinningInfo.HasIntToExtMapping)
             {
-                for (int i = 0; i < CryData.SkinningInfo.BoneMapping.Count; i++)
+                for (int i = 0; i < _cryData.SkinningInfo.BoneMapping.Count; i++)
                 {
-                    int wholePart = (int)i / 4;
-                    vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[0] + " " + index + " ");
-                    vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[1] + " " + (index + 1) + " ");
-                    vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[2] + " " + (index + 2) + " ");
-                    vertices.Append(CryData.SkinningInfo.BoneMapping[i].BoneIndex[3] + " " + (index + 3) + " ");
+                    vertices.Append(_cryData.SkinningInfo.BoneMapping[i].BoneIndex[0] + " " + index + " ");
+                    vertices.Append(_cryData.SkinningInfo.BoneMapping[i].BoneIndex[1] + " " + (index + 1) + " ");
+                    vertices.Append(_cryData.SkinningInfo.BoneMapping[i].BoneIndex[2] + " " + (index + 2) + " ");
+                    vertices.Append(_cryData.SkinningInfo.BoneMapping[i].BoneIndex[3] + " " + (index + 3) + " ");
                     index += 4;
                 }
             }
             else
             {
-                for (int i = 0; i < CryData.SkinningInfo.Ext2IntMap.Count; i++)
+                for (int i = 0; i < _cryData.SkinningInfo.Ext2IntMap.Count; i++)
                 {
-                    int wholePart = (int)i / 4;
-                    vertices.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[0] + " " + index + " ");
-                    vertices.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[1] + " " + (index + 1) + " ");
-                    vertices.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[2] + " " + (index + 2) + " ");
-                    vertices.Append(CryData.SkinningInfo.IntVertices[CryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[3] + " " + (index + 3) + " ");
+                    vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[0] + " " + index + " ");
+                    vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[1] + " " + (index + 1) + " ");
+                    vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[2] + " " + (index + 2) + " ");
+                    vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[3] + " " + (index + 3) + " ");
 
                     index += 4;
                 }
             }
-            vertexWeights.V = new Grendgine_Collada_Int_Array_String
-            {
-                Value_As_String = vertices.ToString().TrimEnd()
-            };
+            vertexWeights.V = new ColladaIntArrayString { Value_As_String = vertices.ToString().TrimEnd() };
             #endregion
 
             // create the extra element for the FCOLLADA profile
-            controller.Extra = new Grendgine_Collada_Extra[1];
-            controller.Extra[0] = new Grendgine_Collada_Extra
+            controller.Extra = new ColladaExtra[1];
+            controller.Extra[0] = new ColladaExtra
             {
-                Technique = new Grendgine_Collada_Technique[1]
+                Technique = new ColladaTechnique[1]
             };
-            controller.Extra[0].Technique[0] = new Grendgine_Collada_Technique
+            controller.Extra[0].Technique[0] = new ColladaTechnique
             {
                 profile = "FCOLLADA",
                 UserProperties = "SkinController"
@@ -1073,27 +1298,26 @@ public class ColladaModelRenderer : IRenderer
 
             // Add the parts to their parents
             controller.Skin = skin;
-            libraryController.Controller = new Grendgine_Collada_Controller[1];
+            libraryController.Controller = new ColladaController[1];
             libraryController.Controller[0] = controller;
             DaeObject.Library_Controllers = libraryController;
         }
     }
 
-    /// <summary> Provides a library in which to place visual_scene elements. </summary>
     public void WriteLibrary_VisualScenes()
     {
-        Grendgine_Collada_Library_Visual_Scenes libraryVisualScenes = new();
+        ColladaLibraryVisualScenes libraryVisualScenes = new();
 
-        List<Grendgine_Collada_Visual_Scene> visualScenes = new();
-        Grendgine_Collada_Visual_Scene visualScene = new();
-        List<Grendgine_Collada_Node> nodes = new();
+        List<ColladaVisualScene> visualScenes = new();
+        ColladaVisualScene visualScene = new();
+        List<ColladaNode> nodes = new();
 
         // THERE CAN BE MULTIPLE ROOT NODES IN EACH FILE!  Check to see if the parentnodeid ~0 and be sure to add a node for it.
-        List<Grendgine_Collada_Node> positionNodes = new();
-        List<ChunkNode> positionRoots = CryData.Models[0].NodeMap.Values.Where(a => a.ParentNodeID == ~0).ToList();
+        List<ColladaNode> positionNodes = new();
+        List<ChunkNode> positionRoots = _cryData.Models[0].NodeMap.Values.Where(a => a.ParentNodeID == ~0).ToList();
         foreach (ChunkNode root in positionRoots)
         {
-            positionNodes.Add(CreateNode(root));
+            positionNodes.Add(CreateNode(root, false));
         }
         nodes.AddRange(positionNodes.ToArray());
 
@@ -1105,64 +1329,53 @@ public class ColladaModelRenderer : IRenderer
         DaeObject.Library_Visual_Scene = libraryVisualScenes;
     }
 
-    /// <summary> Provides a library in which to place visual_scene elements for chr files (rigs + geometry). </summary>
     public void WriteLibrary_VisualScenesWithSkeleton()
     {
-        Grendgine_Collada_Library_Visual_Scenes libraryVisualScenes = new();
+        ColladaLibraryVisualScenes libraryVisualScenes = new();
 
-        List<Grendgine_Collada_Visual_Scene> visualScenes = new();
-        Grendgine_Collada_Visual_Scene visualScene = new();
-        List<Grendgine_Collada_Node> nodes = new();
+        List<ColladaVisualScene> visualScenes = new();
+        ColladaVisualScene visualScene = new();
+        List<ColladaNode> nodes = new();
 
-        // Check to see if there is a CompiledBones chunk.  If so, add a Node.  
-        if (CryData.Chunks.Any(a => a.ChunkType == ChunkType.CompiledBones ||
+        // Check to see if there is a CompiledBones chunk.  If so, add a Node.
+        if (_cryData.Chunks.Any(a => a.ChunkType == ChunkType.CompiledBones ||
             a.ChunkType == ChunkType.CompiledBonesSC ||
-            a.ChunkType == ChunkType.CompiledBonesIvo))
+            a.ChunkType == ChunkType.CompiledBonesIvo ||
+            a.ChunkType == ChunkType.CompiledBonesIvo320))
         {
-            Grendgine_Collada_Node boneNode = new();
-            boneNode = CreateJointNode(CryData.Bones.RootBone);
+            ColladaNode boneNode = new();
+            boneNode = CreateJointNode(_cryData.Bones.RootBone);
             nodes.Add(boneNode);
         }
 
-        var hasGeometry = CryData.Models.Any(x => x.HasGeometry);
+        var hasGeometry = _cryData.Models.Any(x => x.HasGeometry);
 
         if (hasGeometry)
         {
-            var allParentNodes = CryData.Models[CryData.Models.Count == 2 ? 1 : 0].NodeMap.Values.Where(n => n.ParentNodeID != ~1);
+            var modelIndex = _cryData.Models.First().IsIvoFile ? 1 : 0;
+            var allParentNodes = _cryData.Models[modelIndex].NodeMap.Values.Where(n => n.ParentNodeID != ~1);
 
             foreach (var node in allParentNodes)
             {
-                Grendgine_Collada_Node colladaNode = new()
-                {
-                    ID = node.Name,
-                    Name = node.Name,
-                    Type = Grendgine_Collada_Node_Type.NODE,
-                    Matrix = new Grendgine_Collada_Matrix[1]
-                };
-                colladaNode.Matrix[0] = new Grendgine_Collada_Matrix { Value_As_String = CreateStringFromMatrix4x4(Matrix4x4.Identity) };
-                colladaNode.Instance_Controller = new Grendgine_Collada_Instance_Controller[1];
-                colladaNode.Instance_Controller[0] = new Grendgine_Collada_Instance_Controller
+                var colladaNode = CreateNode(node, true);
+                colladaNode.Instance_Controller = new ColladaInstanceController[1];
+                colladaNode.Instance_Controller[0] = new ColladaInstanceController
                 {
                     URL = "#Controller",
-                    Skeleton = new Grendgine_Collada_Skeleton[1]
+                    Skeleton = new ColladaSkeleton[1]
                 };
 
-                var skeleton = colladaNode.Instance_Controller[0].Skeleton[0] = new Grendgine_Collada_Skeleton();
-                skeleton.Value = "#Armature";
-                colladaNode.Instance_Controller[0].Bind_Material = new Grendgine_Collada_Bind_Material[1];
-                Grendgine_Collada_Bind_Material bindMaterial = colladaNode.Instance_Controller[0].Bind_Material[0] = new Grendgine_Collada_Bind_Material();
+                var skeleton = colladaNode.Instance_Controller[0].Skeleton[0] = new ColladaSkeleton();
+                skeleton.Value = $"#{_cryData.Bones.RootBone.boneName}".Replace(' ', '_');
+                colladaNode.Instance_Controller[0].Bind_Material = new ColladaBindMaterial[1];
+                ColladaBindMaterial bindMaterial = colladaNode.Instance_Controller[0].Bind_Material[0] = new ColladaBindMaterial();
 
                 // Create an Instance_Material for each material
-                bindMaterial.Technique_Common = new Grendgine_Collada_Technique_Common_Bind_Material();
+                bindMaterial.Technique_Common = new ColladaTechniqueCommonBindMaterial();
                 colladaNode.Instance_Controller[0].Bind_Material[0].Technique_Common.Instance_Material = CreateInstanceMaterials(node);
 
-                if (node.AllChildNodes is not null)
-                {
-                    foreach (var child in node.AllChildNodes)
-                    {
-                        colladaNode.node = CreateChildNodes(child);
-                    }
-                }
+                foreach (ChunkNode child in node.AllChildNodes)
+                    CreateChildNodes(child, true);
 
                 nodes.Add(colladaNode);
             }
@@ -1176,62 +1389,67 @@ public class ColladaModelRenderer : IRenderer
         DaeObject.Library_Visual_Scene = libraryVisualScenes;
     }
 
-    private Grendgine_Collada_Instance_Material_Geometry[] CreateInstanceMaterials(ChunkNode node)
+    private ColladaInstanceMaterialGeometry[] CreateInstanceMaterials(ChunkNode node)
     {
         // For each mesh subset, we want to create an instance material and add it to instanceMaterials list.
-        List<Grendgine_Collada_Instance_Material_Geometry> instanceMaterials = new();
+        List<ColladaInstanceMaterialGeometry> instanceMaterials = new();
         ChunkMesh meshNode;
         ChunkMeshSubsets submeshNode;
 
-        if (CryData.Models.Count > 1)
+        //ChunkMtlName mtlNameChunk = (ChunkMtlName)_cryData.Models[0].ChunkMap[node.MaterialID];
+        
+        if (_cryData.Models.Count > 1)
         {
-            meshNode = (ChunkMesh)CryData.Models[1].ChunkMap[node.ObjectNodeID];
-            submeshNode = (ChunkMeshSubsets)CryData.Models[1].ChunkMap[meshNode.MeshSubsetsData];
+            // Find the node in model[1] that has the same name as the node.
+            var geoNode = _cryData.Models[1].NodeMap.Values.Where(a => a.Name == node.Name).FirstOrDefault();
+            meshNode = (ChunkMesh)_cryData.Models.Last().ChunkMap[geoNode.ObjectNodeID];
+            submeshNode = (ChunkMeshSubsets)_cryData.Models.Last().ChunkMap[meshNode.MeshSubsetsData];
         }
         else
         {
-            meshNode = (ChunkMesh)CryData.Models[0].ChunkMap[node.ObjectNodeID];
-            submeshNode = (ChunkMeshSubsets)CryData.Models[0].ChunkMap[meshNode.MeshSubsetsData];
+            meshNode = (ChunkMesh)_cryData.Models[0].ChunkMap[node.ObjectNodeID];
+            submeshNode = (ChunkMeshSubsets)_cryData.Models[0].ChunkMap[meshNode.MeshSubsetsData];
         }
 
         for (int i = 0; i < submeshNode.MeshSubsets.Length; i++)
         {
-            var matName = GetMaterialName(node, submeshNode, i);
+            var matName = GetMaterialId(node, submeshNode, i);
 
-            Grendgine_Collada_Instance_Material_Geometry instanceMaterial = new();
-            instanceMaterial.Target = $"#{matName}";
-            instanceMaterial.Symbol = matName;
+            ColladaInstanceMaterialGeometry instanceMaterial = new();
+            instanceMaterial.Target = $"#{matName}-material";
+            instanceMaterial.Symbol = $"{matName}-material";
             instanceMaterials.Add(instanceMaterial);
         }
 
         return instanceMaterials.ToArray();
     }
 
-    private Grendgine_Collada_Node CreateNode(ChunkNode nodeChunk)
+    private ColladaNode CreateNode(ChunkNode nodeChunk, bool isControllerNode)
     {
-        List<Grendgine_Collada_Node> childNodes = new();
+        List<ColladaNode> childNodes = new();
+        ColladaNode colladaNode = new();
 
-        Grendgine_Collada_Node colladaNode = new();
         // Check to see if there is a second model file, and if the mesh chunk is actually there.
-        if (CryData.Models.Count > 1)
+        if (_cryData.Models.Count > 1)
         {
-            // Star Citizen pair.  Get the Node and Mesh chunks from the geometry file, unless it's a Proxy node.
+            // Geometry file pair.  Get the Node and Mesh chunks from the geometry file, unless it's a Proxy node.
             string nodeName = nodeChunk.Name;
             int nodeID = nodeChunk.ID;
 
-            // make sure there is a geometry node in the geometry file
-            if (CryData.Models[0].ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkType.Helper)
-                colladaNode = CreateSimpleNode(nodeChunk);
+            // make sure there is a geometry node in the geometry file.  Or with Ivo files, just use the geometry file
+            var modelIndex = nodeChunk._model.IsIvoFile ? 1 : 0;
+            if (_cryData.Models[modelIndex].ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkType.Helper)
+                colladaNode = CreateSimpleNode(nodeChunk, isControllerNode);
             else
             {
-                ChunkNode geometryNode = CryData.Models[1].NodeMap.Values.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
-                Grendgine_Collada_Geometry geometryLibraryObject = DaeObject.Library_Geometries.Geometry.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
-                if (geometryNode == null || geometryLibraryObject == null)
-                    colladaNode = CreateSimpleNode(nodeChunk);  // Can't find geometry for given node.
+                ChunkNode geometryNode = _cryData.Models[1].NodeMap.Values.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
+                ColladaGeometry geometryLibraryObject = DaeObject.Library_Geometries.Geometry.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
+                if (geometryNode is null || geometryLibraryObject is null)
+                    colladaNode = CreateSimpleNode(nodeChunk, isControllerNode);  // Can't find geometry for given node.
                 else
                 {
-                    ChunkMesh geometryMesh = (ChunkMesh)CryData.Models[1].ChunkMap[geometryNode.ObjectNodeID];
-                    colladaNode = CreateGeometryNode(geometryNode, geometryMesh);
+                    ChunkMesh geometryMesh = (ChunkMesh)_cryData.Models[1].ChunkMap[geometryNode.ObjectNodeID];
+                    colladaNode = CreateGeometryNode(geometryNode, geometryMesh, isControllerNode);
                 }
             }
         }
@@ -1241,127 +1459,129 @@ public class ColladaModelRenderer : IRenderer
             {
                 var meshChunk = (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID];
                 if (meshChunk.MeshSubsetsData == 0 || meshChunk.NumVertices == 0)  // Can have a node with a mesh and meshsubset, but no vertices.  Write as simple node.
-                    colladaNode = CreateSimpleNode(nodeChunk);
+                    colladaNode = CreateSimpleNode(nodeChunk, isControllerNode);
                 else
                 {
                     if (nodeChunk._model.ChunkMap[meshChunk.MeshSubsetsData].ID != 0)
-                        colladaNode = CreateGeometryNode(nodeChunk, (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID]);
+                        colladaNode = CreateGeometryNode(nodeChunk, (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID], isControllerNode);
                     else
-                        colladaNode = CreateSimpleNode(nodeChunk);
+                        colladaNode = CreateSimpleNode(nodeChunk, isControllerNode);
                 }
             }
             else
-                colladaNode = CreateSimpleNode(nodeChunk);
+                colladaNode = CreateSimpleNode(nodeChunk, isControllerNode);
         }
 
-        colladaNode.node = CreateChildNodes(nodeChunk);
+        colladaNode.node = CreateChildNodes(nodeChunk, isControllerNode);
         return colladaNode;
     }
 
     /// <summary>This will be used to make the Collada node element for Node chunks that point to Helper Chunks and MeshPhysics </summary>
-    private Grendgine_Collada_Node CreateSimpleNode(ChunkNode nodeChunk)
+    private ColladaNode CreateSimpleNode(ChunkNode nodeChunk, bool isControllerNode)
     {
         // This will be used to make the Collada node element for Node chunks that point to Helper Chunks and MeshPhysics
-        Grendgine_Collada_Node_Type nodeType = Grendgine_Collada_Node_Type.NODE;
-        Grendgine_Collada_Node colladaNode = new()
+        ColladaNodeType nodeType = ColladaNodeType.NODE;
+        ColladaNode colladaNode = new()
         {
             Type = nodeType,
             Name = nodeChunk.Name,
             ID = nodeChunk.Name
         };
-        List<Grendgine_Collada_Matrix> matrices = new();
 
-        Grendgine_Collada_Matrix matrix = new()
+        ColladaMatrix matrix = new()
         {
-            Value_As_String = CreateStringFromMatrix4x4(nodeChunk.LocalTransform),
-            sID = "transform"
+            sID = "transform",
+            Value_As_String = CreateStringFromMatrix4x4(nodeChunk.LocalTransform)
         };
-        matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
-        colladaNode.Matrix = matrices.ToArray();
+        colladaNode.Matrix = new ColladaMatrix[1] { matrix };
 
-        // Add childnodes
-        colladaNode.node = CreateChildNodes(nodeChunk);
+        colladaNode.node = CreateChildNodes(nodeChunk, isControllerNode);
         return colladaNode;
     }
 
     /// <summary>Used by CreateNode and CreateSimpleNodes to create all the child nodes for the given node.</summary>
-    private Grendgine_Collada_Node[]? CreateChildNodes(ChunkNode nodeChunk)
+    private ColladaNode[]? CreateChildNodes(ChunkNode nodeChunk, bool isControllerNode)
     {
-        if (nodeChunk.AllChildNodes is not null)
+        List<ColladaNode> childNodes = new();
+        foreach (ChunkNode childNodeChunk in nodeChunk.AllChildNodes)
         {
-            List<Grendgine_Collada_Node> childNodes = new();
-            foreach (var childNodeChunk in nodeChunk.AllChildNodes.ToList())
+            if (_args.IsNodeNameExcluded(childNodeChunk.Name))
             {
-                if (Args.IsNodeNameExcluded(childNodeChunk.Name))
-                {
-                    Utilities.Log(LogLevelEnum.Debug, $"Excluding child node {childNodeChunk.Name}");
-                    continue;
-                }
-
-                Grendgine_Collada_Node childNode = CreateNode(childNodeChunk); ;
-                childNodes.Add(childNode);
+                Log(LogLevelEnum.Debug, $"Excluding child node {childNodeChunk.Name}");
+                continue;
             }
-            return childNodes.ToArray();
+
+            ColladaNode childNode = CreateNode(childNodeChunk, isControllerNode); ;
+            childNodes.Add(childNode);
         }
-        else
-            return null;
+        return childNodes.ToArray();
     }
 
-    private Grendgine_Collada_Node CreateJointNode(CompiledBone bone)
+    private ColladaNode CreateJointNode(CompiledBone bone)
     {
-        // This will be used recursively to create a node object and return it to WriteLibrary_VisualScenes
-        // If this is the root bone, set the node id to Armature.  Otherwise set to armature_<bonename>
-        string id = "Armature";
-        if (bone.parentID != 0)
-            id += "_" + bone.boneName.Replace(' ', '_');
-        Grendgine_Collada_Node tmpNode = new()
+        var boneName = bone.boneName.Replace(' ', '_');
+
+        ColladaNode tmpNode = new()
         {
-            ID = id,
-            Name = bone.boneName.Replace(' ', '_'),
-            sID = bone.boneName.Replace(' ', '_'),
-            Type = Grendgine_Collada_Node_Type.JOINT
+            ID = boneName,      // ID, name and sID must be the same or the controller can't seem to find the bone.
+            Name = boneName,
+            sID = boneName,
+            Type = ColladaNodeType.JOINT
         };
+        if (bone.ControllerID != -1)
+            controllerIdToBoneName.Add(bone.ControllerID, bone.boneName);
 
-        Grendgine_Collada_Matrix matrix = new();
-        List<Grendgine_Collada_Matrix> matrices = new();
-        matrix.Value_As_String = CreateStringFromMatrix4x4(bone.LocalTransform);
+        Matrix4x4 localMatrix = bone.LocalTransformMatrix.ConvertToTransformMatrix();
 
-        matrices.Add(matrix);                       // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
+        // Rotate and translate code.
+        //ColladaRotate rotate = new()
+        //{
+        //    sID = "rotate",
+        //    Value_As_String = CreateStringFromVector4(localMatrix.ToAxisAngleDegrees())
+        //};
+        //ColladaTranslate translate = new()
+        //{
+        //    sID = "translate",
+        //    Value_As_String = CreateStringFromVector3(localMatrix.GetTranslation())
+        //};
+        //tmpNode.Rotate = new ColladaRotate[1] { rotate };
+        //tmpNode.Translate = new ColladaTranslate[1] { translate };
+
+        // Matrix code
+        ColladaMatrix matrix = new();
+        List<ColladaMatrix> matrices = new();
+        matrix.Value_As_String = CreateStringFromMatrix4x4(localMatrix);
+        matrix.sID = "matrix";
+        matrices.Add(matrix);
         tmpNode.Matrix = matrices.ToArray();
 
         // Recursively call this for each of the child bones to this bone.
-        if (bone.childIDs.Count > 0)
+        if (bone.numChildren > 0)
         {
-            Grendgine_Collada_Node[] childNodes = new Grendgine_Collada_Node[bone.childIDs.Count];
-            int counter = 0;
-
-            foreach (CompiledBone childBone in CryData.Bones.GetAllChildBones(bone))
+            List<ColladaNode> childNodes = new();
+            var allChildBones = _cryData.Bones.GetChildBones(bone);
+            foreach (CompiledBone childBone in allChildBones)
             {
-                Grendgine_Collada_Node childNode = new();
-                childNode = CreateJointNode(childBone);
-                childNodes[counter] = childNode;
-                counter++;
+                childNodes.Add(CreateJointNode(childBone));
             }
-            tmpNode.node = childNodes;
+            tmpNode.node = childNodes.ToArray();
         }
         return tmpNode;
     }
 
-    private Grendgine_Collada_Node CreateGeometryNode(ChunkNode nodeChunk, ChunkMesh tmpMeshChunk)
+    private ColladaNode CreateGeometryNode(ChunkNode nodeChunk, ChunkMesh tmpMeshChunk, bool isControllerNode)
     {
-        Grendgine_Collada_Node colladaNode = new();
+        ColladaNode colladaNode = new();
         var meshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsetsData];
-        var nodeType = Grendgine_Collada_Node_Type.NODE;
+        var nodeType = ColladaNodeType.NODE;
         colladaNode.Type = nodeType;
         colladaNode.Name = nodeChunk.Name;
         colladaNode.ID = nodeChunk.Name;
-        // Make the lists necessary for this Node.
-        List<Grendgine_Collada_Matrix> matrices = new();
-        List<Grendgine_Collada_Instance_Geometry> instanceGeometries = new();
-        List<Grendgine_Collada_Bind_Material> bindMaterials = new();
-        List<Grendgine_Collada_Instance_Material_Geometry> instanceMaterials = new();
 
-        Grendgine_Collada_Matrix matrix = new()
+        // Make the lists necessary for this Node.
+        List<ColladaBindMaterial> bindMaterials = new();
+        List<ColladaMatrix> matrices = new();
+        ColladaMatrix matrix = new()
         {
             Value_As_String = CreateStringFromMatrix4x4(nodeChunk.LocalTransform),
             sID = "transform"
@@ -1371,25 +1591,28 @@ public class ColladaModelRenderer : IRenderer
         colladaNode.Matrix = matrices.ToArray();
 
         // Each node will have one instance geometry, although it could be a list.
-        Grendgine_Collada_Instance_Geometry instanceGeometry = new()
+        if (!isControllerNode)
         {
-            Name = nodeChunk.Name,
-            URL = "#" + nodeChunk.Name + "-mesh"  // this is the ID of the geometry.
-        };
-
-        Grendgine_Collada_Bind_Material bindMaterial = new()
-        {
-            Technique_Common = new Grendgine_Collada_Technique_Common_Bind_Material
+            List<ColladaInstanceGeometry> instanceGeometries = new();
+            ColladaInstanceGeometry instanceGeometry = new()
             {
-                Instance_Material = new Grendgine_Collada_Instance_Material_Geometry[meshSubsets.NumMeshSubset]
-            }
-        };
-        bindMaterials.Add(bindMaterial);
-        instanceGeometry.Bind_Material = bindMaterials.ToArray();
-        instanceGeometries.Add(instanceGeometry);
+                Name = nodeChunk.Name,
+                URL = "#" + nodeChunk.Name + "-mesh"  // this is the ID of the geometry.
+            };
+            ColladaBindMaterial bindMaterial = new()
+            {
+                Technique_Common = new ColladaTechniqueCommonBindMaterial
+                {
+                    Instance_Material = new ColladaInstanceMaterialGeometry[meshSubsets.NumMeshSubset]
+                }
+            };
+            bindMaterials.Add(bindMaterial);
+            instanceGeometry.Bind_Material = bindMaterials.ToArray();
+            instanceGeometries.Add(instanceGeometry);
 
-        colladaNode.Instance_Geometry = instanceGeometries.ToArray();
-        colladaNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material = CreateInstanceMaterials(nodeChunk);
+            colladaNode.Instance_Geometry = instanceGeometries.ToArray();
+            colladaNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material = CreateInstanceMaterials(nodeChunk);
+        }
 
         return colladaNode;
     }
@@ -1408,8 +1631,8 @@ public class ColladaModelRenderer : IRenderer
     /// <summary> Adds the scene element to the Collada document. </summary>
     private void WriteScene()
     {
-        Grendgine_Collada_Scene scene = new();
-        Grendgine_Collada_Instance_Visual_Scene visualScene = new()
+        ColladaScene scene = new();
+        ColladaInstanceVisualScene visualScene = new()
         {
             URL = "#Scene",
             Name = "Scene"
@@ -1419,26 +1642,43 @@ public class ColladaModelRenderer : IRenderer
     }
 
     /// <summary>Get the material name for a given submesh.</summary>
-    private string? GetMaterialName(ChunkNode nodeChunk, ChunkMeshSubsets meshSubsets, int index)
+    private string? GetMaterialId(ChunkNode nodeChunk, ChunkMeshSubsets meshSubsets, int index)
     {
-        var materialLibraryIndex = meshSubsets.MeshSubsets[index].MatID;
-
-        var materials = nodeChunk.Materials?.SubMaterials;
-
-        if (materials is not null)
+        // material id is <node.MaterialFileName>_mtl_<submatName>
+        var materialFileName = nodeChunk.MaterialFileName;  // also the key in Materials
+        if (string.IsNullOrWhiteSpace(materialFileName) && _cryData.Models.Count == 2)
         {
-            if (materialLibraryIndex >= materials.Length)
-            {
-                Utilities.Log(LogLevelEnum.Warning, $"Attempting to assign material beyond the list of given materials for node ${nodeChunk.Name} with id {nodeChunk.ID}.  Assigning first material.\nCheck if material file is missing.");
-                return materials[0].Name + "-material";
-            }
-            var material = materials[materialLibraryIndex];
-            return material.Name + "-material";
+            var geometryNodeChunk = _cryData.Models[1].NodeMap.Values.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
+            materialFileName = geometryNodeChunk?.MaterialFileName ?? string.Empty;
         }
-        else
-            Utilities.Log(LogLevelEnum.Debug, $"Unable to find submaterials for node chunk ${nodeChunk.Name}");
+        var matindex = meshSubsets.MeshSubsets[index].MatID;
 
-        return null;
+        var materialName = _cryData.Materials[materialFileName]?.SubMaterials?[matindex].Name;
+        return GetMaterialName(materialFileName, materialName ?? "unknown");
+    }
+
+    private string GetMaterialName(string matKey, string submatName)
+    {
+        // material name is <mtlChunkName>_mtl_<submatName>
+        var matfileName = Path.GetFileNameWithoutExtension(matKey);
+
+        return $"{matfileName}_mtl_{submatName}".Replace(' ', '_');
+    }
+
+    private static string CreateStringFromVector3(Vector3 vector)
+    {
+        StringBuilder vectorValues = new();
+        vectorValues.AppendFormat("{0:F6} {1:F6} {2:F6}", vector.X, vector.Y, vector.Z);
+        CleanNumbers(vectorValues);
+        return vectorValues.ToString();
+    }
+
+    private static string CreateStringFromVector4(Vector4 vector)
+    {
+        StringBuilder vectorValues = new();
+        vectorValues.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6}", vector.X, vector.Y, vector.Z, vector.W);
+        CleanNumbers(vectorValues);
+        return vectorValues.ToString();
     }
 
     private static string CreateStringFromMatrix4x4(Matrix4x4 matrix)

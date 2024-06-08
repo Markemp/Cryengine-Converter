@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using CgfConverter.Models;
+using System.IO;
 using System.Linq;
 
 namespace CgfConverter.CryEngineCore;

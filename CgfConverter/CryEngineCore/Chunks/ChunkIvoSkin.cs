@@ -1,4 +1,6 @@
-﻿namespace CgfConverter.CryEngineCore;
+﻿using CgfConverter.Models;
+
+namespace CgfConverter.CryEngineCore;
 
 public class ChunkIvoSkin : Chunk
 {

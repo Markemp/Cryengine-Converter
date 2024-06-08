@@ -17,8 +17,8 @@ internal sealed class ChunkNode_823 : ChunkNode
 
         ObjectNodeID = b.ReadInt32(); // Object reference ID
         ParentNodeID = b.ReadInt32();
-        __NumChildren = b.ReadInt32();
-        MatID = b.ReadInt32();  // Material ID?
+        NumChildren = b.ReadInt32();
+        MaterialID = b.ReadInt32();  // Material ID?
         SkipBytes(b, 4);
 
         // Read the 4x4 transform matrix.
@@ -42,9 +42,8 @@ internal sealed class ChunkNode_823 : ChunkNode
             M44 = b.ReadSingle(),
         };
 
-        //original transform matrix is 3x4 stored as 4x4.
-        transform.M14 = transform.M24 = transform.M34 = 0f;
-        transform.M44 = 1f;
+        //transform.M14 = transform.M24 = transform.M34 = 0f;
+        //transform.M44 = 1f;
         Transform = transform;
 
         Pos = b.ReadVector3() * VERTEX_SCALE;   // Obsolete

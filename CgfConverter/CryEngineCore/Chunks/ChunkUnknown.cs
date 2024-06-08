@@ -1,4 +1,3 @@
-﻿namespace CgfConverter.CryEngineCore
-{
-    public class ChunkUnknown : Chunk { }
-}
+﻿namespace CgfConverter.CryEngineCore;
+
+public class ChunkUnknown : Chunk { }

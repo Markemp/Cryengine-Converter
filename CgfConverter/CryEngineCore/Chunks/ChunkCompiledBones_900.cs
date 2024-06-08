@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using CgfConverter.Models;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -29,24 +30,18 @@ internal sealed class ChunkCompiledBones_900 : ChunkCompiledBones
         for (int i = 0; i < NumBones; i++)
         {
             BoneList[i].boneName = boneNames[i];
-            SetParentBone(BoneList[i]);
-            AddChildIDToParent(BoneList[i]);
+            if (BoneList[i].offsetParent != -1)
+            {
+                BoneList[i].ParentBone = BoneList[BoneList[i].offsetParent];
+                BoneList[i].parentID = BoneList[i].offsetParent;
+                BoneList[i].ParentBone.childIDs.Add(i);
+                BoneList[i].ParentBone.numChildren++;
+            }
         }
 
         SkinningInfo skin = GetSkinningInfo();
         skin.CompiledBones = new List<CompiledBone>();
-        skin.HasSkinningInfo = true;
         skin.CompiledBones = BoneList;
-    }
-
-    void SetParentBone(CompiledBone bone)
-    {
-        // offsetParent is really parent index.
-        if (bone.offsetParent != -1)
-        {
-            bone.parentID = BoneList[bone.offsetParent].ControllerID;
-            bone.ParentBone = BoneList[bone.offsetParent];
-        }
     }
 
     internal static List<string> GetNullSeparatedStrings(int numberOfNames, BinaryReader b)

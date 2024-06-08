@@ -38,4 +38,13 @@ public static class AssertExtensions
         Assert.AreEqual(expected.M32, actual.M32, delta);
         Assert.AreEqual(expected.M33, actual.M33, delta);
     }
+
+    public static void AreEqual(System.Collections.Generic.List<float> expected, System.Collections.Generic.List<float> actual, double delta = 0.0)
+    {
+        Assert.AreEqual(expected.Count, actual.Count, "Size of 2 lists don't match");
+        for (int i = 0; i < expected.Count; i++)
+        {
+            Assert.AreEqual(expected[i], actual[i], delta);
+        }   
+    }
 }

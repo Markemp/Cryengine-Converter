@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
+using CgfConverter.Models;
 using CgfConverter.Services;
 
 namespace CgfConverter.CryEngineCore;
@@ -17,16 +17,17 @@ public abstract class Chunk : IBinaryChunk
     internal ChunkHeader _header;
     internal Model _model;
 
-    public uint Offset { get; internal set; }
-    public ChunkType ChunkType { get; internal set; }
     internal uint VersionRaw;
     internal bool IsBigEndian => (VersionRaw & 0x80000000u) != 0;
     internal uint Version => VersionRaw & 0x7fffffffu;
     internal int ID;
     internal uint Size;
+
+    public uint Offset { get; internal set; }
+    public ChunkType ChunkType { get; internal set; }
     public uint DataSize { get; set; }
 
-    internal Dictionary<long, byte> SkippedBytes = new Dictionary<long, byte> { };
+    internal Dictionary<long, byte> SkippedBytes = new() { };
 
     public static Chunk New(ChunkType chunkType, uint version)
     {
@@ -63,8 +64,12 @@ public abstract class Chunk : IBinaryChunk
             ChunkType.CompiledPhysicalProxiesSC => Chunk.New<ChunkCompiledPhysicalProxies>(version),
             // SC IVO chunks
             ChunkType.MtlNameIvo => Chunk.New<ChunkMtlName>(version),
+            ChunkType.MtlNameIvo320 => Chunk.New<ChunkMtlName>(version),
             ChunkType.CompiledBonesIvo => Chunk.New<ChunkCompiledBones>(version),
+            ChunkType.CompiledBonesIvo320 => Chunk.New<ChunkCompiledBones>(version),
             ChunkType.MeshIvo => Chunk.New<ChunkMesh>(version),
+            ChunkType.MeshIvo320 => Chunk.New<ChunkMesh>(version),
+            ChunkType.IvoSkin2 => Chunk.New<ChunkIvoSkin>(version),
             ChunkType.IvoSkin => Chunk.New<ChunkIvoSkin>(version),
             // Old chunks
             ChunkType.BoneNameList => Chunk.New<ChunkBoneNameList>(version),
@@ -183,18 +188,29 @@ public abstract class Chunk : IBinaryChunk
     }
 
     /// <summary>Gets a link to the SkinningInfo model.</summary>
-    /// <returns>Link to the SkinningInfo model.</returns>
     public SkinningInfo GetSkinningInfo()
     {
-        if (_model.SkinningInfo == null)
+        if (_model.SkinningInfo is null)
             _model.SkinningInfo = new SkinningInfo();
-        
+
         return _model.SkinningInfo;
     }
 
     public virtual void Write(BinaryWriter writer) { throw new NotImplementedException(); }
 
     public override string ToString() => $@"Chunk Type: {ChunkType}, Ver: {Version:X}, Offset: {Offset:X}, ID: {ID:X}, Size: {Size}";
+
+    //public static IvoNodeId GetIvoNodeId(ChunkType chunkType)
+    //{
+    //    if (chunkType == ChunkType.Node)
+    //        return IvoNodeId.NodeChunk;
+    //    if (chunkType == ChunkType.Mesh)
+    //        return IvoNodeId.MeshChunk;
+    //    if (chunkType == ChunkType.MeshSubsets)
+    //        return IvoNodeId.MeshSubsets;
+    //    if (chunkType == ChunkType.Data)
+
+    //}
 
     public static int GetNextRandom()
     {

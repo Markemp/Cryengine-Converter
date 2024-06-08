@@ -13,12 +13,12 @@ namespace CgfConverter.PackFileSystem;
 
 public class WiiuStreamPackFileSystem : IPackFileSystem, IDisposable
 {
-    private readonly TaggedLogger Log = new TaggedLogger("WiiuStreamPackFileSystem");
+    private readonly TaggedLogger Log = new("WiiuStreamPackFileSystem");
     public const string PackFileNameSuffix = ".wiiu.stream";
 
     private readonly Stream _stream;
     private readonly Mutex _streamMutex = new();
-    private readonly List<FileEntry> _entries = new();
+    private readonly Dictionary<string, FileEntry> _entries = new();
 
     public WiiuStreamPackFileSystem(Stream stream, Dictionary<string, string> options)
     {
@@ -31,7 +31,7 @@ public class WiiuStreamPackFileSystem : IPackFileSystem, IDisposable
             throw new InvalidDataException();
 
         options = options.ToDictionary(x => x.Key, x => x.Value);
-        
+
         var altCostume = false;
         if (options.Remove("alt", out var altCostumeString))
             altCostume = altCostumeString.IsTrueyString(true);
@@ -43,13 +43,7 @@ public class WiiuStreamPackFileSystem : IPackFileSystem, IDisposable
         {
             var entry = new FileEntry(reader);
             if ((entry.Variant >= 0 && altCostume) || (entry.Variant <= 0 && !altCostume))
-            {
-                var i = _entries.BinarySearch(entry);
-                if (i >= 0)
-                    _entries[i] = entry;
-                else
-                    _entries.Insert(~i, entry);
-            }
+                _entries[entry.InnerPath.ToLowerInvariant()] = entry;
 
             reader.BaseStream.Seek(
                 entry.CompressedSize == 0 ? entry.DecompressedSize : entry.CompressedSize,
@@ -64,12 +58,9 @@ public class WiiuStreamPackFileSystem : IPackFileSystem, IDisposable
         _stream.Dispose();
     }
 
-    public Stream GetStream(string path)
-    {
-        return new MemoryStream(ReadAllBytes(path));
-    }
+    public Stream GetStream(string path) => new MemoryStream(ReadAllBytes(path));
 
-    public bool Exists(string path) => _entries.BinarySearch(new FileEntry(path)) >= 0;
+    public bool Exists(string path) => _entries.ContainsKey(path.ToLowerInvariant());
 
     public string[] Glob(string pattern)
     {
@@ -81,17 +72,14 @@ public class WiiuStreamPackFileSystem : IPackFileSystem, IDisposable
                         Regex.Escape)))))) +
             "$",
             RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-        return _entries.Where(x => regexPattern.IsMatch(x.InnerPath)).Select(x => x.InnerPath).ToArray();
+        return _entries.Values.Where(x => regexPattern.IsMatch(x.InnerPath)).Select(x => x.InnerPath).ToArray();
     }
 
     public byte[] ReadAllBytes(string path)
     {
-        var entry = new FileEntry(path);
-        var i = _entries.BinarySearch(entry);
-        if (i < 0)
+        if (!_entries.TryGetValue(path.ToLowerInvariant(), out FileEntry entry))
             throw new FileNotFoundException();
 
-        entry = _entries[i];
         var buffer = new byte[entry.DecompressedSize];
 
         Stream stream;
@@ -113,7 +101,7 @@ public class WiiuStreamPackFileSystem : IPackFileSystem, IDisposable
                 _streamMutex.WaitOne();
                 break;
         }
-        
+
         try
         {
             stream.Seek(entry.Offset, SeekOrigin.Begin);
@@ -190,9 +178,7 @@ public class WiiuStreamPackFileSystem : IPackFileSystem, IDisposable
             Offset = reader.BaseStream.Position;
         }
 
-        public int CompareTo(FileEntry other)
-        {
-            return string.Compare(InnerPath, other.InnerPath, StringComparison.InvariantCultureIgnoreCase);
-        }
+        public int CompareTo(FileEntry other) =>
+            string.Compare(InnerPath, other.InnerPath, StringComparison.InvariantCultureIgnoreCase);
     }
 }

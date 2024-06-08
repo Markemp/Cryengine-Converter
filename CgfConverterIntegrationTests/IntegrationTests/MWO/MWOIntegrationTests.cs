@@ -1,21 +1,29 @@
 ﻿using CgfConverter;
 using CgfConverter.CryEngineCore;
+using CgfConverter.Renderers.Collada;
+using CgfConverter.Renderers.Collada.Collada;
+using CgfConverter.Renderers.Gltf;
+using CgfConverterIntegrationTests.Extensions;
 using CgfConverterTests.TestUtilities;
-using grendgine_collada;
+using Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading;
-using CgfConverter.Renderers.Collada;
+using System.Xml.Linq;
+using System.Xml.Serialization;
 
-namespace CgfConverterTests.IntegrationTests.MWO;
+namespace CgfConverterTests.IntegrationTests;
 
 [TestClass]
 public class MWOIntegrationTests
 {
     private readonly TestUtils testUtils = new();
     private readonly string userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+    private readonly string objectDir = @"d:\depot\mwo\";
 
     [TestInitialize]
     public void Initialize()
@@ -29,10 +37,41 @@ public class MWOIntegrationTests
     [TestMethod]
     public void ClanBanner_Adder_VerifyMaterials()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\clanbanner_a_adder.cga", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+        var matFile = @"D:\depot\mwo\Objects\purchasable\cockpit_mounted\clanbanner\clanbanner_a.mtl";
+        var args = new string[] { $@"D:\depot\mwo\Objects\purchasable\cockpit_mounted\clanbanner\clanbanner_a_adder.cga", "-dds", "-dae", "-objectdir", objectDir, "-mtl", matFile };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, null, matFile);
+        cryData.ProcessCryengineFiles();
+
+        var mtlChunks = cryData.Chunks.Where(a => a.ChunkType == ChunkType.MtlName).ToList();
+        Assert.AreEqual(1, (int)((ChunkMtlName)mtlChunks[0]).NumChildren);
+        Assert.AreEqual(MtlNameType.Library, ((ChunkMtlName)mtlChunks[0]).MatType);
+        Assert.AreEqual(MtlNameType.Child, ((ChunkMtlName)mtlChunks[1]).MatType);
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+        Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(1, daeObject.Library_Effects.Effect.Length);
+        Assert.AreEqual(2, daeObject.Library_Images.Image.Length);
+        Assert.AreEqual("clanbanner_a_mtl_clanbanner_a", daeObject.Library_Materials.Material[0].Name);
+        Assert.AreEqual("clanbanner_a_mtl_clanbanner_a-material", daeObject.Library_Materials.Material[0].ID);
+        Assert.AreEqual("#clanbanner_a_mtl_clanbanner_a-effect", daeObject.Library_Materials.Material[0].Instance_Effect.URL);
+        Assert.AreEqual("clanbanner_a_mtl_clanbanner_a_Diffuse", daeObject.Library_Images.Image[0].Name);
+        Assert.AreEqual("clanbanner_a_mtl_clanbanner_a_Diffuse", daeObject.Library_Images.Image[0].ID);
+        Assert.AreEqual("clanbanner_a_mtl_clanbanner_a_Normals", daeObject.Library_Images.Image[1].Name);
+        Assert.AreEqual("clanbanner_a_mtl_clanbanner_a_Normals", daeObject.Library_Images.Image[1].ID);
+    }
+
+    [TestMethod]
+    public void ClanBanner_Adder_VerifyMaterialsWithNoMtlFileArg()
+    {
+        var args = new string[] { $@"D:\depot\mwo\Objects\purchasable\cockpit_mounted\clanbanner\clanbanner_a_adder.cga", "-dds", "-dae", "-objectdir", objectDir };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
         var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
@@ -42,79 +81,363 @@ public class MWOIntegrationTests
         Assert.AreEqual(MtlNameType.Child, ((ChunkMtlName)mtlChunks[1]).MatType);
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.Render();
+        colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
         Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
         Assert.AreEqual(1, daeObject.Library_Effects.Effect.Length);
         Assert.AreEqual(2, daeObject.Library_Images.Image.Length);
-        Assert.AreEqual("clanbanner_a", daeObject.Library_Materials.Material[0].Name);
-        Assert.AreEqual("clanbanner_a-material", daeObject.Library_Materials.Material[0].ID);
-        Assert.AreEqual("#clanbanner_a-effect", daeObject.Library_Materials.Material[0].Instance_Effect.URL);
-        Assert.AreEqual("clanbanner_a_Diffuse", daeObject.Library_Images.Image[0].Name);
-        Assert.AreEqual("clanbanner_a_Diffuse", daeObject.Library_Images.Image[0].ID);
-        Assert.AreEqual("clanbanner_a_Bumpmap", daeObject.Library_Images.Image[1].Name);
-        Assert.AreEqual("clanbanner_a_Bumpmap", daeObject.Library_Images.Image[1].ID);
+        Assert.AreEqual("clanbanner_a_mtl_clanbanner_a", daeObject.Library_Materials.Material[0].Name);
+        Assert.AreEqual("clanbanner_a_mtl_clanbanner_a-material", daeObject.Library_Materials.Material[0].ID);
+        Assert.AreEqual("#clanbanner_a_mtl_clanbanner_a-effect", daeObject.Library_Materials.Material[0].Instance_Effect.URL);
+        Assert.AreEqual("clanbanner_a_mtl_clanbanner_a_Diffuse", daeObject.Library_Images.Image[0].Name);
+        Assert.AreEqual("clanbanner_a_mtl_clanbanner_a_Diffuse", daeObject.Library_Images.Image[0].ID);
+        Assert.AreEqual("clanbanner_a_mtl_clanbanner_a_Normals", daeObject.Library_Images.Image[1].Name);
+        Assert.AreEqual("clanbanner_a_mtl_clanbanner_a_Normals", daeObject.Library_Images.Image[1].ID);
     }
 
     [TestMethod]
     public void AtlasBodyPart_VerifyMaterials()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\as7_centre_torso.cga", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+        var matFile = @"D:\depot\mwo\Objects\mechs\atlas\body\atlas_body.mtl";
+        var args = new string[] { $@"D:\depot\mwo\Objects\mechs\atlas\body\as7_centre_torso.cga", "-dds", "-dae", "-objectdir", objectDir, "-mtl", matFile };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, null, matFile);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+        Assert.AreEqual(5, daeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(5, daeObject.Library_Effects.Effect.Length);
+        Assert.AreEqual(31, daeObject.Library_Images.Image.Length);
+        Assert.AreEqual("atlas_body_mtl_atlas_body", daeObject.Library_Materials.Material[0].Name);
+        Assert.AreEqual("atlas_body_mtl_atlas_body-material", daeObject.Library_Materials.Material[0].ID);
+        Assert.AreEqual("#atlas_body_mtl_atlas_body-effect", daeObject.Library_Materials.Material[0].Instance_Effect.URL);
+        Assert.AreEqual("atlas_body_mtl_atlas_body_Diffuse", daeObject.Library_Images.Image[0].Name);
+        Assert.AreEqual("atlas_body_mtl_atlas_body_Diffuse", daeObject.Library_Images.Image[0].ID);
+        Assert.AreEqual("atlas_body_mtl_atlas_body_Specular", daeObject.Library_Images.Image[1].Name);
+        Assert.AreEqual("atlas_body_mtl_atlas_body_Specular", daeObject.Library_Images.Image[1].ID);
+    }
+
+    [TestMethod]
+    public void Atlas_VerifyArmature()
+    {
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\atlas.chr", "-dds", "-dae", "-objectdir", objectDir };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
         var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.Render();
+        colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
-        Assert.AreEqual(5, daeObject.Library_Materials.Material.Length);
-        Assert.AreEqual(5, daeObject.Library_Effects.Effect.Length);
-        Assert.AreEqual(27, daeObject.Library_Images.Image.Length);
-        Assert.AreEqual("generic_body", daeObject.Library_Materials.Material[0].Name);
-        Assert.AreEqual("generic_body-material", daeObject.Library_Materials.Material[0].ID);
-        Assert.AreEqual("#generic_body-effect", daeObject.Library_Materials.Material[0].Instance_Effect.URL);
-        Assert.AreEqual("generic_body_Diffuse", daeObject.Library_Images.Image[0].Name);
-        Assert.AreEqual("generic_body_Diffuse", daeObject.Library_Images.Image[0].ID);
-        Assert.AreEqual("generic_body_Specular", daeObject.Library_Images.Image[1].Name);
-        Assert.AreEqual("generic_body_Specular", daeObject.Library_Images.Image[1].ID);
+    }
+
+    [TestMethod]
+    public void Atlas_VerifyArmature2()
+    {
+        var args = new string[] { $@"d:\depot\mwo\objects\mechs\atlas\body\atlas.chr", "-dds", "-dae", "-objectdir", objectDir };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+    }
+
+    [TestMethod]
+    public void Adder_VerifyArmatureAndAnimations_Collada()
+    {
+        var args = new string[] { $@"d:\depot\mwo\objects\mechs\adder\body\adder.chr", "-dds", "-dae", "-objectdir", objectDir };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+    }
+
+    [TestMethod]
+    public void Adder_VerifyArmatureAndAnimations_Gltf()
+    {
+        var args = new string[] { $@"d:\depot\mwo\objects\mechs\adder\body\adder.chr", "-dds", "-dae", "-objectdir", objectDir };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        var gltfData = gltfRenderer.GenerateGltfObject();
+    }
+
+    [TestMethod]
+    public void HarnessCable_VerifyArmatureAndAnimations_Gltf()
+    {
+        var args = new string[] { @"D:\depot\MWO\Objects\environments\frontend\mechlab_a\mechbay_cables\harness_cable.chr", "-dds", "-dae", "-objectdir", objectDir };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        var gltfData = gltfRenderer.GenerateGltfObject();
+
+    }
+
+    [TestMethod]
+    public void HarnessCable_VerifyArmatureAndAnimations_Collada()
+    {
+        var args = new string[] { @"D:\depot\MWO\Objects\environments\frontend\mechlab_a\mechbay_cables\harness_cable.chr",
+            "-dds", "-dae",
+            "-objectdir", objectDir };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+
     }
 
     [TestMethod]
     public void adr_right_torso_uac20_bh1()
     {
-        // This model has 4 mtl files, all variations of mechdefault.
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\adr_right_torso_uac20_bh1.cga", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+        // This model has 4 mtl files, all variations of mechdefault.  No mtl file provided, so it should create default materials only.
+        var args = new string[] { $@"d:\depot\mwo\objects\mechs\adder\body\adr_right_torso_uac20_bh1.cga", "-dds", "-dae", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
         var matNameChunks = cryData.Chunks.Where(c => c.ChunkType == ChunkType.MtlName).ToList();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.Render();
+        colladaData.GenerateDaeObject();
+        Assert.AreEqual(0, colladaData.DaeObject.Library_Images.Image.Length);
+        Assert.AreEqual(22, colladaData.DaeObject.Library_Materials.Material.Length); // default materials
+        Assert.AreEqual("mechDefault_mtl_material0", colladaData.DaeObject.Library_Materials.Material[0].Name);
+        Assert.AreEqual(0, colladaData.DaeObject.Library_Images.Image.Length);
+        Assert.AreEqual("mechDefault_mtl_material0", colladaData.DaeObject.Library_Effects.Effect[0].Name);
+        Assert.AreEqual("mechDefault_mtl_material0-effect", colladaData.DaeObject.Library_Effects.Effect[0].ID);
+
+        var visualSceneLibrary = colladaData.DaeObject.Library_Visual_Scene.Visual_Scene[0];
+        var imageLibrary = colladaData.DaeObject.Library_Images;
+
+        Assert.AreEqual(0, colladaData.DaeObject.Library_Images.Image.Length);
+        Assert.AreEqual("mechDefault_mtl_material0", colladaData.DaeObject.Library_Materials.Material[0].Name);
+        Assert.AreEqual("mechDefault_mtl_material0-material", colladaData.DaeObject.Library_Materials.Material[0].ID);
+        Assert.AreEqual(22, colladaData.DaeObject.Library_Materials.Material.Length);
+        // library_effects
+        Assert.AreEqual("mechDefault_mtl_material0", colladaData.DaeObject.Library_Effects.Effect[0].Name);
+        Assert.AreEqual("mechDefault_mtl_material1", colladaData.DaeObject.Library_Effects.Effect[1].Name);
+        Assert.AreEqual("mechDefault_mtl_material0-effect", colladaData.DaeObject.Library_Effects.Effect[0].ID);
+
+        // library_geometries
+        Assert.AreEqual("mechDefault_mtl_material4-material", colladaData.DaeObject.Library_Geometries.Geometry[0].Mesh.Triangles[0].Material);
+        Assert.AreEqual("05_-_Default_mtl_material4-material", colladaData.DaeObject.Library_Geometries.Geometry[1].Mesh.Triangles[0].Material);
+        Assert.AreEqual("mechDefault_mtl_material2-material", colladaData.DaeObject.Library_Geometries.Geometry[2].Mesh.Triangles[0].Material);
+        Assert.AreEqual("05_-_Default_mtl_material4-material", colladaData.DaeObject.Library_Geometries.Geometry[1].Mesh.Triangles[0].Material);
+        Assert.AreEqual("mechDefault_mtl_material2-material", colladaData.DaeObject.Library_Geometries.Geometry[2].Mesh.Triangles[0].Material);
+
+        // Verify visual scene material ids are set right
+        // bh1
+        Assert.AreEqual("adr_right_torso_uac20_bh1", visualSceneLibrary.Node[0].Name);
+        Assert.AreEqual("mechDefault_mtl_material4-material", visualSceneLibrary.Node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+        Assert.AreEqual("#mechDefault_mtl_material4-material", visualSceneLibrary.Node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
+        // mount
+        Assert.AreEqual("adr_right_torso_uac20_bh1_mount", visualSceneLibrary.Node[0].node[3].Name);
+        Assert.AreEqual("mechDefault_mtl_material2-material", visualSceneLibrary.Node[0].node[3].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+        // barrel
+        Assert.AreEqual("barrel013", visualSceneLibrary.Node[0].node[0].node[0].Name);
+        Assert.AreEqual("05_-_Default_mtl_material4-material", visualSceneLibrary.Node[0].node[0].node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+        // animations (no bind_mat)
+        Assert.AreEqual("animation068", visualSceneLibrary.Node[0].node[0].Name);
+        Assert.IsNull(visualSceneLibrary.Node[0].node[0].Instance_Geometry);
     }
 
     [TestMethod]
-    public void FiftyCalNecklace_VerifyMaterials()
+    public void adr_right_torso_uac20_bh1_ProvidedMtlFile()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\50calnecklace_a.chr", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+        // mtl file provided, so materials are created.
+        var matFile = @"D:\depot\mwo\Objects\mechs\adder\body\adder_body.mtl";
+        var args = new string[] { $@"d:\depot\mwo\objects\mechs\adder\body\adr_right_torso_uac20_bh1.cga", "-dds", "-dae", "-objectdir", objectDir, "-mtl", matFile };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, null, matFile);
+        cryData.ProcessCryengineFiles();
+        var matNameChunks = cryData.Chunks.Where(c => c.ChunkType == ChunkType.MtlName).ToList();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+
+        var visualSceneLibrary = colladaData.DaeObject.Library_Visual_Scene.Visual_Scene[0];
+        var imageLibrary = colladaData.DaeObject.Library_Images;
+
+        Assert.AreEqual(28, colladaData.DaeObject.Library_Images.Image.Length);
+        Assert.AreEqual("adder_body_mtl_adder_body", colladaData.DaeObject.Library_Materials.Material[0].Name);
+        Assert.AreEqual("adder_body_mtl_adder_body-material", colladaData.DaeObject.Library_Materials.Material[0].ID);
+        Assert.AreEqual(5, colladaData.DaeObject.Library_Materials.Material.Length);
+        // library_effects
+        Assert.AreEqual("adder_body_mtl_adder_body", colladaData.DaeObject.Library_Effects.Effect[0].Name);
+        Assert.AreEqual("adder_body_mtl_decals", colladaData.DaeObject.Library_Effects.Effect[1].Name);
+        Assert.AreEqual("adder_body_mtl_adder_body-effect", colladaData.DaeObject.Library_Effects.Effect[0].ID);
+
+        // library_geometries
+        Assert.AreEqual("adder_body_mtl_generic-material", colladaData.DaeObject.Library_Geometries.Geometry[0].Mesh.Triangles[0].Material);
+        Assert.AreEqual("adder_body_mtl_generic-material", colladaData.DaeObject.Library_Geometries.Geometry[1].Mesh.Triangles[0].Material);
+        Assert.AreEqual("adder_body_mtl_adder_variant-material", colladaData.DaeObject.Library_Geometries.Geometry[2].Mesh.Triangles[0].Material);
+        Assert.AreEqual("adder_body_mtl_generic-material", colladaData.DaeObject.Library_Geometries.Geometry[1].Mesh.Triangles[0].Material);
+        Assert.AreEqual("adder_body_mtl_adder_variant-material", colladaData.DaeObject.Library_Geometries.Geometry[2].Mesh.Triangles[0].Material);
+
+        // Verify visual scene material ids are set right
+        // bh1
+        Assert.AreEqual("adr_right_torso_uac20_bh1", visualSceneLibrary.Node[0].Name);
+        Assert.AreEqual("adder_body_mtl_generic-material", visualSceneLibrary.Node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+        Assert.AreEqual("#adder_body_mtl_generic-material", visualSceneLibrary.Node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
+        Assert.AreEqual("adder_body_mtl_generic_Diffuse", imageLibrary.Image[19].ID);
+        // mount
+        Assert.AreEqual("adr_right_torso_uac20_bh1_mount", visualSceneLibrary.Node[0].node[3].Name);
+        Assert.AreEqual("adder_body_mtl_adder_variant-material", visualSceneLibrary.Node[0].node[3].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+        // barrel
+        Assert.AreEqual("barrel013", visualSceneLibrary.Node[0].node[0].node[0].Name);
+        Assert.AreEqual("adder_body_mtl_generic-material", visualSceneLibrary.Node[0].node[0].node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+        // animations (no bind_mat)
+        Assert.AreEqual("animation068", visualSceneLibrary.Node[0].node[0].Name);
+        Assert.IsNull(visualSceneLibrary.Node[0].node[0].Instance_Geometry);
+    }
+
+    [TestMethod]
+    public void FiftyCalNecklace_ColladaVerifyMaterials()
+    {
+        var args = new string[] { $@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.chr", "-dds", "-objectdir", objectDir };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
         var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        
+        colladaData.GenerateDaeObject();
+
+        var daeObject = colladaData.DaeObject;
+        Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(1, daeObject.Library_Effects.Effect.Length);
+        Assert.AreEqual(4, daeObject.Library_Images.Image.Length);
+    }
+
+    [TestMethod]
+    public void FiftyCalNecklace_GltfConversion()
+    {
+        var args = new string[] { $@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.chr", "-dds", "-objectdir", objectDir };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        var gltfData = gltfRenderer.GenerateGltfObject();
+
+        Assert.AreEqual(1, gltfData.Materials.Count);
+        Assert.AreEqual(1, gltfData.Meshes.Count);
+
+        // Nodes check
+        Assert.AreEqual(9, gltfData.Nodes.Count);
+        Assert.AreEqual("Bip01", gltfData.Nodes[0].Name);
+        Assert.AreEqual("hang seg1", gltfData.Nodes[1].Name);
+        Assert.AreEqual("hang seg2", gltfData.Nodes[2].Name);
+
+        //AssertExtensions.AreEqual([0, 0, 0, 1], gltfData.Nodes[0].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual([-0.4963841f, -0.5035906f, 0.491474152f, 0.5083822f], gltfData.Nodes[0].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual([0.00154118659f, -0.008913527f, 0.0122360326f, 0.9998842f], gltfData.Nodes[1].Rotation, TestUtils.delta);
+
+        //AssertExtensions.AreEqual([0, 0, 0], gltfData.Nodes[1].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual([2.09588125E-13f, 0.0204448365f, -8.731578E-10f], gltfData.Nodes[0].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual([-0.0209655762f, -8.90577E-09f, 3.4356154E-10f], gltfData.Nodes[1].Translation, TestUtils.delta);
+
+        Assert.AreEqual(1, gltfData.Nodes[0].Children.Count);
+        Assert.AreEqual(1, gltfData.Nodes[1].Children.Count);
+        Assert.AreEqual(1, gltfData.Nodes[2].Children.Count);
+
+        // Accessors check
+        Assert.AreEqual(8, gltfData.Accessors.Count);
+
+        // Skins check
+        Assert.AreEqual(1, gltfData.Skins.Count);
+        Assert.AreEqual(8, gltfData.Skins[0].Joints.Count);
+        Assert.AreEqual(7, gltfData.Skins[0].InverseBindMatrices);
+        Assert.AreEqual("50calnecklace_a/skin", gltfData.Skins[0].Name);
+    }
+
+    [TestMethod]
+    public void MwoFile_MtlFileWithNoDirInfo_OutputsToCorrectDir()
+    {
+        var args = new string[] { $@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.chr", "-dds", "-objectdir", objectDir, "-mtl", "50calnecklace_a.mtl" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[5]);
+        cryData.ProcessCryengineFiles();
+        Assert.AreEqual(@"50calnecklace_a.mtl", cryData.MaterialFiles.First());
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+        Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(1, daeObject.Library_Effects.Effect.Length);
+        Assert.AreEqual(4, daeObject.Library_Images.Image.Length);
+    }
+
+    [TestMethod]
+    public void MwoFile_MtlFileWithExtraSlash_OutputsToCorrectDir()
+    {
+        var args = new string[] { $@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.chr", "-dds", "-objectdir", objectDir, "-mtl", "/50calnecklace_a.mtl" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[5]);
+        cryData.ProcessCryengineFiles();
+        Assert.AreEqual(@"/50calnecklace_a.mtl", cryData.MaterialFiles.First());
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+        Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(1, daeObject.Library_Effects.Effect.Length);
+        Assert.AreEqual(4, daeObject.Library_Images.Image.Length);
+    }
+
+    [TestMethod]
+    public void MwoFile_MtlFileWithCurrentDir_OutputsToCorrectDir()
+    {
+        var args = new string[] { $@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.chr", "-dds", "-objectdir", objectDir, "-mtl", "./50calnecklace_a.mtl" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[5]);
+        cryData.ProcessCryengineFiles();
+        Assert.AreEqual(@"./50calnecklace_a.mtl", cryData.MaterialFiles.First());
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+        Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(1, daeObject.Library_Effects.Effect.Length);
+        Assert.AreEqual(4, daeObject.Library_Images.Image.Length);
     }
 
     [TestMethod]
     public void Uav_VerifyMaterials()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\uav.cga", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\uav.cga", "-dds", "-dae", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
@@ -128,16 +451,14 @@ public class MWOIntegrationTests
     [TestMethod]
     public void MWO_industrial_wetlamp_a_MaterialFileNotFound()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\industrial_wetlamp_a.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\mwo\" };
+        var args = new string[] { $@"D:\depot\MWO\Objects\environments\frontend\mechlab_a\lights\industrial_wetlamp_a.cgf", "-dds", "-dae", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        ColladaModelRenderer colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
-        int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-        Assert.AreEqual(3, actualMaterialsCount);
         testUtils.ValidateColladaXml(colladaData);
     }
 
@@ -150,14 +471,11 @@ public class MWOIntegrationTests
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        ColladaModelRenderer colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
 
-        int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
-        Assert.AreEqual(11, actualMaterialsCount);
-        
-        // Visual Scene Check 
+        // Visual Scene Check
         Assert.AreEqual("Scene", daeObject.Scene.Visual_Scene.Name);
         Assert.AreEqual("#Scene", daeObject.Scene.Visual_Scene.URL);
         Assert.AreEqual(1, daeObject.Library_Visual_Scene.Visual_Scene.Length);
@@ -166,27 +484,27 @@ public class MWOIntegrationTests
 
         // Armature Node check
         var node = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0];
-        Assert.AreEqual("Armature", node.ID);
+        Assert.AreEqual("Bip01", node.ID);
         Assert.AreEqual("Bip01", node.sID);
         Assert.AreEqual("Bip01", node.Name);
         Assert.AreEqual("JOINT", node.Type.ToString());
-        Assert.AreEqual("-0 -1 0 0 1 -0 0 0 0 0 1 0 0 0 0 1", node.Matrix[0].Value_As_String);
+        Assert.AreEqual("-0 1 0 0 -1 -0 0 0 0 0 1 -0 0 0 0 1", node.Matrix[0].Value_As_String);
         var pelvisNode = node.node[0];
-        Assert.AreEqual("Armature_Bip01_Pelvis", pelvisNode.ID);
+        Assert.AreEqual("Bip01_Pelvis", pelvisNode.ID);
         Assert.AreEqual("Bip01_Pelvis", pelvisNode.Name);
         Assert.AreEqual("Bip01_Pelvis", pelvisNode.sID);
         Assert.AreEqual("JOINT", pelvisNode.Type.ToString());
-        Assert.AreEqual("-0 -1 0 -0 0 -0 -1 0.000001 1 -0 0 8.346858 0 0 0 1", pelvisNode.Matrix[0].Value_As_String);
+        Assert.AreEqual("0 0 1 -8.346858 0 1 -0 0.000002 -1 0 0 -0.000001 0 0 0 1", pelvisNode.Matrix[0].Value_As_String);
         Assert.AreEqual(3, pelvisNode.node.Length);
-        var pitchNode = pelvisNode.node.Where(a => a.ID == "Armature_Bip01_Pitch").FirstOrDefault();
-        var leftHipNode = pelvisNode.node.Where(a => a.ID == "Armature_Bip01_L_Hip").FirstOrDefault();
-        var rightHipNode = pelvisNode.node.Where(a => a.ID == "Armature_Bip01_R_Hip").FirstOrDefault();
+        var pitchNode = pelvisNode.node.Where(a => a.ID == "Bip01_Pitch").FirstOrDefault();
+        var leftHipNode = pelvisNode.node.Where(a => a.ID == "Bip01_L_Hip").FirstOrDefault();
+        var rightHipNode = pelvisNode.node.Where(a => a.ID == "Bip01_R_Hip").FirstOrDefault();
         Assert.IsNotNull(pitchNode);
         Assert.AreEqual("Bip01_Pitch", pitchNode.sID);
-        Assert.AreEqual("-0.000001 -0.999753 -0.022216 -8.346856 -0 -0.022216 0.999753 0 -1 0.000001 -0 6.719837 0 0 0 1", leftHipNode.Matrix[0].Value_As_String);
-        Assert.AreEqual("0 0.999753 -0.022216 -8.346855 0 0.022216 0.999753 0.000001 1 -0 -0 9.973884 0 0 0 1", rightHipNode.Matrix[0].Value_As_String);
-        Assert.AreEqual("-0.452222 -0.891861 -0.008838 -9.126455 -0.891905 0.452200 0.004481 0.000001 0 0.009909 -0.999951 8.346861 0 0 0 1", pitchNode.Matrix[0].Value_As_String);
-        
+        Assert.AreEqual("-1 -0 0 -1.627027 0 -0.022216 0.999753 -8.344796 -0 0.999753 0.022216 -0.185437 0 0 0 1", leftHipNode.Matrix[0].Value_As_String);
+        Assert.AreEqual("1 -0 -0 -1.627022 -0 0.022216 -0.999753 8.344796 0 0.999753 0.022216 -0.185438 0 0 0 1", rightHipNode.Matrix[0].Value_As_String);
+        Assert.AreEqual("0 -0.891905 0.452222 -4.127187 0.009909 0.452200 0.891861 -8.139535 -0.999951 0.004481 0.008838 -0.080661 0 0 0 1", pitchNode.Matrix[0].Value_As_String);
+
         // Geometry Node check
         node = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[1];
         Assert.AreEqual("timberwolf", node.ID);
@@ -194,7 +512,7 @@ public class MWOIntegrationTests
         Assert.AreEqual("NODE", node.Type.ToString());
         Assert.IsNull(node.Instance_Geometry);
         Assert.AreEqual(1, node.Instance_Controller.Length);
-        Assert.AreEqual("#Armature", node.Instance_Controller[0].Skeleton[0].Value);
+        Assert.AreEqual("#Bip01", node.Instance_Controller[0].Skeleton[0].Value);
 
         // Controller check
         var controller = daeObject.Library_Controllers.Controller[0];
@@ -210,7 +528,7 @@ public class MWOIntegrationTests
         Assert.AreEqual(64, controllerJoints.Name_Array.Count);
         Assert.AreEqual("Controller-joints-array", controllerJoints.Name_Array.ID);
         var nameArray = controllerJoints.Name_Array.Value();
-        Assert.AreEqual(64, nameArray.Count());
+        Assert.AreEqual(64, nameArray.Length);
         Assert.IsTrue(nameArray.Contains("Bip01"));
         Assert.IsTrue(nameArray.Contains("Bip01_L_Thigh"));
         Assert.IsTrue(nameArray.Contains("Bip01_R_Toe0Nub"));
@@ -229,7 +547,7 @@ public class MWOIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\NoMats\candycane_a.chr", "-dds", "-dae" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
@@ -262,15 +580,15 @@ public class MWOIntegrationTests
         Assert.AreEqual(2, scene.Node.Length);
         var armature = scene.Node[0];
         var instance = scene.Node[1];
-        Assert.AreEqual("Armature", armature.ID);
+        Assert.AreEqual("Bip01", armature.ID);
         Assert.AreEqual("Bip01", armature.Name);
-        Assert.AreEqual("-0 1 -0 0 -0 -0 -1 -0 -1 -0 0 0.023305 0 0 0 1", armature.Matrix[0].Value_As_String);
-        Assert.AreEqual("Armature_hang_seg1", armature.node[0].ID);
+        Assert.AreEqual("-0 -0 -1 0.023305 1 -0 -0 -0 -0 -1 0 -0 0 0 0 1", armature.Matrix[0].Value_As_String);
+        Assert.AreEqual("hang_seg1", armature.node[0].ID);
         Assert.AreEqual("hang_seg1", armature.node[0].Name);
-        Assert.AreEqual("-0 0.000008 -1 -0 1 0.000088 -0 0.000092 0.000088 -1 -0.000008 0.023305 0 0 0 1", armature.node[0].Matrix[0].Value_As_String);
-        Assert.AreEqual("Armature_hang_seg2", armature.node[0].node[0].ID);
+        Assert.AreEqual("-0.000089 -0 -1 -0.000092 1 0.000008 -0.000089 -0 0.000008 -1 0 -0 0 0 0 1", armature.node[0].Matrix[0].Value_As_String);
+        Assert.AreEqual("hang_seg2", armature.node[0].node[0].ID);
         Assert.AreEqual("hang_seg2", armature.node[0].node[0].Name);
-        Assert.AreEqual("-0.000009 -0.000080 -1 -0 1 0.000091 -0.000009 0.026455 0.000091 -1 0.000080 -0.000089 0 0 0 1", armature.node[0].node[0].Matrix[0].Value_As_String);
+        Assert.AreEqual("-0.000091 -0 -1 -0.026455 1 0.000008 -0.000091 -0 0.000008 -1 0 -0 0 0 0 1", armature.node[0].node[0].Matrix[0].Value_As_String);
 
         Assert.AreEqual(2, instance.Instance_Controller[0].Bind_Material[0].Technique_Common.Instance_Material.Length);
 
@@ -280,7 +598,7 @@ public class MWOIntegrationTests
     [TestMethod]
     public void MWO_candycane_a_WithMaterialFile()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\candycane_a.chr", "-dds", "-dae", "-objectdir", @"d:\depot\mwo" };
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\candycane_a.chr", "-dds", "-dae", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
@@ -315,18 +633,10 @@ public class MWOIntegrationTests
         var scene = daeObject.Library_Visual_Scene.Visual_Scene[0];
         Assert.AreEqual(2, scene.Node.Length);
         var armature = scene.Node[0];
-        var instance = scene.Node[1];
-        Assert.AreEqual("Armature", armature.ID);
+        var geometryNode = scene.Node[1];
+        Assert.AreEqual("Bip01", armature.ID);
         Assert.AreEqual("Bip01", armature.Name);
-        Assert.AreEqual("-0 1 -0 0 -0 -0 -1 -0 -1 -0 0 0.023305 0 0 0 1", armature.Matrix[0].Value_As_String);
-        Assert.AreEqual("Armature_hang_seg1", armature.node[0].ID);
-        Assert.AreEqual("hang_seg1", armature.node[0].Name);
-        Assert.AreEqual("-0 0.000008 -1 -0 1 0.000088 -0 0.000092 0.000088 -1 -0.000008 0.023305 0 0 0 1", armature.node[0].Matrix[0].Value_As_String);
-        Assert.AreEqual("Armature_hang_seg2", armature.node[0].node[0].ID);
-        Assert.AreEqual("hang_seg2", armature.node[0].node[0].Name);
-        Assert.AreEqual("-0.000009 -0.000080 -1 -0 1 0.000091 -0.000009 0.026455 0.000091 -1 0.000080 -0.000089 0 0 0 1", armature.node[0].node[0].Matrix[0].Value_As_String);
-
-        Assert.AreEqual(2, instance.Instance_Controller[0].Bind_Material[0].Technique_Common.Instance_Material.Length);
+        Assert.AreEqual(2, geometryNode.Instance_Controller[0].Bind_Material[0].Technique_Common.Instance_Material.Length);
 
         testUtils.ValidateColladaXml(colladaData);
     }
@@ -334,7 +644,7 @@ public class MWOIntegrationTests
     [TestMethod]
     public void MWO_hbr_right_torso_uac5_bh1_cga()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\hbr_right_torso_uac5_bh1.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+        var args = new string[] { $@"d:\depot\mwo\objects\mechs\hellbringer\body\hbr_right_torso.cga", "-dds", "-dae", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
@@ -342,8 +652,6 @@ public class MWOIntegrationTests
 
         ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
-        int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-        Assert.AreEqual(17, actualMaterialsCount);
 
         testUtils.ValidateColladaXml(colladaData);
     }
@@ -351,7 +659,8 @@ public class MWOIntegrationTests
     [TestMethod]
     public void MWO_hbr_right_torso_cga()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\hbr_right_torso.cga", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
+        // No mtl file provided, so it creates generic mats
+        var args = new string[] { $@"d:\depot\mwo\objects\mechs\hellbringer\body\hbr_right_torso.cga", "-dds", "-dae", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
@@ -367,23 +676,8 @@ public class MWOIntegrationTests
         Assert.AreEqual(1, daeObject.Library_Visual_Scene.Visual_Scene.Length);
         Assert.AreEqual("Scene", daeObject.Library_Visual_Scene.Visual_Scene[0].ID);
         Assert.AreEqual(1, daeObject.Library_Visual_Scene.Visual_Scene[0].Node.Length);
-        // Node check
-        var node = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0];
-        Assert.AreEqual("hbr_right_torso", node.ID);
-        Assert.AreEqual("hbr_right_torso", node.Name);
-        Assert.AreEqual(1, node.Instance_Geometry.Length);
-        Assert.AreEqual(2, node.node.Length);
-        Assert.AreEqual(1, node.Matrix.Length);
-        Assert.AreEqual(1, node.Instance_Geometry.Length);
-        Assert.AreEqual("hbr_right_torso_case", node.node[0].ID);
-        Assert.AreEqual("hbr_right_torso_case", node.node[0].Name);
-        Assert.AreEqual("hbr_right_torso_fx", node.node[1].Name);
-        Assert.AreEqual(Grendgine_Collada_Node_Type.NODE, node.node[0].Type);
-        const string caseMatrix = "-1 -0.000005 0.000008 1.830486 0.000001 -0.866025 -0.500000 -2.444341 0.000009 -0.500000 0.866025 -1.542505 0 0 0 1";
-        const string fxMatrix = "1 0 0.000009 1.950168 -0 1 -0 0.630385 -0.000009 0 1 -0.312732 0 0 0 1";
-        Assert.AreEqual(caseMatrix, node.node[0].Matrix[0].Value_As_String);
-        Assert.AreEqual(fxMatrix, node.node[1].Matrix[0].Value_As_String);
         // Node Matrix check
+        var node = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0];
         const string matrix = "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1";
         Assert.AreEqual(matrix, node.Matrix[0].Value_As_String);
         Assert.AreEqual("transform", node.Matrix[0].sID);
@@ -392,22 +686,8 @@ public class MWOIntegrationTests
         Assert.AreEqual("#hbr_right_torso-mesh", node.Instance_Geometry[0].URL);
         Assert.AreEqual(1, node.Instance_Geometry[0].Bind_Material.Length);
         Assert.AreEqual(1, node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material.Length);
-        Assert.AreEqual("hellbringer_body-material", node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
-        Assert.AreEqual("#hellbringer_body-material", node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
-        // library_materials Check
-        int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
-        var materials = colladaData.DaeObject.Library_Materials;
-        Assert.AreEqual(5, actualMaterialsCount);
-        Assert.AreEqual("hellbringer_body-material", materials.Material[0].ID);
-        Assert.AreEqual("decals-material", materials.Material[1].ID);
-        Assert.AreEqual("hellbringer_variant-material", materials.Material[2].ID);
-        Assert.AreEqual("hellbringer_window-material", materials.Material[3].ID);
-        Assert.AreEqual("hellbringer_variant-material", materials.Material[4].ID);
-        Assert.AreEqual("#hellbringer_body-effect", materials.Material[0].Instance_Effect.URL);
-        Assert.AreEqual("#decals-effect", materials.Material[1].Instance_Effect.URL);
-        Assert.AreEqual("#hellbringer_variant-effect", materials.Material[2].Instance_Effect.URL);
-        Assert.AreEqual("#hellbringer_window-effect", materials.Material[3].Instance_Effect.URL);
-        Assert.AreEqual("#hellbringer_variant-effect", materials.Material[4].Instance_Effect.URL);
+        Assert.AreEqual("mechDefault_mtl_material0-material", node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+        Assert.AreEqual("#mechDefault_mtl_material0-material", node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
 
         // library_geometries check
         Assert.AreEqual(1, colladaData.DaeObject.Library_Geometries.Geometry.Length);
@@ -422,7 +702,7 @@ public class MWOIntegrationTests
         var vertices = geometry.Mesh.Vertices;
         var triangles = geometry.Mesh.Triangles;
         // Triangles check
-        Assert.AreEqual("hellbringer_body-material", triangles[0].Material);
+        Assert.AreEqual("mechDefault_mtl_material0-material", triangles[0].Material);
         Assert.AreEqual("#hbr_right_torso-mesh-pos", vertices.Input[0].source);
         Assert.IsTrue(triangles[0].P.Value_As_String.StartsWith("0 0 0 1 1 1 2 2 2 3 3 3 4 4 4 5 5 5 5 5 5 6 6 6 3 3 3 7 7 7 8 8 8 9 9 9 9 9 9"));
         // Source check
@@ -439,9 +719,156 @@ public class MWOIntegrationTests
         Assert.AreEqual("X", source[0].Technique_Common.Accessor.Param[0].Name);
         Assert.AreEqual("float", source[0].Technique_Common.Accessor.Param[0].Type);
 
-
         Assert.AreEqual("hbr_right_torso", daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].ID);
         Assert.AreEqual(1, daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].Instance_Geometry.Length);
         testUtils.ValidateColladaXml(colladaData);
+    }
+
+    [TestMethod]
+    public void HulaGirl_ColladaFormat()
+    {
+        var args = new string[] { @"d:\depot\MWO\objects\purchasable\cockpit_standing\hulagirl\hulagirl__gold_a.cga", "-objectdir", objectDir };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+
+        int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
+        Assert.AreEqual(1, actualMaterialsCount);
+        var libraryGeometry = colladaData.DaeObject.Library_Geometries;
+        Assert.AreEqual(2, libraryGeometry.Geometry.Length);
+        var nodes = colladaData.DaeObject.Library_Visual_Scene.Visual_Scene[0].Node;
+        var baseNode = nodes[0];
+        Assert.AreEqual("hulagirl_a", baseNode.ID);
+        Assert.AreEqual("hulagirl_a", baseNode.Name);
+        Assert.AreEqual(2, baseNode.node.Length);
+        Assert.IsNull(baseNode.Instance_Geometry);
+        Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1", baseNode.Matrix[0].Value_As_String);
+
+        // Serialize the object to XML
+        XmlSerializer serializer = new(typeof(ColladaDoc));
+        StringWriter writer = new();
+        serializer.Serialize(writer, colladaData.DaeObject);
+
+        // Load the serialized XML into an XDocument for LINQ querying
+        XDocument doc = XDocument.Parse(writer.ToString());
+
+        // Find nodes under visual_scene node
+        var visualSceneNodes = doc.Descendants("visual_scene").Elements("node");
+
+        foreach (var node in visualSceneNodes)
+        {
+            // Ensure the translate comes before rotate for each "node" element
+            var translateElement = node.Elements("translate").FirstOrDefault();
+            var rotateElement = node.Elements("rotate").FirstOrDefault();
+
+            Assert.IsNotNull(translateElement, "Translate element not found");
+            Assert.IsNotNull(rotateElement, "Rotate element not found");
+
+            // Assert the order is correct
+            int translateIndex = translateElement.ElementsBeforeSelf().Count();
+            int rotateIndex = rotateElement.ElementsBeforeSelf().Count();
+
+            Assert.IsTrue(translateIndex < rotateIndex, "Translate should come before Rotate");
+
+            // Assert the values are correct
+            string translateValues = translateElement.Value;
+            string rotateValues = rotateElement.Value;
+
+            Assert.AreEqual("0.000101 0 0.064078", translateValues, "Translate values are not as expected");
+            Assert.AreEqual("-0.908837 0.415754 0.034101 12.949439", rotateValues, "Rotate values are not as expected");
+        }
+    }
+
+    [TestMethod]
+    public void HulaGirl_GltfFormat()
+    {
+        var args = new string[]
+        {
+            $@"D:\depot\MWO\Objects\purchasable\cockpit_standing\hulagirl\hulagirl__gold_a.cga",
+            "-objectdir", objectDir,
+            "-mat", "hulagirl_a.mtl"
+        };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[4]);
+        cryData.ProcessCryengineFiles();
+
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        var gltfData = gltfRenderer.GenerateGltfObject();
+
+        Assert.AreEqual(1, gltfData.Materials.Count);
+        Assert.AreEqual(2, gltfData.Meshes.Count);
+
+        // Nodes check
+        Assert.AreEqual(3, gltfData.Nodes.Count);
+        Assert.AreEqual("HulaGirl_UpperBody", gltfData.Nodes[0].Name);
+        Assert.AreEqual("HulaGirl_LowerBody", gltfData.Nodes[1].Name);
+        Assert.AreEqual("hulagirl_a", gltfData.Nodes[2].Name);
+
+        var rotationMatrix = cryData.RootNode.AllChildNodes.First().Rot.ConvertToRotationMatrix();
+        AssertExtensions.AreEqual([0, 0, 0, 1], gltfData.Nodes[1].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual([-0.10248467f, 0.00384537f, -0.04688235744833946f, 0.9936217f], gltfData.Nodes[0].Rotation, TestUtils.delta);
+        AssertExtensions.AreEqual([0, 0, 0, 1], gltfData.Nodes[2].Rotation, TestUtils.delta);
+
+        AssertExtensions.AreEqual([0, 0, 0], gltfData.Nodes[1].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual([-0.000101296f, 0.0640777f, 0f], gltfData.Nodes[0].Translation, TestUtils.delta);
+        AssertExtensions.AreEqual([0, 0, 0], gltfData.Nodes[2].Translation, TestUtils.delta);
+
+        Assert.AreEqual(2, gltfData.Nodes[2].Children.Count);
+        Assert.AreEqual(0, gltfData.Nodes[1].Children.Count);
+        Assert.AreEqual(0, gltfData.Nodes[0].Children.Count);
+
+        // Accessors check
+        Assert.AreEqual(10, gltfData.Accessors.Count);
+    }
+
+    [TestMethod]
+    public void MechFactory_CratesA_Gltf()
+    {
+        var args = new string[]
+        {
+            $@"d:\depot\mwo\objects\environments\mech_factory\mf_crates\mechfactory_cratesa.cgf",
+            "-objectdir", objectDir,
+            "-mat", "mf_crates.mtl"
+        };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[4]);
+        cryData.ProcessCryengineFiles();
+
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        var gltfData = gltfRenderer.GenerateGltfObject();
+        Assert.AreEqual(2, gltfData.Textures.Count);
+        Assert.AreEqual(2, gltfData.Materials.Count);
+    }
+
+    [TestMethod]
+    public void MechFactory_CratesA_Collada()
+    {
+        var args = new string[] { $@"d:\depot\mwo\objects\environments\mech_factory\mf_crates\mechfactory_cratesa.cgf" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+    }
+
+    [TestMethod]
+    public void Mf_Bldg_A_Corner_Slope_Gltf()
+    {
+        var args = new string[] { $@"D:\depot\mwo\objects\environments\mech_factory\building_blocks\mf_bldg_a_corner_slope_01.cgf", "-objectdir", "d:\\depot\\mwo" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        var gltfData = gltfRenderer.GenerateGltfObject();
     }
 }
