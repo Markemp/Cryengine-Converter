@@ -131,6 +131,40 @@ public class StarCitizenTests
     }
 
     [TestMethod]
+    public void ANVL_Hurricane_Front_LandingGear_Ivo_Skin_3_22()
+    {
+        var args = new string[] {
+            @"D:\depot\SC3.22\Data\Objects\Spaceships\Ships\ANVL\LandingGear\Hurricane\anvl_hurricane_landing_gear_front_SKIN.skin",
+            "-dds", "-dae",
+            "-objectdir", @"d:\depot\sc3.22\data" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+    }
+
+    [TestMethod]
+    public void ANVL_Hurricane_Front_LandingGear_Ivo_Skin_3_23()
+    {
+        var args = new string[] {
+            @"D:\depot\SC3.23\Data\Objects\Spaceships\Ships\ANVL\LandingGear\Hurricane\anvl_hurricane_landing_gear_front_SKIN.skin",
+            "-dds", "-dae",
+            "-objectdir", @"d:\depot\sc3.23\data" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+    }
+
+    [TestMethod]
     public void M_ccc_bear_helmet_01_320IvoSkinFile()
     {
         var args = new string[] {
