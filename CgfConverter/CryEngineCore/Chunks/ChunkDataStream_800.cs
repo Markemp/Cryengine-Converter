@@ -50,7 +50,7 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                             Vertices[i].Z = b.ReadSingle();
                         }
                         break;
-                    case 8:  // Prey files, and old Star Citizen files
+                    case 8:  // Prey files, and old Star Citizen files, Evolve
                         for (int i = 0; i < NumElements; i++)
                         {
                             Vertices[i] = b.ReadVector3(InputType.Half);
@@ -70,7 +70,7 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
             #endregion
             #region case DataStreamTypeEnum.INDICES:
 
-            case DatastreamType.INDICES:  // Ref is 
+            case DatastreamType.INDICES:
                 Indices = new uint[NumElements];
 
                 if (BytesPerElement == 2)

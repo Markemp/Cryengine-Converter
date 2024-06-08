@@ -303,7 +303,7 @@ public class CgfConverterIntegrationTests
         var images = colladaData.DaeObject.Library_Images;
         Assert.AreEqual(3, images.Image.Length);
         Assert.AreEqual("green_fern_bush_mtl_green_fern_bush_Diffuse", images.Image[0].ID);
-        Assert.AreEqual("..\\..\\..\\Source\\Repos\\Cryengine-Converter\\CgfConverterIntegrationTests\\bin\\Debug\\net8.0\\objects\\natural\\bushes\\green_fern_bush\\green_fern_bush_leaf_a.dds", images.Image[0].Init_From.Uri);
+        Assert.AreEqual("..\\..\\..\\Source\\Repos\\Cryengine-Converter\\CgfConverterIntegrationTests\\bin\\Release\\net8.0\\objects\\natural\\bushes\\green_fern_bush\\green_fern_bush_leaf_a.dds", images.Image[0].Init_From.Uri);
 
         // Validate visual_scene
         var visualScene = colladaData.DaeObject.Library_Visual_Scene;
