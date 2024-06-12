@@ -27,8 +27,6 @@ public abstract class Chunk : IBinaryChunk
     public ChunkType ChunkType { get; internal set; }
     public uint DataSize { get; set; }
 
-    internal Dictionary<long, byte> SkippedBytes = new() { };
-
     public static Chunk New(ChunkType chunkType, uint version)
     {
         return chunkType switch
@@ -82,7 +80,7 @@ public abstract class Chunk : IBinaryChunk
     public static T New<T>(uint version) where T : Chunk
     {
         Func<Chunk> factory;
-        
+
         lock (_chunkFactoryCache)
         {
             if (!_chunkFactoryCache.TryGetValue(typeof(T), out var versionMap))
@@ -135,10 +133,7 @@ public abstract class Chunk : IBinaryChunk
         if (!bytesToSkip.HasValue)
             bytesToSkip = (long)(Size - Math.Max(reader.BaseStream.Position - Offset, 0));
 
-        for (long i = 0; i < bytesToSkip; i++)
-        {
-            SkippedBytes[reader.BaseStream.Position - Offset] = reader.ReadByte();
-        }
+        reader.BaseStream.Seek((long)(bytesToSkip), SeekOrigin.Current);
     }
 
     public virtual void Read(BinaryReader reader)
@@ -162,7 +157,7 @@ public abstract class Chunk : IBinaryChunk
         {
             // This part is always in little endian.
             swappableReader.IsBigEndian = false;
-            
+
             ChunkType = (ChunkType)reader.ReadUInt32();
             VersionRaw = reader.ReadUInt32();
             Offset = reader.ReadUInt32();
