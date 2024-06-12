@@ -1,0 +1,27 @@
+name: Build
+
+on: push
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v4
+
+      - name: Build
+        run: dotnet build
+
+      # These tests don't work without sample data. Should we do anything about it?
+      # - name: Test
+      #   run: dotnet test
+
+      - name: Publish
+        run: dotnet publish
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: cgf-converter
+          path: cgf-converter\bin\Release\net8.0\win-x64\publish
