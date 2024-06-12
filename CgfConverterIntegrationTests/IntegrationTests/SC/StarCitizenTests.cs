@@ -1,4 +1,5 @@
 ﻿using CgfConverter;
+using CgfConverter.CryEngineCore;
 using CgfConverter.Renderers.Collada;
 using CgfConverter.Renderers.Collada.Collada.Enums;
 using CgfConverter.Renderers.Gltf;
@@ -141,6 +142,13 @@ public class StarCitizenTests
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
+        var meshChunk = (ChunkMesh)cryData.Chunks[7];  // This is the generated one from the skinm file
+        Assert.AreEqual(-0.443651f, meshChunk.MinBound.X, TestUtils.delta);
+        Assert.AreEqual(-0.2984485f, meshChunk.MinBound.Y, TestUtils.delta);
+        Assert.AreEqual(-2.20503f, meshChunk.MinBound.Z, TestUtils.delta);
+        Assert.AreEqual(0.443650f, meshChunk.MaxBound.X, TestUtils.delta);
+        Assert.AreEqual(3.3411438f, meshChunk.MaxBound.Y, TestUtils.delta);
+        Assert.AreEqual(1.4569355f, meshChunk.MaxBound.Z, TestUtils.delta);
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
@@ -158,6 +166,13 @@ public class StarCitizenTests
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
+        var meshChunk = (ChunkMesh)cryData.Chunks[7];  // This is the generated one from the skinm file
+        Assert.AreEqual(-0.443651f, meshChunk.MinBound.X, TestUtils.delta);
+        Assert.AreEqual(-0.2984485f, meshChunk.MinBound.Y, TestUtils.delta);
+        Assert.AreEqual(-2.20503f, meshChunk.MinBound.Z, TestUtils.delta);
+        Assert.AreEqual(0.443650f, meshChunk.MaxBound.X, TestUtils.delta);
+        Assert.AreEqual(3.3411438f, meshChunk.MaxBound.Y, TestUtils.delta);
+        Assert.AreEqual(1.4569355f, meshChunk.MaxBound.Z, TestUtils.delta);
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
