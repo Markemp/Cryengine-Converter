@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
@@ -14,5 +14,11 @@
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.7" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="System.IO.Hashing" Version="8.0.0" />
+    <PackageReference Include="Microsoft.XmlSerializer.Generator" Version="8.0.0" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <!-- Needed for XmlSerializer Source Generator -->
+    <SGenTypes>CgfConverter.Renderers.Collada.Collada.ColladaDoc</SGenTypes>
+  </PropertyGroup>
 </Project>

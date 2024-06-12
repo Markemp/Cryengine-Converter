@@ -83,8 +83,9 @@ public enum ChunkType : uint    // complete
     MtlNameIvo = 0x8335674E,
     MtlNameIvo320 = 0x83353333,
     CompiledBonesIvo = 0xC201973C,
-    CompiledBonesIvo320 = 0xc2011111,
-    CompiledPhysicalBonesIvo = 0x90C687DC,  // Physics  
+    CompiledBonesIvo320 = 0xC2011111,
+    CompiledPhysicalBonesIvo = 0x90C687DC,  // Physics
+    CompiledPhysicalBonesIvo320 = 0x90C66666,
     MeshIvo = 0x9293B9D8,           // SkinInfo
     MeshIvo320 = 0x92914444,
     IvoSkin = 0xB875B2D9,           // SkinMesh
