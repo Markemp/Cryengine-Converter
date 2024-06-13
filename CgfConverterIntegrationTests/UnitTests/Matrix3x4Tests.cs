@@ -9,6 +9,7 @@ namespace CgfConverterTests.UnitTests;
 public class Matrix3x4Tests
 {
     [TestMethod]
+    [TestCategory("unit")]
     public void CreateFromQuaternion_IdentityQuaternion()
     {
         Quaternion q = Quaternion.Identity;

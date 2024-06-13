@@ -4,6 +4,7 @@ using static Extensions.FileHandlingExtensions;
 namespace CgfConverterTests.UnitTests;
 
 [TestClass]
+[TestCategory("unit")]
 public class FileHandlingExtensionsTests
 {
     [TestMethod]

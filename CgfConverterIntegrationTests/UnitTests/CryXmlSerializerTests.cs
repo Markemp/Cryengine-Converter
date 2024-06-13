@@ -5,6 +5,7 @@ using CgfConverter.Utils;
 namespace CgfConverterTests.IntegrationTests;
 
 [TestClass]
+[TestCategory("unit")]
 public class CryXmlSerializerTests
 {
     [TestMethod]

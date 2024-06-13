@@ -10,6 +10,7 @@ using CgfConverter.Renderers.Collada;
 namespace CgfConverterTests.IntegrationTests;
 
 [TestClass]
+[TestCategory("integration")]
 public class SonicBoomTests
 {
     private readonly TestUtils testUtils = new TestUtils();

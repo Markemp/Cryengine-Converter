@@ -19,6 +19,7 @@ using System.Xml.Serialization;
 namespace CgfConverterTests.IntegrationTests;
 
 [TestClass]
+[TestCategory("integration")]
 public class MWOIntegrationTests
 {
     private readonly TestUtils testUtils = new();

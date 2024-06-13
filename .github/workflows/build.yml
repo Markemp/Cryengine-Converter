@@ -1,6 +1,8 @@
 name: Build
 
-on: push
+on: 
+  push:
+    branches: [ master ]
 
 jobs:
   build:
@@ -13,9 +15,8 @@ jobs:
       - name: Build
         run: dotnet build
 
-      # These tests don't work without sample data. Should we do anything about it?
-      # - name: Test
-      #   run: dotnet test
+      - name: Test
+        run: dotnet test --filter TestCategory=unit
 
       - name: Publish
         run: dotnet publish

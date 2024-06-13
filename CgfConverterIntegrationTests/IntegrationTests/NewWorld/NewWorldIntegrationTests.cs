@@ -9,6 +9,7 @@ using System.Threading;
 namespace CgfConverterTests.IntegrationTests;
 
 [TestClass]
+[TestCategory("integration")]
 public class NewWorldIntegrationTests
 {
     private readonly TestUtils testUtils = new();

@@ -7,6 +7,7 @@ using System.Numerics;
 namespace CgfConverterTests.UnitTests
 {
     [TestClass]
+    [TestCategory("unit")]
     public class MatrixTests
     {
         // Joint node values in VisualScenes
@@ -37,7 +38,7 @@ namespace CgfConverterTests.UnitTests
         private Matrix4x4 givenBone0W2B = new Matrix4x4(-0.000000f, -0.000000f, -1.000000f, 0.023305f, 1.000000f, -0.000000f, -0.000000f, -0.000000f, -0.000000f, -1.000000f, 0.000000f, -0.000000f, 0, 0, 0, 1);
         private Matrix4x4 givenBone1W2B = new Matrix4x4(-0.000089f, -0.000000f, -1.000000f, -0.000092f, 1.000000f, 0.000008f, -0.000089f, -0.000000f, 0.000008f, -1.000000f, 0.000000f, -0.000000f, 0, 0, 0, 1);
         private Matrix4x4 givenBone2W2B = new Matrix4x4(-0.000091f, -0.000000f, -1.000000f, -0.026455f, 1.000000f, 0.000008f, -0.000091f, -0.000000f, 0.000008f, -1.000000f, 0.000000f, -0.000000f, 0, 0, 0, 1);
-        
+
         // For LocalTransform ((parent localrot).Transpose * localrot for rotation component, and parent.localtranslation * (localtranslation - parent.localtranslation) for translation component)
         private Matrix4x4 givenBone0B2W = new Matrix4x4(-0.000000f, 1.000000f, -0.000000f, 0.000000f, -0.000000f, -0.000000f, -1.000000f, -0.000000f, -1.000000f, -0.000000f, 0.000000f, 0.023305f, 0, 0, 0, 1);
         private Matrix4x4 givenBone1B2W = new Matrix4x4(-0.000089f, 1.000000f, 0.000008f, 0.000000f, -0.000000f, 0.000008f, -1.000000f, -0.000000f, -1.000000f, -0.000089f, 0.000000f, -0.000092f, 0, 0, 0, 1);
