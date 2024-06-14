@@ -1,0 +1,29 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v4
+
+      - name: Build
+        run: dotnet build
+
+      - name: Test
+        run: dotnet test --filter TestCategory=unit
+
+      - name: Publish
+        run: dotnet publish
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: cgf-converter
+          path: cgf-converter\bin\Release\net8.0\win-x64\publish

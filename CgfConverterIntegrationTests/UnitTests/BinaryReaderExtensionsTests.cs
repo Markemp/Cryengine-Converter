@@ -8,6 +8,7 @@ using System.Numerics;
 namespace CgfConverterTests.UnitTests;
 
 [TestClass]
+[TestCategory("unit")]
 public class BinaryReaderExtensionsTests
 {
     private const float delta = 0.0000001f;

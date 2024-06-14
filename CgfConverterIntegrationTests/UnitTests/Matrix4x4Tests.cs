@@ -23,6 +23,7 @@ public class Matrix4x4Tests
     private const float delta = 0.000001f;
 
     [TestMethod]
+    [TestCategory("unit")]
     public void SetRotationAndTranslationFromQuaternion()
     {
         var quat = new Quaternion(0.0f, 0.0f, 0.0f, 1.0f);
@@ -172,21 +173,21 @@ public class Matrix4x4Tests
     {
         Matrix4x4 matrix = new()
         {
-            M11 = -1.000000f, 
-            M12 = 0.000001f, 
-            M13 = 0.000009f, 
+            M11 = -1.000000f,
+            M12 = 0.000001f,
+            M13 = 0.000009f,
             M14 = 0.000000f,
-            M21 = -0.000005f, 
-            M22 = -0.866025f, 
-            M23 = -0.500000f, 
+            M21 = -0.000005f,
+            M22 = -0.866025f,
+            M23 = -0.500000f,
             M24 = 0.000000f,
-            M31 = 0.000008f, 
-            M32 = -0.500000f, 
-            M33 = 0.866025f, 
+            M31 = 0.000008f,
+            M32 = -0.500000f,
+            M33 = 0.866025f,
             M34 = 0.000000f,
-            M41 = 183.048630f / 100, 
-            M42 = -244.434143f / 100, 
-            M43 = -154.250488f / 100, 
+            M41 = 183.048630f / 100,
+            M42 = -244.434143f / 100,
+            M43 = -154.250488f / 100,
             M44 = 0.000000f
         };
 

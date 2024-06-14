@@ -13,6 +13,7 @@ using System.Threading;
 namespace CgfConverterTests.IntegrationTests;
 
 [TestClass]
+[TestCategory("integration")]
 public class CgfConverterIntegrationTests
 {
     private readonly TestUtils testUtils = new TestUtils();

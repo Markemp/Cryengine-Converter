@@ -10,6 +10,7 @@ using System.Threading;
 namespace CgfConverterTests.IntegrationTests;
 
 [TestClass]
+[TestCategory("integration")]
 public class ArcheAgeTests
 {
     // Archeage tests have the objectdir at the game directory level instead of object dir.  So although the
@@ -59,14 +60,14 @@ public class ArcheAgeTests
         Assert.IsTrue(controller[0].Skin.Source[1].Float_Array.Value_As_String.StartsWith(expectedBpm));
         Assert.AreEqual(160, controller[0].Skin.Source[1].Float_Array.Count);
 
-        // Visual Scene Check 
+        // Visual Scene Check
         Assert.AreEqual("Scene", daeObject.Scene.Visual_Scene.Name);
         Assert.AreEqual("#Scene", daeObject.Scene.Visual_Scene.URL);
         Assert.AreEqual(1, daeObject.Library_Visual_Scene.Visual_Scene.Length);
         Assert.AreEqual("Scene", daeObject.Library_Visual_Scene.Visual_Scene[0].ID);
         Assert.AreEqual(2, daeObject.Library_Visual_Scene.Visual_Scene[0].Node.Length);
 
-        // Armature Node check 
+        // Armature Node check
         var node = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0];
         Assert.AreEqual("Bone04", node.ID);
         Assert.AreEqual("Bone04", node.sID);

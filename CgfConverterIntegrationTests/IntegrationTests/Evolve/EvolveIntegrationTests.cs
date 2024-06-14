@@ -9,6 +9,7 @@ using CgfConverter;
 namespace CgfConverterTests.IntegrationTests;
 
 [TestClass]
+[TestCategory("integration")]
 public class EvolveIntegrationTests
 {
     private readonly TestUtils testUtils = new();

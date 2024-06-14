@@ -11,6 +11,7 @@ using CgfConverter.Renderers.Collada.Collada.Enums;
 namespace CgfConverterTests.IntegrationTests;
 
 [TestClass]
+[TestCategory("integration")]
 public class HuntIntegrationTests
 {
     private readonly TestUtils testUtils = new TestUtils();

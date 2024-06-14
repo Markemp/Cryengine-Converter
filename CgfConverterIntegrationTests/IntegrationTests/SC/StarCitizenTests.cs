@@ -14,6 +14,7 @@ using System.Threading;
 namespace CgfConverterTests.IntegrationTests;
 
 [TestClass]
+[TestCategory("integration")]
 public class StarCitizenTests
 {
     private readonly TestUtils testUtils = new();

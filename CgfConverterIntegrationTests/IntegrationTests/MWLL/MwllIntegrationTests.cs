@@ -7,6 +7,7 @@ using System;
 namespace CgfConverterTests.IntegrationTests;
 
 [TestClass]
+[TestCategory("integration")]
 public class MwllIntegrationTests
 {
     private readonly TestUtils testUtils = new();

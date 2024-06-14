@@ -9,6 +9,7 @@ using CgfConverter.Renderers.Collada;
 namespace CgfConverterTests.IntegrationTests;
 
 [TestClass]
+[TestCategory("integration")]
 public class CrysisIntegrationTests
 {
     private readonly TestUtils testUtils = new();
