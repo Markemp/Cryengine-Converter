@@ -58,6 +58,20 @@ public class StarCitizenTests
     }
 
     [TestMethod]
+    public void RSI_Constellation_Andromeda_Local_Grid()
+    {
+        var args = new string[] { $@"D:\depot\SC3.23\data\objects\Spaceships\ships\rsi\Constellation\Constellation_Andromeda\RSI_Constellation_Andromeda_Local_Grid.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\sc3.23\data" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+    }
+
+    [TestMethod]
     public void CutlassBlue_312_Gltf_NonIvo()
     {
         var args = new string[] { $@"D:\depot\SC2\Data\objects\Spaceships\Ships\DRAK\Cutlass\Cutlass_Blue\DRAK_Cutlass_Blue.cga", "-dds", "-objectdir", @"d:\depot\sc2\data" };

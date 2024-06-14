@@ -64,17 +64,16 @@ public class ColladaModelRenderer : IRenderer
     {
         GenerateDaeObject();
 
-        // At this point, we should have a cryData.Asset object, fully populated.
         Log(LogLevelEnum.Debug);
-        Log(LogLevelEnum.Debug, "*** Starting WriteCOLLADA() ***");
+        Log(LogLevelEnum.Debug, "*** Starting Collada Render ***");
         Log(LogLevelEnum.Debug);
 
         TextWriter writer = new StreamWriter(daeOutputFile.FullName);
         serializer.Serialize(writer, DaeObject);
 
         writer.Close();
-        Log(LogLevelEnum.Debug, "End of Write Collada.  Export complete.");
-        return 1;
+        Log(LogLevelEnum.Debug, "End Collada Render.  Export complete.");
+        return 0;
     }
 
     public void GenerateDaeObject()
