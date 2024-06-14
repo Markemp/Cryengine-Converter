@@ -30,6 +30,10 @@ internal class UsdRenderer : IRenderer
 
     public void GenerateUsdObject()
     {
-
+        Log(LogLevelEnum.Debug, "Number of models: {0}", _cryData.Models.Count);
+        for (int i = 0; i < _cryData.Models.Count; i++)
+        {
+            Log(LogLevelEnum.Debug, "\tNumber of nodes in model: {0}", _cryData.Models[i].NodeMap.Count);
+        }
     }
 }
