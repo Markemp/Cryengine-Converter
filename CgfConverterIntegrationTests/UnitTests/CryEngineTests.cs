@@ -6,6 +6,7 @@ using CgfConverter.PackFileSystem;
 namespace CgfConverterTests.UnitTests;
 
 [TestClass]
+[TestCategory("unit")]
 public class CryEngineTests
 {
     [TestMethod]

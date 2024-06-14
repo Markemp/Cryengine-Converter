@@ -7,6 +7,7 @@ using System.Numerics;
 namespace CgfConverterTests.UnitTests
 {
     [TestClass]
+    [TestCategory("unit")]
     public class Matrix3x3Tests
     {
         [TestMethod]
@@ -48,7 +49,7 @@ namespace CgfConverterTests.UnitTests
         [TestMethod]
         public void CreateFromQuaternion_TestQuaternion2()
         {
-            // [0.000000, -0.470351, 0.882480, 0.000000] to 
+            // [0.000000, -0.470351, 0.882480, 0.000000] to
             // [ -1.0000000,  0.0000000,  0.0000000;
             //    0.0000000, -0.5575403, -0.8301499;
             //    0.0000000, -0.8301499,  0.5575403 ]

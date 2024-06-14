@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace CgfConverterTests.UnitTests;
 
 [TestClass]
+[TestCategory("unit")]
 public class ColorTests
 {
     [TestMethod]

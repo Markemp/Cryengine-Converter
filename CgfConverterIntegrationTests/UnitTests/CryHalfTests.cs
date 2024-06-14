@@ -1,16 +1,18 @@
 ﻿using CgfConverter.Utililities;
 using CgfConverterTests.TestUtilities;
 using NUnit.Framework;
+using Assert = NUnit.Framework.Assert;
 
 namespace CgfConverterTests.UnitTests;
 
 [TestFixture]
+[Category("unit")]
 public class CryHalfTests
 {
     // CryHalf Max value: 131008, min value: -130944
     // Dymek Half max value: 1.0078433, min value: -1.007874
     // Half max value: 65500, min value: -65500
-    
+
     [Test]
     public void CryHalfToFloat_0x4de2_ReturnsCorrectValue()
     {
@@ -115,7 +117,7 @@ public class CryHalfTests
 
         Assert.That(result, Is.EqualTo(2.017578125d).Within(TestUtils.delta));
     }
-    
+
     [Test]
     public void DymekHalfToFloat_a_value_ReturnsCorrectResult()
     {
@@ -214,7 +216,7 @@ public class CryHalfTests
 
         Assert.That(result, Is.EqualTo(0.00044226646423339844d).Within(TestUtils.delta));
     }
-    
+
     [Test]
     public void DymekHalfToFloat_pt120048_ReturnsCorrectResult()
     {
