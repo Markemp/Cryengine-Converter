@@ -9,6 +9,7 @@ using CgfConverterIntegrationTests.Extensions;
 namespace CgfConverterTests.UnitTests;
 
 [TestClass]
+[TestCategory("unit")]
 public class Matrix4x4Tests
 {
     // Tests
@@ -23,7 +24,6 @@ public class Matrix4x4Tests
     private const float delta = 0.000001f;
 
     [TestMethod]
-    [TestCategory("unit")]
     public void SetRotationAndTranslationFromQuaternion()
     {
         var quat = new Quaternion(0.0f, 0.0f, 0.0f, 1.0f);

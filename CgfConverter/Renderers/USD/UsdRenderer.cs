@@ -1,14 +1,15 @@
-﻿using System.IO;
+﻿using CgfConverter.Renderers.USD.Models;
+using System.IO;
 using static CgfConverter.Utilities;
-using static Extensions.FileHandlingExtensions;
 
 namespace CgfConverter.Renderers.USD;
-internal class UsdRenderer : IRenderer
+public class UsdRenderer : IRenderer
 {
     protected readonly ArgsHandler _args;
     protected readonly CryEngine _cryData;
 
     private readonly FileInfo usdOutputFile;
+    private UsdDoc? usdDoc;
 
     public UsdRenderer(ArgsHandler argsHandler, CryEngine cryEngine)
     {
@@ -35,5 +36,14 @@ internal class UsdRenderer : IRenderer
         {
             Log(LogLevelEnum.Debug, "\tNumber of nodes in model: {0}", _cryData.Models[i].NodeMap.Count);
         }
+
+        // Create the usd doc
+        usdDoc = new UsdDoc
+        {
+            Header = new UsdHeader()
+        };
+
+        // Create the root xform
+        usdDoc.Prims.Add(new UsdXform("root"));
     }
 }

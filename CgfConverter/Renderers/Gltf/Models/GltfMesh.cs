@@ -8,5 +8,6 @@ public class GltfMesh
     [JsonProperty("name", NullValueHandling = NullValueHandling.Ignore)]
     public string? Name;
 
-    [JsonProperty("primitives")] public List<GltfMeshPrimitive> Primitives = new();
+    [JsonProperty("primitives")]
+    public List<GltfMeshPrimitive> Primitives = new();
 }
