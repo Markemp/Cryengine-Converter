@@ -3,6 +3,7 @@ using CgfConverter.CryEngineCore;
 using CgfConverter.Renderers.Collada;
 using CgfConverter.Renderers.Collada.Collada;
 using CgfConverter.Renderers.Gltf;
+using CgfConverter.Renderers.USD;
 using CgfConverterIntegrationTests.Extensions;
 using CgfConverterTests.TestUtilities;
 using Extensions;
@@ -825,6 +826,30 @@ public class MWOIntegrationTests
 
         // Accessors check
         Assert.AreEqual(10, gltfData.Accessors.Count);
+    }
+
+    [TestMethod]
+    public void HulaGirl_UsdFormat()
+    {
+        var args = new string[]
+        {
+            $@"D:\depot\MWO\Objects\purchasable\cockpit_standing\hulagirl\hulagirl__gold_a.cga",
+            "-objectdir", objectDir,
+            "-mat", "hulagirl_a.mtl"
+        };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[4]);
+        cryData.ProcessCryengineFiles();
+
+        UsdRenderer usdRenderer = new(testUtils.argsHandler, cryData);
+        var usdDoc = usdRenderer.GenerateUsdObject();
+        usdRenderer.WriteUsdToFile(usdDoc);
+        Assert.IsNotNull(usdDoc);
+        usdDoc.Prims[0].Name = "root";
+        usdDoc.Prims[0].Children[0].Name = "hulagirl_a";
+        usdDoc.Prims[0].Children[0].Children[0].Name = "HulaGirl_UpperBody";
+        usdDoc.Prims[0].Children[0].Children[1].Name = "HulaGirl_LowerBody";
     }
 
     [TestMethod]

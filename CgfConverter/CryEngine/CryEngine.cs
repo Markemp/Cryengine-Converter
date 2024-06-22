@@ -34,7 +34,7 @@ public partial class CryEngine
     public List<Model> Models { get; internal set; } = new();
     public List<Model> Animations { get; internal set; } = new();
     public ChunkNode RootNode { get; internal set; }
-    public ChunkCompiledBones Bones { get; internal set; }  // move to skinning info
+    public ChunkCompiledBones? Bones { get; internal set; }
     public SkinningInfo? SkinningInfo { get; set; }
     public string InputFile { get; internal set; }
     public IPackFileSystem PackFileSystem { get; internal set; }

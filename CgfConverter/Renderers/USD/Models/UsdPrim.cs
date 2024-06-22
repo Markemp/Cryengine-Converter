@@ -12,15 +12,20 @@ public abstract class UsdPrim
 
     public string Name { get; set; }
     public Dictionary<string, object>? Parameters { get; set; }
-    public List<object>? Children { get; set; }
+    public List<UsdPrim>? Children { get; set; }
 
     public abstract string Serialize();
 
     protected string SerializeParameters()
     {
         var sb = new StringBuilder();
+
+        if (Parameters is null)
+            return sb.ToString();
+
         foreach (var param in Parameters)
             sb.AppendLine($"    {param.Key} = {SerializeParameter(param.Value)}");
+
         return sb.ToString();
     }
 
