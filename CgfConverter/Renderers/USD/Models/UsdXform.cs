@@ -1,6 +1,4 @@
 ﻿using CgfConverter.Renderers.USD.Attributes;
-using System.Collections.Generic;
-using System.Numerics;
 using System.Text;
 
 namespace CgfConverter.Renderers.USD.Models;
@@ -8,26 +6,25 @@ namespace CgfConverter.Renderers.USD.Models;
 [UsdElement("Xform")]
 public class UsdXform : UsdPrim
 {
-    [UsdProperty("xformOp")]
-    public Matrix4x4? Transform { get; set; }
+    public UsdXform(string name, bool isUniform = false)
+        : base(name)
+    {
+        //Attributes.Add(new UsdMatrix4d("xformOp:transform", transform, isUniform));
+        //Attributes.Add(new UsdXformOpOrder("xformOpOrder", xformOpOrder, isUniform));
+    }
 
-    [UsdProperty("xformOp:translate")]
-    public List<string>? XformOpOrder { get; set; }
-
-    public UsdSkelRoot? Armature { get; set; }
-
-    public List<UsdXform>? Xforms { get; set; }
-
-    public List<UsdScope>? Scopes { get; set; }
-
-    public UsdXform(string name) : base(name) { }
-
-    public override string Serialize()
+    public override string Serialize(int indentLevel)
     {
         var sb = new StringBuilder();
 
-        sb.AppendLine(base.SerializeParameters());
-        sb.AppendLine(SerializeChildren());
+        AppendIndent(sb, indentLevel);
+        sb.AppendLine($"def Xform \"{Name}\"");
+        AppendIndent(sb, indentLevel);
+        sb.AppendLine("{");
+        sb.Append(SerializeAttributes(indentLevel + 1));
+        sb.Append(SerializeChildren(indentLevel + 1));
+        AppendIndent(sb, indentLevel);
+        sb.AppendLine("}");
 
         return sb.ToString();
     }

@@ -53,14 +53,6 @@ public static class Utilities
         return value;
     }
 
-    public static void CleanNumbers(StringBuilder sb)
-    {
-        sb.Replace("0.000000", "0");
-        sb.Replace("-0.000000", "0");
-        sb.Replace("1.000000", "1");
-        sb.Replace("-1.000000", "-1");
-    }
-
     /// <summary>Custom DateTime formats supported by the parser.</summary>
     public static string[] DateTimeFormats
     {

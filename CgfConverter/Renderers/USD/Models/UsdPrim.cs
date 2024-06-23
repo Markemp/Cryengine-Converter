@@ -1,65 +1,85 @@
-﻿using System.Collections.Generic;
+﻿using CgfConverter.Renderers.USD.Attributes;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace CgfConverter.Renderers.USD.Models;
 
 public abstract class UsdPrim
 {
+    public string Name { get; set; }
+
+    public Dictionary<string, object>? Properties { get; set; }
+    public List<UsdAttribute> Attributes { get; set; } = [];
+    public List<UsdPrim>? Children { get; set; }
+
     protected UsdPrim(string name)
     {
         Name = name;
     }
 
-    public string Name { get; set; }
-    public Dictionary<string, object>? Parameters { get; set; }
-    public List<UsdPrim>? Children { get; set; }
+    public abstract string Serialize(int indentLevel);
 
-    public abstract string Serialize();
-
-    protected string SerializeParameters()
+    protected string SerializeAttributes(int indentLevel)
     {
         var sb = new StringBuilder();
-
-        if (Parameters is null)
-            return sb.ToString();
-
-        foreach (var param in Parameters)
-            sb.AppendLine($"    {param.Key} = {SerializeParameter(param.Value)}");
-
-        return sb.ToString();
-    }
-
-    protected static string? SerializeParameter(object param)
-    {
-        if (param is null)
-            return null;
-
-        if (param is Dictionary<string, object> dict)
+        foreach (var attribute in Attributes)
         {
-            var entries = new List<string>();
-            foreach (var kv in dict)
-                entries.Add($"{kv.Key} = {SerializeParameter(kv.Value)}");
-            return $"{{ {string.Join(", ", entries)} }}";
+            AppendIndent(sb, indentLevel);
+            sb.AppendLine(attribute.Serialize());
         }
-        else if (param is List<string> list)
-            return $"[{string.Join(", ", list)}]";
-        else if (param is bool b)
-            return b ? "1" : "0";
-        else
-            return param.ToString();
+        return sb.ToString();
     }
 
-    protected string? SerializeChildren()
+    protected string SerializeProperties()
     {
-        if (Children is null)
-            return null;
+        if (Properties.Count == 0)
+        {
+            return string.Empty;
+        }
 
         var sb = new StringBuilder();
-
-        foreach (var child in Children)
-            if (child is UsdPrim prim)
-                sb.Append(prim.Serialize());
-
+        sb.Append("(");
+        foreach (var kvp in Properties)
+        {
+            sb.AppendFormat(" {0} = {1}", kvp.Key, SerializePropertyValue(kvp.Value));
+        }
+        sb.Append(" )");
         return sb.ToString();
+    }
+
+    private string SerializePropertyValue(object value)
+    {
+        if (value is string)
+        {
+            return $"\"{value}\"";
+        }
+        else if (value is IEnumerable<string> list)
+        {
+            return $"[{string.Join(", ", list.Select(v => $"\"{v}\""))}]";
+        }
+        else
+        {
+            return value.ToString();
+        }
+    }
+
+    protected string SerializeChildren(int indentLevel)
+    {
+        var sb = new StringBuilder();
+        if (Children is not null && Children.Count > 0)
+        {
+            foreach (var child in Children)
+            {
+                sb.Append(child.Serialize(indentLevel + 1));
+            }
+        }
+        
+        return sb.ToString();
+    }
+
+    protected void AppendIndent(StringBuilder sb, int indentLevel)
+    {
+        sb.Append(new string(' ', indentLevel * 4));
     }
 }

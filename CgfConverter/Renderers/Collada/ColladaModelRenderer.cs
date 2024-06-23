@@ -662,7 +662,7 @@ public class ColladaModelRenderer : IRenderer
                             floatArrayColors.Count = (int)colors.NumElements * 4;
                             for (uint j = 0; j < colors.NumElements; j++)  // Create Colors string
                             {
-                                colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ",
+                                colorString.AppendFormat(culture, "{0:F7} {1:F7} {2:F7} {3:F7} ",
                                     colors.Colors[j].r / 255.0,
                                     colors.Colors[j].g / 255.0,
                                     colors.Colors[j].b / 255.0,
@@ -674,13 +674,13 @@ public class ColladaModelRenderer : IRenderer
                         for (uint j = 0; j < meshChunk.NumVertices; j++)
                         {
                             Vector3 vertex = tmpVertices.Vertices[j];
-                            vertString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", vertex.X, vertex.Y, vertex.Z);
+                            vertString.AppendFormat(culture, "{0:F7} {1:F7} {2:F7} ", vertex.X, vertex.Y, vertex.Z);
                             Vector3 normal = normals?.Normals[j] ?? tangents?.Normals[j] ?? new Vector3(0.0f, 0.0f, 0.0f);
-                            normString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", Safe(normal.X), Safe(normal.Y), Safe(normal.Z));
+                            normString.AppendFormat(culture, "{0:F7} {1:F7} {2:F7} ", Safe(normal.X), Safe(normal.Y), Safe(normal.Z));
                         }
                         for (uint j = 0; j < uvs.NumElements; j++)     // Create UV string
                         {
-                            uvString.AppendFormat(culture, "{0:F6} {1:F6} ", Safe(uvs.UVs[j].U), 1 - Safe(uvs.UVs[j].V));
+                            uvString.AppendFormat(culture, "{0:F7} {1:F7} ", Safe(uvs.UVs[j].U), 1 - Safe(uvs.UVs[j].V));
                         }
                     }
                     else                // VertsUV structure.  Pull out verts and UVs from tmpVertsUVs.
@@ -705,7 +705,7 @@ public class ColladaModelRenderer : IRenderer
                             floatArrayColors.Count = vertsUvs.Colors.Length * 4;
                             for (uint j = 0; j < vertsUvs.Colors.Length; j++)  // Create Colors string
                             {
-                                colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ",
+                                colorString.AppendFormat(culture, "{0:F7} {1:F7} {2:F7} {3:F7} ",
                                     vertsUvs.Colors[j].r / 255.0,
                                     vertsUvs.Colors[j].g / 255.0,
                                     vertsUvs.Colors[j].b / 255.0,
@@ -729,7 +729,7 @@ public class ColladaModelRenderer : IRenderer
                             if (!_cryData.InputFile.EndsWith("skin") && !_cryData.InputFile.EndsWith("chr"))
                                 vertex = (vertex * multiplerVector) + boundaryBoxCenter;
 
-                            vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(vertex.X), Safe(vertex.Y), Safe(vertex.Z));
+                            vertString.AppendFormat("{0:F7} {1:F7} {2:F7} ", Safe(vertex.X), Safe(vertex.Y), Safe(vertex.Z));
 
                             // TODO:  This isn't right?  VertsUvs may always have color as the 3rd element.
                             // Normals depend on the data size.  16 byte structures have the normals in the Tangents.  20 byte structures are in the VertsUV.
@@ -739,18 +739,18 @@ public class ColladaModelRenderer : IRenderer
                             else if (tangents is not null && tangents.Normals is not null)
                                 normal = tangents.Normals[j];
 
-                            normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(normal.X), Safe(normal.Y), Safe(normal.Z));
+                            normString.AppendFormat("{0:F7} {1:F7} {2:F7} ", Safe(normal.X), Safe(normal.Y), Safe(normal.Z));
                         }
                         // Create UV string
                         for (uint j = 0; j < vertsUvs.NumElements; j++)
                         {
-                            uvString.AppendFormat("{0:F6} {1:F6} ", Safe(vertsUvs.UVs[j].U), Safe(1 - vertsUvs.UVs[j].V));
+                            uvString.AppendFormat("{0:F7} {1:F7} ", Safe(vertsUvs.UVs[j].U), Safe(1 - vertsUvs.UVs[j].V));
                         }
                     }
-                    CleanNumbers(vertString);
-                    CleanNumbers(normString);
-                    CleanNumbers(uvString);
-                    CleanNumbers(colorString);
+                    vertString.CleanNumbers();
+                    normString.CleanNumbers();
+                    uvString.CleanNumbers();
+                    colorString.CleanNumbers();
 
                     #region Create the triangles node.
                     var triangles = new ColladaTriangles[meshSubsets.NumMeshSubset];
@@ -1198,7 +1198,7 @@ public class ColladaModelRenderer : IRenderer
                     accessor.Count = (uint)_cryData.SkinningInfo.Ext2IntMap.Count * 4;
                 };
             }
-            CleanNumbers(weights);
+            weights.CleanNumbers();
             weightArraySource.Float_Array.Value_As_String = weights.ToString().TrimEnd();
             // Add technique_common part.
             accessor.Source = "#Controller-weights-array";
@@ -1667,23 +1667,23 @@ public class ColladaModelRenderer : IRenderer
     private static string CreateStringFromVector3(Vector3 vector)
     {
         StringBuilder vectorValues = new();
-        vectorValues.AppendFormat("{0:F6} {1:F6} {2:F6}", vector.X, vector.Y, vector.Z);
-        CleanNumbers(vectorValues);
+        vectorValues.AppendFormat("{0:F7} {1:F7} {2:F7}", vector.X, vector.Y, vector.Z);
+        vectorValues.CleanNumbers();
         return vectorValues.ToString();
     }
 
     private static string CreateStringFromVector4(Vector4 vector)
     {
         StringBuilder vectorValues = new();
-        vectorValues.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6}", vector.X, vector.Y, vector.Z, vector.W);
-        CleanNumbers(vectorValues);
+        vectorValues.AppendFormat("{0:F7} {1:F7} {2:F7} {3:F7}", vector.X, vector.Y, vector.Z, vector.W)
+            .CleanNumbers();
         return vectorValues.ToString();
     }
 
     private static string CreateStringFromMatrix4x4(Matrix4x4 matrix)
     {
         StringBuilder matrixValues = new();
-        matrixValues.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} {12:F6} {13:F6} {14:F6} {15:F6}",
+        matrixValues.AppendFormat("{0:F7} {1:F7} {2:F7} {3:F7} {4:F7} {5:F7} {6:F7} {7:F7} {8:F7} {9:F7} {10:F7} {11:F7} {12:F7} {13:F7} {14:F7} {15:F7}",
             matrix.M11,
             matrix.M12,
             matrix.M13,
@@ -1700,7 +1700,7 @@ public class ColladaModelRenderer : IRenderer
             matrix.M42,
             matrix.M43,
             matrix.M44);
-        CleanNumbers(matrixValues);
+        matrixValues.CleanNumbers();
         return matrixValues.ToString();
     }
 }

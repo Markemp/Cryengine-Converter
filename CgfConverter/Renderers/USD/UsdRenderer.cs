@@ -77,11 +77,10 @@ public class UsdRenderer : IRenderer
 
     private UsdXform CreateNode(ChunkNode node)
     {
-        var xform = new UsdXform(node.Name)
-        {
-            Transform = node.LocalTransform,
-            XformOpOrder = new List<string> { "xformOp:transform" }
-        };
+        var xform = new UsdXform(node.Name);
+
+        xform.Attributes.Add(new UsdMatrix4d("xformOp:transform", node.Transform));
+        xform.Attributes.Add(new UsdXformOpOrder("xformOpOrder", [ "xformOp:transform" ], true));
 
         // Get all the children of the node
 
