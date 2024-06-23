@@ -1,7 +1,9 @@
-﻿using Extensions;
+﻿using CgfConverter.Renderers.USD.Attributes;
 using System.Text;
 
 namespace CgfConverter.Renderers.USD.Models;
+
+[UsdElement("Mesh")]
 public class UsdMesh : UsdPrim
 {
     public UsdMesh(string name) : base(name)

@@ -12,7 +12,7 @@ public abstract class UsdPrim
 
     public Dictionary<string, object>? Properties { get; set; }
     public List<UsdAttribute> Attributes { get; set; } = [];
-    public List<UsdPrim>? Children { get; set; }
+    public List<UsdPrim> Children { get; set; } = [];
 
     protected UsdPrim(string name)
     {

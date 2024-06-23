@@ -89,17 +89,12 @@ public class UsdRenderer : IRenderer
 
         var meshPrim = CreateMeshPrim(node);
         if (meshPrim is not null)
-        {
-            if (xform.Children is null)
-                xform.Children = [];
             xform.Children.Add(meshPrim);
-        }
 
         // Get all the children of the node
         var children = node.AllChildNodes;
         if (children is not null)
         {
-            xform.Children = new List<UsdPrim>();
             foreach (var childNode in children)
             {
                 xform.Children.Add(CreateNode(childNode));
@@ -109,11 +104,30 @@ public class UsdRenderer : IRenderer
         return xform;
     }
 
-    private UsdPrim? CreateMeshPrim(ChunkNode node)
+    private UsdPrim? CreateMeshPrim(ChunkNode nodeChunk)
     {
         // Find the object node that corresponds with this node chunk.  If it's
         // a mesh chunk, create a UsdMesh prim.
-        UsdMesh meshPrim = new(node.Name);
+        var modelIndex = nodeChunk._model.IsIvoFile ? 1 : 0;
+
+        string nodeName = nodeChunk.Name;
+        var geometryNodeChunk = _cryData.Models.Last().NodeMap.Values.Where(x => x.Name == nodeName).FirstOrDefault();
+        var meshNodeId = geometryNodeChunk?.ObjectNodeID;
+
+        var objectNodeChunkType = _cryData.Models.Last().ChunkMap[nodeChunk.ObjectNodeID].GetType();
+        if (!objectNodeChunkType.Name.Contains("ChunkMesh"))
+            return null;
+        var meshChunk = (ChunkMesh)_cryData.Models.Last().ChunkMap[nodeChunk.ObjectNodeID];
+
+        if (meshChunk.MeshSubsetsData == 0
+            || meshChunk.NumVertices == 0
+            || nodeChunk._model.ChunkMap[meshChunk.MeshSubsetsData].ID == 0)
+            return null;
+
+
+
+
+        UsdMesh meshPrim = new(nodeChunk.Name);
         //UsdAttribute doubleSided = new("doubleSided", node.DoubleSided);
         //meshPrim.Attributes.Add()
 
