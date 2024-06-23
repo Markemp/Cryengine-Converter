@@ -52,35 +52,10 @@ public abstract class UsdPrim
     private string SerializePropertyValue(object value)
     {
         if (value is string)
-        {
             return $"\"{value}\"";
-        }
         else if (value is IEnumerable<string> list)
-        {
             return $"[{string.Join(", ", list.Select(v => $"\"{v}\""))}]";
-        }
         else
-        {
             return value.ToString();
-        }
-    }
-
-    protected string SerializeChildren(int indentLevel)
-    {
-        var sb = new StringBuilder();
-        if (Children is not null && Children.Count > 0)
-        {
-            foreach (var child in Children)
-            {
-                sb.Append(child.Serialize(indentLevel + 1));
-            }
-        }
-        
-        return sb.ToString();
-    }
-
-    protected void AppendIndent(StringBuilder sb, int indentLevel)
-    {
-        sb.Append(new string(' ', indentLevel * 4));
     }
 }

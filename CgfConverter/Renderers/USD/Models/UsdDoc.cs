@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Text;
 
 namespace CgfConverter.Renderers.USD.Models;
 
