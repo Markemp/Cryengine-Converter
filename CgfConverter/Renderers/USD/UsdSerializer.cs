@@ -1,5 +1,6 @@
 ﻿using CgfConverter.Renderers.USD.Attributes;
 using CgfConverter.Renderers.USD.Models;
+using Extensions;
 using Microsoft.Extensions.ObjectPool;
 using System.IO;
 using System.Reflection;
@@ -38,15 +39,14 @@ public class UsdSerializer
 
         if (elementAttr is not null)
         {
-            AppendIndent(sb, indentLevel);
+            sb.AppendIndent(indentLevel);
             sb.AppendLine($"def {elementAttr.ElementName} \"{prim.Name}\"");
-            AppendIndent(sb, indentLevel);
+            sb.AppendIndent(indentLevel);
             sb.AppendLine("{");
 
             foreach (var attribute in prim.Attributes)
             {
-                AppendIndent(sb, indentLevel + 1);
-                sb.AppendLine(attribute.Serialize());
+                sb.AppendLine(attribute.Serialize(indentLevel + 1));
             }
 
             if (prim.Children is not null)
@@ -54,7 +54,7 @@ public class UsdSerializer
                 {
                     SerializeObject(child, sb, indentLevel + 1);
                 }
-            AppendIndent(sb, indentLevel);
+            sb.AppendIndent(indentLevel);
             sb.AppendLine("}");
         }
     }

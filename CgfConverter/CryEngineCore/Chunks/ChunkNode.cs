@@ -5,7 +5,7 @@ using System.Numerics;
 
 namespace CgfConverter.CryEngineCore;
 
-public abstract class ChunkNode : Chunk          // cccc000b:   Node
+public abstract class ChunkNode : Chunk
 {
     protected float VERTEX_SCALE = 1f / 100;
 
@@ -13,7 +13,7 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
     public int ObjectNodeID { get; internal set; }
     public int ParentNodeID { get; internal set; }  // Parent nodeID
     public int NumChildren { get; internal set; }
-    public int MaterialID { get; internal set; }         // Chunk Id of the material for this node
+    public int MaterialID { get; internal set; }    // Chunk Id of the material for this node
     public Matrix4x4 Transform { get; internal set; }
     public Vector3 Pos { get; internal set; }       // Obsolete
     public Quaternion Rot { get; internal set; }    // Obsolete

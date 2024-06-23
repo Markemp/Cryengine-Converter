@@ -1,4 +1,5 @@
 ﻿using CgfConverter.Renderers.USD.Attributes;
+using Extensions;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,9 +16,10 @@ public class UsdXformOpOrder : UsdAttribute
         Values = values;
     }
 
-    public override string Serialize()
+    public override string Serialize(int indentLevel)
     {
         var sb = new StringBuilder();
+        sb.AppendIndent(indentLevel);
 
         if (IsUniform)
             sb.Append("uniform ");

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Extensions;
+using System.Text;
 
 namespace CgfConverter.Renderers.USD.Models;
 public class UsdMesh : UsdPrim
@@ -10,6 +11,17 @@ public class UsdMesh : UsdPrim
 
     public override string Serialize(int indentLevel)
     {
-        throw new NotImplementedException();
+        var sb = new StringBuilder();
+
+        //sb.AppendIndent(indentLevel)
+        //    .AppendLine($"def Mesh \"{Name}\"")
+        //    .AppendIndent(indentLevel)
+        //    .AppendLine("{")
+        //        .Append(SerializeAttributes(indentLevel + 1))
+        //        .Append(SerializeChildren(indentLevel + 1))
+        //    .AppendIndent(indentLevel)
+        //    .AppendLine("}");
+
+        return sb.ToString();
     }
 }

@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace CgfConverter.Renderers.USD.Attributes;
+﻿namespace CgfConverter.Renderers.USD.Attributes;
 
 public abstract class UsdAttribute
 {
@@ -13,10 +11,5 @@ public abstract class UsdAttribute
         IsUniform = isUniform;
     }
 
-    public abstract string Serialize();
-
-    protected void AppendIndent(StringBuilder sb, int indentLevel)
-    {
-        sb.Append(new string(' ', indentLevel * 4));
-    }
+    public abstract string Serialize(int indentLevel);
 }

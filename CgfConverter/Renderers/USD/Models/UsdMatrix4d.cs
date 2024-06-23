@@ -15,9 +15,11 @@ public class UsdMatrix4d : UsdAttribute
         Value = value;
     }
 
-    public override string Serialize()
+    public override string Serialize(int indentLevel)
     {
         var sb = new StringBuilder();
+        sb.AppendIndent(indentLevel);
+
         if (IsUniform)
             sb.Append("uniform ");
 

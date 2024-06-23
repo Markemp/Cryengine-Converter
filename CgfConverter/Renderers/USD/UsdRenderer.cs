@@ -1,4 +1,5 @@
 ﻿using CgfConverter.CryEngineCore;
+using CgfConverter.Renderers.USD.Attributes;
 using CgfConverter.Renderers.USD.Models;
 using System.Collections.Generic;
 using System.IO;
@@ -80,10 +81,21 @@ public class UsdRenderer : IRenderer
         var xform = new UsdXform(node.Name);
 
         xform.Attributes.Add(new UsdMatrix4d("xformOp:transform", node.Transform));
-        xform.Attributes.Add(new UsdXformOpOrder("xformOpOrder", [ "xformOp:transform" ], true));
+        xform.Attributes.Add(new UsdXformOpOrder("xformOpOrder", ["xformOp:transform"], true));
+
+        // If it's a geometry node, add a UsdMesh
+        var modelIndex = node._model.IsIvoFile ? 1 : 0;
+        ChunkNode geometryNode = _cryData.Models.Last().NodeMap.Values.Where(a => a.Name == node.Name).FirstOrDefault();
+
+        var meshPrim = CreateMeshPrim(node);
+        if (meshPrim is not null)
+        {
+            if (xform.Children is null)
+                xform.Children = [];
+            xform.Children.Add(meshPrim);
+        }
 
         // Get all the children of the node
-
         var children = node.AllChildNodes;
         if (children is not null)
         {
@@ -95,5 +107,17 @@ public class UsdRenderer : IRenderer
         }
 
         return xform;
+    }
+
+    private UsdPrim? CreateMeshPrim(ChunkNode node)
+    {
+        // Find the object node that corresponds with this node chunk.  If it's
+        // a mesh chunk, create a UsdMesh prim.
+        UsdMesh meshPrim = new(node.Name);
+        //UsdAttribute doubleSided = new("doubleSided", node.DoubleSided);
+        //meshPrim.Attributes.Add()
+
+
+        return meshPrim;
     }
 }

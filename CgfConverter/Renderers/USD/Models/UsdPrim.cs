@@ -1,4 +1,5 @@
 ﻿using CgfConverter.Renderers.USD.Attributes;
+using Extensions;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -25,8 +26,8 @@ public abstract class UsdPrim
         var sb = new StringBuilder();
         foreach (var attribute in Attributes)
         {
-            AppendIndent(sb, indentLevel);
-            sb.AppendLine(attribute.Serialize());
+            sb.AppendIndent(indentLevel);
+            sb.AppendLine(attribute.Serialize(indentLevel));
         }
         return sb.ToString();
     }

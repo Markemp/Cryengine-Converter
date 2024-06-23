@@ -13,4 +13,7 @@ public static class StringBuilderExtensions
 
         return sb;
     }
+
+    public static StringBuilder AppendIndent(this StringBuilder sb, int indentLevel)
+        => sb.Append(new string(' ', indentLevel * 4));
 }
