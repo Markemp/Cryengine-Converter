@@ -1,5 +1,4 @@
 ﻿using CgfConverter.Renderers.USD.Attributes;
-using Extensions;
 using System.Text;
 
 namespace CgfConverter.Renderers.USD.Models;

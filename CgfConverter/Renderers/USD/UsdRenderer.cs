@@ -56,18 +56,21 @@ public class UsdRenderer : IRenderer
         // Create the usd doc
         var usdDoc = new UsdDoc { Header = new UsdHeader() };
         usdDoc.Prims.Add(new UsdXform("root"));
+        var rootPrim = usdDoc.Prims[0];
 
         // Create the node hierarchy as Xforms
-        usdDoc.Prims[0].Children = CreateNodeHierarchy();
+        rootPrim.Children = CreateNodeHierarchy();
+
+        rootPrim.Children.Add(new UsdScope("_materials"));
 
         return usdDoc;
     }
 
-    private List<UsdPrim>? CreateNodeHierarchy()
+    private List<UsdPrim> CreateNodeHierarchy()
     {
         // Get all the root nodes
         List<ChunkNode> rootNodes = _cryData.Models[0].NodeMap.Values.Where(a => a.ParentNodeID == ~0).ToList();
-        List<UsdPrim> nodes = new();
+        List<UsdPrim> nodes = [];
 
         foreach (ChunkNode root in rootNodes)
         {
@@ -143,6 +146,11 @@ public class UsdRenderer : IRenderer
         meshPrim.Attributes.Add(new UsdVector3dList("extent", [meshChunk.MinBound, meshChunk.MaxBound]));
         meshPrim.Attributes.Add(new UsdIntList("faceVertexCounts", Enumerable.Repeat(3, (int)indexChunk.NumElements/3).ToList()));
         meshPrim.Attributes.Add(new UsdIntList("faceVertexIndices", indexChunk.Indices.Select(x => (int)x).ToList()));
+        meshPrim.Attributes.Add(new UsdNormalsList("normals", [.. normalChunk.Normals]));
+        meshPrim.Attributes.Add(new UsdPointsList("points", [.. vertexChunk.Vertices]));
+        meshPrim.Attributes.Add(new UsdColorsList($"{nodeChunk.Name}_color", [.. colorChunk.Colors]));
+        meshPrim.Attributes.Add(new UsdTexCoordsList($"{nodeChunk.Name}_UV", [.. uvChunk.UVs]));
+        meshPrim.Attributes.Add(new UsdToken("subdivisionScheme", "none", true));
         return meshPrim;
     }
 }

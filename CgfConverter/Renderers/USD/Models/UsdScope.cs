@@ -1,5 +1,8 @@
-﻿namespace CgfConverter.Renderers.USD.Models;
+﻿using CgfConverter.Renderers.USD.Attributes;
 
+namespace CgfConverter.Renderers.USD.Models;
+
+[UsdElement("Scope")]
 public class UsdScope : UsdPrim
 {
     public UsdScope(string name) : base(name) { }
