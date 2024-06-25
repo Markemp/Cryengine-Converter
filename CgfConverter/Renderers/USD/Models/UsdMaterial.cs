@@ -1,5 +1,8 @@
-﻿namespace CgfConverter.Renderers.USD.Models;
+﻿using CgfConverter.Renderers.USD.Attributes;
 
+namespace CgfConverter.Renderers.USD.Models;
+
+[UsdElement("Material")]
 public class UsdMaterial : UsdPrim
 {
     public string? OutputsSurfaceConnect { get; set; }

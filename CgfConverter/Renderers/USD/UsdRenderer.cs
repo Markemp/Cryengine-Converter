@@ -1,4 +1,5 @@
 ﻿using CgfConverter.CryEngineCore;
+using CgfConverter.Models.Materials;
 using CgfConverter.Renderers.USD.Attributes;
 using CgfConverter.Renderers.USD.Models;
 using System;
@@ -61,9 +62,36 @@ public class UsdRenderer : IRenderer
         // Create the node hierarchy as Xforms
         rootPrim.Children = CreateNodeHierarchy();
 
-        rootPrim.Children.Add(new UsdScope("_materials"));
+        rootPrim.Children.Add(CreateMaterials());
 
         return usdDoc;
+    }
+
+    private UsdPrim CreateMaterials()
+    {
+        var scope = new UsdScope("_materials");
+        var matList = new List<UsdMaterial>();
+
+        foreach (var matKey in _cryData.Materials.Keys)
+        {
+            var usdMat = new UsdMaterial(matKey);
+            usdMat.Attributes.Add(new UsdToken("outputs:surface.connect", "<path to princ bsdf>"));
+
+            // Build the Shader prims
+            foreach (var submat in _cryData.Materials[matKey].SubMaterials)
+            {
+                // Add the PrincipleBSDF shader
+                usdMat.Children.AddRange(CreateShaders(submat));
+            }
+
+            scope.Children.Add(usdMat);
+        }
+        return scope;
+    }
+
+    private IEnumerable<UsdPrim> CreateShaders(Material submat)
+    {
+        throw new NotImplementedException();
     }
 
     private List<UsdPrim> CreateNodeHierarchy()
