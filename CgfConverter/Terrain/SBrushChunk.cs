@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using CgfConverter.Structs;
+using CgfConverter.Models.Structs;
 using Extensions;
 
 namespace CgfConverter.Terrain;

@@ -1,4 +1,5 @@
 ﻿using System;
+using CgfConverter.Models.Structs;
 
 namespace CgfConverter.CryEngineCore;
 

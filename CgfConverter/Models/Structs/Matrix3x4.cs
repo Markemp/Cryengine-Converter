@@ -2,7 +2,7 @@
 using System;
 using System.Numerics;
 
-namespace CgfConverter.Structs;
+namespace CgfConverter.Models.Structs;
 
 /// <summary>
 /// WorldToBone and BoneToWorld objects in Cryengine files.  Inspiration/code based from
@@ -43,18 +43,16 @@ public struct Matrix3x4 : IEquatable<Matrix3x4>
         M34 = m34;
     }
 
-    public Vector3 Translation { 
+    public Vector3 Translation {
         get { return new Vector3(M14, M24, M34); }
-        set 
-        {
+        set {
             M14 = value.X;
             M24 = value.Y;
             M34 = value.Z;
         }
     }
 
-    public Matrix3x3 Rotation
-    {
+    public Matrix3x3 Rotation {
         get {
             return new Matrix3x3(M11, M12, M13, M21, M22, M23, M31, M32, M33);
         }
@@ -124,9 +122,9 @@ public struct Matrix3x4 : IEquatable<Matrix3x4>
     /// <returns>True if the matrices are equal; False otherwise.</returns>
     public bool Equals(Matrix3x4 other)
     {
-        return (M11 == other.M11 && M22 == other.M22 && M33 == other.M33 && // Check diagonal element first for early out.
+        return M11 == other.M11 && M22 == other.M22 && M33 == other.M33 && // Check diagonal element first for early out.
                 M12 == other.M12 && M13 == other.M13 && M14 == other.M14 &&
                 M21 == other.M21 && M23 == other.M23 && M24 == other.M24 &&
-                M31 == other.M31 && M32 == other.M32 && M34 == other.M34);
+                M31 == other.M31 && M32 == other.M32 && M34 == other.M34;
     }
 }

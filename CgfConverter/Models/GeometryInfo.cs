@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using CgfConverter.CryEngineCore;
+using CgfConverter.Models.Structs;
 
 namespace CgfConverter.Models;
 

@@ -21,7 +21,7 @@ public class UsdRelativePath : UsdAttribute
         if (IsUniform)
             sb.Append("uniform ");
 
-        sb.Append($"rel material:binding = <@{Value}>");
+        sb.Append($"rel material:binding = <{Value}>");
 
         return sb.ToString();
     }

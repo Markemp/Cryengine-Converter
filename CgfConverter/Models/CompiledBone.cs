@@ -2,8 +2,8 @@
 using System.IO;
 using System.Numerics;
 using System.Collections.Generic;
-using CgfConverter.Structs;
 using Extensions;
+using CgfConverter.Models.Structs;
 
 namespace CgfConverter;
 

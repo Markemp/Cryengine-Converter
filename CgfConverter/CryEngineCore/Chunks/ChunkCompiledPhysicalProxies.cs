@@ -1,4 +1,6 @@
-﻿namespace CgfConverter.CryEngineCore;
+﻿using CgfConverter.Models.Structs;
+
+namespace CgfConverter.CryEngineCore;
 
 public abstract class ChunkCompiledPhysicalProxies : Chunk        // 0xACDC0003:  Hit boxes?
 {

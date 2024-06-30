@@ -3,7 +3,6 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using CgfConverter.Structs;
 using Extensions;
 
 namespace CgfConverter.Terrain;

@@ -1,4 +1,5 @@
-﻿using CgfConverter.Renderers.USD.Attributes;
+﻿using CgfConverter.Models.Structs;
+using CgfConverter.Renderers.USD.Attributes;
 using Extensions;
 using System.Collections.Generic;
 using System.Linq;

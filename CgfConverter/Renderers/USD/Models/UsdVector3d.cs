@@ -1,21 +1,19 @@
-﻿using CgfConverter.Renderers.USD.Attributes;
-using Extensions;
+﻿using Extensions;
 using System.Numerics;
 using System.Text;
 
 namespace CgfConverter.Renderers.USD.Models;
 
-public class UsdVector3d : UsdAttribute
+public class UsdVector3d
 {
     public Vector3 Value { get; set; }
 
-    public UsdVector3d(string name, Vector3 value) : base(name)
+    public UsdVector3d(Vector3 value)
     {
-        Name = name;
         Value = value;
     }
 
-    public override string Serialize(int indentLevel)
+    public string Serialize()
     {
         var sb = new StringBuilder();
 

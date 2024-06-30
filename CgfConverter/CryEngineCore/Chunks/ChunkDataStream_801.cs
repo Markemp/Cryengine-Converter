@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using CgfConverter.Models;
+using CgfConverter.Models.Structs;
 using Extensions;
 using static Extensions.BinaryReaderExtensions;
 

@@ -1,4 +1,6 @@
-﻿namespace CgfConverter.CryEngineCore;
+﻿using CgfConverter.Models.Structs;
+
+namespace CgfConverter.CryEngineCore;
 
 public abstract class ChunkCompiledIntSkinVertices : Chunk
 {

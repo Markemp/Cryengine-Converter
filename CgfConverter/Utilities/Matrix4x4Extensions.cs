@@ -1,6 +1,6 @@
 ﻿using System;
-using CgfConverter.Structs;
 using System.Numerics;
+using CgfConverter.Models.Structs;
 
 namespace Extensions;
 

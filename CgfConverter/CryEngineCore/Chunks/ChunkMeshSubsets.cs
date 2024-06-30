@@ -1,4 +1,6 @@
-﻿namespace CgfConverter.CryEngineCore;
+﻿using CgfConverter.Models.Structs;
+
+namespace CgfConverter.CryEngineCore;
 
 public abstract class ChunkMeshSubsets : Chunk // cccc0017:  The different parts of a mesh.  Needed for obj exporting
 {

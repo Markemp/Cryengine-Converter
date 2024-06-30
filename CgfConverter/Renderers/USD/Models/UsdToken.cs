@@ -1,14 +1,18 @@
 ﻿using CgfConverter.Renderers.USD.Attributes;
 using Extensions;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 using System.Text;
 
 namespace CgfConverter.Renderers.USD.Models;
 
-public class UsdToken : UsdAttribute
+public class UsdToken<T> : UsdAttribute
 {
-    public string Value { get; set; }
+    public T Value { get; set; }
 
-    public UsdToken(string name, string value, bool isUniform = false) : base(name, isUniform)
+    public UsdToken(string name, T value, bool isUniform = false) : base(name, isUniform)
     {
         Value = value;
     }
@@ -21,8 +25,38 @@ public class UsdToken : UsdAttribute
         if (IsUniform)
             sb.Append("uniform ");
 
-        sb.Append($"token {Name} = \"{Value}\"");
+        string typeName = Value is IEnumerable && !(Value is string) ? "token[]" : "token";
+        sb.Append($"{typeName} {Name} = {FormatValue(Value)}");
 
         return sb.ToString();
     }
+
+    private string FormatValue(T value)
+    {
+        switch (value)
+        {
+            case string stringValue:
+                return FormatStringValue(stringValue);
+            case IEnumerable<string> stringList:
+                return $"[{string.Join(", ", stringList.Select(FormatStringValue))}]";
+            case IEnumerable<Vector3> vector3List:
+                return $"[{string.Join(", ", vector3List.Select(v => $"({v.X}, {v.Y}, {v.Z})"))}]";
+            case IEnumerable<Matrix4x4> matrixList:
+                return $"[{string.Join(", ", matrixList.Select(x => new UsdMatrix4d("", x)))}]";
+            case IEnumerable<T> genericList:
+                return $"[{string.Join(", ", genericList.Select(v => v.ToString()))}]";
+            default:
+                return value.ToString();
+        }
+    }
+
+    private string FormatStringValue(string value)
+    {
+        if (value.StartsWith("<") && value.EndsWith(">"))
+            return value;  // Return as is for paths with < >
+
+        return $"\"{value}\"";  // Use quotes for regular strings
+    }
+
+
 }

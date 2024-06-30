@@ -20,7 +20,7 @@ public class UsdTests
         {
             Header = new UsdHeader()
         };
-        usd.Prims.Add(new UsdXform("root"));
+        usd.Prims.Add(new UsdXform("root", "/root"));
 
     }
 }

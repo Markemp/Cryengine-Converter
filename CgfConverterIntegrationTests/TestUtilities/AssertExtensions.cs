@@ -1,4 +1,4 @@
-﻿using CgfConverter.Structs;
+﻿using CgfConverter.Models.Structs;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Numerics;
 

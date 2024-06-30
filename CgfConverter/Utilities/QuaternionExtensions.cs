@@ -1,4 +1,4 @@
-﻿using CgfConverter.Structs;
+﻿using CgfConverter.Models.Structs;
 using System;
 using System.Collections.Generic;
 using System.Numerics;

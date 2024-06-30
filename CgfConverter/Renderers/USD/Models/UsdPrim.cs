@@ -11,7 +11,9 @@ public abstract class UsdPrim
     public string Name { get; set; }
 
     public Dictionary<string, object>? Properties { get; set; }
+
     public List<UsdAttribute> Attributes { get; set; } = [];
+
     public List<UsdPrim> Children { get; set; } = [];
 
     protected UsdPrim(string name)
@@ -34,10 +36,8 @@ public abstract class UsdPrim
 
     protected string SerializeProperties()
     {
-        if (Properties.Count == 0)
-        {
+        if (Properties is null || Properties.Count == 0)
             return string.Empty;
-        }
 
         var sb = new StringBuilder();
         sb.Append("(");

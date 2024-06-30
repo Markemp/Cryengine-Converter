@@ -6,9 +6,13 @@ namespace CgfConverter.Renderers.USD.Models;
 [UsdElement("Xform")]
 public class UsdXform : UsdPrim
 {
-    public UsdXform(string name, bool isUniform = false)
+    /// <summary>Full path to the prim.  /root/_materials/primName</summary>
+    public string Path { get; set; }
+
+    public UsdXform(string name, string parentPath, bool isUniform = false)
         : base(name)
     {
+        Path = $"{parentPath}/{name}";
     }
 
     public override string Serialize(int indentLevel)

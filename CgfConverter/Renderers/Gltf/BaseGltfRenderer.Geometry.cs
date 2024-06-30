@@ -8,6 +8,7 @@ using System.Linq;
 using System.Numerics;
 using CgfConverter.Renderers.MaterialTextures;
 using CgfConverter.Models;
+using CgfConverter.Models.Structs;
 
 namespace CgfConverter.Renderers.Gltf;
 

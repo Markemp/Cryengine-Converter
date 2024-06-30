@@ -762,10 +762,6 @@ public class ColladaModelRenderer : IRenderer
                         // in mwo models it can point to mechDefault.  First check to see if the material key for the nodechunk's mtlname chunk exists.
                         // If it does, use that material.  If not, assume just a single materialfile and use that.
 
-                        //var mtlNameChunk = nodeChunk.MaterialID == 0
-                        //    ? 
-                        //    :
-                        //    ;
                         var mtlNameChunk = (ChunkMtlName)_cryData.Models.Last().ChunkMap[nodeChunk.MaterialID];
                         var mtlFileName = mtlNameChunk.Name;
                         var key = Path.GetFileNameWithoutExtension(mtlFileName);

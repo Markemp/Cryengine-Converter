@@ -8,11 +8,10 @@ namespace CgfConverter.Renderers.USD.Models;
 [UsdElement("Shader")]
 public class UsdShader : UsdPrim
 {
-    public string InfoId { get; set; }
     public Dictionary<string, object> Inputs { get; set; } = new Dictionary<string, object>();
     public Dictionary<string, object> Outputs { get; set; } = new Dictionary<string, object>();
 
-    protected UsdShader(string name) : base(name)
+    public UsdShader(string name) : base(name)
     {
     }
 

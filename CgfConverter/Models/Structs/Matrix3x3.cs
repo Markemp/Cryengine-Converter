@@ -2,7 +2,7 @@
 using System;
 using System.Numerics;
 
-namespace CgfConverter.Structs;
+namespace CgfConverter.Models.Structs;
 
 /// <summary>
 /// 3x3 Rotation matrices in Cryengine files.  Inspiration/code based from
@@ -26,8 +26,7 @@ public struct Matrix3x3 : IEquatable<Matrix3x3>
             0f, 0f, 1f
         );
 
-    public static Matrix3x3 Identity
-    {
+    public static Matrix3x3 Identity {
         get { return _identity; }
     }
 
@@ -82,15 +81,15 @@ public struct Matrix3x3 : IEquatable<Matrix3x3>
     {
         Matrix3x3 m;
 
-        m.M11 = (value1.M11 * value2.M11) + (value1.M12 * value2.M21) + (value1.M13 * value2.M31);
-        m.M12 = (value1.M11 * value2.M12) + (value1.M12 * value2.M22) + (value1.M13 * value2.M32);
-        m.M13 = (value1.M11 * value2.M13) + (value1.M12 * value2.M23) + (value1.M13 * value2.M33);
-        m.M21 = (value1.M21 * value2.M11) + (value1.M22 * value2.M21) + (value1.M23 * value2.M31);
-        m.M22 = (value1.M21 * value2.M12) + (value1.M22 * value2.M22) + (value1.M23 * value2.M32);
-        m.M23 = (value1.M21 * value2.M13) + (value1.M22 * value2.M23) + (value1.M23 * value2.M33);
-        m.M31 = (value1.M31 * value2.M11) + (value1.M32 * value2.M21) + (value1.M33 * value2.M31);
-        m.M32 = (value1.M31 * value2.M12) + (value1.M32 * value2.M22) + (value1.M33 * value2.M32);
-        m.M33 = (value1.M31 * value2.M13) + (value1.M32 * value2.M23) + (value1.M33 * value2.M33);
+        m.M11 = value1.M11 * value2.M11 + value1.M12 * value2.M21 + value1.M13 * value2.M31;
+        m.M12 = value1.M11 * value2.M12 + value1.M12 * value2.M22 + value1.M13 * value2.M32;
+        m.M13 = value1.M11 * value2.M13 + value1.M12 * value2.M23 + value1.M13 * value2.M33;
+        m.M21 = value1.M21 * value2.M11 + value1.M22 * value2.M21 + value1.M23 * value2.M31;
+        m.M22 = value1.M21 * value2.M12 + value1.M22 * value2.M22 + value1.M23 * value2.M32;
+        m.M23 = value1.M21 * value2.M13 + value1.M22 * value2.M23 + value1.M23 * value2.M33;
+        m.M31 = value1.M31 * value2.M11 + value1.M32 * value2.M21 + value1.M33 * value2.M31;
+        m.M32 = value1.M31 * value2.M12 + value1.M32 * value2.M22 + value1.M33 * value2.M32;
+        m.M33 = value1.M31 * value2.M13 + value1.M32 * value2.M23 + value1.M33 * value2.M33;
 
         return m;
     }
@@ -100,9 +99,9 @@ public struct Matrix3x3 : IEquatable<Matrix3x3>
         // Multiply the 3x3 matrix by a Vector 3 to get the rotation
         return new Vector3
         {
-            X = ((vector.X * matrix.M11) + (vector.Y * matrix.M21) + (vector.Z * matrix.M31)),
-            Y = ((vector.X * matrix.M12) + (vector.Y * matrix.M22) + (vector.Z * matrix.M32)),
-            Z = ((vector.X * matrix.M13) + (vector.Y * matrix.M23) + (vector.Z * matrix.M33))
+            X = vector.X * matrix.M11 + vector.Y * matrix.M21 + vector.Z * matrix.M31,
+            Y = vector.X * matrix.M12 + vector.Y * matrix.M22 + vector.Z * matrix.M32,
+            Z = vector.X * matrix.M13 + vector.Y * matrix.M23 + vector.Z * matrix.M33
         };
     }
 
@@ -129,9 +128,9 @@ public struct Matrix3x3 : IEquatable<Matrix3x3>
     /// <returns>True if the matrices are equal; False otherwise.</returns>
     public bool Equals(Matrix3x3 other)
     {
-        return (M11 == other.M11 && M22 == other.M22 && M33 == other.M33 && // Check diagonal element first for early out.
+        return M11 == other.M11 && M22 == other.M22 && M33 == other.M33 && // Check diagonal element first for early out.
                 M12 == other.M12 && M13 == other.M13 &&
                 M21 == other.M21 && M23 == other.M23 &&
-                M31 == other.M31 && M32 == other.M32);
+                M31 == other.M31 && M32 == other.M32;
     }
 }

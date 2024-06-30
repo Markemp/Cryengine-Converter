@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using CgfConverter.Models.Structs;
 
 namespace CgfConverter.Models;
 

@@ -1,4 +1,4 @@
-﻿using CgfConverter.Structs;
+﻿using CgfConverter.Models.Structs;
 using CgfConverterIntegrationTests.Extensions;
 using CgfConverterTests.TestUtilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

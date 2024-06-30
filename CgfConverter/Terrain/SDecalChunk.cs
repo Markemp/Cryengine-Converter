@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Numerics;
-using CgfConverter.Structs;
+using CgfConverter.Models.Structs;
 using Extensions;
 
 namespace CgfConverter.Terrain;

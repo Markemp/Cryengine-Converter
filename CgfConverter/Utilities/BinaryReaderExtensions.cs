@@ -1,5 +1,4 @@
-﻿using CgfConverter;
-using CgfConverter.Structs;
+﻿using CgfConverter.Models.Structs;
 using CgfConverter.Utililities;
 using System;
 using System.IO;

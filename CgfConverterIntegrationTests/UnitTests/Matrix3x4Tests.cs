@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using CgfConverter.Structs;
 using System.Numerics;
 using CgfConverterIntegrationTests.Extensions;
+using CgfConverter.Models.Structs;
 
 namespace CgfConverterTests.UnitTests;
 

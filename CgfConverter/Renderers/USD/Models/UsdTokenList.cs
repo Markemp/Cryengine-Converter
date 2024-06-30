@@ -6,12 +6,11 @@ using System.Text;
 
 namespace CgfConverter.Renderers.USD.Models;
 
-public class UsdXformOpOrder : UsdAttribute
+public class UsdTokenList : UsdAttribute
 {
-    public List<string> Values { get; set; } = new List<string>();
+    public List<string> Values { get; set; }
 
-    public UsdXformOpOrder(string name, List<string> values, bool isUniform = false)
-        : base(name, isUniform)
+    public UsdTokenList(string name, List<string> values) : base(name)
     {
         Values = values;
     }
@@ -21,10 +20,9 @@ public class UsdXformOpOrder : UsdAttribute
         var sb = new StringBuilder();
         sb.AppendIndent(indentLevel);
 
-        if (IsUniform)
-            sb.Append("uniform ");
-
-        sb.Append($"token[] {Name} = [{string.Join(", ", Values.Select(v => $"\"{v}\""))}]");
+        sb.Append($"token[] {Name} = [");
+        sb.AppendJoin(", ", Values.Select(v => $"\"{v}\""));
+        sb.Append(']');
 
         return sb.ToString();
     }

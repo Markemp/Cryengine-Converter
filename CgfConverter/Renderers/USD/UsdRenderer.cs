@@ -2,11 +2,9 @@
 using CgfConverter.Models.Materials;
 using CgfConverter.Renderers.USD.Attributes;
 using CgfConverter.Renderers.USD.Models;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Numerics;
 using static CgfConverter.Utilities;
 
 namespace CgfConverter.Renderers.USD;
@@ -56,7 +54,7 @@ public class UsdRenderer : IRenderer
 
         // Create the usd doc
         var usdDoc = new UsdDoc { Header = new UsdHeader() };
-        usdDoc.Prims.Add(new UsdXform("root"));
+        usdDoc.Prims.Add(new UsdXform("root", "/"));
         var rootPrim = usdDoc.Prims[0];
 
         // Create the node hierarchy as Xforms
@@ -74,48 +72,54 @@ public class UsdRenderer : IRenderer
 
         foreach (var matKey in _cryData.Materials.Keys)
         {
-            var usdMat = new UsdMaterial(matKey);
-            usdMat.Attributes.Add(new UsdToken("outputs:surface.connect", "<path to princ bsdf>"));
-
-            // Build the Shader prims
             foreach (var submat in _cryData.Materials[matKey].SubMaterials)
             {
-                // Add the PrincipleBSDF shader
+                var matName = GetMaterialName(matKey, submat.Name);
+                var usdMat = new UsdMaterial(matName);
+                usdMat.Attributes.Add(new UsdToken<string>(
+                    "outputs:surface.connect",
+                    $"</root/_materials/{matName}/Principled_BSDF.outputs:surface>"));
                 usdMat.Children.AddRange(CreateShaders(submat));
+                matList.Add(usdMat);
             }
-
-            scope.Children.Add(usdMat);
         }
+        scope.Children.AddRange(matList);
         return scope;
     }
 
-    private IEnumerable<UsdPrim> CreateShaders(Material submat)
+    private IEnumerable<UsdShader> CreateShaders(Material submat)
     {
-        throw new NotImplementedException();
+        List<UsdShader> shaders = new();
+        // Add the PrincipleBSDF shader
+        var principleBSDF = new UsdShader("Principled_BSDF");
+        principleBSDF.Attributes.Add(new UsdToken<string>("info:id", "UsdPreviewSurface", true));
+        principleBSDF.Attributes.Add(new UsdAttribute<float>("inputs:clearcoat", 0));
+        principleBSDF.Attributes.Add(new UsdAttribute<float>("inputs:clearcoatRoughness", 0.03f));
+        shaders.Add(principleBSDF);
+
+        return shaders;
     }
 
     private List<UsdPrim> CreateNodeHierarchy()
     {
-        // Get all the root nodes
         List<ChunkNode> rootNodes = _cryData.Models[0].NodeMap.Values.Where(a => a.ParentNodeID == ~0).ToList();
         List<UsdPrim> nodes = [];
 
         foreach (ChunkNode root in rootNodes)
         {
             Log(LogLevelEnum.Debug, "Root node: {0}", root.Name);
-            nodes.Add(CreateNode(root));
+            nodes.Add(CreateNode(root, $"/root/{root.Name}"));
         }
 
         return nodes;
     }
 
-    private UsdXform CreateNode(ChunkNode node)
+    private UsdXform CreateNode(ChunkNode node, string parentPath)
     {
-        var xform = new UsdXform(node.Name);
+        var xform = new UsdXform(node.Name, parentPath);
 
         xform.Attributes.Add(new UsdMatrix4d("xformOp:transform", node.Transform));
-        xform.Attributes.Add(new UsdXformOpOrder("xformOpOrder", ["xformOp:transform"], true));
-
+        xform.Attributes.Add(new UsdToken<List<string>>("xformOpOrder", ["xformOp:transform"], true));
         // If it's a geometry node, add a UsdMesh
         var modelIndex = node._model.IsIvoFile ? 1 : 0;
         ChunkNode geometryNode = _cryData.Models.Last().NodeMap.Values.Where(a => a.Name == node.Name).FirstOrDefault();
@@ -130,17 +134,17 @@ public class UsdRenderer : IRenderer
         {
             foreach (var childNode in children)
             {
-                xform.Children.Add(CreateNode(childNode));
+                xform.Children.Add(CreateNode(childNode, xform.Path));
             }
         }
 
         return xform;
     }
 
-    private UsdPrim? CreateMeshPrim(ChunkNode nodeChunk)
+    private UsdPrim CreateMeshPrim(ChunkNode nodeChunk)
     {
         // Find the object node that corresponds with this node chunk.  If it's
-        // a mesh chunk, create a UsdMesh prim.
+        // a mesh chunk, create a collection of UsdMesh prim for each submesh.
         // geometryNodeChunk may be the same as nodeChunk for single file models.  Otherwise
         // it's the matching node to nodeChunk in the second model.
 
@@ -154,7 +158,26 @@ public class UsdRenderer : IRenderer
         var objectNodeChunkType = _cryData.Models.Last().ChunkMap[nodeChunk.ObjectNodeID].GetType();
         if (!objectNodeChunkType.Name.Contains("ChunkMesh"))
             return null;
+
+        List<UsdMesh> usdMeshes = new();
         var meshChunk = (ChunkMesh)_cryData.Models.Last().ChunkMap[geometryNodeChunk.ObjectNodeID];
+        var meshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[meshChunk.MeshSubsetsData];
+        var mtlNameChunk = (ChunkMtlName)_cryData.Models.Last().ChunkMap[nodeChunk.MaterialID];
+        var mtlFileName = mtlNameChunk.Name;
+        var key = Path.GetFileNameWithoutExtension(mtlFileName);
+        var numberOfSubmeshes = meshSubsets.NumMeshSubset;
+
+
+        // Get materials for this mesh chunk
+        Material[] submats;
+        if (_cryData.Materials.ContainsKey(key))
+            submats = _cryData.Materials[key].SubMaterials;
+        else
+        {
+            submats = _cryData.Materials.FirstOrDefault().Value.SubMaterials;
+            mtlFileName = Path.GetFileNameWithoutExtension(_cryData.MaterialFiles.FirstOrDefault());
+        }
+        //var matName = GetMaterialName(mtlFileName, submats[meshSubsets.MeshSubsets[j].MatID].Name);
 
         if (meshChunk.MeshSubsetsData == 0
             || meshChunk.NumVertices == 0
@@ -178,7 +201,36 @@ public class UsdRenderer : IRenderer
         meshPrim.Attributes.Add(new UsdPointsList("points", [.. vertexChunk.Vertices]));
         meshPrim.Attributes.Add(new UsdColorsList($"{nodeChunk.Name}_color", [.. colorChunk.Colors]));
         meshPrim.Attributes.Add(new UsdTexCoordsList($"{nodeChunk.Name}_UV", [.. uvChunk.UVs]));
-        meshPrim.Attributes.Add(new UsdToken("subdivisionScheme", "none", true));
+        meshPrim.Attributes.Add(new UsdToken<string>("subdivisionScheme", "none", true));
+
+        // Add GeomSubset for each submesh
+        for (int j = 0; j < numberOfSubmeshes; j++)
+        {
+            var submesh = meshSubsets.MeshSubsets[j];
+            var submeshName = GetMaterialName(nodeName, submats[submesh.MatID].Name);
+            var submeshPrim = new UsdGeomSubset(submeshName);
+            submeshPrim.Attributes.Add(new UsdUIntList("indices", indexChunk.Indices.Skip(submesh.FirstIndex).Take(submesh.NumIndices).ToList()));
+            //submeshPrim.Attributes.Add(new UsdToken<string>("familyType", "face", true));
+            submeshPrim.Attributes.Add(new UsdToken<string>("elementType", "face", true));
+            submeshPrim.Attributes.Add(new UsdToken<string>("familyName", "materialBind", true));
+            meshPrim.Children.Add(submeshPrim);
+
+            // Assign material to submesh
+            var submatName = _cryData.Materials[key].SubMaterials[submesh.MatID].Name;
+            submeshPrim.Attributes.Add(
+                new UsdRelativePath(
+                    "material:binding",
+                    $"/root/_materials/{GetMaterialName(key, submatName)}"));
+        }
+
         return meshPrim;
+    }
+
+    private string GetMaterialName(string matKey, string submatName)
+    {
+        // material name is <mtlChunkName>_mtl_<submatName>
+        var matfileName = Path.GetFileNameWithoutExtension(submatName);
+
+        return $"{matKey}_mtl_{matfileName}".Replace(' ', '_');
     }
 }

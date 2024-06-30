@@ -2,7 +2,7 @@
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
-using CgfConverter.Structs;
+using CgfConverter.Models.Structs;
 using Extensions;
 
 namespace CgfConverter.Terrain;

@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using CgfConverter.Models.Structs;
 
 namespace CgfConverter
 {

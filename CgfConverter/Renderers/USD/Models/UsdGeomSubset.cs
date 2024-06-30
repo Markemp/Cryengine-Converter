@@ -2,10 +2,10 @@
 
 namespace CgfConverter.Renderers.USD.Models;
 
-[UsdElement("Material")]
-public class UsdMaterial : UsdPrim
+[UsdElement("GeomSubset")]
+public class UsdGeomSubset : UsdPrim
 {
-    public UsdMaterial(string name) : base(name) { }
+    public UsdGeomSubset(string name) : base(name) { }
 
     public override string Serialize(int indentLevel)
     {

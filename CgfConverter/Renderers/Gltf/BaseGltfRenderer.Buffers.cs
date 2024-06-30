@@ -6,6 +6,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using BCnEncoder.Shared;
+using CgfConverter.Models.Structs;
 using CgfConverter.Renderers.Gltf.Models;
 using CgfConverter.Renderers.MaterialTextures;
 using Newtonsoft.Json;
