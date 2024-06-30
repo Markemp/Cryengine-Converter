@@ -852,6 +852,25 @@ public class MWOIntegrationTests
     }
 
     [TestMethod]
+    public void Adder_Cockpit_UsdFormat()
+    {
+        var args = new string[]
+        {
+            $@"D:\depot\MWO\Objects\mechs\Adder\cockpit_standard\adder_a_cockpit_standard.cga",
+            "-objectdir", objectDir
+        };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        UsdRenderer usdRenderer = new(testUtils.argsHandler, cryData);
+        var usdDoc = usdRenderer.GenerateUsdObject();
+        usdRenderer.WriteUsdToFile(usdDoc);
+        Assert.IsNotNull(usdDoc);
+    }
+
+    [TestMethod]
     public void MechFactory_CratesA_Gltf()
     {
         var args = new string[]
