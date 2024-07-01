@@ -97,7 +97,27 @@ public class UsdRenderer : IRenderer
         principleBSDF.Attributes.Add(new UsdAttribute<float>("inputs:clearcoatRoughness", 0.03f));
         shaders.Add(principleBSDF);
 
+        foreach (var texture in submat.Textures)
+        {
+            shaders.Add(CreateUsdImageTextureShader(texture, "/root/_materials", submat.Name));
+        }
+
         return shaders;
+    }
+
+    private UsdShader CreateUsdImageTextureShader(Texture texture, string matPath, string sourceShaderName)
+    {
+        var usdImageTexture = new UsdShader(texture.File);
+
+        usdImageTexture.Attributes.Add(new UsdToken<string>("info:id", "UsdUVTexture", true));
+        usdImageTexture.Attributes.Add(new UsdToken<string>("inputs:wrapS", "repeat"));
+        usdImageTexture.Attributes.Add(new UsdToken<string>("inputs:wrapT", "repeat"));
+        usdImageTexture.Attributes.Add(new UsdAsset(Path.GetFileNameWithoutExtension(texture.File), texture.File));
+        usdImageTexture.Attributes.Add(new UsdFloat2("inputs:st.connect", matPath, sourceShaderName));
+        var bumpmap = texture.Map == Texture.MapTypeEnum.Normals ? "raw" : "sRGB";
+        usdImageTexture.Attributes.Add(new UsdToken<string>("inputs:sourceColorSpace", bumpmap));
+
+        return usdImageTexture;
     }
 
     private List<UsdPrim> CreateNodeHierarchy()
