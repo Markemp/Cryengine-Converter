@@ -6,13 +6,11 @@ namespace CgfConverter.Renderers.USD.Models;
 
 public class UsdFloat2 : UsdAttribute
 {
-    public string Value { get; set; }
-    public string? SourceShaderName { get; set; }
+    public string? Value { get; set; }
 
-    public UsdFloat2(string name, string matPath, string? sourceShaderName = null) : base(name)
+    public UsdFloat2(string name, string? value) : base(name)
     {
-        Value = matPath;
-        SourceShaderName = sourceShaderName;
+        Value = value;
     }
 
     public override string Serialize(int indentLevel)
@@ -22,9 +20,15 @@ public class UsdFloat2 : UsdAttribute
 
         if (IsUniform)
             sb.Append("uniform ");
-        var stringValue = FormatStringValue($"<{Value}>");
 
-        sb.Append($"float2 {Name} = {stringValue}");
+        if (Value is null)
+            sb.Append($"float2 {Name}");
+        else
+        {
+            var stringValue = FormatStringValue($"<{Value}>");
+            sb.Append($"float2 {Name} = {stringValue}");
+        }
+            
 
         return sb.ToString();
     }

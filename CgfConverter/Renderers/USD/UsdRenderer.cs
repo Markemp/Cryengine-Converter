@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using static CgfConverter.Utilities;
+using static Extensions.FileHandlingExtensions;
 
 namespace CgfConverter.Renderers.USD;
 public class UsdRenderer : IRenderer
@@ -99,31 +100,32 @@ public class UsdRenderer : IRenderer
         shaders.Add(principleBSDF);
 
         // Add UV Map
-        var uvMap = new UsdShader("UV_Map");
-        uvMap.Attributes.Add(new UsdToken<string>("info:id", "UsdPrimvarReader_float2", true));
-        uvMap.Attributes.Add(new UsdToken<string>("inputs:varname", matName));
-        uvMap.Attributes.Add(new UsdToken<string?>("outputs:result", null, false));
-        shaders.Add(uvMap);
+        //var uvMap = new UsdShader("UV_Map");
+        //uvMap.Attributes.Add(new UsdToken<string>("info:id", "UsdPrimvarReader_float2", true));
+        //uvMap.Attributes.Add(new UsdToken<string>("inputs:varname", $"{nodeChunkName}_UV"));
+        //uvMap.Attributes.Add(new UsdFloat2("outputs:result", null));
+        //shaders.Add(uvMap);
 
         foreach (var texture in submat.Textures)
         {
             var textureName = Path.ChangeExtension(texture.File, ".dds");
-            shaders.Add(CreateUsdImageTextureShader(texture, matName, textureName));
+            shaders.Add(CreateUsdImageTextureShader(texture, matName));
         }
 
         return shaders;
     }
 
-    private UsdShader CreateUsdImageTextureShader(Texture texture, string matName, string sourceShaderName)
+    private UsdShader CreateUsdImageTextureShader(Texture texture, string matName)
     {
         var usdImageTexture = new UsdShader(Path.GetFileNameWithoutExtension(texture.File));
 
         usdImageTexture.Attributes.Add(new UsdToken<string>("info:id", "UsdUVTexture", true));
         usdImageTexture.Attributes.Add(new UsdToken<string>("inputs:wrapS", "repeat"));
         usdImageTexture.Attributes.Add(new UsdToken<string>("inputs:wrapT", "repeat"));
-        var texturePath = Path.Combine(_args.DataDirs.First(), texture.File);
-        usdImageTexture.Attributes.Add(new UsdAsset(Path.GetFileNameWithoutExtension(texture.File), texture.File));
-        usdImageTexture.Attributes.Add(new UsdFloat2("inputs:st.connect", $"/root/_material/{matName}/UV_Map.outputs:result")); // UVMap input
+        var texturePath = ResolveTextureFile(texture.File, _args.PackFileSystem, _args.DataDirs);
+        usdImageTexture.Attributes.Add(new UsdAsset(
+            Path.GetFileNameWithoutExtension(texture.File),
+            texturePath));
         var bumpmap = texture.Map == Texture.MapTypeEnum.Normals ? "raw" : "sRGB";
         usdImageTexture.Attributes.Add(new UsdToken<string>("inputs:sourceColorSpace", bumpmap));
 
@@ -196,7 +198,6 @@ public class UsdRenderer : IRenderer
         var mtlFileName = mtlNameChunk.Name;
         var key = Path.GetFileNameWithoutExtension(mtlFileName);
         var numberOfSubmeshes = meshSubsets.NumMeshSubset;
-
 
         // Get materials for this mesh chunk
         Material[] submats;
