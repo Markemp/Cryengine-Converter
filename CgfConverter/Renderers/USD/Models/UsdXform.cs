@@ -1,4 +1,5 @@
 ﻿using CgfConverter.Renderers.USD.Attributes;
+using System.Collections.Generic;
 using System.Text;
 
 namespace CgfConverter.Renderers.USD.Models;
@@ -9,8 +10,8 @@ public class UsdXform : UsdPrim
     /// <summary>Full path to the prim.  /root/_materials/primName</summary>
     public string Path { get; set; }
 
-    public UsdXform(string name, string parentPath, bool isUniform = false)
-        : base(name)
+    public UsdXform(string name, string parentPath, List<UsdProperty>? properties = null, bool isUniform = false)
+        : base(name, properties)
     {
         Path = $"{parentPath}/{name}";
     }

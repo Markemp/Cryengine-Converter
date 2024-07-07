@@ -70,7 +70,7 @@ public class UsdRenderer : IRenderer
         var scope = new UsdScope("_materials");
         var matList = new List<UsdMaterial>();
 
-        foreach (var matKey in _cryData.Materials.Keys)
+        foreach (var matKey in _cryData.Materials.Keys) // Each mtl file is a Key
         {
             foreach (var submat in _cryData.Materials[matKey].SubMaterials)
             {
@@ -79,7 +79,7 @@ public class UsdRenderer : IRenderer
                 usdMat.Attributes.Add(new UsdToken<string>(
                     "outputs:surface.connect",
                     $"</root/_materials/{matName}/Principled_BSDF.outputs:surface>"));
-                usdMat.Children.AddRange(CreateShaders(submat));
+                usdMat.Children.AddRange(CreateShaders(submat, matKey, matName));
                 matList.Add(usdMat);
             }
         }
@@ -87,33 +87,43 @@ public class UsdRenderer : IRenderer
         return scope;
     }
 
-    private IEnumerable<UsdShader> CreateShaders(Material submat)
+    private IEnumerable<UsdShader> CreateShaders(Material submat, string matKey, string matName)
     {
         List<UsdShader> shaders = new();
         // Add the PrincipleBSDF shader
-        var principleBSDF = new UsdShader("Principled_BSDF");
+        var principleBSDF = new UsdShader($"Principled_BSDF");
         principleBSDF.Attributes.Add(new UsdToken<string>("info:id", "UsdPreviewSurface", true));
         principleBSDF.Attributes.Add(new UsdAttribute<float>("inputs:clearcoat", 0));
         principleBSDF.Attributes.Add(new UsdAttribute<float>("inputs:clearcoatRoughness", 0.03f));
+        principleBSDF.Attributes.Add(new UsdToken<string?>("outputs:surface", null, false));
         shaders.Add(principleBSDF);
+
+        // Add UV Map
+        var uvMap = new UsdShader("UV_Map");
+        uvMap.Attributes.Add(new UsdToken<string>("info:id", "UsdPrimvarReader_float2", true));
+        uvMap.Attributes.Add(new UsdToken<string>("inputs:varname", matName));
+        uvMap.Attributes.Add(new UsdToken<string?>("outputs:result", null, false));
+        shaders.Add(uvMap);
 
         foreach (var texture in submat.Textures)
         {
-            shaders.Add(CreateUsdImageTextureShader(texture, "/root/_materials", submat.Name));
+            var textureName = Path.ChangeExtension(texture.File, ".dds");
+            shaders.Add(CreateUsdImageTextureShader(texture, matName, textureName));
         }
 
         return shaders;
     }
 
-    private UsdShader CreateUsdImageTextureShader(Texture texture, string matPath, string sourceShaderName)
+    private UsdShader CreateUsdImageTextureShader(Texture texture, string matName, string sourceShaderName)
     {
-        var usdImageTexture = new UsdShader(texture.File);
+        var usdImageTexture = new UsdShader(Path.GetFileNameWithoutExtension(texture.File));
 
         usdImageTexture.Attributes.Add(new UsdToken<string>("info:id", "UsdUVTexture", true));
         usdImageTexture.Attributes.Add(new UsdToken<string>("inputs:wrapS", "repeat"));
         usdImageTexture.Attributes.Add(new UsdToken<string>("inputs:wrapT", "repeat"));
+        var texturePath = Path.Combine(_args.DataDirs.First(), texture.File);
         usdImageTexture.Attributes.Add(new UsdAsset(Path.GetFileNameWithoutExtension(texture.File), texture.File));
-        usdImageTexture.Attributes.Add(new UsdFloat2("inputs:st.connect", matPath, sourceShaderName));
+        usdImageTexture.Attributes.Add(new UsdFloat2("inputs:st.connect", $"/root/_material/{matName}/UV_Map.outputs:result")); // UVMap input
         var bumpmap = texture.Map == Texture.MapTypeEnum.Normals ? "raw" : "sRGB";
         usdImageTexture.Attributes.Add(new UsdToken<string>("inputs:sourceColorSpace", bumpmap));
 
@@ -161,7 +171,7 @@ public class UsdRenderer : IRenderer
         return xform;
     }
 
-    private UsdPrim CreateMeshPrim(ChunkNode nodeChunk)
+    private UsdPrim? CreateMeshPrim(ChunkNode nodeChunk)
     {
         // Find the object node that corresponds with this node chunk.  If it's
         // a mesh chunk, create a collection of UsdMesh prim for each submesh.
@@ -222,6 +232,8 @@ public class UsdRenderer : IRenderer
         meshPrim.Attributes.Add(new UsdColorsList($"{nodeChunk.Name}_color", [.. colorChunk.Colors]));
         meshPrim.Attributes.Add(new UsdTexCoordsList($"{nodeChunk.Name}_UV", [.. uvChunk.UVs]));
         meshPrim.Attributes.Add(new UsdToken<string>("subdivisionScheme", "none", true));
+        Dictionary<string, object> matBindingApi = new() { ["apiSchemas"] = "[\"MaterialBindingAPI\"]" };
+        meshPrim.Properties = [new UsdProperty(matBindingApi, true)];
 
         // Add GeomSubset for each submesh
         for (int j = 0; j < numberOfSubmeshes; j++)
@@ -237,6 +249,7 @@ public class UsdRenderer : IRenderer
 
             // Assign material to submesh
             var submatName = _cryData.Materials[key].SubMaterials[submesh.MatID].Name;
+            submeshPrim.Properties = [new UsdProperty(matBindingApi, true)];
             submeshPrim.Attributes.Add(
                 new UsdRelativePath(
                     "material:binding",

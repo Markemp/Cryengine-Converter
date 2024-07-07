@@ -26,7 +26,10 @@ public class UsdToken<T> : UsdAttribute
             sb.Append("uniform ");
 
         string typeName = Value is IEnumerable && !(Value is string) ? "token[]" : "token";
-        sb.Append($"{typeName} {Name} = {FormatValue(Value)}");
+        if (Value is null)
+            sb.Append($"{typeName} {Name}");
+        else
+            sb.Append($"{typeName} {Name} = {FormatValue(Value)}");
 
         return sb.ToString();
     }
@@ -49,14 +52,4 @@ public class UsdToken<T> : UsdAttribute
                 return value.ToString();
         }
     }
-
-    private string FormatStringValue(string value)
-    {
-        if (value.StartsWith("<") && value.EndsWith(">"))
-            return value;  // Return as is for paths with < >
-
-        return $"\"{value}\"";  // Use quotes for regular strings
-    }
-
-
 }

@@ -38,11 +38,34 @@ public class UsdSerializer
         var elementAttr = type.GetCustomAttribute<UsdElementAttribute>();
 
         if (elementAttr is not null)
-        {
+         {
             sb.AppendIndent(indentLevel);
-            sb.AppendLine($"def {elementAttr.ElementName} \"{prim.Name}\"");
-            sb.AppendIndent(indentLevel);
-            sb.AppendLine("{");
+            if (prim.Properties is null)
+            {
+                sb.AppendLine($"def {elementAttr.ElementName} \"{prim.Name}\"");
+                sb.AppendIndent(indentLevel);
+                sb.AppendLine("{");
+            }
+            else
+            {
+                sb.AppendLine($"def {elementAttr.ElementName} \"{prim.Name}\" (");
+                foreach (var property in prim.Properties)
+                {
+                    foreach (var key in property.Properties.Keys)
+                    {
+                        sb.AppendIndent(indentLevel + 1);
+                        if (property.IsPrepend)
+                            sb.AppendFormat("prepend {0} = {1}", key, property.Properties[key]);
+                        else
+                            sb.AppendFormat("{0} = {1}", key, property.Properties[key]);
+                    }
+                }
+                sb.AppendLine();
+                sb.AppendIndent(indentLevel);
+                sb.AppendLine(")");
+                sb.AppendIndent(indentLevel);
+                sb.AppendLine("{");
+            }
 
             foreach (var attribute in prim.Attributes)
             {

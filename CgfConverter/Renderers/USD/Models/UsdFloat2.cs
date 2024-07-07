@@ -7,9 +7,9 @@ namespace CgfConverter.Renderers.USD.Models;
 public class UsdFloat2 : UsdAttribute
 {
     public string Value { get; set; }
-    public string SourceShaderName { get; set; }
+    public string? SourceShaderName { get; set; }
 
-    public UsdFloat2(string name, string matPath, string sourceShaderName) : base(name)
+    public UsdFloat2(string name, string matPath, string? sourceShaderName = null) : base(name)
     {
         Value = matPath;
         SourceShaderName = sourceShaderName;
@@ -22,8 +22,9 @@ public class UsdFloat2 : UsdAttribute
 
         if (IsUniform)
             sb.Append("uniform ");
+        var stringValue = FormatStringValue($"<{Value}>");
 
-        sb.Append($"float2 {Name} = {Value}/{SourceShaderName}.outputs:result");
+        sb.Append($"float2 {Name} = {stringValue}");
 
         return sb.ToString();
     }

@@ -16,6 +16,14 @@ public abstract class UsdAttribute
     }
 
     public abstract string Serialize(int indentLevel);
+
+    protected string FormatStringValue(string value)
+    {
+        if (value.StartsWith("<") && value.EndsWith(">"))
+            return value;  // Return as is for paths with < >
+
+        return $"\"{value}\"";  // Use quotes for regular strings
+    }
 }
 
 public class UsdAttribute<T> : UsdAttribute

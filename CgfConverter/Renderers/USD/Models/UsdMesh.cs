@@ -1,4 +1,5 @@
 ﻿using CgfConverter.Renderers.USD.Attributes;
+using System.Collections.Generic;
 using System.Text;
 
 namespace CgfConverter.Renderers.USD.Models;
@@ -6,7 +7,7 @@ namespace CgfConverter.Renderers.USD.Models;
 [UsdElement("Mesh")]
 public class UsdMesh : UsdPrim
 {
-    public UsdMesh(string name) : base(name)
+    public UsdMesh(string name, List<UsdProperty>? properties = null) : base(name, properties)
     {
         Name = name;
     }
