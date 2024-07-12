@@ -6,9 +6,9 @@ namespace CgfConverter.Renderers.USD.Models;
 
 public class UsdColor3f : UsdAttribute
 {
-    public string Value { get; set; }
+    public string? Value { get; set; }
 
-    public UsdColor3f(string name, string value, bool isUniform = false) : base(name, isUniform)
+    public UsdColor3f(string name, string? value = null, bool isUniform = false) : base(name, isUniform)
     {
         Value = value;
     }
@@ -21,7 +21,13 @@ public class UsdColor3f : UsdAttribute
         if (IsUniform)
             sb.Append("uniform ");
 
-        sb.Append($"color3f {Name} = {Value}");
+        if (Value is null)
+            sb.Append($"color3f {Name}");
+        else
+        {
+            var stringValue = FormatStringValue($"<{Value}>");
+            sb.Append($"color3f {Name} = {stringValue}");
+        }
 
         return sb.ToString();
     }

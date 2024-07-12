@@ -834,7 +834,6 @@ public class MWOIntegrationTests
         {
             $@"D:\depot\MWO\Objects\purchasable\cockpit_standing\hulagirl\hulagirl__gold_a.cga",
             "-objectdir", objectDir
-            //"-mat", "hulagirl_gold_a.mtl"
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);

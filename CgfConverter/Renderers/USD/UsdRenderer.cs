@@ -76,7 +76,7 @@ public class UsdRenderer : IRenderer
             foreach (var submat in _cryData.Materials[matKey].SubMaterials)
             {
                 var matName = GetMaterialName(matKey, submat.Name);
-                var usdMat = new UsdMaterial(matName);
+                var usdMat = new UsdMaterial(CleanPathString(matName));
                 usdMat.Attributes.Add(new UsdToken<string>(
                     "outputs:surface.connect",
                     $"</root/_materials/{matName}/Principled_BSDF.outputs:surface>"));
@@ -101,6 +101,8 @@ public class UsdRenderer : IRenderer
 
         foreach (var texture in submat.Textures)
         {
+            if (texture.Map == Texture.MapTypeEnum.Env)
+                continue; // Don't add cubemaps as it causes blender to crash
             var textureName = Path.ChangeExtension(texture.File, ".dds");
             var imageTexture = CreateUsdImageTextureShader(texture, matName);
             shaders.Add(imageTexture);
@@ -110,8 +112,17 @@ public class UsdRenderer : IRenderer
                 imageTexture.Attributes.Add(new UsdFloat3f("outputs:rgb"));
                 principleBSDF.Attributes.Add(new UsdColor3f(
                     $"inputs:diffuseColor.connect",
-                    $"</root/_materials/{matName}/{imageTexture.Name}.outputs:rgb>"));
+                    CleanPathString($"/root/_materials/{matName}/{imageTexture.Name}.outputs:rgb")));
             }
+            else if (texture.Map == Texture.MapTypeEnum.Normals)
+            {
+                imageTexture.Attributes.Add(new UsdFloat3f("outputs:rgb"));
+            }
+            //else if (texture.Map == Texture.MapTypeEnum.Env)
+            //{
+            //    imageTexture.Attributes.Add(new UsdToken<string>("inputs:type", "cube"));
+            //    imageTexture.Attributes.Add(new UsdColor3f("outputs:rgb", null));
+            //}
         }
 
         return shaders;
@@ -119,7 +130,7 @@ public class UsdRenderer : IRenderer
 
     private UsdShader CreateUsdImageTextureShader(Texture texture, string matName)
     {
-        var usdImageTexture = new UsdShader(Path.GetFileNameWithoutExtension(texture.File));
+        var usdImageTexture = new UsdShader(CleanPathString(Path.GetFileNameWithoutExtension(texture.File)));
 
         usdImageTexture.Attributes.Add(new UsdToken<string>("info:id", "UsdUVTexture", true));
         usdImageTexture.Attributes.Add(new UsdToken<string>("inputs:wrapS", "repeat"));
@@ -127,7 +138,7 @@ public class UsdRenderer : IRenderer
         var texturePath = ResolveTextureFile(texture.File, _args.PackFileSystem, _args.DataDirs);
         usdImageTexture.Attributes.Add(new UsdAsset(
             Path.GetFileNameWithoutExtension(texture.File),
-            texturePath));
+            CleanPathString(texturePath)));
         var isBumpmap = texture.Map == Texture.MapTypeEnum.Normals ? "raw" : "sRGB";
         usdImageTexture.Attributes.Add(new UsdToken<string>("inputs:sourceColorSpace", isBumpmap));
 
@@ -150,7 +161,8 @@ public class UsdRenderer : IRenderer
 
     private UsdXform CreateNode(ChunkNode node, string parentPath)
     {
-        var xform = new UsdXform(node.Name, parentPath);
+        string cleanNodeName = CleanPathString(node.Name);
+        var xform = new UsdXform(cleanNodeName, parentPath);
 
         xform.Attributes.Add(new UsdMatrix4d("xformOp:transform", node.Transform));
         xform.Attributes.Add(new UsdToken<List<string>>("xformOpOrder", ["xformOp:transform"], true));
@@ -225,7 +237,7 @@ public class UsdRenderer : IRenderer
         var colorChunk = (ChunkDataStream)_cryData.Models.Last().ChunkMap[meshChunk.ColorsData];
         var tangentChunk = (ChunkDataStream)_cryData.Models.Last().ChunkMap[meshChunk.TangentsData];
 
-        UsdMesh meshPrim = new(nodeChunk.Name);
+        UsdMesh meshPrim = new(CleanPathString(nodeChunk.Name));
         meshPrim.Attributes.Add(new UsdBool("doubleSided", true, true));
         meshPrim.Attributes.Add(new UsdVector3dList("extent", [meshChunk.MinBound, meshChunk.MaxBound]));
         meshPrim.Attributes.Add(new UsdIntList("faceVertexCounts", Enumerable.Repeat(3, (int)indexChunk.NumElements/3).ToList()));
@@ -243,7 +255,7 @@ public class UsdRenderer : IRenderer
         {
             var submesh = meshSubsets.MeshSubsets[j];
             var submeshName = GetMaterialName(nodeName, submats[submesh.MatID].Name);
-            var submeshPrim = new UsdGeomSubset(submeshName);
+            var submeshPrim = new UsdGeomSubset(CleanPathString(submeshName));
             submeshPrim.Attributes.Add(new UsdUIntList("indices", indexChunk.Indices.Skip(submesh.FirstIndex).Take(submesh.NumIndices).ToList()));
             //submeshPrim.Attributes.Add(new UsdToken<string>("familyType", "face", true));
             submeshPrim.Attributes.Add(new UsdToken<string>("elementType", "face", true));
@@ -268,5 +280,15 @@ public class UsdRenderer : IRenderer
         var matfileName = Path.GetFileNameWithoutExtension(submatName);
 
         return $"{matKey}_mtl_{matfileName}".Replace(' ', '_');
+    }
+
+    /// <summary>If a prim name or value has an @, or starts with a number, it's invalid.
+    /// Replace @ with _, and if it starts with a digit, add an _</summary>
+    private string CleanPathString(string value)
+    {
+        value = value.Replace('@', '_');
+        if (char.IsDigit(value[0]))
+            value = "_" + value;
+        return value;
     }
 }
