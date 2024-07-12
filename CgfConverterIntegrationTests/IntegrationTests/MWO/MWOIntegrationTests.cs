@@ -833,12 +833,12 @@ public class MWOIntegrationTests
         var args = new string[]
         {
             $@"D:\depot\MWO\Objects\purchasable\cockpit_standing\hulagirl\hulagirl__gold_a.cga",
-            "-objectdir", objectDir,
-            "-mat", "hulagirl_a.mtl"
+            "-objectdir", objectDir
+            //"-mat", "hulagirl_gold_a.mtl"
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[4]);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         UsdRenderer usdRenderer = new(testUtils.argsHandler, cryData);

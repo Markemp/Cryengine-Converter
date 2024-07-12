@@ -99,17 +99,19 @@ public class UsdRenderer : IRenderer
         principleBSDF.Attributes.Add(new UsdToken<string?>("outputs:surface", null, false));
         shaders.Add(principleBSDF);
 
-        // Add UV Map
-        //var uvMap = new UsdShader("UV_Map");
-        //uvMap.Attributes.Add(new UsdToken<string>("info:id", "UsdPrimvarReader_float2", true));
-        //uvMap.Attributes.Add(new UsdToken<string>("inputs:varname", $"{nodeChunkName}_UV"));
-        //uvMap.Attributes.Add(new UsdFloat2("outputs:result", null));
-        //shaders.Add(uvMap);
-
         foreach (var texture in submat.Textures)
         {
             var textureName = Path.ChangeExtension(texture.File, ".dds");
-            shaders.Add(CreateUsdImageTextureShader(texture, matName));
+            var imageTexture = CreateUsdImageTextureShader(texture, matName);
+            shaders.Add(imageTexture);
+            // connect image texture to color input of PrincipledBSDF
+            if (texture.Map == Texture.MapTypeEnum.Diffuse)
+            {
+                imageTexture.Attributes.Add(new UsdFloat3f("outputs:rgb"));
+                principleBSDF.Attributes.Add(new UsdColor3f(
+                    $"inputs:diffuseColor.connect",
+                    $"</root/_materials/{matName}/{imageTexture.Name}.outputs:rgb>"));
+            }
         }
 
         return shaders;
@@ -126,8 +128,8 @@ public class UsdRenderer : IRenderer
         usdImageTexture.Attributes.Add(new UsdAsset(
             Path.GetFileNameWithoutExtension(texture.File),
             texturePath));
-        var bumpmap = texture.Map == Texture.MapTypeEnum.Normals ? "raw" : "sRGB";
-        usdImageTexture.Attributes.Add(new UsdToken<string>("inputs:sourceColorSpace", bumpmap));
+        var isBumpmap = texture.Map == Texture.MapTypeEnum.Normals ? "raw" : "sRGB";
+        usdImageTexture.Attributes.Add(new UsdToken<string>("inputs:sourceColorSpace", isBumpmap));
 
         return usdImageTexture;
     }

@@ -4,11 +4,11 @@ using System.Text;
 
 namespace CgfConverter.Renderers.USD.Models;
 
-public class UsdFloat3f : UsdAttribute
+public class UsdColor3f : UsdAttribute
 {
-    public string? Value { get; set; }
+    public string Value { get; set; }
 
-    public UsdFloat3f(string name, string? value = null) : base(name)
+    public UsdColor3f(string name, string value, bool isUniform = false) : base(name, isUniform)
     {
         Value = value;
     }
@@ -21,14 +21,7 @@ public class UsdFloat3f : UsdAttribute
         if (IsUniform)
             sb.Append("uniform ");
 
-        if (Value is null)
-            sb.Append($"float3 {Name}");
-        else
-        {
-            var stringValue = FormatStringValue($"<{Value}>");
-            sb.Append($"float3 {Name} = {stringValue}");
-        }
-
+        sb.Append($"color3f {Name} = {Value}");
 
         return sb.ToString();
     }
