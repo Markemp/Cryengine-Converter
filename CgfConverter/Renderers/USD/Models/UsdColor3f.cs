@@ -8,7 +8,7 @@ public class UsdColor3f : UsdAttribute
 {
     public string? Value { get; set; }
 
-    public UsdColor3f(string name, string? value = null, bool isUniform = false) : base(name, isUniform)
+    public UsdColor3f(string name, string? value, bool isUniform = false) : base(name, isUniform)
     {
         Value = value;
     }

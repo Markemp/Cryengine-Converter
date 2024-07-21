@@ -254,11 +254,11 @@ public class UsdRenderer : IRenderer
         for (int j = 0; j < numberOfSubmeshes; j++)
         {
             var submesh = meshSubsets.MeshSubsets[j];
-            var submeshName = GetMaterialName(nodeName, submats[submesh.MatID].Name);
+            var submeshName = (submats[submesh.MatID].Name);
             var submeshPrim = new UsdGeomSubset(CleanPathString(submeshName));
             submeshPrim.Attributes.Add(new UsdUIntList("indices", indexChunk.Indices.Skip(submesh.FirstIndex).Take(submesh.NumIndices).ToList()));
             //submeshPrim.Attributes.Add(new UsdToken<string>("familyType", "face", true));
-            submeshPrim.Attributes.Add(new UsdToken<string>("elementType", "face", true));
+            submeshPrim.Attributes.Add(new UsdToken<string>("elementType", "vertex", true));
             submeshPrim.Attributes.Add(new UsdToken<string>("familyName", "materialBind", true));
             meshPrim.Children.Add(submeshPrim);
 
