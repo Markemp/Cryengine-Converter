@@ -22,10 +22,10 @@ public class UsdNormalsList : UsdAttribute
         sb.AppendIndent(indentLevel);
 
         sb.Append($"normal3f[] {Name} = [");
-        sb.AppendJoin(", ", Values.Select(v => $"({v.X:F7}, {v.Y:F7}, {v.Z:F7})"));
+        sb.AppendJoin(", ", Values.Select(v => $"({v.X:F8}, {v.Y:F8}, {v.Z:F8})"));
         sb.AppendLine("] (");
         sb.AppendIndent(indentLevel + 1);
-        sb.AppendLine("interpolation = \"vertex\"");
+        sb.AppendLine("interpolation = \"faceVarying\"");
         sb.AppendIndent(indentLevel);
         sb.Append(')');
 

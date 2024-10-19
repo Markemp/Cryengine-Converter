@@ -105,31 +105,40 @@ public class UsdRenderer : IRenderer
                 continue; // Don't add cubemaps as it causes blender to crash
             var textureName = Path.ChangeExtension(texture.File, ".dds");
             var imageTexture = CreateUsdImageTextureShader(texture, matName);
-            shaders.Add(imageTexture);
-            // connect image texture to color input of PrincipledBSDF
-            if (texture.Map == Texture.MapTypeEnum.Diffuse)
+            if (imageTexture is not null)
             {
-                imageTexture.Attributes.Add(new UsdFloat3f("outputs:rgb"));
-                principleBSDF.Attributes.Add(new UsdColor3f(
-                    $"inputs:diffuseColor.connect",
-                    CleanPathString($"/root/_materials/{matName}/{imageTexture.Name}.outputs:rgb")));
+                shaders.Add(imageTexture);
+                // connect image texture to color input of PrincipledBSDF
+                if (texture.Map == Texture.MapTypeEnum.Diffuse)
+                {
+                    imageTexture.Attributes.Add(new UsdFloat3f("outputs:rgb"));
+                    principleBSDF.Attributes.Add(new UsdColor3f(
+                        $"inputs:diffuseColor.connect",
+                        CleanPathString($"/root/_materials/{matName}/{imageTexture.Name}.outputs:rgb")));
+                }
+                else if (texture.Map == Texture.MapTypeEnum.Normals)
+                {
+                    imageTexture.Attributes.Add(new UsdFloat3f("outputs:rgb"));
+                }
+                //else if (texture.Map == Texture.MapTypeEnum.Env)
+                //{
+                //    imageTexture.Attributes.Add(new UsdToken<string>("inputs:type", "cube"));
+                //    imageTexture.Attributes.Add(new UsdColor3f("outputs:rgb", null));
+                //}
             }
-            else if (texture.Map == Texture.MapTypeEnum.Normals)
-            {
-                imageTexture.Attributes.Add(new UsdFloat3f("outputs:rgb"));
-            }
-            //else if (texture.Map == Texture.MapTypeEnum.Env)
-            //{
-            //    imageTexture.Attributes.Add(new UsdToken<string>("inputs:type", "cube"));
-            //    imageTexture.Attributes.Add(new UsdColor3f("outputs:rgb", null));
-            //}
         }
 
         return shaders;
     }
 
-    private UsdShader CreateUsdImageTextureShader(Texture texture, string matName)
+    private UsdShader? CreateUsdImageTextureShader(Texture texture, string matName)
     {
+        var textureFile = ResolveTextureFile(texture.File, _args.PackFileSystem, _args.DataDirs);
+        if (File.Exists(textureFile) == false)
+        {
+            Log(LogLevelEnum.Error, "Texture file not found: {0}", texture.File);
+            return null;
+        }
         var usdImageTexture = new UsdShader(CleanPathString(Path.GetFileNameWithoutExtension(texture.File)));
 
         usdImageTexture.Attributes.Add(new UsdToken<string>("info:id", "UsdUVTexture", true));
@@ -254,7 +263,7 @@ public class UsdRenderer : IRenderer
         for (int j = 0; j < numberOfSubmeshes; j++)
         {
             var submesh = meshSubsets.MeshSubsets[j];
-            var submeshName = (submats[submesh.MatID].Name);
+            var submeshName = (Path.GetFileNameWithoutExtension(submats[submesh.MatID].Name));
             var submeshPrim = new UsdGeomSubset(CleanPathString(submeshName));
             submeshPrim.Attributes.Add(new UsdUIntList("indices", indexChunk.Indices.Skip(submesh.FirstIndex).Take(submesh.NumIndices).ToList()));
             //submeshPrim.Attributes.Add(new UsdToken<string>("familyType", "face", true));
