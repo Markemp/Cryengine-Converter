@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using CgfConverter.PackFileSystem;
+using CgfConverter.Utilities;
 
 namespace CgfConverter;
 

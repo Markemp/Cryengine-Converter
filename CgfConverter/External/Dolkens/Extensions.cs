@@ -10,7 +10,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-using CgfConverter;
+using CgfConverter.Utilities;
 using DDRIT = Dolkens.Framework.Extensions.ExtensionMethods;
 
 namespace Dolkens.Framework.Extensions

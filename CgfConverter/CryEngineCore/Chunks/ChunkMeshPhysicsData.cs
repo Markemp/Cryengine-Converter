@@ -1,4 +1,6 @@
-﻿namespace CgfConverter.CryEngineCore
+﻿using CgfConverter.Utilities;
+
+namespace CgfConverter.CryEngineCore
 {
     class ChunkMeshPhysicsData : Chunk
     {

@@ -1,7 +1,7 @@
 ﻿using CgfConverter.Models;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
+using static CgfConverter.Utilities.HelperMethods;
 
 namespace CgfConverter.CryEngineCore;
 
@@ -42,25 +42,5 @@ internal sealed class ChunkCompiledBones_900 : ChunkCompiledBones
         SkinningInfo skin = GetSkinningInfo();
         skin.CompiledBones = new List<CompiledBone>();
         skin.CompiledBones = BoneList;
-    }
-
-    internal static List<string> GetNullSeparatedStrings(int numberOfNames, BinaryReader b)
-    {
-        List<string> names = new();
-        StringBuilder builder = new();
-
-        for (int i = 0; i < numberOfNames; i++)
-        {    
-            char c = b.ReadChar();
-            while (c != 0)
-            {
-                builder.Append(c);
-                c = b.ReadChar();
-            }
-            names.Add(builder.ToString());
-            builder.Clear();
-        }
-
-        return names;
     }
 }

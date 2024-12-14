@@ -3,6 +3,7 @@ using CgfConverter.Renderers.Collada;
 using CgfConverter.Renderers.Gltf;
 using CgfConverter.Renderers.Wavefront;
 using CgfConverter.Terrain;
+using CgfConverter.Utilities;
 using CgfConverter.Utils;
 using System;
 using System.Collections.Generic;

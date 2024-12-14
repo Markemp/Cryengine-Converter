@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using CgfConverter.Utilities;
+using System.Numerics;
 
 namespace CgfConverter.CryEngineCore
 {

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using CgfConverter.Models;
 using CgfConverter.Services;
+using CgfConverter.Utilities;
 
 namespace CgfConverter.CryEngineCore;
 

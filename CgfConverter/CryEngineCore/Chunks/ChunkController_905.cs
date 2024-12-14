@@ -7,6 +7,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using CgfConverter.Services;
+using CgfConverter.Utilities;
 using CgfConverter.Utils;
 using Extensions;
 

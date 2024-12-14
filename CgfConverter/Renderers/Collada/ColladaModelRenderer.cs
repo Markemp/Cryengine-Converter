@@ -23,6 +23,7 @@ using CgfConverter.Renderers.Collada.Collada.Collada_FX.Technique_Common;
 using CgfConverter.Renderers.Collada.Collada.Collada_FX.Texturing;
 using CgfConverter.Renderers.Collada.Collada.Enums;
 using CgfConverter.Renderers.Collada.Collada.Types;
+using CgfConverter.Utilities;
 using Extensions;
 using System;
 using System.Collections.Generic;

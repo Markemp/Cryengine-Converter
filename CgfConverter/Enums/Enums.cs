@@ -9,8 +9,8 @@ public enum FileVersion : uint
 
 public enum FileType : uint
 {
-    GEOM = 0xFFFF0000,
-    ANIM = 0xFFFF0001
+    Geometry = 0xFFFF0000,
+    Animation = 0xFFFF0001
 }  // complete
 
 public enum MtlNameType : uint
