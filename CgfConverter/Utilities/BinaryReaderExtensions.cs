@@ -1,6 +1,6 @@
 ﻿using CgfConverter;
 using CgfConverter.Structs;
-using CgfConverter.Utililities;
+using CgfConverter.Utilities;
 using System;
 using System.IO;
 using System.Numerics;

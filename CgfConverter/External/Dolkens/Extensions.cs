@@ -572,7 +572,7 @@ namespace Dolkens.Framework.Extensions
                 {
                     DateTime result = DateTime.MinValue;
 
-                    if (DateTime.TryParseExact(input, Utilities.DateTimeFormats, null, DateTimeStyles.None, out result))
+                    if (DateTime.TryParseExact(input, HelperMethods.DateTimeFormats, null, DateTimeStyles.None, out result))
                         return result;
                     else
                         return DateTime.Parse(input);
@@ -742,7 +742,7 @@ namespace Dolkens.Framework.Extensions
         {
             DateTime result = DateTime.MinValue;
 
-            if (DateTime.TryParseExact(input, Utilities.DateTimeFormats, null, DateTimeStyles.None, out result))
+            if (DateTime.TryParseExact(input, HelperMethods.DateTimeFormats, null, DateTimeStyles.None, out result))
                 return result;
 
             if (DateTime.TryParse(input, out result))
@@ -760,7 +760,7 @@ namespace Dolkens.Framework.Extensions
         {
             DateTimeOffset result = DateTimeOffset.MinValue;
 
-            if (DateTimeOffset.TryParseExact(input, Utilities.DateTimeFormats, null, DateTimeStyles.None, out result))
+            if (DateTimeOffset.TryParseExact(input, HelperMethods.DateTimeFormats, null, DateTimeStyles.None, out result))
                 return result;
 
             if (DateTimeOffset.TryParse(input, out result))

@@ -110,7 +110,7 @@ internal sealed class ChunkDataStream_900 : ChunkDataStream
                         }
                         break;
                     default:
-                        Utilities.Log("Unknown Normals Format");
+                        HelperMethods.Log("Unknown Normals Format");
                         for (int i = 0; i < NumElements; i++)
                         {
                             SkipBytes(b, BytesPerElement);
@@ -216,7 +216,7 @@ internal sealed class ChunkDataStream_900 : ChunkDataStream
                             SkipBytes(b, 4);
                         break;
                     default:
-                        Utilities.Log("Unknown BoneMapping structure");
+                        HelperMethods.Log("Unknown BoneMapping structure");
                         break;
                 }
 

@@ -29,7 +29,7 @@ public enum LogLevelEnum
     None = 0xFF,
 }
 
-public static class Utilities
+public static class HelperMethods
 {
     public static LogLevelEnum LogLevel { get; set; }
     public static LogLevelEnum DebugLevel { get; set; }
@@ -131,10 +131,10 @@ public static class Utilities
 
     public static void Log(LogLevelEnum logLevel, string? format = null, params object[] args)
     {
-        if (Utilities.LogLevel <= logLevel)
+        if (HelperMethods.LogLevel <= logLevel)
             Console.WriteLine(format ?? string.Empty, args);
 
-        if (Utilities.DebugLevel <= logLevel)
+        if (HelperMethods.DebugLevel <= logLevel)
             Debug.WriteLine(format ?? string.Empty, args);
     }
 }

@@ -23,16 +23,19 @@ internal sealed class ChunkMesh_801 : ChunkMesh
         Colors2Data = b.ReadInt32();
         IndicesData = b.ReadInt32();
         TangentsData = b.ReadInt32();
-        SkipBytes(b, 16);
-        for (int i = 0; i < 4; i++)
-        {
-            PhysicsData[i] = b.ReadInt32();
-        }
-        VertsUVsData = b.ReadInt32();          // This should be a vertsUV Chunk ID.
         ShCoeffsData = b.ReadInt32();
         ShapeDeformationData = b.ReadInt32();
         BoneMapData = b.ReadInt32();
         FaceMapData = b.ReadInt32();
+        VertMatsData = b.ReadInt32();
+        QTangentsData = b.ReadInt32();
+        SkinData = b.ReadInt32();
+        Dummy2Data = b.ReadInt32();
+        VertsUVsData = b.ReadInt32();          // This should be a vertsUV Chunk ID.
+        for (int i = 0; i < 4; i++)
+        {
+            PhysicsData[i] = b.ReadInt32();
+        }
         MinBound = b.ReadVector3();
         MaxBound = b.ReadVector3();
     }

@@ -142,7 +142,7 @@ public partial class ColladaDoc
         }
         catch (Exception ex)
         {
-            Utilities.Log(LogLevelEnum.Error, ex.ToString());
+            HelperMethods.Log(LogLevelEnum.Error, ex.ToString());
             Console.ReadLine();
             return null;
         }

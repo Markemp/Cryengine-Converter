@@ -29,8 +29,8 @@ public class Program
     public static async Task<int> Main(string[] args)
 #endif
     {
-        Utilities.LogLevel = LogLevelEnum.Info;
-        Utilities.DebugLevel = LogLevelEnum.Debug;
+        HelperMethods.LogLevel = LogLevelEnum.Info;
+        HelperMethods.DebugLevel = LogLevelEnum.Debug;
 
         var customCulture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
         customCulture.NumberFormat.NumberDecimalSeparator = ".";

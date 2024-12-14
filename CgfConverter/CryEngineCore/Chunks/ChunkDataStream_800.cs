@@ -98,8 +98,11 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                 {
                     for (int i = 0; i < NumElements; i++)
                     {
-                        SkipBytes(b, 4);
-                        Normals[i] = new Vector3();
+                        // TODO:   Finish this.
+                        Normals[i].X = b.ReadCryHalf();
+                        Normals[i].Y = b.ReadCryHalf();
+                        //SkipBytes(b, 4);
+                        //Normals[i] = new Vector3();
                     }
                 }
                 else
@@ -199,7 +202,7 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                         }
                         break;
                     default:
-                        Utilities.Log("Unknown Color Depth");
+                        HelperMethods.Log("Unknown Color Depth");
                         for (int i = 0; i < NumElements; i++)
                         {
                             SkipBytes(b, BytesPerElement);
@@ -272,7 +275,7 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                         }
                         break;
                     default:
-                        Utilities.Log("Unknown VertUV structure");
+                        HelperMethods.Log("Unknown VertUV structure");
                         for (int i = 0; i < NumElements; i++)
                         {
                             SkipBytes(b, BytesPerElement);
@@ -327,7 +330,7 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                         break;
 
                     default:
-                        Utilities.Log("Unknown BoneMapping structure");
+                        HelperMethods.Log("Unknown BoneMapping structure");
                         break;
                 }
 
@@ -361,7 +364,7 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
             #region default:
 
             default:
-                Utilities.Log(LogLevelEnum.Debug, "***** Unknown DataStream Type *****");
+                HelperMethods.Log(LogLevelEnum.Debug, "***** Unknown DataStream Type *****");
                 break;
 
                 #endregion

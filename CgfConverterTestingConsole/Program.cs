@@ -1,6 +1,4 @@
-﻿using CgfConverter.Utililities;
-using System.Numerics;
-using Extensions;
+﻿using System.Numerics;
 
 Console.WriteLine("Bone 5");
 var q = new Quaternion(0.000000f, 0.999048f, 0.000000f, -0.043619f);  // bone 5 quat

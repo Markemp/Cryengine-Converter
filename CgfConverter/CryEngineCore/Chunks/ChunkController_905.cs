@@ -139,9 +139,9 @@ internal sealed class ChunkController_905 : ChunkController
                 }
                 
                 if (data.Count != size)
-                    Utilities.Log(LogLevelEnum.Warning, "eBitset: Expected {0} items, got {1} items", size, data.Count);
+                    HelperMethods.Log(LogLevelEnum.Warning, "eBitset: Expected {0} items, got {1} items", size, data.Count);
                 if (data.Any() && Math.Abs(data[^1] - end) > float.Epsilon)
-                    Utilities.Log(LogLevelEnum.Warning, "eBitset: Expected last as {0}, got {1}", end, data[^1]);
+                    HelperMethods.Log(LogLevelEnum.Warning, "eBitset: Expected last as {0}, got {1}", end, data[^1]);
             }
             else
                 throw new Exception("sum(count per format) != count of keytimes");

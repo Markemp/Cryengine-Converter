@@ -1,4 +1,4 @@
-﻿using CgfConverter.Utililities;
+﻿using CgfConverter.Utilities;
 using CgfConverterTests.TestUtilities;
 using NUnit.Framework;
 using Assert = NUnit.Framework.Assert;

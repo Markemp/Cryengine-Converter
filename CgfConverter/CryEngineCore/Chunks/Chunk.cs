@@ -125,10 +125,10 @@ public abstract class Chunk : IBinaryChunk
             return;
 
         if ((reader.BaseStream.Position > Offset + Size) && (Size > 0))
-            Utilities.Log(LogLevelEnum.Debug, "Buffer Overflow in {2} 0x{0:X} ({1} bytes)", ID, reader.BaseStream.Position - Offset - Size, GetType().Name);
+            HelperMethods.Log(LogLevelEnum.Debug, "Buffer Overflow in {2} 0x{0:X} ({1} bytes)", ID, reader.BaseStream.Position - Offset - Size, GetType().Name);
 
         if (reader.BaseStream.Length < Offset + Size)
-            Utilities.Log(LogLevelEnum.Debug, "Corrupt Headers in {1} 0x{0:X}", ID, GetType().Name);
+            HelperMethods.Log(LogLevelEnum.Debug, "Corrupt Headers in {1} 0x{0:X}", ID, GetType().Name);
 
         if (!bytesToSkip.HasValue)
             bytesToSkip = (long)(Size - Math.Max(reader.BaseStream.Position - Offset, 0));
@@ -170,12 +170,12 @@ public abstract class Chunk : IBinaryChunk
             Offset != _header.Offset ||
             ID != _header.ID)
         {
-            Utilities.Log(LogLevelEnum.Debug, "Conflict in chunk definition");
-            Utilities.Log(LogLevelEnum.Debug, "ChunkType=header({0:X}) vs header2({1:X})", (uint)_header.ChunkType, (uint)ChunkType);
-            Utilities.Log(LogLevelEnum.Debug, "VersionRaw=VersionRaw({0:X}) vs header2({1:X})", _header.VersionRaw, VersionRaw);
-            Utilities.Log(LogLevelEnum.Debug, "Offset=header({0:X}) vs header2({1:X})", _header.Offset, Offset);
-            Utilities.Log(LogLevelEnum.Debug, "ID=header({0:X}) vs header2({1:X})", _header.ID, ID);
-            Utilities.Log(LogLevelEnum.Debug, "ChunkType=header({0:X}) vs header2({1:X})", _header.ChunkType, ChunkType);
+            HelperMethods.Log(LogLevelEnum.Debug, "Conflict in chunk definition");
+            HelperMethods.Log(LogLevelEnum.Debug, "ChunkType=header({0:X}) vs header2({1:X})", (uint)_header.ChunkType, (uint)ChunkType);
+            HelperMethods.Log(LogLevelEnum.Debug, "VersionRaw=VersionRaw({0:X}) vs header2({1:X})", _header.VersionRaw, VersionRaw);
+            HelperMethods.Log(LogLevelEnum.Debug, "Offset=header({0:X}) vs header2({1:X})", _header.Offset, Offset);
+            HelperMethods.Log(LogLevelEnum.Debug, "ID=header({0:X}) vs header2({1:X})", _header.ID, ID);
+            HelperMethods.Log(LogLevelEnum.Debug, "ChunkType=header({0:X}) vs header2({1:X})", _header.ChunkType, ChunkType);
         }
 
         // Remainder of the chunk is in whichever endianness specified from version.

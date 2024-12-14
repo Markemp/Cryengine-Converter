@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CgfConverter.Utililities;
+namespace CgfConverter.Utilities;
 
 public static class CryHalf
 {
@@ -13,7 +13,7 @@ public static class CryHalf
         mantissa = (uint)(value & 0x03FF);
 
         if ((value & 0x7C00) != 0)  // The value is normalized
-            exponent = (uint)((value >> 10) & 0x1F);
+            exponent = (uint)(value >> 10 & 0x1F);
         else if (mantissa != 0)     // The value is denormalized
         {
             // Normalize the value in the resulting float
@@ -30,22 +30,13 @@ public static class CryHalf
         else                        // The value is zero
             exponent = 4294967184;  // (uint)-112
 
-        result = (((uint)value & 0x8000) << 16) | // Sign
-            ((exponent + 112) << 23) | // Exponent
-            (mantissa << 13);          // Mantissa
+        result = ((uint)value & 0x8000) << 16 | // Sign
+            exponent + 112 << 23 | // Exponent
+            mantissa << 13;          // Mantissa
         return BitConverter.ToSingle(BitConverter.GetBytes(result), 0);
     }
 
-    public static float ConvertDymekHalfToFloat(ushort value)
-    {
-        return Byte2HexIntFracToFloat2(value.ToString("X4")) / 127;
-    }
-
-    static int Byte1HexToIntType2(string hexString)
-    {
-        int value = Convert.ToSByte(hexString, 16);
-        return value;
-    }
+    public static float ConvertDymekHalfToFloat(ushort value) => Byte2HexIntFracToFloat2(value.ToString("X4")) / 127;
 
     static float Byte2HexIntFracToFloat2(string hexString)
     {
@@ -64,9 +55,11 @@ public static class CryHalf
         for (int i = 0; i < binaryFracPart.Length; i++)
         {
             if (binaryFracPart[i] == '0') continue;
-            dec += (float)Math.Pow(2, (i + 1) * (-1));
+            dec += (float)Math.Pow(2, (i + 1) * -1);
         }
-        float number = (float)intPart + dec;
+        float number = intPart + dec;
         return number;
     }
+
+    static int Byte1HexToIntType2(string hexString) => Convert.ToSByte(hexString, 16);
 }

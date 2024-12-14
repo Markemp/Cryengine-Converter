@@ -15,7 +15,7 @@ public enum FileType : uint
 
 public enum MtlNameType : uint
 {
-    // This is a bitwise struct. 
+    // TODO: This is a bitwise struct. 
     Basic = 0x00,
     Library = 0x01,
     MwoChild = 0x02,

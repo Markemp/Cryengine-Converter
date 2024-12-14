@@ -112,7 +112,7 @@ internal sealed class ChunkIvoSkin_900 : ChunkIvoSkin
                     if (!model.ChunkMap.ContainsKey(normals.ID))
                         model.ChunkMap.Add(normals.ID, normals);
                     else
-                        Utilities.Log(LogLevelEnum.Warning, $"An existing Normals chunk was found for the Ivo model.");
+                        HelperMethods.Log(LogLevelEnum.Warning, $"An existing Normals chunk was found for the Ivo model.");
                     break;
                 case IvoDatastreamType.IVOTANGENTS:
                     ChunkDataStream_900 tangents = new((uint)meshChunk.NumVertices);

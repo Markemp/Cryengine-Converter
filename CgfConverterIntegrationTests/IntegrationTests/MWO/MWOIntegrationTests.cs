@@ -679,7 +679,7 @@ public class MWOIntegrationTests
         Assert.AreEqual(1, daeObject.Library_Visual_Scene.Visual_Scene[0].Node.Length);
         // Node Matrix check
         var node = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0];
-        const string matrix = "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1";
+        const string matrix = "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0";
         Assert.AreEqual(matrix, node.Matrix[0].Value_As_String);
         Assert.AreEqual("transform", node.Matrix[0].sID);
         // Instance Geometry check
@@ -747,7 +747,7 @@ public class MWOIntegrationTests
         Assert.AreEqual("hulagirl_a", baseNode.Name);
         Assert.AreEqual(2, baseNode.node.Length);
         Assert.IsNull(baseNode.Instance_Geometry);
-        Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1", baseNode.Matrix[0].Value_As_String);
+        Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0", baseNode.Matrix[0].Value_As_String);
 
         // Serialize the object to XML
         XmlSerializer serializer = new(typeof(ColladaDoc));

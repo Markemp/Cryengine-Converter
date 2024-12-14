@@ -151,7 +151,7 @@ internal sealed class ChunkDataStream_801 : ChunkDataStream
                         }
                         break;
                     default:
-                        Utilities.Log("Unknown Color Depth");
+                        HelperMethods.Log("Unknown Color Depth");
                         for (int i = 0; i < NumElements; i++)
                         {
                             SkipBytes(b, BytesPerElement);
@@ -250,7 +250,7 @@ internal sealed class ChunkDataStream_801 : ChunkDataStream
                         }
                         break;
                     default:
-                        Utilities.Log("Unknown VertUV structure");
+                        HelperMethods.Log("Unknown VertUV structure");
                         for (int i = 0; i < NumElements; i++)
                         {
                             SkipBytes(b, BytesPerElement);
@@ -302,7 +302,7 @@ internal sealed class ChunkDataStream_801 : ChunkDataStream
 
                             break;
                         default:
-                            Utilities.Log("Unknown BoneMapping structure");
+                            HelperMethods.Log("Unknown BoneMapping structure");
                             break;
                     }
                 }
@@ -335,7 +335,7 @@ internal sealed class ChunkDataStream_801 : ChunkDataStream
             #endregion // Prey normals?
 
             default:
-                Utilities.Log(LogLevelEnum.Debug, "***** Unknown DataStream Type *****");
+                HelperMethods.Log(LogLevelEnum.Debug, "***** Unknown DataStream Type *****");
                 break;
         }
     }

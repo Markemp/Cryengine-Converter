@@ -148,11 +148,11 @@ public sealed class ArgsHandler
                     }
 
                     if (Enum.TryParse(inputArgs[i], true, out LogLevelEnum level))
-                        Utilities.LogLevel = level;
+                        HelperMethods.LogLevel = level;
                     else
                     {
                         Console.Error.WriteLine("Invalid log level {0}, defaulting to warn", inputArgs[i]);
-                        Utilities.LogLevel = LogLevelEnum.Warning;
+                        HelperMethods.LogLevel = LogLevelEnum.Warning;
                     }
                     break;
                 case "-usage":
@@ -272,48 +272,48 @@ public sealed class ArgsHandler
 
         if (MaxThreads == 0)
             MaxThreads = Environment.ProcessorCount;
-        Utilities.Log(LogLevelEnum.Info, $"Using up to {MaxThreads} threads");
+        HelperMethods.Log(LogLevelEnum.Info, $"Using up to {MaxThreads} threads");
         
         if (Smooth)
-            Utilities.Log(LogLevelEnum.Info, "Smoothing Faces");
+            HelperMethods.Log(LogLevelEnum.Info, "Smoothing Faces");
         if (GroupMeshes)
-            Utilities.Log(LogLevelEnum.Info, "Grouping enabled");
+            HelperMethods.Log(LogLevelEnum.Info, "Grouping enabled");
         
         if (NoTextures)
-            Utilities.Log(LogLevelEnum.Info, "Skipping texture output");
+            HelperMethods.Log(LogLevelEnum.Info, "Skipping texture output");
         else if (PngTextures)
-            Utilities.Log(LogLevelEnum.Info, "Using PNG textures");
+            HelperMethods.Log(LogLevelEnum.Info, "Using PNG textures");
         else if (TiffTextures)
-            Utilities.Log(LogLevelEnum.Info, "Using TIF textures");
+            HelperMethods.Log(LogLevelEnum.Info, "Using TIF textures");
         else if (TgaTextures)
-            Utilities.Log(LogLevelEnum.Info, "Using TGA textures");
+            HelperMethods.Log(LogLevelEnum.Info, "Using TGA textures");
         if (MaterialFile is not null)
-            Utilities.Log(LogLevelEnum.Info, $"Using material file: {MaterialFile}");
+            HelperMethods.Log(LogLevelEnum.Info, $"Using material file: {MaterialFile}");
 
         if (OutputWavefront)
-            Utilities.Log(LogLevelEnum.Info, "Output format set to Wavefront (.obj)");
+            HelperMethods.Log(LogLevelEnum.Info, "Output format set to Wavefront (.obj)");
         if (OutputCollada)
-            Utilities.Log(LogLevelEnum.Info, "Output format set to COLLADA (.dae)");
+            HelperMethods.Log(LogLevelEnum.Info, "Output format set to COLLADA (.dae)");
         if (OutputGLTF)
-            Utilities.Log(LogLevelEnum.Info, "Output format set to glTF (.gltf)");
+            HelperMethods.Log(LogLevelEnum.Info, "Output format set to glTF (.gltf)");
         if (OutputGLB)
-            Utilities.Log(LogLevelEnum.Info, "Output format set to glTF Binary (.glb)");
+            HelperMethods.Log(LogLevelEnum.Info, "Output format set to glTF Binary (.glb)");
 
         if (AllowConflicts)
-            Utilities.Log(LogLevelEnum.Info, "Allow conflicts for mtl files enabled");
+            HelperMethods.Log(LogLevelEnum.Info, "Allow conflicts for mtl files enabled");
         if (NoConflicts)
-            Utilities.Log(LogLevelEnum.Info, "Prevent conflicts for mtl files enabled");
+            HelperMethods.Log(LogLevelEnum.Info, "Prevent conflicts for mtl files enabled");
         if (ExcludeNodeNames.Any())
-            Utilities.Log(LogLevelEnum.Info, $"Skipping nodes starting with any of these names: {String.Join(", ", ExcludeNodeNames)}");
+            HelperMethods.Log(LogLevelEnum.Info, $"Skipping nodes starting with any of these names: {String.Join(", ", ExcludeNodeNames)}");
         if (ExcludeMaterialNames.Any())
-            Utilities.Log(LogLevelEnum.Info, $"Skipping meshes using materials named: {String.Join(", ", ExcludeMaterialNames)}");
+            HelperMethods.Log(LogLevelEnum.Info, $"Skipping meshes using materials named: {String.Join(", ", ExcludeMaterialNames)}");
         if (DumpChunkInfo)
-            Utilities.Log(LogLevelEnum.Info, "Output chunk info for missing or invalid chunks.");
+            HelperMethods.Log(LogLevelEnum.Info, "Output chunk info for missing or invalid chunks.");
         if (Throw)
-            Utilities.Log(LogLevelEnum.Info, "Exceptions thrown to debugger");
+            HelperMethods.Log(LogLevelEnum.Info, "Exceptions thrown to debugger");
 
         if (OutputDir != null)
-            Utilities.Log(LogLevelEnum.Info, "Output directory set to {0}", OutputDir);
+            HelperMethods.Log(LogLevelEnum.Info, "Output directory set to {0}", OutputDir);
 
         foreach (var dirAndOptions in lookupDataDirs)
         {
@@ -327,7 +327,7 @@ public sealed class ArgsHandler
             
             if (Directory.Exists(dir))
             {
-                Utilities.Log(LogLevelEnum.Info, "Source [Filesystem]: {0}", dir);
+                HelperMethods.Log(LogLevelEnum.Info, "Source [Filesystem]: {0}", dir);
                 DataDirs.Add(dir);
                 PackFileSystem.Add(new RealFileSystem(dir));
                 foundAny = true;
@@ -338,7 +338,7 @@ public sealed class ArgsHandler
                 if (globbed.EndsWith(WiiuStreamPackFileSystem.PackFileNameSuffix,
                         StringComparison.InvariantCultureIgnoreCase))
                 {
-                    Utilities.Log(LogLevelEnum.Info, "Source [Packfile]: {0}", globbed);
+                    HelperMethods.Log(LogLevelEnum.Info, "Source [Packfile]: {0}", globbed);
                     DataDirs.Add(globbed);
                     PackFileSystem.Add(new WiiuStreamPackFileSystem(PackFileSystem.GetStream(globbed), packFileSystemOptions));
                     foundAny = true;
@@ -346,7 +346,7 @@ public sealed class ArgsHandler
             }
 
             if (!foundAny)
-                Utilities.Log(LogLevelEnum.Warning, "No corresponding source directory exist: {0}", dir);
+                HelperMethods.Log(LogLevelEnum.Warning, "No corresponding source directory exist: {0}", dir);
         }
 
         foreach (var input in lookupInputs)
@@ -354,13 +354,13 @@ public sealed class ArgsHandler
             var foundAny = false;
             foreach (var globbed in PackFileSystem.Glob(input))
             {
-                Utilities.Log(LogLevelEnum.Info, "Found input: {0}", globbed);
+                HelperMethods.Log(LogLevelEnum.Info, "Found input: {0}", globbed);
                 InputFiles.Add(globbed);
                 foundAny = true;
             }
             
             if (!foundAny)
-                Utilities.Log(LogLevelEnum.Warning, "No corresponding input file exist: {0}", input);
+                HelperMethods.Log(LogLevelEnum.Warning, "No corresponding input file exist: {0}", input);
         }
         
         ExcludeNodeNameRegexes.AddRange(ExcludeNodeNames.Select(x => new Regex(x, RegexOptions.Compiled | RegexOptions.IgnoreCase)));

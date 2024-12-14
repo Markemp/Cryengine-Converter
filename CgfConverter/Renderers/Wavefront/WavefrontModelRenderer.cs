@@ -47,7 +47,7 @@ public class WavefrontModelRenderer : IRenderer
         if (this.Args.GroupMeshes)
             this.GroupOverride = Path.GetFileNameWithoutExtension(this.OutputFile_Model.Name);
 
-        Utilities.Log(LogLevelEnum.Info, @"Output file is {0}", OutputFile_Model);
+        HelperMethods.Log(LogLevelEnum.Info, @"Output file is {0}", OutputFile_Model);
 
         //this.WriteMaterial(this.CryData);
 
@@ -67,7 +67,7 @@ public class WavefrontModelRenderer : IRenderer
             {
                 foreach (var node in nullParents)
                 {
-                    Utilities.Log(LogLevelEnum.Warning, "Rendering node with null parent {0}", node.Name);
+                    HelperMethods.Log(LogLevelEnum.Warning, "Rendering node with null parent {0}", node.Name);
                 }
             }
 
@@ -75,13 +75,13 @@ public class WavefrontModelRenderer : IRenderer
             {
                 if (Args.IsNodeNameExcluded(node.Name))
                 {
-                    Utilities.Log(LogLevelEnum.Debug, $"Excluding node {node.Name}");
+                    HelperMethods.Log(LogLevelEnum.Debug, $"Excluding node {node.Name}");
                     continue;
                 }
 
                 if (node.ObjectChunk == null)
                 {
-                    Utilities.Log(LogLevelEnum.Warning, "Skipped node with missing Object {0}", node.Name);
+                    HelperMethods.Log(LogLevelEnum.Warning, "Skipped node with missing Object {0}", node.Name);
                     continue;
                 }
 
@@ -92,7 +92,7 @@ public class WavefrontModelRenderer : IRenderer
 
                         if ((node.ParentNode != null) && (node.ParentNode.ChunkType != ChunkType.Node))
                         {
-                            Utilities.Log(LogLevelEnum.Debug, "Rendering {0} to parent {1}", node.Name, node.ParentNode.Name);
+                            HelperMethods.Log(LogLevelEnum.Debug, "Rendering {0} to parent {1}", node.Name, node.ParentNode.Name);
                         }
 
                         // Grab the mesh and process that.
@@ -106,7 +106,7 @@ public class WavefrontModelRenderer : IRenderer
 
                     default:
                         // Warn us if we're skipping other nodes of interest
-                        Utilities.Log(LogLevelEnum.Debug, "Skipped a {0} chunk", node.ObjectChunk.ChunkType);
+                        HelperMethods.Log(LogLevelEnum.Debug, "Skipped a {0} chunk", node.ObjectChunk.ChunkType);
                         break;
                 }
             }
@@ -162,7 +162,7 @@ public class WavefrontModelRenderer : IRenderer
 
         if (tmpMesh.MeshSubsetsData == 0)   // This is probably wrong.  These may be parents with no geometry, but still have an offset
         {
-            Utilities.Log(LogLevelEnum.Debug, "*******Found a Mesh chunk with no Submesh ID (ID: {0:X}, Name: {1}).  Skipping...", tmpMesh.ID, chunkNode.Name);
+            HelperMethods.Log(LogLevelEnum.Debug, "*******Found a Mesh chunk with no Submesh ID (ID: {0:X}, Name: {1}).  Skipping...", tmpMesh.ID, chunkNode.Name);
             // tmpMesh.WriteChunk();
             // Utils.Log(LogLevelEnum.Debug, "Node Chunk: {0}", chunkNode.Name);
             // transform = cgfData.GetTransform(chunkNode, transform);
@@ -170,7 +170,7 @@ public class WavefrontModelRenderer : IRenderer
         }
         if (tmpMesh.VerticesData == 0 && tmpMesh.VertsUVsData == 0)  // This is probably wrong.  These may be parents with no geometry, but still have an offset
         {
-            Utilities.Log(LogLevelEnum.Debug, "*******Found a Mesh chunk with no Vertex info (ID: {0:X}, Name: {1}).  Skipping...", tmpMesh.ID, chunkNode.Name);
+            HelperMethods.Log(LogLevelEnum.Debug, "*******Found a Mesh chunk with no Vertex info (ID: {0:X}, Name: {1}).  Skipping...", tmpMesh.ID, chunkNode.Name);
             //tmpMesh.WriteChunk();
             //Utils.Log(LogLevelEnum.Debug, "Node Chunk: {0}", chunkNode.Name);
             //transform = cgfData.GetTransform(chunkNode, transform);
@@ -269,7 +269,7 @@ public class WavefrontModelRenderer : IRenderer
                     }
                     else
                     {
-                        Utilities.Log(LogLevelEnum.Debug, "Error rendering vertices for {0:X}", chunkNode.Name);
+                        HelperMethods.Log(LogLevelEnum.Debug, "Error rendering vertices for {0:X}", chunkNode.Name);
                     }
                 }
 

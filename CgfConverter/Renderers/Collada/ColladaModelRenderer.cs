@@ -34,7 +34,6 @@ using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-using static CgfConverter.Utilities;
 using static Extensions.FileHandlingExtensions;
 
 namespace CgfConverter.Renderers.Collada;
@@ -65,24 +64,24 @@ public class ColladaModelRenderer : IRenderer
         GenerateDaeObject();
 
         // At this point, we should have a cryData.Asset object, fully populated.
-        Log(LogLevelEnum.Debug);
-        Log(LogLevelEnum.Debug, "*** Starting WriteCOLLADA() ***");
-        Log(LogLevelEnum.Debug);
+        HelperMethods.Log(LogLevelEnum.Debug);
+        HelperMethods.Log(LogLevelEnum.Debug, "*** Starting WriteCOLLADA() ***");
+        HelperMethods.Log(LogLevelEnum.Debug);
 
         TextWriter writer = new StreamWriter(daeOutputFile.FullName);
         serializer.Serialize(writer, DaeObject);
 
         writer.Close();
-        Log(LogLevelEnum.Debug, "End of Write Collada.  Export complete.");
+        HelperMethods.Log(LogLevelEnum.Debug, "End of Write Collada.  Export complete.");
         return 1;
     }
 
     public void GenerateDaeObject()
     {
-        Log(LogLevelEnum.Debug, "Number of models: {0}", _cryData.Models.Count);
+        HelperMethods.Log(LogLevelEnum.Debug, "Number of models: {0}", _cryData.Models.Count);
         for (int i = 0; i < _cryData.Models.Count; i++)
         {
-            Log(LogLevelEnum.Debug, "\tNumber of nodes in model: {0}", _cryData.Models[i].NodeMap.Count);
+            HelperMethods.Log(LogLevelEnum.Debug, "\tNumber of nodes in model: {0}", _cryData.Models[i].NodeMap.Count);
         }
 
         WriteColladaRoot(colladaVersion);
@@ -535,13 +534,13 @@ public class ColladaModelRenderer : IRenderer
 
             if (_args.IsNodeNameExcluded(nodeChunk.Name))
             {
-                Log(LogLevelEnum.Debug, $"Excluding node {nodeChunk.Name}");
+                HelperMethods.Log(LogLevelEnum.Debug, $"Excluding node {nodeChunk.Name}");
                 continue;
             }
 
             if (nodeChunk.ObjectChunk is null)
             {
-                Log(LogLevelEnum.Warning, "Skipped node with missing Object {0}", nodeChunk.Name);
+                HelperMethods.Log(LogLevelEnum.Warning, "Skipped node with missing Object {0}", nodeChunk.Name);
                 continue;
             }
 
@@ -677,11 +676,12 @@ public class ColladaModelRenderer : IRenderer
                             Vector3 vertex = tmpVertices.Vertices[j];
                             vertString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", vertex.X, vertex.Y, vertex.Z);
                             Vector3 normal = normals?.Normals[j] ?? tangents?.Normals[j] ?? new Vector3(0.0f, 0.0f, 0.0f);
-                            normString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", Safe(normal.X), Safe(normal.Y), Safe(normal.Z));
+                            normString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", HelperMethods.Safe(normal.X), HelperMethods.Safe(normal.Y), HelperMethods.Safe(normal.Z));
                         }
                         for (uint j = 0; j < uvs.NumElements; j++)     // Create UV string
                         {
-                            uvString.AppendFormat(culture, "{0:F6} {1:F6} ", Safe(uvs.UVs[j].U), 1 - Safe(uvs.UVs[j].V));
+                            uvString.AppendFormat(culture, "{0:F6} {1:F6} ",
+                                HelperMethods.Safe(uvs.UVs[j].U), 1 - HelperMethods.Safe(uvs.UVs[j].V));
                         }
                     }
                     else                // VertsUV structure.  Pull out verts and UVs from tmpVertsUVs.
@@ -730,7 +730,7 @@ public class ColladaModelRenderer : IRenderer
                             if (!_cryData.InputFile.EndsWith("skin") && !_cryData.InputFile.EndsWith("chr"))
                                 vertex = (vertex * multiplerVector) + boundaryBoxCenter;
 
-                            vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(vertex.X), Safe(vertex.Y), Safe(vertex.Z));
+                            vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", HelperMethods.Safe(vertex.X), HelperMethods.Safe(vertex.Y), HelperMethods.Safe(vertex.Z));
 
                             // TODO:  This isn't right?  VertsUvs may always have color as the 3rd element.
                             // Normals depend on the data size.  16 byte structures have the normals in the Tangents.  20 byte structures are in the VertsUV.
@@ -740,18 +740,18 @@ public class ColladaModelRenderer : IRenderer
                             else if (tangents is not null && tangents.Normals is not null)
                                 normal = tangents.Normals[j];
 
-                            normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(normal.X), Safe(normal.Y), Safe(normal.Z));
+                            normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", HelperMethods.Safe(normal.X), HelperMethods.Safe(normal.Y), HelperMethods.Safe(normal.Z));
                         }
                         // Create UV string
                         for (uint j = 0; j < vertsUvs.NumElements; j++)
                         {
-                            uvString.AppendFormat("{0:F6} {1:F6} ", Safe(vertsUvs.UVs[j].U), Safe(1 - vertsUvs.UVs[j].V));
+                            uvString.AppendFormat("{0:F6} {1:F6} ", HelperMethods.Safe(vertsUvs.UVs[j].U), HelperMethods.Safe(1 - vertsUvs.UVs[j].V));
                         }
                     }
-                    CleanNumbers(vertString);
-                    CleanNumbers(normString);
-                    CleanNumbers(uvString);
-                    CleanNumbers(colorString);
+                    HelperMethods.CleanNumbers(vertString);
+                    HelperMethods.CleanNumbers(normString);
+                    HelperMethods.CleanNumbers(uvString);
+                    HelperMethods.CleanNumbers(colorString);
 
                     #region Create the triangles node.
                     var triangles = new ColladaTriangles[meshSubsets.NumMeshSubset];
@@ -1199,7 +1199,7 @@ public class ColladaModelRenderer : IRenderer
                     accessor.Count = (uint)_cryData.SkinningInfo.Ext2IntMap.Count * 4;
                 };
             }
-            CleanNumbers(weights);
+            HelperMethods.CleanNumbers(weights);
             weightArraySource.Float_Array.Value_As_String = weights.ToString().TrimEnd();
             // Add technique_common part.
             accessor.Source = "#Controller-weights-array";
@@ -1507,7 +1507,7 @@ public class ColladaModelRenderer : IRenderer
         {
             if (_args.IsNodeNameExcluded(childNodeChunk.Name))
             {
-                Log(LogLevelEnum.Debug, $"Excluding child node {childNodeChunk.Name}");
+                HelperMethods.Log(LogLevelEnum.Debug, $"Excluding child node {childNodeChunk.Name}");
                 continue;
             }
 
@@ -1669,7 +1669,7 @@ public class ColladaModelRenderer : IRenderer
     {
         StringBuilder vectorValues = new();
         vectorValues.AppendFormat("{0:F6} {1:F6} {2:F6}", vector.X, vector.Y, vector.Z);
-        CleanNumbers(vectorValues);
+        HelperMethods.CleanNumbers(vectorValues);
         return vectorValues.ToString();
     }
 
@@ -1677,7 +1677,7 @@ public class ColladaModelRenderer : IRenderer
     {
         StringBuilder vectorValues = new();
         vectorValues.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6}", vector.X, vector.Y, vector.Z, vector.W);
-        CleanNumbers(vectorValues);
+        HelperMethods.CleanNumbers(vectorValues);
         return vectorValues.ToString();
     }
 
@@ -1701,7 +1701,7 @@ public class ColladaModelRenderer : IRenderer
             matrix.M42,
             matrix.M43,
             matrix.M44);
-        CleanNumbers(matrixValues);
+        HelperMethods.CleanNumbers(matrixValues);
         return matrixValues.ToString();
     }
 }

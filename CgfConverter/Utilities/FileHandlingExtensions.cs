@@ -46,7 +46,7 @@ public static class FileHandlingExtensions
                 .FirstOrDefault(x => TextureExtensions.Contains(Path.GetExtension(x)?.ToLowerInvariant())) is { } path)
             return path;
 
-        Utilities.Log(LogLevelEnum.Debug, $"Could not find extension for material texture \"{imagePath}\". Defaulting to .dds");
+        HelperMethods.Log(LogLevelEnum.Debug, $"Could not find extension for material texture \"{imagePath}\". Defaulting to .dds");
         
         return Path.ChangeExtension(imagePath, ".dds").Replace("\\", "/");
     }
