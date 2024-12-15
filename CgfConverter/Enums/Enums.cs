@@ -82,8 +82,8 @@ public enum ChunkType : uint    // complete
     // Star Citizen #ivo file chunks
     MtlNameIvo = 0x8335674E,
     MtlNameIvo320 = 0x83353333,
-    CompiledBonesIvo = 0xC201973C,
-    CompiledBonesIvo320 = 0xC2011111,
+    NodeDetails = 0xC201973C,      // cgf/cga files with multiple nodes
+    CompiledBonesIvo = 0xC2011111,
     CompiledPhysicalBonesIvo = 0x90C687DC,  // Physics
     CompiledPhysicalBonesIvo320 = 0x90C66666,
     MeshIvo = 0x9293B9D8,           // SkinInfo

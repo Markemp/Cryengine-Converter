@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using CgfConverter.CryEngineCore.Chunks;
 using CgfConverter.Models;
 using CgfConverter.Services;
 using CgfConverter.Utilities;
@@ -64,8 +65,8 @@ public abstract class Chunk : IBinaryChunk
             // SC IVO chunks
             ChunkType.MtlNameIvo => Chunk.New<ChunkMtlName>(version),
             ChunkType.MtlNameIvo320 => Chunk.New<ChunkMtlName>(version),
+            ChunkType.NodeDetails => Chunk.New<ChunkNodeDetails>(version),
             ChunkType.CompiledBonesIvo => Chunk.New<ChunkCompiledBones>(version),
-            ChunkType.CompiledBonesIvo320 => Chunk.New<ChunkCompiledBones>(version),
             ChunkType.MeshIvo => Chunk.New<ChunkMesh>(version),
             ChunkType.MeshIvo320 => Chunk.New<ChunkMesh>(version),
             ChunkType.IvoSkin2 => Chunk.New<ChunkIvoSkin>(version),

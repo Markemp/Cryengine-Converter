@@ -266,6 +266,16 @@ public class StarCitizenTests
     }
 
     [TestMethod]
+    public void BMSL_FPS_APAR_Animus_Body_v324_Ivo()
+    {
+        var args = new string[] { $@"D:\depot\SC3.24\Data\Objects\fps_weapons\weapons_v7\apar\launcher\animus\bmsl_fps_apar_animus_body.cga", "-dds", "-dae", "-objectdir", @"d:\depot\sc3.24\data" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+    }
+
+    [TestMethod]
     public void CRUS_Spirit_Exterior()
     {
         var args = new string[] { $@"d:\depot\sc3.22\data\objects\spaceships\ships\CRUS\spirit\exterior\crus_Spirit.cga", "-dds", "-dae", "-objectdir", @"d:\depot\sc3.22\data" };

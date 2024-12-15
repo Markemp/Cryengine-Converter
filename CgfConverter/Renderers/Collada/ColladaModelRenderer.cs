@@ -1341,8 +1341,8 @@ public class ColladaModelRenderer : IRenderer
         // Check to see if there is a CompiledBones chunk.  If so, add a Node.
         if (_cryData.Chunks.Any(a => a.ChunkType == ChunkType.CompiledBones ||
             a.ChunkType == ChunkType.CompiledBonesSC ||
-            a.ChunkType == ChunkType.CompiledBonesIvo ||
-            a.ChunkType == ChunkType.CompiledBonesIvo320))
+            //a.ChunkType == ChunkType.CompiledBonesIvo ||
+            a.ChunkType == ChunkType.CompiledBonesIvo))
         {
             ColladaNode boneNode = new();
             boneNode = CreateJointNode(_cryData.Bones.RootBone);

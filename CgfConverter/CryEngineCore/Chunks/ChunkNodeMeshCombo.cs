@@ -15,9 +15,12 @@ abstract class ChunkNodeMeshCombo : Chunk
     public int Unknown { get; internal set; }
     public int Unknown2 { get; internal set; }
     public int Unknown3 { get; internal set; }
-    public int UnknownIndices { get; internal set; }
     public int StringTableSize { get; internal set; }
     public required List<NodeMeshCombo> NodeMeshCombos { get; internal set; }
+
+    public required List<ushort> MaterialIndices { get; internal set; }
+    public required List<ushort> UnknownIndices { get; internal set; }
+
     public required List<string> NodeNames { get; internal set; }
 }
 
