@@ -74,7 +74,8 @@ public class StarCitizenTests
     [TestMethod]
     public void AEGS_Vanguard_LandingGear_Front_IvoFile()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\AEGS_Vanguard_LandingGear_Front.skin", "-dds", "-dae" };
+        //var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\AEGS_Vanguard_LandingGear_Front.skin", "-dds", "-dae" };
+        var args = new string[] { $@"d:\depot\sc3.24\data\objects\spaceships\ships\AEGS\LandingGear\Vanguard\AEGS_Vanguard_LandingGear_Front.skin", "-dds", "-dae", "-objectdir", @"d:\depot\sc3.24\data" };
 
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
@@ -367,7 +368,8 @@ public class StarCitizenTests
     [TestMethod]
     public void AEGS_GladiusLandingGearFront_CHR()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\AEGS_Gladius_LandingGear_Front_CHR.chr", "-dds", "-dae", "-objectdir", @"d:\depot\sc2\data" };
+        var args = new string[] { $@"d:\depot\sc3.24\Data\Objects\Spaceships\Ships\AEGS\LandingGear\Gladius\AEGS_Gladius_LandingGear_Front_CHR.chr", "-dds", "-dae", "-objectdir", @"d:\depot\sc3.24\data" };
+        //var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\AEGS_Gladius_LandingGear_Front_CHR.chr", "-dds", "-dae", "-objectdir", @"d:\depot\sc2\data" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
@@ -456,36 +458,12 @@ public class StarCitizenTests
         Assert.AreEqual(25, materials.Length);
     }
 
-    //D:\depot\SC3.22\Data\Objects\Characters\Mobiglas
     [TestMethod]
-    public void Mobiglass()
+    public void Mobiglass_Civilian_01_Skin_Collada()
     {
         var args = new string[] {
-            $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\f_mobiglas_civilian_01.skin",
-            "-dds", "-dae" };
-        int result = testUtils.argsHandler.ProcessArgs(args);
-        Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
-        cryData.ProcessCryengineFiles();
-
-        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
-        colladaData.GenerateDaeObject();
-
-        // Geometry Library checks
-        var geometries = colladaData.DaeObject.Library_Geometries.Geometry;
-        Assert.AreEqual(1, geometries.Length);
-
-        // Materials check
-        var materials = colladaData.DaeObject.Library_Materials.Material;
-        Assert.AreEqual(5, materials.Length);
-    }
-
-    [TestMethod]
-    public void Mobiglass_Collada_InDirectory()
-    {
-        var args = new string[] {
-            $@"D:\depot\SC3.22\Data\Objects\Characters\Mobiglas\f_mobiglas_civilian_01.skin",
-            "-dds", "-dae", "-objectdir", @"d:\depot\sc3.22\data" };
+            $@"D:\depot\SC3.24\Data\Objects\Characters\Mobiglas\f_mobiglas_civilian_01.skin",
+            "-dds", "-dae", "-objectdir", @"d:\depot\sc3.24\data" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
@@ -532,8 +510,8 @@ public class StarCitizenTests
     public void Mobiglass_Gltf()
     {
         var args = new string[] {
-            $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\f_mobiglas_civilian_01.skin",
-            "-dds", "-dae" };
+            $@"D:\depot\SC3.24\Data\Objects\Characters\Mobiglas\f_mobiglas_civilian_01.skin",
+            "-dds", "-dae", "-objectdir", @"d:\depot\sc3.24\data" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
