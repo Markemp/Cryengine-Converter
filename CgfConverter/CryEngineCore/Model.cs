@@ -215,7 +215,7 @@ public class Model
             if (chunkHeaderItem.ChunkType == ChunkType.CompiledBones ||
                 chunkHeaderItem.ChunkType == ChunkType.CompiledBonesSC ||
                 //chunkHeaderItem.ChunkType == ChunkType.CompiledBonesIvo ||
-                chunkHeaderItem.ChunkType == ChunkType.CompiledBonesIvo)
+                chunkHeaderItem.ChunkType == ChunkType.CompiledBones_Ivo2)
             {
                 Bones = chunk as ChunkCompiledBones;
             }

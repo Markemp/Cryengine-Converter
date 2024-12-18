@@ -1342,7 +1342,7 @@ public class ColladaModelRenderer : IRenderer
         if (_cryData.Chunks.Any(a => a.ChunkType == ChunkType.CompiledBones ||
             a.ChunkType == ChunkType.CompiledBonesSC ||
             //a.ChunkType == ChunkType.CompiledBonesIvo ||
-            a.ChunkType == ChunkType.CompiledBonesIvo))
+            a.ChunkType == ChunkType.CompiledBones_Ivo2))
         {
             ColladaNode boneNode = new();
             boneNode = CreateJointNode(_cryData.Bones.RootBone);
