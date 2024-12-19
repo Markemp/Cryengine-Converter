@@ -33,14 +33,13 @@ internal sealed class ChunkCompiledBones_900 : ChunkCompiledBones
             if (BoneList[i].offsetParent != -1)
             {
                 BoneList[i].ParentBone = BoneList[BoneList[i].offsetParent];
-                BoneList[i].parentID = BoneList[i].offsetParent;
-                BoneList[i].ParentBone.childIDs.Add(i);
+                BoneList[i].ParentControllerIndex = BoneList[i].offsetParent;
+                BoneList[i].ParentBone.ChildIDs.Add(i);
                 BoneList[i].ParentBone.numChildren++;
             }
         }
 
         SkinningInfo skin = GetSkinningInfo();
-        skin.CompiledBones = new List<CompiledBone>();
         skin.CompiledBones = BoneList;
     }
 }

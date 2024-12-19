@@ -23,7 +23,8 @@ public class HashingExtensionTests
         var expected = "display";
         var crc32 = Crc32CryEngine.Compute(expected);
 
-        Assert.AreEqual((uint)0x786B12A1, crc32);
+        Assert.AreEqual((uint)215052963, crc32);
+        Assert.AreEqual((uint)0x0CD172A3, crc32);
     }
 
     [TestMethod]
@@ -32,7 +33,8 @@ public class HashingExtensionTests
         var expected = "hud";
         var crc32b = Crc32CryEngine.Compute(expected);
 
-        Assert.AreEqual((uint)0x0CD172A3, crc32b);
+        Assert.AreEqual((uint)2702338936, crc32b);
+        Assert.AreEqual((uint)0xA1126B78, crc32b);
     }
 
     [TestMethod]

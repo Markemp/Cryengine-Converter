@@ -8,6 +8,8 @@ public abstract class ChunkCompiledBones : Chunk     //  Bones info
     public string RootBoneName;         // Controller ID?  Name?  Not sure yet.
     public CompiledBone RootBone;       // First bone in the data structure.
     public int NumBones;                // Number of bones in the chunk
+    public int? Flags1;
+    public int? Flags2;
 
     // Bones are a bit different than Node Chunks, since there is only one CompiledBones Chunk, and it contains all the bones in the model.
     public List<CompiledBone> BoneList = new();

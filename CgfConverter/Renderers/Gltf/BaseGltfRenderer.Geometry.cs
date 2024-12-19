@@ -225,7 +225,7 @@ public partial class BaseGltfRenderer
             };
             controllerIdToNodeIndex[bone.ControllerID] = AddNode(boneNode);
 
-            if (bone.parentID == 0)
+            if (bone.ParentControllerIndex == 0)
                 CurrentScene.Nodes.Add(controllerIdToNodeIndex[bone.ControllerID]);
             else
                 Root.Nodes[controllerIdToNodeIndex[parentBone.ControllerID]].Children

@@ -28,9 +28,9 @@ internal sealed class ChunkCompiledBones_801 : ChunkCompiledBones
 
             if (tempBone.ParentBone is not null)
                 //tempBone.parentID = tempBone.ParentBone.ControllerID;
-                tempBone.parentID = BoneList.IndexOf(tempBone) + tempBone.offsetParent;
+                tempBone.ParentControllerIndex = BoneList.IndexOf(tempBone) + tempBone.offsetParent;
             else
-                tempBone.parentID = 0;
+                tempBone.ParentControllerIndex = 0;
 
             BoneList.Add(tempBone);
         }
