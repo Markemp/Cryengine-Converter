@@ -106,6 +106,7 @@ public class ArcheAgeTests
     [TestMethod]
     public void DrugBoy_Chr()
     {
+        // Camera has controller id 0xffffffff just like parent Bip01.
         var args = new string[]
         {
             @"D:\depot\archeage\game\objects\characters\people\drug_boy01\face\drug_boy01_face01\drug_boy01_face01.chr",

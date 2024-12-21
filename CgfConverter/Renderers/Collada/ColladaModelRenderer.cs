@@ -50,7 +50,7 @@ public class ColladaModelRenderer : IRenderer
     private readonly XmlSerializer serializer = new(typeof(ColladaDoc));
     private readonly FileInfo daeOutputFile;
 
-    private readonly Dictionary<int, string> controllerIdToBoneName = new();
+    private readonly Dictionary<uint, string> controllerIdToBoneName = new();
 
     public ColladaModelRenderer(ArgsHandler argsHandler, CryEngine cryEngine)
     {

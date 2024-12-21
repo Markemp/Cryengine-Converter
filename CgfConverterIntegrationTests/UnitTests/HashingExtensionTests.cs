@@ -40,14 +40,11 @@ public class HashingExtensionTests
     [TestMethod]
     public void Crc32_CryEngineExample_ShouldPass()
     {
-        // Arrange
         string input = "123456789";
         uint expectedCrc = 0xCBF43926;
 
-        // Act
         uint actualCrc = Crc32CryEngine.Compute(input);
 
-        // Assert
         Assert.AreEqual(expectedCrc, actualCrc);
     }
 }

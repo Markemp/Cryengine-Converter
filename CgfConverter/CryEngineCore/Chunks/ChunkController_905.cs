@@ -395,7 +395,7 @@ internal sealed class ChunkController_905 : ChunkController
     public struct CControllerInfo
     {
         public const int InvalidTrack = -1;
-        public int ControllerID;
+        public uint ControllerID;
         public int PosKeyTimeTrack;
         public int PosTrack;
         public int RotKeyTimeTrack;
@@ -412,7 +412,7 @@ internal sealed class ChunkController_905 : ChunkController
 
         public CControllerInfo(BinaryReader r)
         {
-            ControllerID = r.ReadInt32();
+            ControllerID = r.ReadUInt32();
             PosKeyTimeTrack = r.ReadInt32();
             PosTrack = r.ReadInt32();
             RotKeyTimeTrack = r.ReadInt32();

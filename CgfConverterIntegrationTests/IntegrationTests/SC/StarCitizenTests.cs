@@ -536,4 +536,21 @@ public class StarCitizenTests
         var materials = colladaData.DaeObject.Library_Materials.Material;
         Assert.AreEqual(21, materials.Length);
     }
+
+    [TestMethod]
+    public void Bmsl_Fps_APAR_Animus_Body()
+    {
+        var args = new string[] {
+            $@"D:\depot\SC3.24\Data\Objects\fps_weapons\weapons_v7\apar\launcher\animus\bmsl_fps_apar_animus_body.cga",
+            "-dds", "-dae", "-objectdir", @"d:\depot\sc3.24\data" };
+
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        //colladaData.GenerateDaeObject();
+    }
+    
 }

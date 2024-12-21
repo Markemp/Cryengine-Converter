@@ -64,7 +64,7 @@ public partial class BaseGltfRenderer
             return false;
         }
 
-        var controllerIdToNodeIndex = new Dictionary<int, int>();
+        var controllerIdToNodeIndex = new Dictionary<uint, int>();
 
         // Create this node and add to GltfRoot.Nodes
         var rotationQuat = Quaternion.CreateFromRotationMatrix(cryNode.LocalTransform);
@@ -124,7 +124,7 @@ public partial class BaseGltfRenderer
         return true;
     }
 
-    private void AddMesh(CryEngine cryData, ChunkNode cryNode, GltfNode gltfNode, Dictionary<int, int> controllerIdToNodeIndex, bool omitSkins)
+    private void AddMesh(CryEngine cryData, ChunkNode cryNode, GltfNode gltfNode, Dictionary<uint, int> controllerIdToNodeIndex, bool omitSkins)
     {
         var accessors = new GltfMeshPrimitiveAttributes();
         var meshChunk = cryNode.ObjectChunk as ChunkMesh;
@@ -158,7 +158,7 @@ public partial class BaseGltfRenderer
         out int joints,
         GltfNode rootNode,
         SkinningInfo skinningInfo,
-        IDictionary<int, int> controllerIdToNodeIndex)
+        IDictionary<uint, int> controllerIdToNodeIndex)
     {
         if (!skinningInfo.HasSkinningInfo)
             throw new ArgumentException("HasSkinningInfo must be true", nameof(skinningInfo));
