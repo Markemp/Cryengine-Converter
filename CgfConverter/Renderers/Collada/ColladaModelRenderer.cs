@@ -361,33 +361,36 @@ public class ColladaModelRenderer : IRenderer
 
         // Create a list for the new_params
         List<ColladaNewParam> newparams = new();
-        for (int j = 0; j < subMat.Textures.Length; j++)
+        if (subMat.Textures is not null)
         {
-            // Add the Surface node
-            ColladaNewParam texSurface = new()
+            for (int j = 0; j < subMat.Textures.Length; j++)
             {
-                sID = effectName + "_" + subMat.Textures[j].Map + "-surface"
-            };
-            ColladaSurface surface = new();
-            texSurface.Surface = surface;
-            surface.Init_From = new ColladaInitFrom();
-            texSurface.Surface.Type = "2D";
-            texSurface.Surface.Init_From = new ColladaInitFrom
-            {
-                Uri = effectName + "_" + subMat.Textures[j].Map
-            };
+                // Add the Surface node
+                ColladaNewParam texSurface = new()
+                {
+                    sID = effectName + "_" + subMat.Textures[j].Map + "-surface"
+                };
+                ColladaSurface surface = new();
+                texSurface.Surface = surface;
+                surface.Init_From = new ColladaInitFrom();
+                texSurface.Surface.Type = "2D";
+                texSurface.Surface.Init_From = new ColladaInitFrom
+                {
+                    Uri = effectName + "_" + subMat.Textures[j].Map
+                };
 
-            // Add the Sampler node
-            ColladaNewParam texSampler = new()
-            {
-                sID = effectName + "_" + subMat.Textures[j].Map + "-sampler"
-            };
-            ColladaSampler2D sampler2D = new();
-            texSampler.Sampler2D = sampler2D;
-            texSampler.Sampler2D.Source = texSurface.sID;
+                // Add the Sampler node
+                ColladaNewParam texSampler = new()
+                {
+                    sID = effectName + "_" + subMat.Textures[j].Map + "-sampler"
+                };
+                ColladaSampler2D sampler2D = new();
+                texSampler.Sampler2D = sampler2D;
+                texSampler.Sampler2D.Source = texSurface.sID;
 
-            newparams.Add(texSurface);
-            newparams.Add(texSampler);
+                newparams.Add(texSurface);
+                newparams.Add(texSampler);
+            }
         }
 
         #region Create the Technique
@@ -406,52 +409,55 @@ public class ColladaModelRenderer : IRenderer
         bool diffuseFound = false;
         bool specularFound = false;
 
-        foreach (var texture in subMat.Textures)
+        if (subMat.Textures is not null)
         {
-            if (texture.Map == Texture.MapTypeEnum.Diffuse)
+            foreach (var texture in subMat.Textures)
             {
-                diffuseFound = true;
-                phong.Diffuse.Texture = new ColladaTexture
+                if (texture.Map == Texture.MapTypeEnum.Diffuse)
                 {
-                    // Texcoord is the ID of the UV source in geometries.  Not needed.
-                    Texture = effectName + "_" + texture.Map + "-sampler",
-                    TexCoord = ""
-                };
-            }
+                    diffuseFound = true;
+                    phong.Diffuse.Texture = new ColladaTexture
+                    {
+                        // Texcoord is the ID of the UV source in geometries.  Not needed.
+                        Texture = effectName + "_" + texture.Map + "-sampler",
+                        TexCoord = ""
+                    };
+                }
 
-            if (texture.Map == Texture.MapTypeEnum.Specular)
-            {
-                specularFound = true;
-                phong.Specular.Texture = new ColladaTexture
+                if (texture.Map == Texture.MapTypeEnum.Specular)
                 {
-                    Texture = effectName + "_" + texture.Map + "-sampler",
-                    TexCoord = ""
-                };
-            }
+                    specularFound = true;
+                    phong.Specular.Texture = new ColladaTexture
+                    {
+                        Texture = effectName + "_" + texture.Map + "-sampler",
+                        TexCoord = ""
+                    };
+                }
 
-            if (texture.Map == Texture.MapTypeEnum.Normals)
-            {
-                // Bump maps go in an extra node.
-                ColladaExtra[] extras = new ColladaExtra[1];
-                ColladaExtra extra = new();
-                extras[0] = extra;
-
-                technique.Extra = extras;
-
-                // Create the technique for the extra
-                ColladaTechnique[] extraTechniques = new ColladaTechnique[1];
-                ColladaTechnique extraTechnique = new();
-                extra.Technique = extraTechniques;
-
-                extraTechniques[0] = extraTechnique;
-                extraTechnique.profile = "FCOLLADA";
-
-                ColladaBumpMap bumpMap = new() { Textures = new ColladaTexture[1] };
-                bumpMap.Textures[0] = new ColladaTexture
+                if (texture.Map == Texture.MapTypeEnum.Normals)
                 {
-                    Texture = effectName + "_" + texture.Map + "-sampler"
-                };
-                extraTechnique.Data = new XmlElement[1] { bumpMap };
+                    // Bump maps go in an extra node.
+                    ColladaExtra[] extras = new ColladaExtra[1];
+                    ColladaExtra extra = new();
+                    extras[0] = extra;
+
+                    technique.Extra = extras;
+
+                    // Create the technique for the extra
+                    ColladaTechnique[] extraTechniques = new ColladaTechnique[1];
+                    ColladaTechnique extraTechnique = new();
+                    extra.Technique = extraTechniques;
+
+                    extraTechniques[0] = extraTechnique;
+                    extraTechnique.profile = "FCOLLADA";
+
+                    ColladaBumpMap bumpMap = new() { Textures = new ColladaTexture[1] };
+                    bumpMap.Textures[0] = new ColladaTexture
+                    {
+                        Texture = effectName + "_" + texture.Map + "-sampler"
+                    };
+                    extraTechnique.Data = new XmlElement[1] { bumpMap };
+                }
             }
         }
 
