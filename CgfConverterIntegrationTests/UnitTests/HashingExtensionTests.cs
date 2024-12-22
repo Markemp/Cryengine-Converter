@@ -47,4 +47,15 @@ public class HashingExtensionTests
 
         Assert.AreEqual(expectedCrc, actualCrc);
     }
+
+    [TestMethod]
+    public void Crc32_Nose()
+    {
+        string input = "Nose";
+        uint expectedCrc = 0x20CEC3ED;  // 550421485
+
+        uint actualCrc = Crc32CryEngine.Compute(input);
+
+        Assert.AreEqual(expectedCrc, actualCrc);
+    }
 }

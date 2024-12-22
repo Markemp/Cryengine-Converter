@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 
 namespace CgfConverter.CryEngineCore;
 
@@ -11,7 +10,6 @@ public abstract class ChunkCompiledBones : Chunk     //  Bones info
     public int? Flags1;
     public int? Flags2;
 
-    // Bones are a bit different than Node Chunks, since there is only one CompiledBones Chunk, and it contains all the bones in the model.
     public List<CompiledBone> BoneList = new();
 
     public List<CompiledBone> GetChildBones(CompiledBone bone)
@@ -24,8 +22,6 @@ public abstract class ChunkCompiledBones : Chunk     //  Bones info
         }
         return childBones;
     }
-
-    public List<string> GetBoneNames() => BoneList.Select(a => a.boneName).ToList();
 
     public override string ToString() => $@"Chunk Type: {ChunkType}, ID: {ID:X}";
 }

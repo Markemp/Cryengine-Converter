@@ -12,7 +12,7 @@ internal class ChunkCompiledBones_901 : ChunkCompiledBones
         base.Read(b);
 
         NumBones = b.ReadInt32();
-        var stringTableSize = b.ReadInt32(); // Won't use
+        var _ = b.ReadInt32(); // String table size.  Won't use.
         Flags1 = b.ReadInt32();
         Flags2 = b.ReadInt32();
 

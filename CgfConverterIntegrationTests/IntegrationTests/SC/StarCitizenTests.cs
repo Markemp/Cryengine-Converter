@@ -222,8 +222,8 @@ public class StarCitizenTests
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
-
-        //Assert.AreEqual(17, cryData.Materials.Count);
+        
+        Assert.AreEqual(17, daeObject.Library_Materials.Material.Length);
 
         testUtils.ValidateColladaXml(colladaData);
     }

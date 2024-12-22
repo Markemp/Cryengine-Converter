@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using CgfConverter.CryEngineCore.Chunks;
 using CgfConverter.Models;
 using CgfConverter.Services;
 
@@ -50,7 +51,7 @@ public class Model
     {
         get
         {
-            if (nodeMap == null)
+            if (nodeMap is null)
             {
                 nodeMap = new Dictionary<int, ChunkNode>() { };
                 ChunkNode? rootNode = null;
@@ -76,7 +77,7 @@ public class Model
         }
     }
 
-    public bool HasBones => Bones != null;
+    public bool HasBones => Bones is not null;
 
     public bool HasGeometry
     {
@@ -117,6 +118,29 @@ public class Model
         ReadFileHeader(reader);
         ReadChunkTable(reader);
         ReadChunks(reader);
+        BuildIvoNodeStructure();
+        
+    }
+
+    // With Ivo files, the node structure is either implied (skin and chr files) or
+    // part of the nodemeshcombo chunks. 
+    private void BuildIvoNodeStructure()
+    {
+        if (!IsIvoFile)
+            return;
+        // Build the node structure for #ivo files
+        // All will have a MeshInfo chunk.  The ones with NodeMeshCombo will
+        // have multiple nodes.
+        if (ChunkMap.Values.Any(c => c.ChunkType == ChunkType.NodeMeshCombo))
+        {
+            // Root node is the one with parent of -1
+
+
+        }
+        else
+        {
+            CreateDummyRootNode();
+        }
     }
 
     private void ReadFileHeader(BinaryReader b)
@@ -137,7 +161,6 @@ public class Model
             FileVersion = (FileVersion)b.ReadUInt32();  // 0x0900
             NumChunks = b.ReadUInt32();
             ChunkTableOffset = b.ReadInt32();
-            CreateDummyRootNode();
             return;
         }
 

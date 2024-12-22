@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CgfConverter.CryEngineCore.Chunks;
 using CgfConverter.Models;
 using CgfConverter.Services;
 using CgfConverter.Utilities;
@@ -65,7 +64,7 @@ public abstract class Chunk : IBinaryChunk
             // SC IVO chunks
             ChunkType.MtlNameIvo => Chunk.New<ChunkMtlName>(version),
             ChunkType.MtlNameIvo320 => Chunk.New<ChunkMtlName>(version),
-            ChunkType.CompiledBones_Ivo => Chunk.New<ChunkNodeDetails>(version),
+            ChunkType.CompiledBones_Ivo => Chunk.New<ChunkCompiledBones>(version),
             ChunkType.CompiledBones_Ivo2 => Chunk.New<ChunkCompiledBones>(version),
             ChunkType.MeshIvo => Chunk.New<ChunkMesh>(version),
             ChunkType.MeshInfo => Chunk.New<ChunkMesh>(version),
@@ -196,18 +195,6 @@ public abstract class Chunk : IBinaryChunk
     public virtual void Write(BinaryWriter writer) { throw new NotImplementedException(); }
 
     public override string ToString() => $@"Chunk Type: {ChunkType}, Ver: {Version:X}, Offset: {Offset:X}, ID: {ID:X}, Size: {Size}";
-
-    //public static IvoNodeId GetIvoNodeId(ChunkType chunkType)
-    //{
-    //    if (chunkType == ChunkType.Node)
-    //        return IvoNodeId.NodeChunk;
-    //    if (chunkType == ChunkType.Mesh)
-    //        return IvoNodeId.MeshChunk;
-    //    if (chunkType == ChunkType.MeshSubsets)
-    //        return IvoNodeId.MeshSubsets;
-    //    if (chunkType == ChunkType.Data)
-
-    //}
 
     public static int GetNextRandom()
     {
