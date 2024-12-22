@@ -247,7 +247,7 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                                 Vertices[i].Z = b.ReadDymekHalf();
                                 SkipBytes(b, 2);
 
-                                Colors[i] = b.ReadColorBGRA();
+                                Colors[i] = b.ReadColor();
 
                                 // Inelegant hack for Blender, as it's Collada importer doesn't support Alpha channels,
                                 // and some materials need the alpha channel more than the green channel.

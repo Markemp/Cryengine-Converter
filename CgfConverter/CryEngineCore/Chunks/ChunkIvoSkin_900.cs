@@ -5,7 +5,7 @@ namespace CgfConverter.CryEngineCore.Chunks;
 
 internal sealed class ChunkIvoSkin_900 : ChunkIvoSkin
 {
-    /*
+    /* 
      * Node IDs for Ivo models
      * 1: NodeChunk
      * 2: MeshChunk
