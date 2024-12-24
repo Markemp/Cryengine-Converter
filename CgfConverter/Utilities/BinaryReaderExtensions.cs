@@ -92,6 +92,30 @@ public static class BinaryReaderExtensions
         return q;
     }
 
+    public static GeometryMeshDetails ReadMeshDetails(this BinaryReader r)
+    {
+        return new GeometryMeshDetails
+        {
+            Flags2 = r.ReadUInt32(),  // 4 = no normals datastream, 5 has normals datastream
+            NumberOfVertices = r.ReadUInt32(),
+            NumberOfIndices = r.ReadUInt32(),
+            NumberOfSubmeshes = r.ReadUInt32(),
+            Unknown = r.ReadInt32(),
+            BoundingBox = r.ReadBoundingBox(),
+            ScalingBoundingBox = r.ReadBoundingBox(),
+            VertexFormat = (VertexFormat)r.ReadUInt32()
+        };
+    }
+
+    public static BoundingBox ReadBoundingBox(this BinaryReader r)
+    {
+        return new BoundingBox
+        {
+            Min = r.ReadVector3(),
+            Max = r.ReadVector3()
+        };
+    }
+
     public static AaBb ReadAaBb(this BinaryReader reader)
     {
         return new AaBb
@@ -101,9 +125,9 @@ public static class BinaryReaderExtensions
         };
     }
 
-    public static ShotInt3Quat ReadShotInt3Quat(this BinaryReader r)
+    public static ShortInt3Quat ReadShortInt3Quat(this BinaryReader r)
     {
-        return new ShotInt3Quat
+        return new ShortInt3Quat
         {
             X = r.ReadInt16(),
             Y = r.ReadInt16(),
@@ -162,7 +186,7 @@ public static class BinaryReaderExtensions
     public static Matrix3x3 ReadMatrix3x3(this BinaryReader reader)
     {
         // Reads a Matrix33 structure
-        if (reader == null)
+        if (reader is null)
             throw new ArgumentNullException(nameof(reader));
 
         Matrix3x3 m = new()
@@ -183,7 +207,7 @@ public static class BinaryReaderExtensions
 
     public static Matrix3x4 ReadMatrix3x4(this BinaryReader r)
     {
-        if (r == null)
+        if (r is null)
             throw new ArgumentNullException(nameof(r));
 
         Matrix3x4 m = new()
@@ -207,7 +231,7 @@ public static class BinaryReaderExtensions
 
     public static Matrix4x4 ReadMatrix4x4(this BinaryReader r)
     {
-        if (r == null)
+        if (r is null)
             throw new ArgumentNullException(nameof(r));
 
         Matrix4x4 m = new()

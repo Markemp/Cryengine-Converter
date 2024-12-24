@@ -182,17 +182,16 @@ public enum DatastreamType : uint
     COLORS2,
     INDICES,    // 0x05
     TANGENTS,
-    SHCOEFFS,
-    SHAPEDEFORMATION,
+    DUMMY0,
+    DUMMY1,
     BONEMAP,    // 0x09
     FACEMAP,
     VERTMATS,
     QTANGENTS,   // Prey Normals?
-    UNKNOWN2,
-    UNKNOWN3,
+    SKINDATA,
+    DUMMY2,
     VERTSUVS,   // 0x0F
-    UNKNOWN5,
-    UNKNOWN6
+    NUMTYPES
 }
 
 public enum IvoDatastreamType : uint
@@ -217,30 +216,48 @@ public enum PhysicsPrimitiveType : uint
     UNKNOWN6 = 0X6   // nothing between 2-4, no idea what unknown is.
 }
 
-public enum ECgfStreamType : uint
-{
-    CGF_STREAM_POSITIONS,
-    CGF_STREAM_NORMALS,
-    CGF_STREAM_TEXCOORDS,
-    CGF_STREAM_COLORS,
-    CGF_STREAM_COLORS2,
-    CGF_STREAM_INDICES,
-    CGF_STREAM_TANGENTS,
-    CGF_STREAM_DUMMY0_,  // used to be CGF_STREAM_SHCOEFFS, dummy is needed to keep existing assets loadable
-    CGF_STREAM_DUMMY1_,  // used to be CGF_STREAM_SHAPEDEFORMATION, dummy is needed to keep existing assets loadable
-    CGF_STREAM_BONEMAPPING,
-    CGF_STREAM_FACEMAP,
-    CGF_STREAM_VERT_MATS,
-    CGF_STREAM_QTANGENTS,
-    CGF_STREAM_SKINDATA,
-    CGF_STREAM_DUMMY2_,  // used to be CGF_STREAM_PS3EDGEDATA, dummy is needed to keep existing assets loadable
-    CGF_STREAM_P3S_C4B_T2S,
-    CGF_STREAM_NUM_TYPES
-};
-
 public enum XmlFileType
 {
     MATERIAL,
     PREFAB,
     CHRPARAMS
 }
+
+public enum VertexFormat : uint
+{
+    eVF_Unknown,
+
+    // Base stream
+    eVF_P3F_C4B_T2F,
+    eVF_P3F_C4B_T2F_T2F,
+    eVF_P3S_C4B_T2S,
+    eVF_P3S_C4B_T2S_T2S, // For UV2 support  
+    eVF_P3S_N4B_C4B_T2S,
+
+    eVF_P3F_C4B_T4B_N3F2, // Particles.
+    eVF_TP3F_C4B_T2F, // Fonts (28 bytes).
+    eVF_TP3F_T2F_T3F,  // Miscellaneus.
+    eVF_P3F_T3F,       // Miscellaneus. (AuxGeom)
+    eVF_P3F_T2F_T3F,   // Miscellaneus.
+
+    // Additional streams
+    eVF_T2F,           // Light maps TC (8 bytes).
+    eVF_W4B_I4S,  // Skinned weights/indices stream.
+    eVF_C4B_C4B,      // SH coefficients.
+    eVF_P3F_P3F_I4B,  // Shape deformation stream.
+    eVF_P3F,       // Velocity stream.
+
+    eVF_C4B_T2S,     // General (Position is merged with Tangent stream)
+
+    // Lens effects simulation
+    eVF_P2F_T4F_C4F,  // primary
+    eVF_P2F_T4F_T4F_C4F,
+
+    eVF_P2S_N4B_C4B_T1F,
+    eVF_P3F_C4B_T2S,
+    eVF_P2F_C4B_T2F_F4B, // UI
+    eVF_P3F_C4B,// Auxiliary geometry
+
+    eVF_P3F_C4F_T2F  //numbering for tracking the new vertex formats and for comparison with testing 23
+    // There are more 
+};

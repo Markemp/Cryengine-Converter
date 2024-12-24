@@ -1,9 +1,10 @@
 ﻿using CgfConverter.Utilities;
+using Extensions;
 using System.IO;
 
 namespace CgfConverter.CryEngineCore.Chunks;
 
-internal sealed class ChunkIvoSkin_900 : ChunkIvoSkin
+internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
 {
     /* 
      * Node IDs for Ivo models
@@ -25,19 +26,24 @@ internal sealed class ChunkIvoSkin_900 : ChunkIvoSkin
         var model = _model;
 
         base.Read(b);
-        SkipBytes(b, 4);
+        SkipBytes(b, 4);  // Flags probably
 
-        ChunkMesh_900 meshChunk = new();
-        meshChunk._model = _model;
-        meshChunk._header = _header;
-        meshChunk._header.Offset = (uint)b.BaseStream.Position;
-        meshChunk.ChunkType = ChunkType.Mesh;
-        meshChunk.Read(b);
-        meshChunk.ID = 2;
-        meshChunk.MeshSubsetsData = 3;
-        model.ChunkMap.Add(meshChunk.ID, meshChunk);
+        GeometryMeshDetails meshDetails = new();
+        meshDetails = b.ReadMeshDetails();
 
-        SkipBytes(b, 120);  // Unknown data.  All 0x00
+        //ChunkMesh_900 meshChunk = new();
+        //meshChunk._model = _model;
+        //meshChunk._header = _header;
+        //meshChunk._header.Offset = (uint)b.BaseStream.Position;
+        //meshChunk.ChunkType = ChunkType.Mesh;
+        //meshChunk.Read(b);
+        //meshChunk.ID = 2;
+        //meshChunk.MeshSubsetsData = 3;
+        //model.ChunkMap.Add(meshChunk.ID, meshChunk);
+
+        SkipBytes(b, 92);  // Unknown data.  All 0x00
+
+        IvoMeshSubset meshSubset = new();
 
         ChunkMeshSubsets_900 subsetsChunk = new(meshChunk.NumVertSubsets);
         // Create dummy header info here (ChunkType, version, size, offset)

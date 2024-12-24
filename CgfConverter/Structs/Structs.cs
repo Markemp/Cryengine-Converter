@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.Intrinsics;
 
 namespace CgfConverter;
 
@@ -111,8 +112,8 @@ public struct IRGBA
 
 public struct AaBb
 {
-    public Vector3 Min;
-    public Vector3 Max;
+    public Vector3 Min { get; set; }
+    public Vector3 Max { get; set; }
 }
 
 public struct Tangent
@@ -155,6 +156,71 @@ public struct PhysicsGeometry
         framemtx = b.ReadMatrix3x3();
         return;
     }
+}
+
+public struct BoundingBox
+{
+    public Vector3 Min { get; set; }
+    public Vector3 Max { get; set; }
+};
+
+public struct IvoMeshSubset
+{
+    public ushort MaterialId { get; set; }
+    public ushort MeshParent { get; set; }
+    public uint FirstIndex { get; set; }
+    public uint NumIndices { get; set; }
+    public uint FirstVertex { get; set; }
+    public uint Unknown { get; set; }
+    public uint NumVertices { get; set; }
+    public Vector3 Center { get; set; }
+    public int Unknown0 { get; set; }
+    public int Unknown1 { get; set; }
+    public int Unknown2 { get; set; }
+}
+
+public struct GeometryMeshDetails
+{
+    /// <summary>
+    /// Flags indicating whether normals datastream is present.
+    /// 4 = no normals datastream, 5 = has normals datastream.
+    /// </summary>
+    public uint Flags2 { get; set; }
+
+    /// <summary>
+    /// The number of vertices in the geometry mesh.
+    /// </summary>
+    public int NumberOfVertices { get; set; }
+
+    /// <summary>
+    /// The number of indices in the geometry mesh.
+    /// </summary>
+    public int NumberOfIndices { get; set; }
+
+    /// <summary>
+    /// The number of submeshes in the geometry mesh.
+    /// </summary>
+    public int NumberOfSubmeshes { get; set; }
+
+    /// <summary>
+    /// Unknown field. Format: Hexadecimal.
+    /// </summary>
+    public int Unknown { get; set; }
+
+    /// <summary>
+    /// Bounding box for the geometry mesh.
+    /// </summary>
+    public BoundingBox BoundingBox { get; set; }
+
+    /// <summary>
+    /// Unknown vectors in the geometry mesh. Print using BoundingBox format.
+    /// </summary>
+    public BoundingBox UnknownVectors { get; set; }
+
+    /// <summary>
+    /// Vertex format. 
+    /// </summary>
+    public VertexFormat VertexFormat { get; set; }
 }
 
 public class CompiledPhysicalBone
@@ -299,9 +365,9 @@ public struct MorphTargets
 
 public struct TFace
 {
-    public ushort I0 { get; set; }
-    public ushort I1 { get; set; }
-    public ushort I2 { get; set; }
+    public ushort I0;
+    public ushort I1;
+    public ushort I2;
 }
 
 public class MeshCollisionInfo
@@ -452,7 +518,7 @@ public struct PhysicsStruct50
     public short Unknown24;
 }
 
-public struct ShotInt3Quat
+public struct ShortInt3Quat
 {
     private const float MAX_SHORTINTf = 32767f;
     
@@ -460,12 +526,12 @@ public struct ShotInt3Quat
     public short Y;
     public short Z;
 
-    public ShotInt3Quat()
+    public ShortInt3Quat()
     {
         X = Y = Z = 0;
     }
 
-    public static explicit operator ShotInt3Quat(Quaternion q)
+    public static explicit operator ShortInt3Quat(Quaternion q)
     {
         if (q.W < 0)
         {
@@ -474,7 +540,7 @@ public struct ShotInt3Quat
             q.Z *= -1;
         }
 
-        return new ShotInt3Quat
+        return new ShortInt3Quat
         {
             X = (short) Math.Floor(q.X * MAX_SHORTINTf + 0.5f),
             Y = (short) Math.Floor(q.Y * MAX_SHORTINTf + 0.5f),
@@ -482,7 +548,7 @@ public struct ShotInt3Quat
         };
     }
 
-    public static implicit operator Quaternion(ShotInt3Quat value)
+    public static implicit operator Quaternion(ShortInt3Quat value)
     {
         Quaternion q = new()
         {

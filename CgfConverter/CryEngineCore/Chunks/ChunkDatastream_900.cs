@@ -18,8 +18,6 @@ internal sealed class ChunkDataStream_900 : ChunkDataStream
     public override void Read(BinaryReader b)
     {
         base.Read(b);
-        // Datastreams are aligned on 8 byte boundaries.  After reading a datastream,
-        // set the position to the next 8 byte boundary.
 
         uint dataStreamType = b.ReadUInt32();
         var ivoDataStreamType = (IvoDatastreamType)dataStreamType;
@@ -60,6 +58,7 @@ internal sealed class ChunkDataStream_900 : ChunkDataStream
                         for (int i = 0; i < NumElements; i++)
                         {
                             Vertices[i] = b.ReadVector3(InputType.CryHalf);
+                            SkipBytes(b, 1);
                             Colors[i] = b.ReadColor();
                             UVs[i].U = (float)b.ReadHalf();
                             UVs[i].V = (float)b.ReadHalf();

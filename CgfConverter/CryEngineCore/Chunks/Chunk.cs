@@ -68,8 +68,8 @@ public abstract class Chunk : IBinaryChunk
             ChunkType.CompiledBones_Ivo2 => Chunk.New<ChunkCompiledBones>(version),
             ChunkType.MeshIvo => Chunk.New<ChunkMesh>(version),
             ChunkType.MeshInfo => Chunk.New<ChunkMesh>(version),
-            ChunkType.IvoSkin2 => Chunk.New<ChunkIvoSkin>(version),
-            ChunkType.IvoSkin => Chunk.New<ChunkIvoSkin>(version),
+            ChunkType.IvoSkin2 => Chunk.New<ChunkIvoSkinMesh>(version),
+            ChunkType.IvoSkin => Chunk.New<ChunkIvoSkinMesh>(version),
             // Old chunks
             ChunkType.BoneNameList => Chunk.New<ChunkBoneNameList>(version),
             ChunkType.MeshMorphTarget => Chunk.New<ChunkMeshMorphTargets>(version),

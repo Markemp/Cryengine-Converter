@@ -175,7 +175,7 @@ internal sealed class ChunkController_905 : ChunkController
             else if (keyPosFormats[(int) ECompressionFormat.eShotInt3Quat] > 0)
             {
                 --keyPosFormats[(int) ECompressionFormat.eShotInt3Quat];
-                data = Enumerable.Range(0, length).Select(_ => ((Quaternion)b.ReadShotInt3Quat()).DropW()).ToList();
+                data = Enumerable.Range(0, length).Select(_ => ((Quaternion)b.ReadShortInt3Quat()).DropW()).ToList();
             }
             else if (keyPosFormats[(int) ECompressionFormat.eSmallTreeDWORDQuat] > 0)
             {
@@ -226,7 +226,7 @@ internal sealed class ChunkController_905 : ChunkController
             else if (keyRotFormats[(int) ECompressionFormat.eShotInt3Quat] > 0)
             {
                 --keyRotFormats[(int) ECompressionFormat.eShotInt3Quat];
-                data = Enumerable.Range(0, length).Select(_ => (Quaternion)b.ReadShotInt3Quat()).ToList();
+                data = Enumerable.Range(0, length).Select(_ => (Quaternion)b.ReadShortInt3Quat()).ToList();
             }
             else if (keyRotFormats[(int) ECompressionFormat.eSmallTreeDWORDQuat] > 0)
             {
