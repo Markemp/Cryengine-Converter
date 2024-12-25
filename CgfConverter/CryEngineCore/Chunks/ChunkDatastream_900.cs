@@ -59,18 +59,16 @@ internal sealed class ChunkDataStream_900 : ChunkDataStream
                         {
                             Vertices[i] = b.ReadVector3(InputType.CryHalf);
                             SkipBytes(b, 1);
-                            Colors[i] = b.ReadColor();
-                            UVs[i].U = (float)b.ReadHalf();
-                            UVs[i].V = (float)b.ReadHalf();
+                            Colors[i] = b.ReadIRGBA();
+                            UVs[i] = b.ReadUV(InputType.Half);
                         }
                         break;
                     case 20:
                         for (int i = 0; i < NumElements; i++)
                         {
                             Vertices[i] = b.ReadVector3(); // For some reason, skins are an extra 1 meter in the z direction.
-                            Colors[i] = b.ReadColor();
-                            UVs[i].U = (float)b.ReadHalf();
-                            UVs[i].V = (float)b.ReadHalf();
+                            Colors[i] = b.ReadIRGBA();
+                            UVs[i] = b.ReadUV(InputType.Half);
                         }
                         
                         break;

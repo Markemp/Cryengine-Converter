@@ -99,7 +99,7 @@ public abstract class Chunk : IBinaryChunk
                         && type.IsClass
                         && !type.IsGenericType
                         && typeof(T).IsAssignableFrom(type)
-                        && type.Name == String.Format("{0}_{1:X}", typeof(T).Name, version));
+                        && type.Name == string.Format("{0}_{1:X}", typeof(T).Name, version));
 
                 if (targetType != null)
                     factory = () => Activator.CreateInstance(targetType) as T;
@@ -147,7 +147,7 @@ public abstract class Chunk : IBinaryChunk
         Offset = _header.Offset;
         ID = _header.ID;
         Size = _header.Size;
-        DataSize = Size;          // For SC files, there is no header in chunks.  But need Datasize to calculate things.
+        DataSize = Size;    // For SC files, there is no header in chunks.  But need Datasize to calculate things.
 
         reader.BaseStream.Seek(_header.Offset, SeekOrigin.Begin);
 

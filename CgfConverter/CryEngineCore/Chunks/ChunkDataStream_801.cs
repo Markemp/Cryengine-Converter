@@ -137,10 +137,7 @@ internal sealed class ChunkDataStream_801 : ChunkDataStream
                         Colors = new IRGBA[NumElements];
                         for (int i = 0; i < NumElements; i++)
                         {
-                            Colors[i].r = b.ReadByte();
-                            Colors[i].g = b.ReadByte();
-                            Colors[i].b = b.ReadByte();
-                            Colors[i].a = 255;
+                            Colors[i] = b.ReadIRGBA(0xff);
                         }
                         break;
 
@@ -148,7 +145,7 @@ internal sealed class ChunkDataStream_801 : ChunkDataStream
                         Colors = new IRGBA[NumElements];
                         for (int i = 0; i < NumElements; i++)
                         {
-                            Colors[i] = b.ReadColor();
+                            Colors[i] = b.ReadIRGBA();
                         }
                         break;
                     default:

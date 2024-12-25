@@ -123,8 +123,7 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                 UVs = new UV[NumElements];
                 for (int i = 0; i < NumElements; i++)
                 {
-                    UVs[i].U = b.ReadSingle();
-                    UVs[i].V = b.ReadSingle();
+                    UVs[i] = b.ReadUV();
                 }
                 //Utils.Log(LogLevelEnum.Debug, "Offset is {0:X}", b.BaseStream.Position);
                 break;
@@ -188,10 +187,7 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                         Colors = new IRGBA[NumElements];
                         for (int i = 0; i < NumElements; i++)
                         {
-                            Colors[i].r = b.ReadByte();
-                            Colors[i].g = b.ReadByte();
-                            Colors[i].b = b.ReadByte();
-                            Colors[i].a = 255;
+                            Colors[i] = b.ReadIRGBA(0xff);
                         }
                         break;
 
@@ -199,7 +195,7 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                         Colors = new IRGBA[NumElements];
                         for (int i = 0; i < NumElements; i++)
                         {
-                            Colors[i] = b.ReadColor();
+                            Colors[i] = b.ReadIRGBA();
                         }
                         break;
                     default:
@@ -232,9 +228,7 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                             Normals[i].Y = b.ReadSByte() / 127f;
                             Normals[i].Z = b.ReadSByte() / 127f;
                             b.ReadSByte(); // Should be FF.
-
-                            UVs[i].U = (float)b.ReadHalf();
-                            UVs[i].V = (float)b.ReadHalf();
+                            UVs[i] = b.ReadUV(InputType.Half);
                         }
                         break;
                     case 16:   // Dymek updated
@@ -247,19 +241,18 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                                 Vertices[i].Z = b.ReadDymekHalf();
                                 SkipBytes(b, 2);
 
-                                Colors[i] = b.ReadColor();
+                                Colors[i] = b.ReadIRGBA();
 
                                 // Inelegant hack for Blender, as it's Collada importer doesn't support Alpha channels,
                                 // and some materials need the alpha channel more than the green channel.
                                 // This is complicated, as some materials need the green channel more.
-                                byte alpha = Colors[i].a;
-                                byte green = Colors[i].g;
-                                Colors[i].a = green;
-                                Colors[i].g = alpha;
+                                //byte alpha = Colors[i].a;
+                                //byte green = Colors[i].g;
+                                //Colors[i].a = green;
+                                //Colors[i].g = alpha;
 
                                 // UVs ABSOLUTELY should use the Half structures.
-                                UVs[i].U = (float)b.ReadHalf();
-                                UVs[i].V = (float)b.ReadHalf();
+                                UVs[i] = b.ReadUV(InputType.Half);
                             }
                         }
                         else
@@ -270,8 +263,7 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                             {
                                 Vertices[i] = b.ReadVector3(InputType.Half);
                                 Normals[i] = b.ReadVector3(InputType.Half);  // prob not normals
-                                UVs[i].U = (float)b.ReadHalf();
-                                UVs[i].V = (float)b.ReadHalf();
+                                UVs[i] = b.ReadUV(InputType.Half);
                             }
                         }
                         break;

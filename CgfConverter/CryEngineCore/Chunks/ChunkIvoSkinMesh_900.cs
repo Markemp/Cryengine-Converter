@@ -1,5 +1,6 @@
 ﻿using CgfConverter.Utilities;
 using Extensions;
+using System.Collections.Generic;
 using System.IO;
 
 namespace CgfConverter.CryEngineCore.Chunks;
@@ -28,8 +29,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
         base.Read(b);
         SkipBytes(b, 4);  // Flags probably
 
-        GeometryMeshDetails meshDetails = new();
-        meshDetails = b.ReadMeshDetails();
+        IvoGeometryMeshDetails meshDetails = b.ReadMeshDetails();
 
         //ChunkMesh_900 meshChunk = new();
         //meshChunk._model = _model;
@@ -43,28 +43,28 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
 
         SkipBytes(b, 92);  // Unknown data.  All 0x00
 
-        IvoMeshSubset meshSubset = new();
+        IvoMeshSubset meshSubset = b.ReadIvoMeshSubset();
 
-        ChunkMeshSubsets_900 subsetsChunk = new(meshChunk.NumVertSubsets);
-        // Create dummy header info here (ChunkType, version, size, offset)
-        subsetsChunk._model = _model;
-        subsetsChunk._header = _header;
-        subsetsChunk._header.Offset = (uint)b.BaseStream.Position;
-        subsetsChunk.Read(b);
-        subsetsChunk.ChunkType = ChunkType.MeshSubsets;
-        subsetsChunk.ID = 3;
-        model.ChunkMap.Add(subsetsChunk.ID, subsetsChunk);
+        //ChunkMeshSubsets_900 subsetsChunk = new(meshChunk.NumVertSubsets);
+        //// Create dummy header info here (ChunkType, version, size, offset)
+        //subsetsChunk._model = _model;
+        //subsetsChunk._header = _header;
+        //subsetsChunk._header.Offset = (uint)b.BaseStream.Position;
+        //subsetsChunk.Read(b);
+        //subsetsChunk.ChunkType = ChunkType.MeshSubsets;
+        //subsetsChunk.ID = 3;
+        //model.ChunkMap.Add(subsetsChunk.ID, subsetsChunk);
 
         // Create dummy mtlName chunk
-        ChunkMtlName_800 mtlName = new();
-        mtlName._model = _model;
-        mtlName._header = _header;
-        mtlName._header.Offset = (uint)b.BaseStream.Position;
-        mtlName.ChunkType = ChunkType.MtlName;
-        mtlName.ID = 11;
-        model.ChunkMap.Add(mtlName.ID, mtlName);
+        //ChunkMtlName_800 mtlName = new();
+        //mtlName._model = _model;
+        //mtlName._header = _header;
+        //mtlName._header.Offset = (uint)b.BaseStream.Position;
+        //mtlName.ChunkType = ChunkType.MtlName;
+        //mtlName.ID = 11;
+        //model.ChunkMap.Add(mtlName.ID, mtlName);
 
-        while (b.BaseStream.Position != b.BaseStream.Length)
+        while (b.BaseStream.Position != b.BaseStream.Length)  // Read to end.
         {
             var datastreamType = b.ReadUInt32();
             var ivoDataStreamType = (IvoDatastreamType)datastreamType;
@@ -74,16 +74,36 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
             {
                 case IvoDatastreamType.IVOINDICES:
                     // Indices datastream
-                    ChunkDataStream_900 indicesDatastreamChunk = new((uint)meshChunk.NumIndices);
-                    indicesDatastreamChunk._model = _model;
-                    indicesDatastreamChunk._header = _header;
-                    indicesDatastreamChunk._header.Offset = (uint)b.BaseStream.Position;
-                    indicesDatastreamChunk.Read(b);
-                    indicesDatastreamChunk.DataStreamType = DatastreamType.INDICES;
-                    indicesDatastreamChunk.ChunkType = ChunkType.DataStream;
-                    indicesDatastreamChunk.ID = 4;
-                    model.ChunkMap.Add(indicesDatastreamChunk.ID, indicesDatastreamChunk);
+                    IvoDatastream<uint> indices = new();
+                    indices.DatastreamType = IvoDatastreamType.IVOINDICES;
+                    indices.BytesPerElement = b.ReadUInt32();
+                    indices.NumberOfElements = meshDetails.NumberOfIndices;
+                    if (indices.BytesPerElement == 2)
+                    {
+                        for (int i = 0; i < meshDetails.NumberOfIndices; i++)
+                        {
+                            indices.Values.Add(b.ReadUInt16()); // casts to uint nicely
+                        }
+                    }
+                    else if (indices.BytesPerElement == 4)
+                    {
+                        for ( int i = 0; i < meshDetails.NumberOfIndices; i++)
+                        {
+                            indices.Values.Add(b.ReadUInt32());
+                        }
+                    }
+                    Indices = indices;
                     break;
+                    //ChunkDataStream_900 indicesDatastreamChunk = new((uint)meshChunk.NumIndices);
+                    //indicesDatastreamChunk._model = _model;
+                    //indicesDatastreamChunk._header = _header;
+                    //indicesDatastreamChunk._header.Offset = (uint)b.BaseStream.Position;
+                    //indicesDatastreamChunk.Read(b);
+                    //indicesDatastreamChunk.DataStreamType = DatastreamType.INDICES;
+                    //indicesDatastreamChunk.ChunkType = ChunkType.DataStream;
+                    //indicesDatastreamChunk.ID = 4;
+                    //model.ChunkMap.Add(indicesDatastreamChunk.ID, indicesDatastreamChunk);
+                    //break;
                 case IvoDatastreamType.IVOVERTSUVS:
                     ChunkDataStream_900 vertsUvsDatastreamChunk = new((uint)meshChunk.NumVertices);
                     vertsUvsDatastreamChunk._model = _model;

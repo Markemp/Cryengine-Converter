@@ -5,31 +5,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Runtime.Intrinsics;
 
 namespace CgfConverter;
 
-public struct RangeEntity
+public sealed record RangeEntity
 {
     public string Name { get; set; } // String32!  32 byte char array.
     public int Start { get; set; }
     public int End { get; set; }
-}
-
-/// <summary>Vertex with position p(Vector3) and normal n(Vector3) </summary>
-public struct Vertex
-{
-    public Vector3 p;  // position
-    public Vector3 n;  // normal
-}
-
-public struct Face        // mesh face (3 vertex, Material index, smoothing group.  All ints)
-{
-    public int v0; // first vertex
-    public int v1; // second vertex
-    public int v2; // third vertex
-    public int Material; // Material Index
-    public int SmGroup; //smoothing group
 }
 
 public struct MeshSubset
@@ -53,18 +36,9 @@ public struct Key
     public float[] Unknown2; // If ARG==9?  array length = 2
 }
 
-public struct UV
-{
-    public float U;
-    public float V;
-}
+public sealed record VertUv(Vector3 Vertex, IRGBA Color, UV UV);
 
-public struct UVFace
-{
-    public int t0; // first vertex index
-    public int t1; // second vertex index
-    public int t2; // third vertex index
-}
+public sealed record UV(float U, float V);
 
 public struct ControllerInfo
 {
@@ -75,46 +49,11 @@ public struct ControllerInfo
     public uint RotTrack;
 }
 
-public struct IRGB
-{
-    public byte r; // red
-    public byte g; // green
-    public byte b; // blue
+public sealed record IRGB(byte R, byte G, byte B);
 
-    public IRGB Read(BinaryReader b)
-    {
-        return new IRGB
-        {
-            r = b.ReadByte(),
-            g = b.ReadByte(),
-            b = b.ReadByte()
-        };
-    }
-}
+public sealed record IRGBA(byte R, byte G, byte B, byte A);
 
-public struct IRGBA
-{
-    public byte r; // red
-    public byte g; // green
-    public byte b; // blue
-    public byte a; // alpha
-    public IRGBA Read(BinaryReader b)
-    {
-        return new IRGBA
-        {
-            r = b.ReadByte(),
-            g = b.ReadByte(),
-            b = b.ReadByte(),
-            a = b.ReadByte()
-        };
-    }
-}
-
-public struct AaBb
-{
-    public Vector3 Min { get; set; }
-    public Vector3 Max { get; set; }
-}
+public sealed record AaBb(Vector3 Min, Vector3 Max);
 
 public struct Tangent
 {
@@ -158,13 +97,9 @@ public struct PhysicsGeometry
     }
 }
 
-public struct BoundingBox
-{
-    public Vector3 Min { get; set; }
-    public Vector3 Max { get; set; }
-};
+public sealed record BoundingBox(Vector3 Min, Vector3 Max);
 
-public struct IvoMeshSubset
+public sealed record IvoMeshSubset
 {
     public ushort MaterialId { get; set; }
     public ushort MeshParent { get; set; }
@@ -179,48 +114,25 @@ public struct IvoMeshSubset
     public int Unknown2 { get; set; }
 }
 
-public struct GeometryMeshDetails
+public sealed record IvoGeometryMeshDetails
 {
-    /// <summary>
-    /// Flags indicating whether normals datastream is present.
-    /// 4 = no normals datastream, 5 = has normals datastream.
-    /// </summary>
-    public uint Flags2 { get; set; }
-
-    /// <summary>
-    /// The number of vertices in the geometry mesh.
-    /// </summary>
-    public int NumberOfVertices { get; set; }
-
-    /// <summary>
-    /// The number of indices in the geometry mesh.
-    /// </summary>
-    public int NumberOfIndices { get; set; }
-
-    /// <summary>
-    /// The number of submeshes in the geometry mesh.
-    /// </summary>
-    public int NumberOfSubmeshes { get; set; }
-
-    /// <summary>
-    /// Unknown field. Format: Hexadecimal.
-    /// </summary>
+    public uint Flags2 { get; set; }  // 4 = no normals datastream, 5 = has normals datastream.
+    public uint NumberOfVertices { get; set; }
+    public uint NumberOfIndices { get; set; }
+    public uint NumberOfSubmeshes { get; set; }
     public int Unknown { get; set; }
-
-    /// <summary>
-    /// Bounding box for the geometry mesh.
-    /// </summary>
     public BoundingBox BoundingBox { get; set; }
-
-    /// <summary>
-    /// Unknown vectors in the geometry mesh. Print using BoundingBox format.
-    /// </summary>
-    public BoundingBox UnknownVectors { get; set; }
-
-    /// <summary>
-    /// Vertex format. 
-    /// </summary>
+    public BoundingBox ScalingBoundingBox { get; set; }
     public VertexFormat VertexFormat { get; set; }
+}
+
+public sealed record IvoDatastream<T>
+{
+    public IvoDatastreamType DatastreamType { get; set; }
+    public uint BytesPerElement { get; set; }
+    public uint NumberOfElements { get; set; }
+    public Type ElementType { get; set; }
+    public List<T> Values { get; set; } = new();
 }
 
 public class CompiledPhysicalBone

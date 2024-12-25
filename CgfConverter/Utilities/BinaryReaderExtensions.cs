@@ -92,9 +92,9 @@ public static class BinaryReaderExtensions
         return q;
     }
 
-    public static GeometryMeshDetails ReadMeshDetails(this BinaryReader r)
+    public static IvoGeometryMeshDetails ReadMeshDetails(this BinaryReader r)
     {
-        return new GeometryMeshDetails
+        return new IvoGeometryMeshDetails
         {
             Flags2 = r.ReadUInt32(),  // 4 = no normals datastream, 5 has normals datastream
             NumberOfVertices = r.ReadUInt32(),
@@ -107,23 +107,41 @@ public static class BinaryReaderExtensions
         };
     }
 
-    public static BoundingBox ReadBoundingBox(this BinaryReader r)
+    public static IvoMeshSubset ReadIvoMeshSubset(this BinaryReader r)
     {
-        return new BoundingBox
+        // Pre 3.24 versions have Unknown moved to the end.
+        return new IvoMeshSubset
         {
-            Min = r.ReadVector3(),
-            Max = r.ReadVector3()
+            MaterialId = r.ReadUInt16(),
+            MeshParent = r.ReadUInt16(),
+            FirstIndex = r.ReadUInt32(),
+            NumIndices = r.ReadUInt32(),
+            FirstVertex = r.ReadUInt32(),
+            Unknown = r.ReadUInt32(),
+            NumVertices = r.ReadUInt32(),
+            Center = r.ReadVector3(),
+            Unknown0 = r.ReadInt32(),
+            Unknown1 = r.ReadInt32(),
+            Unknown2 = r.ReadInt32()
         };
     }
 
-    public static AaBb ReadAaBb(this BinaryReader reader)
-    {
-        return new AaBb
-        {
-            Min = reader.ReadVector3(),
-            Max = reader.ReadVector3(),
-        };
-    }
+    public static BoundingBox ReadBoundingBox(this BinaryReader r) => 
+        new (ReadVector3(r), ReadVector3(r));
+
+    public static IRGB ReadIRGB(this BinaryReader reader) =>
+        new (reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
+
+    public static IRGBA ReadIRGBA(this BinaryReader reader, byte? alpha = null) =>
+        new(
+            reader.ReadByte(),
+            reader.ReadByte(),
+            reader.ReadByte(),
+            alpha ?? reader.ReadByte()
+        );
+
+    public static AaBb ReadAaBb(this BinaryReader reader) =>
+        new (reader.ReadVector3(), reader.ReadVector3());
 
     public static ShortInt3Quat ReadShortInt3Quat(this BinaryReader r)
     {
@@ -171,17 +189,17 @@ public static class BinaryReaderExtensions
         };
     }
 
-    public static IRGBA ReadColor(this BinaryReader r)
-    {
-        var c = new IRGBA()
-        {
-            r = r.ReadByte(),
-            g = r.ReadByte(),
-            b = r.ReadByte(),
-            a = r.ReadByte()
-        };
-        return c;
-    }
+    //public static IRGBA ReadColor(this BinaryReader r)
+    //{
+    //    var c = new IRGBA()
+    //    {
+    //        r = r.ReadByte(),
+    //        g = r.ReadByte(),
+    //        b = r.ReadByte(),
+    //        a = r.ReadByte()
+    //    };
+    //    return c;
+    //}
 
     public static Matrix3x3 ReadMatrix3x3(this BinaryReader reader)
     {

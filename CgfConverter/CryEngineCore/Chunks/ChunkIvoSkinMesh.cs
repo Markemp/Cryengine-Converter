@@ -6,11 +6,11 @@ public class ChunkIvoSkinMesh : Chunk
 {
     public GeometryInfo geometryInfo { get; set; }
 
-    public ChunkMesh meshChunk { get; set; }
-    public ChunkMeshSubsets meshSubsetsChunk { get; set; }
-    public ChunkDataStream indices { get; set; }
-    public ChunkDataStream vertsUvs { get; set; }
-    public ChunkDataStream tangents { get; set; }
-    public ChunkDataStream colors { get; set; }
-    public ChunkDataStream colors2 { get; set; }
+    public required IvoGeometryMeshDetails MeshDetails { get; set; }
+    public required IvoMeshSubset IvoMeshSubset { get; set; }
+    public required IvoDatastream<uint> Indices { get; set; }
+    public IvoDatastream<VertUv> VertsUvs { get; set; }
+    public IvoDatastream<Tangent> Tangents { get; set; }
+    public IvoDatastream<IRGBA> Colors { get; set; }
+    public IvoDatastream<IRGBA> Colors2 { get; set; }
 }

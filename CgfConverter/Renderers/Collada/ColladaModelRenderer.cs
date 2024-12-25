@@ -667,13 +667,13 @@ public class ColladaModelRenderer : IRenderer
                         if (colors is not null)
                         {
                             floatArrayColors.Count = (int)colors.NumElements * 4;
-                            for (uint j = 0; j < colors.NumElements; j++)  // Create Colors string
+                            foreach (var color in colors.Colors)
                             {
                                 colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ",
-                                    colors.Colors[j].r / 255.0,
-                                    colors.Colors[j].g / 255.0,
-                                    colors.Colors[j].b / 255.0,
-                                    colors.Colors[j].a / 255.0);
+                                    color.R / 255.0,
+                                    color.G / 255.0,
+                                    color.B / 255.0,
+                                    color.A / 255.0);
                             }
                         }
 
@@ -711,13 +711,13 @@ public class ColladaModelRenderer : IRenderer
                         if (vertsUvs.Colors is not null)
                         {
                             floatArrayColors.Count = vertsUvs.Colors.Length * 4;
-                            for (uint j = 0; j < vertsUvs.Colors.Length; j++)  // Create Colors string
+                            foreach (var color in vertsUvs.Colors)
                             {
                                 colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ",
-                                    vertsUvs.Colors[j].r / 255.0,
-                                    vertsUvs.Colors[j].g / 255.0,
-                                    vertsUvs.Colors[j].b / 255.0,
-                                    vertsUvs.Colors[j].a / 255.0);
+                                    color.R / 255.0,
+                                    color.G / 255.0,
+                                    color.B / 255.0,
+                                    color.A / 255.0);
                             }
                         }
 
