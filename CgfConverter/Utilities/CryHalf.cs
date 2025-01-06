@@ -2,6 +2,11 @@
 
 namespace CgfConverter.Utilities;
 
+/// <summary>
+/// CryHalf Max value: 131008, min value: -130944
+/// Dymek Half max value: 1.0078433, min value: -1.007874
+/// Half max value: 65500, min value: -65500
+/// </summary>
 public static class CryHalf
 {
     public static float ConvertCryHalfToFloat(ushort value)
@@ -36,6 +41,9 @@ public static class CryHalf
         return BitConverter.ToSingle(BitConverter.GetBytes(result), 0);
     }
 
+    /// <summary>
+    /// A fancy implementation of UNORMs.
+    /// </summary>
     public static float ConvertDymekHalfToFloat(ushort value) => Byte2HexIntFracToFloat2(value.ToString("X4")) / 127;
 
     static float Byte2HexIntFracToFloat2(string hexString)

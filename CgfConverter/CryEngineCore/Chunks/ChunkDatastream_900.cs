@@ -122,7 +122,7 @@ internal sealed class ChunkDataStream_900 : ChunkDataStream
             #endregion
             #region Tangents
             case IvoDatastreamType.IVOTANGENTS:
-            case IvoDatastreamType.IVOTANGENTS2:
+            case IvoDatastreamType.IVOQTANGENTS:
                 Tangents = new Tangent[NumElements, 2];
                 //Normals = new Vector3[NumElements];
                 for (int i = 0; i < NumElements; i++)

@@ -1,5 +1,5 @@
-﻿using System.Numerics;
-using CgfConverter.CryEngineCore;
+﻿using System.Collections.Generic;
+using System.Numerics;
 
 namespace CgfConverter.Models;
 
@@ -9,18 +9,11 @@ namespace CgfConverter.Models;
 /// </summary>
 public sealed class GeometryInfo
 {
-    public ChunkMeshSubsets GeometrySubset { get; set; }
-    public Vector3[] Vertices { get; set; }
-    public Vector3[] Normals { get; set; }
-    public UV[] UVs { get; set; }
-    public IRGBA[]? Colors { get; set; }
-    public uint[] Indices { get; set; }
-    public Tangent[,] Tangents { get; set; }
-
-
-    //public byte[,] ShCoeffs { get; set; }
-    //public byte[,] ShapeDeformation { get; set; }
-    //public byte[,]? BoneMap { get; set; }
-    //public byte[,]? FaceMap { get; set; }
-    //public byte[,]? VertMats { get; set; }
+    //public ChunkMeshSubsets GeometrySubset { get; set; }
+    public List<uint> Indices { get; set; } = [];
+    public List<UV> UVs { get; set; } = [];
+    public List<Vector3> Vertices { get; set; } = [];
+    public List<Vector3> Normals { get; set; } = [];
+    public List<IRGBA>? Colors { get; set; }
+    public List<MeshBoneMapping>? BoneMappings { get; set; }
 }

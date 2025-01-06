@@ -79,8 +79,7 @@ internal sealed class ChunkDataStream_801 : ChunkDataStream
                 UVs = new UV[NumElements];
                 for (int i = 0; i < NumElements; i++)
                 {
-                    UVs[i].U = b.ReadSingle();
-                    UVs[i].V = b.ReadSingle();
+                    UVs[i] = b.ReadUV();
                 }
                 break;
 
@@ -168,83 +167,21 @@ internal sealed class ChunkDataStream_801 : ChunkDataStream
                 UVs = new UV[NumElements];
                 switch (BytesPerElement)  // new Star Citizen files
                 {
-                    case 20:  // Dymek wrote this.  Used in 2.6 skin files.  3 floats for vertex position, 4 bytes for normals, 2 halfs for UVs.  Normals are calculated from Tangents
+                    case 20:
                         for (int i = 0; i < NumElements; i++)
                         {
                             Vertices[i] = b.ReadVector3(); // For some reason, skins are an extra 1 meter in the z direction.
-
-                            // Normals are stored in a signed byte, prob div by 127.
-                            Normals[i].X = b.ReadSByte() / 127.0f;
-                            Normals[i].Y = b.ReadSByte() / 127.0f;
-                            Normals[i].Z = b.ReadSByte() / 127.0f;
-                            b.ReadSByte();
-
-                            UVs[i].U = (float)b.ReadHalf();
-                            UVs[i].V = (float)b.ReadHalf();
+                            Colors[i] = b.ReadIRGBA();
+                            UVs[i] = b.ReadUV(InputType.Half);
                         }
                         break;
-                    case 16:   // Dymek updated this.
+                    case 16:
                         for (int i = 0; i < NumElements; i++)
                         {
                             Vertices[i] = b.ReadVector3(InputType.CryHalf);
                             SkipBytes(b, 2);
-
-                            // Next structure is Colors, not normals.  For 16 byte elements, normals are calculated from Tangent data.
-                            //this.RGBColors[i].r = b.ReadByte();
-                            //this.RGBColors[i].g = b.ReadByte();
-                            //this.RGBColors[i].b = b.ReadByte();
-                            //b.ReadByte();           // additional byte.
-
-                            //this.Normals[i].x = (b.ReadByte() - 128.0f) / 127.5f;
-                            //this.Normals[i].y = (b.ReadByte() - 128.0f) / 127.5f;
-                            //this.Normals[i].z = (b.ReadByte() - 128.0f) / 127.5f;
-                            //b.ReadByte();           // additional byte.
-
-                            // Read a Quat, convert it to vector3
-                            Vector4 quat = new Vector4();
-                            quat.X = (b.ReadByte() - 128.0f) / 127.5f;
-                            quat.Y = (b.ReadByte() - 128.0f) / 127.5f;
-                            quat.Z = (b.ReadByte() - 128.0f) / 127.5f;
-                            quat.W = (b.ReadByte() - 128.0f) / 127.5f;
-                            Normals[i].X = (2f * (quat.X * quat.Z + quat.Y * quat.W));
-                            Normals[i].Y = (2f * (quat.Y * quat.Z - quat.X * quat.W));
-                            Normals[i].Z = (2f * (quat.Z * quat.Z + quat.W * quat.W)) - 1f;
-
-                            UVs[i].U = (float)b.ReadHalf();
-                            UVs[i].V = (float)b.ReadHalf();
-                            #region Legacy version using Halfs
-                            //Half xshort = new Half();
-                            //xshort.bits = b.ReadUInt16();
-                            //this.Vertices[i].x = xshort.ToSingle();
-
-                            //Half yshort = new Half();
-                            //yshort.bits = b.ReadUInt16();
-                            //this.Vertices[i].y = yshort.ToSingle();
-
-                            //Half zshort = new Half();
-                            //zshort.bits = b.ReadUInt16();
-                            //this.Vertices[i].z = zshort.ToSingle();
-
-                            //Half xnorm = new Half();
-                            //xnorm.bits = b.ReadUInt16();
-                            //this.Normals[i].x = xnorm.ToSingle();
-
-                            //Half ynorm = new Half();
-                            //ynorm.bits = b.ReadUInt16();
-                            //this.Normals[i].y = ynorm.ToSingle();
-
-                            //Half znorm = new Half();
-                            //znorm.bits = b.ReadUInt16();
-                            //this.Normals[i].z = znorm.ToSingle();
-
-                            //Half uvu = new Half();
-                            //uvu.bits = b.ReadUInt16();
-                            //this.UVs[i].U = uvu.ToSingle();
-
-                            //Half uvv = new Half();
-                            //uvv.bits = b.ReadUInt16();
-                            //this.UVs[i].V = uvv.ToSingle();
-                            #endregion
+                            Colors[i] = b.ReadIRGBA();
+                            UVs[i] = b.ReadUV(InputType.Half);
                         }
                         break;
                     default:
@@ -265,7 +202,7 @@ internal sealed class ChunkDataStream_801 : ChunkDataStream
                 // Bones should have 4 bone IDs (index) and 4 weights.
                 for (int i = 0; i < NumElements; i++)
                 {
-                    MeshBoneMapping tmpMap = new MeshBoneMapping();
+                    MeshBoneMapping tmpMap = new();
                     switch (BytesPerElement)
                     {
                         case 8:

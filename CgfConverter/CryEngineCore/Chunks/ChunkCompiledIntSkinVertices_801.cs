@@ -30,7 +30,7 @@ internal sealed class ChunkCompiledIntSkinVertices_801 : ChunkCompiledIntSkinVer
                 IntSkinVertices[i].Weights[j] = b.ReadSingle();
             }
             // Read the color
-            IntSkinVertices[i].Color.Read(b);
+            IntSkinVertices[i].Color = b.ReadIRGBA();
         }
         SkinningInfo skin = GetSkinningInfo();
         skin.IntVertices = IntSkinVertices.ToList();

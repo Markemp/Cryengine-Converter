@@ -262,7 +262,7 @@ public partial class CryEngine
                 .Select(x => x.NumChildren)
                 .Max();
 
-            var maxMats = (uint)meshSubsets.Select(x => x.MatID).Max() + 1;
+            var maxMats = (uint)(meshSubsets.Select(x => x.MatID).DefaultIfEmpty(0).Max() + 1);
             // set maxMats to the max of maxMats and maxChildren
             maxMats = Math.Max(maxMats, maxChildren);
 

@@ -38,7 +38,7 @@ public struct Key
 
 public sealed record VertUv(Vector3 Vertex, IRGBA Color, UV UV);
 
-public sealed record UV(float U, float V);
+public record struct UV(float U, float V);
 
 public struct ControllerInfo
 {
@@ -230,11 +230,20 @@ public struct BonePhysics           // 26 total words = 104 total bytes
     Matrix3x3 Frame_Matrix;        
 }
 
+public sealed record VertUV
+{
+    public required Vector3 Vertex { get; init; }
+    public required IRGBA Color { get; init; }
+    public required UV UV { get; init; }
+    public byte[]? Skipped { get; init; }
+}
+
+
 public struct MeshBoneMapping
 {
     // 4 bones, 4 weights for each vertex mapping.
     public int[] BoneIndex;
-    public int[] Weight;                    // Byte / 256?
+    public int[] Weight;
 }
 
 public struct MeshPhysicalProxyHeader

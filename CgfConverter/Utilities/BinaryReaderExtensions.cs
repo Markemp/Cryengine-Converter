@@ -54,6 +54,22 @@ public static class BinaryReaderExtensions
                     Z = (float)r.ReadHalf()
                 };
                 break;
+            case InputType.SNorm:
+                v = new()
+                {
+                    X = r.ReadInt16() / 32767.0f,
+                    Y = r.ReadInt16() / 32767.0f,
+                    Z = r.ReadInt16() / 32767.0f
+                };
+                break;
+            case InputType.CryHalf:
+                v = new()
+                {
+                    X = CryHalf.ConvertCryHalfToFloat(r.ReadUInt16()),
+                    Y = CryHalf.ConvertCryHalfToFloat(r.ReadUInt16()),
+                    Z = CryHalf.ConvertCryHalfToFloat(r.ReadUInt16())
+                };
+                break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
@@ -83,6 +99,15 @@ public static class BinaryReaderExtensions
                     Y = (float)r.ReadHalf(),
                     Z = (float)r.ReadHalf(),
                     W = (float)r.ReadHalf()
+                };
+                break;
+            case InputType.SNorm:
+                q = new Quaternion()
+                {
+                    X = r.ReadInt16() / 32767.0f,
+                    Y = r.ReadInt16() / 32767.0f,
+                    Z = r.ReadInt16() / 32767.0f,
+                    W = r.ReadInt16() / 32767.0f
                 };
                 break;
             default:
@@ -142,6 +167,16 @@ public static class BinaryReaderExtensions
 
     public static AaBb ReadAaBb(this BinaryReader reader) =>
         new (reader.ReadVector3(), reader.ReadVector3());
+
+    public static UV ReadUV(this BinaryReader reader, InputType inputType = InputType.Single)
+    {
+        if (inputType == InputType.Single)
+            return new(reader.ReadSingle(), reader.ReadSingle());
+        else if (inputType == InputType.Half)
+            return new((float)reader.ReadHalf(), (float)reader.ReadHalf());
+        else
+            throw new ArgumentOutOfRangeException();
+    }
 
     public static ShortInt3Quat ReadShortInt3Quat(this BinaryReader r)
     {
@@ -280,7 +315,8 @@ public static class BinaryReaderExtensions
         Half,
         CryHalf,
         Single,
-        Double
+        Double,
+        SNorm
     }
     
     public static int ReadCryInt(this Stream stream)

@@ -201,7 +201,7 @@ public enum IvoDatastreamType : uint
     IVOCOLORS2 = 0xD9EED421,           // Objects\Characters\Human\male_v7\armor\ccc\m_ccc_vanduul_helmet_01.skinm
     IVOINDICES = 0xEECDC168,
     IVOTANGENTS = 0xB95E9A1B,
-    IVOTANGENTS2 = 0xEE057252,
+    IVOQTANGENTS = 0xEE057252,
     IVOBONEMAP = 0x677C7B23,        
     IVOVERTSUVS = 0x91329AE9,
     IVOVERTSUVS2 = 0xB3A70D5E,

@@ -378,7 +378,7 @@ public partial class BaseGltfRenderer
                         baseName,
                         -1,
                         GltfBufferViewTarget.ArrayBuffer,
-                        colors.Colors.Select(x => new Vector4(x.r, x.g, x.b, x.a) / 255f)
+                        colors.Colors.Select(x => new Vector4(x.R, x.G, x.B, x.A) / 255f)
                             .ToArray()));
 
             baseName = $"${gltfNode.Name}/tangent";
