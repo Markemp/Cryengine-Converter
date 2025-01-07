@@ -2,7 +2,6 @@
 using CgfConverter.Utilities;
 using Extensions;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using static Extensions.BinaryReaderExtensions;
@@ -215,19 +214,13 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                 Vertices = new Vector3[NumElements];
                 Colors = new IRGBA[NumElements];
                 UVs = new UV[NumElements];
-                switch (BytesPerElement)  // new Star Citizen files
+                switch (BytesPerElement)
                 {
                     case 20:  // Dymek's code.  3 floats for vertex position, 4 bytes for normals, 2 halfs for UVs.  Normals are calculated from Tangents
-                        Normals = new Vector3[NumElements];
                         for (int i = 0; i < NumElements; i++)
                         {
                             Vertices[i] = b.ReadVector3(); // For some reason, skins are an extra 1 meter in the z direction.
-
-                            // Probably not normals
-                            Normals[i].X = b.ReadSByte() / 127f;
-                            Normals[i].Y = b.ReadSByte() / 127f;
-                            Normals[i].Z = b.ReadSByte() / 127f;
-                            b.ReadSByte(); // Should be FF.
+                            Colors[i] = b.ReadIRGBA();
                             UVs[i] = b.ReadUV(InputType.Half);
                         }
                         break;
@@ -243,26 +236,17 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
 
                                 Colors[i] = b.ReadIRGBA();
 
-                                // Inelegant hack for Blender, as it's Collada importer doesn't support Alpha channels,
-                                // and some materials need the alpha channel more than the green channel.
-                                // This is complicated, as some materials need the green channel more.
-                                //byte alpha = Colors[i].a;
-                                //byte green = Colors[i].g;
-                                //Colors[i].a = green;
-                                //Colors[i].g = alpha;
-
-                                // UVs ABSOLUTELY should use the Half structures.
                                 UVs[i] = b.ReadUV(InputType.Half);
                             }
                         }
                         else
                         {
-                            Normals = new Vector3[NumElements];
                             // Legacy version using Halfs (Also Hunt models)
                             for (int i = 0; i < NumElements; i++)
                             {
                                 Vertices[i] = b.ReadVector3(InputType.Half);
-                                Normals[i] = b.ReadVector3(InputType.Half);  // prob not normals
+                                SkipBytes(b, 2);
+                                Colors[i] = b.ReadIRGBA();
                                 UVs[i] = b.ReadUV(InputType.Half);
                             }
                         }
@@ -280,16 +264,18 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
             #region case DataStreamTypeEnum.BONEMAP:
             case DatastreamType.BONEMAP:
                 SkinningInfo skin = GetSkinningInfo();
-                skin.BoneMapping = new List<MeshBoneMapping>();
+                skin.BoneMappings = [];
 
                 switch (BytesPerElement)
                 {
                     case 8:
                         for (int i = 0; i < NumElements; i++)
                         {
-                            MeshBoneMapping tmpMap = new();
-                            tmpMap.BoneIndex = new int[4];
-                            tmpMap.Weight = new int[4];
+                            MeshBoneMapping tmpMap = new()
+                            {
+                                BoneIndex = new int[4],
+                                Weight = new float[4]
+                            };
 
                             for (int j = 0; j < 4; j++)         // read the 4 bone indexes first
                             {
@@ -297,17 +283,19 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                             }
                             for (int j = 0; j < 4; j++)           // read the weights.
                             {
-                                tmpMap.Weight[j] = b.ReadByte();
+                                tmpMap.Weight[j] = b.ReadByte() / 255.0f;
                             }
-                            skin.BoneMapping.Add(tmpMap);
+                            skin.BoneMappings.Add(tmpMap);
                         }
                         break;
                     case 12:
                         for (int i = 0; i < NumElements; i++)
                         {
-                            MeshBoneMapping tmpMap = new MeshBoneMapping();
-                            tmpMap.BoneIndex = new int[4];
-                            tmpMap.Weight = new int[4];
+                            MeshBoneMapping tmpMap = new()
+                            {
+                                BoneIndex = new int[4],
+                                Weight = new float[4]
+                            };
 
                             for (int j = 0; j < 4; j++)         // read the 4 bone indexes first
                             {
@@ -316,9 +304,9 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                             }
                             for (int j = 0; j < 4; j++)           // read the weights.
                             {
-                                tmpMap.Weight[j] = b.ReadByte();
+                                tmpMap.Weight[j] = b.ReadByte() / 255.0f;
                             }
-                            skin.BoneMapping.Add(tmpMap);
+                            skin.BoneMappings.Add(tmpMap);
                         }
                         break;
 

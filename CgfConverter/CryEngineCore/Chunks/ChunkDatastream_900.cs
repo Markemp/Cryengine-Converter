@@ -167,16 +167,18 @@ internal sealed class ChunkDataStream_900 : ChunkDataStream
             case IvoDatastreamType.IVOBONEMAP32:
             case IvoDatastreamType.IVOBONEMAP:
                 SkinningInfo skin = GetSkinningInfo();
-                skin.BoneMapping = new List<MeshBoneMapping>();
+                skin.BoneMappings = [];
 
                 switch (BytesPerElement)
                 {
                     case 12:
                         for (int i = 0; i < NumElements; i++)
                         {
-                            MeshBoneMapping tmpMap = new();
-                            tmpMap.BoneIndex = new int[4];
-                            tmpMap.Weight = new int[4];
+                            MeshBoneMapping tmpMap = new()
+                            {
+                                BoneIndex = new int[4],
+                                Weight = new float[4]
+                            };
 
                             for (int j = 0; j < 4; j++)         // read the 4 bone indexes first
                             {
@@ -184,17 +186,19 @@ internal sealed class ChunkDataStream_900 : ChunkDataStream
                             }
                             for (int j = 0; j < 4; j++)           // read the weights.
                             {
-                                tmpMap.Weight[j] = b.ReadByte();
+                                tmpMap.Weight[j] = b.ReadByte() / 255.0f;
                             }
-                            skin.BoneMapping.Add(tmpMap);
+                            skin.BoneMappings.Add(tmpMap);
                         }
                         break;
                     case 24:
                         for (int i = 0; i < NumElements; i++)
                         {
-                            MeshBoneMapping tmpMap = new();
-                            tmpMap.BoneIndex = new int[4];
-                            tmpMap.Weight = new int[4];
+                            MeshBoneMapping tmpMap = new()
+                            {
+                                BoneIndex = new int[4],
+                                Weight = new float[4]
+                            };
 
                             for (int j = 0; j < 4; j++)         // read the 4 bone indexes first
                             {
@@ -202,9 +206,9 @@ internal sealed class ChunkDataStream_900 : ChunkDataStream
                             }
                             for (int j = 0; j < 4; j++)           // read the weights.
                             {
-                                tmpMap.Weight[j] = b.ReadUInt16();
+                                tmpMap.Weight[j] = b.ReadUInt16() / 32767.0f  ;
                             }
-                            skin.BoneMapping.Add(tmpMap);
+                            skin.BoneMappings.Add(tmpMap);
                         }
                         break;
                     default:

@@ -170,12 +170,12 @@ public partial class BaseGltfRenderer
 
         weights =
             GetAccessorOrDefault(baseName, 0,
-                skinningInfo.IntVertices is null ? skinningInfo.BoneMapping.Count : skinningInfo.Ext2IntMap.Count)
+                skinningInfo.IntVertices is null ? skinningInfo.BoneMappings.Count : skinningInfo.Ext2IntMap.Count)
             ?? AddAccessor(baseName, -1, null,
                 skinningInfo.IntVertices is null
-                    ? skinningInfo.BoneMapping
+                    ? skinningInfo.BoneMappings
                         .Select(x => new Vector4(
-                            x.Weight[0] / 255f, x.Weight[1] / 255f, x.Weight[2] / 255f, x.Weight[3] / 255f))
+                            x.Weight[0], x.Weight[1], x.Weight[2], x.Weight[3]))
                         .ToArray()
                     : skinningInfo.Ext2IntMap
                         .Select(x => skinningInfo.IntVertices[x])
@@ -237,7 +237,7 @@ public partial class BaseGltfRenderer
             GetAccessorOrDefault(
                 baseName,
                 0,
-                skinningInfo.IntVertices is null ? skinningInfo.BoneMapping.Count : skinningInfo.Ext2IntMap.Count)
+                skinningInfo.IntVertices is null ? skinningInfo.BoneMappings.Count : skinningInfo.Ext2IntMap.Count)
             ?? AddAccessor(
                 baseName,
                 -1,
@@ -248,7 +248,7 @@ public partial class BaseGltfRenderer
                         .Select(x => new TypedVec4<ushort>(
                             x.BoneIDs[0], x.BoneIDs[1], x.BoneIDs[2], x.BoneIDs[3]))
                         .ToArray()
-                    : skinningInfo.BoneMapping
+                    : skinningInfo.BoneMappings
                         .Select(x => new TypedVec4<ushort>(
                             (ushort)x.BoneIndex[0], (ushort)x.BoneIndex[1], (ushort)x.BoneIndex[2],
                             (ushort)x.BoneIndex[3]))

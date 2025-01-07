@@ -186,8 +186,8 @@ public partial class CryEngine
             if (model.SkinningInfo.BoneEntities is not null)
                 skin.BoneEntities = model.SkinningInfo.BoneEntities;
 
-            if (model.SkinningInfo.BoneMapping is not null)
-                skin.BoneMapping = model.SkinningInfo.BoneMapping;
+            if (model.SkinningInfo.BoneMappings is not null)
+                skin.BoneMappings = model.SkinningInfo.BoneMappings;
 
             if (model.SkinningInfo.Collisions is not null)
                 skin.Collisions = model.SkinningInfo.Collisions;

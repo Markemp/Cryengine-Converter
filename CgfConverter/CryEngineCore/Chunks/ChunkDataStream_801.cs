@@ -197,43 +197,36 @@ internal sealed class ChunkDataStream_801 : ChunkDataStream
             #region case DataStreamTypeEnum.BONEMAP:
             case DatastreamType.BONEMAP:
                 SkinningInfo skin = GetSkinningInfo();
-                skin.BoneMapping = new List<MeshBoneMapping>();
+                skin.BoneMappings = [];
 
                 // Bones should have 4 bone IDs (index) and 4 weights.
                 for (int i = 0; i < NumElements; i++)
                 {
-                    MeshBoneMapping tmpMap = new();
+                    MeshBoneMapping tmpMap = new() { BoneIndex = new int[4], Weight = new float[4] };
                     switch (BytesPerElement)
                     {
-                        case 8:
-                            tmpMap.BoneIndex = new int[4];
-                            tmpMap.Weight = new int[4];
-
+                        case 8:     // legacy support
                             for (int j = 0; j < 4; j++)         // read the 4 bone indexes first
                             {
                                 tmpMap.BoneIndex[j] = b.ReadByte();
-
                             }
                             for (int j = 0; j < 4; j++)           // read the weights.
                             {
-                                tmpMap.Weight[j] = b.ReadByte();
+                                tmpMap.Weight[j] = b.ReadByte() / 255.0f;
                             }
-                            skin.BoneMapping.Add(tmpMap);
+                            skin.BoneMappings.Add(tmpMap);
                             break;
                         case 12:
-                            tmpMap.BoneIndex = new int[4];
-                            tmpMap.Weight = new int[4];
-
-                            for (int j = 0; j < 4; j++)         // read the 4 bone indexes first
+                            for (int j = 0; j < 4; j++)
                             {
                                 tmpMap.BoneIndex[j] = b.ReadUInt16();
 
                             }
-                            for (int j = 0; j < 4; j++)           // read the weights.
+                            for (int j = 0; j < 4; j++) 
                             {
-                                tmpMap.Weight[j] = b.ReadByte();
+                                tmpMap.Weight[j] = b.ReadByte() / 255.0f;
                             }
-                            skin.BoneMapping.Add(tmpMap);
+                            skin.BoneMappings.Add(tmpMap);
 
                             break;
                         default:

@@ -278,18 +278,18 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                     {
                         for (int i = 0; i < meshDetails.NumberOfVertices; i++)
                         {
-                            MeshBoneMapping bm = new MeshBoneMapping();
-                            bm.BoneIndex = new int[4];
-                            bm.Weight = new int[4];
-                            // read 4 ushorts and put in bone index
+                            MeshBoneMapping bm = new()
+                            {
+                                BoneIndex = new int[4],
+                                Weight = new float[4]
+                            };
                             for (int j = 0; j < 4; j++)
                             {
                                 bm.BoneIndex[j] = b.ReadUInt16();
                             }
-                            // read 4 bytes and put in weight, div by 255 to get weight.
                             for (int j = 0; j < 4; j++)
                             {
-                                //bm.Weight[j] = (float)b.ReadByte() / 255.0f;
+                                bm.Weight[j] = b.ReadByte() / 255.0f;
                             }
 
                             boneMaps.Values.Add(bm);
@@ -299,10 +299,19 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                     {
                         for (int i = 0; i < meshDetails.NumberOfVertices; i++)
                         {
-                            MeshBoneMapping bm = new MeshBoneMapping();
-                            bm.BoneIndex = new int[4];
-                            bm.Weight = new int[4];
-
+                            MeshBoneMapping bm = new()
+                            {
+                                BoneIndex = new int[4],
+                                Weight = new float[4]
+                            };
+                            for (int j = 0; j < 4; j++)
+                            {
+                                bm.BoneIndex[j] = b.ReadByte();
+                            }
+                            for (int j = 0; j < 4; j++)
+                            {
+                                bm.Weight[j] = b.ReadByte() / 255.0f;
+                            }
 
                             boneMaps.Values.Add(bm);
                         }

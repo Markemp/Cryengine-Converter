@@ -10,7 +10,7 @@ namespace CgfConverter;
 
 public sealed record RangeEntity
 {
-    public string Name { get; set; } // String32!  32 byte char array.
+    public required string Name { get; set; } // String32!  32 byte char array.
     public int Start { get; set; }
     public int End { get; set; }
 }
@@ -239,11 +239,11 @@ public sealed record VertUV
 }
 
 
-public struct MeshBoneMapping
+public sealed record MeshBoneMapping
 {
     // 4 bones, 4 weights for each vertex mapping.
-    public int[] BoneIndex;
-    public int[] Weight;
+    public required int[] BoneIndex;
+    public required float[] Weight;
 }
 
 public struct MeshPhysicalProxyHeader
