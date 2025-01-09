@@ -670,10 +670,10 @@ public class ColladaModelRenderer : IRenderer
                             foreach (var color in colors.Colors)
                             {
                                 colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ",
-                                    color.R / 255.0,
-                                    color.G / 255.0,
-                                    color.B / 255.0,
-                                    color.A / 255.0);
+                                    color.R,
+                                    color.G,
+                                    color.B,
+                                    color.A);
                             }
                         }
 
@@ -714,10 +714,10 @@ public class ColladaModelRenderer : IRenderer
                             foreach (var color in vertsUvs.Colors)
                             {
                                 colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ",
-                                    color.R / 255.0,
-                                    color.G / 255.0,
-                                    color.B / 255.0,
-                                    color.A / 255.0);
+                                    color.R,
+                                    color.G,
+                                    color.B,
+                                    color.A);
                             }
                         }
 

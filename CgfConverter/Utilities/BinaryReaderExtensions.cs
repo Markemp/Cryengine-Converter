@@ -155,14 +155,14 @@ public static class BinaryReaderExtensions
         new (ReadVector3(r), ReadVector3(r));
 
     public static IRGB ReadIRGB(this BinaryReader reader) =>
-        new (reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
+        new (reader.ReadByte() / 255.0f, reader.ReadByte() / 255.0f, reader.ReadByte() / 255.0f);
 
     public static IRGBA ReadIRGBA(this BinaryReader reader, byte? alpha = null) =>
         new(
-            reader.ReadByte(),
-            reader.ReadByte(),
-            reader.ReadByte(),
-            alpha ?? reader.ReadByte()
+            reader.ReadByte() / 255.0f,
+            reader.ReadByte() / 255.0f,
+            reader.ReadByte() / 255.0f,
+            alpha ?? reader.ReadByte() / 255.0f
         );
 
     public static AaBb ReadAaBb(this BinaryReader reader) =>

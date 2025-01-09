@@ -49,9 +49,9 @@ public struct ControllerInfo
     public uint RotTrack;
 }
 
-public sealed record IRGB(byte R, byte G, byte B);
+public sealed record IRGB(float R, float G, float B);
 
-public sealed record IRGBA(byte R, byte G, byte B, byte A);
+public sealed record IRGBA(float R, float G, float B, float A);
 
 public sealed record AaBb(Vector3 Min, Vector3 Max);
 
