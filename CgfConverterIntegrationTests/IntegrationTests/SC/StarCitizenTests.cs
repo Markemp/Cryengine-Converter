@@ -31,6 +31,16 @@ public class StarCitizenTests
     }
 
     [TestMethod]
+    public void Box_Cgf_Ivo()
+    {
+        var args = new string[] { $@"d:\depot\sc3.24\data\objects\default\box.cgf" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+    }
+
+    [TestMethod]
     public void NavyPilotFlightSuit_Ivo()
     {
         var args = new string[] { $@"D:\depot\SC3.24\Data\Objects\Characters\Human\male_v7\armor\nvy\pilot_flightsuit\m_nvy_pilot_light_helmet_01.skin", "-dds", "-dae", "-objectdir", @"d:\depot\sc3.24\data" };

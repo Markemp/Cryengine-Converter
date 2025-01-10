@@ -1433,7 +1433,7 @@ public class ColladaModelRenderer : IRenderer
 
     private ColladaNode CreateNode(ChunkNode nodeChunk, bool isControllerNode)
     {
-        List<ColladaNode> childNodes = new();
+        List<ColladaNode> childNodes = [];
         ColladaNode colladaNode = new();
 
         // Check to see if there is a second model file, and if the mesh chunk is actually there.
@@ -1586,8 +1586,8 @@ public class ColladaModelRenderer : IRenderer
         colladaNode.ID = nodeChunk.Name;
 
         // Make the lists necessary for this Node.
-        List<ColladaBindMaterial> bindMaterials = new();
-        List<ColladaMatrix> matrices = new();
+        List<ColladaBindMaterial> bindMaterials = [];
+        List<ColladaMatrix> matrices = [];
         ColladaMatrix matrix = new()
         {
             Value_As_String = CreateStringFromMatrix4x4(nodeChunk.LocalTransform),

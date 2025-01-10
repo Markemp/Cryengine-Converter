@@ -134,7 +134,38 @@ public class Model
         if (ChunkMap.Values.Any(c => c.ChunkType == ChunkType.NodeMeshCombo))
         {
             // Root node is the one with parent of -1
+            // Get the NodeMeshCombo objects
+            var nodeMeshCombo = ChunkMap.Values
+                .Where(c => c.ChunkType == ChunkType.NodeMeshCombo)
+                .Select(x => x as ChunkNodeMeshCombo)
+                .FirstOrDefault();
+            var stringTable = nodeMeshCombo.NodeNames;
+            var materialIndexTable = nodeMeshCombo.MaterialIndices;
+            if (nodeMeshCombo != null)
+            {
+                var nodes = nodeMeshCombo.NodeMeshCombos;
+                // create a Node chunk for each NodeMeshCombo
+                foreach (var node in nodes)
+                {
+                    // There is a single "mesh chunk" used by nodes with geometry
 
+                    int index = nodes.IndexOf(node);
+                    bool hasGeometry = node.GeometryType
+                    ChunkNode_823 newNode = new ChunkNode_823
+                    {
+                        Name = stringTable[index],
+                        ObjectNodeID = node.ObjectNodeID,
+                        ParentNodeID = node.ParentIndex,
+                        NumChildren = node.NumberOfChildren,
+                        MaterialID = materialIndexTable[index],
+                        Transform = node.WorldToBone,  // Which one to use?
+                        ChunkType = ChunkType.Node,
+                        ID = (int)node.Id
+                    };
+                    ChunkMap.Add((int)node.Id, newNode);
+                }
+
+            //var root = NodeMap.Values.FirstOrDefault(n => n.ParentNodeID == ~0);
 
         }
         else
@@ -185,7 +216,7 @@ public class Model
         ChunkNode rootNode = new ChunkNode_823
         {
             Name = Path.GetFileNameWithoutExtension(FileName!),
-            ObjectNodeID = 2,      // No node IDs in #ivo files.  The actual mesh is the only node in the m file.
+            ObjectNodeID = 2,      // No node IDs in #ivo skin files.  The actual mesh is the only node in the m file.
             ParentNodeID = ~0,     // No parent
             NumChildren = 0,     // Single object
             MaterialID = 11,

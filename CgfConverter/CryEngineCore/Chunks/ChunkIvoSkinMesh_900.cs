@@ -31,7 +31,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
         SkipBytes(b, 4);  // Flags probably
 
         IvoGeometryMeshDetails meshDetails = b.ReadMeshDetails();
-
+        MeshDetails = meshDetails;
         //ChunkMesh_900 meshChunk = new();
         //meshChunk._model = _model;
         //meshChunk._header = _header;
@@ -45,6 +45,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
         SkipBytes(b, 92);  // Unknown data.  All 0x00
 
         IvoMeshSubset meshSubset = b.ReadIvoMeshSubset();
+        IvoMeshSubset = meshSubset;
 
         //ChunkMeshSubsets_900 subsetsChunk = new(meshChunk.NumVertSubsets);
         //// Create dummy header info here (ChunkType, version, size, offset)
@@ -294,6 +295,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
 
                             boneMaps.Values.Add(bm);
                         }
+                        BoneMappings = boneMaps;
                     }
                     else if (boneMaps.BytesPerElement == 8) // older format, rare
                     {
@@ -315,6 +317,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
 
                             boneMaps.Values.Add(bm);
                         }
+                        BoneMappings = boneMaps;
                     }
                     //ChunkDataStream_900 bonemap = new((uint)meshChunk.NumVertices)
                     //{
