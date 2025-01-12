@@ -202,13 +202,14 @@ public partial class CryEngine
                 foreach (var node in Nodes)
                 {
                     var index = Nodes.IndexOf(node);
-                    if (node.ParentNodeIndex != ~0)
+                    if (node.ParentNodeIndex != 0xFFFF)
+                        node.ParentNode = Nodes[node.ParentNodeIndex];
+
+                    // Add all child nodes to Children.  A child is where the parent index is current index
+                    var childNodes = Nodes.Where(x => x.ParentNodeIndex == index);
+                    foreach (var child in childNodes)
                     {
-                        node.ParentNode = Nodes[index];
-                        if (Nodes[index].Children is null)
-                            Nodes[index].Children = [node];
-                        else
-                            Nodes[index].Children.Add(node);
+                        node.Children.Add(child);
                     }
                 }
                 // assign geometry to nodes
