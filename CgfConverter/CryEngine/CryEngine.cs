@@ -1,4 +1,5 @@
 ﻿using CgfConverter.CryEngineCore;
+using CgfConverter.CryEngineCore.Chunks;
 using CgfConverter.CryXmlB;
 using CgfConverter.Models;
 using CgfConverter.PackFileSystem;
@@ -16,8 +17,8 @@ public partial class CryEngine
 {
     private const string invalidExtensionErrorMessage = "Warning: Unsupported file extension - please use a cga, cgf, chr or skin file.";
 
-    private static readonly HashSet<string> validExtensions = new()
-    {
+    private static readonly HashSet<string> validExtensions =
+    [
         ".cgf",
         ".cga",
         ".chr",
@@ -26,25 +27,28 @@ public partial class CryEngine
         ".soc",
         ".caf",
         ".dba"
-    };
+    ];
 
     protected readonly TaggedLogger Log;
 
     public string Name => Path.GetFileNameWithoutExtension(InputFile).ToLower();
-    public List<Model> Models { get; internal set; } = new();
-    public List<Model> Animations { get; internal set; } = new();
-    public ChunkNode RootNode { get; internal set; }
+    public List<Model> Models { get; internal set; } = []; // All the model files associated with this game object
+    public List<Model> Animations { get; internal set; } = [];  // Animation files for this object
+    public List<GeometryInfo> GeometryInfos { get; internal set; } = []; // Datastream info.
+    public List<ChunkNode> Nodes { get; internal set; } = []; // node hierarchy.
+    public ChunkNode RootNode { get; internal set; } // can get node hierarchy from here
     public ChunkCompiledBones Bones { get; internal set; }  // move to skinning info
     public SkinningInfo? SkinningInfo { get; set; }
     public string InputFile { get; internal set; }
     public IPackFileSystem PackFileSystem { get; internal set; }
-    public List<string>? MaterialFiles { get; set; } = new();
+    public List<string>? MaterialFiles { get; set; } = [];
     public string? ObjectDir { get; set; }
 
     /// <summary>Dictionary of Materials.  Key is the mtlName chunk Name property (stripped of path and
     /// extension info), or the material file if provided.</summary>
     public Dictionary<string, Material> Materials { get; internal set; } = new();
 
+    private List<Chunk>? _chunks;
     public List<Chunk> Chunks {
         get {
             _chunks ??= Models.SelectMany(m => m.ChunkMap.Values).ToList();
@@ -52,6 +56,7 @@ public partial class CryEngine
         }
     }
 
+    private Dictionary<string, ChunkNode>? _nodeMap;
     public Dictionary<string, ChunkNode> NodeMap  // Cannot use the Node name for the key.  Across a couple files, you may have multiple nodes with same name.
     {
         get {
@@ -89,9 +94,6 @@ public partial class CryEngine
         }
     }
 
-    private List<Chunk>? _chunks;
-    private Dictionary<string, ChunkNode>? _nodeMap;
-
     public CryEngine(string filename, IPackFileSystem packFileSystem, TaggedLogger? parentLogger = null, string? materialFiles = null, string? objectDir = null)
     {
         Log = new TaggedLogger(Path.GetFileName(filename), parentLogger);
@@ -126,6 +128,8 @@ public partial class CryEngine
             Models.Add(model);
         }
 
+        // TODO:  Build the CryEngine level hierarchy.  Nodes, geometry, materials, animations.  Don't
+        // do at the Models level.
         SkinningInfo = ConsolidateSkinningInfo(Models);
 
         // Create materials from the first model. First model contains material file chunks if filenames aren't provided.
@@ -147,6 +151,8 @@ public partial class CryEngine
         {
             // pass
         }
+
+        BuildNodeStructure(); // new way to build the geometry to remove dependency on models
     }
 
     private void AutoDetectMFile(string filename, string inputFile, List<string> inputFiles)
@@ -157,6 +163,119 @@ public partial class CryEngine
             Log.D("Found geometry file {0}", mFile);
             inputFiles.Add(mFile);
         }
+    }
+
+    // With Ivo files, the node structure is either implied (skin and chr files) or
+    // part of the nodemeshcombo chunks. Model[0] has the hierarchy, model[1] has the geometry.
+    private void BuildNodeStructure()
+    {
+        if (IsIvoFile)
+        {
+            // Create node chunks from the first model.  If there is a nodemeshcombo chunk, use
+            // that for the nodes.  If not (skin and chr files), create a dummy root node.
+            if (Models[0].ChunkMap.Values.Any(c => c.ChunkType == ChunkType.NodeMeshCombo))
+            {
+                var comboChunk = Models[0].ChunkMap.Values
+                    .Where(c => c.ChunkType == ChunkType.NodeMeshCombo)
+                    .Select(x => x as ChunkNodeMeshCombo)
+                    .First();  // only one nodemeshcombo chunk per file
+                var stringTable = comboChunk.NodeNames;
+                var materialTable = comboChunk.MaterialIndices;
+                // create node chunks
+                foreach (var node in comboChunk.NodeMeshCombos)
+                {
+                    var index = comboChunk.NodeMeshCombos.IndexOf(node);
+                    var newNode = new ChunkNode_823
+                    {
+                        Name = stringTable[index],
+                        ObjectNodeID = -1,
+                        ParentNodeIndex = node.ParentIndex,
+                        NumChildren = node.NumberOfChildren,
+                        MaterialID = node.GeometryType == IvoGeometryType.Geometry ? materialTable[index] : 0,
+                        Transform = node.WorldToBone.ConvertToTransformMatrix(),
+                        ChunkType = ChunkType.Node,
+                        ID = (int)node.Id
+                    };
+                    Nodes.Add(newNode);
+                }
+                // build node hierarchy
+                foreach (var node in Nodes)
+                {
+                    var index = Nodes.IndexOf(node);
+                    if (node.ParentNodeIndex != ~0)
+                    {
+                        node.ParentNode = Nodes[index];
+                        if (Nodes[index].Children is null)
+                            Nodes[index].Children = [node];
+                        else
+                            Nodes[index].Children.Add(node);
+                    }
+                }
+                // assign geometry to nodes
+            }
+            else
+            {
+                //CreateDummyRootNode();
+            }   
+        }
+        else // Traditional Crydata.  Build geometry info from the models.
+        {
+
+        }
+
+
+        // Build the node structure
+        //if (ChunkMap.Values.Any(c => c.ChunkType == ChunkType.NodeMeshCombo))
+        //{
+        //    // Root node is the one with parent of -1
+        //    // Get the NodeMeshCombo objects
+        //    var nodeMeshCombo = ChunkMap.Values
+        //        .Where(c => c.ChunkType == ChunkType.NodeMeshCombo)
+        //        .Select(x => x as ChunkNodeMeshCombo)
+        //        .FirstOrDefault();
+        //    var stringTable = nodeMeshCombo.NodeNames;
+        //    var materialIndexTable = nodeMeshCombo.MaterialIndices;
+        //    if (nodeMeshCombo != null)
+        //    {
+        //        var nodes = nodeMeshCombo.NodeMeshCombos;
+        //        // create a Node chunk for each NodeMeshCombo
+        //        foreach (var node in nodes)
+        //        {
+        //            // There is a single "mesh chunk" used by nodes with geometry
+
+        //            int index = nodes.IndexOf(node);
+        //            bool hasGeometry = node.GeometryType == IvoGeometryType.Geometry ? true : false;
+
+        //            var helperNode = hasGeometry ? null : new ChunkHelper_744
+        //            {
+        //                Name = stringTable[index],
+        //                Transform = node.WorldToBone.ConvertToTransformMatrix(),
+        //                ChunkType = ChunkType.Helper,
+        //                ID =
+        //            };
+
+        //            ChunkNode_823 newNode = new ChunkNode_823
+        //            {
+        //                Name = stringTable[index],
+        //                ObjectNodeID = node.ObjectNodeID,
+        //                ParentNodeID = node.ParentIndex,
+        //                NumChildren = node.NumberOfChildren,
+        //                MaterialID = materialIndexTable[index],
+        //                Transform = node.WorldToBone.ConvertToTransformMatrix(),
+        //                ChunkType = ChunkType.Node,
+        //                ID = (int)node.Id
+        //            };
+        //            ChunkMap.Add((int)node.Id, newNode);
+        //        }
+
+        //        //var root = NodeMap.Values.FirstOrDefault(n => n.ParentNodeID == ~0);
+
+        //    }
+        //    else
+        //    {
+        //        CreateDummyRootNode();
+        //    }
+        //}
     }
 
     private static SkinningInfo? ConsolidateSkinningInfo(List<Model> models)
@@ -406,6 +525,8 @@ public partial class CryEngine
         Log.W("Unable to find material file for {0}", InputFile);
         return null;
     }
+
+    public bool IsIvoFile => Models.First().FileSignature?.Equals("#ivo") ?? false;
 
     public static bool SupportsFile(string name) => validExtensions.Contains(Path.GetExtension(name).ToLowerInvariant());
 }

@@ -1,17 +1,19 @@
-﻿using CgfConverter.Models.Materials;
+﻿using CgfConverter.Models;
+using CgfConverter.Models.Materials;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 
 namespace CgfConverter.CryEngineCore;
 
-public abstract class ChunkNode : Chunk          // cccc000b:   Node
+public abstract class ChunkNode : Chunk
 {
     protected float VERTEX_SCALE = 1f / 100;
 
     public string Name { get; internal set; } = string.Empty;
-    public int ObjectNodeID { get; internal set; }
+    public int ObjectNodeID { get; internal set; } // Doesn't exist in Ivo
     public int ParentNodeID { get; internal set; }  // Parent nodeID
+    public uint? ParentNodeIndex { get; internal set; }  // Parent node index for Ivo files
     public int NumChildren { get; internal set; }
     public int MaterialID { get; internal set; }         // Chunk Id of the material for this node
     public Matrix4x4 Transform { get; internal set; }
@@ -23,6 +25,7 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
     public int SclCtrlID { get; internal set; }
     public string Properties { get; internal set; } = string.Empty;
     public int PropertyStringLength { get; internal set; }
+    public GeometryInfo? GeometryInfo { get; internal set; }
 
     /// <summary>Computed from material file. Not set for helper nodes, etc.</summary>
     public Material Materials { get; internal set; } = new();
@@ -32,7 +35,6 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
     public Matrix4x4 LocalTransform => Matrix4x4.Transpose(Transform);
 
     private ChunkNode? _parentNode;
-
     public ChunkNode? ParentNode
     {
         get
@@ -40,7 +42,7 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
             if (ParentNodeID == ~0)  // aka 0xFFFFFFFF, or -1
                 return null;
 
-            if (_parentNode == null)
+            if (_parentNode is null)
             {
                 if (_model.ChunkMap.TryGetValue(ParentNodeID, out Chunk? node))
                     _parentNode = node as ChunkNode;
@@ -57,6 +59,8 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
         }
     }
 
+    public List<ChunkNode>? Children { get; set; }
+
     private Chunk? _objectChunk;
 
     public Chunk? ObjectChunk
@@ -68,9 +72,15 @@ public abstract class ChunkNode : Chunk          // cccc000b:   Node
 
             return _objectChunk;
         }
+        set
+        {
+            _objectChunk = value;
+        }
     }
 
     public IEnumerable<ChunkNode> AllChildNodes => _model.NodeMap.Values.Where(a => a.ParentNodeID == ID);
+
+    public bool HasGeometry => GeometryInfo is not null; 
 
     public override string ToString() => $@"Chunk Type: {ChunkType}, ID: {ID:X}, Version: {Version}, Name: {Name}, Object Node ID: {ObjectNodeID:X}, Parent Node ID: {ParentNodeID:X}, Mat: {MaterialID:X}";
 }

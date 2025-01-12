@@ -15,16 +15,16 @@ public sealed record RangeEntity
     public int End { get; set; }
 }
 
-public struct MeshSubset
+public sealed record MeshSubset
 {
-    public int FirstIndex;
-    public int NumIndices;
-    public int FirstVertex;
-    public int NumVertices;
-    public int MatID;
-    public float Radius;
-    public Vector3 Center;
-}  // Contains data about the parts of a mesh, such as vertices, radius and center.
+    public int FirstIndex { get; set; }
+    public int NumIndices { get; set; }
+    public int FirstVertex { get; set; }
+    public int NumVertices { get; set; }
+    public int MatID { get; set; }
+    public float Radius { get; set; }
+    public Vector3 Center { get; set; }
+}
 
 public struct Key
 {

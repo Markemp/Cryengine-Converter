@@ -19,7 +19,7 @@ internal sealed class ChunkNodeMeshCombo_900 : ChunkNodeMeshCombo
         Unknown1 = b.ReadInt32(); // related to number of nodes 
         Unknown3 = b.ReadInt32(); // 0 if no mesh chunk for this node
 
-        NodeMeshCombos = new();
+        NodeMeshCombos = [];
         for (int i = 0; i < NumberOfNodes; i++)
         {
             // Read NodeMeshCombo
@@ -34,15 +34,16 @@ internal sealed class ChunkNodeMeshCombo_900 : ChunkNodeMeshCombo
                 GeometryType = (IvoGeometryType)Enum.ToObject(typeof(IvoGeometryType), b.ReadUInt16()),
                 BoundingBoxMin = b.ReadVector3(),
                 BoundingBoxMax = b.ReadVector3(),
-                Unknown3 = new uint[4] { b.ReadUInt32(), b.ReadUInt32(), b.ReadUInt32(), b.ReadUInt32() },
+                Unknown3 = [b.ReadUInt32(), b.ReadUInt32(), b.ReadUInt32(), b.ReadUInt32()],
                 NumberOfVertices = b.ReadUInt32(),
                 NumberOfChildren = b.ReadUInt16(),
                 MeshChunkId = b.ReadUInt16()
             });
+            SkipBytes(b, 40); // Skip unknown data
         }
-        UnknownIndices = new();
-        MaterialIndices = new();
-        for (int i = 0; i < GeometryTypeFlag; i++)
+        UnknownIndices = [];
+        MaterialIndices = [];
+        for (int i = 0; i < Unknown2; i++)
         {
             UnknownIndices.Add(b.ReadUInt16());
         }

@@ -118,60 +118,10 @@ public class Model
         ReadFileHeader(reader);
         ReadChunkTable(reader);
         ReadChunks(reader);
-        BuildIvoNodeStructure();
+
+        // Move this to the parent.  Model should just read a single file.
+        //BuildIvoNodeStructure();
         
-    }
-
-    // With Ivo files, the node structure is either implied (skin and chr files) or
-    // part of the nodemeshcombo chunks. 
-    private void BuildIvoNodeStructure()
-    {
-        if (!IsIvoFile)
-            return;
-        // Build the node structure for #ivo files
-        // All will have a MeshInfo chunk.  The ones with NodeMeshCombo will
-        // have multiple nodes.
-        if (ChunkMap.Values.Any(c => c.ChunkType == ChunkType.NodeMeshCombo))
-        {
-            // Root node is the one with parent of -1
-            // Get the NodeMeshCombo objects
-            var nodeMeshCombo = ChunkMap.Values
-                .Where(c => c.ChunkType == ChunkType.NodeMeshCombo)
-                .Select(x => x as ChunkNodeMeshCombo)
-                .FirstOrDefault();
-            var stringTable = nodeMeshCombo.NodeNames;
-            var materialIndexTable = nodeMeshCombo.MaterialIndices;
-            if (nodeMeshCombo != null)
-            {
-                var nodes = nodeMeshCombo.NodeMeshCombos;
-                // create a Node chunk for each NodeMeshCombo
-                foreach (var node in nodes)
-                {
-                    // There is a single "mesh chunk" used by nodes with geometry
-
-                    int index = nodes.IndexOf(node);
-                    bool hasGeometry = node.GeometryType
-                    ChunkNode_823 newNode = new ChunkNode_823
-                    {
-                        Name = stringTable[index],
-                        ObjectNodeID = node.ObjectNodeID,
-                        ParentNodeID = node.ParentIndex,
-                        NumChildren = node.NumberOfChildren,
-                        MaterialID = materialIndexTable[index],
-                        Transform = node.WorldToBone,  // Which one to use?
-                        ChunkType = ChunkType.Node,
-                        ID = (int)node.Id
-                    };
-                    ChunkMap.Add((int)node.Id, newNode);
-                }
-
-            //var root = NodeMap.Values.FirstOrDefault(n => n.ParentNodeID == ~0);
-
-        }
-        else
-        {
-            CreateDummyRootNode();
-        }
     }
 
     private void ReadFileHeader(BinaryReader b)

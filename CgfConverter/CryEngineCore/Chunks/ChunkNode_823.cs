@@ -42,8 +42,6 @@ internal sealed class ChunkNode_823 : ChunkNode
             M44 = b.ReadSingle(),
         };
 
-        //transform.M14 = transform.M24 = transform.M34 = 0f;
-        //transform.M44 = 1f;
         Transform = transform;
 
         Pos = b.ReadVector3() * VERTEX_SCALE;   // Obsolete

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Numerics;
 
-namespace CgfConverter.CryEngineCore.Chunks;
+namespace CgfConverter.CryEngineCore;
 
 abstract class ChunkNodeMeshCombo : Chunk
 {

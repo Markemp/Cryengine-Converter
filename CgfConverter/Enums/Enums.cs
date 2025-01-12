@@ -139,7 +139,7 @@ public enum LightType : uint         //complete
 
 public enum IvoGeometryType : short
 {
-    Geomery = 0x0,
+    Geometry = 0x0,
     Helper2 = 0x2,
     Helper3 = 0x3       // Have only seen 0 (geometry) and 2/3 (helper) in the wild.
 }

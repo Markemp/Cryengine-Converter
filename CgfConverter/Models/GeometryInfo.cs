@@ -9,11 +9,14 @@ namespace CgfConverter.Models;
 /// </summary>
 public sealed class GeometryInfo
 {
-    //public ChunkMeshSubsets GeometrySubset { get; set; }
+    public MeshSubset GeometrySubset { get; set; }
     public List<uint> Indices { get; set; } = [];
     public List<UV> UVs { get; set; } = [];
     public List<Vector3> Vertices { get; set; } = [];
     public List<Vector3> Normals { get; set; } = [];
     public List<IRGBA>? Colors { get; set; }
     public List<MeshBoneMapping>? BoneMappings { get; set; }
+    public required BoundingBox BoundingBox { get; set; }
+    public required Vector3 Center { get; set; }
+    public PhysicsData? PhysicsData { get; set; }
 }
