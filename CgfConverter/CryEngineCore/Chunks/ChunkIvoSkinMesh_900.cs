@@ -1,6 +1,7 @@
 ﻿using Extensions;
 using System;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using static Extensions.BinaryReaderExtensions;
 
@@ -32,20 +33,13 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
 
         IvoGeometryMeshDetails meshDetails = b.ReadMeshDetails();
         MeshDetails = meshDetails;
-        //ChunkMesh_900 meshChunk = new();
-        //meshChunk._model = _model;
-        //meshChunk._header = _header;
-        //meshChunk._header.Offset = (uint)b.BaseStream.Position;
-        //meshChunk.ChunkType = ChunkType.Mesh;
-        //meshChunk.Read(b);
-        //meshChunk.ID = 2;
-        //meshChunk.MeshSubsetsData = 3;
-        //model.ChunkMap.Add(meshChunk.ID, meshChunk);
 
         SkipBytes(b, 92);  // Unknown data.  All 0x00
 
-        IvoMeshSubset meshSubset = b.ReadIvoMeshSubset();
-        IvoMeshSubset = meshSubset;
+        for (int i = 0; i < meshDetails.NumberOfSubmeshes; i++)
+        {
+            MeshSubsets.Add(b.ReadMeshSubset());
+        }
 
         //ChunkMeshSubsets_900 subsetsChunk = new(meshChunk.NumVertSubsets);
         //// Create dummy header info here (ChunkType, version, size, offset)
@@ -74,7 +68,6 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
             switch (ivoDataStreamType)
             {
                 case IvoDatastreamType.IVOINDICES:
-                    // Indices datastream
                     IvoDatastream<uint> indices = new();
                     indices.DatastreamType = IvoDatastreamType.IVOINDICES;
                     indices.BytesPerElement = b.ReadUInt32();
@@ -95,16 +88,6 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                     }
                     Indices = indices;
                     break;
-                    //ChunkDataStream_900 indicesDatastreamChunk = new((uint)meshChunk.NumIndices);
-                    //indicesDatastreamChunk._model = _model;
-                    //indicesDatastreamChunk._header = _header;
-                    //indicesDatastreamChunk._header.Offset = (uint)b.BaseStream.Position;
-                    //indicesDatastreamChunk.Read(b);
-                    //indicesDatastreamChunk.DataStreamType = DatastreamType.INDICES;
-                    //indicesDatastreamChunk.ChunkType = ChunkType.DataStream;
-                    //indicesDatastreamChunk.ID = 4;
-                    //model.ChunkMap.Add(indicesDatastreamChunk.ID, indicesDatastreamChunk);
-                //break;
                 case IvoDatastreamType.IVOVERTSUVS:
                 case IvoDatastreamType.IVOVERTSUVS2:
                     IvoDatastream<VertUV> vertUVs = new()
@@ -120,7 +103,6 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                             vertUVs.Values.Add(new VertUV
                             {
                                 Vertex = b.ReadVector3(InputType.SNorm),
-                                //Vertex = b.ReadVector3(InputType.SNorm),
                                 Skipped = b.ReadBytes(2),
                                 Color = b.ReadIRGBA(),
                                 UV = b.ReadUV(InputType.Half)
@@ -141,27 +123,6 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                     }
                     VertsUvs = vertUVs;
                     break;
-                    //ChunkDataStream_900 vertsUvsDatastreamChunk = new((uint)meshChunk.NumVertices);
-                    //vertsUvsDatastreamChunk._model = _model;
-                    //vertsUvsDatastreamChunk._header = _header;
-                    //vertsUvsDatastreamChunk._header.Offset = (uint)b.BaseStream.Position;
-                    //vertsUvsDatastreamChunk.Read(b);
-                    //vertsUvsDatastreamChunk.DataStreamType = DatastreamType.VERTSUVS;
-                    //vertsUvsDatastreamChunk.ChunkType = ChunkType.DataStream;
-                    //vertsUvsDatastreamChunk.ID = 5;
-                    //model.ChunkMap.Add(vertsUvsDatastreamChunk.ID, vertsUvsDatastreamChunk);
-
-                    //// Create colors chunk
-                    //ChunkDataStream_900 c = new((uint)meshChunk.NumVertices);
-                    //c._model = _model;
-                    //c._header = _header;
-                    //c.ChunkType = ChunkType.DataStream;
-                    //c.BytesPerElement = 4;
-                    //c.DataStreamType = DatastreamType.COLORS;
-                    //c.Colors = vertsUvsDatastreamChunk.Colors;
-                    //c.ID = 9;
-                    //model.ChunkMap.Add(c.ID, c);
-
                 case IvoDatastreamType.IVONORMALS:
                 case IvoDatastreamType.IVONORMALS2:
                     IvoDatastream<Vector3> normals = new()
@@ -198,18 +159,6 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                     }
                     Normals = normals;
                     break;
-                    //ChunkDataStream_900 normals = new((uint)meshChunk.NumVertices);
-                    //normals._model = _model;
-                    //normals._header = _header;
-                    //normals._header.Offset = (uint)b.BaseStream.Position;
-                    //normals.Read(b);
-                    //normals.DataStreamType = DatastreamType.NORMALS;
-                    //normals.ChunkType = ChunkType.DataStream;
-                    //normals.ID = 6;
-                    //if (!model.ChunkMap.ContainsKey(normals.ID))
-                    //    model.ChunkMap.Add(normals.ID, normals);
-                    //else
-                    //    HelperMethods.Log(LogLevelEnum.Warning, $"An existing Normals chunk was found for the Ivo model.");
                 case IvoDatastreamType.IVOQTANGENTS:
                     // For Ivo files, these are qtangents using SNORM (int16 I think).  8 bytes.
                     IvoDatastream<Quaternion> qtangents = new()
@@ -319,18 +268,6 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                         }
                         BoneMappings = boneMaps;
                     }
-                    //ChunkDataStream_900 bonemap = new((uint)meshChunk.NumVertices)
-                    //{
-                    //    _model = _model,
-                    //    _header = _header
-                    //};
-                    //bonemap._header.Offset = (uint)b.BaseStream.Position;
-                    //bonemap.Read(b);
-
-                    //bonemap.DataStreamType = DatastreamType.BONEMAP;
-                    //bonemap.ChunkType = ChunkType.DataStream;
-                    //bonemap.ID = 8;
-                    //model.ChunkMap.Add(bonemap.ID, bonemap);
                     break;
                 case IvoDatastreamType.IVOCOLORS2:
                     //ChunkDataStream_900 colors2 = new((uint)meshChunk.NumVertices);
@@ -349,5 +286,17 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                     break;
             }
         }
+        // Create GeometryInfo
+        GeometryInfo = new()
+        {
+            GeometrySubsets = MeshSubsets,
+            Vertices = VertsUvs?.Values.Select(a => a.Vertex).ToList() ?? [],
+            Normals = Normals?.Values ?? [],
+            UVs = VertsUvs?.Values.Select(a => a.UV).ToList() ?? [],
+            Colors = VertsUvs?.Values.Select(a => a.Color).ToList() ?? [],
+            Indices = Indices.Values,
+            BoneMappings = BoneMappings?.Values,
+            BoundingBox = meshDetails.BoundingBox
+        };
     }
 }

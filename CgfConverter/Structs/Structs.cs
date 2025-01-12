@@ -24,6 +24,11 @@ public sealed record MeshSubset
     public int MatID { get; set; }
     public float Radius { get; set; }
     public Vector3 Center { get; set; }
+    public uint? NodeParentIndex { get; set; }
+    public int? Unknown { get; set; }
+    public int? Unknown0 { get; set; }
+    public int? Unknown1 { get; set; }
+    public int? Unknown2 { get; set; }
 }
 
 public struct Key

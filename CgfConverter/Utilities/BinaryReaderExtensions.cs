@@ -132,30 +132,27 @@ public static class BinaryReaderExtensions
         };
     }
 
-    public static IvoMeshSubset ReadIvoMeshSubset(this BinaryReader r)
-    {
-        // Pre 3.24 versions have Unknown moved to the end.
-        return new IvoMeshSubset
+    public static MeshSubset ReadMeshSubset(this BinaryReader r) =>
+        new()
         {
-            MaterialId = r.ReadUInt16(),
-            MeshParent = r.ReadUInt16(),
-            FirstIndex = r.ReadUInt32(),
-            NumIndices = r.ReadUInt32(),
-            FirstVertex = r.ReadUInt32(),
-            Unknown = r.ReadUInt32(),
-            NumVertices = r.ReadUInt32(),
+            MatID = r.ReadUInt16(),
+            NodeParentIndex = r.ReadUInt16(),
+            FirstIndex = r.ReadInt32(),
+            NumIndices = r.ReadInt32(),
+            FirstVertex = r.ReadInt32(),
+            Unknown = r.ReadInt32(),
+            NumVertices = r.ReadInt32(),
+            Radius = r.ReadSingle(),
             Center = r.ReadVector3(),
-            Unknown0 = r.ReadInt32(),
             Unknown1 = r.ReadInt32(),
             Unknown2 = r.ReadInt32()
         };
-    }
 
-    public static BoundingBox ReadBoundingBox(this BinaryReader r) => 
-        new (ReadVector3(r), ReadVector3(r));
+    public static BoundingBox ReadBoundingBox(this BinaryReader r) =>
+        new(ReadVector3(r), ReadVector3(r));
 
     public static IRGB ReadIRGB(this BinaryReader reader) =>
-        new (reader.ReadByte() / 255.0f, reader.ReadByte() / 255.0f, reader.ReadByte() / 255.0f);
+        new(reader.ReadByte() / 255.0f, reader.ReadByte() / 255.0f, reader.ReadByte() / 255.0f);
 
     public static IRGBA ReadIRGBA(this BinaryReader reader, byte? alpha = null) =>
         new(
@@ -166,7 +163,7 @@ public static class BinaryReaderExtensions
         );
 
     public static AaBb ReadAaBb(this BinaryReader reader) =>
-        new (reader.ReadVector3(), reader.ReadVector3());
+        new(reader.ReadVector3(), reader.ReadVector3());
 
     public static UV ReadUV(this BinaryReader reader, InputType inputType = InputType.Single)
     {
@@ -318,7 +315,7 @@ public static class BinaryReaderExtensions
         Double,
         SNorm
     }
-    
+
     public static int ReadCryInt(this Stream stream)
     {
         var current = stream.ReadByte();
@@ -356,21 +353,21 @@ public static class BinaryReaderExtensions
         {
             case 1:
                 var b1 = reader.ReadByte();
-                return *(T*) &b1;
+                return *(T*)&b1;
             case 2:
                 var b2 = reader.ReadUInt16();
-                return *(T*) &b2;
+                return *(T*)&b2;
             case 4:
                 var b4 = reader.ReadUInt32();
-                return *(T*) &b4;
+                return *(T*)&b4;
             case 8:
                 var b8 = reader.ReadUInt64();
-                return *(T*) &b8;
+                return *(T*)&b8;
             default:
                 throw new ArgumentException("Enum is not of size 1, 2, 4, or 8.", nameof(T), null);
         }
     }
-    
+
     public static void ReadInto(this BinaryReader reader, out byte value) => value = reader.ReadByte();
     public static void ReadInto(this BinaryReader reader, out sbyte value) => value = reader.ReadSByte();
     public static void ReadInto(this BinaryReader reader, out ushort value) => value = reader.ReadUInt16();
@@ -381,7 +378,7 @@ public static class BinaryReaderExtensions
     public static void ReadInto(this BinaryReader reader, out long value) => value = reader.ReadInt64();
     public static void ReadInto(this BinaryReader reader, out float value) => value = reader.ReadSingle();
     public static void ReadInto(this BinaryReader reader, out double value) => value = reader.ReadDouble();
-    
+
     public static void ReadInto<T>(this BinaryReader reader, out T value) where T : unmanaged, Enum
         => value = reader.ReadEnum<T>();
 

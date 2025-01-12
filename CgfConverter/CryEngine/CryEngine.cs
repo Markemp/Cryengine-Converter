@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using Material = CgfConverter.Models.Materials.Material;
 
 namespace CgfConverter;
@@ -204,6 +205,8 @@ public partial class CryEngine
                     var index = Nodes.IndexOf(node);
                     if (node.ParentNodeIndex != 0xFFFF)
                         node.ParentNode = Nodes[node.ParentNodeIndex];
+                    else
+                        RootNode = node; // hopefully there is just one
 
                     // Add all child nodes to Children.  A child is where the parent index is current index
                     var childNodes = Nodes.Where(x => x.ParentNodeIndex == index);
@@ -212,12 +215,29 @@ public partial class CryEngine
                         node.Children.Add(child);
                     }
                 }
-                // assign geometry to nodes
             }
             else
             {
-                //CreateDummyRootNode();
-            }   
+                var rootNode = new ChunkNode_823
+                {
+                    Name = Path.GetFileNameWithoutExtension(InputFile),
+                    ObjectNodeID = 2,      // No node IDs in #ivo skin files.  The actual mesh is the only node in the m file.
+                    ParentNodeIndex = -1,     // No parent
+                    NumChildren = 0,     // Single object
+                    MaterialID = 11,
+                    Transform = Matrix4x4.Identity,
+                    ChunkType = ChunkType.Node,
+                    ID = 1
+                };
+                Nodes.Add(rootNode);
+                RootNode = rootNode;
+            }
+            // assign geometry to nodes
+            // models[1] has the geometry info in the SkinMesh chunk.
+            var skinMesh = Models[1].ChunkMap.Values
+                .Where(c => c.ChunkType == ChunkType.IvoSkin || c.ChunkType == ChunkType.IvoSkin2)
+                .Select(x => x as ChunkIvoSkinMesh)
+                .First();  // only one skinmesh chunk per file
         }
         else // Traditional Crydata.  Build geometry info from the models.
         {
@@ -225,58 +245,6 @@ public partial class CryEngine
         }
 
 
-        // Build the node structure
-        //if (ChunkMap.Values.Any(c => c.ChunkType == ChunkType.NodeMeshCombo))
-        //{
-        //    // Root node is the one with parent of -1
-        //    // Get the NodeMeshCombo objects
-        //    var nodeMeshCombo = ChunkMap.Values
-        //        .Where(c => c.ChunkType == ChunkType.NodeMeshCombo)
-        //        .Select(x => x as ChunkNodeMeshCombo)
-        //        .FirstOrDefault();
-        //    var stringTable = nodeMeshCombo.NodeNames;
-        //    var materialIndexTable = nodeMeshCombo.MaterialIndices;
-        //    if (nodeMeshCombo != null)
-        //    {
-        //        var nodes = nodeMeshCombo.NodeMeshCombos;
-        //        // create a Node chunk for each NodeMeshCombo
-        //        foreach (var node in nodes)
-        //        {
-        //            // There is a single "mesh chunk" used by nodes with geometry
-
-        //            int index = nodes.IndexOf(node);
-        //            bool hasGeometry = node.GeometryType == IvoGeometryType.Geometry ? true : false;
-
-        //            var helperNode = hasGeometry ? null : new ChunkHelper_744
-        //            {
-        //                Name = stringTable[index],
-        //                Transform = node.WorldToBone.ConvertToTransformMatrix(),
-        //                ChunkType = ChunkType.Helper,
-        //                ID =
-        //            };
-
-        //            ChunkNode_823 newNode = new ChunkNode_823
-        //            {
-        //                Name = stringTable[index],
-        //                ObjectNodeID = node.ObjectNodeID,
-        //                ParentNodeID = node.ParentIndex,
-        //                NumChildren = node.NumberOfChildren,
-        //                MaterialID = materialIndexTable[index],
-        //                Transform = node.WorldToBone.ConvertToTransformMatrix(),
-        //                ChunkType = ChunkType.Node,
-        //                ID = (int)node.Id
-        //            };
-        //            ChunkMap.Add((int)node.Id, newNode);
-        //        }
-
-        //        //var root = NodeMap.Values.FirstOrDefault(n => n.ParentNodeID == ~0);
-
-        //    }
-        //    else
-        //    {
-        //        CreateDummyRootNode();
-        //    }
-        //}
     }
 
     private static SkinningInfo? ConsolidateSkinningInfo(List<Model> models)

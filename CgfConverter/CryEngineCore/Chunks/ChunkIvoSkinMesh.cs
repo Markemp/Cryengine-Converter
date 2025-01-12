@@ -1,14 +1,15 @@
 ﻿using CgfConverter.Models;
+using System.Collections.Generic;
 using System.Numerics;
 
 namespace CgfConverter.CryEngineCore;
 
 public class ChunkIvoSkinMesh : Chunk
 {
-    public GeometryInfo? geometryInfo { get; set; }
+    public GeometryInfo? GeometryInfo { get; set; }
 
     public required IvoGeometryMeshDetails MeshDetails { get; set; }
-    public required IvoMeshSubset IvoMeshSubset { get; set; }
+    public required List<MeshSubset> MeshSubsets { get; set; } = [];
     public required IvoDatastream<uint> Indices { get; set; }
     public IvoDatastream<VertUV>? VertsUvs { get; set; }
     public IvoDatastream<Vector3>? Normals { get; set; }
