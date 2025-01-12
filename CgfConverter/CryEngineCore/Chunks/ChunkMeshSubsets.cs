@@ -1,4 +1,5 @@
 ﻿using CgfConverter.Utilities;
+using System.Collections.Generic;
 
 namespace CgfConverter.CryEngineCore;
 
@@ -6,7 +7,7 @@ public abstract class ChunkMeshSubsets : Chunk // cccc0017:  The different parts
 {
     public uint Flags; // probably the offset
     public uint NumMeshSubset; // number of mesh subsets
-    public MeshSubset[] MeshSubsets;
+    public List<MeshSubset> MeshSubsets = [];
 
     // For bone ID meshes? Not sure where this is used yet.
     public uint NumberOfBoneIDs;

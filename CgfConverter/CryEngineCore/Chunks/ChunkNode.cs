@@ -13,9 +13,9 @@ public abstract class ChunkNode : Chunk
     public string Name { get; internal set; } = string.Empty;
     public int ObjectNodeID { get; internal set; } // Doesn't exist in Ivo
     public int ParentNodeID { get; internal set; }  // Parent nodeID
-    public int ParentNodeIndex { get; internal set; }  // Parent node index for Ivo files
+    public int ParentNodeIndex { get; internal set; } // Parent node index for Ivo files
     public int NumChildren { get; internal set; }
-    public int MaterialID { get; internal set; }         // Chunk Id of the material for this node
+    public int MaterialID { get; internal set; }    // Chunk Id of the material for this node
     public Matrix4x4 Transform { get; internal set; }
     public Vector3 Pos { get; internal set; }       // Obsolete
     public Quaternion Rot { get; internal set; }    // Obsolete

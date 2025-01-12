@@ -764,7 +764,7 @@ public class ColladaModelRenderer : IRenderer
                     var triangles = new ColladaTriangles[meshSubsets.NumMeshSubset];
                     geometry.Mesh.Triangles = triangles;
 
-                    for (uint j = 0; j < meshSubsets.NumMeshSubset; j++) // Need to make a new Triangles entry for each submesh.
+                    for (int j = 0; j < meshSubsets.NumMeshSubset; j++) // Need to make a new Triangles entry for each submesh.
                     {
                         // Find the material associated with this meshsubset and index.  Normally the nodechunk points to the mtlnamechunk, but
                         // in mwo models it can point to mechDefault.  First check to see if the material key for the nodechunk's mtlname chunk exists.
@@ -1418,7 +1418,7 @@ public class ColladaModelRenderer : IRenderer
             submeshNode = (ChunkMeshSubsets)_cryData.Models[0].ChunkMap[meshNode.MeshSubsetsData];
         }
 
-        for (int i = 0; i < submeshNode.MeshSubsets.Length; i++)
+        for (int i = 0; i < submeshNode.MeshSubsets.Count; i++)
         {
             var matName = GetMaterialId(node, submeshNode, i);
 

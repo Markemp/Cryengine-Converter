@@ -154,6 +154,7 @@ public partial class CryEngine
         }
 
         BuildNodeStructure(); // new way to build the geometry to remove dependency on models
+        AssignMaterialsToNodes(false);
     }
 
     private void AutoDetectMFile(string filename, string inputFile, List<string> inputFiles)
@@ -221,7 +222,7 @@ public partial class CryEngine
                 var rootNode = new ChunkNode_823
                 {
                     Name = Path.GetFileNameWithoutExtension(InputFile),
-                    ObjectNodeID = 2,      // No node IDs in #ivo skin files.  The actual mesh is the only node in the m file.
+                    ObjectNodeID = 2,
                     ParentNodeIndex = -1,     // No parent
                     NumChildren = 0,     // Single object
                     MaterialID = 11,
@@ -232,12 +233,6 @@ public partial class CryEngine
                 Nodes.Add(rootNode);
                 RootNode = rootNode;
             }
-            // assign geometry to nodes
-            // models[1] has the geometry info in the SkinMesh chunk.
-            var skinMesh = Models[1].ChunkMap.Values
-                .Where(c => c.ChunkType == ChunkType.IvoSkin || c.ChunkType == ChunkType.IvoSkin2)
-                .Select(x => x as ChunkIvoSkinMesh)
-                .First();  // only one skinmesh chunk per file
         }
         else // Traditional Crydata.  Build geometry info from the models.
         {
@@ -366,7 +361,7 @@ public partial class CryEngine
                 }
             }
         }
-        AssignMaterialsToNodes(false);
+        
     }
 
     private void AssignMaterialsToNodes(bool mtlFilesProvided = true)

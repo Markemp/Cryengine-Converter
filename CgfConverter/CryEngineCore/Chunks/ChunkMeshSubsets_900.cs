@@ -14,18 +14,24 @@ internal sealed class ChunkMeshSubsets_900 : ChunkMeshSubsets
     {
         base.Read(b);
 
-        MeshSubsets = new MeshSubset[NumMeshSubset];
+        //MeshSubsets = new MeshSubset[NumMeshSubset];
         for (int i = 0; i < NumMeshSubset; i++)
         {
-            MeshSubsets[i].MatID = b.ReadInt16();
-            SkipBytes(b, 2);  // 2 unknowns; possibly padding;
-            MeshSubsets[i].FirstIndex = b.ReadInt32();
-            MeshSubsets[i].NumIndices = b.ReadInt32();
-            MeshSubsets[i].FirstVertex = b.ReadInt32();
-            MeshSubsets[i].NumVertices = b.ReadInt32();
-            MeshSubsets[i].Radius = b.ReadSingle();
-            MeshSubsets[i].Center = b.ReadVector3();
-            SkipBytes(b, 12);  // 3 unknowns; possibly floats;
+            MeshSubset meshSubset = new()
+            {
+                MatID = b.ReadInt16(),
+                Unknown = b.ReadUInt16(),  // 2 unknowns; possibly padding;
+                FirstIndex = b.ReadInt32(),
+                NumIndices = b.ReadInt32(),
+                FirstVertex = b.ReadInt32(),
+                NumVertices = b.ReadInt32(),
+                Radius = b.ReadSingle(),
+                Center = b.ReadVector3(),
+                Unknown0 = b.ReadInt32(),
+                Unknown1 = b.ReadInt32(),
+                Unknown2 = b.ReadInt32()
+            };
+            MeshSubsets.Add(meshSubset);
         }
     }
 }
