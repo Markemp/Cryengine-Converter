@@ -80,7 +80,5 @@ public abstract class ChunkNode : Chunk
 
     public IEnumerable<ChunkNode> AllChildNodes => _model.NodeMap.Values.Where(a => a.ParentNodeID == ID);
 
-    public bool HasGeometry => GeometryInfo is not null; 
-
     public override string ToString() => $@"Chunk Type: {ChunkType}, ID: {ID:X}, Version: {Version}, Name: {Name}, Object Node ID: {ObjectNodeID:X}, Parent Node ID: {ParentNodeID:X}, Mat: {MaterialID:X}";
 }

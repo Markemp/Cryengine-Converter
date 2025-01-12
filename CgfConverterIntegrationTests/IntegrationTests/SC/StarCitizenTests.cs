@@ -33,7 +33,7 @@ public class StarCitizenTests
     [TestMethod]
     public void Box_Cgf_Ivo()
     {
-        var args = new string[] { $@"d:\depot\sc3.24\data\objects\default\box.cgf" };
+        var args = new string[] { $@"d:\depot\sc3.24\data\objects\default\box.cgf", "-objectdir", @"d:\depot\sc3.24\data" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);

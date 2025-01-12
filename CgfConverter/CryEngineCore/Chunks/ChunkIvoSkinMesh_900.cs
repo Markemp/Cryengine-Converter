@@ -159,6 +159,22 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                     }
                     Normals = normals;
                     break;
+                case IvoDatastreamType.IVOTANGENTS:
+                    IvoDatastream<Quaternion> tangents = new()
+                    {
+                        DatastreamType = IvoDatastreamType.IVOTANGENTS,
+                        BytesPerElement = b.ReadUInt32(),
+                        NumberOfElements = meshDetails.NumberOfVertices
+                    };
+                    if (tangents.BytesPerElement == 8)
+                    {
+                        for (int i = 0; i < meshDetails.NumberOfVertices; i++)
+                        {
+                            Quaternion q = b.ReadQuaternion(InputType.SNorm);
+                            tangents.Values.Add(q);
+                        }
+                    }
+                    break;
                 case IvoDatastreamType.IVOQTANGENTS:
                     // For Ivo files, these are qtangents using SNORM (int16 I think).  8 bytes.
                     IvoDatastream<Quaternion> qtangents = new()
@@ -286,6 +302,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                     break;
             }
         }
+
         // Create GeometryInfo
         GeometryInfo = new()
         {

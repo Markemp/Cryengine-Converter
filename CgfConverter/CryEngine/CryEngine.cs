@@ -129,33 +129,17 @@ public partial class CryEngine
             Models.Add(model);
         }
 
-        // TODO:  Build the CryEngine level hierarchy.  Nodes, geometry, materials, animations.  Don't
-        // do at the Models level.
         SkinningInfo = ConsolidateSkinningInfo(Models);
 
-        // Create materials from the first model. First model contains material file chunks if filenames aren't provided.
         CreateMaterials();
-
-        try
-        {
-            var chrparams = CryXmlSerializer.Deserialize<ChrParams.ChrParams>(
-                PackFileSystem.GetStream(Path.ChangeExtension(InputFile, ".chrparams")));
-            var trackFilePath = chrparams.Animations?.FirstOrDefault(x => x.Name == "$TracksDatabase" || x.Name == "#filepath")?.Path;
-            if (trackFilePath is null)
-                throw new FileNotFoundException();
-            if (Path.GetExtension(trackFilePath) != "dba")
-                trackFilePath = Path.ChangeExtension(trackFilePath, "dba");
-            Log.D("Associated animation track database file found at {0}", trackFilePath);
-            Animations.Add(Model.FromStream(trackFilePath, PackFileSystem.GetStream(trackFilePath), true));
-        }
-        catch (FileNotFoundException)
-        {
-            // pass
-        }
-
         BuildNodeStructure(); // new way to build the geometry to remove dependency on models
+
+        CreateAnimations();
+
         AssignMaterialsToNodes(false);
     }
+
+    
 
     private void AutoDetectMFile(string filename, string inputFile, List<string> inputFiles)
     {
@@ -184,6 +168,8 @@ public partial class CryEngine
                 var stringTable = comboChunk.NodeNames;
                 var materialTable = comboChunk.MaterialIndices;
                 // create node chunks
+                var skinMeshChunk = (ChunkIvoSkinMesh)Models[1].ChunkMap.Values.FirstOrDefault(x => x.ChunkType == ChunkType.IvoSkin || x.ChunkType == ChunkType.IvoSkin2);
+                var geometryInfo = skinMeshChunk.GeometryInfo;
                 foreach (var node in comboChunk.NodeMeshCombos)
                 {
                     var index = comboChunk.NodeMeshCombos.IndexOf(node);
@@ -198,8 +184,15 @@ public partial class CryEngine
                         ChunkType = ChunkType.Node,
                         ID = (int)node.Id
                     };
+                    if (node.GeometryType == IvoGeometryType.Geometry)
+                    {
+                        newNode.GeometryInfo = geometryInfo;
+                        newNode.Materials = Materials.Values.First();
+                    }
+
                     Nodes.Add(newNode);
                 }
+
                 // build node hierarchy
                 foreach (var node in Nodes)
                 {
@@ -238,7 +231,6 @@ public partial class CryEngine
         {
 
         }
-
 
     }
 
@@ -298,7 +290,6 @@ public partial class CryEngine
                 {
                     var materials = MaterialUtilities.FromStream(PackFileSystem.GetStream(fullyQualifiedMaterialFile), materialFile, true);
                     Materials.Add(key, materials);
-                
                 }
                 else
                     Log.W("Unable to find provided material file {0}.  Checking material library chunks for materials.", materialFile);
@@ -361,54 +352,53 @@ public partial class CryEngine
                 }
             }
         }
-        
+    }
+
+    private void CreateAnimations()
+    {
+        try
+        {
+            var chrparams = CryXmlSerializer.Deserialize<ChrParams.ChrParams>(
+                PackFileSystem.GetStream(Path.ChangeExtension(InputFile, ".chrparams")));
+            var trackFilePath = chrparams.Animations?.FirstOrDefault(x => x.Name == "$TracksDatabase" || x.Name == "#filepath")?.Path;
+            if (trackFilePath is null)
+                throw new FileNotFoundException();
+            if (Path.GetExtension(trackFilePath) != "dba")
+                trackFilePath = Path.ChangeExtension(trackFilePath, "dba");
+            Log.D("Associated animation track database file found at {0}", trackFilePath);
+            Animations.Add(Model.FromStream(trackFilePath, PackFileSystem.GetStream(trackFilePath), true));
+        }
+        catch (FileNotFoundException)
+        {
+            // pass
+        }
     }
 
     private void AssignMaterialsToNodes(bool mtlFilesProvided = true)
     {
-        if (mtlFilesProvided)
+        foreach (var node in NodeMap.Values.Where(x => x.MaterialID != 0))
         {
-            foreach (var node in NodeMap.Values.Where(x => x.MaterialID != 0))
+            if (mtlFilesProvided && MaterialFiles.Count == 1)
             {
-                if (MaterialFiles.Count == 1)
-                {
-                    node.MaterialFileName = Path.GetFileNameWithoutExtension(MaterialFiles[0]);
-                    node.Materials = Materials.Values.First();
-                    continue;
-                }
-
-                var mtlNameChunk = Chunks.OfType<ChunkMtlName>().Where(x => x.ID == node.MaterialID).FirstOrDefault();
-                var mtlNameKey = Path.GetFileNameWithoutExtension(mtlNameChunk?.Name) ?? "default";
-
-                if (Materials.ContainsKey(mtlNameKey))
-                {
-                    node.MaterialFileName = mtlNameKey;
-                    node.Materials = Materials[mtlNameKey];
-                }
-                else
-                {
-                    node.MaterialFileName = Materials.FirstOrDefault().Key;
-                    node.Materials = Materials.FirstOrDefault().Value;
-                }
+                // Special case: single material file provided
+                node.MaterialFileName = Path.GetFileNameWithoutExtension(MaterialFiles[0]);
+                node.Materials = Materials.Values.First();
+                continue;
             }
-        }
-        else
-        {
-            foreach (var node in NodeMap.Values.Where(x => x.MaterialID != 0))
-            {
-                var mtlNameChunk = Chunks.OfType<ChunkMtlName>().Where(x => x.ID == node.MaterialID).FirstOrDefault();
-                var mtlNameKey = Path.GetFileNameWithoutExtension(mtlNameChunk?.Name) ?? "default";
 
-                if (Materials.ContainsKey(mtlNameKey))
-                {
-                    node.MaterialFileName = mtlNameKey;
-                    node.Materials = Materials[mtlNameKey];
-                }
-                else
-                {
-                    node.MaterialFileName = Materials.FirstOrDefault().Key;
-                    node.Materials = Materials.FirstOrDefault().Value;
-                }
+            // General case: Resolve material based on MaterialID
+            var mtlNameChunk = Chunks.OfType<ChunkMtlName>().Where(x => x.ID == node.MaterialID).FirstOrDefault();
+            var mtlNameKey = Path.GetFileNameWithoutExtension(mtlNameChunk?.Name) ?? "default";
+
+            if (Materials.ContainsKey(mtlNameKey))
+            {
+                node.MaterialFileName = mtlNameKey;
+                node.Materials = Materials[mtlNameKey];
+            }
+            else
+            {
+                node.MaterialFileName = Materials.FirstOrDefault().Key;
+                node.Materials = Materials.FirstOrDefault().Value;
             }
         }
     }
