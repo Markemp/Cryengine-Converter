@@ -60,14 +60,14 @@ public sealed record IRGBA(float R, float G, float B, float A);
 
 public sealed record AaBb(Vector3 Min, Vector3 Max);
 
-public struct Tangent
-{
-    // Tangents.  Divide each component by 32767 to get the actual value
-    public float x;
-    public float y;
-    public float z;
-    public float w;  // Handness?  Either 32767 (+1.0) or -32767 (-1.0)
-}
+//public sealed record Tangent
+//{
+//    // Tangents.  Divide each component by 32767 to get the actual value
+//    public float X { get; set; }
+//    public float Y { get; set; }
+//    public float Z { get; set; }
+//    public float W { get; set; }  // Handness?  Either 32767 (+1.0) or -32767 (-1.0)
+//}
 
 public struct SkinVertex
 {

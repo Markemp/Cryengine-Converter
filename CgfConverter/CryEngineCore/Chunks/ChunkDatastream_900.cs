@@ -123,20 +123,22 @@ internal sealed class ChunkDataStream_900 : ChunkDataStream
             #region Tangents
             case IvoDatastreamType.IVOTANGENTS:
             case IvoDatastreamType.IVOQTANGENTS:
-                Tangents = new Tangent[NumElements, 2];
+                //Tangents = new Tangent[NumElements, 2];
                 //Normals = new Vector3[NumElements];
                 for (int i = 0; i < NumElements; i++)
                 {
-                    Tangents[i, 0].w = b.ReadSByte() / 127f;
-                    Tangents[i, 0].x = b.ReadSByte() / 127f;
-                    Tangents[i, 0].y = b.ReadSByte() / 127f;
-                    Tangents[i, 0].z = b.ReadSByte() / 127f;
+                    Tangents.Add(b.ReadQuaternion(InputType.SNorm));
+                    BiTangents.Add(b.ReadQuaternion(InputType.SNorm));
+                    //Tangents[i, 0].W = b.ReadSByte() / 127f;
+                    //Tangents[i, 0].X = b.ReadSByte() / 127f;
+                    //Tangents[i, 0].Y = b.ReadSByte() / 127f;
+                    //Tangents[i, 0].Z = b.ReadSByte() / 127f;
 
-                    // Binormal
-                    Tangents[i, 1].w = b.ReadSByte() / 127f;
-                    Tangents[i, 1].x = b.ReadSByte() / 127f;
-                    Tangents[i, 1].y = b.ReadSByte() / 127f;
-                    Tangents[i, 1].z = b.ReadSByte() / 127f;
+                    //// Binormal
+                    //Tangents[i, 1].W = b.ReadSByte() / 127f;
+                    //Tangents[i, 1].X = b.ReadSByte() / 127f;
+                    //Tangents[i, 1].Y = b.ReadSByte() / 127f;
+                    //Tangents[i, 1].Z = b.ReadSByte() / 127f;
 
                     // Calculate the normal based on the cross product of the tangents.
                     //Normals[i].X = (Tangents[i, 0].y * Tangents[i, 1].z - Tangents[i, 0].z * Tangents[i, 1].y);

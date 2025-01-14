@@ -384,11 +384,11 @@ public partial class BaseGltfRenderer
             baseName = $"${gltfNode.Name}/tangent";
             accessors.Tangent = tangents is null || !usesTangent
                 ? null
-                : GetAccessorOrDefault(baseName, 0, tangents.Tangents.Length / 2)
+                : GetAccessorOrDefault(baseName, 0, tangents.Tangents.Count / 2)
                   ?? AddAccessor(baseName, -1, GltfBufferViewTarget.ArrayBuffer,
-                      tangents.Tangents.Cast<Tangent>()
+                      tangents.Tangents.Cast<Quaternion>()
                           .Where((_, i) => i % 2 == 1)
-                          .Select(x => new Vector4(x.x, x.y, x.z, x.w) / 32767f)
+                          .Select(x => new Vector4(x.X, x.Y, x.Z, x.W) / 32767f)
                           .Select(SwapAxesForTangent)
                           .ToArray());
 

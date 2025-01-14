@@ -13,8 +13,8 @@ public class ChunkIvoSkinMesh : Chunk
     public required IvoDatastream<uint> Indices { get; set; }
     public IvoDatastream<VertUV>? VertsUvs { get; set; }
     public IvoDatastream<Vector3>? Normals { get; set; }
-    public IvoDatastream<Tangent>? Tangents { get; set; }
-    public IvoDatastream<Tangent>? BiTangents { get; set; }
+    public IvoDatastream<Quaternion>? Tangents { get; set; }
+    public IvoDatastream<Quaternion>? BiTangents { get; set; }
     public IvoDatastream<Quaternion>? QTangents { get; set; }
     public IvoDatastream<IRGBA>? Colors { get; set; }
     public IvoDatastream<IRGBA>? Colors2 { get; set; }

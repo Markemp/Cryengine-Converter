@@ -1,4 +1,5 @@
-﻿using Extensions;
+﻿using CgfConverter.Utilities;
+using Extensions;
 using System;
 using System.IO;
 using System.Linq;
@@ -87,6 +88,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                         }
                     }
                     Indices = indices;
+                    b.AlignTo(8);
                     break;
                 case IvoDatastreamType.IVOVERTSUVS:
                 case IvoDatastreamType.IVOVERTSUVS2:
@@ -122,6 +124,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                         }
                     }
                     VertsUvs = vertUVs;
+                    b.AlignTo(8);
                     break;
                 case IvoDatastreamType.IVONORMALS:
                 case IvoDatastreamType.IVONORMALS2:
@@ -158,15 +161,23 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                         }
                     }
                     Normals = normals;
+                    b.AlignTo(8);
                     break;
                 case IvoDatastreamType.IVOTANGENTS:
+                    var bytesPerElement = b.ReadUInt32();
                     IvoDatastream<Quaternion> tangents = new()
                     {
                         DatastreamType = IvoDatastreamType.IVOTANGENTS,
-                        BytesPerElement = b.ReadUInt32(),
+                        BytesPerElement = bytesPerElement,
                         NumberOfElements = meshDetails.NumberOfVertices
                     };
-                    if (tangents.BytesPerElement == 8)
+                    IvoDatastream<Quaternion> bitangents = new()
+                    {
+                        DatastreamType = IvoDatastreamType.IVOTANGENTS,
+                        BytesPerElement = bytesPerElement,
+                        NumberOfElements = meshDetails.NumberOfVertices
+                    };
+                    if (bytesPerElement == 8)
                     {
                         for (int i = 0; i < meshDetails.NumberOfVertices; i++)
                         {
@@ -174,6 +185,21 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                             tangents.Values.Add(q);
                         }
                     }
+                    else if (tangents.BytesPerElement == 16)
+                    {
+                        for (int i = 0; i < meshDetails.NumberOfVertices; i++)
+                        {
+                            Quaternion tan = b.ReadQuaternion(InputType.SNorm);
+                            Quaternion bitan = b.ReadQuaternion(InputType.SNorm);
+                            tangents.Values.Add(b.ReadQuaternion(InputType.Single));
+
+                        }
+                    }
+                    else
+                        throw new NotSupportedException($"Unsupported tangents format: {tangents.BytesPerElement}");
+                    Tangents = tangents;
+                    BiTangents = bitangents;
+                    b.AlignTo(8);
                     break;
                 case IvoDatastreamType.IVOQTANGENTS:
                     // For Ivo files, these are qtangents using SNORM (int16 I think).  8 bytes.
@@ -209,30 +235,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                     }
                     QTangents = qtangents;
                     Normals = normals2;
-                    //Tangents = qtangents;
-                    //ChunkDataStream_900 tangents = new((uint)meshChunk.NumVertices);
-                    //tangents._model = _model;
-                    //tangents._header = _header;
-                    //tangents._header.Offset = (uint)b.BaseStream.Position;
-                    //tangents.Read(b);
-                    //tangents.DataStreamType = DatastreamType.TANGENTS;
-                    //tangents.ChunkType = ChunkType.DataStream;
-                    //tangents.ID = 7;
-                    //model.ChunkMap.Add(tangents.ID, tangents);
-
-                    //if (!model.ChunkMap.ContainsKey(6))
-                    //{
-                    //    // Create a normals chunk from Tangents data
-                    //    ChunkDataStream_900 norms = new((uint)meshChunk.NumVertices);
-                    //    norms._model = _model;
-                    //    norms._header = _header;
-                    //    norms.ChunkType = ChunkType.DataStream;
-                    //    norms.BytesPerElement = 4;
-                    //    norms.DataStreamType = DatastreamType.NORMALS;
-                    //    norms.Normals = tangents.Normals;
-                    //    norms.ID = 6;
-                    //    model.ChunkMap.Add(norms.ID, norms);
-                    //}
+                    b.AlignTo(8);
                     break;
                 case IvoDatastreamType.IVOBONEMAP32:
                 case IvoDatastreamType.IVOBONEMAP:
@@ -284,6 +287,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                         }
                         BoneMappings = boneMaps;
                     }
+                    b.AlignTo(8);
                     break;
                 case IvoDatastreamType.IVOCOLORS2:
                     //ChunkDataStream_900 colors2 = new((uint)meshChunk.NumVertices);
@@ -298,6 +302,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                     //model.ChunkMap.Add(colors2.ID, colors2);
                     break;
                 default:
+                    HelperMethods.Log(LogLevelEnum.Warning, $"***** Unknown DataStream Type {ivoDataStreamType} *****");
                     b.BaseStream.Position = b.BaseStream.Position + 4;
                     break;
             }

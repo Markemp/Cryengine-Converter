@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Collections.Generic;
+using System.Numerics;
 
 namespace CgfConverter.CryEngineCore;
 
@@ -20,8 +21,9 @@ public abstract class ChunkDataStream : Chunk // Contains data such as vertices,
     public IRGBA[] Colors;
     public IRGBA[] Colors2;
 
-    // For Tangents on down, this may be a 2 element array.
-    public Tangent[,] Tangents;  // for dataStreamType of 6, length is NumElements, 2.  
+    public List<Quaternion> Tangents = []; // datastreamType of 6
+    public List<Quaternion> BiTangents = [];
+    public List<Quaternion> QTangents = [];
     public byte[,] ShCoeffs;     // for dataStreamType of 7, length is NumElement,BytesPerElements.
     public byte[,] ShapeDeformation; // for dataStreamType of 8, length is NumElements,BytesPerElement.
     public byte[,] BoneMap;      // for dataStreamType of 9, length is NumElements,BytesPerElement, 2.
