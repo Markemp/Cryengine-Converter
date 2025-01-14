@@ -47,7 +47,7 @@ public partial class CryEngine
 
     /// <summary>Dictionary of Materials.  Key is the mtlName chunk Name property (stripped of path and
     /// extension info), or the material file if provided.</summary>
-    public Dictionary<string, Material> Materials { get; internal set; } = new();
+    public Dictionary<string, Material> Materials { get; internal set; } = [];
 
     private List<Chunk>? _chunks;
     public List<Chunk> Chunks {
@@ -57,43 +57,41 @@ public partial class CryEngine
         }
     }
 
-    private Dictionary<string, ChunkNode>? _nodeMap;
-    public Dictionary<string, ChunkNode> NodeMap  // Cannot use the Node name for the key.  Across a couple files, you may have multiple nodes with same name.
-    {
-        get {
-            if (_nodeMap is null)
-            {
-                _nodeMap = new Dictionary<string, ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
+    //private Dictionary<string, ChunkNode>? _nodeMap;
+    //public Dictionary<string, ChunkNode> NodeMap  // Cannot use the Node name for the key.  Across a couple files, you may have multiple nodes with same name.
+    //{
+    //    get {
+    //        if (_nodeMap is null)
+    //        {
+    //            _nodeMap = new Dictionary<string, ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
 
-                ChunkNode? rootNode = null;
+    //            ChunkNode? rootNode = null;
 
-                Log.D("Mapping Nodes");
+    //            foreach (Model model in Models)
+    //            {
+    //                model.RootNode = rootNode = (rootNode ?? model.RootNode);
 
-                foreach (Model model in Models)
-                {
-                    model.RootNode = rootNode = (rootNode ?? model.RootNode);
+    //                foreach (ChunkNode node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkType.Node).Select(c => c as ChunkNode))
+    //                {
+    //                    // Preserve existing parents
+    //                    if (_nodeMap.ContainsKey(node.Name))
+    //                    {
+    //                        ChunkNode parentNode = _nodeMap[node.Name].ParentNode;
 
-                    foreach (ChunkNode node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkType.Node).Select(c => c as ChunkNode))
-                    {
-                        // Preserve existing parents
-                        if (_nodeMap.ContainsKey(node.Name))
-                        {
-                            ChunkNode parentNode = _nodeMap[node.Name].ParentNode;
+    //                        if (parentNode is not null)
+    //                            parentNode = _nodeMap[parentNode.Name];
 
-                            if (parentNode is not null)
-                                parentNode = _nodeMap[parentNode.Name];
+    //                        node.ParentNode = parentNode;
+    //                    }
 
-                            node.ParentNode = parentNode;
-                        }
+    //                    _nodeMap[node.Name] = node;    // TODO:  fix this.  The node name can conflict. (example?)
+    //                }
+    //            }
+    //        }
 
-                        _nodeMap[node.Name] = node;    // TODO:  fix this.  The node name can conflict. (example?)
-                    }
-                }
-            }
-
-            return _nodeMap;
-        }
-    }
+    //        return _nodeMap;
+    //    }
+    //}
 
     public CryEngine(string filename, IPackFileSystem packFileSystem, TaggedLogger? parentLogger = null, string? materialFiles = null, string? objectDir = null)
     {
@@ -229,7 +227,11 @@ public partial class CryEngine
         }
         else // Traditional Crydata.  Build geometry info from the models.
         {
-
+            // For each ChunkNode in model[0], add it to the Nodes list.
+            foreach (var node in Models[0].ChunkMap.Values.Where(c => c.ChunkType == ChunkType.Node).Select(c => c as ChunkNode))
+            {
+                Nodes.Add(node);
+            }
         }
 
     }
@@ -320,7 +322,7 @@ public partial class CryEngine
                 if (fullyQualifiedMaterialFile is not null)
                 {
                     var materials = MaterialUtilities.FromStream(PackFileSystem.GetStream(fullyQualifiedMaterialFile), materialFile, true);
-                    Materials.Add(key, MaterialUtilities.FromStream(PackFileSystem.GetStream(fullyQualifiedMaterialFile), materialFile, true));
+                    Materials.Add(key, materials);
                 }
             }
         }
@@ -376,7 +378,7 @@ public partial class CryEngine
 
     private void AssignMaterialsToNodes(bool mtlFilesProvided = true)
     {
-        foreach (var node in NodeMap.Values.Where(x => x.MaterialID != 0))
+        foreach (var node in Nodes.Where(x => x.MaterialID != 0))
         {
             if (mtlFilesProvided && MaterialFiles.Count == 1)
             {

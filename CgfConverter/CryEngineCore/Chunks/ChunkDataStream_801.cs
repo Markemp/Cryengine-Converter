@@ -134,7 +134,6 @@ internal sealed class ChunkDataStream_801 : ChunkDataStream
             case DatastreamType.VERTSUVS:  // 3 half floats for verts, 3 half floats for normals, 2 half floats for UVs
                 // Utils.Log(LogLevelEnum.Debug, "In VertsUVs...");
                 Vertices = new Vector3[NumElements];
-                Normals = new Vector3[NumElements];
                 Colors = new IRGBA[NumElements];
                 UVs = new UV[NumElements];
                 switch (BytesPerElement)  // new Star Citizen files

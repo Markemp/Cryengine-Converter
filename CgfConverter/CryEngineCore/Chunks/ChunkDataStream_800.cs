@@ -146,7 +146,6 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                             throw new NotSupportedException($"Unsupported tangents format: {BytesPerElement}"); throw new Exception("Need to add new Tangent Size");
                     }
                 }
-                // Utils.Log(LogLevelEnum.Debug, "Offset is {0:X}", b.BaseStream.Position);
                 break;
 
             #endregion
@@ -293,26 +292,9 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
             #endregion
             #region case DataStreamTypeEnum.QTangents
             case DatastreamType.QTANGENTS:
-                //Tangents = new Tangent[NumElements, 2];
-                //Normals = new Vector3[NumElements];
                 for (int i = 0; i < NumElements; i++)
                 {
                     QTangents.Add(b.ReadQuaternion(InputType.SNorm));
-                    //Tangents[i, 0].W = b.ReadSByte() / 127f;
-                    //Tangents[i, 0].X = b.ReadSByte() / 127f;
-                    //Tangents[i, 0].Y = b.ReadSByte() / 127f;
-                    //Tangents[i, 0].Z = b.ReadSByte() / 127f;
-
-                    //// Binormal
-                    //Tangents[i, 1].W = b.ReadSByte() / 127f;
-                    //Tangents[i, 1].X = b.ReadSByte() / 127f;
-                    //Tangents[i, 1].Y = b.ReadSByte() / 127f;
-                    //Tangents[i, 1].Z = b.ReadSByte() / 127f;
-
-                    //// Calculate the normal based on the cross product of the tangents.
-                    //Normals[i].X = (Tangents[i, 0].Y * Tangents[i, 1].Z - Tangents[i, 0].Z * Tangents[i, 1].Y);
-                    //Normals[i].Y = 0 - (Tangents[i, 0].X * Tangents[i, 1].Z - Tangents[i, 0].Z * Tangents[i, 1].X);
-                    //Normals[i].Z = (Tangents[i, 0].X * Tangents[i, 1].Y - Tangents[i, 0].Y * Tangents[i, 1].X);
                 }
                 break;
             #endregion // Prey normals?

@@ -206,6 +206,7 @@ public enum IvoDatastreamType : uint
     IVOVERTSUVS = 0x91329AE9,
     IVOVERTSUVS2 = 0xB3A70D5E,
     IVOBONEMAP32 = 0x6ECA3708,           // Objects\Characters\Human\heads\male\npc\male01\male01_t2_head.skinm
+    IVOUNKNOWN = 0x9D51C5EE,        // box.cgfm.  2 bytes, all zeros, numvertices
 }
 
 public enum PhysicsPrimitiveType : uint

@@ -301,6 +301,14 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                     //colors2.ID = 10;
                     //model.ChunkMap.Add(colors2.ID, colors2);
                     break;
+                case IvoDatastreamType.IVOUNKNOWN:
+                    var numBytes = b.ReadUInt32();
+                    for (int i = 0; i < meshDetails.NumberOfVertices; i++)
+                    {
+                        b.ReadUInt16();
+                    }
+                    b.AlignTo(8);
+                    break;
                 default:
                     HelperMethods.Log(LogLevelEnum.Warning, $"***** Unknown DataStream Type {ivoDataStreamType} *****");
                     b.BaseStream.Position = b.BaseStream.Position + 4;

@@ -70,6 +70,14 @@ public static class BinaryReaderExtensions
                     Z = CryHalf.ConvertCryHalfToFloat(r.ReadUInt16())
                 };
                 break;
+            case InputType.DymekHalf:
+                v = new()
+                {
+                    X = CryHalf.ConvertDymekHalfToFloat(r.ReadUInt16()),
+                    Y = CryHalf.ConvertDymekHalfToFloat(r.ReadUInt16()),
+                    Z = CryHalf.ConvertDymekHalfToFloat(r.ReadUInt16())
+                };
+                break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
@@ -108,6 +116,24 @@ public static class BinaryReaderExtensions
                     Y = r.ReadInt16() / 32767.0f,
                     Z = r.ReadInt16() / 32767.0f,
                     W = r.ReadInt16() / 32767.0f
+                };
+                break;
+            case InputType.CryHalf:
+                q = new Quaternion()
+                {
+                    X = CryHalf.ConvertCryHalfToFloat(r.ReadUInt16()),
+                    Y = CryHalf.ConvertCryHalfToFloat(r.ReadUInt16()),
+                    Z = CryHalf.ConvertCryHalfToFloat(r.ReadUInt16()),
+                    W = CryHalf.ConvertCryHalfToFloat(r.ReadUInt16())
+                };
+                break;
+            case InputType.DymekHalf:
+                q = new Quaternion()
+                {
+                    X = CryHalf.ConvertDymekHalfToFloat(r.ReadUInt16()),
+                    Y = CryHalf.ConvertDymekHalfToFloat(r.ReadUInt16()),
+                    Z = CryHalf.ConvertDymekHalfToFloat(r.ReadUInt16()),
+                    W = CryHalf.ConvertDymekHalfToFloat(r.ReadUInt16())
                 };
                 break;
             default:
@@ -313,7 +339,8 @@ public static class BinaryReaderExtensions
         CryHalf,
         Single,
         Double,
-        SNorm
+        SNorm,
+        DymekHalf
     }
 
     public static int ReadCryInt(this Stream stream)

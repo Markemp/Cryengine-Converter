@@ -38,6 +38,23 @@ public class StarCitizenTests
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
+
+        var mat = cryData.Materials["grid_grayyellow"];
+        Assert.AreEqual("grid_grey", mat.SubMaterials[0].Name);
+        Assert.AreEqual("grid_yellow", mat.SubMaterials[1].Name);
+    }
+
+    [TestMethod]
+    public void Box_Cgf_MWO()
+    {
+        var args = new string[] { $@"d:\depot\MWO\objects\default\box.cgf", "-objectdir", @"d:\depot\sc3.24\data" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var mat = cryData.Materials["helper"];
+        // TODO:  MWO box not finding box.mtl in the same dir as the .cgf.
     }
 
     [TestMethod]
