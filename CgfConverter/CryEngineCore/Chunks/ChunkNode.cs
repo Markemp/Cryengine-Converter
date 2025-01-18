@@ -25,10 +25,15 @@ public abstract class ChunkNode : Chunk
     public int SclCtrlID { get; internal set; }
     public string Properties { get; internal set; } = string.Empty;
     public int PropertyStringLength { get; internal set; }
-    public GeometryInfo? GeometryInfo { get; internal set; }
+
+    // Computed properties
+    public GeometryInfo? GeometryInfo { get; internal set; } // null for helper and meshphysics
+    public ChunkHelper? ChunkHelper { get; set; }      // Only set if object node id is helper object
+    public ChunkMesh? MeshData { get; set; }           // Only set if object node id is ChunkMesh
 
     /// <summary>Computed from material file. Not set for helper nodes, etc.</summary>
     public Material Materials { get; internal set; } = new();
+
     /// <summary>Name of the material library file.</summary>
     public string MaterialFileName { get; internal set; } = string.Empty;
 
@@ -62,7 +67,6 @@ public abstract class ChunkNode : Chunk
     public List<ChunkNode> Children { get; set; } = [];
 
     private Chunk? _objectChunk;
-
     public Chunk? ObjectChunk
     {
         get

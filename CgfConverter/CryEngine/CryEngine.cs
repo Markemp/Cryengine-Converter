@@ -35,7 +35,6 @@ public partial class CryEngine
     public string Name => Path.GetFileNameWithoutExtension(InputFile).ToLower();
     public List<Model> Models { get; internal set; } = []; // All the model files associated with this game object
     public List<Model> Animations { get; internal set; } = [];  // Animation files for this object
-    public List<GeometryInfo> GeometryInfos { get; internal set; } = []; // Datastream info.
     public List<ChunkNode> Nodes { get; internal set; } = []; // node hierarchy.
     public ChunkNode RootNode { get; internal set; } // can get node hierarchy from here
     public ChunkCompiledBones Bones { get; internal set; }  // move to skinning info
@@ -56,42 +55,6 @@ public partial class CryEngine
             return _chunks;
         }
     }
-
-    //private Dictionary<string, ChunkNode>? _nodeMap;
-    //public Dictionary<string, ChunkNode> NodeMap  // Cannot use the Node name for the key.  Across a couple files, you may have multiple nodes with same name.
-    //{
-    //    get {
-    //        if (_nodeMap is null)
-    //        {
-    //            _nodeMap = new Dictionary<string, ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
-
-    //            ChunkNode? rootNode = null;
-
-    //            foreach (Model model in Models)
-    //            {
-    //                model.RootNode = rootNode = (rootNode ?? model.RootNode);
-
-    //                foreach (ChunkNode node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkType.Node).Select(c => c as ChunkNode))
-    //                {
-    //                    // Preserve existing parents
-    //                    if (_nodeMap.ContainsKey(node.Name))
-    //                    {
-    //                        ChunkNode parentNode = _nodeMap[node.Name].ParentNode;
-
-    //                        if (parentNode is not null)
-    //                            parentNode = _nodeMap[parentNode.Name];
-
-    //                        node.ParentNode = parentNode;
-    //                    }
-
-    //                    _nodeMap[node.Name] = node;    // TODO:  fix this.  The node name can conflict. (example?)
-    //                }
-    //            }
-    //        }
-
-    //        return _nodeMap;
-    //    }
-    //}
 
     public CryEngine(string filename, IPackFileSystem packFileSystem, TaggedLogger? parentLogger = null, string? materialFiles = null, string? objectDir = null)
     {
@@ -137,8 +100,6 @@ public partial class CryEngine
         AssignMaterialsToNodes(false);
     }
 
-    
-
     private void AutoDetectMFile(string filename, string inputFile, List<string> inputFiles)
     {
         var mFile = Path.ChangeExtension(filename, $"{Path.GetExtension(inputFile)}m");
@@ -149,14 +110,13 @@ public partial class CryEngine
         }
     }
 
-    // With Ivo files, the node structure is either implied (skin and chr files) or
-    // part of the nodemeshcombo chunks. Model[0] has the hierarchy, model[1] has the geometry.
     private void BuildNodeStructure()
     {
         if (IsIvoFile)
         {
             // Create node chunks from the first model.  If there is a nodemeshcombo chunk, use
             // that for the nodes.  If not (skin and chr files), create a dummy root node.
+            // Can be zero or multiple nodes, but all reference the same geometry.
             if (Models[0].ChunkMap.Values.Any(c => c.ChunkType == ChunkType.NodeMeshCombo))
             {
                 var comboChunk = Models[0].ChunkMap.Values
@@ -227,13 +187,43 @@ public partial class CryEngine
         }
         else // Traditional Crydata.  Build geometry info from the models.
         {
+            // Separate datastream for each node.
             // For each ChunkNode in model[0], add it to the Nodes list.
             foreach (var node in Models[0].ChunkMap.Values.Where(c => c.ChunkType == ChunkType.Node).Select(c => c as ChunkNode))
             {
+                // Add helper or mesh data to the node
+                var objectNodeId = node.ObjectNodeID;
+                var objectChunk = Models[0].ChunkMap.Values.FirstOrDefault(c => c.ID == objectNodeId);
+                if (objectChunk is ChunkHelper helper)
+                {
+                    node.ChunkHelper = helper;
+                    continue;
+                }
+                else if (objectChunk is ChunkMesh mesh)
+                {
+                    // For models with split geometry m files, the MESH_IS_EMPTY flag will be set
+                    // on the first model.  You have to find the equivalent mesh chunk in the geometry
+                    // file to find out if it's a mesh physics chunk or not.
+                    bool isSplitFile = Models.Count > 1;
+                    if (!isSplitFile)
+                    {
+                        node.MeshData = mesh;
+                        // If it's mesh physics data, there won't be any geometry info.
+                        if (!mesh.Flags1.HasFlag(MeshChunkFlag.MESH_IS_EMPTY))
+                        {
+                            //mesh.MeshSubsets = Models[0].ChunkMap.Values.OfType<ChunkMeshSubsets>().FirstOrDefault(x => x.ID == mesh.MeshSubsetsData);
+                        }
+                    }
+
+
+                }
+                    
+
+                // Add mesh subset info to the node if it has geometry
+
                 Nodes.Add(node);
             }
         }
-
     }
 
     private static SkinningInfo? ConsolidateSkinningInfo(List<Model> models)
@@ -372,7 +362,7 @@ public partial class CryEngine
         }
         catch (FileNotFoundException)
         {
-            // pass
+            Log.I("Unable to find associated animation track database file for {0}", InputFile);
         }
     }
 

@@ -1,4 +1,6 @@
-﻿namespace CgfConverter;
+﻿using System;
+
+namespace CgfConverter;
 
 public enum FileVersion : uint
 {
@@ -13,17 +15,28 @@ public enum FileType : uint
     Animation = 0xFFFF0001
 }  // complete
 
+[Flags]
 public enum MtlNameType : uint
 {
     // TODO: This is a bitwise struct. 
     Basic = 0x00,
-    Library = 0x01,
-    MwoChild = 0x02,
+    Library = 0x01,     // multi material
+    MwoChild = 0x02,    // Submaterial
     Single = 0x10,
     Child = 0x12,
     Unknown1 = 0x0B,   // Collision materials?  In MWO, these are the torsos, arms, legs from body/<mech>.mtl
     Unknown2 = 0x04
 }
+
+[Flags]
+enum MaterialTypeFlags : uint
+{
+    FLAG_MULTI_MATERIAL = 0x0001, // Have sub materials info.
+    FLAG_SUB_MATERIAL = 0x0002, // This is sub material.
+    FLAG_SH_COEFFS = 0x0004, // This material should get spherical harmonics coefficients computed.
+    FLAG_SH_2SIDED = 0x0008, // This material will be used as 2 sided in the sh precomputation
+    FLAG_SH_AMBIENT = 0x0010, // This material will get an ambient sh term(to not shadow it entirely)
+};
 
 public enum ChunkType : uint    // complete
 {
@@ -96,11 +109,6 @@ public enum ChunkType : uint    // complete
     BinaryXmlDataSC = 0xcccbf004,
 }
 
-public enum ChunkVersion : uint
-{
-    ChkVersion
-}    //complete
-
 public enum HelperType : uint
 {
     POINT,
@@ -108,14 +116,6 @@ public enum HelperType : uint
     XREF,
     CAMERA,
     GEOMETRY
-}      //complete
-
-public enum MtlType : uint            //complete
-{
-    UNKNOWN,
-    STANDARD,
-    MULTI,
-    TWOSIDED
 }
 
 public enum MtlNamePhysicsType : uint //complete
@@ -223,6 +223,20 @@ public enum XmlFileType
     PREFAB,
     CHRPARAMS
 }
+
+/// <summary>
+/// Flags for the mesh. How to check:
+///   var flags = EFlags.MESH_IS_EMPTY | EFlags.HAS_TEX_MAPPING_DENSITY;
+///   bool hasTexMappingDensity = (flags & EFlags.HAS_TEX_MAPPING_DENSITY) != 0;
+/// </summary>
+[Flags]
+public enum MeshChunkFlag
+{
+    MESH_IS_EMPTY = 0x0001, // Empty mesh (no datastreams.  geometry may be in geometry model)
+    HAS_TEX_MAPPING_DENSITY = 0x0002, // has texMappingDensity
+    HAS_EXTRA_WEIGHTS = 0x0004, // Bonemap stream has weights 5-8
+    HAS_FACE_AREA = 0x0008, // has geometricMeanFaceArea
+};
 
 public enum VertexFormat : uint
 {

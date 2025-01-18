@@ -9,7 +9,7 @@ internal sealed class ChunkMesh_801 : ChunkMesh
     {
         base.Read(b);
 
-        Flags1 = b.ReadInt32();
+        Flags1 = (MeshChunkFlag)b.ReadInt32();
         Flags2 = b.ReadInt32();
         NumVertices = b.ReadInt32();
         NumIndices = b.ReadInt32();

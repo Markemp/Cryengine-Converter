@@ -1,4 +1,5 @@
-﻿using CgfConverter.Utilities;
+﻿using CgfConverter.Models;
+using CgfConverter.Utilities;
 using System.Numerics;
 
 namespace CgfConverter.CryEngineCore;
@@ -6,7 +7,7 @@ namespace CgfConverter.CryEngineCore;
 public abstract class ChunkMesh : Chunk
 {
     // public UInt32 Version;  // 623 Far Cry, 744 Far Cry, Aion, 800 Crysis
-    public int Flags1 { get; set; }  // 800
+    public MeshChunkFlag Flags1 { get; set; }  // 800
     public int Flags2 { get; set; }  // 801 and 802
     public int NumVertices { get; set; } // 
     public int NumIndices { get; set; }  // Number of indices (each triangle has 3 indices, so this is the number of triangles times 3).
@@ -36,6 +37,10 @@ public abstract class ChunkMesh : Chunk
     public int[] PhysicsData = new int[4];
     public Vector3 MinBound;
     public Vector3 MaxBound;
+
+    // Computed properties
+    public GeometryInfo? GeometryInfo { get; set; }
+    //public ChunkMeshSubsets? MeshSubsets { get; set; } // can be null for mesh physics data
 
     public override string ToString() => $@"Chunk Type: {ChunkType}, ID: {ID:X}, Version: {Version}";
 

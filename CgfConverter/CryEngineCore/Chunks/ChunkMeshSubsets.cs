@@ -5,13 +5,13 @@ namespace CgfConverter.CryEngineCore;
 
 public abstract class ChunkMeshSubsets : Chunk // cccc0017:  The different parts of a mesh.  Needed for obj exporting
 {
-    public uint Flags; // probably the offset
-    public uint NumMeshSubset; // number of mesh subsets
-    public List<MeshSubset> MeshSubsets = [];
+    public uint Flags { get; set; } // probably the offset
+    public uint NumMeshSubset { get; set; } // number of mesh subsets
+    public List<MeshSubset> MeshSubsets { get; set; } = [];
 
     // For bone ID meshes? Not sure where this is used yet.
-    public uint NumberOfBoneIDs;
-    public ushort[] BoneIDs;
+    //public uint NumberOfBoneIDs { get; set; }
+    //public ushort[] BoneIDs { get; set; }
 
     public override string ToString() => $@"Chunk Type: {ChunkType}, ID: {ID:X}, Version: {Version}, Number of Mesh Subsets: {NumMeshSubset}";
 
