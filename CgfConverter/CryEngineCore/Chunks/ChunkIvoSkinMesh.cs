@@ -10,7 +10,7 @@ public class ChunkIvoSkinMesh : Chunk
 
     public required IvoGeometryMeshDetails MeshDetails { get; set; }
     public required List<MeshSubset> MeshSubsets { get; set; } = [];
-    public required IvoDatastream<uint> Indices { get; set; }
+    public required Datastream<uint> Indices { get; set; }
     public Datastream<VertUV>? VertsUvs { get; set; }
     public Datastream<Vector3>? Normals { get; set; }
     public Datastream<Quaternion>? Tangents { get; set; }
