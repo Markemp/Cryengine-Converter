@@ -11,12 +11,12 @@ public class ChunkIvoSkinMesh : Chunk
     public required IvoGeometryMeshDetails MeshDetails { get; set; }
     public required List<MeshSubset> MeshSubsets { get; set; } = [];
     public required IvoDatastream<uint> Indices { get; set; }
-    public IvoDatastream<VertUV>? VertsUvs { get; set; }
-    public IvoDatastream<Vector3>? Normals { get; set; }
-    public IvoDatastream<Quaternion>? Tangents { get; set; }
-    public IvoDatastream<Quaternion>? BiTangents { get; set; }
-    public IvoDatastream<Quaternion>? QTangents { get; set; }
-    public IvoDatastream<IRGBA>? Colors { get; set; }
-    public IvoDatastream<IRGBA>? Colors2 { get; set; }
-    public IvoDatastream<MeshBoneMapping>? BoneMappings { get; set; }
+    public Datastream<VertUV>? VertsUvs { get; set; }
+    public Datastream<Vector3>? Normals { get; set; }
+    public Datastream<Quaternion>? Tangents { get; set; }
+    public Datastream<Quaternion>? BiTangents { get; set; }
+    public Datastream<Quaternion>? QTangents { get; set; }
+    public Datastream<IRGBA>? Colors { get; set; }
+    public Datastream<IRGBA>? Colors2 { get; set; }
+    public Datastream<MeshBoneMapping>? BoneMappings { get; set; }
 }

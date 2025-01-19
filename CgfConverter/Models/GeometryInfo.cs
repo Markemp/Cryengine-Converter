@@ -12,7 +12,7 @@ public sealed record GeometryInfo
     public List<MeshSubset> GeometrySubsets { get; set; } = [];
     public List<uint> Indices { get; set; } = [];
     public List<UV> UVs { get; set; } = [];
-    public List<Vector3> Vertices { get; set; } = [];
+    public Datastream<Vector3> Vertices { get; set; }
     public List<Vector3> Normals { get; set; } = [];
     public List<IRGBA>? Colors { get; set; }
     public List<MeshBoneMapping>? BoneMappings { get; set; }

@@ -191,10 +191,21 @@ public enum DatastreamType : uint
     SKINDATA,
     DUMMY2,
     VERTSUVS,   // 0x0F
-    NUMTYPES
+    NUMTYPES,
+    IVONORMALS = 0x9CF3F615,
+    IVONORMALS2 = 0x38A581FE,           // ResourceFiles\SC\ivo\new_skin_format\Avenger_Landing_Gear\AEGS_Vanguard_LandingGear_Front.skinm
+    IVOCOLORS2 = 0xD9EED421,           // Objects\Characters\Human\male_v7\armor\ccc\m_ccc_vanduul_helmet_01.skinm
+    IVOINDICES = 0xEECDC168,
+    IVOTANGENTS = 0xB95E9A1B,
+    IVOQTANGENTS = 0xEE057252,
+    IVOBONEMAP = 0x677C7B23,
+    IVOVERTSUVS = 0x91329AE9,
+    IVOVERTSUVS2 = 0xB3A70D5E,
+    IVOBONEMAP32 = 0x6ECA3708,           // Objects\Characters\Human\heads\male\npc\male01\male01_t2_head.skinm
+    IVOUNKNOWN = 0x9D51C5EE,        // box.cgfm.  2 bytes, all zeros, numvertices
 }
 
-public enum IvoDatastreamType : uint
+public enum IvoDatastreamType : uint  // TODO:  Get rid of this.
 {
     IVONORMALS = 0x9CF3F615,
     IVONORMALS2 = 0x38A581FE,           // ResourceFiles\SC\ivo\new_skin_format\Avenger_Landing_Gear\AEGS_Vanguard_LandingGear_Front.skinm

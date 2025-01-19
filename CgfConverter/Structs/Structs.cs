@@ -136,8 +136,15 @@ public sealed record IvoDatastream<T>
     public IvoDatastreamType DatastreamType { get; set; }
     public uint BytesPerElement { get; set; }
     public uint NumberOfElements { get; set; }
-    public Type ElementType { get; set; }
-    public List<T> Values { get; set; } = new();
+    public List<T> Data { get; set; } = [];
+}
+
+public class Datastream<T>(DatastreamType type, uint numElements, uint bytesPerElement, T[] data)
+{
+    public DatastreamType Type { get; } = type;
+    public uint NumElements { get; } = numElements;
+    public uint BytesPerElement { get; } = bytesPerElement;
+    public T[] Data { get; } = data;
 }
 
 public class CompiledPhysicalBone

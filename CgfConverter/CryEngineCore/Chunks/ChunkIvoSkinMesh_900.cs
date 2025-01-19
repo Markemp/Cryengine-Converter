@@ -64,76 +64,79 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
         while (b.BaseStream.Position != b.BaseStream.Length)  // Read to end.
         {
             var datastreamType = b.ReadUInt32();
-            var ivoDataStreamType = (IvoDatastreamType)datastreamType;
+            var ivoDataStreamType = (DatastreamType)datastreamType;
+            uint bytesPerElement = 0;
 
             switch (ivoDataStreamType)
             {
-                case IvoDatastreamType.IVOINDICES:
-                    IvoDatastream<uint> indices = new();
-                    indices.DatastreamType = IvoDatastreamType.IVOINDICES;
-                    indices.BytesPerElement = b.ReadUInt32();
-                    indices.NumberOfElements = meshDetails.NumberOfIndices;
+                case DatastreamType.IVOINDICES:
+                    bytesPerElement = b.ReadUInt32();
+                    Datastream<uint> indices = new(
+                        DatastreamType.IVOINDICES,
+                        meshDetails.NumberOfIndices,
+                        bytesPerElement,
+                        new uint[bytesPerElement]);
                     if (indices.BytesPerElement == 2)
                     {
                         for (int i = 0; i < meshDetails.NumberOfIndices; i++)
                         {
-                            indices.Values.Add(b.ReadUInt16()); // casts to uint nicely
+                            indices.Data[i] = b.ReadUInt16(); // casts to uint nicely
                         }
                     }
                     else if (indices.BytesPerElement == 4)
                     {
-                        for ( int i = 0; i < meshDetails.NumberOfIndices; i++)
+                        for (int i = 0; i < meshDetails.NumberOfIndices; i++)
                         {
-                            indices.Values.Add(b.ReadUInt32());
+                            indices.Data[i] = b.ReadUInt32();
                         }
                     }
                     Indices = indices;
                     b.AlignTo(8);
                     break;
-                case IvoDatastreamType.IVOVERTSUVS:
-                case IvoDatastreamType.IVOVERTSUVS2:
-                    IvoDatastream<VertUV> vertUVs = new()
-                    {
-                        DatastreamType = IvoDatastreamType.IVOVERTSUVS2,
-                        BytesPerElement = b.ReadUInt32(),
-                        NumberOfElements = meshDetails.NumberOfVertices
-                    };
+                case DatastreamType.IVOVERTSUVS:
+                case DatastreamType.IVOVERTSUVS2:
+                    bytesPerElement = b.ReadUInt32();
+                    Datastream<VertUV> vertUVs = new(
+                        DatastreamType.IVOVERTSUVS2,
+                        meshDetails.NumberOfVertices,
+                        bytesPerElement,
+                        new VertUV[bytesPerElement]);
                     if (vertUVs.BytesPerElement == 16)
                     {
                         for (int i = 0; i < meshDetails.NumberOfVertices; i++)
                         {
-                            vertUVs.Values.Add(new VertUV
+                            vertUVs.Data[i] = new VertUV
                             {
                                 Vertex = b.ReadVector3(InputType.SNorm),
                                 Skipped = b.ReadBytes(2),
                                 Color = b.ReadIRGBA(),
                                 UV = b.ReadUV(InputType.Half)
-                            });
+                            };
                         }
                     }
                     else if (vertUVs.BytesPerElement == 20)
                     {
                         for (int i = 0; i < meshDetails.NumberOfVertices; i++)
                         {
-                            vertUVs.Values.Add(new VertUV
+                            vertUVs.Data[i] = new VertUV
                             {
                                 Vertex = b.ReadVector3(InputType.Single),
                                 Color = b.ReadIRGBA(),
                                 UV = b.ReadUV(InputType.Half)
-                            });
+                            };
                         }
                     }
                     VertsUvs = vertUVs;
                     b.AlignTo(8);
                     break;
-                case IvoDatastreamType.IVONORMALS:
-                case IvoDatastreamType.IVONORMALS2:
-                    IvoDatastream<Vector3> normals = new()
-                    {
-                        DatastreamType = IvoDatastreamType.IVONORMALS2,
-                        BytesPerElement = b.ReadUInt32(),
-                        NumberOfElements = meshDetails.NumberOfVertices
-                    };
+                case DatastreamType.IVONORMALS:
+                case DatastreamType.IVONORMALS2:
+                    bytesPerElement = b.ReadUInt32();
+                    Datastream<Vector3> normals = new(
+                        DatastreamType.IVONORMALS2,
+                        meshDetails.NumberOfVertices,
+                        bytesPerElement,
+                        new Vector3[bytesPerElement]);
                     if (normals.BytesPerElement == 4)
                     {
                         for (int i = 0; i < meshDetails.NumberOfVertices; i++)
@@ -150,27 +153,26 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                                 throw new InvalidDataException($"Invalid normal magnitude at vertex {i}: x²+y²={sumSquares}");
 
                             float z = (float)Math.Sqrt(1.0f - sumSquares);
-                            normals.Values.Add(new Vector3(x, y, z));
+                            normals.Data[i] = new Vector3(x, y, z);
                         }
                     }
                     else if (normals.BytesPerElement == 12)
                     {
                         for (int i = 0; i < meshDetails.NumberOfVertices; i++)
                         {
-                            normals.Values.Add(b.ReadVector3());
+                            normals.Data[i] = b.ReadVector3();
                         }
                     }
                     Normals = normals;
                     b.AlignTo(8);
                     break;
-                case IvoDatastreamType.IVOTANGENTS:
-                    var bytesPerElement = b.ReadUInt32();
-                    IvoDatastream<Quaternion> tangents = new()
-                    {
-                        DatastreamType = IvoDatastreamType.IVOTANGENTS,
-                        BytesPerElement = bytesPerElement,
-                        NumberOfElements = meshDetails.NumberOfVertices
-                    };
+                case DatastreamType.IVOTANGENTS:
+                    bytesPerElement = b.ReadUInt32();
+                    Datastream<Quaternion> tangents = new(
+                        DatastreamType.IVOTANGENTS,
+                        meshDetails.NumberOfVertices,
+                        bytesPerElement,
+                        new Quaternion[bytesPerElement]);
                     IvoDatastream<Quaternion> bitangents = new()
                     {
                         DatastreamType = IvoDatastreamType.IVOTANGENTS,
@@ -182,7 +184,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                         for (int i = 0; i < meshDetails.NumberOfVertices; i++)
                         {
                             Quaternion q = b.ReadQuaternion(InputType.SNorm);
-                            tangents.Values.Add(q);
+                            tangents.Data[i] = q;
                         }
                     }
                     else if (tangents.BytesPerElement == 16)
@@ -191,7 +193,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                         {
                             Quaternion tan = b.ReadQuaternion(InputType.SNorm);
                             Quaternion bitan = b.ReadQuaternion(InputType.SNorm);
-                            tangents.Values.Add(b.ReadQuaternion(InputType.Single));
+                            tangents.Data[i] = b.ReadQuaternion(InputType.Single);
 
                         }
                     }
@@ -201,7 +203,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                     BiTangents = bitangents;
                     b.AlignTo(8);
                     break;
-                case IvoDatastreamType.IVOQTANGENTS:
+                case DatastreamType.IVOQTANGENTS:
                     // For Ivo files, these are qtangents using SNORM (int16 I think).  8 bytes.
                     IvoDatastream<Quaternion> qtangents = new()
                     {
@@ -220,9 +222,9 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                         for (int i = 0; i < meshDetails.NumberOfVertices; i++)
                         {
                             Quaternion q = b.ReadQuaternion(InputType.SNorm);
-                            qtangents.Values.Add(q);
+                            qtangents.Data.Add(q);
                             var normal = q.GetNormalFromQTangent();
-                            normals2.Values.Add(normal);
+                            normals2.Data.Add(normal);
                         }
                     }
                     else if (qtangents.BytesPerElement == 16)
@@ -230,15 +232,15 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                         for (int i = 0; i < meshDetails.NumberOfVertices; i++)
                         {
                             // TODO: Finish this or ignore.
-                            qtangents.Values.Add(b.ReadQuaternion(InputType.Single));
+                            qtangents.Data.Add(b.ReadQuaternion(InputType.Single));
                         }
                     }
                     QTangents = qtangents;
                     Normals = normals2;
                     b.AlignTo(8);
                     break;
-                case IvoDatastreamType.IVOBONEMAP32:
-                case IvoDatastreamType.IVOBONEMAP:
+                case DatastreamType.IVOBONEMAP32:
+                case DatastreamType.IVOBONEMAP:
                     IvoDatastream<MeshBoneMapping> boneMaps = new();
                     boneMaps.DatastreamType = IvoDatastreamType.IVOBONEMAP;
                     boneMaps.BytesPerElement = b.ReadUInt32();
@@ -261,7 +263,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                                 bm.Weight[j] = b.ReadByte() / 255.0f;
                             }
 
-                            boneMaps.Values.Add(bm);
+                            boneMaps.Data.Add(bm);
                         }
                         BoneMappings = boneMaps;
                     }
@@ -283,13 +285,13 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                                 bm.Weight[j] = b.ReadByte() / 255.0f;
                             }
 
-                            boneMaps.Values.Add(bm);
+                            boneMaps.Data.Add(bm);
                         }
                         BoneMappings = boneMaps;
                     }
                     b.AlignTo(8);
                     break;
-                case IvoDatastreamType.IVOCOLORS2:
+                case DatastreamType.IVOCOLORS2:
                     //ChunkDataStream_900 colors2 = new((uint)meshChunk.NumVertices);
                     //colors2._model = _model;
                     //colors2._header = _header;
@@ -301,7 +303,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                     //colors2.ID = 10;
                     //model.ChunkMap.Add(colors2.ID, colors2);
                     break;
-                case IvoDatastreamType.IVOUNKNOWN:
+                case DatastreamType.IVOUNKNOWN:
                     var numBytes = b.ReadUInt32();
                     for (int i = 0; i < meshDetails.NumberOfVertices; i++)
                     {
@@ -320,12 +322,12 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
         GeometryInfo = new()
         {
             GeometrySubsets = MeshSubsets,
-            Vertices = VertsUvs?.Values.Select(a => a.Vertex).ToList() ?? [],
-            Normals = Normals?.Values ?? [],
-            UVs = VertsUvs?.Values.Select(a => a.UV).ToList() ?? [],
-            Colors = VertsUvs?.Values.Select(a => a.Color).ToList() ?? [],
-            Indices = Indices.Values,
-            BoneMappings = BoneMappings?.Values,
+            Vertices = new Datastream<Vector3[]>(DatastreamType.VERTICES, 0, 0, VertsUvs?.Data.Select(a => a.Vertex).ToArray() ?? []),
+            Normals = Normals?.Data ?? [],
+            UVs = VertsUvs?.Data.Select(a => a.UV).ToList() ?? [],
+            Colors = VertsUvs?.Data.Select(a => a.Color).ToList() ?? [],
+            Indices = Indices.Data,
+            BoneMappings = BoneMappings?.Data,
             BoundingBox = meshDetails.BoundingBox
         };
     }

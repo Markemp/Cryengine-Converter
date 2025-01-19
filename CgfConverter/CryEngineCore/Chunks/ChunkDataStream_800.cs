@@ -39,30 +39,35 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
 
             case DatastreamType.VERTICES:  // Ref is 0x00000000
                 Vertices = new Vector3[NumElements];
-
+                var vertices = new Vector3[NumElements];
                 switch (BytesPerElement)
                 {
                     case 12:
+                        
                         for (int i = 0; i < NumElements; i++)
                         {
-                            Vertices[i].X = b.ReadSingle();
-                            Vertices[i].Y = b.ReadSingle();
-                            Vertices[i].Z = b.ReadSingle();
+                            vertices[i] = b.ReadVector3();
+                            Vertices[i] = vertices[i];  // TODO: Refactor when datastreams are migrated
                         }
+                        DataStream = new Datastream<Vector3>(DataStreamType, NumElements, BytesPerElement, vertices);
                         break;
                     case 8:  // Prey files, and old Star Citizen files, Evolve
                         for (int i = 0; i < NumElements; i++)
                         {
-                            Vertices[i] = b.ReadVector3(InputType.Half);
+                            vertices[i] = b.ReadVector3(InputType.Half);
+                            Vertices[i] = vertices[i];  // TODO: Refactor when datastreams are migrated
                             b.ReadUInt16();
                         }
+                        DataStream = new Datastream<Vector3>(DataStreamType, NumElements, BytesPerElement, vertices);
                         break;
                     case 16:
                         for (int i = 0; i < NumElements; i++)
                         {
-                            Vertices[i] = b.ReadVector3();
+                            vertices[i] = b.ReadVector3();
+                            Vertices[i] = vertices[i];   // TODO: Refactor when datastreams are migrated
                             SkipBytes(b, 4); // TODO:  Sometimes there's a W to these structures.  Will investigate.
                         }
+                        DataStream = new Datastream<Vector3>(DataStreamType, NumElements, BytesPerElement, vertices);
                         break;
                 }
                 break;
