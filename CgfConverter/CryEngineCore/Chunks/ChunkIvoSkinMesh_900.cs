@@ -172,29 +172,26 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                         DatastreamType.IVOTANGENTS,
                         meshDetails.NumberOfVertices,
                         bytesPerElement,
-                        new Quaternion[bytesPerElement]);
-                    IvoDatastream<Quaternion> bitangents = new()
-                    {
-                        DatastreamType = IvoDatastreamType.IVOTANGENTS,
-                        BytesPerElement = bytesPerElement,
-                        NumberOfElements = meshDetails.NumberOfVertices
-                    };
+                        new Quaternion[meshDetails.NumberOfVertices]);
+                    Datastream<Quaternion> bitangents = new(
+                        DatastreamType.IVOTANGENTS,
+                        meshDetails.NumberOfVertices,
+                        bytesPerElement,
+                        new Quaternion[meshDetails.NumberOfVertices]);
+
                     if (bytesPerElement == 8)
                     {
                         for (int i = 0; i < meshDetails.NumberOfVertices; i++)
                         {
-                            Quaternion q = b.ReadQuaternion(InputType.SNorm);
-                            tangents.Data[i] = q;
+                            tangents.Data[i] = b.ReadQuaternion(InputType.SNorm);
                         }
                     }
                     else if (tangents.BytesPerElement == 16)
                     {
                         for (int i = 0; i < meshDetails.NumberOfVertices; i++)
                         {
-                            Quaternion tan = b.ReadQuaternion(InputType.SNorm);
-                            Quaternion bitan = b.ReadQuaternion(InputType.SNorm);
-                            tangents.Data[i] = b.ReadQuaternion(InputType.Single);
-
+                            tangents.Data[i] = b.ReadQuaternion(InputType.SNorm);
+                            bitangents.Data[i] = b.ReadQuaternion(InputType.SNorm);
                         }
                     }
                     else
@@ -205,26 +202,24 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                     break;
                 case DatastreamType.IVOQTANGENTS:
                     // For Ivo files, these are qtangents using SNORM (int16 I think).  8 bytes.
-                    IvoDatastream<Quaternion> qtangents = new()
-                    {
-                        DatastreamType = IvoDatastreamType.IVOTANGENTS,
-                        BytesPerElement = b.ReadUInt32(),
-                        NumberOfElements = meshDetails.NumberOfVertices
-                    };
-                    IvoDatastream<Vector3> normals2 = new()
-                    {
-                        DatastreamType = IvoDatastreamType.IVONORMALS,
-                        BytesPerElement = 12,
-                        NumberOfElements = meshDetails.NumberOfVertices
-                    };
+                    bytesPerElement = b.ReadUInt32();
+                    Datastream<Quaternion> qtangents = new(
+                        DatastreamType.IVOTANGENTS,
+                        meshDetails.NumberOfVertices,
+                        bytesPerElement,
+                        new Quaternion[meshDetails.NumberOfVertices]);
+                    Datastream<Vector3> normals2 = new(
+                        DatastreamType.NORMALS,
+                        meshDetails.NumberOfVertices,
+                        bytesPerElement,
+                        new Vector3[meshDetails.NumberOfVertices]);
                     if (qtangents.BytesPerElement == 8)
                     {
                         for (int i = 0; i < meshDetails.NumberOfVertices; i++)
                         {
                             Quaternion q = b.ReadQuaternion(InputType.SNorm);
-                            qtangents.Data.Add(q);
-                            var normal = q.GetNormalFromQTangent();
-                            normals2.Data.Add(normal);
+                            qtangents.Data[i] = q;
+                            normals2.Data[i] = q.GetNormalFromQTangent();
                         }
                     }
                     else if (qtangents.BytesPerElement == 16)
@@ -232,7 +227,9 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                         for (int i = 0; i < meshDetails.NumberOfVertices; i++)
                         {
                             // TODO: Finish this or ignore.
-                            qtangents.Data.Add(b.ReadQuaternion(InputType.Single));
+                            Quaternion q = b.ReadQuaternion(InputType.Single);
+                            qtangents.Data[i] = q;
+                            normals2.Data[i] = q.GetNormalFromQTangent();
                         }
                     }
                     QTangents = qtangents;
@@ -241,10 +238,12 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                     break;
                 case DatastreamType.IVOBONEMAP32:
                 case DatastreamType.IVOBONEMAP:
-                    IvoDatastream<MeshBoneMapping> boneMaps = new();
-                    boneMaps.DatastreamType = IvoDatastreamType.IVOBONEMAP;
-                    boneMaps.BytesPerElement = b.ReadUInt32();
-                    boneMaps.NumberOfElements = meshDetails.NumberOfIndices;
+                    bytesPerElement = b.ReadUInt32();
+                    Datastream<MeshBoneMapping> boneMaps = new(
+                        DatastreamType.IVOBONEMAP,
+                        meshDetails.NumberOfIndices,
+                        bytesPerElement,
+                        new MeshBoneMapping[bytesPerElement]);
                     if (boneMaps.BytesPerElement == 12) // 4 ushort, 4 ubytes
                     {
                         for (int i = 0; i < meshDetails.NumberOfVertices; i++)
@@ -263,9 +262,9 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                                 bm.Weight[j] = b.ReadByte() / 255.0f;
                             }
 
-                            boneMaps.Data.Add(bm);
+                            boneMaps.Data[i] = bm;
                         }
-                        BoneMappings = boneMaps;
+                        
                     }
                     else if (boneMaps.BytesPerElement == 8) // older format, rare
                     {
@@ -285,30 +284,36 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                                 bm.Weight[j] = b.ReadByte() / 255.0f;
                             }
 
-                            boneMaps.Data.Add(bm);
+                            boneMaps.Data[i] = bm;
                         }
-                        BoneMappings = boneMaps;
                     }
+                    BoneMappings = boneMaps;
                     b.AlignTo(8);
                     break;
                 case DatastreamType.IVOCOLORS2:
-                    //ChunkDataStream_900 colors2 = new((uint)meshChunk.NumVertices);
-                    //colors2._model = _model;
-                    //colors2._header = _header;
-                    //colors2._header.Offset = (uint)b.BaseStream.Position;
-                    //colors2.Read(b);
-                    //colors2.ChunkType = ChunkType.DataStream;
-                    //colors2.BytesPerElement = 4;
-                    //colors2.DataStreamType = DatastreamType.COLORS2;
-                    //colors2.ID = 10;
-                    //model.ChunkMap.Add(colors2.ID, colors2);
+                    bytesPerElement = b.ReadUInt32();
+                    Datastream<IRGBA> colors = new(
+                        DatastreamType.COLORS,
+                        meshDetails.NumberOfVertices,
+                        bytesPerElement,
+                        new IRGBA[meshDetails.NumberOfVertices]);
+                    if (bytesPerElement == 4)
+                    {
+                        for (int i = 0; i < meshDetails.NumberOfVertices; i++)
+                        {
+                            colors.Data[i] = b.ReadIRGBA();
+                        }
+                    }
+                    else
+                    {
+                        SkipBytes(b, bytesPerElement * meshDetails.NumberOfVertices);
+                    }
+                    b.AlignTo(8);
+                    Colors = colors;
                     break;
                 case DatastreamType.IVOUNKNOWN:
-                    var numBytes = b.ReadUInt32();
-                    for (int i = 0; i < meshDetails.NumberOfVertices; i++)
-                    {
-                        b.ReadUInt16();
-                    }
+                    bytesPerElement = b.ReadUInt32();
+                    SkipBytes(b, bytesPerElement * meshDetails.NumberOfVertices);
                     b.AlignTo(8);
                     break;
                 default:

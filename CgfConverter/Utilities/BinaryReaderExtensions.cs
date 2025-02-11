@@ -177,10 +177,10 @@ public static class BinaryReaderExtensions
     public static BoundingBox ReadBoundingBox(this BinaryReader r) =>
         new(ReadVector3(r), ReadVector3(r));
 
-    public static IRGB ReadIRGB(this BinaryReader reader) =>
-        new(reader.ReadByte() / 255.0f, reader.ReadByte() / 255.0f, reader.ReadByte() / 255.0f);
+    public static IRGBA ReadIRGB(this BinaryReader reader) =>
+        ReadIRGBA(reader, alpha: 1.0f);
 
-    public static IRGBA ReadIRGBA(this BinaryReader reader, byte? alpha = null) =>
+    public static IRGBA ReadIRGBA(this BinaryReader reader, float? alpha = null) =>
         new(
             reader.ReadByte() / 255.0f,
             reader.ReadByte() / 255.0f,
