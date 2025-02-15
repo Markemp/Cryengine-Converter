@@ -41,8 +41,6 @@ public struct Key
     public float[] Unknown2; // If ARG==9?  array length = 2
 }
 
-public sealed record VertUv(Vector3 Vertex, IRGBA Color, UV UV);
-
 public record struct UV(float U, float V);
 
 public struct ControllerInfo
@@ -57,25 +55,6 @@ public struct ControllerInfo
 public sealed record IRGB(float R, float G, float B);
 
 public sealed record IRGBA(float R, float G, float B, float A);
-
-public sealed record AaBb(Vector3 Min, Vector3 Max);
-
-//public sealed record Tangent
-//{
-//    // Tangents.  Divide each component by 32767 to get the actual value
-//    public float X { get; set; }
-//    public float Y { get; set; }
-//    public float Z { get; set; }
-//    public float W { get; set; }  // Handness?  Either 32767 (+1.0) or -32767 (-1.0)
-//}
-
-public struct SkinVertex
-{
-    public int Volumetric;
-    public int[] Index;     // Array of 4 ints
-    public float[] w;       // Array of 4 floats
-    public Matrix3x3 M;
-}
 
 public struct PhysicsGeometry
 {
@@ -129,22 +108,6 @@ public sealed record IvoGeometryMeshDetails
     public BoundingBox BoundingBox { get; set; }
     public BoundingBox ScalingBoundingBox { get; set; }
     public VertexFormat VertexFormat { get; set; }
-}
-
-public sealed record IvoDatastream<T>
-{
-    public IvoDatastreamType DatastreamType { get; set; }
-    public uint BytesPerElement { get; set; }
-    public uint NumberOfElements { get; set; }
-    public List<T> Data { get; set; } = [];
-}
-
-public sealed record Datastream<T>(DatastreamType type, uint numElements, uint bytesPerElement, T[]? data)
-{
-    public DatastreamType Type { get; set; } = type;
-    public uint NumElements { get; set; } = numElements;
-    public uint BytesPerElement { get; set; } = bytesPerElement;
-    public T[]? Data { get; set; } = data;
 }
 
 public class CompiledPhysicalBone
@@ -244,9 +207,9 @@ public struct BonePhysics           // 26 total words = 104 total bytes
 
 public sealed record VertUV
 {
-    public required Vector3 Vertex { get; init; }
-    public required IRGBA Color { get; init; }
-    public required UV UV { get; init; }
+    public Vector3 Vertex { get; set; }
+    public IRGBA Color { get; set; }
+    public UV UV { get; set; }
     public byte[]? Skipped { get; init; }
 }
 

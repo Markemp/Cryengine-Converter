@@ -328,7 +328,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
         {
             GeometrySubsets = MeshSubsets,
             Vertices = new Datastream<Vector3[]>(DatastreamType.VERTICES, 0, 0, VertsUvs?.Data.Select(a => a.Vertex).ToArray() ?? []),
-            Normals = Normals?.Data ?? [],
+            Normals =   Normals?.Data ?? [],
             UVs = VertsUvs?.Data.Select(a => a.UV).ToList() ?? [],
             Colors = VertsUvs?.Data.Select(a => a.Color).ToList() ?? [],
             Indices = Indices.Data,

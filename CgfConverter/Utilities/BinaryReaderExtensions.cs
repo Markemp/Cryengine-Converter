@@ -33,6 +33,65 @@ public static class BinaryReaderExtensions
         return new Plane(n, d);
     }
 
+    public static VertUV ReadVertUV (this BinaryReader r, uint bytesPerElement, bool isSC)
+    {
+        switch (bytesPerElement)
+        {
+            case 16:
+                return new VertUV()
+                {
+                    Vertex = isSC ? r.ReadVector3(InputType.DymekHalf) : r.ReadVector3(InputType.Half),
+                    Skipped = r.ReadBytes(2),
+                    Color = r.ReadIRGBA(),
+                    UV = r.ReadUV(InputType.Half)
+                };
+            case 20:
+                return new VertUV()
+                {
+                    Vertex = r.ReadVector3(),
+                    Color = r.ReadIRGBA(),
+                    UV = r.ReadUV(InputType.Half)
+                };
+            default:
+                throw new ArgumentException($"ReadVertUV provided invalid bytesPerElement of {bytesPerElement}");
+        }
+    }
+
+    public static MeshBoneMapping ReadBoneMap(this BinaryReader b, uint bytesPerElement)
+    {
+        MeshBoneMapping boneMap = new()
+        {
+            BoneIndex = new int[4],
+            Weight = new float[4]
+        };
+
+        switch (bytesPerElement)
+        {
+            case 8:
+                for (int j = 0; j < 4; j++)         // read the 4 bone indexes first
+                {
+                    boneMap.BoneIndex[j] = b.ReadByte();
+                }
+                for (int j = 0; j < 4; j++)           // read the weights.
+                {
+                    boneMap.Weight[j] = b.ReadByte() / 255.0f;
+                }
+                return boneMap;
+            case 12:
+                for (int j = 0; j < 4; j++)         // read the 4 bone indexes first
+                {
+                    boneMap.BoneIndex[j] = b.ReadUInt16();
+                }
+                for (int j = 0; j < 4; j++)           // read the weights.
+                {
+                    boneMap.Weight[j] = b.ReadByte() / 255.0f;
+                }
+                return boneMap;
+            default:
+                throw new ArgumentException($"ReadBoneMap provided invalid bytesPerElement of {bytesPerElement}");
+        }
+    }
+
     public static Vector3 ReadVector3(this BinaryReader r, InputType inputType = InputType.Single)
     {
         Vector3 v;
@@ -175,7 +234,7 @@ public static class BinaryReaderExtensions
         };
 
     public static BoundingBox ReadBoundingBox(this BinaryReader r) =>
-        new(ReadVector3(r), ReadVector3(r));
+        new(r.ReadVector3(), r.ReadVector3());
 
     public static IRGBA ReadIRGB(this BinaryReader reader) =>
         ReadIRGBA(reader, alpha: 1.0f);
@@ -187,9 +246,6 @@ public static class BinaryReaderExtensions
             reader.ReadByte() / 255.0f,
             alpha ?? reader.ReadByte() / 255.0f
         );
-
-    public static AaBb ReadAaBb(this BinaryReader reader) =>
-        new(reader.ReadVector3(), reader.ReadVector3());
 
     public static UV ReadUV(this BinaryReader reader, InputType inputType = InputType.Single)
     {
@@ -246,18 +302,6 @@ public static class BinaryReaderExtensions
             M2 = r.ReadUInt32(),
         };
     }
-
-    //public static IRGBA ReadColor(this BinaryReader r)
-    //{
-    //    var c = new IRGBA()
-    //    {
-    //        r = r.ReadByte(),
-    //        g = r.ReadByte(),
-    //        b = r.ReadByte(),
-    //        a = r.ReadByte()
-    //    };
-    //    return c;
-    //}
 
     public static Matrix3x3 ReadMatrix3x3(this BinaryReader reader)
     {
@@ -409,7 +453,7 @@ public static class BinaryReaderExtensions
     public static void ReadInto<T>(this BinaryReader reader, out T value) where T : unmanaged, Enum
         => value = reader.ReadEnum<T>();
 
-    public static void ReadInto(this BinaryReader reader, out AaBb value) => value = reader.ReadAaBb();
+    public static void ReadInto(this BinaryReader reader, out BoundingBox value) => value = reader.ReadBoundingBox();
     public static void ReadInto(this BinaryReader reader, out Plane value) => value = reader.ReadPlane();
     public static void ReadInto(this BinaryReader reader, out Vector3 value) => value = reader.ReadVector3();
     public static void ReadInto(this BinaryReader reader, out Matrix3x4 value) => value = reader.ReadMatrix3x4();

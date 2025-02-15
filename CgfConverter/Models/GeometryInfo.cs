@@ -10,12 +10,12 @@ namespace CgfConverter.Models;
 public sealed record GeometryInfo
 {
     public List<MeshSubset> GeometrySubsets { get; set; } = [];
-    public List<uint> Indices { get; set; } = [];
-    public List<UV> UVs { get; set; } = [];
-    public Datastream<Vector3> Vertices { get; set; }
-    public List<Vector3> Normals { get; set; } = [];
-    public List<IRGBA>? Colors { get; set; }
-    public List<MeshBoneMapping>? BoneMappings { get; set; }
+    public required Datastream<uint> Indices { get; set; }
+    public required Datastream<UV> UVs { get; set; }
+    public required Datastream<Vector3> Vertices { get; set; }
+    public Datastream<Vector3>? Normals { get; set; }
+    public Datastream<IRGBA>? Colors { get; set; }
+    public Datastream<MeshBoneMapping>? BoneMappings { get; set; }
     public required BoundingBox BoundingBox { get; set; }
     public PhysicsData? PhysicsData { get; set; }
 }
