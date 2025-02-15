@@ -7,7 +7,7 @@ namespace CgfConverter.Terrain;
 public class SRenderNodeChunk
 {
     public readonly int ChunkVersion;
-    public readonly AaBb WsBBox;
+    public readonly BoundingBox WsBBox;
     public readonly short LayerId;
     public readonly short Dummy;
     public readonly ERenderFlags RenderFlags;

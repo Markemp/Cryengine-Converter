@@ -20,14 +20,8 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
         DataStreamType = (DatastreamType)dataStreamType;
         NumElements = b.ReadUInt32(); // number of elements in this chunk
 
-        if (_model.FileVersion == FileVersion.CryTek3 || _model.FileVersion == FileVersion.CryTek1And2)
-            BytesPerElement = b.ReadUInt32();
-
-        if (_model.FileVersion == FileVersion.CryTek_3_6)
-        {
-            BytesPerElement = (uint)b.ReadInt16();  // Star Citizen 2.0 is using an int16 here now.
-            starCitizenFlag = b.ReadInt16();        // For Star Citizen files, this is 257.  Other known games (Hunt, Evolve, Prey) are 0.
-        }
+        BytesPerElement = b.ReadUInt16();    // Star Citizen 2.0 is using an int16 here now.
+        starCitizenFlag = b.ReadInt16();     // For Star Citizen files, this is 257.  Other known games (Hunt, Evolve, Prey) are 0.
 
         SkipBytes(b, 8);  // Reserved1 and Reserved2
 

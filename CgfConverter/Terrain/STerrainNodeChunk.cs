@@ -9,7 +9,7 @@ public class STerrainNodeChunk
 {
     public readonly short ChunkVersion;
     public readonly short HasHoles;
-    public readonly AaBb BoxHeightmap;
+    public readonly BoundingBox BoxHeightmap;
     public readonly float Offset;
     public readonly float Range;
     public readonly int Size;

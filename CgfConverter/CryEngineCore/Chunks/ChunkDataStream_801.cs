@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Numerics;
 using CgfConverter.Models;
 using CgfConverter.Utilities;
@@ -11,6 +9,8 @@ namespace CgfConverter.CryEngineCore;
 
 internal sealed class ChunkDataStream_801 : ChunkDataStream
 {
+    private short starCitizenFlag = 0;
+
     public override void Read(BinaryReader b)
     {
         base.Read(b);
@@ -21,201 +21,175 @@ internal sealed class ChunkDataStream_801 : ChunkDataStream
         SkipBytes(b, 4);    // data stream index, for multiple streams (not used)
         
         NumElements = b.ReadUInt32(); // number of elements in this chunk
-        BytesPerElement = b.ReadUInt32();
+
+        BytesPerElement = b.ReadUInt16();
+        starCitizenFlag = b.ReadInt16();
 
         SkipBytes(b, 8);
 
         switch (DataStreamType)
         {
             case DatastreamType.VERTICES:
-                Vertices = new Vector3[NumElements];
-                if (BytesPerElement == 12)
-                {
-                    for (int i = 0; i < NumElements; i++)
-                    {
-                        Vertices[i] = b.ReadVector3();
-                    }
-                }
-                else
-                if (BytesPerElement == 8)
-                {
-                    for (int i = 0; i < NumElements; i++)
-                    {
-                        Vertices[i] = b.ReadVector3(InputType.Half);
-                        b.ReadUInt16();
-                    }
-                }
-
-                break;
-
-            case DatastreamType.INDICES:
-                Indices = new uint[NumElements];
-
-                if (BytesPerElement == 2)
-                {
-                    for (int i = 0; i < NumElements; i++)
-                    {
-                        Indices[i] = b.ReadUInt16();
-                    }
-                }
-                if (BytesPerElement == 4)
-                {
-                    for (int i = 0; i < NumElements; i++)
-                    {
-                        Indices[i] = b.ReadUInt32();
-                    }
-                }
-                break;
-
-            case DatastreamType.NORMALS:
-                Normals = new Vector3[NumElements];
-                for (int i = 0; i < NumElements; i++)
-                {
-                    Normals[i] = b.ReadVector3();
-                }
-                break;
-
-            case DatastreamType.UVS:
-                UVs = new UV[NumElements];
-                for (int i = 0; i < NumElements; i++)
-                {
-                    UVs[i] = b.ReadUV();
-                }
-                break;
-
-            case DatastreamType.TANGENTS:
-                for (int i = 0; i < NumElements; i++)
-                {
-                    switch (BytesPerElement)
-                    {
-                        case 0x10:
-                            Tangents.Add(b.ReadQuaternion(InputType.SNorm));
-                            BiTangents.Add(b.ReadQuaternion(InputType.SNorm));
-                            break;
-                        case 0x08:
-                            QTangents.Add(b.ReadQuaternion(InputType.SNorm));
-                            break;
-                        default:
-                            throw new NotSupportedException($"Unsupported tangents format: {BytesPerElement}"); throw new Exception("Need to add new Tangent Size");
-                    }
-                }
-                break;
-
-            case DatastreamType.COLORS:
+                var vertices = new Vector3[NumElements];
                 switch (BytesPerElement)
                 {
-                    case 3:
-                        Colors = new IRGBA[NumElements];
+                    case 12:
                         for (int i = 0; i < NumElements; i++)
                         {
-                            Colors[i] = b.ReadIRGBA(0xff);
+                            vertices[i] = b.ReadVector3();
                         }
                         break;
-
-                    case 4:
-                        Colors = new IRGBA[NumElements];
+                    case 8:  // Prey files, and old Star Citizen files, Evolve
                         for (int i = 0; i < NumElements; i++)
                         {
-                            Colors[i] = b.ReadIRGBA();
-                        }
-                        break;
-                    default:
-                        HelperMethods.Log("Unknown Color Depth");
-                        for (int i = 0; i < NumElements; i++)
-                        {
-                            SkipBytes(b, BytesPerElement);
-                        }
-                        break;
-                }
-                break;
-
-            #region case DataStreamTypeEnum.VERTSUVS:
-
-            case DatastreamType.VERTSUVS:  // 3 half floats for verts, 3 half floats for normals, 2 half floats for UVs
-                // Utils.Log(LogLevelEnum.Debug, "In VertsUVs...");
-                Vertices = new Vector3[NumElements];
-                Colors = new IRGBA[NumElements];
-                UVs = new UV[NumElements];
-                switch (BytesPerElement)  // new Star Citizen files
-                {
-                    case 20:
-                        for (int i = 0; i < NumElements; i++)
-                        {
-                            Vertices[i] = b.ReadVector3(); // For some reason, skins are an extra 1 meter in the z direction.
-                            Colors[i] = b.ReadIRGBA();
-                            UVs[i] = b.ReadUV(InputType.Half);
+                            vertices[i] = b.ReadVector3(InputType.Half);
+                            b.ReadUInt16();
                         }
                         break;
                     case 16:
                         for (int i = 0; i < NumElements; i++)
                         {
-                            Vertices[i] = b.ReadVector3(InputType.CryHalf);
-                            SkipBytes(b, 2);
-                            Colors[i] = b.ReadIRGBA();
-                            UVs[i] = b.ReadUV(InputType.Half);
+                            vertices[i] = b.ReadVector3();
+                            SkipBytes(b, 4);
                         }
                         break;
                     default:
-                        HelperMethods.Log("Unknown VertUV structure");
+                        throw new UnsupportedDataFormatException(DataStreamType, BytesPerElement,
+                            $"Unsupported bytes per element {BytesPerElement} for vertices data");
+                }
+                DataStream = new Datastream<Vector3>(DataStreamType, NumElements, BytesPerElement, vertices);
+                break;
+
+            case DatastreamType.INDICES:
+                var indices = new uint[NumElements];
+                switch (BytesPerElement)
+                {
+                    case 2:
                         for (int i = 0; i < NumElements; i++)
                         {
-                            SkipBytes(b, BytesPerElement);
+                            indices[i] = b.ReadUInt16();
                         }
                         break;
+                    case 4:
+                        for (int i = 0; i < NumElements; i++)
+                        {
+                            indices[i] = b.ReadUInt32();
+                        }
+                        break;
+                    default:
+                        throw new UnsupportedDataFormatException(DataStreamType, BytesPerElement,
+                            $"Unsupported bytes per element {BytesPerElement} for indices data");
                 }
+                DataStream = new Datastream<uint>(DataStreamType, NumElements, BytesPerElement, indices);
                 break;
-            #endregion
-            #region case DataStreamTypeEnum.BONEMAP:
-            case DatastreamType.BONEMAP:
-                SkinningInfo skin = GetSkinningInfo();
-                skin.BoneMappings = [];
 
-                // Bones should have 4 bone IDs (index) and 4 weights.
+            case DatastreamType.NORMALS:
+                var normals = new Vector3[NumElements];
+                switch (BytesPerElement)
+                {
+                    case 4:
+                        for (int i = 0; i < NumElements; i++)
+                        {
+                            // TODO:   Finish this. This is wrong.
+                            normals[i].X = b.ReadCryHalf();
+                            normals[i].Y = b.ReadCryHalf();
+                        }
+                        break;
+                    case 12:
+                        for (int i = 0; i < NumElements; i++)
+                        {
+                            normals[i] = b.ReadVector3();
+                        }
+                        break;
+                    default:
+                        throw new UnsupportedDataFormatException(DataStreamType, BytesPerElement,
+                            $"Unsupported bytes per element {BytesPerElement} for normal data");
+                }
+
+                DataStream = new Datastream<Vector3>(DataStreamType, NumElements, BytesPerElement, normals);
+                break;
+
+            case DatastreamType.UVS:
+                var uvs = new UV[NumElements];
                 for (int i = 0; i < NumElements; i++)
                 {
-                    MeshBoneMapping tmpMap = new() { BoneIndex = new int[4], Weight = new float[4] };
+                    uvs[i] = b.ReadUV();
+                }
+                DataStream = new Datastream<UV>(DataStreamType, NumElements, BytesPerElement, uvs);
+                break;
+
+            case DatastreamType.TANGENTS:
+                var tangents = new Quaternion[NumElements];
+                var bitangents = new Quaternion[NumElements];
+                for (int i = 0; i < NumElements; i++)
+                {
                     switch (BytesPerElement)
                     {
-                        case 8:     // legacy support
-                            for (int j = 0; j < 4; j++)         // read the 4 bone indexes first
-                            {
-                                tmpMap.BoneIndex[j] = b.ReadByte();
-                            }
-                            for (int j = 0; j < 4; j++)           // read the weights.
-                            {
-                                tmpMap.Weight[j] = b.ReadByte() / 255.0f;
-                            }
-                            skin.BoneMappings.Add(tmpMap);
+                        case 0x10:  // 16 bytes
+                            tangents[i] = b.ReadQuaternion(InputType.SNorm);
+                            tangents[i] = b.ReadQuaternion(InputType.SNorm); // not really using these
                             break;
-                        case 12:
-                            for (int j = 0; j < 4; j++)
-                            {
-                                tmpMap.BoneIndex[j] = b.ReadUInt16();
-
-                            }
-                            for (int j = 0; j < 4; j++) 
-                            {
-                                tmpMap.Weight[j] = b.ReadByte() / 255.0f;
-                            }
-                            skin.BoneMappings.Add(tmpMap);
-
+                        case 0x08:
+                            tangents[i] = b.ReadQuaternion(InputType.SNorm);
                             break;
                         default:
-                            HelperMethods.Log("Unknown BoneMapping structure");
-                            break;
+                            throw new UnsupportedDataFormatException(DataStreamType, BytesPerElement,
+                                $"Unsupported bytes per element {BytesPerElement} for Tangent data");
                     }
                 }
+                DataStream = new Datastream<Quaternion>(DataStreamType, NumElements, BytesPerElement, tangents);
                 break;
 
-            #endregion
-            #region DataStreamTypeEnum.QTANGENTS
-            case DatastreamType.QTANGENTS:
+            case DatastreamType.COLORS:
+                var colors = new IRGBA[NumElements];
+                switch (BytesPerElement)
+                {
+                    case 3:
+                        for (int i = 0; i < NumElements; i++)
+                        {
+                            colors[i] = b.ReadIRGBA(0xff);
+                        }
+                        break;
+
+                    case 4:
+                        for (int i = 0; i < NumElements; i++)
+                        {
+                            colors[i] = b.ReadIRGBA();
+                        }
+                        break;
+                    default:
+                        throw new UnsupportedDataFormatException(DataStreamType, BytesPerElement,
+                            $"Unsupported bytes per element {BytesPerElement} for Color data");
+                }
+                DataStream = new Datastream<IRGBA>(DataStreamType, NumElements, BytesPerElement, colors);
+                break;
+
+            case DatastreamType.VERTSUVS:
+                var vertsUVs = new VertUV[NumElements];
                 for (int i = 0; i < NumElements; i++)
                 {
-                    QTangents.Add(b.ReadQuaternion(InputType.SNorm));
+                    vertsUVs[i] = b.ReadVertUV(BytesPerElement, starCitizenFlag == 257);
                 }
+                DataStream = new Datastream<VertUV>(DataStreamType, NumElements, BytesPerElement, vertsUVs);
                 break;
-            #endregion
+
+            case DatastreamType.BONEMAP:
+                var bonemap = new MeshBoneMapping[NumElements];
+                for (int i = 0; i < NumElements; i++)
+                {
+                    bonemap[i] = b.ReadBoneMap(BytesPerElement);
+                }
+                DataStream = new Datastream<MeshBoneMapping>(DataStreamType, NumElements, BytesPerElement, bonemap);
+                break;
+
+            case DatastreamType.QTANGENTS:
+                var qtans = new Quaternion[NumElements];
+                for (int i = 0; i < NumElements; i++)
+                {
+                    qtans[i] = b.ReadQuaternion(InputType.SNorm);
+                }
+                DataStream = new Datastream<Quaternion>(DataStreamType, NumElements, BytesPerElement, qtans);
+                break;
 
             default:
                 HelperMethods.Log(LogLevelEnum.Debug, "***** Unknown DataStream Type *****");
