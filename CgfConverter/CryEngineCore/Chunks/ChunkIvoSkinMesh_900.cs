@@ -3,7 +3,6 @@ using CgfConverter.Utilities;
 using Extensions;
 using System;
 using System.IO;
-using System.Linq;
 using System.Numerics;
 using static Extensions.BinaryReaderExtensions;
 
@@ -11,25 +10,8 @@ namespace CgfConverter.CryEngineCore.Chunks;
 
 internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
 {
-    /* 
-     * Node IDs for Ivo models
-     * 1: NodeChunk
-     * 2: MeshChunk
-     * 3: MeshSubsets
-     * 4: Indices
-     * 5: VertsUVs (contains vertices, UVs and colors)
-     * 6: Normals
-     * 7: Tangents
-     * 8: Bonemap  (assume all #ivo files have armatures)
-     * 9: Colors
-     * 10: Colors2
-     * 11: MtlName
-     */
-
     public override void Read(BinaryReader b)
     {
-        var model = _model;
-
         base.Read(b);
         SkipBytes(b, 4);  // Flags probably
 
@@ -42,25 +24,6 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
         {
             MeshSubsets.Add(b.ReadMeshSubset());
         }
-
-        //ChunkMeshSubsets_900 subsetsChunk = new(meshChunk.NumVertSubsets);
-        //// Create dummy header info here (ChunkType, version, size, offset)
-        //subsetsChunk._model = _model;
-        //subsetsChunk._header = _header;
-        //subsetsChunk._header.Offset = (uint)b.BaseStream.Position;
-        //subsetsChunk.Read(b);
-        //subsetsChunk.ChunkType = ChunkType.MeshSubsets;
-        //subsetsChunk.ID = 3;
-        //model.ChunkMap.Add(subsetsChunk.ID, subsetsChunk);
-
-        // Create dummy mtlName chunk
-        //ChunkMtlName_800 mtlName = new();
-        //mtlName._model = _model;
-        //mtlName._header = _header;
-        //mtlName._header.Offset = (uint)b.BaseStream.Position;
-        //mtlName.ChunkType = ChunkType.MtlName;
-        //mtlName.ID = 11;
-        //model.ChunkMap.Add(mtlName.ID, mtlName);
 
         while (b.BaseStream.Position != b.BaseStream.Length)  // Read to end.
         {
@@ -265,7 +228,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
 
                             boneMaps.Data[i] = bm;
                         }
-                        
+
                     }
                     else if (boneMaps.BytesPerElement == 8) // older format, rare
                     {
@@ -323,18 +286,5 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                     break;
             }
         }
-
-        // Create GeometryInfo
-        GeometryInfo = new()
-        {
-            GeometrySubsets = MeshSubsets,
-            Vertices = new Datastream<Vector3[]>(DatastreamType.VERTICES, 0, 0, VertsUvs?.Data.Select(a => a.Vertex).ToArray() ?? []),
-            Normals =   Normals?.Data ?? [],
-            UVs = VertsUvs?.Data.Select(a => a.UV).ToList() ?? [],
-            Colors = VertsUvs?.Data.Select(a => a.Color).ToList() ?? [],
-            Indices = Indices.Data,
-            BoneMappings = BoneMappings?.Data,
-            BoundingBox = meshDetails.BoundingBox
-        };
     }
 }

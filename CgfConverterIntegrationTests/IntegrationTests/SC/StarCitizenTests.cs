@@ -42,8 +42,8 @@ public class StarCitizenTests
         var mat = cryData.Materials["grid_grayyellow"];
         Assert.AreEqual("grid_grey", mat.SubMaterials[0].Name);
         Assert.AreEqual("grid_yellow", mat.SubMaterials[1].Name);
-        var geometry = cryData.Nodes[0].GeometryInfo;
-        var geometry2 = cryData.Nodes[1].GeometryInfo;
+        var geometry = cryData.Nodes[0].MeshData.GeometryInfo;
+        var geometry2 = cryData.Nodes[1].MeshData.GeometryInfo;
     }
 
     [TestMethod]
@@ -57,7 +57,7 @@ public class StarCitizenTests
 
         var mat = cryData.Materials["helper"];
         // TODO:  MWO box not finding box.mtl in the same dir as the .cgf.
-        var geometry = cryData.Nodes[0].GeometryInfo;
+        var geometry = cryData.Nodes[0].MeshData.GeometryInfo;
     }
 
     [TestMethod]

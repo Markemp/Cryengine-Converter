@@ -1,5 +1,4 @@
 ﻿using CgfConverter.CryEngineCore;
-using CgfConverter.CryEngineCore.Chunks;
 using CgfConverter.CryXmlB;
 using CgfConverter.Models;
 using CgfConverter.PackFileSystem;
@@ -119,18 +118,32 @@ public partial class CryEngine
             // Can be zero or multiple nodes, but all reference the same geometry.
             if (Models[0].ChunkMap.Values.Any(c => c.ChunkType == ChunkType.NodeMeshCombo))
             {
+                // SkinMesh has the mesh and meshsubset info, as well as all the datastreams
+                var skinMesh = Models[1].ChunkMap.Values.FirstOrDefault(x => x.ChunkType == ChunkType.IvoSkin || x.ChunkType == ChunkType.IvoSkin2) as ChunkIvoSkinMesh;
+                // Combochunk has all the node chunks and node names
                 var comboChunk = Models[0].ChunkMap.Values
                     .Where(c => c.ChunkType == ChunkType.NodeMeshCombo)
                     .Select(x => x as ChunkNodeMeshCombo)
                     .First();  // only one nodemeshcombo chunk per file
                 var stringTable = comboChunk.NodeNames;
                 var materialTable = comboChunk.MaterialIndices;
+                // Create the GeometryInfo object. This will be the same for all nodes.
+                // many nodes with one chunkmesh and one geometryinfo
+
+                // Create the ChunkMesh object from skinMesh. This will be the same for all nodes.
+
+
                 // create node chunks
-                var skinMeshChunk = (ChunkIvoSkinMesh)Models[1].ChunkMap.Values.FirstOrDefault(x => x.ChunkType == ChunkType.IvoSkin || x.ChunkType == ChunkType.IvoSkin2);
-                var geometryInfo = skinMeshChunk.GeometryInfo;
                 foreach (var node in comboChunk.NodeMeshCombos)
                 {
                     var index = comboChunk.NodeMeshCombos.IndexOf(node);
+                    var meshData = new ChunkMesh_800
+                    {
+                        // TODO:  Fill this
+                        // NumIndices =
+                        //MeshSubsetsData = Models[1].ChunkMap.Values.FirstOrDefault(x => x.ChunkType == ChunkType.IvoSkin || x.ChunkType == ChunkType.IvoSkin2)
+                    };
+
                     var newNode = new ChunkNode_823
                     {
                         Name = stringTable[index],
@@ -140,11 +153,12 @@ public partial class CryEngine
                         MaterialID = node.GeometryType == IvoGeometryType.Geometry ? materialTable[index] : 0,
                         Transform = node.WorldToBone.ConvertToTransformMatrix(),
                         ChunkType = ChunkType.Node,
-                        ID = (int)node.Id
+                        ID = (int)node.Id,
+                        MeshData = meshData
                     };
                     if (node.GeometryType == IvoGeometryType.Geometry)
                     {
-                        newNode.GeometryInfo = geometryInfo;
+                        //newNode.MeshData.GeometryInfo = geometryInfo;
                         newNode.Materials = Materials.Values.First();
                     }
 
@@ -201,7 +215,7 @@ public partial class CryEngine
                 }
                 else if (objectChunk is ChunkMesh mesh)
                 {
-                    // For models with split geometry m files, the MESH_IS_EMPTY flag will be set
+                    // For models with separate geometry files, the MESH_IS_EMPTY flag will be set
                     // on the first model.  You have to find the equivalent mesh chunk in the geometry
                     // file to find out if it's a mesh physics chunk or not.
                     bool isSplitFile = Models.Count > 1;
@@ -211,15 +225,22 @@ public partial class CryEngine
                         // If it's mesh physics data, there won't be any geometry info.
                         if (!mesh.Flags1.HasFlag(MeshChunkFlag.MESH_IS_EMPTY))
                         {
-                            //mesh.MeshSubsets = Models[0].ChunkMap.Values.OfType<ChunkMeshSubsets>().FirstOrDefault(x => x.ID == mesh.MeshSubsetsData);
+                            var submeshData = (Models[0].ChunkMap[mesh.MeshSubsetsData] as ChunkMeshSubsets)!.MeshSubsets;
+                            mesh.GeometryInfo = new()
+                            {
+                                GeometrySubsets = submeshData,
+                                Indices = GetRequiredDatastream<uint>(mesh.IndicesData),
+                                UVs = GetRequiredDatastream<UV>(mesh.UVsData),
+                                Vertices = GetRequiredDatastream<Vector3>(mesh.VerticesData),
+                                Colors = GetRequiredDatastream<IRGBA>(mesh.ColorsData),
+                                VertUVs = GetRequiredDatastream<VertUV>(mesh.VertsUVsData),
+                                Normals = GetRequiredDatastream<Vector3>(mesh.NormalsData),
+                                BoneMappings = GetRequiredDatastream<MeshBoneMapping>(mesh.BoneMapData),
+                                BoundingBox = new BoundingBox(mesh.MinBound, mesh.MaxBound)
+                            };
                         }
                     }
-
-
                 }
-                    
-
-                // Add mesh subset info to the node if it has geometry
 
                 Nodes.Add(node);
             }
@@ -475,4 +496,18 @@ public partial class CryEngine
     public bool IsIvoFile => Models.First().FileSignature?.Equals("#ivo") ?? false;
 
     public static bool SupportsFile(string name) => validExtensions.Contains(Path.GetExtension(name).ToLowerInvariant());
+
+    private Datastream<T>? GetDatastream<T>(int chunkId)
+    {
+        var chunk = Models[0].ChunkMap[chunkId] as ChunkDataStream;
+        return chunk?.Data as Datastream<T>;
+    }
+
+    private Datastream<T>? GetRequiredDatastream<T>(int chunkId)
+    {
+        if (chunkId != 0)
+            return GetDatastream<T>(chunkId);
+
+        return null;
+    }
 }

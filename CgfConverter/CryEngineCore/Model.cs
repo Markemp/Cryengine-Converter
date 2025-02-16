@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using CgfConverter.CryEngineCore.Chunks;
 using CgfConverter.Models;
 using CgfConverter.Services;
 

@@ -6,8 +6,6 @@ namespace CgfConverter.CryEngineCore;
 
 public class ChunkIvoSkinMesh : Chunk
 {
-    public GeometryInfo? GeometryInfo { get; set; }
-
     public required IvoGeometryMeshDetails MeshDetails { get; set; }
     public required List<MeshSubset> MeshSubsets { get; set; } = [];
     public required Datastream<uint> Indices { get; set; }

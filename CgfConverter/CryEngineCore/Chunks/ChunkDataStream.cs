@@ -1,6 +1,4 @@
 ﻿using CgfConverter.Models;
-using System.Collections.Generic;
-using System.Numerics;
 
 namespace CgfConverter.CryEngineCore;
 
@@ -11,7 +9,7 @@ public abstract class ChunkDataStream : Chunk // Contains data such as vertices,
     public uint NumElements { get; set; } // Number of data entries
     public uint BytesPerElement { get; set; } // Bytes per data entry
 
-    public IDatastream? DataStream { get; protected set; }
+    public IDatastream? Data { get; protected set; }
 
     // Remove these properties
     //public Vector3[] Vertices { get; set; }

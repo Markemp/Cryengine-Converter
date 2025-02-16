@@ -40,7 +40,6 @@ public abstract class ChunkMesh : Chunk
 
     // Computed properties
     public GeometryInfo? GeometryInfo { get; set; }
-    //public ChunkMeshSubsets? MeshSubsets { get; set; } // can be null for mesh physics data
 
     public override string ToString() => $@"Chunk Type: {ChunkType}, ID: {ID:X}, Version: {Version}";
 

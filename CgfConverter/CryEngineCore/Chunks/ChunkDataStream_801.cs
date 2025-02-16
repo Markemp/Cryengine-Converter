@@ -57,7 +57,7 @@ internal sealed class ChunkDataStream_801 : ChunkDataStream
                         throw new UnsupportedDataFormatException(DataStreamType, BytesPerElement,
                             $"Unsupported bytes per element {BytesPerElement} for vertices data");
                 }
-                DataStream = new Datastream<Vector3>(DataStreamType, NumElements, BytesPerElement, vertices);
+                Data = new Datastream<Vector3>(DataStreamType, NumElements, BytesPerElement, vertices);
                 break;
 
             case DatastreamType.INDICES:
@@ -80,7 +80,7 @@ internal sealed class ChunkDataStream_801 : ChunkDataStream
                         throw new UnsupportedDataFormatException(DataStreamType, BytesPerElement,
                             $"Unsupported bytes per element {BytesPerElement} for indices data");
                 }
-                DataStream = new Datastream<uint>(DataStreamType, NumElements, BytesPerElement, indices);
+                Data = new Datastream<uint>(DataStreamType, NumElements, BytesPerElement, indices);
                 break;
 
             case DatastreamType.NORMALS:
@@ -106,7 +106,7 @@ internal sealed class ChunkDataStream_801 : ChunkDataStream
                             $"Unsupported bytes per element {BytesPerElement} for normal data");
                 }
 
-                DataStream = new Datastream<Vector3>(DataStreamType, NumElements, BytesPerElement, normals);
+                Data = new Datastream<Vector3>(DataStreamType, NumElements, BytesPerElement, normals);
                 break;
 
             case DatastreamType.UVS:
@@ -115,7 +115,7 @@ internal sealed class ChunkDataStream_801 : ChunkDataStream
                 {
                     uvs[i] = b.ReadUV();
                 }
-                DataStream = new Datastream<UV>(DataStreamType, NumElements, BytesPerElement, uvs);
+                Data = new Datastream<UV>(DataStreamType, NumElements, BytesPerElement, uvs);
                 break;
 
             case DatastreamType.TANGENTS:
@@ -137,7 +137,7 @@ internal sealed class ChunkDataStream_801 : ChunkDataStream
                                 $"Unsupported bytes per element {BytesPerElement} for Tangent data");
                     }
                 }
-                DataStream = new Datastream<Quaternion>(DataStreamType, NumElements, BytesPerElement, tangents);
+                Data = new Datastream<Quaternion>(DataStreamType, NumElements, BytesPerElement, tangents);
                 break;
 
             case DatastreamType.COLORS:
@@ -161,7 +161,7 @@ internal sealed class ChunkDataStream_801 : ChunkDataStream
                         throw new UnsupportedDataFormatException(DataStreamType, BytesPerElement,
                             $"Unsupported bytes per element {BytesPerElement} for Color data");
                 }
-                DataStream = new Datastream<IRGBA>(DataStreamType, NumElements, BytesPerElement, colors);
+                Data = new Datastream<IRGBA>(DataStreamType, NumElements, BytesPerElement, colors);
                 break;
 
             case DatastreamType.VERTSUVS:
@@ -170,7 +170,7 @@ internal sealed class ChunkDataStream_801 : ChunkDataStream
                 {
                     vertsUVs[i] = b.ReadVertUV(BytesPerElement, starCitizenFlag == 257);
                 }
-                DataStream = new Datastream<VertUV>(DataStreamType, NumElements, BytesPerElement, vertsUVs);
+                Data = new Datastream<VertUV>(DataStreamType, NumElements, BytesPerElement, vertsUVs);
                 break;
 
             case DatastreamType.BONEMAP:
@@ -179,7 +179,7 @@ internal sealed class ChunkDataStream_801 : ChunkDataStream
                 {
                     bonemap[i] = b.ReadBoneMap(BytesPerElement);
                 }
-                DataStream = new Datastream<MeshBoneMapping>(DataStreamType, NumElements, BytesPerElement, bonemap);
+                Data = new Datastream<MeshBoneMapping>(DataStreamType, NumElements, BytesPerElement, bonemap);
                 break;
 
             case DatastreamType.QTANGENTS:
@@ -188,7 +188,7 @@ internal sealed class ChunkDataStream_801 : ChunkDataStream
                 {
                     qtans[i] = b.ReadQuaternion(InputType.SNorm);
                 }
-                DataStream = new Datastream<Quaternion>(DataStreamType, NumElements, BytesPerElement, qtans);
+                Data = new Datastream<Quaternion>(DataStreamType, NumElements, BytesPerElement, qtans);
                 break;
 
             default:

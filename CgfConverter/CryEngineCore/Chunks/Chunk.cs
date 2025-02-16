@@ -140,8 +140,7 @@ public abstract class Chunk : IBinaryChunk
 
     public virtual void Read(BinaryReader reader)
     {
-        if (reader is null)
-            throw new ArgumentNullException(nameof(reader));
+        ArgumentNullException.ThrowIfNull(reader);
 
         ChunkType = _header.ChunkType;
         VersionRaw = _header.VersionRaw;
