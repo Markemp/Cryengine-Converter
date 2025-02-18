@@ -150,14 +150,14 @@ public class WavefrontModelRenderer : IRenderer
             HelperMethods.Log(LogLevelEnum.Debug, "*******Found a Mesh chunk with no Vertex info (ID: {0:X}, Name: {1}).  Skipping...", meshChunk.ID, chunkNode.Name);
             return;
         }
-        var meshData = chunkNode.MeshData;
-        var subsets = meshData.GeometryInfo.GeometrySubsets;
-        var verts = meshData.GeometryInfo.Vertices;
-        var vertsUvs = meshData.GeometryInfo.VertUVs;
-        var uvs = meshData.GeometryInfo.UVs;
-        var indices = meshData.GeometryInfo.Indices;
-        var colors = meshData.GeometryInfo.Colors;
-        var normals = meshData.GeometryInfo.Normals;
+        //var meshChunk = chunkNode.MeshData;
+        var subsets = meshChunk.GeometryInfo.GeometrySubsets;
+        var verts = meshChunk.GeometryInfo.Vertices;
+        var vertsUvs = meshChunk.GeometryInfo.VertUVs;
+        var uvs = meshChunk.GeometryInfo.UVs;
+        var indices = meshChunk.GeometryInfo.Indices;
+        var colors = meshChunk.GeometryInfo.Colors;
+        var normals = meshChunk.GeometryInfo.Normals;
 
         // Going to assume that there is only one VerticesData datastream for now.  Need to watch for    
         // Some 801 types have vertices and not VertsUVs.

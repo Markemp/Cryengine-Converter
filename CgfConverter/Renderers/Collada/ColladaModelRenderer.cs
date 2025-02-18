@@ -1,5 +1,6 @@
 ﻿using CgfConverter.Collada;
 using CgfConverter.CryEngineCore;
+using CgfConverter.Models;
 using CgfConverter.Models.Materials;
 using CgfConverter.Renderers.Collada.Collada;
 using CgfConverter.Renderers.Collada.Collada.Collada_B_Rep.Surfaces;
@@ -36,6 +37,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using static Extensions.FileHandlingExtensions;
+using static CgfConverter.Utilities.HelperMethods;
 
 namespace CgfConverter.Renderers.Collada;
 
@@ -49,6 +51,10 @@ public class ColladaModelRenderer : IRenderer
     private const string colladaVersion = "1.4.1";
     private readonly XmlSerializer serializer = new(typeof(ColladaDoc));
     private readonly FileInfo daeOutputFile;
+
+    private static readonly Vector3 DefaultNormal = new(0.0f, 0.0f, 0.0f);
+    private static readonly UV DefaultUV = new(0.0f, 0.0f);
+    private static readonly IRGBA DefaultColor = new(1.0f, 1.0f, 1.0f, 1.0f);
 
     private readonly Dictionary<uint, string> controllerIdToBoneName = new();
 
@@ -65,24 +71,24 @@ public class ColladaModelRenderer : IRenderer
         GenerateDaeObject();
 
         // At this point, we should have a cryData.Asset object, fully populated.
-        HelperMethods.Log(LogLevelEnum.Debug);
-        HelperMethods.Log(LogLevelEnum.Debug, "*** Starting WriteCOLLADA() ***");
-        HelperMethods.Log(LogLevelEnum.Debug);
+        Log(LogLevelEnum.Debug);
+        Log(LogLevelEnum.Debug, "*** Starting WriteCOLLADA() ***");
+        Log(LogLevelEnum.Debug);
 
         TextWriter writer = new StreamWriter(daeOutputFile.FullName);
         serializer.Serialize(writer, DaeObject);
 
         writer.Close();
-        HelperMethods.Log(LogLevelEnum.Debug, "End of Write Collada.  Export complete.");
+        Log(LogLevelEnum.Debug, "End of Write Collada.  Export complete.");
         return 1;
     }
 
     public void GenerateDaeObject()
     {
-        HelperMethods.Log(LogLevelEnum.Debug, "Number of models: {0}", _cryData.Models.Count);
+        Log(LogLevelEnum.Debug, "Number of models: {0}", _cryData.Models.Count);
         for (int i = 0; i < _cryData.Models.Count; i++)
         {
-            HelperMethods.Log(LogLevelEnum.Debug, "\tNumber of nodes in model: {0}", _cryData.Models[i].NodeMap.Count);
+            Log(LogLevelEnum.Debug, "\tNumber of nodes in model: {0}", _cryData.Models[i].NodeMap.Count);
         }
 
         WriteColladaRoot(colladaVersion);
@@ -509,487 +515,429 @@ public class ColladaModelRenderer : IRenderer
 
     public void WriteLibrary_Geometries()
     {
-        if (_cryData.Models.Count == 1)  // Single file model
-            WriteGeometries(_cryData.Models[0]);
-        else
-            WriteGeometries(_cryData.Models[1]);
+        WriteGeometries();
+        //if (_cryData.Models.Count == 1)  // Single file model
+        //    WriteGeometries(_cryData.Models[0]);
+        //else
+        //    WriteGeometries(_cryData.Models[1]);
     }
 
-    public void WriteGeometries(Model model)
+    public void WriteGeometries()
     {
         ColladaLibraryGeometries libraryGeometries = new();
 
         // Make a list for all the geometries objects we will need. Will convert to array at end.  Define the array here as well
         // We have to define a Geometry for EACH meshsubset in the meshsubsets, since the mesh can contain multiple materials
-        List<ColladaGeometry> geometryList = new();
+        List<ColladaGeometry> geometryList = [];
 
         // For each of the nodes, we need to write the geometry.
-        foreach (ChunkNode nodeChunk in model.ChunkMap.Values.Where(a => a.ChunkType == ChunkType.Node))
+        //foreach (ChunkNode nodeChunk in model.ChunkMap.Values.Where(a => a.ChunkType == ChunkType.Node))
+        foreach (ChunkNode nodeChunk in _cryData.Nodes)
         {
-            // Create a geometry object.  Use the chunk ID for the geometry ID
-            // Create all the materials used by this chunk.
-            // Will have to be careful with this, since with .cga/.cgam pairs will need to match by Name.
-            // Make the mesh object.  This will have 3 or 4 sources, 1 vertices, and 1 or more Triangles (with material ID)
-            // If the Object ID of Node chunk points to a Helper or a Controller though, place an empty.
-            ChunkDataStream? normals = null;
-            ChunkDataStream? uvs = null;
-            ChunkDataStream? tmpVertices = null;
-            ChunkDataStream? vertsUvs = null;
-            ChunkDataStream? indices = null;
-            ChunkDataStream? colors = null;
-            ChunkDataStream? tangents = null;
-
             if (_args.IsNodeNameExcluded(nodeChunk.Name))
             {
-                HelperMethods.Log(LogLevelEnum.Debug, $"Excluding node {nodeChunk.Name}");
+                Log(LogLevelEnum.Debug, $"Excluding node {nodeChunk.Name}");
                 continue;
             }
 
             if (nodeChunk.ObjectChunk is null)
             {
-                HelperMethods.Log(LogLevelEnum.Warning, "Skipped node with missing Object {0}", nodeChunk.Name);
+                Log(LogLevelEnum.Warning, "Skipped node with missing Object {0}", nodeChunk.Name);
                 continue;
             }
 
-            if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkType.Mesh)
+            if (nodeChunk.MeshData is not ChunkMesh meshChunk)
+                continue;
+
+            // Create a geometry object.  Use the chunk ID for the geometry ID
+            // Create all the materials used by this chunk.
+            // Make the mesh object.  This will have 3 or 4 sources, 1 vertices, and 1 or more Triangles (with material ID)
+            // If the Object ID of Node chunk points to a Helper or a Controller, place an empty.
+            var subsets = meshChunk.GeometryInfo.GeometrySubsets;
+            Datastream<uint>? indices = nodeChunk.GeometryInfo.Indices;
+            Datastream<UV>? uvs = meshChunk.GeometryInfo.UVs;
+            Datastream<Vector3>? verts = meshChunk.GeometryInfo.Vertices;
+            Datastream<VertUV>? vertsUvs = meshChunk.GeometryInfo.VertUVs;
+            Datastream<Vector3>? normals = meshChunk.GeometryInfo.Normals;
+            Datastream<IRGBA>? colors = meshChunk.GeometryInfo.Colors;
+
+            //var meshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[meshChunk.MeshSubsetsData];  // Listed as Object ID for the Node
+            if (verts is null && vertsUvs is null) // There is no vertex data for this node.  Skip.
+                continue;
+
+            // geometry is a Geometry object for each meshsubset.  Name will be "Nodechunk name_matID".
+            ColladaGeometry geometry = new()
             {
-                // Create materials collection for this node. Index of collection in meshSubSets determines which mat to use.
-                //CreateMaterialsFromNodeChunk(nodeChunk); // now being created from the crydata Materials object
+                Name = nodeChunk.Name,
+                ID = nodeChunk.Name + "-mesh"
+            };
+            ColladaMesh colladaMesh = new();
+            geometry.Mesh = colladaMesh;
 
-                // Get the mesh chunk and submesh chunk for this node.
-                var meshChunk = (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID];
+            ColladaSource[] source = new ColladaSource[4];   // 4 possible source types.
+            ColladaSource posSource = new();
+            ColladaSource normSource = new();
+            ColladaSource uvSource = new();
+            ColladaSource colorSource = new();
+            source[0] = posSource;
+            source[1] = normSource;
+            source[2] = uvSource;
+            source[3] = colorSource;
+            posSource.ID = nodeChunk.Name + "-mesh-pos";
+            posSource.Name = nodeChunk.Name + "-pos";
+            normSource.ID = nodeChunk.Name + "-mesh-norm";
+            normSource.Name = nodeChunk.Name + "-norm";
+            uvSource.ID = nodeChunk.Name + "-mesh-UV";
+            uvSource.Name = nodeChunk.Name + "-UV";
+            colorSource.ID = nodeChunk.Name + "-mesh-color";
+            colorSource.Name = nodeChunk.Name + "-color";
 
-                // Check to see if the Mesh points to a PhysicsData mesh.  Don't want to write these.
-                //if (meshChunk.MeshPhysicsData != 0)
-                // TODO:  Implement this chunk
+            ColladaVertices vertices = new() { ID = nodeChunk.Name + "-vertices" };
+            geometry.Mesh.Vertices = vertices;
+            ColladaInputUnshared[] inputshared = new ColladaInputUnshared[4];
+            vertices.Input = inputshared;
 
-                if (meshChunk.MeshSubsetsData != 0)   // You can have Mesh chunks with no Mesh Subset.  Need to skip these.  They are in the .cga file and contain no geometry.
+            ColladaInputUnshared posInput = new() { Semantic = ColladaInputSemantic.POSITION };
+            ColladaInputUnshared normInput = new() { Semantic = ColladaInputSemantic.NORMAL };
+            ColladaInputUnshared uvInput = new() { Semantic = ColladaInputSemantic.TEXCOORD };
+            ColladaInputUnshared colorInput = new() { Semantic = ColladaInputSemantic.COLOR };
+
+            posInput.source = "#" + posSource.ID;
+            normInput.source = "#" + normSource.ID;
+            uvInput.source = "#" + uvSource.ID;
+            colorInput.source = "#" + colorSource.ID;
+            inputshared[0] = posInput;
+
+            ColladaFloatArray floatArrayVerts = new();
+            ColladaFloatArray floatArrayNormals = new();
+            ColladaFloatArray floatArrayUVs = new();
+            ColladaFloatArray floatArrayColors = new();
+
+            StringBuilder vertString = new();
+            StringBuilder normString = new();
+            StringBuilder uvString = new();
+            StringBuilder colorString = new();
+
+            if (verts is not null)  // Will be null if it's using VertsUVs.
+            {
+                int numVerts = (int)verts.NumElements;
+
+                floatArrayVerts.ID = posSource.ID + "-array";
+                floatArrayVerts.Digits = 6;
+                floatArrayVerts.Magnitude = 38;
+                floatArrayVerts.Count = numVerts * 3;
+                floatArrayUVs.ID = uvSource.ID + "-array";
+                floatArrayUVs.Digits = 6;
+                floatArrayUVs.Magnitude = 38;
+                floatArrayUVs.Count = numVerts * 2;
+                floatArrayNormals.ID = normSource.ID + "-array";
+                floatArrayNormals.Digits = 6;
+                floatArrayNormals.Magnitude = 38;
+                floatArrayNormals.Count = numVerts * 3;
+                floatArrayColors.ID = colorSource.ID + "-array";
+                floatArrayColors.Digits = 6;
+                floatArrayColors.Magnitude = 38;
+                floatArrayColors.Count = numVerts * 4;
+
+                var hasNormals = normals is not null;
+                var hasUVs = uvs is not null;
+                var hasColors = colors is not null;
+                for (uint j = 0; j < numVerts; j++)
                 {
-                    var meshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[meshChunk.MeshSubsetsData];  // Listed as Object ID for the Node
-
-                    if (meshChunk.VerticesData != 0)
-                        tmpVertices = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.VerticesData];
-
-                    if (meshChunk.VertsUVsData != 0)
-                        vertsUvs = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.VertsUVsData];
-
-                    if (tmpVertices is null && vertsUvs is null) // There is no vertex data for this node.  Skip.
-                        continue;
-
-                    if (meshChunk.NormalsData != 0)
-                        normals = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.NormalsData];
-
-                    if (meshChunk.UVsData != 0)
-                        uvs = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.UVsData];
-
-                    if (meshChunk.IndicesData != 0)
-                        indices = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.IndicesData];
-
-                    if (meshChunk.ColorsData != 0)
-                        colors = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.ColorsData];
-
-                    if (meshChunk.TangentsData != 0)
-                        tangents = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.TangentsData];
-
-                    // geometry is a Geometry object for each meshsubset.  Name will be "Nodechunk name_matID".
-                    ColladaGeometry geometry = new()
-                    {
-                        Name = nodeChunk.Name,
-                        ID = nodeChunk.Name + "-mesh"
-                    };
-                    ColladaMesh colladaMesh = new();
-                    geometry.Mesh = colladaMesh;
-
-                    // TODO:  Move the source creation to a separate function.  Too much retyping.
-                    ColladaSource[] source = new ColladaSource[4];   // 4 possible source types.
-                    ColladaSource posSource = new();
-                    ColladaSource normSource = new();
-                    ColladaSource uvSource = new();
-                    ColladaSource colorSource = new();
-                    source[0] = posSource;
-                    source[1] = normSource;
-                    source[2] = uvSource;
-                    source[3] = colorSource;
-                    posSource.ID = nodeChunk.Name + "-mesh-pos";
-                    posSource.Name = nodeChunk.Name + "-pos";
-                    normSource.ID = nodeChunk.Name + "-mesh-norm";
-                    normSource.Name = nodeChunk.Name + "-norm";
-                    uvSource.ID = nodeChunk.Name + "-mesh-UV";
-                    uvSource.Name = nodeChunk.Name + "-UV";
-                    colorSource.ID = nodeChunk.Name + "-mesh-color";
-                    colorSource.Name = nodeChunk.Name + "-color";
-
-                    ColladaVertices vertices = new() { ID = nodeChunk.Name + "-vertices" };
-                    geometry.Mesh.Vertices = vertices;
-                    ColladaInputUnshared[] inputshared = new ColladaInputUnshared[4];
-                    ColladaInputUnshared posInput = new() { Semantic = ColladaInputSemantic.POSITION };
-                    vertices.Input = inputshared;
-
-                    ColladaInputUnshared normInput = new() { Semantic = ColladaInputSemantic.NORMAL };
-                    ColladaInputUnshared uvInput = new() { Semantic = ColladaInputSemantic.TEXCOORD };
-                    ColladaInputUnshared colorInput = new() { Semantic = ColladaInputSemantic.COLOR };
-
-                    posInput.source = "#" + posSource.ID;
-                    normInput.source = "#" + normSource.ID;
-                    uvInput.source = "#" + uvSource.ID;
-                    colorInput.source = "#" + colorSource.ID;
-                    inputshared[0] = posInput;
-
-                    ColladaFloatArray floatArrayVerts = new();
-                    ColladaFloatArray floatArrayNormals = new();
-                    ColladaFloatArray floatArrayUVs = new();
-                    ColladaFloatArray floatArrayColors = new();
-                    ColladaFloatArray floatArrayTangents = new();
-
-                    StringBuilder vertString = new();
-                    StringBuilder normString = new();
-                    StringBuilder uvString = new();
-                    StringBuilder colorString = new();
-
-                    if (tmpVertices is not null)  // Will be null if it's using VertsUVs.
-                    {
-                        floatArrayVerts.ID = posSource.ID + "-array";
-                        floatArrayVerts.Digits = 6;
-                        floatArrayVerts.Magnitude = 38;
-                        floatArrayVerts.Count = (int)tmpVertices.NumElements * 3;
-                        floatArrayUVs.ID = uvSource.ID + "-array";
-                        floatArrayUVs.Digits = 6;
-                        floatArrayUVs.Magnitude = 38;
-                        floatArrayUVs.Count = (int)uvs.NumElements * 2;
-                        floatArrayNormals.ID = normSource.ID + "-array";
-                        floatArrayNormals.Digits = 6;
-                        floatArrayNormals.Magnitude = 38;
-                        if (normals is not null)
-                            floatArrayNormals.Count = (int)normals.NumElements * 3;
-                        floatArrayColors.ID = colorSource.ID + "-array";
-                        floatArrayColors.Digits = 6;
-                        floatArrayColors.Magnitude = 38;
-                        if (colors is not null)
-                        {
-                            floatArrayColors.Count = (int)colors.NumElements * 4;
-                            foreach (var color in colors.Colors)
-                            {
-                                colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ",
-                                    color.R,
-                                    color.G,
-                                    color.B,
-                                    color.A);
-                            }
-                        }
-
-                        // Create Vertices and normals string
-                        for (uint j = 0; j < meshChunk.NumVertices; j++)
-                        {
-                            Vector3 vertex = tmpVertices.Vertices[j];
-                            vertString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", vertex.X, vertex.Y, vertex.Z);
-                            Vector3 normal = normals?.Normals[j] ?? tangents?.Normals[j] ?? new Vector3(0.0f, 0.0f, 0.0f);
-                            normString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", HelperMethods.Safe(normal.X), HelperMethods.Safe(normal.Y), HelperMethods.Safe(normal.Z));
-                        }
-                        for (uint j = 0; j < uvs.NumElements; j++)     // Create UV string
-                        {
-                            uvString.AppendFormat(culture, "{0:F6} {1:F6} ",
-                                HelperMethods.Safe(uvs.UVs[j].U), 1 - HelperMethods.Safe(uvs.UVs[j].V));
-                        }
-                    }
-                    else                // VertsUV structure.  Pull out verts and UVs from tmpVertsUVs.
-                    {
-                        floatArrayVerts.ID = posSource.ID + "-array";
-                        floatArrayVerts.Digits = 6;
-                        floatArrayVerts.Magnitude = 38;
-                        floatArrayVerts.Count = (int)vertsUvs.NumElements * 3;
-                        floatArrayUVs.ID = uvSource.ID + "-array";
-                        floatArrayUVs.Digits = 6;
-                        floatArrayUVs.Magnitude = 38;
-                        floatArrayUVs.Count = (int)vertsUvs.NumElements * 2;
-                        floatArrayNormals.ID = normSource.ID + "-array";
-                        floatArrayNormals.Digits = 6;
-                        floatArrayNormals.Magnitude = 38;
-                        floatArrayNormals.Count = (int)vertsUvs.NumElements * 3;
-                        floatArrayColors.ID = colorSource.ID + "-array";
-                        floatArrayColors.Digits = 6;
-                        floatArrayColors.Magnitude = 38;
-                        if (vertsUvs.Colors is not null)
-                        {
-                            floatArrayColors.Count = vertsUvs.Colors.Length * 4;
-                            foreach (var color in vertsUvs.Colors)
-                            {
-                                colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ",
-                                    color.R,
-                                    color.G,
-                                    color.B,
-                                    color.A);
-                            }
-                        }
-
-                        // Dymek's code to rescale by bounding box.  Only apply to geometry (cga or cgf), and not skin or chr objects.
-                        // TODO: Move this to the cryengine data.
-                        var multiplerVector = Vector3.Abs((meshChunk.MinBound - meshChunk.MaxBound) / 2f);
-                        if (multiplerVector.X < 1) { multiplerVector.X = 1; }
-                        if (multiplerVector.Y < 1) { multiplerVector.Y = 1; }
-                        if (multiplerVector.Z < 1) { multiplerVector.Z = 1; }
-                        var boundaryBoxCenter = (meshChunk.MinBound + meshChunk.MaxBound) / 2f;
-
-                        // Create Vertices, normals and colors string
-                        for (uint j = 0; j < meshChunk.NumVertices; j++)
-                        {
-                            Vector3 vertex = vertsUvs.Vertices[j];
-                            // Rotate/translate the vertex
-                            if (!_cryData.InputFile.EndsWith("skin") && !_cryData.InputFile.EndsWith("chr"))
-                                vertex = (vertex * multiplerVector) + boundaryBoxCenter;
-
-                            vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", HelperMethods.Safe(vertex.X), HelperMethods.Safe(vertex.Y), HelperMethods.Safe(vertex.Z));
-
-                            // TODO:  This isn't right?  VertsUvs may always have color as the 3rd element.
-                            // Normals depend on the data size.  16 byte structures have the normals in the Tangents.  20 byte structures are in the VertsUV.
-                            Vector3 normal = new();
-                            if (vertsUvs.Normals is not null)
-                                normal = vertsUvs.Normals[j];
-                            else if (tangents is not null && tangents.Normals is not null)
-                                normal = tangents.Normals[j];
-
-                            normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", HelperMethods.Safe(normal.X), HelperMethods.Safe(normal.Y), HelperMethods.Safe(normal.Z));
-                        }
-                        // Create UV string
-                        for (uint j = 0; j < vertsUvs.NumElements; j++)
-                        {
-                            uvString.AppendFormat("{0:F6} {1:F6} ", HelperMethods.Safe(vertsUvs.UVs[j].U), HelperMethods.Safe(1 - vertsUvs.UVs[j].V));
-                        }
-                    }
-                    HelperMethods.CleanNumbers(vertString);
-                    HelperMethods.CleanNumbers(normString);
-                    HelperMethods.CleanNumbers(uvString);
-                    HelperMethods.CleanNumbers(colorString);
-
-                    #region Create the triangles node.
-                    var triangles = new ColladaTriangles[meshSubsets.NumMeshSubset];
-                    geometry.Mesh.Triangles = triangles;
-
-                    for (int j = 0; j < meshSubsets.NumMeshSubset; j++) // Need to make a new Triangles entry for each submesh.
-                    {
-                        // Find the material associated with this meshsubset and index.  Normally the nodechunk points to the mtlnamechunk, but
-                        // in mwo models it can point to mechDefault.  First check to see if the material key for the nodechunk's mtlname chunk exists.
-                        // If it does, use that material.  If not, assume just a single materialfile and use that.
-
-                        //var mtlNameChunk = nodeChunk.MaterialID == 0
-                        //    ? 
-                        //    :
-                        //    ;
-                        var mtlNameChunk = (ChunkMtlName)_cryData.Models.Last().ChunkMap[nodeChunk.MaterialID];
-                        var mtlFileName = mtlNameChunk.Name;
-                        var key = Path.GetFileNameWithoutExtension(mtlFileName);
-                        Material[] submats;
-                        if (_cryData.Materials.ContainsKey(key))
-                            submats = _cryData.Materials[key].SubMaterials;
-                        else
-                        {
-                            submats = _cryData.Materials.FirstOrDefault().Value.SubMaterials;
-                            mtlFileName = Path.GetFileNameWithoutExtension(_cryData.MaterialFiles.FirstOrDefault());
-                        }
-
-                        triangles[j] = new ColladaTriangles
-                        {
-                            Count = meshSubsets.MeshSubsets[j].NumIndices / 3,
-                            Material = GetMaterialName(mtlFileName, submats[meshSubsets.MeshSubsets[j].MatID].Name) + "-material"
-                            //Material = GetMaterialId(nodeChunk, meshSubsets, (int)j)
-                        };
-
-                        // Create the inputs.  vertex, normal, texcoord, color
-                        int inputCount = 3;
-                        if (colors != null || vertsUvs?.Colors != null)
-                            inputCount++;
-
-                        triangles[j].Input = new ColladaInputShared[inputCount];
-
-                        triangles[j].Input[0] = new ColladaInputShared
-                        {
-                            Semantic = new ColladaInputSemantic()
-                        };
-                        triangles[j].Input[0].Semantic = ColladaInputSemantic.VERTEX;
-                        triangles[j].Input[0].Offset = 0;
-                        triangles[j].Input[0].source = "#" + vertices.ID;
-                        triangles[j].Input[1] = new ColladaInputShared
-                        {
-                            Semantic = ColladaInputSemantic.NORMAL,
-                            Offset = 1,
-                            source = "#" + normSource.ID
-                        };
-                        triangles[j].Input[2] = new ColladaInputShared
-                        {
-                            Semantic = ColladaInputSemantic.TEXCOORD,
-                            Offset = 2,
-                            source = "#" + uvSource.ID
-                        };
-
-                        int nextInputID = 3;
-                        if (colors != null || vertsUvs?.Colors != null)
-                        {
-                            triangles[j].Input[nextInputID] = new ColladaInputShared
-                            {
-                                Semantic = ColladaInputSemantic.COLOR,
-                                Offset = nextInputID,
-                                source = "#" + colorSource.ID
-                            };
-                            nextInputID++;
-                        }
-
-                        // Create the vcount list.  All triangles, so the subset number of indices.
-                        StringBuilder vc = new();
-                        for (var k = meshSubsets.MeshSubsets[j].FirstIndex; k < (meshSubsets.MeshSubsets[j].FirstIndex + meshSubsets.MeshSubsets[j].NumIndices); k++)
-                        {
-                            int ccount = 3;
-
-                            if (colors != null || vertsUvs?.Colors != null)
-                                ccount++;
-
-                            vc.AppendFormat(culture, String.Format("{0} ", ccount));
-                            k += 2;
-                        }
-
-                        // Create the P node for the Triangles.
-                        StringBuilder p = new();
-                        for (var k = meshSubsets.MeshSubsets[j].FirstIndex; k < (meshSubsets.MeshSubsets[j].FirstIndex + meshSubsets.MeshSubsets[j].NumIndices); k++)
-                        {
-                            int values = 0;
-                            if (colors != null || vertsUvs?.Colors != null)
-                            {
-                                values++;
-                            }
-
-                            List<string> formatlist = new();
-                            formatlist.Add("{0} {0} {0} ");
-                            formatlist.Add("{1} {1} {1} ");
-                            formatlist.Add("{2} {2} {2} ");
-                            for (var valuecount = 0; valuecount < values; valuecount++)
-                            {
-                                formatlist[0] += "{0} ";
-                                formatlist[1] += "{1} ";
-                                formatlist[2] += "{2} ";
-                            }
-                            string finalformat = String.Join("", formatlist);
-                            p.AppendFormat(finalformat, indices.Indices[k], indices.Indices[k + 1], indices.Indices[k + 2]);
-                            k += 2;
-                        }
-                        triangles[j].P = new ColladaIntArrayString
-                        {
-                            Value_As_String = p.ToString().TrimEnd()
-                        };
-                    }
-
-                    #endregion
-
-                    #region Create the source float_array nodes.  Vertex, normal, UV.  May need color as well.
-
-                    floatArrayVerts.Value_As_String = vertString.ToString().TrimEnd();
-                    floatArrayNormals.Value_As_String = normString.ToString().TrimEnd();
-                    floatArrayUVs.Value_As_String = uvString.ToString().TrimEnd();
-                    floatArrayColors.Value_As_String = colorString.ToString();
-
-                    source[0].Float_Array = floatArrayVerts;
-                    source[1].Float_Array = floatArrayNormals;
-                    source[2].Float_Array = floatArrayUVs;
-                    source[3].Float_Array = floatArrayColors;
-                    geometry.Mesh.Source = source;
-
-                    // create the technique_common for each of these
-                    posSource.Technique_Common = new ColladaTechniqueCommonSource
-                    {
-                        Accessor = new ColladaAccessor()
-                    };
-                    posSource.Technique_Common.Accessor.Source = "#" + floatArrayVerts.ID;
-                    posSource.Technique_Common.Accessor.Stride = 3;
-                    posSource.Technique_Common.Accessor.Count = (uint)meshChunk.NumVertices;
-                    ColladaParam[] paramPos = new ColladaParam[3];
-                    paramPos[0] = new ColladaParam();
-                    paramPos[1] = new ColladaParam();
-                    paramPos[2] = new ColladaParam();
-                    paramPos[0].Name = "X";
-                    paramPos[0].Type = "float";
-                    paramPos[1].Name = "Y";
-                    paramPos[1].Type = "float";
-                    paramPos[2].Name = "Z";
-                    paramPos[2].Type = "float";
-                    posSource.Technique_Common.Accessor.Param = paramPos;
-
-                    normSource.Technique_Common = new ColladaTechniqueCommonSource
-                    {
-                        Accessor = new ColladaAccessor
-                        {
-                            Source = "#" + floatArrayNormals.ID,
-                            Stride = 3,
-                            Count = (uint)meshChunk.NumVertices
-                        }
-                    };
-                    ColladaParam[] paramNorm = new ColladaParam[3];
-                    paramNorm[0] = new ColladaParam();
-                    paramNorm[1] = new ColladaParam();
-                    paramNorm[2] = new ColladaParam();
-                    paramNorm[0].Name = "X";
-                    paramNorm[0].Type = "float";
-                    paramNorm[1].Name = "Y";
-                    paramNorm[1].Type = "float";
-                    paramNorm[2].Name = "Z";
-                    paramNorm[2].Type = "float";
-                    normSource.Technique_Common.Accessor.Param = paramNorm;
-
-                    uvSource.Technique_Common = new ColladaTechniqueCommonSource
-                    {
-                        Accessor = new ColladaAccessor
-                        {
-                            Source = "#" + floatArrayUVs.ID,
-                            Stride = 2
-                        }
-                    };
-
-                    if (tmpVertices != null)
-                        uvSource.Technique_Common.Accessor.Count = uvs.NumElements;
-                    else
-                        uvSource.Technique_Common.Accessor.Count = vertsUvs.NumElements;
-
-                    ColladaParam[] paramUV = new ColladaParam[2];
-                    paramUV[0] = new ColladaParam();
-                    paramUV[1] = new ColladaParam();
-                    paramUV[0].Name = "S";
-                    paramUV[0].Type = "float";
-                    paramUV[1].Name = "T";
-                    paramUV[1].Type = "float";
-                    uvSource.Technique_Common.Accessor.Param = paramUV;
-
-                    if (colors != null || vertsUvs?.Colors != null)
-                    {
-                        uint numberOfElements;
-                        if (colors != null)
-                            numberOfElements = colors.NumElements;
-                        else
-                            numberOfElements = (uint)vertsUvs.Colors.Length;
-
-                        colorSource.Technique_Common = new ColladaTechniqueCommonSource
-                        {
-                            Accessor = new ColladaAccessor()
-                        };
-                        colorSource.Technique_Common.Accessor.Source = "#" + floatArrayColors.ID;
-                        colorSource.Technique_Common.Accessor.Stride = 4;
-                        colorSource.Technique_Common.Accessor.Count = numberOfElements;
-                        ColladaParam[] paramColor = new ColladaParam[4];
-                        paramColor[0] = new ColladaParam();
-                        paramColor[1] = new ColladaParam();
-                        paramColor[2] = new ColladaParam();
-                        paramColor[3] = new ColladaParam();
-                        paramColor[0].Name = "R";
-                        paramColor[0].Type = "float";
-                        paramColor[1].Name = "G";
-                        paramColor[1].Type = "float";
-                        paramColor[2].Name = "B";
-                        paramColor[2].Type = "float";
-                        paramColor[3].Name = "A";
-                        paramColor[3].Type = "float";
-                        colorSource.Technique_Common.Accessor.Param = paramColor;
-                    }
-
-                    geometryList.Add(geometry);
-
-                    #endregion
+                    var normal = hasNormals ? normals.Data[j] : DefaultNormal;
+                    var uv = hasUVs ? uvs.Data[j] : DefaultUV;
+                    var color = hasColors ? colors.Data[j] : DefaultColor;
+                    vertString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", verts.Data[j].X, verts.Data[j].Y, verts.Data[j].Z);
+                    normString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", Safe(normal.X), Safe(normal.Y), Safe(normal.Z));
+                    colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ", color.R, color.G, color.B, color.A);
+                    uvString.AppendFormat(culture, "{0:F6} {1:F6} ", Safe(uv.U), 1 - Safe(uv.V));
                 }
             }
+            else    // VertsUV structure.  Pull out verts, colors and UVs from vertsUvs.
+            {
+                floatArrayVerts.ID = posSource.ID + "-array";
+                floatArrayVerts.Digits = 6;
+                floatArrayVerts.Magnitude = 38;
+                floatArrayVerts.Count = (int)vertsUvs.NumElements * 3;
+                floatArrayUVs.ID = uvSource.ID + "-array";
+                floatArrayUVs.Digits = 6;
+                floatArrayUVs.Magnitude = 38;
+                floatArrayUVs.Count = (int)vertsUvs.NumElements * 2;
+                floatArrayNormals.ID = normSource.ID + "-array";
+                floatArrayNormals.Digits = 6;
+                floatArrayNormals.Magnitude = 38;
+                floatArrayNormals.Count = (int)vertsUvs.NumElements * 3;
+                floatArrayColors.ID = colorSource.ID + "-array";
+                floatArrayColors.Digits = 6;
+                floatArrayColors.Magnitude = 38;
+                floatArrayColors.Count = vertsUvs.Data.Length * 4;
+                //foreach (var color in vertsUvs.Data)
+                //{
+                    
+                //}
+
+                // Dymek's code to rescale by bounding box.  Only apply to geometry (cga or cgf), and not skin or chr objects.
+                // TODO: Move this to the cryengine data.
+                var multiplerVector = Vector3.Abs((meshChunk.MinBound - meshChunk.MaxBound) / 2f);
+                if (multiplerVector.X < 1) { multiplerVector.X = 1; }
+                if (multiplerVector.Y < 1) { multiplerVector.Y = 1; }
+                if (multiplerVector.Z < 1) { multiplerVector.Z = 1; }
+                var boundaryBoxCenter = (meshChunk.MinBound + meshChunk.MaxBound) / 2f;
+
+                // Create Vertices, UV, normals and colors string
+                for (uint j = 0; j < meshChunk.NumVertices; j++)
+                {
+                    Vector3 vertex = vertsUvs.Data[j].Vertex;
+                    // Rotate/translate the vertex
+                    if (!_cryData.InputFile.EndsWith("skin") && !_cryData.InputFile.EndsWith("chr"))
+                        vertex = (vertex * multiplerVector) + boundaryBoxCenter;
+
+                    vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(vertex.X), Safe(vertex.Y), Safe(vertex.Z));
+                    colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ", vertsUvs.Data[j].Color.R, vertsUvs.Data[j].Color.G, vertsUvs.Data[j].Color.B, vertsUvs.Data[j].Color.A);
+                    uvString.AppendFormat("{0:F6} {1:F6} ", Safe(vertsUvs.Data[j].UV.U), Safe(1 - vertsUvs.Data[j].UV.V));
+                    //Vector3 normal = new();
+                    //if (vertsUvs.Normals is not null)
+                    //    normal = vertsUvs.Normals[j];
+                    //else if (tangents is not null && tangents.Normals is not null)
+                    //    normal = tangents.Normals[j];
+
+                    normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(normals.Data[j].X), Safe(normals.Data[j].Y), Safe(normals.Data[j].Z));
+                }
+            }
+            CleanNumbers(vertString);
+            CleanNumbers(normString);
+            CleanNumbers(uvString);
+            CleanNumbers(colorString);
+
+            #region Create the triangles node.
+            var triangles = new ColladaTriangles[meshSubsets.NumMeshSubset];
+            geometry.Mesh.Triangles = triangles;
+
+            for (int j = 0; j < meshSubsets.NumMeshSubset; j++) // Need to make a new Triangles entry for each submesh.
+            {
+                // Find the material associated with this meshsubset and index.  Normally the nodechunk points to the mtlnamechunk, but
+                // in mwo models it can point to mechDefault.  First check to see if the material key for the nodechunk's mtlname chunk exists.
+                // If it does, use that material.  If not, assume just a single materialfile and use that.
+
+                //var mtlNameChunk = nodeChunk.MaterialID == 0
+                //    ? 
+                //    :
+                //    ;
+                var mtlNameChunk = (ChunkMtlName)_cryData.Models.Last().ChunkMap[nodeChunk.MaterialID];
+                var mtlFileName = mtlNameChunk.Name;
+                var key = Path.GetFileNameWithoutExtension(mtlFileName);
+                Material[] submats;
+                if (_cryData.Materials.ContainsKey(key))
+                    submats = _cryData.Materials[key].SubMaterials;
+                else
+                {
+                    submats = _cryData.Materials.FirstOrDefault().Value.SubMaterials;
+                    mtlFileName = Path.GetFileNameWithoutExtension(_cryData.MaterialFiles.FirstOrDefault());
+                }
+
+                triangles[j] = new ColladaTriangles
+                {
+                    Count = meshSubsets.MeshSubsets[j].NumIndices / 3,
+                    Material = GetMaterialName(mtlFileName, submats[meshSubsets.MeshSubsets[j].MatID].Name) + "-material"
+                    //Material = GetMaterialId(nodeChunk, meshSubsets, (int)j)
+                };
+
+                // Create the inputs.  vertex, normal, texcoord, color
+                int inputCount = 3;
+                if (colors != null || vertsUvs?.Colors != null)
+                    inputCount++;
+
+                triangles[j].Input = new ColladaInputShared[inputCount];
+
+                triangles[j].Input[0] = new ColladaInputShared
+                {
+                    Semantic = new ColladaInputSemantic()
+                };
+                triangles[j].Input[0].Semantic = ColladaInputSemantic.VERTEX;
+                triangles[j].Input[0].Offset = 0;
+                triangles[j].Input[0].source = "#" + vertices.ID;
+                triangles[j].Input[1] = new ColladaInputShared
+                {
+                    Semantic = ColladaInputSemantic.NORMAL,
+                    Offset = 1,
+                    source = "#" + normSource.ID
+                };
+                triangles[j].Input[2] = new ColladaInputShared
+                {
+                    Semantic = ColladaInputSemantic.TEXCOORD,
+                    Offset = 2,
+                    source = "#" + uvSource.ID
+                };
+
+                int nextInputID = 3;
+                if (colors != null || vertsUvs?.Colors != null)
+                {
+                    triangles[j].Input[nextInputID] = new ColladaInputShared
+                    {
+                        Semantic = ColladaInputSemantic.COLOR,
+                        Offset = nextInputID,
+                        source = "#" + colorSource.ID
+                    };
+                    nextInputID++;
+                }
+
+                // Create the vcount list.  All triangles, so the subset number of indices.
+                StringBuilder vc = new();
+                for (var k = meshSubsets.MeshSubsets[j].FirstIndex; k < (meshSubsets.MeshSubsets[j].FirstIndex + meshSubsets.MeshSubsets[j].NumIndices); k++)
+                {
+                    int ccount = 3;
+
+                    if (colors != null || vertsUvs?.Colors != null)
+                        ccount++;
+
+                    vc.AppendFormat(culture, String.Format("{0} ", ccount));
+                    k += 2;
+                }
+
+                // Create the P node for the Triangles.
+                StringBuilder p = new();
+                for (var k = meshSubsets.MeshSubsets[j].FirstIndex; k < (meshSubsets.MeshSubsets[j].FirstIndex + meshSubsets.MeshSubsets[j].NumIndices); k++)
+                {
+                    int values = 0;
+                    if (colors != null || vertsUvs?.Colors != null)
+                    {
+                        values++;
+                    }
+
+                    List<string> formatlist = new();
+                    formatlist.Add("{0} {0} {0} ");
+                    formatlist.Add("{1} {1} {1} ");
+                    formatlist.Add("{2} {2} {2} ");
+                    for (var valuecount = 0; valuecount < values; valuecount++)
+                    {
+                        formatlist[0] += "{0} ";
+                        formatlist[1] += "{1} ";
+                        formatlist[2] += "{2} ";
+                    }
+                    string finalformat = String.Join("", formatlist);
+                    p.AppendFormat(finalformat, indices.Indices[k], indices.Indices[k + 1], indices.Indices[k + 2]);
+                    k += 2;
+                }
+                triangles[j].P = new ColladaIntArrayString
+                {
+                    Value_As_String = p.ToString().TrimEnd()
+                };
+            }
+
+            #endregion
+
+            #region Create the source float_array nodes.  Vertex, normal, UV.  May need color as well.
+
+            floatArrayVerts.Value_As_String = vertString.ToString().TrimEnd();
+            floatArrayNormals.Value_As_String = normString.ToString().TrimEnd();
+            floatArrayUVs.Value_As_String = uvString.ToString().TrimEnd();
+            floatArrayColors.Value_As_String = colorString.ToString();
+
+            source[0].Float_Array = floatArrayVerts;
+            source[1].Float_Array = floatArrayNormals;
+            source[2].Float_Array = floatArrayUVs;
+            source[3].Float_Array = floatArrayColors;
+            geometry.Mesh.Source = source;
+
+            // create the technique_common for each of these
+            posSource.Technique_Common = new ColladaTechniqueCommonSource
+            {
+                Accessor = new ColladaAccessor()
+            };
+            posSource.Technique_Common.Accessor.Source = "#" + floatArrayVerts.ID;
+            posSource.Technique_Common.Accessor.Stride = 3;
+            posSource.Technique_Common.Accessor.Count = (uint)meshChunk.NumVertices;
+            ColladaParam[] paramPos = new ColladaParam[3];
+            paramPos[0] = new ColladaParam();
+            paramPos[1] = new ColladaParam();
+            paramPos[2] = new ColladaParam();
+            paramPos[0].Name = "X";
+            paramPos[0].Type = "float";
+            paramPos[1].Name = "Y";
+            paramPos[1].Type = "float";
+            paramPos[2].Name = "Z";
+            paramPos[2].Type = "float";
+            posSource.Technique_Common.Accessor.Param = paramPos;
+
+            normSource.Technique_Common = new ColladaTechniqueCommonSource
+            {
+                Accessor = new ColladaAccessor
+                {
+                    Source = "#" + floatArrayNormals.ID,
+                    Stride = 3,
+                    Count = (uint)meshChunk.NumVertices
+                }
+            };
+            ColladaParam[] paramNorm = new ColladaParam[3];
+            paramNorm[0] = new ColladaParam();
+            paramNorm[1] = new ColladaParam();
+            paramNorm[2] = new ColladaParam();
+            paramNorm[0].Name = "X";
+            paramNorm[0].Type = "float";
+            paramNorm[1].Name = "Y";
+            paramNorm[1].Type = "float";
+            paramNorm[2].Name = "Z";
+            paramNorm[2].Type = "float";
+            normSource.Technique_Common.Accessor.Param = paramNorm;
+
+            uvSource.Technique_Common = new ColladaTechniqueCommonSource
+            {
+                Accessor = new ColladaAccessor
+                {
+                    Source = "#" + floatArrayUVs.ID,
+                    Stride = 2
+                }
+            };
+
+            if (vertices != null)
+                uvSource.Technique_Common.Accessor.Count = uvs.NumElements;
+            else
+                uvSource.Technique_Common.Accessor.Count = vertsUvs.NumElements;
+
+            ColladaParam[] paramUV = new ColladaParam[2];
+            paramUV[0] = new ColladaParam();
+            paramUV[1] = new ColladaParam();
+            paramUV[0].Name = "S";
+            paramUV[0].Type = "float";
+            paramUV[1].Name = "T";
+            paramUV[1].Type = "float";
+            uvSource.Technique_Common.Accessor.Param = paramUV;
+
+            if (colors != null || vertsUvs?.Colors != null)
+            {
+                uint numberOfElements;
+                if (colors != null)
+                    numberOfElements = colors.NumElements;
+                else
+                    numberOfElements = (uint)vertsUvs.Colors.Length;
+
+                colorSource.Technique_Common = new ColladaTechniqueCommonSource
+                {
+                    Accessor = new ColladaAccessor()
+                };
+                colorSource.Technique_Common.Accessor.Source = "#" + floatArrayColors.ID;
+                colorSource.Technique_Common.Accessor.Stride = 4;
+                colorSource.Technique_Common.Accessor.Count = numberOfElements;
+                ColladaParam[] paramColor = new ColladaParam[4];
+                paramColor[0] = new ColladaParam();
+                paramColor[1] = new ColladaParam();
+                paramColor[2] = new ColladaParam();
+                paramColor[3] = new ColladaParam();
+                paramColor[0].Name = "R";
+                paramColor[0].Type = "float";
+                paramColor[1].Name = "G";
+                paramColor[1].Type = "float";
+                paramColor[2].Name = "B";
+                paramColor[2].Type = "float";
+                paramColor[3].Name = "A";
+                paramColor[3].Type = "float";
+                colorSource.Technique_Common.Accessor.Param = paramColor;
+            }
+
+            geometryList.Add(geometry);
+
+            #endregion
+            
             // There is no geometry for a helper or controller node.  Can skip the rest.
         }
         libraryGeometries.Geometry = geometryList.ToArray();
@@ -1206,7 +1154,7 @@ public class ColladaModelRenderer : IRenderer
                     accessor.Count = (uint)_cryData.SkinningInfo.Ext2IntMap.Count * 4;
                 };
             }
-            HelperMethods.CleanNumbers(weights);
+            CleanNumbers(weights);
             weightArraySource.Float_Array.Value_As_String = weights.ToString().TrimEnd();
             // Add technique_common part.
             accessor.Source = "#Controller-weights-array";
@@ -1514,7 +1462,7 @@ public class ColladaModelRenderer : IRenderer
         {
             if (_args.IsNodeNameExcluded(childNodeChunk.Name))
             {
-                HelperMethods.Log(LogLevelEnum.Debug, $"Excluding child node {childNodeChunk.Name}");
+                Log(LogLevelEnum.Debug, $"Excluding child node {childNodeChunk.Name}");
                 continue;
             }
 
@@ -1676,7 +1624,7 @@ public class ColladaModelRenderer : IRenderer
     {
         StringBuilder vectorValues = new();
         vectorValues.AppendFormat("{0:F6} {1:F6} {2:F6}", vector.X, vector.Y, vector.Z);
-        HelperMethods.CleanNumbers(vectorValues);
+        CleanNumbers(vectorValues);
         return vectorValues.ToString();
     }
 
@@ -1684,7 +1632,7 @@ public class ColladaModelRenderer : IRenderer
     {
         StringBuilder vectorValues = new();
         vectorValues.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6}", vector.X, vector.Y, vector.Z, vector.W);
-        HelperMethods.CleanNumbers(vectorValues);
+        CleanNumbers(vectorValues);
         return vectorValues.ToString();
     }
 
@@ -1708,7 +1656,7 @@ public class ColladaModelRenderer : IRenderer
             matrix.M42,
             matrix.M43,
             matrix.M44);
-        HelperMethods.CleanNumbers(matrixValues);
+        CleanNumbers(matrixValues);
         return matrixValues.ToString();
     }
 }

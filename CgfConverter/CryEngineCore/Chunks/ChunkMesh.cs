@@ -42,22 +42,4 @@ public abstract class ChunkMesh : Chunk
     public GeometryInfo? GeometryInfo { get; set; }
 
     public override string ToString() => $@"Chunk Type: {ChunkType}, ID: {ID:X}, Version: {Version}";
-
-    public void WriteChunk()
-    {
-        HelperMethods.Log(LogLevelEnum.Verbose, "*** START MESH CHUNK ***");
-        HelperMethods.Log(LogLevelEnum.Verbose, "    ChunkType:           {0}", ChunkType);
-        HelperMethods.Log(LogLevelEnum.Verbose, "    Chunk ID:            {0:X}", ID);
-        HelperMethods.Log(LogLevelEnum.Verbose, "    MeshSubSetID:        {0:X}", MeshSubsetsData);
-        HelperMethods.Log(LogLevelEnum.Verbose, "    Vertex Datastream:   {0:X}", VerticesData);
-        HelperMethods.Log(LogLevelEnum.Verbose, "    Normals Datastream:  {0:X}", NormalsData);
-        HelperMethods.Log(LogLevelEnum.Verbose, "    UVs Datastream:      {0:X}", UVsData);
-        HelperMethods.Log(LogLevelEnum.Verbose, "    Indices Datastream:  {0:X}", IndicesData);
-        HelperMethods.Log(LogLevelEnum.Verbose, "    Tangents Datastream: {0:X}", TangentsData);
-        HelperMethods.Log(LogLevelEnum.Verbose, "    Mesh Physics Data:   {0:X}", MeshPhysicsData);
-        HelperMethods.Log(LogLevelEnum.Verbose, "    VertUVs:             {0:X}", VertsUVsData);
-        HelperMethods.Log(LogLevelEnum.Verbose, "    MinBound:            {0:F7}, {1:F7}, {2:F7}", MinBound.X, MinBound.Y, MinBound.Z);
-        HelperMethods.Log(LogLevelEnum.Verbose, "    MaxBound:            {0:F7}, {1:F7}, {2:F7}", MaxBound.X, MaxBound.Y, MaxBound.Z);
-        HelperMethods.Log(LogLevelEnum.Verbose, "*** END MESH CHUNK ***");
-    }
 }
