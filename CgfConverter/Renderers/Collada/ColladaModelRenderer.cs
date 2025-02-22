@@ -554,7 +554,7 @@ public class ColladaModelRenderer : IRenderer
             // Make the mesh object.  This will have 3 or 4 sources, 1 vertices, and 1 or more Triangles (with material ID)
             // If the Object ID of Node chunk points to a Helper or a Controller, place an empty.
             var subsets = meshChunk.GeometryInfo.GeometrySubsets;
-            Datastream<uint>? indices = nodeChunk.GeometryInfo.Indices;
+            Datastream<uint>? indices = meshChunk.GeometryInfo.Indices;
             Datastream<UV>? uvs = meshChunk.GeometryInfo.UVs;
             Datastream<Vector3>? verts = meshChunk.GeometryInfo.Vertices;
             Datastream<VertUV>? vertsUvs = meshChunk.GeometryInfo.VertUVs;
