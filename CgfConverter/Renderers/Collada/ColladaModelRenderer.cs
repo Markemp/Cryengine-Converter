@@ -671,10 +671,6 @@ public class ColladaModelRenderer : IRenderer
                 floatArrayColors.Digits = 6;
                 floatArrayColors.Magnitude = 38;
                 floatArrayColors.Count = vertsUvs.Data.Length * 4;
-                //foreach (var color in vertsUvs.Data)
-                //{
-                    
-                //}
 
                 // Dymek's code to rescale by bounding box.  Only apply to geometry (cga or cgf), and not skin or chr objects.
                 // TODO: Move this to the cryengine data.
@@ -683,6 +679,7 @@ public class ColladaModelRenderer : IRenderer
                 if (multiplerVector.Y < 1) { multiplerVector.Y = 1; }
                 if (multiplerVector.Z < 1) { multiplerVector.Z = 1; }
                 var boundaryBoxCenter = (meshChunk.MinBound + meshChunk.MaxBound) / 2f;
+                var hasNormals = normals is not null;
 
                 // Create Vertices, UV, normals and colors string
                 for (uint j = 0; j < meshChunk.NumVertices; j++)
@@ -695,12 +692,8 @@ public class ColladaModelRenderer : IRenderer
                     vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(vertex.X), Safe(vertex.Y), Safe(vertex.Z));
                     colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ", vertsUvs.Data[j].Color.R, vertsUvs.Data[j].Color.G, vertsUvs.Data[j].Color.B, vertsUvs.Data[j].Color.A);
                     uvString.AppendFormat("{0:F6} {1:F6} ", Safe(vertsUvs.Data[j].UV.U), Safe(1 - vertsUvs.Data[j].UV.V));
-                    //Vector3 normal = new();
-                    //if (vertsUvs.Normals is not null)
-                    //    normal = vertsUvs.Normals[j];
-                    //else if (tangents is not null && tangents.Normals is not null)
-                    //    normal = tangents.Normals[j];
 
+                    var normal = hasNormals ? normals.Data[j] : DefaultNormal;
                     normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(normals.Data[j].X), Safe(normals.Data[j].Y), Safe(normals.Data[j].Z));
                 }
             }
@@ -710,19 +703,12 @@ public class ColladaModelRenderer : IRenderer
             CleanNumbers(colorString);
 
             #region Create the triangles node.
-            var triangles = new ColladaTriangles[meshSubsets.NumMeshSubset];
+            var numberOfMeshSubsets = subsets.Count;
+            var triangles = new ColladaTriangles[numberOfMeshSubsets];
             geometry.Mesh.Triangles = triangles;
 
-            for (int j = 0; j < meshSubsets.NumMeshSubset; j++) // Need to make a new Triangles entry for each submesh.
+            for (int j = 0; j < numberOfMeshSubsets; j++) // Need to make a new Triangles entry for each submesh.
             {
-                // Find the material associated with this meshsubset and index.  Normally the nodechunk points to the mtlnamechunk, but
-                // in mwo models it can point to mechDefault.  First check to see if the material key for the nodechunk's mtlname chunk exists.
-                // If it does, use that material.  If not, assume just a single materialfile and use that.
-
-                //var mtlNameChunk = nodeChunk.MaterialID == 0
-                //    ? 
-                //    :
-                //    ;
                 var mtlNameChunk = (ChunkMtlName)_cryData.Models.Last().ChunkMap[nodeChunk.MaterialID];
                 var mtlFileName = mtlNameChunk.Name;
                 var key = Path.GetFileNameWithoutExtension(mtlFileName);
@@ -737,14 +723,14 @@ public class ColladaModelRenderer : IRenderer
 
                 triangles[j] = new ColladaTriangles
                 {
-                    Count = meshSubsets.MeshSubsets[j].NumIndices / 3,
-                    Material = GetMaterialName(mtlFileName, submats[meshSubsets.MeshSubsets[j].MatID].Name) + "-material"
+                    Count = subsets[j].NumIndices / 3,
+                    Material = GetMaterialName(mtlFileName, submats[subsets[j].MatID].Name) + "-material"
                     //Material = GetMaterialId(nodeChunk, meshSubsets, (int)j)
                 };
 
                 // Create the inputs.  vertex, normal, texcoord, color
                 int inputCount = 3;
-                if (colors != null || vertsUvs?.Colors != null)
+                if (colors is not null || vertsUvs is not null)
                     inputCount++;
 
                 triangles[j].Input = new ColladaInputShared[inputCount];
@@ -770,7 +756,7 @@ public class ColladaModelRenderer : IRenderer
                 };
 
                 int nextInputID = 3;
-                if (colors != null || vertsUvs?.Colors != null)
+                if (colors is not null || vertsUvs is not null)
                 {
                     triangles[j].Input[nextInputID] = new ColladaInputShared
                     {
@@ -783,11 +769,11 @@ public class ColladaModelRenderer : IRenderer
 
                 // Create the vcount list.  All triangles, so the subset number of indices.
                 StringBuilder vc = new();
-                for (var k = meshSubsets.MeshSubsets[j].FirstIndex; k < (meshSubsets.MeshSubsets[j].FirstIndex + meshSubsets.MeshSubsets[j].NumIndices); k++)
+                for (var k = subsets[j].FirstIndex; k < (subsets[j].FirstIndex + subsets[j].NumIndices); k++)
                 {
                     int ccount = 3;
 
-                    if (colors != null || vertsUvs?.Colors != null)
+                    if (colors is not null || vertsUvs is not null)
                         ccount++;
 
                     vc.AppendFormat(culture, String.Format("{0} ", ccount));
@@ -796,13 +782,11 @@ public class ColladaModelRenderer : IRenderer
 
                 // Create the P node for the Triangles.
                 StringBuilder p = new();
-                for (var k = meshSubsets.MeshSubsets[j].FirstIndex; k < (meshSubsets.MeshSubsets[j].FirstIndex + meshSubsets.MeshSubsets[j].NumIndices); k++)
+                for (var k = subsets[j].FirstIndex; k < (subsets[j].FirstIndex + subsets[j].NumIndices); k++)
                 {
                     int values = 0;
-                    if (colors != null || vertsUvs?.Colors != null)
-                    {
+                    if (colors is not null || vertsUvs is not null)
                         values++;
-                    }
 
                     List<string> formatlist = new();
                     formatlist.Add("{0} {0} {0} ");
@@ -814,8 +798,8 @@ public class ColladaModelRenderer : IRenderer
                         formatlist[1] += "{1} ";
                         formatlist[2] += "{2} ";
                     }
-                    string finalformat = String.Join("", formatlist);
-                    p.AppendFormat(finalformat, indices.Indices[k], indices.Indices[k + 1], indices.Indices[k + 2]);
+                    string finalformat = string.Join("", formatlist);
+                    p.AppendFormat(finalformat, indices.Data[k], indices.Data[k + 1], indices.Data[k + 2]);
                     k += 2;
                 }
                 triangles[j].P = new ColladaIntArrayString
@@ -889,7 +873,7 @@ public class ColladaModelRenderer : IRenderer
                 }
             };
 
-            if (vertices != null)
+            if (vertices is not null)
                 uvSource.Technique_Common.Accessor.Count = uvs.NumElements;
             else
                 uvSource.Technique_Common.Accessor.Count = vertsUvs.NumElements;
@@ -903,13 +887,13 @@ public class ColladaModelRenderer : IRenderer
             paramUV[1].Type = "float";
             uvSource.Technique_Common.Accessor.Param = paramUV;
 
-            if (colors != null || vertsUvs?.Colors != null)
+            if (colors is not null || vertsUvs is not null)
             {
                 uint numberOfElements;
-                if (colors != null)
+                if (colors is not null)
                     numberOfElements = colors.NumElements;
                 else
-                    numberOfElements = (uint)vertsUvs.Colors.Length;
+                    numberOfElements = (uint)vertsUvs.Data.Length;
 
                 colorSource.Technique_Common = new ColladaTechniqueCommonSource
                 {
