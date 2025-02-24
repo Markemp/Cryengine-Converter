@@ -549,6 +549,9 @@ public class ColladaModelRenderer : IRenderer
             if (nodeChunk.MeshData is not ChunkMesh meshChunk)
                 continue;
 
+            if (meshChunk.GeometryInfo is null)  // $physics node
+                continue;
+
             // Create a geometry object.  Use the chunk ID for the geometry ID
             // Create all the materials used by this chunk.
             // Make the mesh object.  This will have 3 or 4 sources, 1 vertices, and 1 or more Triangles (with material ID)
@@ -776,7 +779,7 @@ public class ColladaModelRenderer : IRenderer
                     if (colors is not null || vertsUvs is not null)
                         ccount++;
 
-                    vc.AppendFormat(culture, String.Format("{0} ", ccount));
+                    vc.AppendFormat(culture, string.Format("{0} ", ccount));
                     k += 2;
                 }
 
@@ -1113,31 +1116,48 @@ public class ColladaModelRenderer : IRenderer
                 ID = "Controller-weights-array",
             };
             StringBuilder weights = new();
+            var nodeChunk = _cryData.RootNode;
+            var boneMappingData = nodeChunk.MeshData.GeometryInfo.BoneMappings;
+            var numberOfWeights = boneMappingData.numElements;
 
-            if (_cryData.SkinningInfo.IntVertices is null)       // This is a case where there are bones, and only Bone Mapping data from a datastream chunk.  Skin files.
+            if (boneMappingData is null) return;
+
+            //weightArraySource.Float_Array.Count = _cryData.SkinningInfo.BoneMappings.Count;
+            weightArraySource.Float_Array.Count = (int)numberOfWeights;
+            for (int i = 0; i < numberOfWeights; i++)
             {
-                weightArraySource.Float_Array.Count = _cryData.SkinningInfo.BoneMappings.Count;
-                for (int i = 0; i < _cryData.SkinningInfo.BoneMappings.Count; i++)
+                for (int j = 0; j < 4; j++)
                 {
-                    for (int j = 0; j < 4; j++)
-                    {
-                        weights.Append(((float)_cryData.SkinningInfo.BoneMappings[i].Weight[j]).ToString() + " ");
-                    }
-                };
-                accessor.Count = (uint)_cryData.SkinningInfo.BoneMappings.Count * 4;
+                    weights.Append((boneMappingData.Data[i].Weight[j]).ToString() + " ");
+                }
             }
-            else                                                // Bones and int verts.  Will use int verts for weights, but this doesn't seem perfect either.
-            {
-                weightArraySource.Float_Array.Count = _cryData.SkinningInfo.Ext2IntMap.Count;
-                for (int i = 0; i < _cryData.SkinningInfo.Ext2IntMap.Count; i++)
-                {
-                    for (int j = 0; j < 4; j++)
-                    {
-                        weights.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].Weights[j] + " ");
-                    }
-                    accessor.Count = (uint)_cryData.SkinningInfo.Ext2IntMap.Count * 4;
-                };
-            }
+            ;
+            accessor.Count = numberOfWeights * 4;
+
+            //if (_cryData.SkinningInfo.IntVertices is null)       // This is a case where there are bones, and only Bone Mapping data from a datastream chunk.  Skin files.
+            //{
+            //    weightArraySource.Float_Array.Count = _cryData.SkinningInfo.BoneMappings.Count;
+            //    for (int i = 0; i < _cryData.SkinningInfo.BoneMappings.Count; i++)
+            //    {
+            //        for (int j = 0; j < 4; j++)
+            //        {
+            //            weights.Append(((float)_cryData.SkinningInfo.BoneMappings[i].Weight[j]).ToString() + " ");
+            //        }
+            //    };
+            //    accessor.Count = (uint)_cryData.SkinningInfo.BoneMappings.Count * 4;
+            //}
+            //else                                                // Bones and int verts.  Will use int verts for weights, but this doesn't seem perfect either.
+            //{
+            //    weightArraySource.Float_Array.Count = _cryData.SkinningInfo.Ext2IntMap.Count;
+            //    for (int i = 0; i < _cryData.SkinningInfo.Ext2IntMap.Count; i++)
+            //    {
+            //        for (int j = 0; j < 4; j++)
+            //        {
+            //            weights.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].Weights[j] + " ");
+            //        }
+            //        accessor.Count = (uint)_cryData.SkinningInfo.Ext2IntMap.Count * 4;
+            //    };
+            //}
             CleanNumbers(weights);
             weightArraySource.Float_Array.Value_As_String = weights.ToString().TrimEnd();
             // Add technique_common part.
@@ -1174,7 +1194,7 @@ public class ColladaModelRenderer : IRenderer
 
             #region Vertex Weights
             ColladaVertexWeights vertexWeights = skin.Vertex_Weights = new();
-            vertexWeights.Count = _cryData.SkinningInfo.BoneMappings.Count;
+            vertexWeights.Count = (int)numberOfWeights;
             skin.Vertex_Weights.Input = new ColladaInputShared[2];
             ColladaInputShared jointSemantic = skin.Vertex_Weights.Input[0] = new();
             jointSemantic.Semantic = ColladaInputSemantic.JOINT;
@@ -1185,8 +1205,7 @@ public class ColladaModelRenderer : IRenderer
             weightSemantic.source = "#Controller-weights";
             weightSemantic.Offset = 1;
             StringBuilder vCount = new();
-            //for (int i = 0; i < CryData.Models[0].SkinningInfo.IntVertices.Count; i++)
-            for (int i = 0; i < _cryData.SkinningInfo.BoneMappings.Count; i++)
+            for (int i = 0; i < numberOfWeights; i++)
             {
                 vCount.Append("4 ");
             };
@@ -1197,29 +1216,29 @@ public class ColladaModelRenderer : IRenderer
             StringBuilder vertices = new();
             //for (int i = 0; i < CryData.Models[0].SkinningInfo.IntVertices.Count * 4; i++)
             int index = 0;
-            if (!_cryData.SkinningInfo.HasIntToExtMapping)
+            //if (!_cryData.SkinningInfo.HasIntToExtMapping)
+            //{
+            for (int i = 0; i < numberOfWeights; i++)
             {
-                for (int i = 0; i < _cryData.SkinningInfo.BoneMappings.Count; i++)
-                {
-                    vertices.Append(_cryData.SkinningInfo.BoneMappings[i].BoneIndex[0] + " " + index + " ");
-                    vertices.Append(_cryData.SkinningInfo.BoneMappings[i].BoneIndex[1] + " " + (index + 1) + " ");
-                    vertices.Append(_cryData.SkinningInfo.BoneMappings[i].BoneIndex[2] + " " + (index + 2) + " ");
-                    vertices.Append(_cryData.SkinningInfo.BoneMappings[i].BoneIndex[3] + " " + (index + 3) + " ");
-                    index += 4;
-                }
+                vertices.Append(boneMappingData.Data[i].BoneIndex[0] + " " + index + " ");
+                vertices.Append(boneMappingData.Data[i].BoneIndex[1] + " " + (index + 1) + " ");
+                vertices.Append(boneMappingData.Data[i].BoneIndex[2] + " " + (index + 2) + " ");
+                vertices.Append(boneMappingData.Data[i].BoneIndex[3] + " " + (index + 3) + " ");
+                index += 4;
             }
-            else
-            {
-                for (int i = 0; i < _cryData.SkinningInfo.Ext2IntMap.Count; i++)
-                {
-                    vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[0] + " " + index + " ");
-                    vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[1] + " " + (index + 1) + " ");
-                    vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[2] + " " + (index + 2) + " ");
-                    vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[3] + " " + (index + 3) + " ");
+            //}
+            //else
+            //{
+            //    for (int i = 0; i < _cryData.SkinningInfo.Ext2IntMap.Count; i++)
+            //    {
+            //        vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[0] + " " + index + " ");
+            //        vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[1] + " " + (index + 1) + " ");
+            //        vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[2] + " " + (index + 2) + " ");
+            //        vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[3] + " " + (index + 3) + " ");
 
-                    index += 4;
-                }
-            }
+            //        index += 4;
+            //    }
+            //}
             vertexWeights.V = new ColladaIntArrayString { Value_As_String = vertices.ToString().TrimEnd() };
             #endregion
 

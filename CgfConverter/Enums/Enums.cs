@@ -4,9 +4,11 @@ namespace CgfConverter;
 
 public enum FileVersion : uint
 {
-    CryTek1And2 = 0x744,
-    CryTek3 = 0x745,
-    CryTek_3_6 = 0x746,
+    Unknown = 0,
+    x0744 = 0x744,
+    x0745 = 0x745,
+    x0746 = 0x746,
+    x0900 = 0x900
 }
 
 public enum FileType : uint

@@ -193,7 +193,7 @@ public class Model
         // Set sizes for versions that don't have sizes
         for (int i = 0; i < NumChunks; i++)
         {
-            if (FileVersion == FileVersion.CryTek1And2 &&  i < NumChunks - 2)
+            if (FileVersion == FileVersion.x0744 &&  i < NumChunks - 2)
                 chunkHeaders[i].Size = chunkHeaders[i + 1].Offset - chunkHeaders[i].Offset;
         }
     }

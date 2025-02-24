@@ -154,7 +154,7 @@ public abstract class Chunk : IBinaryChunk
         var swappableReader = (EndiannessChangeableBinaryReader)reader;
 
         // Star Citizen files don't have the type, version, offset and ID at the start of a chunk, so don't read them.
-        if (_model.FileVersion == FileVersion.CryTek1And2 || _model.FileVersion == FileVersion.CryTek3)
+        if (_model.FileVersion == FileVersion.x0744 || _model.FileVersion == FileVersion.x0745)
         {
             // This part is always in little endian.
             swappableReader.IsBigEndian = false;

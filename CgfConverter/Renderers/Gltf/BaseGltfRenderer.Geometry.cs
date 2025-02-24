@@ -284,7 +284,7 @@ public partial class BaseGltfRenderer
             return Log.D<bool>("Mesh[{0}]: MeshData is not a ChunkMesh.", gltfNode.Name);
 
         var subsets = meshChunk.GeometryInfo.GeometrySubsets;
-        Datastream<uint>? indices = nodeChunk.GeometryInfo.Indices;
+        Datastream<uint>? indices = meshChunk.GeometryInfo.Indices;
         Datastream<UV>? uvs = meshChunk.GeometryInfo.UVs;
         Datastream<Vector3>? verts = meshChunk.GeometryInfo.Vertices;
         Datastream<VertUV>? vertsUvs = meshChunk.GeometryInfo.VertUVs;
@@ -406,6 +406,7 @@ public partial class BaseGltfRenderer
             Primitives = subsets
                 .Select(x => Tuple.Create(x, FindMaterial(x.MatID)))
                 .Where(x => !(x.Item2?.IsSkippedFromArgs ?? false))
+                .Where(x => x.Item1.NumVertices != 0)
                 .Select(x =>
                 {
                     var (v, mat) = x;
