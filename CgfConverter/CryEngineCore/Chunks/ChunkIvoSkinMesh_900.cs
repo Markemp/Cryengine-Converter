@@ -39,7 +39,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                         DatastreamType.IVOINDICES,
                         meshDetails.NumberOfIndices,
                         bytesPerElement,
-                        new uint[bytesPerElement]);
+                        new uint[meshDetails.NumberOfIndices]);
                     if (indices.BytesPerElement == 2)
                     {
                         for (int i = 0; i < meshDetails.NumberOfIndices; i++)
@@ -64,7 +64,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                         DatastreamType.IVOVERTSUVS2,
                         meshDetails.NumberOfVertices,
                         bytesPerElement,
-                        new VertUV[bytesPerElement]);
+                        new VertUV[meshDetails.NumberOfVertices]);
                     if (vertUVs.BytesPerElement == 16)
                     {
                         for (int i = 0; i < meshDetails.NumberOfVertices; i++)
@@ -100,7 +100,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                         DatastreamType.IVONORMALS2,
                         meshDetails.NumberOfVertices,
                         bytesPerElement,
-                        new Vector3[bytesPerElement]);
+                        new Vector3[meshDetails.NumberOfVertices]);
                     if (normals.BytesPerElement == 4)
                     {
                         for (int i = 0; i < meshDetails.NumberOfVertices; i++)
@@ -205,9 +205,9 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                     bytesPerElement = b.ReadUInt32();
                     Datastream<MeshBoneMapping> boneMaps = new(
                         DatastreamType.IVOBONEMAP,
-                        meshDetails.NumberOfIndices,
+                        meshDetails.NumberOfVertices,
                         bytesPerElement,
-                        new MeshBoneMapping[bytesPerElement]);
+                        new MeshBoneMapping[meshDetails.NumberOfVertices]);
                     if (boneMaps.BytesPerElement == 12) // 4 ushort, 4 ubytes
                     {
                         for (int i = 0; i < meshDetails.NumberOfVertices; i++)

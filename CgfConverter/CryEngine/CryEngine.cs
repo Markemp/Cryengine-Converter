@@ -311,11 +311,11 @@ public partial class CryEngine
             return;
         }
 
-        // No material files provided.  Check the material library chunks for materials.
-        var materialLibraryFiles = Models[0].ChunkMap.Values
-            .OfType<ChunkMtlName>()
-            .Where(x => x.MatType == MtlNameType.Library || x.MatType == MtlNameType.Basic || x.MatType == MtlNameType.Single)
-            .Select(x => x.Name);
+    // No material files provided.  Check the material library chunks for materials.
+    var materialLibraryFiles = Models[0].ChunkMap.Values
+        .OfType<ChunkMtlName>()
+        .Where(x => x.MatType == MtlNameType.Library || x.MatType == MtlNameType.Basic || x.MatType == MtlNameType.Single)
+        .Select(x => x.Name);
 
         Log.I("Found following potential material files.  If you are not specifying a material file and the materials don't" +
             " look right, trying one of the following files:");
@@ -455,7 +455,7 @@ public partial class CryEngine
     // Gets the Library material file if one can be found. File will be the name in the library as it's the dictionary key.
     private HashSet<string>? GetMaterialFilesFromMatLibraryChunks(IEnumerable<string> libraryFileNames)
     {
-        HashSet<string> materialFiles = new();
+        HashSet<string> materialFiles = [];
         if (libraryFileNames is not null)
         {
             foreach (var libraryFile in libraryFileNames)

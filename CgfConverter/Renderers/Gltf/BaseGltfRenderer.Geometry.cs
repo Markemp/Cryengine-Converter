@@ -157,7 +157,7 @@ public partial class BaseGltfRenderer
         out int weights,
         out int joints,
         GltfNode rootNode,
-        SkinningInfo skinningInfo,
+        SkinningInfo skinningInfo, // TODO:  Remove skinning info
         IDictionary<uint, int> controllerIdToNodeIndex)
     {
         if (!skinningInfo.HasSkinningInfo)

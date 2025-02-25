@@ -74,7 +74,6 @@ public class MWOIntegrationTests
         Assert.AreEqual("helper_mtl_material0-material", mats.Material[0].ID);
         Assert.AreEqual("#helper_mtl_material0-effect", mats.Material[0].Instance_Effect.URL);
         Assert.AreEqual("helper_mtl_material1", mats.Material[1].Name);
-
     }
 
     [TestMethod]

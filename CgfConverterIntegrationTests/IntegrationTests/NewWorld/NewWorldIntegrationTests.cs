@@ -14,7 +14,7 @@ public class NewWorldIntegrationTests
 {
     private readonly TestUtils testUtils = new();
     private readonly string userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-    private readonly string objectDir = @"d:\depot\newworld\";
+    private readonly string objectDir = @"d:\depot\newworld";
 
     [TestInitialize]
     public void Initialize()
@@ -26,9 +26,24 @@ public class NewWorldIntegrationTests
     }
 
     [TestMethod]
+    public void PrimitiveBox_Collada()
+    {
+        var args = new string[] { $@"{objectDir}\Objects\default\primitive_box.cgf", "-dds", "-dae", "-objectdir", objectDir };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, null);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+    }
+
+    [TestMethod]
     public void Npc_Horus_Skel_Chr()
     {
-        var args = new string[] { $@"D:\depot\newworld\Objects\characters\npc\npc_horus_skel.chr", "-dds", "-dae", "-objectdir", objectDir };
+        var args = new string[] { $@"{objectDir}\Objects\characters\npc\npc_horus_skel.chr", "-dds", "-dae", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
@@ -48,7 +63,7 @@ public class NewWorldIntegrationTests
     [TestMethod]
     public void Adiana_Body_Skin()
     {
-        var args = new string[] { $@"D:\depot\newworld\objects\characters\npc\natural\adiana\adiana_body.skin", "-dds", "-dae", "-objectdir", objectDir };
+        var args = new string[] { $@"{objectDir}\objects\characters\npc\natural\adiana\adiana_body.skin", "-dds", "-dae", "-objectdir", objectDir };
 
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
@@ -65,7 +80,7 @@ public class NewWorldIntegrationTests
     [TestMethod]
     public void AugerTrap_cgf()
     {
-        var args = new string[] { $@"D:\depot\NewWorld\objects\props\augertrap\augertrap.cgf", "-dds", "-dae", "-objectdir", objectDir };
+        var args = new string[] { $@"{objectDir}\objects\props\augertrap\augertrap.cgf", "-dds", "-dae", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
