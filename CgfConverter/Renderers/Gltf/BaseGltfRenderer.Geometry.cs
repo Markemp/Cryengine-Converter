@@ -84,7 +84,7 @@ public partial class BaseGltfRenderer
         {
             if (cryData.Models.Count == 1)
             {
-                if (cryNode.ObjectChunk is ChunkMesh meshChunk
+                if (cryNode.MeshData is ChunkMesh meshChunk
                     && meshChunk.MeshSubsetsData != 0)
                 {
                     AddMesh(cryData, cryNode, node, controllerIdToNodeIndex, omitSkins);
@@ -127,7 +127,7 @@ public partial class BaseGltfRenderer
     private void AddMesh(CryEngine cryData, ChunkNode cryNode, GltfNode gltfNode, Dictionary<uint, int> controllerIdToNodeIndex, bool omitSkins)
     {
         var accessors = new GltfMeshPrimitiveAttributes();
-        var meshChunk = cryNode.ObjectChunk as ChunkMesh;
+        var meshChunk = cryNode.MeshData;
         WriteMeshOrLogError(out var gltfMesh, cryData, gltfNode, cryNode, meshChunk!, accessors);
 
         gltfNode.Mesh = AddMesh(gltfMesh);

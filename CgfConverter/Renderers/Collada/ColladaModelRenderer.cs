@@ -540,12 +540,6 @@ public class ColladaModelRenderer : IRenderer
                 continue;
             }
 
-            if (nodeChunk.ObjectChunk is null)
-            {
-                Log(LogLevelEnum.Warning, "Skipped node with missing Object {0}", nodeChunk.Name);
-                continue;
-            }
-
             if (nodeChunk.MeshData is not ChunkMesh meshChunk)
                 continue;
 

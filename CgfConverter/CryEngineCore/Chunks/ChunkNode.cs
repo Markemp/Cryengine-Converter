@@ -40,10 +40,8 @@ public abstract class ChunkNode : Chunk
     public Matrix4x4 LocalTransform => Matrix4x4.Transpose(Transform);
 
     private ChunkNode? _parentNode;
-    public ChunkNode? ParentNode
-    {
-        get
-        {
+    public ChunkNode? ParentNode {
+        get {
             if (ParentNodeID == ~0)  // aka 0xFFFFFFFF, or -1
                 return null;
 
@@ -57,30 +55,13 @@ public abstract class ChunkNode : Chunk
 
             return _parentNode;
         }
-        set
-        {
+        set {
             ParentNodeID = value == null ? ~0 : value.ID;
             _parentNode = value;
         }
     }
 
     public List<ChunkNode> Children { get; set; } = [];
-
-    private Chunk? _objectChunk;
-    public Chunk? ObjectChunk
-    {
-        get
-        {
-            if (_objectChunk is null)
-                _model.ChunkMap.TryGetValue(ObjectNodeID, out _objectChunk);
-
-            return _objectChunk;
-        }
-        set
-        {
-            _objectChunk = value;
-        }
-    }
 
     public IEnumerable<ChunkNode> AllChildNodes => _model.NodeMap.Values.Where(a => a.ParentNodeID == ID);
 

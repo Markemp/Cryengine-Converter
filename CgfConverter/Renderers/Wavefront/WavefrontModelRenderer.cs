@@ -1,6 +1,5 @@
 ﻿using CgfConverter.CryEngineCore;
 using CgfConverter.Utilities;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -15,36 +14,27 @@ public class WavefrontModelRenderer : IRenderer
     protected readonly CryEngine CryData;
     public readonly FileInfo OutputFile_Model;
     public readonly FileInfo OutputFile_Material;
-    
-    public WavefrontModelRenderer(ArgsHandler argsHandler, CryEngine cryEngine) 
+
+    public WavefrontModelRenderer(ArgsHandler argsHandler, CryEngine cryEngine)
     {
         Args = argsHandler;
         CryData = cryEngine;
         OutputFile_Model = Args.FormatOutputFileName(".obj", cryEngine.InputFile);
         OutputFile_Material = Args.FormatOutputFileName(".mtl", cryEngine.InputFile);
     }
-    
+
     public int CurrentVertexPosition { get; internal set; }
     public int TempIndicesPosition { get; internal set; }
     public int TempVertexPosition { get; internal set; }
     public int CurrentIndicesPosition { get; internal set; }
     public string GroupOverride { get; internal set; }
     public int FaceIndex { get; internal set; }
-    
+
     /// <summary>
     /// Renders an .obj file, and matching .mat file for the current model
     /// </summary>
     public int Render()
     {
-        // We need to create the obj header, then for each submesh write the vertex, UV and normal data.
-        // First, let's figure out the name of the output file.  Should be <object name>.obj
-
-        // Each Mesh will have a mesh subset and a series of datastream objects.  Need temporary pointers to these
-        // so we can manipulate
-
-        // Get object name.  This is the Root Node chunk Name
-        // Get the objOutputFile name
-
         if (Args.GroupMeshes)
             GroupOverride = Path.GetFileNameWithoutExtension(OutputFile_Model.Name);
 
@@ -69,7 +59,7 @@ public class WavefrontModelRenderer : IRenderer
             }
         }
 
-        foreach (CryEngineCore.ChunkNode node in CryData.Nodes)
+        foreach (ChunkNode node in CryData.Nodes)
         {
             if (Args.IsNodeNameExcluded(node.Name))
             {
@@ -77,30 +67,33 @@ public class WavefrontModelRenderer : IRenderer
                 continue;
             }
 
-            if (node.ObjectChunk is null)
+            if (node.MeshData is null)
             {
                 HelperMethods.Log(LogLevelEnum.Warning, "Skipped node with missing Object {0}", node.Name);
                 continue;
             }
 
-            switch (node.ObjectChunk.ChunkType)
-            {
-                case ChunkType.Mesh:
-                    if ((node.ParentNode is not null) && (node.ParentNode.ChunkType != ChunkType.Node))
-                        HelperMethods.Log(LogLevelEnum.Debug, "Rendering {0} to parent {1}", node.Name, node.ParentNode.Name);
+            if (node.MeshData is not null)
+                WriteObjNode(file, node);
 
-                    // Grab the mesh and process that.
-                    WriteObjNode(file, node);
-                    break;
+            //switch (node.ObjectChunk.ChunkType)
+            //{
+            //    case ChunkType.Mesh:
+            //        if ((node.ParentNode is not null) && (node.ParentNode.ChunkType != ChunkType.Node))
+            //            HelperMethods.Log(LogLevelEnum.Debug, "Rendering {0} to parent {1}", node.Name, node.ParentNode.Name);
 
-                case ChunkType.Helper: // Ignore Helpers nodes
-                    break;
+            //        // Grab the mesh and process that.
+            //        WriteObjNode(file, node);
+            //        break;
 
-                default:
-                    // Warn us if we're skipping other nodes of interest
-                    HelperMethods.Log(LogLevelEnum.Debug, "Skipped a {0} chunk", node.ObjectChunk.ChunkType);
-                    break;
-            }
+            //    case ChunkType.Helper: // Ignore Helpers nodes
+            //        break;
+
+            //    default:
+            //        // Warn us if we're skipping other nodes of interest
+            //        HelperMethods.Log(LogLevelEnum.Debug, "Skipped a {0} chunk", node.ObjectChunk.ChunkType);
+            //        break;
+            //}
         }
 
         // If this is a .chr file, just write out the hitbox info.  OBJ files can't do armatures.
@@ -137,7 +130,7 @@ public class WavefrontModelRenderer : IRenderer
 
     public void WriteObjNode(StreamWriter f, ChunkNode chunkNode)
     {
-        if (chunkNode.ObjectChunk is not ChunkMesh meshChunk)
+        if (chunkNode.MeshData is not ChunkMesh meshChunk)
             return;
 
         if (meshChunk.MeshSubsetsData == 0)   // This is probably wrong.  These may be parents with no geometry, but still have an offset
