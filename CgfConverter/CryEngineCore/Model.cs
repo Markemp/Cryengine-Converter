@@ -44,7 +44,6 @@ public class Model
     public List<ChunkHeader> chunkHeaders = new();
 
     private Dictionary<int, ChunkNode> nodeMap { get; set; }
-
     /// <summary> All NodeChunks for this model in a dictionary by chunk Id. </summary>
     public Dictionary<int, ChunkNode> NodeMap
     {

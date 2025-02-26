@@ -38,7 +38,7 @@ public class SonicBoomTests
         Assert.AreEqual((uint)17, cryData.Models[0].NumChunks);
         Assert.AreEqual(ChunkType.Node, cryData.Models[0].ChunkMap[33].ChunkType);
         var datastream = cryData.Models[0].ChunkMap[23] as ChunkDataStream;
-        var geometryInfo = cryData.Nodes[1].GeometryInfo;
+        var geometryInfo = cryData.Nodes[1].MeshData.GeometryInfo;
         Assert.AreEqual((uint)12, geometryInfo.Vertices.BytesPerElement);
         Assert.AreEqual((uint)629, geometryInfo.Vertices.NumElements);
         Assert.AreEqual(-0.1071479171, geometryInfo.Vertices.Data[0].X, TestUtils.delta);
@@ -69,7 +69,7 @@ public class SonicBoomTests
         Assert.AreEqual((uint)24, cryData.Models[0].NumChunks);
         Assert.AreEqual(ChunkType.Node, cryData.Models[0].ChunkMap[47].ChunkType);
         var datastream = cryData.Models[0].ChunkMap[40] as ChunkDataStream;
-        var geometryInfo = cryData.Nodes[1].GeometryInfo;
+        var geometryInfo = cryData.Nodes[1].MeshData.GeometryInfo;
         Assert.AreEqual((uint)12, datastream.BytesPerElement);
         Assert.AreEqual((uint)46244, datastream.NumElements);
         Assert.AreEqual(-130.51466369, geometryInfo.Vertices.Data[0].X, TestUtils.delta);
@@ -91,7 +91,7 @@ public class SonicBoomTests
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
-        var geometryInfo = cryData.Nodes[1].GeometryInfo;
+        var geometryInfo = cryData.Nodes[1].MeshData.GeometryInfo;
         Assert.AreEqual((uint)30, cryData.Models[0].NumChunks);
         Assert.AreEqual(ChunkType.Node, cryData.Models[0].ChunkMap[59].ChunkType);
         var datastream = cryData.Models[0].ChunkMap[52] as ChunkDataStream;

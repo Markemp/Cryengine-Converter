@@ -27,7 +27,6 @@ public abstract class ChunkNode : Chunk
     public int PropertyStringLength { get; internal set; }
 
     // Computed properties
-    public GeometryInfo? GeometryInfo { get; internal set; } // null for helper and meshphysics
     public ChunkHelper? ChunkHelper { get; set; }      // Only set if object node id is helper object
     public ChunkMesh? MeshData { get; set; }           // Only set if object node id is ChunkMesh
 

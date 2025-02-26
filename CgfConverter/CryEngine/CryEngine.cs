@@ -203,11 +203,10 @@ public partial class CryEngine
         {
             // Separate datastream for each node.
             // For each ChunkNode in model[0], add it to the Nodes list.
-            foreach (var node in Models[0].ChunkMap.Values.Where(c => c.ChunkType == ChunkType.Node).Select(c => c as ChunkNode))
+            foreach (var node in Models[0].NodeMap.Values)
             {
                 // Add helper or mesh data to the node
-                var objectNodeId = node.ObjectNodeID;
-                var objectChunk = Models[0].ChunkMap.Values.FirstOrDefault(c => c.ID == objectNodeId);
+                var objectChunk = Models[0].ChunkMap[node.ObjectNodeID];
                 if (objectChunk is ChunkHelper helper)
                 {
                     node.ChunkHelper = helper;
@@ -219,26 +218,37 @@ public partial class CryEngine
                     // on the first model.  You have to find the equivalent mesh chunk in the geometry
                     // file to find out if it's a mesh physics chunk or not.
                     bool isSplitFile = Models.Count > 1;
-                    if (!isSplitFile)
+                    if (isSplitFile)
                     {
-                        node.MeshData = mesh;
-                        // If it's mesh physics data, there won't be any geometry info.
-                        if (!mesh.Flags1.HasFlag(MeshChunkFlag.MESH_IS_EMPTY))
+                        // Have mesh point to 2nd model's mesh chunk.
+                        var model1Node = Models[1].NodeMap.FirstOrDefault(x => x.Value.Name == node.Name).Value;
+                        if (model1Node is null)  // physics node.  Continue.
+                            continue;
+                        mesh = Models[1].ChunkMap[model1Node.ObjectNodeID] as ChunkMesh;
+                    }
+                    //else
+                    //{
+                    //    var model1node = Models[1].NodeMap.FirstOrDefault(x => x.Value.Name == node.Name).Value;
+                    //    if (model1node is not null)
+                    //        node.MeshData = model1node.MeshData;
+                    //}
+                    node.MeshData = mesh;
+                    // If it's mesh physics data, there won't be any geometry info.
+                    if (!mesh.Flags1.HasFlag(MeshChunkFlag.MESH_IS_EMPTY))
+                    {
+                        var submeshData = (Models[^1].ChunkMap[mesh.MeshSubsetsData] as ChunkMeshSubsets)!.MeshSubsets;
+                        mesh.GeometryInfo = new()
                         {
-                            var submeshData = (Models[0].ChunkMap[mesh.MeshSubsetsData] as ChunkMeshSubsets)!.MeshSubsets;
-                            mesh.GeometryInfo = new()
-                            {
-                                GeometrySubsets = submeshData,
-                                Indices = GetRequiredDatastream<uint>(mesh.IndicesData),
-                                UVs = GetRequiredDatastream<UV>(mesh.UVsData),
-                                Vertices = GetRequiredDatastream<Vector3>(mesh.VerticesData),
-                                Colors = GetRequiredDatastream<IRGBA>(mesh.ColorsData),
-                                VertUVs = GetRequiredDatastream<VertUV>(mesh.VertsUVsData),
-                                Normals = GetRequiredDatastream<Vector3>(mesh.NormalsData),
-                                BoneMappings = GetRequiredDatastream<MeshBoneMapping>(mesh.BoneMapData),
-                                BoundingBox = new BoundingBox(mesh.MinBound, mesh.MaxBound)
-                            };
-                        }
+                            GeometrySubsets = submeshData,
+                            Indices = GetRequiredDatastream<uint>(mesh.IndicesData),
+                            UVs = GetRequiredDatastream<UV>(mesh.UVsData),
+                            Vertices = GetRequiredDatastream<Vector3>(mesh.VerticesData),
+                            Colors = GetRequiredDatastream<IRGBA>(mesh.ColorsData),
+                            VertUVs = GetRequiredDatastream<VertUV>(mesh.VertsUVsData),
+                            Normals = GetRequiredDatastream<Vector3>(mesh.NormalsData),
+                            BoneMappings = GetRequiredDatastream<MeshBoneMapping>(mesh.BoneMapData),
+                            BoundingBox = new BoundingBox(mesh.MinBound, mesh.MaxBound)
+                        };
                     }
                 }
 
@@ -499,7 +509,7 @@ public partial class CryEngine
 
     private Datastream<T>? GetDatastream<T>(int chunkId)
     {
-        var chunk = Models[0].ChunkMap[chunkId] as ChunkDataStream;
+        var chunk = Models[^1].ChunkMap[chunkId] as ChunkDataStream;
         return chunk?.Data as Datastream<T>;
     }
 
