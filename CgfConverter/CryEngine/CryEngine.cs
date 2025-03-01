@@ -210,6 +210,7 @@ public partial class CryEngine
                 if (objectChunk is ChunkHelper helper)
                 {
                     node.ChunkHelper = helper;
+                    Nodes.Add(node);
                     continue;
                 }
                 else if (objectChunk is ChunkMesh mesh)
@@ -223,7 +224,11 @@ public partial class CryEngine
                         // Have mesh point to 2nd model's mesh chunk.
                         var model1Node = Models[1].NodeMap.FirstOrDefault(x => x.Value.Name == node.Name).Value;
                         if (model1Node is null)  // physics node.  Continue.
+                        {
+                            Nodes.Add(node);
                             continue;
+                        }
+                            
                         mesh = Models[1].ChunkMap[model1Node.ObjectNodeID] as ChunkMesh;
                     }
                     //else

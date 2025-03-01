@@ -691,7 +691,7 @@ public class ColladaModelRenderer : IRenderer
                     uvString.AppendFormat("{0:F6} {1:F6} ", Safe(vertsUvs.Data[j].UV.U), Safe(1 - vertsUvs.Data[j].UV.V));
 
                     var normal = hasNormals ? normals.Data[j] : DefaultNormal;
-                    normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(normals.Data[j].X), Safe(normals.Data[j].Y), Safe(normals.Data[j].Z));
+                    normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(normal.X), Safe(normal.Y), Safe(normal.Z));
                 }
             }
             CleanNumbers(vertString);
@@ -706,23 +706,10 @@ public class ColladaModelRenderer : IRenderer
 
             for (int j = 0; j < numberOfMeshSubsets; j++) // Need to make a new Triangles entry for each submesh.
             {
-                var mtlNameChunk = (ChunkMtlName)_cryData.Models.Last().ChunkMap[nodeChunk.MaterialID];
-                var mtlFileName = mtlNameChunk.Name;
-                var key = Path.GetFileNameWithoutExtension(mtlFileName);
-                Material[] submats;
-                if (_cryData.Materials.ContainsKey(key))
-                    submats = _cryData.Materials[key].SubMaterials;
-                else
-                {
-                    submats = _cryData.Materials.FirstOrDefault().Value.SubMaterials;
-                    mtlFileName = Path.GetFileNameWithoutExtension(_cryData.MaterialFiles.FirstOrDefault());
-                }
-
                 triangles[j] = new ColladaTriangles
                 {
                     Count = subsets[j].NumIndices / 3,
-                    Material = GetMaterialName(mtlFileName, submats[subsets[j].MatID].Name) + "-material"
-                    //Material = GetMaterialId(nodeChunk, meshSubsets, (int)j)
+                    Material = GetMaterialName(nodeChunk.MaterialFileName, nodeChunk.Materials.SubMaterials[subsets[j].MatID].Name) + "-material"
                 };
 
                 // Create the inputs.  vertex, normal, texcoord, color
@@ -870,7 +857,7 @@ public class ColladaModelRenderer : IRenderer
                 }
             };
 
-            if (vertices is not null)
+            if (verts is not null)
                 uvSource.Technique_Common.Accessor.Count = uvs.NumElements;
             else
                 uvSource.Technique_Common.Accessor.Count = vertsUvs.NumElements;
@@ -1344,28 +1331,13 @@ public class ColladaModelRenderer : IRenderer
     private ColladaInstanceMaterialGeometry[] CreateInstanceMaterials(ChunkNode node)
     {
         // For each mesh subset, we want to create an instance material and add it to instanceMaterials list.
-        List<ColladaInstanceMaterialGeometry> instanceMaterials = new();
+        List<ColladaInstanceMaterialGeometry> instanceMaterials = [];
         ChunkMesh meshNode;
         ChunkMeshSubsets submeshNode;
 
-        //ChunkMtlName mtlNameChunk = (ChunkMtlName)_cryData.Models[0].ChunkMap[node.MaterialID];
-        
-        if (_cryData.Models.Count > 1)
+        for (int i = 0; i < node.Materials.SubMaterials?.Length; i++)
         {
-            // Find the node in model[1] that has the same name as the node.
-            var geoNode = _cryData.Models[1].NodeMap.Values.Where(a => a.Name == node.Name).FirstOrDefault();
-            meshNode = (ChunkMesh)_cryData.Models.Last().ChunkMap[geoNode.ObjectNodeID];
-            submeshNode = (ChunkMeshSubsets)_cryData.Models.Last().ChunkMap[meshNode.MeshSubsetsData];
-        }
-        else
-        {
-            meshNode = (ChunkMesh)_cryData.Models[0].ChunkMap[node.ObjectNodeID];
-            submeshNode = (ChunkMeshSubsets)_cryData.Models[0].ChunkMap[meshNode.MeshSubsetsData];
-        }
-
-        for (int i = 0; i < submeshNode.MeshSubsets.Count; i++)
-        {
-            var matName = GetMaterialId(node, submeshNode, i);
+            var matName = GetMaterialName(node.MaterialFileName, node.Materials.SubMaterials[i].Name);
 
             ColladaInstanceMaterialGeometry instanceMaterial = new();
             instanceMaterial.Target = $"#{matName}-material";
@@ -1591,22 +1563,6 @@ public class ColladaModelRenderer : IRenderer
         };
         scene.Visual_Scene = visualScene;
         DaeObject.Scene = scene;
-    }
-
-    /// <summary>Get the material name for a given submesh.</summary>
-    private string? GetMaterialId(ChunkNode nodeChunk, ChunkMeshSubsets meshSubsets, int index)
-    {
-        // material id is <node.MaterialFileName>_mtl_<submatName>
-        var materialFileName = nodeChunk.MaterialFileName;  // also the key in Materials
-        if (string.IsNullOrWhiteSpace(materialFileName) && _cryData.Models.Count == 2)
-        {
-            var geometryNodeChunk = _cryData.Models[1].NodeMap.Values.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
-            materialFileName = geometryNodeChunk?.MaterialFileName ?? string.Empty;
-        }
-        var matindex = meshSubsets.MeshSubsets[index].MatID;
-
-        var materialName = _cryData.Materials[materialFileName]?.SubMaterials?[matindex].Name;
-        return GetMaterialName(materialFileName, materialName ?? "unknown");
     }
 
     private string GetMaterialName(string matKey, string submatName)

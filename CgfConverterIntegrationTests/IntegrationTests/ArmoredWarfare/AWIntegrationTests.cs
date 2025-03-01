@@ -64,6 +64,12 @@ public class ArmoredWarfareIntegrationTests
         Assert.AreEqual("helper_mtl_material0-material", mats.Material[0].ID);
         Assert.AreEqual("#helper_mtl_material0-effect", mats.Material[0].Instance_Effect.URL);
         Assert.AreEqual("helper_mtl_material1", mats.Material[1].Name);
+        var boundMaterials = boxNode.Instance_Geometry[0].Bind_Material;
+        Assert.AreEqual("#helper_mtl_material0-material", boundMaterials[0].Technique_Common.Instance_Material[0].Target);
+        Assert.AreEqual("helper_mtl_material0-material", boundMaterials[0].Technique_Common.Instance_Material[0].Symbol);
+        Assert.AreEqual("#helper_mtl_material1-material", boundMaterials[0].Technique_Common.Instance_Material[1].Target);
+        Assert.AreEqual("helper_mtl_material1-material", boundMaterials[0].Technique_Common.Instance_Material[1].Symbol);
+
     }
 
     [TestMethod]
