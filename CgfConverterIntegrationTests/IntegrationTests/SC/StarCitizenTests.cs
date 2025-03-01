@@ -110,35 +110,38 @@ public class StarCitizenTests
         var daeObject = colladaData.DaeObject;
 
         // Visual Scene checks
-        var boxNode = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0];
-        Assert.AreEqual("box", boxNode.ID);
+        var rootNode = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0];
+        Assert.AreEqual("box", rootNode.ID);
+        Assert.AreEqual(ColladaNodeType.NODE, rootNode.Type);
+        Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0", rootNode.Matrix[0].Value_As_String);
+        var boxNode = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].node[0];
+        Assert.AreEqual("mesh_box", boxNode.ID);
         Assert.AreEqual(ColladaNodeType.NODE, boxNode.Type);
         Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0", boxNode.Matrix[0].Value_As_String);
-        Assert.AreEqual("#helper_mtl_material0-material", boxNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
-        Assert.AreEqual("helper_mtl_material0-material", boxNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+        Assert.AreEqual("#grid_grayyellow_mtl_grid_grey-material", boxNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
+        Assert.AreEqual("grid_grayyellow_mtl_grid_grey-material", boxNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
 
         // Geometry Checks
         var geometry = daeObject.Library_Geometries.Geometry[0];
-        Assert.AreEqual("box-mesh", geometry.ID);
+        Assert.AreEqual("mesh_box-mesh", geometry.ID);
         Assert.AreEqual(1, daeObject.Library_Geometries.Geometry.Length);
         var mesh = geometry.Mesh;
         Assert.AreEqual(4, mesh.Source.Length);
-        Assert.AreEqual(2, mesh.Triangles.Length);
+        Assert.AreEqual(1, mesh.Triangles.Length);
         Assert.AreEqual(12, mesh.Triangles[0].Count);
-        Assert.AreEqual(0, mesh.Triangles[1].Count);
 
         // Materials Checks
         var mats = daeObject.Library_Materials;
-        Assert.AreEqual(2, mats.Material.Length);
-        Assert.AreEqual("helper_mtl_material0", mats.Material[0].Name);
-        Assert.AreEqual("helper_mtl_material0-material", mats.Material[0].ID);
-        Assert.AreEqual("#helper_mtl_material0-effect", mats.Material[0].Instance_Effect.URL);
-        Assert.AreEqual("helper_mtl_material1", mats.Material[1].Name);
+        Assert.AreEqual(3, mats.Material.Length);
+        Assert.AreEqual("grid_grayyellow_mtl_grid_grey", mats.Material[0].Name);
+        Assert.AreEqual("grid_grayyellow_mtl_grid_grey-material", mats.Material[0].ID);
+        Assert.AreEqual("#grid_grayyellow_mtl_grid_grey-effect", mats.Material[0].Instance_Effect.URL);
+        Assert.AreEqual("grid_grayyellow_mtl_grid_yellow", mats.Material[1].Name);
         var boundMaterials = boxNode.Instance_Geometry[0].Bind_Material;
-        Assert.AreEqual("#helper_mtl_material0-material", boundMaterials[0].Technique_Common.Instance_Material[0].Target);
-        Assert.AreEqual("helper_mtl_material0-material", boundMaterials[0].Technique_Common.Instance_Material[0].Symbol);
-        Assert.AreEqual("#helper_mtl_material1-material", boundMaterials[0].Technique_Common.Instance_Material[1].Target);
-        Assert.AreEqual("helper_mtl_material1-material", boundMaterials[0].Technique_Common.Instance_Material[1].Symbol);
+        Assert.AreEqual("#grid_grayyellow_mtl_grid_grey-material", boundMaterials[0].Technique_Common.Instance_Material[0].Target);
+        Assert.AreEqual("grid_grayyellow_mtl_grid_grey-material", boundMaterials[0].Technique_Common.Instance_Material[0].Symbol);
+        Assert.AreEqual("#grid_grayyellow_mtl_grid_yellow-material", boundMaterials[0].Technique_Common.Instance_Material[1].Target);
+        Assert.AreEqual("grid_grayyellow_mtl_grid_yellow-material", boundMaterials[0].Technique_Common.Instance_Material[1].Symbol);
 
     }
 

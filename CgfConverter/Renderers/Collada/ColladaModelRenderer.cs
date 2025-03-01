@@ -1253,7 +1253,8 @@ public class ColladaModelRenderer : IRenderer
 
         // THERE CAN BE MULTIPLE ROOT NODES IN EACH FILE!  Check to see if the parentnodeid ~0 and be sure to add a node for it.
         List<ColladaNode> positionNodes = new();
-        List<ChunkNode> positionRoots = _cryData.Models[0].NodeMap.Values.Where(a => a.ParentNodeID == ~0).ToList();
+        //List<ChunkNode> positionRoots = _cryData.Models[0].NodeMap.Values.Where(a => a.ParentNodeID == ~0).ToList();
+        List<ChunkNode> positionRoots = _cryData.Nodes.Where(a => a.ParentNodeID == ~0).ToList();
         foreach (ChunkNode root in positionRoots)
         {
             positionNodes.Add(CreateNode(root, false));
@@ -1354,46 +1355,16 @@ public class ColladaModelRenderer : IRenderer
         ColladaNode colladaNode = new();
 
         // Check to see if there is a second model file, and if the mesh chunk is actually there.
-        if (_cryData.Models.Count > 1)
-        {
-            // Geometry file pair.  Get the Node and Mesh chunks from the geometry file, unless it's a Proxy node.
-            string nodeName = nodeChunk.Name;
-            int nodeID = nodeChunk.ID;
+        string nodeName = nodeChunk.Name;
+        int nodeID = nodeChunk.ID;
 
-            // make sure there is a geometry node in the geometry file.  Or with Ivo files, just use the geometry file
-            var modelIndex = nodeChunk._model.IsIvoFile ? 1 : 0;
-            if (_cryData.Models[modelIndex].ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkType.Helper)
-                colladaNode = CreateSimpleNode(nodeChunk, isControllerNode);
-            else
-            {
-                ChunkNode geometryNode = _cryData.Models[1].NodeMap.Values.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
-                ColladaGeometry geometryLibraryObject = DaeObject.Library_Geometries.Geometry.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
-                if (geometryNode is null || geometryLibraryObject is null)
-                    colladaNode = CreateSimpleNode(nodeChunk, isControllerNode);  // Can't find geometry for given node.
-                else
-                {
-                    ChunkMesh geometryMesh = (ChunkMesh)_cryData.Models[1].ChunkMap[geometryNode.ObjectNodeID];
-                    colladaNode = CreateGeometryNode(geometryNode, geometryMesh, isControllerNode);
-                }
-            }
-        }
+        if (nodeChunk.ChunkHelper is not null || nodeChunk.MeshData?.GeometryInfo is null)
+            colladaNode = CreateSimpleNode(nodeChunk, isControllerNode);
         else
         {
-            if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkType.Mesh)
-            {
-                var meshChunk = (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID];
-                if (meshChunk.MeshSubsetsData == 0 || meshChunk.NumVertices == 0)  // Can have a node with a mesh and meshsubset, but no vertices.  Write as simple node.
-                    colladaNode = CreateSimpleNode(nodeChunk, isControllerNode);
-                else
-                {
-                    if (nodeChunk._model.ChunkMap[meshChunk.MeshSubsetsData].ID != 0)
-                        colladaNode = CreateGeometryNode(nodeChunk, (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID], isControllerNode);
-                    else
-                        colladaNode = CreateSimpleNode(nodeChunk, isControllerNode);
-                }
-            }
-            else
-                colladaNode = CreateSimpleNode(nodeChunk, isControllerNode);
+            ColladaGeometry geometryLibraryObject = DaeObject.Library_Geometries.Geometry.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
+            ChunkMesh geometryMesh = nodeChunk.MeshData;
+            colladaNode = CreateGeometryNode(nodeChunk, geometryMesh, isControllerNode);
         }
 
         colladaNode.node = CreateChildNodes(nodeChunk, isControllerNode);
@@ -1426,7 +1397,7 @@ public class ColladaModelRenderer : IRenderer
     /// <summary>Used by CreateNode and CreateSimpleNodes to create all the child nodes for the given node.</summary>
     private ColladaNode[]? CreateChildNodes(ChunkNode nodeChunk, bool isControllerNode)
     {
-        List<ColladaNode> childNodes = new();
+        List<ColladaNode> childNodes = [];
         foreach (ChunkNode childNodeChunk in nodeChunk.AllChildNodes)
         {
             if (_args.IsNodeNameExcluded(childNodeChunk.Name))
@@ -1435,7 +1406,7 @@ public class ColladaModelRenderer : IRenderer
                 continue;
             }
 
-            ColladaNode childNode = CreateNode(childNodeChunk, isControllerNode); ;
+            ColladaNode childNode = CreateNode(childNodeChunk, isControllerNode);
             childNodes.Add(childNode);
         }
         return childNodes.ToArray();
@@ -1496,7 +1467,7 @@ public class ColladaModelRenderer : IRenderer
     private ColladaNode CreateGeometryNode(ChunkNode nodeChunk, ChunkMesh tmpMeshChunk, bool isControllerNode)
     {
         ColladaNode colladaNode = new();
-        var meshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsetsData];
+        var meshSubsets =nodeChunk.MeshData.GeometryInfo.GeometrySubsets;
         var nodeType = ColladaNodeType.NODE;
         colladaNode.Type = nodeType;
         colladaNode.Name = nodeChunk.Name;
@@ -1517,7 +1488,7 @@ public class ColladaModelRenderer : IRenderer
         // Each node will have one instance geometry, although it could be a list.
         if (!isControllerNode)
         {
-            List<ColladaInstanceGeometry> instanceGeometries = new();
+            List<ColladaInstanceGeometry> instanceGeometries = [];
             ColladaInstanceGeometry instanceGeometry = new()
             {
                 Name = nodeChunk.Name,
@@ -1527,7 +1498,7 @@ public class ColladaModelRenderer : IRenderer
             {
                 Technique_Common = new ColladaTechniqueCommonBindMaterial
                 {
-                    Instance_Material = new ColladaInstanceMaterialGeometry[meshSubsets.NumMeshSubset]
+                    Instance_Material = new ColladaInstanceMaterialGeometry[meshSubsets.Count]
                 }
             };
             bindMaterials.Add(bindMaterial);
