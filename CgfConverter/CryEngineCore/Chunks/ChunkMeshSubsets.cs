@@ -9,10 +9,6 @@ public abstract class ChunkMeshSubsets : Chunk // cccc0017:  The different parts
     public uint NumMeshSubset { get; set; } // number of mesh subsets
     public List<MeshSubset> MeshSubsets { get; set; } = [];
 
-    // For bone ID meshes? Not sure where this is used yet.
-    //public uint NumberOfBoneIDs { get; set; }
-    //public ushort[] BoneIDs { get; set; }
-
     public override string ToString() => $@"Chunk Type: {ChunkType}, ID: {ID:X}, Version: {Version}, Number of Mesh Subsets: {NumMeshSubset}";
 
     public void WriteChunk()

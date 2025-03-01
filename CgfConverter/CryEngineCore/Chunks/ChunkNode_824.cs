@@ -44,7 +44,7 @@ internal sealed class ChunkNode_824 : ChunkNode
 
         Transform = transform;
 
-        Pos = b.ReadVector3() * VERTEX_SCALE;
+        Pos = b.ReadVector3();
         Rot = b.ReadQuaternion();
         Scale = b.ReadVector3();
 

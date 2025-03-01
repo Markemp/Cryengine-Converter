@@ -231,12 +231,7 @@ public partial class CryEngine
                             
                         mesh = Models[1].ChunkMap[model1Node.ObjectNodeID] as ChunkMesh;
                     }
-                    //else
-                    //{
-                    //    var model1node = Models[1].NodeMap.FirstOrDefault(x => x.Value.Name == node.Name).Value;
-                    //    if (model1node is not null)
-                    //        node.MeshData = model1node.MeshData;
-                    //}
+
                     node.MeshData = mesh;
                     // If it's mesh physics data, there won't be any geometry info.
                     if (!mesh.Flags1.HasFlag(MeshChunkFlag.MESH_IS_EMPTY))

@@ -1,5 +1,5 @@
-﻿using CgfConverter.Models;
-using CgfConverter.Models.Materials;
+﻿using CgfConverter.Models.Materials;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -17,9 +17,12 @@ public abstract class ChunkNode : Chunk
     public int NumChildren { get; internal set; }
     public int MaterialID { get; internal set; }    // Chunk Id of the material for this node
     public Matrix4x4 Transform { get; internal set; }
-    public Vector3 Pos { get; internal set; }       // Obsolete
-    public Quaternion Rot { get; internal set; }    // Obsolete
-    public Vector3 Scale { get; internal set; }     // Obsolete
+    [Obsolete("Use Transform")]
+    public Vector3 Pos { get; internal set; }
+    [Obsolete("Use Transform")]
+    public Quaternion Rot { get; internal set; }
+    [Obsolete("Use Transform")]
+    public Vector3 Scale { get; internal set; }
     public int PosCtrlID { get; internal set; }
     public int RotCtrlID { get; internal set; }
     public int SclCtrlID { get; internal set; }
