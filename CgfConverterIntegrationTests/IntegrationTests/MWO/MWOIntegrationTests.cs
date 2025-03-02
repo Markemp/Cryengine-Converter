@@ -293,7 +293,7 @@ public class MWOIntegrationTests
     public void adr_right_torso_uac20_bh1_Collada()
     {
         // This model has 4 mtl files, all variations of mechdefault.  No mtl file provided, so it should create default materials only.
-        var args = new string[] { $@"d:\depot\mwo\objects\mechs\adder\body\adr_right_torso_uac20_bh1.cga", "-dds", "-dae", "-objectdir", objectDir };
+        var args = new string[] { $@"{objectDir}\objects\mechs\adder\body\adr_right_torso_uac20_bh1.cga", "-dds", "-dae", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
@@ -332,14 +332,14 @@ public class MWOIntegrationTests
         // Verify visual scene material ids are set right
         // bh1
         Assert.AreEqual("adr_right_torso_uac20_bh1", visualSceneLibrary.Node[0].Name);
-        Assert.AreEqual("mechDefault_mtl_material4-material", visualSceneLibrary.Node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
-        Assert.AreEqual("#mechDefault_mtl_material4-material", visualSceneLibrary.Node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
+        Assert.AreEqual("mechDefault_mtl_material0-material", visualSceneLibrary.Node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+        Assert.AreEqual("#mechDefault_mtl_material0-material", visualSceneLibrary.Node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
         // mount
         Assert.AreEqual("adr_right_torso_uac20_bh1_mount", visualSceneLibrary.Node[0].node[3].Name);
-        Assert.AreEqual("mechDefault_mtl_material2-material", visualSceneLibrary.Node[0].node[3].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+        Assert.AreEqual("mechDefault_mtl_material0-material", visualSceneLibrary.Node[0].node[3].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
         // barrel
         Assert.AreEqual("barrel013", visualSceneLibrary.Node[0].node[0].node[0].Name);
-        Assert.AreEqual("05_-_Default_mtl_material4-material", visualSceneLibrary.Node[0].node[0].node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+        Assert.AreEqual("05_-_Default_mtl_material0-material", visualSceneLibrary.Node[0].node[0].node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
         // animations (no bind_mat)
         Assert.AreEqual("animation068", visualSceneLibrary.Node[0].node[0].Name);
         Assert.IsNull(visualSceneLibrary.Node[0].node[0].Instance_Geometry);
@@ -850,7 +850,7 @@ public class MWOIntegrationTests
         Assert.AreEqual("HulaGirl_LowerBody", gltfData.Nodes[1].Name);
         Assert.AreEqual("hulagirl_a", gltfData.Nodes[2].Name);
 
-        var rotationMatrix = cryData.RootNode.AllChildNodes.First().Rot.ConvertToRotationMatrix();
+        var rotationMatrix = cryData.RootNode.Children.First().Rot.ConvertToRotationMatrix();
         AssertExtensions.AreEqual([0, 0, 0, 1], gltfData.Nodes[1].Rotation, TestUtils.delta);
         AssertExtensions.AreEqual([-0.10248467f, 0.00384537f, -0.04688235744833946f, 0.9936217f], gltfData.Nodes[0].Rotation, TestUtils.delta);
         AssertExtensions.AreEqual([0, 0, 0, 1], gltfData.Nodes[2].Rotation, TestUtils.delta);

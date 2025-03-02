@@ -45,7 +45,11 @@ public class StarCitizenTests
         Assert.AreEqual("grid_grey", mat.SubMaterials[0].Name);
         Assert.AreEqual("grid_yellow", mat.SubMaterials[1].Name);
         var geometry = cryData.Nodes[0].MeshData.GeometryInfo;
-        var geometry2 = cryData.Nodes[1].MeshData.GeometryInfo;
+        Assert.IsNull(cryData.Nodes[1].MeshData);
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
     }
 
     [TestMethod]
@@ -142,7 +146,6 @@ public class StarCitizenTests
         Assert.AreEqual("grid_grayyellow_mtl_grid_grey-material", boundMaterials[0].Technique_Common.Instance_Material[0].Symbol);
         Assert.AreEqual("#grid_grayyellow_mtl_grid_yellow-material", boundMaterials[0].Technique_Common.Instance_Material[1].Target);
         Assert.AreEqual("grid_grayyellow_mtl_grid_yellow-material", boundMaterials[0].Technique_Common.Instance_Material[1].Symbol);
-
     }
 
     [TestMethod]

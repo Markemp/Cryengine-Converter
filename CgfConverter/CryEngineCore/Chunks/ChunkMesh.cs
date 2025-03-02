@@ -34,8 +34,8 @@ public abstract class ChunkMesh : Chunk
     public int MeshPhysicsData { get; set; }
     public int VertsUVsData { get; set; }
     public int[] PhysicsData = new int[4];
-    public Vector3 MinBound;
-    public Vector3 MaxBound;
+    public Vector3 MinBound { get; set; }
+    public Vector3 MaxBound { get; set; }
 
     // Computed properties
     public GeometryInfo? GeometryInfo { get; set; }

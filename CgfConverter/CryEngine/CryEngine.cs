@@ -131,30 +131,48 @@ public partial class CryEngine
                 // many nodes with one chunkmesh and one geometryinfo
 
                 // Create the ChunkMesh object from skinMesh. This will be the same for all nodes.
+                ChunkMesh chunkMesh = new ChunkMesh_802
+                {
+                    MaxBound = skinMesh.MeshDetails.BoundingBox.Max,
+                    MinBound = skinMesh.MeshDetails.BoundingBox.Min,
+                    NumVertices = (int)skinMesh.MeshDetails.NumberOfVertices,
+                    NumIndices = (int)skinMesh.MeshDetails.NumberOfIndices,
+                    NumVertSubsets = skinMesh.MeshDetails.NumberOfSubmeshes
+                };
 
+                var geometryInfo = new GeometryInfo
+                {
+                    BoundingBox = new(chunkMesh.MinBound, chunkMesh.MaxBound),
+                    Indices = skinMesh.Indices,
+                    VertUVs = skinMesh.VertsUvs,
+                    Normals = skinMesh.Normals,
+                    Colors = skinMesh.Colors,
+                    BoneMappings = skinMesh.BoneMappings,
+                    GeometrySubsets = skinMesh.MeshSubsets
+                };
+
+                chunkMesh.GeometryInfo = geometryInfo;
+                var materialFileName = Materials.Keys.First();
 
                 // create node chunks
                 foreach (var node in comboChunk.NodeMeshCombos)
                 {
                     var index = comboChunk.NodeMeshCombos.IndexOf(node);
-                    var meshData = new ChunkMesh_800
-                    {
-                        // TODO:  Fill this
-                        // NumIndices =
-                        //MeshSubsetsData = Models[1].ChunkMap.Values.FirstOrDefault(x => x.ChunkType == ChunkType.IvoSkin || x.ChunkType == ChunkType.IvoSkin2)
-                    };
+                    var meshData = chunkMesh;
 
                     var newNode = new ChunkNode_823
                     {
                         Name = stringTable[index],
                         ObjectNodeID = -1,
                         ParentNodeIndex = node.ParentIndex,
+                        ParentNodeID = node.ParentIndex == 0xffff ? -1 : node.ParentIndex,
                         NumChildren = node.NumberOfChildren,
                         MaterialID = node.GeometryType == IvoGeometryType.Geometry ? materialTable[index] : 0,
                         Transform = node.WorldToBone.ConvertToTransformMatrix(),
                         ChunkType = ChunkType.Node,
                         ID = (int)node.Id,
-                        MeshData = meshData
+                        MeshData = node.GeometryType == IvoGeometryType.Geometry ? meshData : null,
+                        MaterialFileName = materialFileName
                     };
                     if (node.GeometryType == IvoGeometryType.Geometry)
                     {
@@ -182,7 +200,7 @@ public partial class CryEngine
                     }
                 }
             }
-            else
+            else  // Skin version.  Manually create mesh chunk and submeshes.
             {
                 var rootNode = new ChunkNode_823
                 {

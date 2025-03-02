@@ -1247,13 +1247,12 @@ public class ColladaModelRenderer : IRenderer
     {
         ColladaLibraryVisualScenes libraryVisualScenes = new();
 
-        List<ColladaVisualScene> visualScenes = new();
+        List<ColladaVisualScene> visualScenes = [];
         ColladaVisualScene visualScene = new();
-        List<ColladaNode> nodes = new();
+        List<ColladaNode> nodes = [];
 
         // THERE CAN BE MULTIPLE ROOT NODES IN EACH FILE!  Check to see if the parentnodeid ~0 and be sure to add a node for it.
-        List<ColladaNode> positionNodes = new();
-        //List<ChunkNode> positionRoots = _cryData.Models[0].NodeMap.Values.Where(a => a.ParentNodeID == ~0).ToList();
+        List<ColladaNode> positionNodes = [];
         List<ChunkNode> positionRoots = _cryData.Nodes.Where(a => a.ParentNodeID == ~0).ToList();
         foreach (ChunkNode root in positionRoots)
         {
@@ -1314,7 +1313,7 @@ public class ColladaModelRenderer : IRenderer
                 bindMaterial.Technique_Common = new ColladaTechniqueCommonBindMaterial();
                 colladaNode.Instance_Controller[0].Bind_Material[0].Technique_Common.Instance_Material = CreateInstanceMaterials(node);
 
-                foreach (ChunkNode child in node.AllChildNodes)
+                foreach (ChunkNode child in node.Children)
                     CreateChildNodes(child, true);
 
                 nodes.Add(colladaNode);
@@ -1398,7 +1397,7 @@ public class ColladaModelRenderer : IRenderer
     private ColladaNode[]? CreateChildNodes(ChunkNode nodeChunk, bool isControllerNode)
     {
         List<ColladaNode> childNodes = [];
-        foreach (ChunkNode childNodeChunk in nodeChunk.AllChildNodes)
+        foreach (ChunkNode childNodeChunk in nodeChunk.Children)
         {
             if (_args.IsNodeNameExcluded(childNodeChunk.Name))
             {
