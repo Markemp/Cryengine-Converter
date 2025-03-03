@@ -108,16 +108,17 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                             var x = (float)b.ReadCryHalf();
                             var y = (float)b.ReadCryHalf();
 
-                            if (Math.Abs(x) > 1.05f || Math.Abs(y) > 1.05f)
-                                throw new InvalidDataException($"Invalid normal components at vertex {i}: ({x}, {y})");
+                            //if (Math.Abs(x) > 1.05f || Math.Abs(y) > 1.05f)
+                            //    throw new InvalidDataException($"Invalid normal components at vertex {i}: ({x}, {y})");
 
-                            // Check if x²+y² <= 1 (required for valid unit vector)
-                            float sumSquares = x * x + y * y;
-                            if (sumSquares > 1.05f)
-                                throw new InvalidDataException($"Invalid normal magnitude at vertex {i}: x²+y²={sumSquares}");
+                            //// Check if x²+y² <= 1 (required for valid unit vector)
+                            //float sumSquares = x * x + y * y;
+                            //if (sumSquares > 1.05f)
+                            //    throw new InvalidDataException($"Invalid normal magnitude at vertex {i}: x²+y²={sumSquares}");
 
-                            float z = (float)Math.Sqrt(1.0f - sumSquares);
-                            normals.Data[i] = new Vector3(x, y, z);
+                            //float z = (float)Math.Sqrt(1.0f - sumSquares);
+                            //normals.Data[i] = new Vector3(x, y, z);
+                            normals.Data[i] = new Vector3(x, y, 0.0f);
                         }
                     }
                     else if (normals.BytesPerElement == 12)

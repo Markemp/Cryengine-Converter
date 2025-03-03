@@ -225,6 +225,8 @@ public partial class CryEngine
             {
                 // Add helper or mesh data to the node
                 var objectChunk = Models[0].ChunkMap[node.ObjectNodeID];
+                node.Children = Models[0].NodeMap.Values.Where(x => x.ParentNodeID == node.ID).ToList();
+
                 if (objectChunk is ChunkHelper helper)
                 {
                     node.ChunkHelper = helper;
@@ -269,7 +271,7 @@ public partial class CryEngine
                         };
                     }
                 }
-
+                
                 Nodes.Add(node);
             }
         }

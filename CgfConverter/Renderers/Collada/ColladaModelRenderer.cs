@@ -1350,10 +1350,8 @@ public class ColladaModelRenderer : IRenderer
 
     private ColladaNode CreateNode(ChunkNode nodeChunk, bool isControllerNode)
     {
-        List<ColladaNode> childNodes = [];
         ColladaNode colladaNode = new();
 
-        // Check to see if there is a second model file, and if the mesh chunk is actually there.
         string nodeName = nodeChunk.Name;
         int nodeID = nodeChunk.ID;
 
@@ -1374,10 +1372,9 @@ public class ColladaModelRenderer : IRenderer
     private ColladaNode CreateSimpleNode(ChunkNode nodeChunk, bool isControllerNode)
     {
         // This will be used to make the Collada node element for Node chunks that point to Helper Chunks and MeshPhysics
-        ColladaNodeType nodeType = ColladaNodeType.NODE;
         ColladaNode colladaNode = new()
         {
-            Type = nodeType,
+            Type = ColladaNodeType.NODE,
             Name = nodeChunk.Name,
             ID = nodeChunk.Name
         };
