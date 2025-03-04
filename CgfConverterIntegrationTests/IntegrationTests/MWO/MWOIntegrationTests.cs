@@ -332,14 +332,14 @@ public class MWOIntegrationTests
         // Verify visual scene material ids are set right
         // bh1
         Assert.AreEqual("adr_right_torso_uac20_bh1", visualSceneLibrary.Node[0].Name);
-        Assert.AreEqual("mechDefault_mtl_material0-material", visualSceneLibrary.Node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
-        Assert.AreEqual("#mechDefault_mtl_material0-material", visualSceneLibrary.Node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
+        Assert.AreEqual("mechDefault_mtl_material4-material", visualSceneLibrary.Node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+        Assert.AreEqual("#mechDefault_mtl_material4-material", visualSceneLibrary.Node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
         // mount
         Assert.AreEqual("adr_right_torso_uac20_bh1_mount", visualSceneLibrary.Node[0].node[3].Name);
-        Assert.AreEqual("mechDefault_mtl_material0-material", visualSceneLibrary.Node[0].node[3].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+        Assert.AreEqual("mechDefault_mtl_material2-material", visualSceneLibrary.Node[0].node[3].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
         // barrel
         Assert.AreEqual("barrel013", visualSceneLibrary.Node[0].node[0].node[0].Name);
-        Assert.AreEqual("05_-_Default_mtl_material0-material", visualSceneLibrary.Node[0].node[0].node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+        Assert.AreEqual("05_-_Default_mtl_material4-material", visualSceneLibrary.Node[0].node[0].node[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
         // animations (no bind_mat)
         Assert.AreEqual("animation068", visualSceneLibrary.Node[0].node[0].Name);
         Assert.IsNull(visualSceneLibrary.Node[0].node[0].Instance_Geometry);

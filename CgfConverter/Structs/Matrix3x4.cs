@@ -112,7 +112,7 @@ public struct Matrix3x4 : IEquatable<Matrix3x4>
             M41 = 0,
             M42 = 0,
             M43 = 0,
-            M44 = 0
+            M44 = 1
         };
         return m;
     }

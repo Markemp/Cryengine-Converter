@@ -1335,15 +1335,28 @@ public class ColladaModelRenderer : IRenderer
         ChunkMesh meshNode;
         ChunkMeshSubsets submeshNode;
 
-        for (int i = 0; i < node.Materials.SubMaterials?.Length; i++)
-        {
-            var matName = GetMaterialName(node.MaterialFileName, node.Materials.SubMaterials[i].Name);
+        // only add instance materials for materials in the node's submeshes
+        var matIndices = node.MeshData.GeometryInfo.GeometrySubsets.Select(x => x.MatID);
 
+        foreach (var index in matIndices)
+        {
+            var matName = GetMaterialName(node.MaterialFileName, node.Materials.SubMaterials[index].Name);
             ColladaInstanceMaterialGeometry instanceMaterial = new();
             instanceMaterial.Target = $"#{matName}-material";
             instanceMaterial.Symbol = $"{matName}-material";
             instanceMaterials.Add(instanceMaterial);
         }
+
+
+        //for (int i = 0; i < node.Materials.SubMaterials?.Length; i++)
+        //{
+        //    var matName = GetMaterialName(node.MaterialFileName, node.Materials.SubMaterials[i].Name);
+
+        //    ColladaInstanceMaterialGeometry instanceMaterial = new();
+        //    instanceMaterial.Target = $"#{matName}-material";
+        //    instanceMaterial.Symbol = $"{matName}-material";
+        //    instanceMaterials.Add(instanceMaterial);
+        //}
 
         return instanceMaterials.ToArray();
     }

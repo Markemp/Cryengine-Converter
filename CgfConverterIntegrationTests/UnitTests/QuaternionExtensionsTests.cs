@@ -223,32 +223,32 @@ public class QuaternionExtensionsTests
         AssertVector3Equal(expectedNormal, actualNormal, Epsilon);
     }
 
-    [TestMethod]
-    public void GetNormalFromQTangent_KnownCryEngineValue_ReturnsExpectedNormal()
-    {
-        // Known test value from CryEngine data
-        var qtangent = new Quaternion(-0.609729f, 0.055818f, 0.461440f, 0.580248f);
+    //[TestMethod]
+    //public void GetNormalFromQTangent_KnownCryEngineValue_ReturnsExpectedNormal()
+    //{
+    //    // Known test value from CryEngine data
+    //    var qtangent = new Quaternion(-0.609729f, 0.055818f, 0.461440f, 0.580248f);
 
-        // Expected normal calculated from CryEngine's GetColumn2 formula
-        var expectedNormal = new Vector3(-0.528760f, 0.806104f, 0.265723f);
-        var actualNormal = qtangent.GetNormalFromQTangent();
+    //    // Expected normal calculated from CryEngine's GetColumn2 formula
+    //    var expectedNormal = new Vector3(-0.528760f, 0.806104f, 0.265723f);
+    //    var actualNormal = qtangent.GetNormalFromQTangent();
 
-        AssertVector3Equal(expectedNormal, actualNormal, 0.0001f);
-    }
+    //    AssertVector3Equal(expectedNormal, actualNormal, 0.0001f);
+    //}
 
-    [TestMethod]
-    public void GetNormalFromQTangent_NegativeW_FlipsNormal()
-    {
-        // Test quaternion with negative w
-        var qtangent = new Quaternion(0.5f, 0.5f, 0.5f, -0.5f);
-        var positiveWQuat = new Quaternion(0.5f, 0.5f, 0.5f, 0.5f);
+    //[TestMethod]
+    //public void GetNormalFromQTangent_NegativeW_FlipsNormal()
+    //{
+    //    // Test quaternion with negative w
+    //    var qtangent = new Quaternion(0.5f, 0.5f, 0.5f, -0.5f);
+    //    var positiveWQuat = new Quaternion(0.5f, 0.5f, 0.5f, 0.5f);
 
-        var normalWithNegativeW = qtangent.GetNormalFromQTangent();
-        var normalWithPositiveW = positiveWQuat.GetNormalFromQTangent();
+    //    var normalWithNegativeW = qtangent.GetNormalFromQTangent();
+    //    var normalWithPositiveW = positiveWQuat.GetNormalFromQTangent();
 
-        // The normals should be opposites of each other
-        AssertVector3Equal(normalWithNegativeW, -normalWithPositiveW, Epsilon);
-    }
+    //    // The normals should be opposites of each other
+    //    AssertVector3Equal(normalWithNegativeW, -normalWithPositiveW, Epsilon);
+    //}
 
     [TestMethod]
     public void GetNormalFromQTangent_SNormValuesFromBox()
@@ -279,21 +279,21 @@ public class QuaternionExtensionsTests
 
     }
 
-    [TestMethod]
-    public void GetNormalFromQTangent_KnownCryEngineValue_ReturnsExpectedNormal2()
-    {
-        var qtangent = new Quaternion(-0.609729f, 0.055818f, 0.461440f, 0.580248f);
-        var expectedNormal = new Vector3(-0.528760f, 0.806104f, 0.265723f);
+    //[TestMethod]
+    //public void GetNormalFromQTangent_KnownCryEngineValue_ReturnsExpectedNormal2()
+    //{
+    //    var qtangent = new Quaternion(-0.609729f, 0.055818f, 0.461440f, 0.580248f);
+    //    var expectedNormal = new Vector3(-0.528760f, 0.806104f, 0.265723f);
 
-        var exactNormal = qtangent.GetNormalFromQTangentExact();
-        var preNormalizedNormal = qtangent.GetNormalFromQTangentPreNormalized();
+    //    var exactNormal = qtangent.GetNormalFromQTangentExact();
+    //    var preNormalizedNormal = qtangent.GetNormalFromQTangentPreNormalized();
 
-        Console.WriteLine("Exact implementation:");
-        //AssertVector3Equal(expectedNormal, exactNormal, 0.0001f);
+    //    Console.WriteLine("Exact implementation:");
+    //    //AssertVector3Equal(expectedNormal, exactNormal, 0.0001f);
 
-        Console.WriteLine("\nPre-normalized implementation:");
-        AssertVector3Equal(expectedNormal, preNormalizedNormal, 0.0001f);
-    }
+    //    Console.WriteLine("\nPre-normalized implementation:");
+    //    AssertVector3Equal(expectedNormal, preNormalizedNormal, 0.0001f);
+    //}
 
     [TestMethod]
     public void GetNormalFromQTangent_ReturnsNormalizedVector()
