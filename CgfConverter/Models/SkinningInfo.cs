@@ -7,7 +7,7 @@ public class SkinningInfo
     /// <summary> If there is skinning info in the model, set to true. </summary>
     public bool HasSkinningInfo => CompiledBones is not null && CompiledBones.Count > 0;
     /// <summary> If there is an internal vertex to external vertex mapping, set to true. </summary>
-    public bool HasIntToExtMapping { get; internal set; }
+    public bool HasIntToExtMapping => Ext2IntMap is not null;
     /// <summary> BoneEntities are the list of the bones in the object.  Contains the info to find each of the necessary skinning components. </summary>
     public List<BoneEntity>? BoneEntities { get; set; }
     public List<CompiledBone>? CompiledBones { get; set; }

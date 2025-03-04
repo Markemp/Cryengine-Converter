@@ -1,6 +1,4 @@
-﻿using CgfConverter.Models;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 
 namespace CgfConverter.CryEngineCore;
 
@@ -35,9 +33,5 @@ internal sealed class ChunkCompiledBones_800 : ChunkCompiledBones
 
             BoneList.Add(tempBone);
         }
-
-        SkinningInfo skin = GetSkinningInfo();
-        skin.CompiledBones = new List<CompiledBone>();
-        skin.CompiledBones = BoneList;
     }
 }

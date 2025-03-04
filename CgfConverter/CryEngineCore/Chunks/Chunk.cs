@@ -183,15 +183,6 @@ public abstract class Chunk : IBinaryChunk
         swappableReader.IsBigEndian = IsBigEndian;
     }
 
-    /// <summary>Gets a link to the SkinningInfo model.</summary>
-    public SkinningInfo GetSkinningInfo()
-    {
-        if (_model.SkinningInfo is null)
-            _model.SkinningInfo = new SkinningInfo();
-
-        return _model.SkinningInfo;
-    }
-
     public virtual void Write(BinaryWriter writer) { throw new NotImplementedException(); }
 
     public override string ToString() => $@"Chunk Type: {ChunkType}, Ver: {Version:X}, Offset: {Offset:X}, ID: {ID:X}, Size: {Size}";

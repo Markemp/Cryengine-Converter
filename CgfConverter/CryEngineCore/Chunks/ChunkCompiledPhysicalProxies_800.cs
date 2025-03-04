@@ -1,7 +1,5 @@
-﻿using CgfConverter.Models;
-using Extensions;
+﻿using Extensions;
 using System.IO;
-using System.Linq;
 using System.Numerics;
 
 namespace CgfConverter.CryEngineCore;
@@ -40,8 +38,5 @@ internal sealed class ChunkCompiledPhysicalProxies_800 : ChunkCompiledPhysicalPr
                 b.ReadByte();
             }
         }
-
-        SkinningInfo skin = GetSkinningInfo();
-        skin.PhysicalBoneMeshes = PhysicalProxies.ToList();
     }
 }

@@ -1,7 +1,5 @@
-﻿using CgfConverter.Models;
-using Extensions;
+﻿using Extensions;
 using System.IO;
-using System.Linq;
 
 namespace CgfConverter.CryEngineCore;
 
@@ -32,7 +30,5 @@ internal sealed class ChunkCompiledIntSkinVertices_801 : ChunkCompiledIntSkinVer
             // Read the color
             IntSkinVertices[i].Color = b.ReadIRGBA();
         }
-        SkinningInfo skin = GetSkinningInfo();
-        skin.IntVertices = IntSkinVertices.ToList();
     }
 }

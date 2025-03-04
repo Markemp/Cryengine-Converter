@@ -1330,12 +1330,8 @@ public class ColladaModelRenderer : IRenderer
 
     private ColladaInstanceMaterialGeometry[] CreateInstanceMaterials(ChunkNode node)
     {
-        // For each mesh subset, we want to create an instance material and add it to instanceMaterials list.
         List<ColladaInstanceMaterialGeometry> instanceMaterials = [];
-        ChunkMesh meshNode;
-        ChunkMeshSubsets submeshNode;
 
-        // only add instance materials for materials in the node's submeshes
         var matIndices = node.MeshData.GeometryInfo.GeometrySubsets.Select(x => x.MatID);
 
         foreach (var index in matIndices)
@@ -1346,17 +1342,6 @@ public class ColladaModelRenderer : IRenderer
             instanceMaterial.Symbol = $"{matName}-material";
             instanceMaterials.Add(instanceMaterial);
         }
-
-
-        //for (int i = 0; i < node.Materials.SubMaterials?.Length; i++)
-        //{
-        //    var matName = GetMaterialName(node.MaterialFileName, node.Materials.SubMaterials[i].Name);
-
-        //    ColladaInstanceMaterialGeometry instanceMaterial = new();
-        //    instanceMaterial.Target = $"#{matName}-material";
-        //    instanceMaterial.Symbol = $"{matName}-material";
-        //    instanceMaterials.Add(instanceMaterial);
-        //}
 
         return instanceMaterials.ToArray();
     }

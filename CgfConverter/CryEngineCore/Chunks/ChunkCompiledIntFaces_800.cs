@@ -1,6 +1,4 @@
-﻿using CgfConverter.Models;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 
 namespace CgfConverter.CryEngineCore;
 
@@ -17,7 +15,5 @@ internal sealed class ChunkCompiledIntFaces_800 : ChunkCompiledIntFaces
             Faces[i].I1 = b.ReadUInt16();
             Faces[i].I2 = b.ReadUInt16();
         }
-        SkinningInfo skin = GetSkinningInfo();
-        skin.IntFaces = Faces.ToList();
     }
 }

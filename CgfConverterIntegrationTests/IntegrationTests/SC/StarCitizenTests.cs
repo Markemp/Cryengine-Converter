@@ -71,7 +71,7 @@ public class StarCitizenTests
         var boxMeshNode = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].node;
         Assert.AreEqual("box", boxNode.ID);
         Assert.AreEqual(ColladaNodeType.NODE, boxNode.Type);
-        Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0", boxNode.Matrix[0].Value_As_String);
+        Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1", boxNode.Matrix[0].Value_As_String);
         Assert.AreEqual("#grid_grayyellow_mtl_grid_grey-material", boxMeshNode[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
         Assert.AreEqual("grid_grayyellow_mtl_grid_grey-material", boxMeshNode[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
 
@@ -94,8 +94,7 @@ public class StarCitizenTests
         var boundMaterials = boxMeshNode[0].Instance_Geometry[0].Bind_Material;
         Assert.AreEqual("#grid_grayyellow_mtl_grid_grey-material", boundMaterials[0].Technique_Common.Instance_Material[0].Target);
         Assert.AreEqual("grid_grayyellow_mtl_grid_grey-material", boundMaterials[0].Technique_Common.Instance_Material[0].Symbol);
-        Assert.AreEqual("#grid_grayyellow_mtl_grid_yellow-material", boundMaterials[0].Technique_Common.Instance_Material[1].Target);
-        Assert.AreEqual("grid_grayyellow_mtl_grid_yellow-material", boundMaterials[0].Technique_Common.Instance_Material[1].Symbol);
+        Assert.AreEqual(1, boundMaterials[0].Technique_Common.Instance_Material.Length);
     }
 
     [TestMethod]
@@ -143,8 +142,7 @@ public class StarCitizenTests
         var boundMaterials = boxNode.Instance_Geometry[0].Bind_Material;
         Assert.AreEqual("#grid_grayyellow_mtl_grid_grey-material", boundMaterials[0].Technique_Common.Instance_Material[0].Target);
         Assert.AreEqual("grid_grayyellow_mtl_grid_grey-material", boundMaterials[0].Technique_Common.Instance_Material[0].Symbol);
-        Assert.AreEqual("#grid_grayyellow_mtl_grid_yellow-material", boundMaterials[0].Technique_Common.Instance_Material[1].Target);
-        Assert.AreEqual("grid_grayyellow_mtl_grid_yellow-material", boundMaterials[0].Technique_Common.Instance_Material[1].Symbol);
+        Assert.AreEqual(1, boundMaterials[0].Technique_Common.Instance_Material.Length);
     }
 
     [TestMethod]

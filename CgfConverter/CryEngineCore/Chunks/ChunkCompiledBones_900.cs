@@ -1,5 +1,4 @@
-﻿using CgfConverter.Models;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using static CgfConverter.Utilities.HelperMethods;
 
@@ -38,8 +37,5 @@ internal sealed class ChunkCompiledBones_900 : ChunkCompiledBones
                 BoneList[i].ParentBone.numChildren++;
             }
         }
-
-        SkinningInfo skin = GetSkinningInfo();
-        skin.CompiledBones = BoneList;
     }
 }
