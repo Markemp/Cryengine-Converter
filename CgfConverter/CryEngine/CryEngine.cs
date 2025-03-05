@@ -284,37 +284,37 @@ public partial class CryEngine
 
         SkinningInfo skin = new();
 
-        foreach (Model model in models)
+        foreach(var chunk in models.SelectMany(x => x.ChunkMap.Values))
         {
-            if (model.SkinningInfo.IntFaces is not null)
-                skin.IntFaces = model.SkinningInfo.IntFaces;
+            if (chunk is ChunkCompiledExtToIntMap extToIntMap)
+                skin.Ext2IntMap = extToIntMap.Source?.ToList();
 
-            if (model.SkinningInfo.IntVertices is not null)
-                skin.IntVertices = model.SkinningInfo.IntVertices;
+            if (chunk is ChunkCompiledBones compiledBones)
+                skin.CompiledBones = compiledBones.BoneList;
 
-            if (model.SkinningInfo.LookDirectionBlends is not null)
-                skin.LookDirectionBlends = model.SkinningInfo.LookDirectionBlends;
+            if (chunk is ChunkCompiledIntFaces intFaces)
+                skin.IntFaces = intFaces.Faces?.ToList();
 
-            if (model.SkinningInfo.MorphTargets is not null)
-                skin.MorphTargets = model.SkinningInfo.MorphTargets;
+            if (chunk is ChunkCompiledIntSkinVertices intVertices)
+                skin.IntVertices = intVertices.IntSkinVertices?.ToList();
 
-            if (model.SkinningInfo.PhysicalBoneMeshes is not null)
-                skin.PhysicalBoneMeshes = model.SkinningInfo.PhysicalBoneMeshes;
+            //if (chunk is ChunkCompiledLookDirectionBlends lookDirBlends)
+            //    skin.LookDirectionBlends = lookDirBlends.Blends;
 
-            if (model.SkinningInfo.BoneEntities is not null)
-                skin.BoneEntities = model.SkinningInfo.BoneEntities;
+            //if (chunk is ChunkCompiledMorphTargets morphTargets)
+            //    skin.MorphTargets = morphTargets.MorphTargetVertices?.ToList();
 
-            if (model.SkinningInfo.BoneMappings is not null)
-                skin.BoneMappings = model.SkinningInfo.BoneMappings;
+            //if (chunk is ChunkCompiledPhysicalBones physicalBoneMeshes)
+            //    skin.PhysicalBoneMeshes = physicalBoneMeshes.  .Meshes;
 
-            if (model.SkinningInfo.Collisions is not null)
-                skin.Collisions = model.SkinningInfo.Collisions;
+            //if (chunk is ChunkBoneEntities boneEntities)
+            //    skin.BoneEntities = boneEntities.Entities;
 
-            if (model.SkinningInfo.CompiledBones is not null)
-                skin.CompiledBones = model.SkinningInfo.CompiledBones;
+            //if (chunk is ChunkBoneMappings boneMappings)
+            //    skin.BoneMappings = boneMappings.Mappings;
 
-            if (model.SkinningInfo.Ext2IntMap is not null)
-                skin.Ext2IntMap = model.SkinningInfo.Ext2IntMap;
+            //if (chunk is ChunkCollisions collisions)
+            //    skin.Collisions = collisions.Data;
         }
 
         return skin;

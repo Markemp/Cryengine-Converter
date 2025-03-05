@@ -452,11 +452,9 @@ public class MWOIntegrationTests
         Assert.AreEqual("hang seg1", gltfData.Nodes[1].Name);
         Assert.AreEqual("hang seg2", gltfData.Nodes[2].Name);
 
-        //AssertExtensions.AreEqual([0, 0, 0, 1], gltfData.Nodes[0].Rotation, TestUtils.delta);
         AssertExtensions.AreEqual([-0.4963841f, -0.5035906f, 0.491474152f, 0.5083822f], gltfData.Nodes[0].Rotation, TestUtils.delta);
         AssertExtensions.AreEqual([0.00154118659f, -0.008913527f, 0.0122360326f, 0.9998842f], gltfData.Nodes[1].Rotation, TestUtils.delta);
 
-        //AssertExtensions.AreEqual([0, 0, 0], gltfData.Nodes[1].Translation, TestUtils.delta);
         AssertExtensions.AreEqual([2.09588125E-13f, 0.0204448365f, -8.731578E-10f], gltfData.Nodes[0].Translation, TestUtils.delta);
         AssertExtensions.AreEqual([-0.0209655762f, -8.90577E-09f, 3.4356154E-10f], gltfData.Nodes[1].Translation, TestUtils.delta);
 
@@ -465,12 +463,12 @@ public class MWOIntegrationTests
         Assert.AreEqual(1, gltfData.Nodes[2].Children.Count);
 
         // Accessors check
-        Assert.AreEqual(8, gltfData.Accessors.Count);
+        Assert.AreEqual(7, gltfData.Accessors.Count);
 
         // Skins check
         Assert.AreEqual(1, gltfData.Skins.Count);
         Assert.AreEqual(8, gltfData.Skins[0].Joints.Count);
-        Assert.AreEqual(7, gltfData.Skins[0].InverseBindMatrices);
+        Assert.AreEqual(6, gltfData.Skins[0].InverseBindMatrices);
         Assert.AreEqual("50calnecklace_a/skin", gltfData.Skins[0].Name);
     }
 
