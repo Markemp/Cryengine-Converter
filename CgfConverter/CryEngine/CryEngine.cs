@@ -169,7 +169,7 @@ public partial class CryEngine
                         ParentNodeID = node.ParentIndex == 0xffff ? -1 : node.ParentIndex,
                         NumChildren = node.NumberOfChildren,
                         MaterialID = node.GeometryType == IvoGeometryType.Geometry ? materialTable[index] : 0,
-                        Transform = node.WorldToBone.ConvertToTransformMatrix(),
+                        Transform = node.BoneToWorld.ConvertToLocalTransformMatrix(),
                         ChunkType = ChunkType.Node,
                         ID = (int)node.Id,
                         MeshData = node.GeometryType == IvoGeometryType.Geometry ? chunkMesh : null,

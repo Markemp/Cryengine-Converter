@@ -117,6 +117,30 @@ public struct Matrix3x4 : IEquatable<Matrix3x4>
         return m;
     }
 
+    public readonly Matrix4x4 ConvertToLocalTransformMatrix()
+    {
+        var m = new Matrix4x4
+        {
+            M11 = M11,
+            M12 = M12,
+            M13 = M13,
+            M14 = 0,
+            M21 = M21,
+            M22 = M22,
+            M23 = M23,
+            M24 = 0,
+            M31 = M31,
+            M32 = M32,
+            M33 = M33,
+            M34 = 0,
+            M41 = M14,
+            M42 = M24,
+            M43 = M34,
+            M44 = 1
+        };
+        return m;
+    }
+
     /// <summary>
     /// Returns a boolean indicating whether this matrix instance is equal to the other given matrix.
     /// </summary>

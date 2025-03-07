@@ -22,7 +22,6 @@ internal sealed class ChunkNodeMeshCombo_900 : ChunkNodeMeshCombo
         NodeMeshCombos = [];
         for (int i = 0; i < NumberOfNodes; i++)
         {
-            // Read NodeMeshCombo
             NodeMeshCombos.Add(new NodeMeshCombo
             {
                 WorldToBone = b.ReadMatrix3x4(),
