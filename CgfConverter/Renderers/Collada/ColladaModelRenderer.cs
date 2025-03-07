@@ -103,7 +103,8 @@ public class ColladaModelRenderer : IRenderer
         WriteLibrary_Geometries();
 
         // If there is Skinning info, create the controller library and set up visual scene to refer to it.  Otherwise just write the Visual Scene
-        if (_cryData.SkinningInfo?.HasSkinningInfo ?? false)
+        var extension = Path.GetExtension(_cryData.InputFile);
+        if (extension == ".chr" || extension == ".skin")
         {
             WriteLibrary_Controllers();
             WriteLibrary_VisualScenesWithSkeleton();
@@ -1098,12 +1099,11 @@ public class ColladaModelRenderer : IRenderer
             };
             StringBuilder weights = new();
             var nodeChunk = _cryData.RootNode;
-            var boneMappingData = nodeChunk.MeshData.GeometryInfo.BoneMappings;
-            var numberOfWeights = boneMappingData.numElements;
-
+            var boneMappingData = nodeChunk.MeshData?.GeometryInfo?.BoneMappings;
             if (boneMappingData is null) return;
 
-            //weightArraySource.Float_Array.Count = _cryData.SkinningInfo.BoneMappings.Count;
+            var numberOfWeights = boneMappingData.numElements;
+
             weightArraySource.Float_Array.Count = (int)numberOfWeights;
             for (int i = 0; i < numberOfWeights; i++)
             {
@@ -1115,30 +1115,6 @@ public class ColladaModelRenderer : IRenderer
             ;
             accessor.Count = numberOfWeights * 4;
 
-            //if (_cryData.SkinningInfo.IntVertices is null)       // This is a case where there are bones, and only Bone Mapping data from a datastream chunk.  Skin files.
-            //{
-            //    weightArraySource.Float_Array.Count = _cryData.SkinningInfo.BoneMappings.Count;
-            //    for (int i = 0; i < _cryData.SkinningInfo.BoneMappings.Count; i++)
-            //    {
-            //        for (int j = 0; j < 4; j++)
-            //        {
-            //            weights.Append(((float)_cryData.SkinningInfo.BoneMappings[i].Weight[j]).ToString() + " ");
-            //        }
-            //    };
-            //    accessor.Count = (uint)_cryData.SkinningInfo.BoneMappings.Count * 4;
-            //}
-            //else                                                // Bones and int verts.  Will use int verts for weights, but this doesn't seem perfect either.
-            //{
-            //    weightArraySource.Float_Array.Count = _cryData.SkinningInfo.Ext2IntMap.Count;
-            //    for (int i = 0; i < _cryData.SkinningInfo.Ext2IntMap.Count; i++)
-            //    {
-            //        for (int j = 0; j < 4; j++)
-            //        {
-            //            weights.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].Weights[j] + " ");
-            //        }
-            //        accessor.Count = (uint)_cryData.SkinningInfo.Ext2IntMap.Count * 4;
-            //    };
-            //}
             CleanNumbers(weights);
             weightArraySource.Float_Array.Value_As_String = weights.ToString().TrimEnd();
             // Add technique_common part.
@@ -1207,19 +1183,6 @@ public class ColladaModelRenderer : IRenderer
                 vertices.Append(boneMappingData.Data[i].BoneIndex[3] + " " + (index + 3) + " ");
                 index += 4;
             }
-            //}
-            //else
-            //{
-            //    for (int i = 0; i < _cryData.SkinningInfo.Ext2IntMap.Count; i++)
-            //    {
-            //        vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[0] + " " + index + " ");
-            //        vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[1] + " " + (index + 1) + " ");
-            //        vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[2] + " " + (index + 2) + " ");
-            //        vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[3] + " " + (index + 3) + " ");
-
-            //        index += 4;
-            //    }
-            //}
             vertexWeights.V = new ColladaIntArrayString { Value_As_String = vertices.ToString().TrimEnd() };
             #endregion
 
@@ -1272,14 +1235,15 @@ public class ColladaModelRenderer : IRenderer
     {
         ColladaLibraryVisualScenes libraryVisualScenes = new();
 
-        List<ColladaVisualScene> visualScenes = new();
+        List<ColladaVisualScene> visualScenes = [];
         ColladaVisualScene visualScene = new();
-        List<ColladaNode> nodes = new();
+        List<ColladaNode> nodes = [];
+
+        List<ChunkNode> positionRoots = _cryData.Nodes.Where(a => a.ParentNodeID == ~0).ToList();
 
         // Check to see if there is a CompiledBones chunk.  If so, add a Node.
         if (_cryData.Chunks.Any(a => a.ChunkType == ChunkType.CompiledBones ||
             a.ChunkType == ChunkType.CompiledBonesSC ||
-            //a.ChunkType == ChunkType.CompiledBonesIvo ||
             a.ChunkType == ChunkType.CompiledBones_Ivo2))
         {
             ColladaNode boneNode = new();
@@ -1287,14 +1251,11 @@ public class ColladaModelRenderer : IRenderer
             nodes.Add(boneNode);
         }
 
-        var hasGeometry = _cryData.Models.Any(x => x.HasGeometry);
+        var hasGeometry = _cryData.Nodes.Any(x => x.MeshData is not null);
 
         if (hasGeometry)
         {
-            var modelIndex = _cryData.Models.First().IsIvoFile ? 1 : 0;
-            var allParentNodes = _cryData.Models[modelIndex].NodeMap.Values.Where(n => n.ParentNodeID != ~1);
-
-            foreach (var node in allParentNodes)
+            foreach (var node in positionRoots)
             {
                 var colladaNode = CreateNode(node, true);
                 colladaNode.Instance_Controller = new ColladaInstanceController[1];
@@ -1305,7 +1266,7 @@ public class ColladaModelRenderer : IRenderer
                 };
 
                 var skeleton = colladaNode.Instance_Controller[0].Skeleton[0] = new ColladaSkeleton();
-                skeleton.Value = $"#{_cryData.Bones.RootBone.boneName}".Replace(' ', '_');
+                skeleton.Value = $"#{_cryData.SkinningInfo.CompiledBones[0].boneName}".Replace(' ', '_');
                 colladaNode.Instance_Controller[0].Bind_Material = new ColladaBindMaterial[1];
                 ColladaBindMaterial bindMaterial = colladaNode.Instance_Controller[0].Bind_Material[0] = new ColladaBindMaterial();
 
@@ -1332,7 +1293,7 @@ public class ColladaModelRenderer : IRenderer
     {
         List<ColladaInstanceMaterialGeometry> instanceMaterials = [];
 
-        var matIndices = node.MeshData.GeometryInfo.GeometrySubsets.Select(x => x.MatID);
+        var matIndices = node.MeshData?.GeometryInfo?.GeometrySubsets?.Select(x => x.MatID) ?? [];
 
         foreach (var index in matIndices)
         {

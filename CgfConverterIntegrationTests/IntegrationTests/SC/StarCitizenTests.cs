@@ -373,11 +373,11 @@ public class StarCitizenTests
         colladaData.GenerateDaeObject();
         var noseNode = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].node[0];
         Assert.AreEqual("Nose", noseNode.ID);
-        Assert.AreEqual("Front_LG_Door_Left", noseNode.node[28].ID);
-        Assert.AreEqual("1 0 0 -0.300001 0 -0.938131 -0.346280 0.512432 0 0.346280 -0.938131 -1.835138 0 0 0 1", noseNode.node[28].Matrix[0].Value_As_String);
+        Assert.AreEqual("hardpoint_radar", noseNode.node[28].ID);
+        Assert.AreEqual("1 0 0 0 -0 1 0 0 0 -0 1 0 -0 9.628372 -1.547105 1", noseNode.node[28].Matrix[0].Value_As_String);
 
-        Assert.AreEqual(29, colladaData.DaeObject.Library_Materials.Material.Length);
-        Assert.AreEqual(88, colladaData.DaeObject.Library_Images.Image.Length);
+        Assert.AreEqual(31, colladaData.DaeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(52, colladaData.DaeObject.Library_Images.Image.Length);
         testUtils.ValidateColladaXml(colladaData);
     }
 

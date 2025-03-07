@@ -120,45 +120,46 @@ public partial class CryEngine
             {
                 // SkinMesh has the mesh and meshsubset info, as well as all the datastreams
                 var skinMesh = Models[1].ChunkMap.Values.FirstOrDefault(x => x.ChunkType == ChunkType.IvoSkin || x.ChunkType == ChunkType.IvoSkin2) as ChunkIvoSkinMesh;
-                // Combochunk has all the node chunks and node names
+
                 var comboChunk = Models[0].ChunkMap.Values
                     .Where(c => c.ChunkType == ChunkType.NodeMeshCombo)
                     .Select(x => x as ChunkNodeMeshCombo)
                     .First();  // only one nodemeshcombo chunk per file
+
                 var stringTable = comboChunk.NodeNames;
                 var materialTable = comboChunk.MaterialIndices;
-                // Create the GeometryInfo object. This will be the same for all nodes.
-                // many nodes with one chunkmesh and one geometryinfo
-
-                // Create the ChunkMesh object from skinMesh. This will be the same for all nodes.
-                ChunkMesh chunkMesh = new ChunkMesh_802
-                {
-                    MaxBound = skinMesh.MeshDetails.BoundingBox.Max,
-                    MinBound = skinMesh.MeshDetails.BoundingBox.Min,
-                    NumVertices = (int)skinMesh.MeshDetails.NumberOfVertices,
-                    NumIndices = (int)skinMesh.MeshDetails.NumberOfIndices,
-                    NumVertSubsets = skinMesh.MeshDetails.NumberOfSubmeshes
-                };
-
-                var geometryInfo = new GeometryInfo
-                {
-                    BoundingBox = new(chunkMesh.MinBound, chunkMesh.MaxBound),
-                    Indices = skinMesh.Indices,
-                    VertUVs = skinMesh.VertsUvs,
-                    Normals = skinMesh.Normals,
-                    Colors = skinMesh.Colors,
-                    BoneMappings = skinMesh.BoneMappings,
-                    GeometrySubsets = skinMesh.MeshSubsets
-                };
-
-                chunkMesh.GeometryInfo = geometryInfo;
                 var materialFileName = Materials.Keys.First();
 
                 // create node chunks
                 foreach (var node in comboChunk.NodeMeshCombos)
                 {
                     var index = comboChunk.NodeMeshCombos.IndexOf(node);
-                    var meshData = chunkMesh;
+
+                    // Create meshsubsets for this node.  This is all meshSubsets where the meshParent equals
+                    // the node index.
+                    var subsets = skinMesh.MeshSubsets.Where(x => x.NodeParentIndex == index);
+
+                    ChunkMesh chunkMesh = new ChunkMesh_802();
+
+                    // Create a meshchunk for nodes with geometry
+                    if (node.GeometryType == IvoGeometryType.Geometry)
+                    {
+                        chunkMesh.MaxBound = node.BoundingBoxMax;
+                        chunkMesh.MinBound = node.BoundingBoxMin;
+                        chunkMesh.NumVertices = (int)skinMesh.MeshDetails.NumberOfVertices;
+                        chunkMesh.NumIndices = (int)skinMesh.MeshDetails.NumberOfIndices;
+                        chunkMesh.NumVertSubsets = skinMesh.MeshDetails.NumberOfSubmeshes;
+                        chunkMesh.GeometryInfo = new()
+                        {
+                            BoundingBox = new(node.BoundingBoxMin, node.BoundingBoxMax),
+                            GeometrySubsets = subsets.ToList(),
+                            Indices = skinMesh.Indices,
+                            Colors = skinMesh.Colors,
+                            VertUVs = skinMesh.VertsUvs,
+                            Normals = skinMesh.Normals,
+                            BoneMappings = skinMesh.BoneMappings
+                        };
+                    }
 
                     var newNode = new ChunkNode_823
                     {
@@ -171,14 +172,12 @@ public partial class CryEngine
                         Transform = node.WorldToBone.ConvertToTransformMatrix(),
                         ChunkType = ChunkType.Node,
                         ID = (int)node.Id,
-                        MeshData = node.GeometryType == IvoGeometryType.Geometry ? meshData : null,
+                        MeshData = node.GeometryType == IvoGeometryType.Geometry ? chunkMesh : null,
                         MaterialFileName = materialFileName
                     };
+
                     if (node.GeometryType == IvoGeometryType.Geometry)
-                    {
-                        //newNode.MeshData.GeometryInfo = geometryInfo;
                         newNode.Materials = Materials.Values.First();
-                    }
 
                     Nodes.Add(newNode);
                 }
