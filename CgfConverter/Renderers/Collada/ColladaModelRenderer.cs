@@ -517,10 +517,6 @@ public class ColladaModelRenderer : IRenderer
     public void WriteLibrary_Geometries()
     {
         WriteGeometries();
-        //if (_cryData.Models.Count == 1)  // Single file model
-        //    WriteGeometries(_cryData.Models[0]);
-        //else
-        //    WriteGeometries(_cryData.Models[1]);
     }
 
     public void WriteGeometries()
@@ -546,6 +542,24 @@ public class ColladaModelRenderer : IRenderer
 
             if (meshChunk.GeometryInfo is null)  // $physics node
                 continue;
+
+            Dictionary<uint, uint> globalToLocalIndex = [];
+            uint localVertexCounter = 0;
+            HashSet<uint> usedVertices = [];
+
+            foreach (var subset in meshChunk.GeometryInfo.GeometrySubsets ?? [])
+            {
+                for (var k = subset.FirstIndex; k < (subset.FirstIndex + subset.NumIndices); k++)
+                {
+                    usedVertices.Add(meshChunk.GeometryInfo.Indices.Data[k]);
+                }
+            }
+
+            // Create the mapping
+            foreach (uint globalIndex in usedVertices)
+            {
+                globalToLocalIndex[globalIndex] = localVertexCounter++;
+            }
 
             // Create a geometry object.  Use the chunk ID for the geometry ID
             // Create all the materials used by this chunk.
@@ -616,6 +630,9 @@ public class ColladaModelRenderer : IRenderer
             StringBuilder uvString = new();
             StringBuilder colorString = new();
 
+            var numberOfElements = nodeChunk.MeshData.GeometryInfo.GeometrySubsets.Sum(x => x.NumVertices);
+            var numberOfIndices = nodeChunk.MeshData.GeometryInfo.GeometrySubsets.Sum(x => x.NumIndices);
+
             if (verts is not null)  // Will be null if it's using VertsUVs.
             {
                 int numVerts = (int)verts.NumElements;
@@ -653,22 +670,23 @@ public class ColladaModelRenderer : IRenderer
             }
             else    // VertsUV structure.  Pull out verts, colors and UVs from vertsUvs.
             {
+                
                 floatArrayVerts.ID = posSource.ID + "-array";
                 floatArrayVerts.Digits = 6;
                 floatArrayVerts.Magnitude = 38;
-                floatArrayVerts.Count = (int)vertsUvs.NumElements * 3;
+                floatArrayVerts.Count = numberOfElements * 3;
                 floatArrayUVs.ID = uvSource.ID + "-array";
                 floatArrayUVs.Digits = 6;
                 floatArrayUVs.Magnitude = 38;
-                floatArrayUVs.Count = (int)vertsUvs.NumElements * 2;
+                floatArrayUVs.Count = numberOfElements * 2;
                 floatArrayNormals.ID = normSource.ID + "-array";
                 floatArrayNormals.Digits = 6;
                 floatArrayNormals.Magnitude = 38;
-                floatArrayNormals.Count = (int)vertsUvs.NumElements * 3;
+                floatArrayNormals.Count = numberOfElements * 3;
                 floatArrayColors.ID = colorSource.ID + "-array";
                 floatArrayColors.Digits = 6;
                 floatArrayColors.Magnitude = 38;
-                floatArrayColors.Count = vertsUvs.Data.Length * 4;
+                floatArrayColors.Count = numberOfElements * 4;
 
                 // Dymek's code to rescale by bounding box.  Only apply to geometry (cga or cgf), and not skin or chr objects.
                 // TODO: Move this to the cryengine data.
@@ -680,21 +698,24 @@ public class ColladaModelRenderer : IRenderer
                 var hasNormals = normals is not null;
 
                 // Create Vertices, UV, normals and colors string
-                for (uint j = 0; j < meshChunk.NumVertices; j++)
+                foreach (var subset in meshChunk.GeometryInfo.GeometrySubsets ?? [])
                 {
-                    Vector3 vertex = vertsUvs.Data[j].Vertex;
-                    // Rotate/translate the vertex
-                    if (!_cryData.InputFile.EndsWith("skin") && !_cryData.InputFile.EndsWith("chr"))
-                        vertex = (vertex * multiplerVector) + boundaryBoxCenter;
+                    for (int i = subset.FirstVertex; i < subset.NumVertices + subset.FirstVertex; i++)
+                    {
+                        Vector3 vert = vertsUvs.Data[i].Vertex;
+                        if (!_cryData.InputFile.EndsWith("skin") && !_cryData.InputFile.EndsWith("chr"))
+                            vert = (vert * multiplerVector) + boundaryBoxCenter;
 
-                    vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(vertex.X), Safe(vertex.Y), Safe(vertex.Z));
-                    colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ", vertsUvs.Data[j].Color.R, vertsUvs.Data[j].Color.G, vertsUvs.Data[j].Color.B, vertsUvs.Data[j].Color.A);
-                    uvString.AppendFormat("{0:F6} {1:F6} ", Safe(vertsUvs.Data[j].UV.U), Safe(1 - vertsUvs.Data[j].UV.V));
+                        vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(vert.X), Safe(vert.Y), Safe(vert.Z));
+                        colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ", vertsUvs.Data[i].Color.R, vertsUvs.Data[i].Color.G, vertsUvs.Data[i].Color.B, vertsUvs.Data[i].Color.A);
+                        uvString.AppendFormat("{0:F6} {1:F6} ", Safe(vertsUvs.Data[i].UV.U), Safe(1 - vertsUvs.Data[i].UV.V));
 
-                    var normal = hasNormals ? normals.Data[j] : DefaultNormal;
-                    normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(normal.X), Safe(normal.Y), Safe(normal.Z));
+                        var normal = hasNormals ? normals.Data[i] : DefaultNormal;
+                        normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(normal.X), Safe(normal.Y), Safe(normal.Z));
+                    }
                 }
             }
+
             CleanNumbers(vertString);
             CleanNumbers(normString);
             CleanNumbers(uvString);
@@ -722,11 +743,10 @@ public class ColladaModelRenderer : IRenderer
 
                 triangles[j].Input[0] = new ColladaInputShared
                 {
-                    Semantic = new ColladaInputSemantic()
+                    Semantic = ColladaInputSemantic.VERTEX,
+                    Offset = 0,
+                    source = "#" + vertices.ID
                 };
-                triangles[j].Input[0].Semantic = ColladaInputSemantic.VERTEX;
-                triangles[j].Input[0].Offset = 0;
-                triangles[j].Input[0].source = "#" + vertices.ID;
                 triangles[j].Input[1] = new ColladaInputShared
                 {
                     Semantic = ColladaInputSemantic.NORMAL,
@@ -752,41 +772,40 @@ public class ColladaModelRenderer : IRenderer
                     nextInputID++;
                 }
 
-                // Create the vcount list.  All triangles, so the subset number of indices.
-                StringBuilder vc = new();
-                for (var k = subsets[j].FirstIndex; k < (subsets[j].FirstIndex + subsets[j].NumIndices); k++)
-                {
-                    int ccount = 3;
-
-                    if (colors is not null || vertsUvs is not null)
-                        ccount++;
-
-                    vc.AppendFormat(culture, string.Format("{0} ", ccount));
-                    k += 2;
-                }
-
                 // Create the P node for the Triangles.
                 StringBuilder p = new();
-                for (var k = subsets[j].FirstIndex; k < (subsets[j].FirstIndex + subsets[j].NumIndices); k++)
-                {
-                    int values = 0;
-                    if (colors is not null || vertsUvs is not null)
-                        values++;
+                string formatString;
+                if (colors is not null || vertsUvs is not null)
+                    formatString = "{0} {0} {0} {0} {1} {1} {1} {1} {2} {2} {2} {2} ";
+                else
+                    formatString = "{0} {0} {0} {1} {1} {1} {2} {2} {2} ";
 
-                    List<string> formatlist = new();
-                    formatlist.Add("{0} {0} {0} ");
-                    formatlist.Add("{1} {1} {1} ");
-                    formatlist.Add("{2} {2} {2} ");
-                    for (var valuecount = 0; valuecount < values; valuecount++)
-                    {
-                        formatlist[0] += "{0} ";
-                        formatlist[1] += "{1} ";
-                        formatlist[2] += "{2} ";
-                    }
-                    string finalformat = string.Join("", formatlist);
-                    p.AppendFormat(finalformat, indices.Data[k], indices.Data[k + 1], indices.Data[k + 2]);
-                    k += 2;
+                for (var k = subsets[j].FirstIndex; k < (subsets[j].FirstIndex + subsets[j].NumIndices); k += 3)
+                {
+                    uint localIndex0 = globalToLocalIndex[indices.Data[k]];
+                    uint localIndex1 = globalToLocalIndex[indices.Data[k + 1]];
+                    uint localIndex2 = globalToLocalIndex[indices.Data[k + 2]];
+
+                    p.AppendFormat(formatString, localIndex0, localIndex1, localIndex2);
                 }
+
+                //for (var k = subsets[j].FirstIndex; k < (subsets[j].FirstIndex + subsets[j].NumIndices); k++)
+                //{
+                //    int values = 0;
+                //    if (colors is not null || vertsUvs is not null)
+                //        values++;
+
+                //    List<string> formatlist = ["{0} {0} {0} ", "{1} {1} {1} ", "{2} {2} {2} "];
+                //    for (var valuecount = 0; valuecount < values; valuecount++)
+                //    {
+                //        formatlist[0] += "{0} ";
+                //        formatlist[1] += "{1} ";
+                //        formatlist[2] += "{2} ";
+                //    }
+                //    string finalformat = string.Join("", formatlist);
+                //    p.AppendFormat(finalformat,   indices.Data[k], indices.Data[k + 1], indices.Data[k + 2]);
+                //    k += 2;
+                //}
                 triangles[j].P = new ColladaIntArrayString
                 {
                     Value_As_String = p.ToString().TrimEnd()
@@ -815,7 +834,7 @@ public class ColladaModelRenderer : IRenderer
             };
             posSource.Technique_Common.Accessor.Source = "#" + floatArrayVerts.ID;
             posSource.Technique_Common.Accessor.Stride = 3;
-            posSource.Technique_Common.Accessor.Count = (uint)meshChunk.NumVertices;
+            posSource.Technique_Common.Accessor.Count = (uint)numberOfElements;
             ColladaParam[] paramPos = new ColladaParam[3];
             paramPos[0] = new ColladaParam();
             paramPos[1] = new ColladaParam();
@@ -834,7 +853,7 @@ public class ColladaModelRenderer : IRenderer
                 {
                     Source = "#" + floatArrayNormals.ID,
                     Stride = 3,
-                    Count = (uint)meshChunk.NumVertices
+                    Count = (uint)numberOfElements
                 }
             };
             ColladaParam[] paramNorm = new ColladaParam[3];
@@ -858,10 +877,7 @@ public class ColladaModelRenderer : IRenderer
                 }
             };
 
-            if (verts is not null)
-                uvSource.Technique_Common.Accessor.Count = uvs.NumElements;
-            else
-                uvSource.Technique_Common.Accessor.Count = vertsUvs.NumElements;
+            uvSource.Technique_Common.Accessor.Count = (uint)numberOfElements;
 
             ColladaParam[] paramUV = new ColladaParam[2];
             paramUV[0] = new ColladaParam();
@@ -874,19 +890,13 @@ public class ColladaModelRenderer : IRenderer
 
             if (colors is not null || vertsUvs is not null)
             {
-                uint numberOfElements;
-                if (colors is not null)
-                    numberOfElements = colors.NumElements;
-                else
-                    numberOfElements = (uint)vertsUvs.Data.Length;
-
                 colorSource.Technique_Common = new ColladaTechniqueCommonSource
                 {
                     Accessor = new ColladaAccessor()
                 };
                 colorSource.Technique_Common.Accessor.Source = "#" + floatArrayColors.ID;
                 colorSource.Technique_Common.Accessor.Stride = 4;
-                colorSource.Technique_Common.Accessor.Count = numberOfElements;
+                colorSource.Technique_Common.Accessor.Count = (uint)numberOfElements;
                 ColladaParam[] paramColor = new ColladaParam[4];
                 paramColor[0] = new ColladaParam();
                 paramColor[1] = new ColladaParam();
@@ -906,8 +916,14 @@ public class ColladaModelRenderer : IRenderer
             geometryList.Add(geometry);
 
             #endregion
-            
+
             // There is no geometry for a helper or controller node.  Can skip the rest.
+            // Sanity checks
+            var vertcheck = vertString.ToString().TrimEnd().Split(' ');
+            var normcheck = normString.ToString().TrimEnd().Split(' ');
+            var colorcheck = colorString.ToString().TrimEnd().Split(' ');
+            var uvcheck = uvString.ToString().TrimEnd().Split(' ');
+
         }
         libraryGeometries.Geometry = geometryList.ToArray();
         DaeObject.Library_Geometries = libraryGeometries;
