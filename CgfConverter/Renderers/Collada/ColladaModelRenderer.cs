@@ -697,12 +697,50 @@ public class ColladaModelRenderer : IRenderer
                 var boundaryBoxCenter = (meshChunk.MinBound + meshChunk.MaxBound) / 2f;
                 var hasNormals = normals is not null;
 
+                float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
+                float maxX = float.MinValue, maxY = float.MinValue, maxZ = float.MinValue;
+                // Calculate max and min values for verts x, y and z
+                foreach (var subset in meshChunk.GeometryInfo.GeometrySubsets ?? [])
+                {
+                    // Define the range of vertices to consider
+                    int startIndex = subset.FirstVertex;
+                    int endIndex = subset.FirstVertex + subset.NumVertices - 1;
+
+                    // Get only the vertices in the specified range
+                    var subsetVerts = vertsUvs.Data
+                        .Skip(startIndex)
+                        .Take(subset.NumVertices)
+                        .Select(x => x.Vertex);
+                    // Find min values from this subset
+                    float subsetMinX = subsetVerts.Min(v => v.X);
+                    float subsetMinY = subsetVerts.Min(v => v.Y);
+                    float subsetMinZ = subsetVerts.Min(v => v.Z);
+
+                    // Update overall min values if needed
+                    minX = Math.Min(minX, subsetMinX);
+                    minY = Math.Min(minY, subsetMinY);
+                    minZ = Math.Min(minZ, subsetMinZ);
+
+                    // Find max values from this subset
+                    float subsetMaxX = subsetVerts.Max(v => v.X);
+                    float subsetMaxY = subsetVerts.Max(v => v.Y);
+                    float subsetMaxZ = subsetVerts.Max(v => v.Z);
+
+                    // Update overall max values if needed
+                    maxX = Math.Max(maxX, subsetMaxX);
+                    maxY = Math.Max(maxY, subsetMaxY);
+                    maxZ = Math.Max(maxZ, subsetMaxZ);
+                }
+                Vector3 minVerts = new Vector3(minX, minY, minZ);
+                Vector3 maxVerts = new Vector3(maxX, maxY, maxZ);
+
                 // Create Vertices, UV, normals and colors string
                 foreach (var subset in meshChunk.GeometryInfo.GeometrySubsets ?? [])
                 {
                     for (int i = subset.FirstVertex; i < subset.NumVertices + subset.FirstVertex; i++)
                     {
                         Vector3 vert = vertsUvs.Data[i].Vertex;
+
                         if (!_cryData.InputFile.EndsWith("skin") && !_cryData.InputFile.EndsWith("chr"))
                             vert = (vert * multiplerVector) + boundaryBoxCenter;
 
@@ -789,23 +827,6 @@ public class ColladaModelRenderer : IRenderer
                     p.AppendFormat(formatString, localIndex0, localIndex1, localIndex2);
                 }
 
-                //for (var k = subsets[j].FirstIndex; k < (subsets[j].FirstIndex + subsets[j].NumIndices); k++)
-                //{
-                //    int values = 0;
-                //    if (colors is not null || vertsUvs is not null)
-                //        values++;
-
-                //    List<string> formatlist = ["{0} {0} {0} ", "{1} {1} {1} ", "{2} {2} {2} "];
-                //    for (var valuecount = 0; valuecount < values; valuecount++)
-                //    {
-                //        formatlist[0] += "{0} ";
-                //        formatlist[1] += "{1} ";
-                //        formatlist[2] += "{2} ";
-                //    }
-                //    string finalformat = string.Join("", formatlist);
-                //    p.AppendFormat(finalformat,   indices.Data[k], indices.Data[k + 1], indices.Data[k + 2]);
-                //    k += 2;
-                //}
                 triangles[j].P = new ColladaIntArrayString
                 {
                     Value_As_String = p.ToString().TrimEnd()

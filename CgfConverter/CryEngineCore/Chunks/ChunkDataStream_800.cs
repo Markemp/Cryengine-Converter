@@ -51,6 +51,12 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
                             SkipBytes(b, 4);
                         }
                         break;
+                    case 4:
+                        for (int i = 0; i < NumElements; i++)
+                        {
+                            SkipBytes(b, 4);
+                        }
+                        break;
                     default:
                         throw new UnsupportedDataFormatException(DataStreamType, BytesPerElement,
                             $"Unsupported bytes per element {BytesPerElement} for vertices data");

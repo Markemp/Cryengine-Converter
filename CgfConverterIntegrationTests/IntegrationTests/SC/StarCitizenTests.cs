@@ -146,6 +146,21 @@ public class StarCitizenTests
     }
 
     [TestMethod]
+    public void Teapot_Ivo()
+    {
+        var args = new string[] { $@"{objectDir}\Objects\default\teapot.cgf", "-dds", "-dae", "-objectdir", objectDir };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+    }
+
+    [TestMethod]
     public void NavyPilotFlightSuit_Ivo()
     {
         var args = new string[] { $@"D:\depot\SC3.24\Data\Objects\Characters\Human\male_v7\armor\nvy\pilot_flightsuit\m_nvy_pilot_light_helmet_01.skin", "-dds", "-dae", "-objectdir", @"d:\depot\sc3.24\data" };
@@ -360,9 +375,31 @@ public class StarCitizenTests
     }
 
     [TestMethod]
-    public void AEGS_Avenger()
+    public void AEGS_Avenger_324()
     {
         var args = new string[] { $@"d:\depot\sc3.24\data\objects\spaceships\ships\AEGS\Avenger\AEGS_Avenger.cga", "-dds", "-dae", "-objectdir", @"d:\depot\sc3.24\data" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var daeObject = colladaData.DaeObject;
+        colladaData.GenerateDaeObject();
+        var noseNode = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].node[0];
+        Assert.AreEqual("Nose", noseNode.ID);
+        Assert.AreEqual("hardpoint_radar", noseNode.node[28].ID);
+        Assert.AreEqual("1 0 0 0 -0 1 0 0 0 -0 1 0 -0 9.628372 -1.547105 1", noseNode.node[28].Matrix[0].Value_As_String);
+
+        Assert.AreEqual(31, colladaData.DaeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(52, colladaData.DaeObject.Library_Images.Image.Length);
+        testUtils.ValidateColladaXml(colladaData);
+    }
+
+    [TestMethod]
+    public void AEGS_Avenger_322()
+    {
+        var args = new string[] { $@"d:\depot\sc3.22\data\objects\spaceships\ships\AEGS\Avenger\AEGS_Avenger.cga", "-dds", "-dae", "-objectdir", @"d:\depot\sc3.22\data" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
