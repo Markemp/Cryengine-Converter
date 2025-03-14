@@ -38,6 +38,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using static Extensions.FileHandlingExtensions;
 using static CgfConverter.Utilities.HelperMethods;
+using Microsoft.Toolkit.HighPerformance;
 
 namespace CgfConverter.Renderers.Collada;
 
@@ -670,7 +671,6 @@ public class ColladaModelRenderer : IRenderer
             }
             else    // VertsUV structure.  Pull out verts, colors and UVs from vertsUvs.
             {
-                
                 floatArrayVerts.ID = posSource.ID + "-array";
                 floatArrayVerts.Digits = 6;
                 floatArrayVerts.Magnitude = 38;
@@ -688,51 +688,25 @@ public class ColladaModelRenderer : IRenderer
                 floatArrayColors.Magnitude = 38;
                 floatArrayColors.Count = numberOfElements * 4;
 
-                // Dymek's code to rescale by bounding box.  Only apply to geometry (cga or cgf), and not skin or chr objects.
-                // TODO: Move this to the cryengine data.
                 var multiplerVector = Vector3.Abs((meshChunk.MinBound - meshChunk.MaxBound) / 2f);
+                
                 if (multiplerVector.X < 1) { multiplerVector.X = 1; }
                 if (multiplerVector.Y < 1) { multiplerVector.Y = 1; }
                 if (multiplerVector.Z < 1) { multiplerVector.Z = 1; }
-                var boundaryBoxCenter = (meshChunk.MinBound + meshChunk.MaxBound) / 2f;
-                var hasNormals = normals is not null;
 
-                float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
-                float maxX = float.MinValue, maxY = float.MinValue, maxZ = float.MinValue;
-                // Calculate max and min values for verts x, y and z
-                foreach (var subset in meshChunk.GeometryInfo.GeometrySubsets ?? [])
+                Vector3 scalingVector = Vector3.One;
+
+                if (meshChunk.ScalingVectors is not null)
                 {
-                    // Define the range of vertices to consider
-                    int startIndex = subset.FirstVertex;
-                    int endIndex = subset.FirstVertex + subset.NumVertices - 1;
-
-                    // Get only the vertices in the specified range
-                    var subsetVerts = vertsUvs.Data
-                        .Skip(startIndex)
-                        .Take(subset.NumVertices)
-                        .Select(x => x.Vertex);
-                    // Find min values from this subset
-                    float subsetMinX = subsetVerts.Min(v => v.X);
-                    float subsetMinY = subsetVerts.Min(v => v.Y);
-                    float subsetMinZ = subsetVerts.Min(v => v.Z);
-
-                    // Update overall min values if needed
-                    minX = Math.Min(minX, subsetMinX);
-                    minY = Math.Min(minY, subsetMinY);
-                    minZ = Math.Min(minZ, subsetMinZ);
-
-                    // Find max values from this subset
-                    float subsetMaxX = subsetVerts.Max(v => v.X);
-                    float subsetMaxY = subsetVerts.Max(v => v.Y);
-                    float subsetMaxZ = subsetVerts.Max(v => v.Z);
-
-                    // Update overall max values if needed
-                    maxX = Math.Max(maxX, subsetMaxX);
-                    maxY = Math.Max(maxY, subsetMaxY);
-                    maxZ = Math.Max(maxZ, subsetMaxZ);
+                    scalingVector = Vector3.Abs((meshChunk.ScalingVectors.Max - meshChunk.ScalingVectors.Min) / 2f);
+                    if (scalingVector.X < 1) { scalingVector.X = 1; }
+                    if (scalingVector.Y < 1) { scalingVector.Y = 1; }
+                    if (scalingVector.Z < 1) { scalingVector.Z = 1; }
                 }
-                Vector3 minVerts = new Vector3(minX, minY, minZ);
-                Vector3 maxVerts = new Vector3(maxX, maxY, maxZ);
+
+                var boundaryBoxCenter = (meshChunk.MinBound + meshChunk.MaxBound) / 2f;
+
+                var hasNormals = normals is not null;
 
                 // Create Vertices, UV, normals and colors string
                 foreach (var subset in meshChunk.GeometryInfo.GeometrySubsets ?? [])
@@ -742,7 +716,12 @@ public class ColladaModelRenderer : IRenderer
                         Vector3 vert = vertsUvs.Data[i].Vertex;
 
                         if (!_cryData.InputFile.EndsWith("skin") && !_cryData.InputFile.EndsWith("chr"))
-                            vert = (vert * multiplerVector) + boundaryBoxCenter;
+                        {
+                            if (meshChunk.ScalingVectors is null)
+                                vert = (vert * multiplerVector) + boundaryBoxCenter;
+                            else
+                                vert = (vert * scalingVector);
+                        }
 
                         vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(vert.X), Safe(vert.Y), Safe(vert.Z));
                         colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ", vertsUvs.Data[i].Color.R, vertsUvs.Data[i].Color.G, vertsUvs.Data[i].Color.B, vertsUvs.Data[i].Color.A);

@@ -120,6 +120,7 @@ public partial class CryEngine
             {
                 // SkinMesh has the mesh and meshsubset info, as well as all the datastreams
                 var skinMesh = Models[1].ChunkMap.Values.FirstOrDefault(x => x.ChunkType == ChunkType.IvoSkin || x.ChunkType == ChunkType.IvoSkin2) as ChunkIvoSkinMesh;
+                var geometryMeshDetails = skinMesh.MeshDetails;
 
                 var comboChunk = Models[0].ChunkMap.Values
                     .Where(c => c.ChunkType == ChunkType.NodeMeshCombo)
@@ -144,14 +145,15 @@ public partial class CryEngine
                     // Create a meshchunk for nodes with geometry
                     if (node.GeometryType == IvoGeometryType.Geometry)
                     {
-                        chunkMesh.MaxBound = node.BoundingBoxMax;
-                        chunkMesh.MinBound = node.BoundingBoxMin;
+                        chunkMesh.ScalingVectors = geometryMeshDetails.ScalingBoundingBox;
+                        chunkMesh.MaxBound = geometryMeshDetails.BoundingBox.Max;
+                        chunkMesh.MinBound = geometryMeshDetails.BoundingBox.Min;
                         chunkMesh.NumVertices = (int)skinMesh.MeshDetails.NumberOfVertices;
                         chunkMesh.NumIndices = (int)skinMesh.MeshDetails.NumberOfIndices;
                         chunkMesh.NumVertSubsets = skinMesh.MeshDetails.NumberOfSubmeshes;
                         chunkMesh.GeometryInfo = new()
                         {
-                            BoundingBox = new(node.BoundingBoxMin, node.BoundingBoxMax),
+                            BoundingBox = new(geometryMeshDetails.BoundingBox.Min, geometryMeshDetails.BoundingBox.Max),
                             GeometrySubsets = subsets.ToList(),
                             Indices = skinMesh.Indices,
                             Colors = skinMesh.Colors,
@@ -170,6 +172,7 @@ public partial class CryEngine
                         NumChildren = node.NumberOfChildren,
                         MaterialID = node.GeometryType == IvoGeometryType.Geometry ? materialTable[index] : 0,
                         Transform = node.BoneToWorld.ConvertToLocalTransformMatrix(),
+                        //Transform = node.WorldToBone.ConvertToLocalTransformMatrix(),
                         ChunkType = ChunkType.Node,
                         ID = (int)node.Id,
                         MeshData = node.GeometryType == IvoGeometryType.Geometry ? chunkMesh : null,

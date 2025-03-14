@@ -34,8 +34,12 @@ public abstract class ChunkMesh : Chunk
     public int MeshPhysicsData { get; set; }
     public int VertsUVsData { get; set; }
     public int[] PhysicsData = new int[4];
+    public BoundingBox BoundingBox { get; set; }
     public Vector3 MinBound { get; set; }
     public Vector3 MaxBound { get; set; }
+
+    // For Ivo files
+    public BoundingBox? ScalingVectors { get; set; }
 
     // Computed properties
     public GeometryInfo? GeometryInfo { get; set; }

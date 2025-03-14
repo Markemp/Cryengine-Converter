@@ -1,7 +1,6 @@
 ﻿using CgfConverter.Models.Materials;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 
 namespace CgfConverter.CryEngineCore;
