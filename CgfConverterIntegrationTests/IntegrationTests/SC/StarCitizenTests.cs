@@ -401,14 +401,28 @@ public class StarCitizenTests
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
+        testUtils.ValidateColladaXml(colladaData);
+
         var noseNode = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].node[0];
+        var leftWing = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].node[1].node[0];
+
         Assert.AreEqual("Nose", noseNode.ID);
         Assert.AreEqual("hardpoint_radar", noseNode.node[28].ID);
-        Assert.AreEqual("1 0 0 0 -0 1 0 0 0 -0 1 0 -0 9.628372 -1.547105 1", noseNode.node[28].Matrix[0].Value_As_String);
+        Assert.AreEqual("1 0 0 0 0 1 0 3.925374 0 0 1 -1.074105 0 0 0 1", noseNode.node[28].Matrix[0].Value_As_String);
+        Assert.AreEqual("Wing_Left", leftWing.Name);
+        Assert.AreEqual("1 0 0 -5.550000 0 1 0 -0.070000 0 0 1 -0.883000 0 0 0 1", leftWing.Matrix[0].Value_As_String);
 
         Assert.AreEqual(31, colladaData.DaeObject.Library_Materials.Material.Length);
         Assert.AreEqual(52, colladaData.DaeObject.Library_Images.Image.Length);
-        testUtils.ValidateColladaXml(colladaData);
+
+        // Geometry
+        var noseGeo = daeObject.Library_Geometries.Geometry[0];
+        Assert.AreEqual("Nose-mesh", noseGeo.ID);
+        Assert.AreEqual(4, noseGeo.Mesh.Source.Length);
+        Assert.AreEqual(15, noseGeo.Mesh.Triangles.Length);
+        Assert.AreEqual(59817, noseGeo.Mesh.Source[0].Float_Array.Count);
+        Assert.IsTrue(noseGeo.Mesh.Source[0].Float_Array.Value_As_String.StartsWith("4.480176 -3.697751 -0.267610"));
+
     }
 
     [TestMethod]
@@ -423,14 +437,31 @@ public class StarCitizenTests
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
+        testUtils.ValidateColladaXml(colladaData);
+
         var noseNode = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].node[0];
+        var leftWing = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].node[1].node[0];
         Assert.AreEqual("Nose", noseNode.ID);
-        Assert.AreEqual("hardpoint_radar", noseNode.node[28].ID);
-        Assert.AreEqual("1 0 0 0 -0 1 0 0 0 -0 1 0 -0 9.628372 -1.547105 1", noseNode.node[28].Matrix[0].Value_As_String);
+        Assert.AreEqual("1 -0 0 0 0 1 0 5.702999 0 0 1 -0.473000 0 0 0 0", noseNode.Matrix[0].Value_As_String);
+        Assert.AreEqual("#Nose-mesh", noseNode.Instance_Geometry[0].URL);
+        Assert.AreEqual(15, noseNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material.Length);
+        Assert.AreEqual("#aegs_avenger_exterior_mtl_white_insulation_pads-material", noseNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
+        Assert.AreEqual("Front_LG_Door_Left", noseNode.node[28].ID);
+        Assert.AreEqual("1 0 0 -0.300001 0 -0.938131 -0.346280 0.512432 0 0.346280 -0.938131 -1.835138 0 0 0 0", noseNode.node[28].Matrix[0].Value_As_String);
+        Assert.AreEqual("Wing_Left", leftWing.Name);
+        Assert.AreEqual("1 0 0 -5.550000 0 1 0 -0.070000 0 0 1 -0.883000 0 0 0 0", leftWing.Matrix[0].Value_As_String);
 
         Assert.AreEqual(31, colladaData.DaeObject.Library_Materials.Material.Length);
-        Assert.AreEqual(52, colladaData.DaeObject.Library_Images.Image.Length);
-        testUtils.ValidateColladaXml(colladaData);
+        Assert.AreEqual(53, colladaData.DaeObject.Library_Images.Image.Length);
+        
+
+        // Geometry
+        var noseGeo = daeObject.Library_Geometries.Geometry[0];
+        Assert.AreEqual("Nose-mesh", noseGeo.ID);
+        Assert.AreEqual(4, noseGeo.Mesh.Source.Length);
+        Assert.AreEqual(15, noseGeo.Mesh.Triangles.Length);
+        Assert.AreEqual(59817, noseGeo.Mesh.Source[0].Float_Array.Count);
+        Assert.IsTrue(noseGeo.Mesh.Source[0].Float_Array.Value_As_String.StartsWith("-1.781178 -0.110417 0.704468"));
     }
 
     [TestMethod]
