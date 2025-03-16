@@ -151,16 +151,7 @@ public partial class CryEngine
                         chunkMesh.NumVertices = (int)skinMesh.MeshDetails.NumberOfVertices;
                         chunkMesh.NumIndices = (int)skinMesh.MeshDetails.NumberOfIndices;
                         chunkMesh.NumVertSubsets = skinMesh.MeshDetails.NumberOfSubmeshes;
-                        chunkMesh.GeometryInfo = new()
-                        {
-                            BoundingBox = new(geometryMeshDetails.BoundingBox.Min, geometryMeshDetails.BoundingBox.Max),
-                            GeometrySubsets = subsets.ToList(),
-                            Indices = skinMesh.Indices,
-                            Colors = skinMesh.Colors,
-                            VertUVs = skinMesh.VertsUvs,
-                            Normals = skinMesh.Normals,
-                            BoneMappings = skinMesh.BoneMappings
-                        };
+                        chunkMesh.GeometryInfo = BuildNodeGeometryInfo(skinMesh, subsets);
                     }
 
                     var newNode = new ChunkNode_823
@@ -417,6 +408,22 @@ public partial class CryEngine
         {
             Log.I("Unable to find associated animation track database file for {0}", InputFile);
         }
+    }
+
+    private GeometryInfo BuildNodeGeometryInfo(ChunkIvoSkinMesh skinMesh, IEnumerable<MeshSubset> subsets)
+    {
+        var geometryMeshDetails = skinMesh.MeshDetails;
+
+        return new()
+        {
+            BoundingBox = new(geometryMeshDetails.BoundingBox.Min, geometryMeshDetails.BoundingBox.Max),
+            GeometrySubsets = subsets.ToList(),
+            Indices = skinMesh.Indices,
+            Colors = skinMesh.Colors,
+            VertUVs = skinMesh.VertsUvs,
+            Normals = skinMesh.Normals,
+            BoneMappings = skinMesh.BoneMappings
+        };
     }
 
     private void AssignMaterialsToNodes(bool mtlFilesProvided = true)
