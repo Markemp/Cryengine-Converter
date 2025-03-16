@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Reflection;
+using System.Xml.Linq;
 using Material = CgfConverter.Models.Materials.Material;
 
 namespace CgfConverter;
@@ -163,7 +165,6 @@ public partial class CryEngine
                         NumChildren = node.NumberOfChildren,
                         MaterialID = node.GeometryType == IvoGeometryType.Geometry ? materialTable[index] : 0,
                         Transform = node.BoneToWorld.ConvertToLocalTransformMatrix(),
-                        //Transform = node.WorldToBone.ConvertToLocalTransformMatrix(),
                         ChunkType = ChunkType.Node,
                         ID = (int)node.Id,
                         MeshData = node.GeometryType == IvoGeometryType.Geometry ? chunkMesh : null,
@@ -195,16 +196,33 @@ public partial class CryEngine
             }
             else  // Skin version.  Manually create mesh chunk and submeshes.
             {
+                var skinMesh = Models[1].ChunkMap.Values.FirstOrDefault(x => x.ChunkType == ChunkType.IvoSkin || x.ChunkType == ChunkType.IvoSkin2) as ChunkIvoSkinMesh;
+                var geometryMeshDetails = skinMesh.MeshDetails;
+                var subsets = skinMesh.MeshSubsets;
+
+                ChunkMesh chunkMesh = new ChunkMesh_802
+                {
+                    ScalingVectors = geometryMeshDetails.ScalingBoundingBox,
+                    MaxBound = geometryMeshDetails.BoundingBox.Max,
+                    MinBound = geometryMeshDetails.BoundingBox.Min,
+                    NumVertices = (int)skinMesh.MeshDetails.NumberOfVertices,
+                    NumIndices = (int)skinMesh.MeshDetails.NumberOfIndices,
+                    NumVertSubsets = skinMesh.MeshDetails.NumberOfSubmeshes,
+                    GeometryInfo = BuildNodeGeometryInfo(skinMesh, subsets)
+                };
+
                 var rootNode = new ChunkNode_823
                 {
                     Name = Path.GetFileNameWithoutExtension(InputFile),
                     ObjectNodeID = 2,
                     ParentNodeIndex = -1,     // No parent
+                    ParentNodeID = -1,
                     NumChildren = 0,     // Single object
                     MaterialID = 11,
                     Transform = Matrix4x4.Identity,
                     ChunkType = ChunkType.Node,
-                    ID = 1
+                    ID = 1,
+                    MeshData = chunkMesh
                 };
                 Nodes.Add(rootNode);
                 RootNode = rootNode;

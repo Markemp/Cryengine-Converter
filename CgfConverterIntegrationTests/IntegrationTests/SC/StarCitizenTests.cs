@@ -33,26 +33,6 @@ public class StarCitizenTests
     }
 
     [TestMethod]
-    public void Box_Ivo_Collada()
-    {
-        var args = new string[] { $@"{objectDir}\objects\default\box.cgf", "-objectdir", @"d:\depot\sc3.24\data" };
-        int result = testUtils.argsHandler.ProcessArgs(args);
-        Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
-        cryData.ProcessCryengineFiles();
-
-        var mat = cryData.Materials["grid_grayyellow"];
-        Assert.AreEqual("grid_grey", mat.SubMaterials[0].Name);
-        Assert.AreEqual("grid_yellow", mat.SubMaterials[1].Name);
-        var geometry = cryData.Nodes[0].MeshData.GeometryInfo;
-        Assert.IsNull(cryData.Nodes[1].MeshData);
-
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.GenerateDaeObject();
-        var daeObject = colladaData.DaeObject;
-    }
-
-    [TestMethod]
     public void Box_Collada_Ivo()
     {
         var args = new string[] { $@"{objectDir}\Objects\default\box.cgf", "-dds", "-dae", "-objectdir", objectDir };
@@ -358,7 +338,7 @@ public class StarCitizenTests
     [TestMethod]
     public void BehrRifle_324IvoChrFile()
     {
-        var args = new string[] { $@"D:\depot\SC3.24\Data\Objects\fps_weapons\weapons_v7\behr\rifle\p4ar\brfl_fps_behr_p4ar.chr", "-dds", "-dae" };
+        var args = new string[] { $@"{objectDir}\Objects\fps_weapons\weapons_v7\behr\rifle\p4ar\brfl_fps_behr_p4ar.chr", "-dds", "-dae" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
@@ -376,7 +356,31 @@ public class StarCitizenTests
     [TestMethod]
     public void BehrRifle_324IvoSkinFile()
     {
-        var args = new string[] { $@"D:\depot\SC3.24\Data\Objects\fps_weapons\weapons_v7\behr\rifle\p4ar\brfl_fps_behr_p4ar_parts.skin", "-dds", "-dae" };
+        var args = new string[]
+        {
+            $@"{objectDir}\Objects\fps_weapons\weapons_v7\behr\rifle\p4ar\brfl_fps_behr_p4ar_parts.skin",
+            "-dds", "-dae", "-objectdir", $"{objectDir}"
+        };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+
+        testUtils.ValidateColladaXml(colladaData);
+    }
+
+    [TestMethod]
+    public void BehrRifle_324IvoCgfFile()
+    {
+        var args = new string[]
+        {
+            $@"{objectDir}\Objects\fps_weapons\weapons_v7\behr\rifle\p4ar\brfl_fps_behr_p4ar_stock.cgf",
+            "-dds", "-dae", "-objectdir", $"{objectDir}"
+        };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
@@ -392,7 +396,7 @@ public class StarCitizenTests
     [TestMethod]
     public void AEGS_Avenger_324()
     {
-        var args = new string[] { $@"d:\depot\sc3.24\data\objects\spaceships\ships\AEGS\Avenger\AEGS_Avenger.cga", "-dds", "-dae", "-objectdir", @"d:\depot\sc3.24\data" };
+        var args = new string[] { $@"d:\depot\sc3.24\data\objects\spaceships\ships\AEGS\Avenger\AEGS_Avenger.cga", "-dds", "-dae", "-objectdir", $"{objectDir}" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
@@ -422,7 +426,6 @@ public class StarCitizenTests
         Assert.AreEqual(15, noseGeo.Mesh.Triangles.Length);
         Assert.AreEqual(59817, noseGeo.Mesh.Source[0].Float_Array.Count);
         Assert.IsTrue(noseGeo.Mesh.Source[0].Float_Array.Value_As_String.StartsWith("4.480176 -3.697751 -0.267610"));
-
     }
 
     [TestMethod]

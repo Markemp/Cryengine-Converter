@@ -544,24 +544,6 @@ public class ColladaModelRenderer : IRenderer
             if (meshChunk.GeometryInfo is null)  // $physics node
                 continue;
 
-            Dictionary<uint, uint> globalToLocalIndex = [];
-            uint localVertexCounter = 0;
-            HashSet<uint> usedVertices = [];
-
-            foreach (var subset in meshChunk.GeometryInfo.GeometrySubsets ?? [])
-            {
-                for (var k = subset.FirstIndex; k < (subset.FirstIndex + subset.NumIndices); k++)
-                {
-                    usedVertices.Add(meshChunk.GeometryInfo.Indices.Data[k]);
-                }
-            }
-
-            // Create the mapping
-            foreach (uint globalIndex in usedVertices)
-            {
-                globalToLocalIndex[globalIndex] = localVertexCounter++;
-            }
-
             // Create a geometry object.  Use the chunk ID for the geometry ID
             // Create all the materials used by this chunk.
             // Make the mesh object.  This will have 3 or 4 sources, 1 vertices, and 1 or more Triangles (with material ID)
@@ -632,7 +614,6 @@ public class ColladaModelRenderer : IRenderer
             StringBuilder colorString = new();
 
             var numberOfElements = nodeChunk.MeshData.GeometryInfo.GeometrySubsets.Sum(x => x.NumVertices);
-            var numberOfIndices = nodeChunk.MeshData.GeometryInfo.GeometrySubsets.Sum(x => x.NumIndices);
 
             if (verts is not null)  // Will be null if it's using VertsUVs.
             {
@@ -803,19 +784,12 @@ public class ColladaModelRenderer : IRenderer
                     offsetStart += meshChunk.GeometryInfo.GeometrySubsets[q].NumVertices;
                 }
                 
-                //uint offsetStart = j == 0 ? 0 : (uint)subsets[j].NumVertices;
                 for (var k = subsets[j].FirstIndex; k < (subsets[j].FirstIndex + subsets[j].NumIndices); k += 3)
                 {
-                    //uint localIndex0 = globalToLocalIndex[indices.Data[k]];
-                    //uint localIndex1 = globalToLocalIndex[indices.Data[k + 1]];
-                    //uint localIndex2 = globalToLocalIndex[indices.Data[k + 2]];
                     var firstGlobalIndex = indices.Data[subsets[j].FirstIndex];
                     uint localIndex0 = (uint)((indices.Data[k] - firstGlobalIndex) + offsetStart);
                     uint localIndex1 = (uint)((indices.Data[k + 1] - firstGlobalIndex) + offsetStart);
                     uint localIndex2 = (uint)((indices.Data[k + 2] - firstGlobalIndex) + offsetStart);
-                    //uint localIndex0 = (indices.Data[k] - k) - offsetStart;
-                    //uint localIndex1 = indices.Data[k + 1] - offsetStart;
-                    //uint localIndex2 = indices.Data[k + 2] - offsetStart;
 
                     p.AppendFormat(formatString, localIndex0, localIndex1, localIndex2);
                 }
