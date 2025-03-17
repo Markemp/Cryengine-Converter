@@ -5,6 +5,7 @@ using CgfConverter.Renderers.Collada.Collada.Enums;
 using CgfConverter.Renderers.Gltf;
 using CgfConverterIntegrationTests.Extensions;
 using CgfConverterTests.TestUtilities;
+using Microsoft.VisualStudio.CodeCoverage;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Globalization;
@@ -80,7 +81,7 @@ public class StarCitizenTests
     [TestMethod]
     public void Box_Collada_322()
     {
-        var args = new string[] { $@"{objectDir322}\Objects\default\box.cgf", "-dds", "-dae", "-objectdir", objectDir };
+        var args = new string[] { $@"{objectDir322}\Objects\default\box.cgf", "-dds", "-dae", "-objectdir", objectDir322 };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
@@ -228,20 +229,6 @@ public class StarCitizenTests
     }
 
     [TestMethod]
-    public void M_ccc_bear_helmet_01_IvoSkin()
-    {
-        var args = new string[] { @"D:\depot\SC3.24\Data\Objects\Characters\Human\male_v7\armor\ccc\m_ccc_bear_helmet_01.skin", "-dds", "-dae" };
-        int result = testUtils.argsHandler.ProcessArgs(args);
-        Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
-        cryData.ProcessCryengineFiles();
-
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.GenerateDaeObject();
-        var daeObject = colladaData.DaeObject;
-    }
-
-    [TestMethod]
     public void ANVL_Hurricane_Front_LandingGear_IvoCHR()
     {
         var args = new string[] {
@@ -259,23 +246,23 @@ public class StarCitizenTests
     }
 
     [TestMethod]
-    public void ANVL_Hurricane_Front_LandingGear_Ivo_Skin_3_22()
+    public void ANVL_Hurricane_Front_LandingGear_Ivo_Skin_324()
     {
         var args = new string[] {
-            @"D:\depot\SC3.22\Data\Objects\Spaceships\Ships\ANVL\LandingGear\Hurricane\anvl_hurricane_landing_gear_front_SKIN.skin",
+            $@"{objectDir}\Objects\Spaceships\Ships\ANVL\LandingGear\Hurricane\anvl_hurricane_landing_gear_front_SKIN.skin",
             "-dds", "-dae",
-            "-objectdir", @"d:\depot\sc3.22\data" };
+            "-objectdir", $@"{objectDir}" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
-        var meshChunk = (ChunkMesh)cryData.Chunks[7];  // This is the generated one from the skinm file
-        Assert.AreEqual(-0.443651f, meshChunk.MinBound.X, TestUtils.delta);
-        Assert.AreEqual(-0.2984485f, meshChunk.MinBound.Y, TestUtils.delta);
-        Assert.AreEqual(-2.20503f, meshChunk.MinBound.Z, TestUtils.delta);
-        Assert.AreEqual(0.443650f, meshChunk.MaxBound.X, TestUtils.delta);
-        Assert.AreEqual(3.3411438f, meshChunk.MaxBound.Y, TestUtils.delta);
-        Assert.AreEqual(1.4569355f, meshChunk.MaxBound.Z, TestUtils.delta);
+        var mesh = (ChunkMesh)cryData.RootNode.MeshData;
+        Assert.AreEqual(-0.443651f, mesh.MinBound.X, TestUtils.delta);
+        Assert.AreEqual(-0.2984485f, mesh.MinBound.Y, TestUtils.delta);
+        Assert.AreEqual(-2.20503f, mesh.MinBound.Z, TestUtils.delta);
+        Assert.AreEqual(0.443650f, mesh.MaxBound.X, TestUtils.delta);
+        Assert.AreEqual(3.3411438f, mesh.MaxBound.Y, TestUtils.delta);
+        Assert.AreEqual(1.4569355f, mesh.MaxBound.Z, TestUtils.delta);
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
@@ -283,34 +270,10 @@ public class StarCitizenTests
     }
 
     [TestMethod]
-    public void ANVL_Hurricane_Front_LandingGear_Ivo_Skin_3_23()
+    public void M_ccc_bear_helmet_01_IvoSkinFile()
     {
         var args = new string[] {
-            @"D:\depot\SC3.23\Data\Objects\Spaceships\Ships\ANVL\LandingGear\Hurricane\anvl_hurricane_landing_gear_front_SKIN.skin",
-            "-dds", "-dae",
-            "-objectdir", @"d:\depot\sc3.23\data" };
-        int result = testUtils.argsHandler.ProcessArgs(args);
-        Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
-        cryData.ProcessCryengineFiles();
-        var meshChunk = (ChunkMesh)cryData.Chunks[7];  // This is the generated one from the skinm file
-        Assert.AreEqual(-0.443651f, meshChunk.MinBound.X, TestUtils.delta);
-        Assert.AreEqual(-0.2984485f, meshChunk.MinBound.Y, TestUtils.delta);
-        Assert.AreEqual(-2.20503f, meshChunk.MinBound.Z, TestUtils.delta);
-        Assert.AreEqual(0.443650f, meshChunk.MaxBound.X, TestUtils.delta);
-        Assert.AreEqual(3.3411438f, meshChunk.MaxBound.Y, TestUtils.delta);
-        Assert.AreEqual(1.4569355f, meshChunk.MaxBound.Z, TestUtils.delta);
-
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.GenerateDaeObject();
-        var daeObject = colladaData.DaeObject;
-    }
-
-    [TestMethod]
-    public void M_ccc_bear_helmet_01_320IvoSkinFile()
-    {
-        var args = new string[] {
-            @"D:\depot\SC3.22\Data\Objects\Characters\Human\male_v7\armor\ccc\m_ccc_bear_helmet_01.skin", "-dds", "-dae" };
+            $@"{objectDir}\Objects\Characters\Human\male_v7\armor\ccc\m_ccc_bear_helmet_01.skin", "-dds", "-dae", "-objectdir", $"{objectDir}" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
@@ -396,7 +359,7 @@ public class StarCitizenTests
     [TestMethod]
     public void AEGS_Avenger_324()
     {
-        var args = new string[] { $@"d:\depot\sc3.24\data\objects\spaceships\ships\AEGS\Avenger\AEGS_Avenger.cga", "-dds", "-dae", "-objectdir", $"{objectDir}" };
+        var args = new string[] { $@"{objectDir} \objects\spaceships\ships\CRUS\spirit\exterior\crus_Spirit.cgaga", "-dds", "-dae", "-objectdir", $"{objectDir}" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
@@ -478,9 +441,37 @@ public class StarCitizenTests
     }
 
     [TestMethod]
+    public void ANVL_Arrow_Ivo()
+    {
+        var args = new string[] { $@"{objectDir}\objects\spaceships\ships\ANVL\Arrow\ANVL_Arrow.cga", "-dds", "-dae", "-objectdir", $"{objectDir}" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var daeObject = colladaData.DaeObject;
+        colladaData.GenerateDaeObject();
+    }
+
+    [TestMethod]
+    public void Idris_Wall_Ivo()
+    {
+        var args = new string[] { $@"{objectDir}\Objects\Spaceships\Ships\AEGS\Idris_Frigate\interior\med_bay\med_bay_wall_corner_b.cgf", "-dds", "-dae", "-objectdir", $"{objectDir}" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var daeObject = colladaData.DaeObject;
+        colladaData.GenerateDaeObject();
+    }
+
+    [TestMethod]
     public void CRUS_Spirit_Exterior()
     {
-        var args = new string[] { $@"d:\depot\sc3.24\data\objects\spaceships\ships\CRUS\spirit\exterior\crus_Spirit.cga", "-dds", "-dae", "-objectdir", @"d:\depot\sc3.24\data" };
+        var args = new string[] { $@"{objectDir}\objects\spaceships\ships\CRUS\spirit\exterior\crus_Spirit.cga", "-dds", "-dae", "-objectdir", $"{objectDir}" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
