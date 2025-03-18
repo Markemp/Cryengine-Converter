@@ -144,8 +144,10 @@ public partial class CryEngine
 
                     ChunkMesh chunkMesh = new ChunkMesh_802();
 
+                    var hasGeometry = subsets is not null;
+
                     // Create a meshchunk for nodes with geometry
-                    if (node.GeometryType == IvoGeometryType.Geometry)
+                    if (hasGeometry)
                     {
                         chunkMesh.ScalingVectors = geometryMeshDetails.ScalingBoundingBox;
                         chunkMesh.MaxBound = geometryMeshDetails.BoundingBox.Max;
@@ -167,11 +169,11 @@ public partial class CryEngine
                         Transform = node.BoneToWorld.ConvertToLocalTransformMatrix(),
                         ChunkType = ChunkType.Node,
                         ID = (int)node.Id,
-                        MeshData = node.GeometryType == IvoGeometryType.Geometry ? chunkMesh : null,
+                        MeshData = hasGeometry ? chunkMesh : null,
                         MaterialFileName = materialFileName
                     };
 
-                    if (node.GeometryType == IvoGeometryType.Geometry)
+                    if (hasGeometry)
                         newNode.Materials = Materials.Values.First();
 
                     Nodes.Add(newNode);

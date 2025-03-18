@@ -359,7 +359,7 @@ public class StarCitizenTests
     [TestMethod]
     public void AEGS_Avenger_324()
     {
-        var args = new string[] { $@"{objectDir} \objects\spaceships\ships\CRUS\spirit\exterior\crus_Spirit.cgaga", "-dds", "-dae", "-objectdir", $"{objectDir}" };
+        var args = new string[] { $@"{objectDir}\objects\spaceships\ships\AEGS\Avenger\AEGS_Avenger.cga", "-dds", "-dae", "-objectdir", $"{objectDir}" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
@@ -394,7 +394,7 @@ public class StarCitizenTests
     [TestMethod]
     public void AEGS_Avenger_322()
     {
-        var args = new string[] { $@"d:\depot\sc3.22\data\objects\spaceships\ships\AEGS\Avenger\AEGS_Avenger.cga", "-dds", "-dae", "-objectdir", @"d:\depot\sc3.22\data" };
+        var args = new string[] { $@"{objectDir322}\objects\spaceships\ships\AEGS\Avenger\AEGS_Avenger.cga", "-dds", "-dae", "-objectdir", objectDir322 };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
@@ -457,7 +457,12 @@ public class StarCitizenTests
     [TestMethod]
     public void Idris_Wall_Ivo()
     {
-        var args = new string[] { $@"{objectDir}\Objects\Spaceships\Ships\AEGS\Idris_Frigate\interior\med_bay\med_bay_wall_corner_b.cgf", "-dds", "-dae", "-objectdir", $"{objectDir}" };
+        var args = new string[]
+        {
+            $@"{objectDir}\Objects\Spaceships\Ships\AEGS\Idris_Frigate\interior\med_bay\med_bay_wall_corner_b.cgf", "-dds", "-dae",
+            "-objectdir", objectDir,
+            "-mtl", objectDir
+        };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
