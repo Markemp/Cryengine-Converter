@@ -38,7 +38,6 @@ using System.Xml;
 using System.Xml.Serialization;
 using static Extensions.FileHandlingExtensions;
 using static CgfConverter.Utilities.HelperMethods;
-using Microsoft.Toolkit.HighPerformance;
 
 namespace CgfConverter.Renderers.Collada;
 
@@ -686,7 +685,7 @@ public class ColladaModelRenderer : IRenderer
                 }
 
                 var boundaryBoxCenter = (meshChunk.MinBound + meshChunk.MaxBound) / 2f;
-
+                var scalingBoxCenter = (meshChunk.ScalingVectors.Max + meshChunk.ScalingVectors.Min) / 2f;
                 var hasNormals = normals is not null;
 
                 // Create Vertices, UV, normals and colors string
@@ -701,7 +700,7 @@ public class ColladaModelRenderer : IRenderer
                             if (meshChunk.ScalingVectors is null)
                                 vert = (vert * multiplerVector) + boundaryBoxCenter;
                             else
-                                vert = (vert * scalingVector);
+                                vert = (vert * scalingVector) + scalingBoxCenter;
                         }
 
                         vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(vert.X), Safe(vert.Y), Safe(vert.Z));

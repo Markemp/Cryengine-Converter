@@ -455,6 +455,23 @@ public class StarCitizenTests
     }
 
     [TestMethod]
+    public void ANVL_Arrow_322()
+    {
+        var args = new string[] { $@"{objectDir322}\objects\spaceships\ships\ANVL\Arrow\ANVL_Arrow.cga", "-dds", "-dae", "-objectdir", objectDir322 };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var daeObject = colladaData.DaeObject;
+        colladaData.GenerateDaeObject();
+        var rightWingNode = cryData.Nodes.Where(x => x.Name == "wing_right");
+        var rightWingGeoNode = cryData.Models[1].NodeMap.Values.Where(x => x.Name == "wing_right").First();
+        var colladaGeo = daeObject.Library_Geometries.Geometry[24].Mesh.Source[0].Float_Array.Value_As_String.Split(' ');
+    }
+
+    [TestMethod]
     public void Idris_Wall_Ivo()
     {
         var args = new string[]
@@ -610,8 +627,8 @@ public class StarCitizenTests
     public void DRAK_Buccaneer_Landing_Gear_Front_Skin()
     {
         var args = new string[] {
-            $@"D:\depot\SC3.24\Data\Objects\Spaceships\Ships\DRAK\Buccaneer\Landing_Gear\DRAK_Buccaneer_Landing_Gear_Front_Skin.skin",
-            "-dds", "-dae" };
+            $@"{objectDir}\Objects\Spaceships\Ships\DRAK\Buccaneer\Landing_Gear\DRAK_Buccaneer_Landing_Gear_Front_Skin.skin",
+            "-dds", "-dae", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
@@ -626,15 +643,15 @@ public class StarCitizenTests
 
         // Materials check
         var materials = colladaData.DaeObject.Library_Materials.Material;
-        Assert.AreEqual(21, materials.Length);
+        Assert.AreEqual(25, materials.Length);
     }
 
     [TestMethod]
     public void Mobiglass_Civilian_01_Skin_Collada()
     {
         var args = new string[] {
-            $@"D:\depot\SC3.24\Data\Objects\Characters\Mobiglas\f_mobiglas_civilian_01.skin",
-            "-dds", "-dae", "-objectdir", @"d:\depot\sc3.24\data" };
+            $@"{objectDir}\Objects\Characters\Mobiglas\f_mobiglas_civilian_01.skin",
+            "-dds", "-dae", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
@@ -709,7 +726,6 @@ public class StarCitizenTests
         gltfRenderer.Render();
     }
 
-
     [TestMethod]
     public void Glaive()
     {
@@ -749,5 +765,47 @@ public class StarCitizenTests
         ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
         //colladaData.GenerateDaeObject();
     }
-    
+
+    [TestMethod]
+    public void MISC_Fury_322()
+    {
+        var args = new string[] {
+            $@"{objectDir322}\Objects\spaceships\ships\MISC\Fury\MISC_Fury.cga",
+            "-dds", "-dae", "-objectdir", objectDir322 };
+
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+
+        var visualScene = colladaData.DaeObject.Library_Visual_Scene;
+        var meshWingTopRight = visualScene.Visual_Scene[0].Node[0].node[0].node[70].node[1].node[0].node[0];
+        var matrix = meshWingTopRight.Matrix[0].Value_As_String;
+        Assert.AreEqual("1 -0 0 -0.848649 0 1 0.000001 -1.239070 -0 -0.000001 1 0.058854 0 0 0 0", matrix);
+    }
+
+    [TestMethod]
+    public void MISC_Fury_Ivo()
+    {
+        var args = new string[] {
+            $@"{objectDir}\Objects\spaceships\ships\MISC\Fury\MISC_Fury.cga",
+            "-dds", "-dae", "-objectdir", objectDir };
+
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+
+        var visualScene = colladaData.DaeObject.Library_Visual_Scene;
+        var meshWingTopRight = visualScene.Visual_Scene[0].Node[0].node[0].node[72].node[1].node[0].node[0];
+        var matrix = meshWingTopRight.Matrix[0].Value_As_String;
+        Assert.AreEqual("1 -0 0 -0.848649 0 1 0.000001 -1.239070 -0 -0.000001 1 0.058854 0 0 0 1", matrix);
+    }
+
 }
