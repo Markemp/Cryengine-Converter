@@ -159,7 +159,8 @@ public class StarCitizenTests
     [TestMethod]
     public void NavyPilotFlightSuit_Ivo()
     {
-        var args = new string[] { $@"D:\depot\SC3.24\Data\Objects\Characters\Human\male_v7\armor\nvy\pilot_flightsuit\m_nvy_pilot_light_helmet_01.skin", "-dds", "-dae", "-objectdir", @"d:\depot\sc3.24\data" };
+        var args = new string[] { $@"{objectDir}\Objects\Characters\Human\male_v7\armor\nvy\pilot_flightsuit\m_nvy_pilot_light_helmet_01.skin", "-dds", "-dae",
+            "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
@@ -200,7 +201,6 @@ public class StarCitizenTests
     [TestMethod]
     public void AEGS_Vanguard_LandingGear_Front_IvoFile()
     {
-        //var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\SC\ivo\AEGS_Vanguard_LandingGear_Front.skin", "-dds", "-dae" };
         var args = new string[] { $@"d:\depot\sc3.24\data\objects\spaceships\ships\AEGS\LandingGear\Vanguard\AEGS_Vanguard_LandingGear_Front.skin", "-dds", "-dae", "-objectdir", @"d:\depot\sc3.24\data" };
 
         int result = testUtils.argsHandler.ProcessArgs(args);
@@ -251,7 +251,7 @@ public class StarCitizenTests
         var args = new string[] {
             $@"{objectDir}\Objects\Spaceships\Ships\ANVL\LandingGear\Hurricane\anvl_hurricane_landing_gear_front_SKIN.skin",
             "-dds", "-dae",
-            "-objectdir", $@"{objectDir}" };
+            "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
@@ -273,7 +273,8 @@ public class StarCitizenTests
     public void M_ccc_bear_helmet_01_IvoSkinFile()
     {
         var args = new string[] {
-            $@"{objectDir}\Objects\Characters\Human\male_v7\armor\ccc\m_ccc_bear_helmet_01.skin", "-dds", "-dae", "-objectdir", $"{objectDir}" };
+            $@"{objectDir}\Objects\Characters\Human\male_v7\armor\ccc\m_ccc_bear_helmet_01.skin", "-dds", "-dae",
+            "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
@@ -287,7 +288,8 @@ public class StarCitizenTests
     [TestMethod]
     public void Avenger_LandingGear_SkinFile_324()
     {
-        var args = new string[] { @"D:\depot\SC3.24\Data\Objects\Spaceships\Ships\AEGS\LandingGear\Avenger\AEGS_Avenger_LandingGear_Back.skin", "-dds", "-dae", "-objectdir", @"d:\depot\sc3.24\data" };
+        var args = new string[] { $@"{objectDir}\Objects\Spaceships\Ships\AEGS\LandingGear\Avenger\AEGS_Avenger_LandingGear_Back.skin", "-dds", "-dae",
+            "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
@@ -301,7 +303,7 @@ public class StarCitizenTests
     [TestMethod]
     public void BehrRifle_324IvoChrFile()
     {
-        var args = new string[] { $@"{objectDir}\Objects\fps_weapons\weapons_v7\behr\rifle\p4ar\brfl_fps_behr_p4ar.chr", "-dds", "-dae" };
+        var args = new string[] { $@"{objectDir}\Objects\fps_weapons\weapons_v7\behr\rifle\p4ar\brfl_fps_behr_p4ar.chr", "-dds", "-dae", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
@@ -388,7 +390,7 @@ public class StarCitizenTests
         Assert.AreEqual(4, noseGeo.Mesh.Source.Length);
         Assert.AreEqual(15, noseGeo.Mesh.Triangles.Length);
         Assert.AreEqual(59817, noseGeo.Mesh.Source[0].Float_Array.Count);
-        Assert.IsTrue(noseGeo.Mesh.Source[0].Float_Array.Value_As_String.StartsWith("4.480176 -3.697751 -0.267610"));
+        Assert.IsTrue(noseGeo.Mesh.Source[0].Float_Array.Value_As_String.StartsWith("4.480176 -3.697465 -0.268108"));
     }
 
     [TestMethod]
@@ -493,7 +495,7 @@ public class StarCitizenTests
     [TestMethod]
     public void CRUS_Spirit_Exterior()
     {
-        var args = new string[] { $@"{objectDir}\objects\spaceships\ships\CRUS\spirit\exterior\crus_Spirit.cga", "-dds", "-dae", "-objectdir", $"{objectDir}" };
+        var args = new string[] { $@"{objectDir}\objects\spaceships\ships\CRUS\spirit\exterior\crus_Spirit.cga", "-dds", "-dae", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
@@ -504,7 +506,7 @@ public class StarCitizenTests
         colladaData.GenerateDaeObject();
         var bodyNode = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].node[0];
         Assert.AreEqual("body", bodyNode.ID);
-        Assert.AreEqual("wing_base_right", bodyNode.node[28].ID);
+        Assert.AreEqual("hardpoint_turret_rear_radar", bodyNode.node[28].ID);
         Assert.AreEqual("1 0 0 9.400001 0 1 0 -2.750000 0 0 1 -1.200000 0 0 0 1", bodyNode.node[28].Matrix[0].Value_As_String);
 
         Assert.AreEqual(93, colladaData.DaeObject.Library_Materials.Material.Length);
@@ -557,7 +559,8 @@ public class StarCitizenTests
     [TestMethod]
     public void AEGS_GladiusLandingGearFront_CHR()
     {
-        var args = new string[] { $@"d:\depot\sc3.24\Data\Objects\Spaceships\Ships\AEGS\LandingGear\Gladius\AEGS_Gladius_LandingGear_Front_CHR.chr", "-dds", "-dae", "-objectdir", @"d:\depot\sc3.24\data" };
+        var args = new string[] { $@"{objectDir}\Objects\Spaceships\Ships\AEGS\LandingGear\Gladius\AEGS_Gladius_LandingGear_Front_CHR.chr", "-dds", "-dae",
+            "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);

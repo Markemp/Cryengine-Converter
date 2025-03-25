@@ -140,11 +140,11 @@ public partial class CryEngine
 
                     // Create meshsubsets for this node.  This is all meshSubsets where the meshParent equals
                     // the node index.
-                    var subsets = skinMesh.MeshSubsets.Where(x => x.NodeParentIndex == index);
+                    var subsets = skinMesh.MeshSubsets.Where(x => x.NodeParentIndex == index).ToList();
 
                     ChunkMesh chunkMesh = new ChunkMesh_802();
 
-                    var hasGeometry = subsets is not null;
+                    var hasGeometry = subsets.Count != 0;
 
                     // Create a meshchunk for nodes with geometry
                     if (hasGeometry)
@@ -198,20 +198,7 @@ public partial class CryEngine
             }
             else  // Skin version.  Manually create mesh chunk and submeshes.
             {
-                var skinMesh = Models[1].ChunkMap.Values.FirstOrDefault(x => x.ChunkType == ChunkType.IvoSkin || x.ChunkType == ChunkType.IvoSkin2) as ChunkIvoSkinMesh;
-                var geometryMeshDetails = skinMesh.MeshDetails;
-                var subsets = skinMesh.MeshSubsets;
-
-                ChunkMesh chunkMesh = new ChunkMesh_802
-                {
-                    ScalingVectors = geometryMeshDetails.ScalingBoundingBox,
-                    MaxBound = geometryMeshDetails.BoundingBox.Max,
-                    MinBound = geometryMeshDetails.BoundingBox.Min,
-                    NumVertices = (int)skinMesh.MeshDetails.NumberOfVertices,
-                    NumIndices = (int)skinMesh.MeshDetails.NumberOfIndices,
-                    NumVertSubsets = skinMesh.MeshDetails.NumberOfSubmeshes,
-                    GeometryInfo = BuildNodeGeometryInfo(skinMesh, subsets)
-                };
+                ChunkMesh? chunkMesh = Models.Count == 1 ? null : CreateMeshData();
 
                 var rootNode = new ChunkNode_823
                 {
@@ -288,6 +275,25 @@ public partial class CryEngine
                 Nodes.Add(node);
             }
         }
+    }
+
+    private ChunkMesh CreateMeshData()
+    {
+        var skinMesh = Models[1].ChunkMap.Values.FirstOrDefault(x => x.ChunkType == ChunkType.IvoSkin || x.ChunkType == ChunkType.IvoSkin2) as ChunkIvoSkinMesh;
+        var geometryMeshDetails = skinMesh.MeshDetails;
+        var subsets = skinMesh.MeshSubsets;
+
+        ChunkMesh chunkMesh = new ChunkMesh_802
+        {
+            ScalingVectors = geometryMeshDetails.ScalingBoundingBox,
+            MaxBound = geometryMeshDetails.BoundingBox.Max,
+            MinBound = geometryMeshDetails.BoundingBox.Min,
+            NumVertices = (int)skinMesh.MeshDetails.NumberOfVertices,
+            NumIndices = (int)skinMesh.MeshDetails.NumberOfIndices,
+            NumVertSubsets = skinMesh.MeshDetails.NumberOfSubmeshes,
+            GeometryInfo = BuildNodeGeometryInfo(skinMesh, subsets)
+        };
+        return chunkMesh;
     }
 
     private static SkinningInfo? ConsolidateSkinningInfo(List<Model> models)

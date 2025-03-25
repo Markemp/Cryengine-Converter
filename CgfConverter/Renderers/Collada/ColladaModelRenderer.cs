@@ -685,7 +685,7 @@ public class ColladaModelRenderer : IRenderer
                 }
 
                 var boundaryBoxCenter = (meshChunk.MinBound + meshChunk.MaxBound) / 2f;
-                var scalingBoxCenter = (meshChunk.ScalingVectors.Max + meshChunk.ScalingVectors.Min) / 2f;
+                var scalingBoxCenter = meshChunk.ScalingVectors is not null ? (meshChunk.ScalingVectors.Max + meshChunk.ScalingVectors.Min) / 2f : Vector3.Zero;
                 var hasNormals = normals is not null;
 
                 // Create Vertices, UV, normals and colors string
