@@ -360,11 +360,11 @@ public partial class CryEngine
             return;
         }
 
-    // No material files provided.  Check the material library chunks for materials.
-    var materialLibraryFiles = Models[0].ChunkMap.Values
-        .OfType<ChunkMtlName>()
-        .Where(x => x.MatType == MtlNameType.Library || x.MatType == MtlNameType.Basic || x.MatType == MtlNameType.Single)
-        .Select(x => x.Name);
+        // No material files provided.  Check the material library chunks for materials.
+        var materialLibraryFiles = Models[0].ChunkMap.Values
+            .OfType<ChunkMtlName>()
+            .Where(x => x.MatType == MtlNameType.Library || x.MatType == MtlNameType.Basic || x.MatType == MtlNameType.Single)
+            .Select(x => x.Name);
 
         Log.I("Found following potential material files.  If you are not specifying a material file and the materials don't" +
             " look right, trying one of the following files:");

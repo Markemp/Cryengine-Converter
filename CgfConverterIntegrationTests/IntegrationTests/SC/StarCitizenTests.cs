@@ -8,6 +8,7 @@ using CgfConverterTests.TestUtilities;
 using Microsoft.VisualStudio.CodeCoverage;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Formats.Tar;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -159,11 +160,31 @@ public class StarCitizenTests
     [TestMethod]
     public void NavyPilotFlightSuit_Ivo()
     {
-        var args = new string[] { $@"{objectDir}\Objects\Characters\Human\male_v7\armor\nvy\pilot_flightsuit\m_nvy_pilot_light_helmet_01.skin", "-dds", "-dae",
-            "-objectdir", objectDir };
+        var args = new string[]
+        {
+            $@"{objectDir}\Objects\Characters\Human\male_v7\armor\nvy\pilot_flightsuit\m_nvy_pilot_light_helmet_01.skin", "-dds", "-dae",
+            "-objectdir", objectDir
+        };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+    }
+
+    [TestMethod]
+    public void Vgl_Armor_Medium_Helmet()
+    {
+        // Game file has wrong mtl name. It's vgl_armor_medium_helmet_01_01_01 in the game files but actual mtl file is m_vgl_armor_medium_helmet_01_01_01.mtl
+        var args = new string[] { $@"{objectDir}\objects\characters\human\male_v7\armor\vgl\m_vgl_armor_medium_helmet_01.cgf", "-dds", "-dae",
+            "-objectdir", objectDir,
+            "-mtl", "m_vgl_armor_medium_helmet_01_01_01"};
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, null, args[6]);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
@@ -479,8 +500,7 @@ public class StarCitizenTests
         var args = new string[]
         {
             $@"{objectDir}\Objects\Spaceships\Ships\AEGS\Idris_Frigate\interior\med_bay\med_bay_wall_corner_b.cgf", "-dds", "-dae",
-            "-objectdir", objectDir,
-            "-mtl", objectDir
+            "-objectdir", objectDir
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);

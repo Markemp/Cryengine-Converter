@@ -114,7 +114,7 @@ public class MWOIntegrationTests
     public void ClanBanner_Adder_VerifyMaterials()
     {
         var matFile = $@"{objectDir}\Objects\purchasable\cockpit_mounted\clanbanner\clanbanner_a.mtl";
-        var args = new string[] { $@"D:\depot\mwo\Objects\purchasable\cockpit_mounted\clanbanner\clanbanner_a_adder.cga", "-dds", "-dae", "-objectdir", objectDir, "-mtl", matFile };
+        var args = new string[] { $@"{objectDir}\Objects\purchasable\cockpit_mounted\clanbanner\clanbanner_a_adder.cga", "-dds", "-dae", "-objectdir", objectDir, "-mtl", matFile };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
