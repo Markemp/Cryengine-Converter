@@ -118,7 +118,7 @@ public partial class CryEngine
             // Create node chunks from the first model.  If there is a nodemeshcombo chunk, use
             // that for the nodes.  If not (skin and chr files), create a dummy root node.
             // Can be zero or multiple nodes, but all reference the same geometry.
-            if (Models[0].ChunkMap.Values.Any(c => c.ChunkType == ChunkType.NodeMeshCombo))
+            if (Models[index: 0].ChunkMap.Values.Any(c => c.ChunkType == ChunkType.NodeMeshCombo))
             {
                 // SkinMesh has the mesh and meshsubset info, as well as all the datastreams
                 var skinMesh = Models[1].ChunkMap.Values.FirstOrDefault(x => x.ChunkType == ChunkType.IvoSkin || x.ChunkType == ChunkType.IvoSkin2) as ChunkIvoSkinMesh;
@@ -329,7 +329,7 @@ public partial class CryEngine
             //if (chunk is ChunkBoneEntities boneEntities)
             //    skin.BoneEntities = boneEntities.Entities;
 
-            //if (chunk is ChunkBoneMappings boneMappings)
+            //if (chunk is ChunkCompiledBones boneMappings)
             //    skin.BoneMappings = boneMappings.Mappings;
 
             //if (chunk is ChunkCollisions collisions)

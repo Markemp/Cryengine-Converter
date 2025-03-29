@@ -231,6 +231,27 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                         }
 
                     }
+                    else if (boneMaps.BytesPerElement == 24)
+                    {
+                        for (int i =0; i < meshDetails.NumberOfVertices; i++)
+                        {
+                            MeshBoneMapping bm = new()
+                            {
+                                BoneIndex = new int[4],
+                                Weight = new float[4]
+                            };
+                            for (int j = 0; j < 4; j++)
+                            {
+                                bm.BoneIndex[j] = b.ReadInt32();
+                            }
+                            for (int j = 0; j < 4; j++)
+                            {
+                                bm.Weight[j] = b.ReadUInt16() / 255.0f;
+                            }
+
+                            boneMaps.Data[i] = bm;
+                        }
+                    }
                     else if (boneMaps.BytesPerElement == 8) // older format, rare
                     {
                         for (int i = 0; i < meshDetails.NumberOfVertices; i++)

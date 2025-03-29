@@ -163,7 +163,8 @@ public class StarCitizenTests
         var args = new string[]
         {
             $@"{objectDir}\Objects\Characters\Human\male_v7\armor\nvy\pilot_flightsuit\m_nvy_pilot_light_helmet_01.skin", "-dds", "-dae",
-            "-objectdir", objectDir
+            "-objectdir", objectDir,
+            "-mat", "m_nvy_pilot_light_no_name_01_01_01"
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
