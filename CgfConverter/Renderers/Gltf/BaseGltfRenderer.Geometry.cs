@@ -143,7 +143,7 @@ public partial class BaseGltfRenderer
 
         if (cryData.SkinningInfo is { HasSkinningInfo: true } skinningInfo)
         {
-            if (WriteSkinOrLogError(out var newSkin, out var weights, out var joints, gltfNode, skinningInfo,
+            if (WriteSkinOrLogError(out var newSkin, out var weights, out var joints, cryData, gltfNode, skinningInfo,
                 controllerIdToNodeIndex))
             {
                 gltfNode.Skin = AddSkin(newSkin);
@@ -162,6 +162,7 @@ public partial class BaseGltfRenderer
         out GltfSkin newSkin,
         out int weights,
         out int joints,
+        CryEngine cryData,
         GltfNode rootNode,
         SkinningInfo skinningInfo, // TODO:  Remove skinning info
         IDictionary<uint, int> controllerIdToNodeIndex)
@@ -174,20 +175,31 @@ public partial class BaseGltfRenderer
 
         var baseName = $"{rootNode.Name}/bone/weight";
 
+        var nodeChunk = cryData.RootNode;
+        var boneMappingData = nodeChunk.MeshData?.GeometryInfo?.BoneMappings;
+
         weights =
-            GetAccessorOrDefault(baseName, 0,
-                skinningInfo.IntVertices is null ? skinningInfo.BoneMappings.Count : skinningInfo.Ext2IntMap.Count)
+            GetAccessorOrDefault(baseName, 0, boneMappingData.Data.Length)
+                //skinningInfo.IntVertices is null ? skinningInfo.BoneMappings.Count : skinningInfo.Ext2IntMap.Count)
             ?? AddAccessor(baseName, -1, null,
-                skinningInfo.IntVertices is null
-                    ? skinningInfo.BoneMappings
-                        .Select(x => new Vector4(
-                            x.Weight[0], x.Weight[1], x.Weight[2], x.Weight[3]))
-                        .ToArray()
-                    : skinningInfo.Ext2IntMap
-                        .Select(x => skinningInfo.IntVertices[x])
-                        .Select(x => new Vector4(
-                            x.Weights[0], x.Weights[1], x.Weights[2], x.Weights[3]))
-                        .ToArray());
+                boneMappingData.Data
+                    .Select(x => new Vector4(x.Weight[0], x.Weight[1], x.Weight[2], x.Weight[3]))
+                    .ToArray());
+
+        //weights =
+        //    GetAccessorOrDefault(baseName, 0,
+        //        skinningInfo.IntVertices is null ? skinningInfo.BoneMappings.Count : skinningInfo.Ext2IntMap.Count)
+        //    ?? AddAccessor(baseName, -1, null,
+        //        skinningInfo.IntVertices is null
+        //            ? skinningInfo.BoneMappings
+        //                .Select(x => new Vector4(
+        //                    x.Weight[0], x.Weight[1], x.Weight[2], x.Weight[3]))
+        //                .ToArray()
+        //            : skinningInfo.Ext2IntMap
+        //                .Select(x => skinningInfo.IntVertices[x])
+        //                .Select(x => new Vector4(
+        //                    x.Weights[0], x.Weights[1], x.Weights[2], x.Weights[3]))
+        //                .ToArray());
 
         var boneIdToBindPoseMatrices = new Dictionary<int, Matrix4x4>();
         foreach (var bone in skinningInfo.CompiledBones)

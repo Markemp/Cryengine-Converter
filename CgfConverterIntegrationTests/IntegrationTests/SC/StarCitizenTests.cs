@@ -121,13 +121,13 @@ public class StarCitizenTests
         var gltfData = gltfRenderer.GenerateGltfObject();
 
         Assert.AreEqual(28, gltfData.Materials.Count);
-        Assert.AreEqual(34, gltfData.Meshes.Count);
+        Assert.AreEqual(36, gltfData.Meshes.Count);
 
         // Nodes check
-        Assert.AreEqual(116, gltfData.Nodes.Count);
-        Assert.AreEqual("UI_Helper", gltfData.Nodes[0].Name);
-        Assert.AreEqual("hardpoint_controller_energy", gltfData.Nodes[1].Name);
-        Assert.AreEqual("hardpoint_controller_door", gltfData.Nodes[2].Name);
+        Assert.AreEqual(121, gltfData.Nodes.Count);
+        Assert.AreEqual("Front_LG_Door_Right", gltfData.Nodes[0].Name);
+        Assert.AreEqual("Front_LG_Door_Left", gltfData.Nodes[1].Name);
+        Assert.AreEqual("Canopy", gltfData.Nodes[2].Name);
 
         AssertExtensions.AreEqual([0, 0, 0, 1], gltfData.Nodes[0].Rotation, TestUtils.delta);
         AssertExtensions.AreEqual([-0.0f, -0.0f, 0.0f, 1f], gltfData.Nodes[1].Rotation, TestUtils.delta);

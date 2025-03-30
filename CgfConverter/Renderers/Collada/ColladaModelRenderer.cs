@@ -1173,10 +1173,8 @@ public class ColladaModelRenderer : IRenderer
                 Value_As_String = vCount.ToString().TrimEnd()
             };
             StringBuilder vertices = new();
-            //for (int i = 0; i < CryData.Models[0].SkinningInfo.IntVertices.Count * 4; i++)
             int index = 0;
-            //if (!_cryData.SkinningInfo.HasIntToExtMapping)
-            //{
+
             for (int i = 0; i < numberOfWeights; i++)
             {
                 vertices.Append(boneMappingData.Data[i].BoneIndex[0] + " " + index + " ");
