@@ -87,7 +87,7 @@ public class ArcheAgeTests
     {
         var args = new string[]
         {
-            @"d:\depot\archeage\game\objects\characters\animals\bird\bird_a.chr",
+            $@"{objectDir}\objects\characters\animals\bird\bird_a.chr",
             "-dds",
             "-obj", objectDir
         };
@@ -109,7 +109,7 @@ public class ArcheAgeTests
         // Camera has controller id 0xffffffff just like parent Bip01.
         var args = new string[]
         {
-            @"D:\depot\archeage\game\objects\characters\people\drug_boy01\face\drug_boy01_face01\drug_boy01_face01.chr",
+            $@"{objectDir}\objects\characters\people\drug_boy01\face\drug_boy01_face01\drug_boy01_face01.chr",
             "-dds",
             "-obj", objectDir
         };

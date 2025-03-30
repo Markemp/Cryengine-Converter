@@ -134,5 +134,5 @@ public static class QuaternionExtensions
         return normal;
     }
 
-    public static List<float> ToGltfList(this Quaternion q) => new List<float>() { q.X, q.Y, q.Z, q.W };
+    public static List<float> ToGltfList(this Quaternion q) => [q.X, q.Y, q.Z, q.W];
 }

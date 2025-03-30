@@ -8,6 +8,7 @@ using System.Linq;
 using System.Numerics;
 using CgfConverter.Renderers.MaterialTextures;
 using CgfConverter.Models;
+using CgfConverter.Renderers.Collada.Collada.Collada_Core.Scene;
 
 namespace CgfConverter.Renderers.Gltf;
 
@@ -18,7 +19,11 @@ public partial class BaseGltfRenderer
         if (cryData.MaterialFiles is not null)
             WriteMaterial(cryData.MaterialFiles.FirstOrDefault(), cryData.Materials.Values.FirstOrDefault());
 
-        foreach (ChunkNode cryNode in cryData.Models[0].RootNodes)
+        // THERE CAN BE MULTIPLE ROOT NODES IN EACH FILE!  Check to see if the parentnodeid ~0 and be sure to add a node for it.
+        List<ColladaNode> positionNodes = [];
+        List<ChunkNode> positionRoots = cryData.Nodes.Where(a => a.ParentNodeID == ~0).ToList();
+
+        foreach (ChunkNode cryNode in positionRoots)
         {
             // CurrentScene.Nodes has the index for the nodes in GltfRoot.Nodes
             if (!CreateGltfNode(out GltfNode? childNode, cryData, cryNode, omitSkins))
@@ -40,7 +45,7 @@ public partial class BaseGltfRenderer
         };
 
         CreateGltfNodeInto(node.Children, cryData, omitSkins);
-        return node.Children.Any();
+        return node.Children.Count != 0;
     }
 
     /// <summary>
@@ -79,33 +84,34 @@ public partial class BaseGltfRenderer
         };
 
         // Add mesh if needed
-        if (cryData.Models[0].IsIvoFile ||
-            cryData.Models[0].ChunkMap[cryNode.ObjectNodeID].ChunkType != ChunkType.Helper)
+        //if (cryData.Models[0].IsIvoFile ||
+        //    cryData.Models[0].ChunkMap[cryNode.ObjectNodeID].ChunkType != ChunkType.Helper)
+        if (cryNode.ChunkHelper is null && cryNode.MeshData?.GeometryInfo is not null)
         {
-            if (cryData.Models.Count == 1)
-            {
-                if (cryNode.MeshData is ChunkMesh meshChunk
-                    && meshChunk.MeshSubsetsData != 0)
-                {
-                    AddMesh(cryData, cryNode, node, controllerIdToNodeIndex, omitSkins);
-                }
-            }
+            // Some nodes don't have matching geometry in geometry file, even though the object chunk for the node
+            // points to a mesh chunk ($PHYSICS_Proxy_Tail in Buccaneer Blue).  Check if the node exists in the geometry
+            // file, and if not, continue processing.
 
-            else  // Has geometry file
-            {
-                // Some nodes don't have matching geometry in geometry file, even though the object chunk for the node
-                // points to a mesh chunk ($PHYSICS_Proxy_Tail in Buccaneer Blue).  Check if the node exists in the geometry
-                // file, and if not, continue processing.
-                ChunkNode? geometryNode = cryData.Models[1].NodeMap.Values.FirstOrDefault(a => a.Name == cryNode.Name);
-                if (geometryNode is not null)
-                {
-                    if (cryData.Models[1].ChunkMap[geometryNode.ObjectNodeID] is ChunkMesh geometryMesh
-                        && geometryMesh.NumIndices != 0)
-                    {
-                        AddMesh(cryData, geometryNode, node, controllerIdToNodeIndex, omitSkins);
-                    }
-                }
-            }
+            AddMesh(cryData, cryNode, node, controllerIdToNodeIndex, omitSkins);
+
+            //if (cryData.Models.Count == 1)
+            //{
+            //    if (cryNode.MeshData is ChunkMesh meshChunk && meshChunk.MeshSubsetsData != 0)
+            //        AddMesh(cryData, cryNode, node, controllerIdToNodeIndex, omitSkins);
+            //}
+            //else  // Has geometry file
+            //{
+
+            //    ChunkNode? geometryNode = cryData.Models[1].NodeMap.Values.FirstOrDefault(a => a.Name == cryNode.Name);
+            //    if (geometryNode is not null)
+            //    {
+            //        if (cryData.Models[1].ChunkMap[geometryNode.ObjectNodeID] is ChunkMesh geometryMesh
+            //            && geometryMesh.NumIndices != 0)
+            //        {
+            //            AddMesh(cryData, geometryNode, node, controllerIdToNodeIndex, omitSkins);
+            //        }
+            //    }
+            //}
         }
 
         if (!omitSkins)

@@ -14,11 +14,9 @@ internal class ChunkMtlName_804 : ChunkMtlName
         SkipBytes(b, 26);
 
         // some count followed by 3 emtpy bytes 
-        var count = b.ReadByte();
-        SkipBytes(b, 3);
-        SkipBytes(b, count * 4);
+        NumChildren = b.ReadUInt32();
+        SkipBytes(b, NumChildren);  // Flags.  Usually 0xffffffff
 
-        Name = b.ReadCString();
-        NumChildren = 0;
+        Name = b.ReadCString();  // this is an array of strings
     }
 }
