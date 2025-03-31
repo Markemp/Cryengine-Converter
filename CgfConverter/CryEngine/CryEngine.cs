@@ -118,16 +118,17 @@ public partial class CryEngine
             // Create node chunks from the first model.  If there is a nodemeshcombo chunk, use
             // that for the nodes.  If not (skin and chr files), create a dummy root node.
             // Can be zero or multiple nodes, but all reference the same geometry.
-            if (Models[index: 0].ChunkMap.Values.Any(c => c.ChunkType == ChunkType.NodeMeshCombo))
+            bool hasValidNodeMeshCombo = false;
+            var comboChunk = (ChunkNodeMeshCombo?)Models[index: 0].ChunkMap.Values.FirstOrDefault(c => c.ChunkType == ChunkType.NodeMeshCombo);
+
+            if (comboChunk is not null && comboChunk.NumberOfNodes != 0)
+                hasValidNodeMeshCombo = true;
+
+            if (hasValidNodeMeshCombo)
             {
                 // SkinMesh has the mesh and meshsubset info, as well as all the datastreams
                 var skinMesh = Models[1].ChunkMap.Values.FirstOrDefault(x => x.ChunkType == ChunkType.IvoSkin || x.ChunkType == ChunkType.IvoSkin2) as ChunkIvoSkinMesh;
                 var geometryMeshDetails = skinMesh.MeshDetails;
-
-                var comboChunk = Models[0].ChunkMap.Values
-                    .Where(c => c.ChunkType == ChunkType.NodeMeshCombo)
-                    .Select(x => x as ChunkNodeMeshCombo)
-                    .First();  // only one nodemeshcombo chunk per file
 
                 var stringTable = comboChunk.NodeNames;
                 var materialTable = comboChunk.MaterialIndices;
@@ -138,8 +139,7 @@ public partial class CryEngine
                 {
                     var index = comboChunk.NodeMeshCombos.IndexOf(node);
 
-                    // Create meshsubsets for this node.  This is all meshSubsets where the meshParent equals
-                    // the node index.
+                    // Create meshsubsets for this node.  This is all meshSubsets where the meshParent equals the node index
                     var subsets = skinMesh.MeshSubsets.Where(x => x.NodeParentIndex == index).ToList();
 
                     ChunkMesh chunkMesh = new ChunkMesh_802();
