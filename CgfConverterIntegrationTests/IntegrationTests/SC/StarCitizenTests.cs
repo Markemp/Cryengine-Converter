@@ -160,16 +160,75 @@ public class StarCitizenTests
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
 
         Assert.IsFalse(cryData.Models[0].HasGeometry);
+
+        var daeObject = colladaData.DaeObject;
+        var scene = daeObject.Library_Visual_Scene.Visual_Scene[0];
+        var geometry = daeObject.Library_Geometries;
+        var materials = daeObject.Library_Materials;
+
+        Assert.AreEqual("AEGS_Gladius_LandingGear_Front_Anim", scene.Node[0].ID);
+        Assert.AreEqual(0, geometry.Geometry.Length);
+        Assert.AreEqual(33, materials.Material.Length);
+    }
+
+    [TestMethod]
+    public void AEGS_Idris_Holo_viewer_cgf_41()
+    {
+        var args = new string[] { $@"{objectDir}\Objects\Spaceships\holoviewer_ships\aegs_idris_holo_viewer.cgf", "-dds", "-dae",
+            "-objectdir", objectDir,
+            "-mtl", "aegs_idris_holo_viewer.mtl"};
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, null, args[6]);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+
+        var daeObject = colladaData.DaeObject;
+        var scene = daeObject.Library_Visual_Scene.Visual_Scene[0];
+        var geometry = daeObject.Library_Geometries.Geometry[0];
+        var materials = daeObject.Library_Materials;
+
+        Assert.AreEqual("AEGS_Idris_holo_viewer", scene.Node[0].ID);
+        Assert.AreEqual("AEGS_Idris_holo_viewer-mesh", geometry.ID);
+        Assert.AreEqual(4, geometry.Mesh.Triangles.Length);
+        Assert.AreEqual(5, materials.Material.Length);
+    }
+
+    [TestMethod]
+    public void AEGS_Idris_Holo_01_cga_41()
+    {
+        // No geometry or scenes
+        var args = new string[] { $@"{objectDir}\Objects\Spaceships\holoviewer_ships\AEGS_Idris_holo_01.cga", "-dds", "-dae",
+            "-objectdir", objectDir,
+            "-mtl", "AEGS_Idris_holo.mtl"};
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, null, args[6]);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+
+        var daeObject = colladaData.DaeObject;
+        var scene = daeObject.Library_Visual_Scene.Visual_Scene[0];
+        var geometry = daeObject.Library_Geometries.Geometry[0];
+        var materials = daeObject.Library_Materials;
+
+        Assert.AreEqual("AEGS_Idris_holo_01", scene.Node[0].ID);
+        Assert.AreEqual("addiitonal01-mesh", geometry.ID);
+        Assert.AreEqual(1, geometry.Mesh.Triangles.Length);
+        Assert.AreEqual(6, materials.Material.Length);
     }
 
     [TestMethod]
     public void AEGS_Vanguard_LandingGear_Front_IvoFile()
     {
-        var args = new string[] { $@"d:\depot\sc3.24\data\objects\spaceships\ships\AEGS\LandingGear\Vanguard\AEGS_Vanguard_LandingGear_Front.skin", "-dds", "-dae", "-objectdir", @"d:\depot\sc3.24\data" };
+        var args = new string[] { $@"{objectDir}\objects\spaceships\ships\AEGS\LandingGear\Vanguard\AEGS_Vanguard_LandingGear_Front.skin", "-dds", "-dae", "-objectdir", objectDir };
 
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
@@ -648,6 +707,32 @@ public class StarCitizenTests
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
+    }
+
+    [TestMethod]
+    public void m_qrt_specialist_heavy_arms_01_02_Ivo41()
+    {
+        // mtlname chunk doesn't match any material file.  Create dummy mats.
+        var args = new string[] {
+            $@"{objectDir41}\Objects\Characters\Human\male_v7\armor\qrt\quirinus\m_qrt_specialist_heavy_arms_01_02.skin", "-dds", "-dae",
+            "-objectdir", objectDir41 };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+
+        var daeObject = colladaData.DaeObject;
+        var scene = daeObject.Library_Visual_Scene.Visual_Scene[0];
+        var geometry = daeObject.Library_Geometries.Geometry[0];
+        var materials = daeObject.Library_Materials;
+
+        Assert.AreEqual("World", scene.Node[0].ID);
+        Assert.AreEqual("m_qrt_specialist_heavy_arms_01_02-mesh", geometry.ID);
+        Assert.AreEqual(2, geometry.Mesh.Triangles.Length);
+        Assert.AreEqual(2, materials.Material.Length);
     }
 
     [TestMethod]

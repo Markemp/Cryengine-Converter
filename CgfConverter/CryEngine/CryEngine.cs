@@ -93,8 +93,8 @@ public partial class CryEngine
 
         SkinningInfo = ConsolidateSkinningInfo(Models);
 
-        CreateMaterials();
         BuildNodeStructure(); // new way to build the geometry to remove dependency on models
+        CreateMaterials();
 
         CreateAnimations();
 
@@ -366,10 +366,8 @@ public partial class CryEngine
             .Where(x => x.MatType == MtlNameType.Library || x.MatType == MtlNameType.Basic || x.MatType == MtlNameType.Single)
             .Select(x => x.Name);
 
-        Log.I("Found following potential material files.  If you are not specifying a material file and the materials don't" +
-            " look right, trying one of the following files:");
         foreach (var file in materialLibraryFiles)
-            Log.I($"   {file}");
+            Log.I($"Material Library File: {file}");
 
         MaterialFiles = GetMaterialFilesFromMatLibraryChunks(materialLibraryFiles)?.ToList();
 
@@ -390,6 +388,7 @@ public partial class CryEngine
         // Unable to find any materials.  Create default mats for each library file.
         if (Materials.Count == 0)
         {
+            Log.W("Unable to find any material files for this model.  Creating dummy materials.");
             var meshSubsets = Models.Last().ChunkMap.Values.OfType<ChunkMeshSubsets>()
                 .SelectMany(c => c.MeshSubsets);
 
@@ -399,8 +398,12 @@ public partial class CryEngine
                 .Max();
 
             var maxMats = (uint)(meshSubsets.Select(x => x.MatID).DefaultIfEmpty(0).Max() + 1);
-            // set maxMats to the max of maxMats and maxChildren
-            maxMats = Math.Max(maxMats, maxChildren);
+
+            var ivoSubsets = Models[1].ChunkMap.Values.OfType<ChunkIvoSkinMesh>()
+                .SelectMany(x => x.MeshSubsets);
+            var maxIvoMats = (uint)(ivoSubsets.Select(x => x.MatID)).DefaultIfEmpty(0).Max() + 1;
+
+            maxMats = Math.Max(Math.Max(maxMats, maxChildren), maxIvoMats);
 
             foreach (var materialFile in materialLibraryFiles)
             {
