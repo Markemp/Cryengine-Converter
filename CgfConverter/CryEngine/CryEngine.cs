@@ -93,8 +93,8 @@ public partial class CryEngine
 
         SkinningInfo = ConsolidateSkinningInfo(Models);
 
-        BuildNodeStructure(); // new way to build the geometry to remove dependency on models
         CreateMaterials();
+        BuildNodeStructure(); // new way to build the geometry to remove dependency on models
 
         CreateAnimations();
 
