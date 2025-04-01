@@ -435,7 +435,7 @@ public partial class CryEngine
         }
         catch (FileNotFoundException)
         {
-            Log.I("Unable to find associated animation track database file for {0}", InputFile);
+            Log.I("Unable to find associated animation track database file.");
         }
     }
 

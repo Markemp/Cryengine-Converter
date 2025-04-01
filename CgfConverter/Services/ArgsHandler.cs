@@ -273,7 +273,6 @@ public sealed class ArgsHandler
 
         if (MaxThreads == 0)
             MaxThreads = Environment.ProcessorCount;
-        HelperMethods.Log(LogLevelEnum.Info, $"Using up to {MaxThreads} threads");
         
         if (Smooth)
             HelperMethods.Log(LogLevelEnum.Info, "Smoothing Faces");
