@@ -9,8 +9,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Reflection;
-using System.Xml.Linq;
 using Material = CgfConverter.Models.Materials.Material;
 
 namespace CgfConverter;

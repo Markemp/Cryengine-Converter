@@ -555,11 +555,10 @@ public class ColladaModelRenderer : IRenderer
             Datastream<Vector3>? normals = meshChunk.GeometryInfo.Normals;
             Datastream<IRGBA>? colors = meshChunk.GeometryInfo.Colors;
 
-            //var meshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[meshChunk.MeshSubsetsData];  // Listed as Object ID for the Node
             if (verts is null && vertsUvs is null) // There is no vertex data for this node.  Skip.
                 continue;
 
-            // geometry is a Geometry object for each meshsubset.  Name will be "Nodechunk name_matID".
+            // geometry is a Geometry object for each meshsubset.
             ColladaGeometry geometry = new()
             {
                 Name = nodeChunk.Name,
@@ -1113,8 +1112,7 @@ public class ColladaModelRenderer : IRenderer
                 {
                     weights.Append((boneMappingData.Data[i].Weight[j]).ToString() + " ");
                 }
-            }
-            ;
+            };
             accessor.Count = numberOfWeights * 4;
 
             CleanNumbers(weights);

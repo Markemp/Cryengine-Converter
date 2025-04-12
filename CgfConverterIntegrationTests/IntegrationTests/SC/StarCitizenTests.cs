@@ -713,6 +713,7 @@ public class StarCitizenTests
     public void m_qrt_specialist_heavy_arms_01_02_Ivo41()
     {
         // mtlname chunk doesn't match any material file.  Create dummy mats.
+        // Skin not mapping
         var args = new string[] {
             $@"{objectDir41}\Objects\Characters\Human\male_v7\armor\qrt\quirinus\m_qrt_specialist_heavy_arms_01_02.skin", "-dds", "-dae",
             "-objectdir", objectDir41 };

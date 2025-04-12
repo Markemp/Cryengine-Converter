@@ -17,9 +17,7 @@ internal sealed class ChunkBinaryXmlData_3 : ChunkBinaryXmlData     //  0xCCCBF0
 
         var buffer = b.ReadBytes(bytesToRead);
 
-        using (var memoryStream = new MemoryStream(buffer))
-        {
-            this.Data = CryXmlSerializer.ReadStream(memoryStream);
-        }
+        using var memoryStream = new MemoryStream(buffer);
+        Data = CryXmlSerializer.ReadStream(memoryStream);
     }
 }

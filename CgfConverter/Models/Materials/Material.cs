@@ -15,7 +15,7 @@ public class Material
     internal string? SourceFileName { get; set; }
 
     [XmlAttribute(AttributeName = "Name")]
-    public string? Name { get; set; } = string.Empty;
+    public string? Name { get; set; }
 
     [XmlAttribute(AttributeName = "MtlFlags")]
     public string? MtlFlags {

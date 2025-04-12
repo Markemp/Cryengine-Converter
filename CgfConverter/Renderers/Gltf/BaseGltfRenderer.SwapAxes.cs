@@ -21,7 +21,17 @@ public partial class BaseGltfRenderer
      * Forward   +Z        +Y
      */
 
-    // orig
+    // Originals from Soreepeong
+    //private static Vector3 SwapAxes(Vector3 val) => new(val.X, val.Z, val.Y);
+
+    //private static Quaternion SwapAxes(Quaternion val) => new(val.X, val.Z, val.Y, -val.W);
+
+    //private static Matrix4x4 SwapAxes(Matrix4x4 val) => new(
+    //    val.M11, val.M13, val.M12, val.M14,
+    //    val.M31, val.M33, val.M32, val.M34,
+    //    val.M21, val.M23, val.M22, val.M24,
+    //    val.M41, val.M43, val.M42, val.M44);
+
     protected static Vector3 SwapAxesForPosition(Vector3 val) => new(-val.X, val.Z, val.Y);
     // protected static Vector3 SwapAxesForPosition(Vector3 val) => new(val.X, val.Z, -val.Y);
 

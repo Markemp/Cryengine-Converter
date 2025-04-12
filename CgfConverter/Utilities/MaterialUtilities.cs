@@ -15,7 +15,7 @@ public static class MaterialUtilities
     {
         try
         {
-            var material = CryXmlSerializer.Deserialize<Material>(stream);
+            var material = CryXmlSerializer.Deserialize<Material>(stream, closeAfter);
 
             // For basic materials, add the material to submaterials so that all materials are consistent.
             if (material.SubMaterials is null)
