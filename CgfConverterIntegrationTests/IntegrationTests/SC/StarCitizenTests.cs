@@ -456,11 +456,31 @@ public class StarCitizenTests
         var args = new string[]
         {
             $@"{objectDir}\Objects\fps_weapons\weapons_v7\behr\rifle\p4ar\brfl_fps_behr_p4ar_parts.skin",
-            "-dds", "-dae", "-objectdir", $"{objectDir}"
+            "-dds", "-dae", "-objectdir", objectDir
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: args[4]);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+
+        testUtils.ValidateColladaXml(colladaData);
+    }
+
+    [TestMethod]
+    public void BehrRifle_41IvoSkinFile()
+    {
+        var args = new string[]
+        {
+            $@"{objectDir41}\Objects\fps_weapons\weapons_v7\behr\rifle\p4ar\brfl_fps_behr_p4ar_parts.skin",
+            "-dds", "-dae", "-objectdir", objectDir41
+        };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: args[4]);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
