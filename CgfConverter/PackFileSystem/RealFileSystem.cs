@@ -50,7 +50,7 @@ public class RealFileSystem : IPackFileSystem
         var testedPatterns = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
         var foundPaths = new List<string>();
 
-        while (remainingPatterns.Any())
+        while (remainingPatterns.Count != 0)
         {
             pattern = remainingPatterns[^1].ToLowerInvariant();
             remainingPatterns.RemoveAt(remainingPatterns.Count - 1);
@@ -105,7 +105,7 @@ public class RealFileSystem : IPackFileSystem
                     break;
                 }
 
-                if (-1 != pattern.IndexOfAny(new[] {'?', '*'}, i, next - i))
+                if (-1 != pattern.IndexOfAny(['?', '*'], i, next - i))
                 {
                     var searchBase = pattern[..i];
                     var remainingPattern = pattern[next..];

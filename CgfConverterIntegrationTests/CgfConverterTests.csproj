@@ -31,6 +31,12 @@
     <ProjectReference Include="..\CgfConverter\CgfConverter.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <None Update="IntegrationTests\KCD2\lashes.mtl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="IntegrationTests\KCD2\m_head_capon_m01.mtl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Schemas\COLLADA_1_5.xsd">
       <SubType>Designer</SubType>
     </None>

@@ -50,7 +50,7 @@ public static class CryXmlSerializer
         }
         catch (Exception e)
         {
-            throw new InvalidDataException($"Unknown file format(head={peek.ToString()})", e);
+            throw new InvalidDataException($"Unknown file format (head={peek.ToString()})", e);
         }
         finally
         {

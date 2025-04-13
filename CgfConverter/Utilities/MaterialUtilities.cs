@@ -11,7 +11,7 @@ public static class MaterialUtilities
     public static Material? FromFile(string path, string? materialName) =>
         FromStream(new FileStream(path, FileMode.Open, FileAccess.Read), materialName, true);
 
-    public static Material? FromStream(Stream stream, string? materialName, bool closeAfter = false)
+    public static Material FromStream(Stream stream, string? materialName, bool closeAfter = false)
     {
         try
         {
@@ -30,14 +30,13 @@ public static class MaterialUtilities
         catch (Exception ex)
         {
             Debug.WriteLine("{0} failed deserialize - {1}", materialName, ex.Message);
+            return CreateDefaultMaterial(materialName ?? "default_mat");
         }
         finally
         {
             if (closeAfter)
                 stream.Close();
         }
-
-        return null;
     }
 
     public static Material CreateDefaultMaterial(string materialName, string diffuse = "0.5,0.5,0.5") =>
@@ -48,6 +47,6 @@ public static class MaterialUtilities
             Specular = "1.0,1.0,1.0",
             Shininess = 0.2,
             Opacity = "1.0",
-            Textures = Array.Empty<Texture>()
+            Textures = []
         };
 }

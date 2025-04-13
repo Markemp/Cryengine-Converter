@@ -397,9 +397,9 @@ public partial class CryEngine
 
             var maxMats = (uint)(meshSubsets.Select(x => x.MatID).DefaultIfEmpty(0).Max() + 1);
 
-            var ivoSubsets = Models[1].ChunkMap.Values.OfType<ChunkIvoSkinMesh>()
-                .SelectMany(x => x.MeshSubsets);
-            var maxIvoMats = (uint)(ivoSubsets.Select(x => x.MatID)).DefaultIfEmpty(0).Max() + 1;
+            var ivoSubsets = Models.Count > 1 ? Models[1].ChunkMap.Values.OfType<ChunkIvoSkinMesh>()
+                .SelectMany(x => x.MeshSubsets) : [];
+            var maxIvoMats = (uint)ivoSubsets.Select(x => x.MatID).DefaultIfEmpty(0).Max() + 1;
 
             maxMats = Math.Max(Math.Max(maxMats, maxChildren), maxIvoMats);
 
