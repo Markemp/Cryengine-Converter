@@ -216,6 +216,7 @@ public sealed record VertUV
 
 public sealed record MeshBoneMapping
 {
+    public int BoneInfluenceCount { get; set; } = 4; // Number of bones influencing this vertex.
     // 4 bones, 4 weights for each vertex mapping.
     public required int[] BoneIndex;
     public required float[] Weight;

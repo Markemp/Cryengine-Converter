@@ -1104,16 +1104,17 @@ public class ColladaModelRenderer : IRenderer
             if (boneMappingData is null) return;
 
             var numberOfWeights = boneMappingData.numElements;
+            var boneInfluenceCount = boneMappingData.Data[0].BoneInfluenceCount;
 
             weightArraySource.Float_Array.Count = (int)numberOfWeights;
             for (int i = 0; i < numberOfWeights; i++)
             {
-                for (int j = 0; j < 4; j++)
+                for (int j = 0; j < boneInfluenceCount; j++)
                 {
                     weights.Append((boneMappingData.Data[i].Weight[j]).ToString() + " ");
                 }
             };
-            accessor.Count = numberOfWeights * 4;
+            accessor.Count = (uint)(numberOfWeights * boneInfluenceCount);
 
             CleanNumbers(weights);
             weightArraySource.Float_Array.Value_As_String = weights.ToString().TrimEnd();
@@ -1164,7 +1165,7 @@ public class ColladaModelRenderer : IRenderer
             StringBuilder vCount = new();
             for (int i = 0; i < numberOfWeights; i++)
             {
-                vCount.Append("4 ");
+                vCount.Append($"{boneInfluenceCount} ");
             };
             vertexWeights.VCount = new ColladaIntArrayString
             {
@@ -1179,6 +1180,14 @@ public class ColladaModelRenderer : IRenderer
                 vertices.Append(boneMappingData.Data[i].BoneIndex[1] + " " + (index + 1) + " ");
                 vertices.Append(boneMappingData.Data[i].BoneIndex[2] + " " + (index + 2) + " ");
                 vertices.Append(boneMappingData.Data[i].BoneIndex[3] + " " + (index + 3) + " ");
+                if (boneInfluenceCount == 8)
+                {
+                    vertices.Append(boneMappingData.Data[i].BoneIndex[4] + " " + (index + 4) + " ");
+                    vertices.Append(boneMappingData.Data[i].BoneIndex[5] + " " + (index + 5) + " ");
+                    vertices.Append(boneMappingData.Data[i].BoneIndex[6] + " " + (index + 6) + " ");
+                    vertices.Append(boneMappingData.Data[i].BoneIndex[7] + " " + (index + 7) + " ");
+                    index += 4;
+                }
                 index += 4;
             }
             vertexWeights.V = new ColladaIntArrayString { Value_As_String = vertices.ToString().TrimEnd() };

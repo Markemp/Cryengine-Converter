@@ -238,6 +238,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                         {
                             MeshBoneMapping bm = new()
                             {
+                                BoneInfluenceCount = 8,
                                 BoneIndex = new int[8],
                                 Weight = new float[8]
                             };
