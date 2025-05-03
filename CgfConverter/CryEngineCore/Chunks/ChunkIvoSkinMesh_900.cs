@@ -215,7 +215,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                         {
                             MeshBoneMapping bm = new()
                             {
-                                BoneIndex = new int[4],
+                                BoneIndex = new ushort[4],
                                 Weight = new float[4]
                             };
                             for (int j = 0; j < 4; j++)
@@ -239,7 +239,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                             MeshBoneMapping bm = new()
                             {
                                 BoneInfluenceCount = 8,
-                                BoneIndex = new int[8],
+                                BoneIndex = new ushort[8],
                                 Weight = new float[8]
                             };
                             for (int j = 0; j < 8; j++)
@@ -260,7 +260,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                         {
                             MeshBoneMapping bm = new()
                             {
-                                BoneIndex = new int[4],
+                                BoneIndex = new ushort[4],
                                 Weight = new float[4]
                             };
                             for (int j = 0; j < 4; j++)

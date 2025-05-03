@@ -61,7 +61,7 @@ public static class BinaryReaderExtensions
     {
         MeshBoneMapping boneMap = new()
         {
-            BoneIndex = new int[4],
+            BoneIndex = new ushort[4],
             Weight = new float[4]
         };
 

@@ -332,7 +332,13 @@ public partial class CryEngine
 
             //if (chunk is ChunkCollisions collisions)
             //    skin.Collisions = collisions.Data;
+            if (chunk is ChunkIvoSkinMesh ivoSkinMesh)
+            {
+                skin.BoneMappings = ivoSkinMesh.BoneMappings.Data.ToList();
+            }
         }
+
+        // For Ivo skins, the bone mapping is in the skin mesh chunk.
 
         return skin;
     }

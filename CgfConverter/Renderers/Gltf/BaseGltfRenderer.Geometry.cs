@@ -186,20 +186,20 @@ public partial class BaseGltfRenderer
                     .Select(x => new Vector4(x.Weight[0], x.Weight[1], x.Weight[2], x.Weight[3]))
                     .ToArray());
 
-        //weights =
-        //    GetAccessorOrDefault(baseName, 0,
-        //        skinningInfo.IntVertices is null ? skinningInfo.BoneMappings.Count : skinningInfo.Ext2IntMap.Count)
-        //    ?? AddAccessor(baseName, -1, null,
-        //        skinningInfo.IntVertices is null
-        //            ? skinningInfo.BoneMappings
-        //                .Select(x => new Vector4(
-        //                    x.Weight[0], x.Weight[1], x.Weight[2], x.Weight[3]))
-        //                .ToArray()
-        //            : skinningInfo.Ext2IntMap
-        //                .Select(x => skinningInfo.IntVertices[x])
-        //                .Select(x => new Vector4(
-        //                    x.Weights[0], x.Weights[1], x.Weights[2], x.Weights[3]))
-        //                .ToArray());
+        var weights2 =
+            GetAccessorOrDefault(baseName, 0,
+                skinningInfo.IntVertices is null ? skinningInfo.BoneMappings.Count : skinningInfo.Ext2IntMap.Count)
+            ?? AddAccessor(baseName, -1, null,
+                skinningInfo.IntVertices is null
+                    ? skinningInfo.BoneMappings
+                        .Select(x => new Vector4(
+                            x.Weight[0], x.Weight[1], x.Weight[2], x.Weight[3]))
+                        .ToArray()
+                    : skinningInfo.Ext2IntMap
+                        .Select(x => skinningInfo.IntVertices[x])
+                        .Select(x => new Vector4(
+                            x.BoneMapping.Weight[0], x.BoneMapping.Weight[1], x.BoneMapping.Weight[2], x.BoneMapping.Weight[3]))
+                        .ToArray());
 
         var boneIdToBindPoseMatrices = new Dictionary<int, Matrix4x4>();
         foreach (var bone in skinningInfo.CompiledBones)
@@ -264,7 +264,7 @@ public partial class BaseGltfRenderer
                     ? skinningInfo.Ext2IntMap
                         .Select(x => skinningInfo.IntVertices[x])
                         .Select(x => new TypedVec4<ushort>(
-                            x.BoneIDs[0], x.BoneIDs[1], x.BoneIDs[2], x.BoneIDs[3]))
+                            x.BoneMapping.BoneIndex[0], x.BoneMapping.BoneIndex[1], x.BoneMapping.BoneIndex[2], x.BoneMapping.BoneIndex[3]))
                         .ToArray()
                     : skinningInfo.BoneMappings
                         .Select(x => new TypedVec4<ushort>(

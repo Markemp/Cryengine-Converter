@@ -13,7 +13,7 @@ namespace CgfConverterTests.IntegrationTests;
 [TestCategory("integration")]
 public class SonicBoomTests
 {
-    private readonly TestUtils testUtils = new TestUtils();
+    private readonly TestUtils testUtils = new();
     string userHome;
 
     [TestInitialize]

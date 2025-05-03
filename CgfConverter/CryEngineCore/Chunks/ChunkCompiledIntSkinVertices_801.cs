@@ -15,18 +15,28 @@ internal sealed class ChunkCompiledIntSkinVertices_801 : ChunkCompiledIntSkinVer
         for (int i = 0; i < NumIntVertices; i++)
         {
             IntSkinVertices[i].Position = b.ReadVector3();
+
             // Read 4 bone IDs
-            IntSkinVertices[i].BoneIDs = new ushort[4];
+            ushort[] boneIndices = new ushort[4];
             for (int j = 0; j < 4; j++)
             {
-                IntSkinVertices[i].BoneIDs[j] = b.ReadUInt16();
+                boneIndices[j] = b.ReadUInt16();
             }
+
             // Read the weights for those bone IDs
-            IntSkinVertices[i].Weights = new float[4];
+            float[] weights = new float[4];
             for (int j = 0; j < 4; j++)
             {
-                IntSkinVertices[i].Weights[j] = b.ReadSingle();
+                weights[j] = b.ReadSingle();
             }
+
+            // Create MeshBoneMapping with required properties
+            IntSkinVertices[i].BoneMapping = new MeshBoneMapping
+            {
+                BoneIndex = boneIndices,
+                Weight = weights
+            };
+
             // Read the color
             IntSkinVertices[i].Color = b.ReadIRGBA();
         }

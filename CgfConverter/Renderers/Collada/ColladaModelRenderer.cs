@@ -1100,18 +1100,23 @@ public class ColladaModelRenderer : IRenderer
             };
             StringBuilder weights = new();
             var nodeChunk = _cryData.RootNode;
-            var boneMappingData = nodeChunk.MeshData?.GeometryInfo?.BoneMappings;
+            var boneMappingData = _cryData.SkinningInfo.IntVertices is null
+                ? nodeChunk.MeshData?.GeometryInfo?.BoneMappings.Data.ToList()
+                : _cryData.SkinningInfo.IntVertices.Select(x => x.BoneMapping).ToList();
             if (boneMappingData is null) return;
 
-            var numberOfWeights = boneMappingData.numElements;
-            var boneInfluenceCount = boneMappingData.Data[0].BoneInfluenceCount;
+            var numberOfWeights = boneMappingData.Count();
+            var boneInfluenceCount =
+                nodeChunk.MeshData?.GeometryInfo?.BoneMappings?.Data[0].BoneInfluenceCount == 8
+                    ? 8
+                    : 4;
 
             weightArraySource.Float_Array.Count = (int)numberOfWeights;
             for (int i = 0; i < numberOfWeights; i++)
             {
                 for (int j = 0; j < boneInfluenceCount; j++)
                 {
-                    weights.Append((boneMappingData.Data[i].Weight[j]).ToString() + " ");
+                    weights.Append((boneMappingData[i].Weight[j]).ToString() + " ");
                 }
             };
             accessor.Count = (uint)(numberOfWeights * boneInfluenceCount);
@@ -1176,16 +1181,16 @@ public class ColladaModelRenderer : IRenderer
 
             for (int i = 0; i < numberOfWeights; i++)
             {
-                vertices.Append(boneMappingData.Data[i].BoneIndex[0] + " " + index + " ");
-                vertices.Append(boneMappingData.Data[i].BoneIndex[1] + " " + (index + 1) + " ");
-                vertices.Append(boneMappingData.Data[i].BoneIndex[2] + " " + (index + 2) + " ");
-                vertices.Append(boneMappingData.Data[i].BoneIndex[3] + " " + (index + 3) + " ");
+                vertices.Append(boneMappingData[i].BoneIndex[0] + " " + index + " ");
+                vertices.Append(boneMappingData[i].BoneIndex[1] + " " + (index + 1) + " ");
+                vertices.Append(boneMappingData[i].BoneIndex[2] + " " + (index + 2) + " ");
+                vertices.Append(boneMappingData[i].BoneIndex[3] + " " + (index + 3) + " ");
                 if (boneInfluenceCount == 8)
                 {
-                    vertices.Append(boneMappingData.Data[i].BoneIndex[4] + " " + (index + 4) + " ");
-                    vertices.Append(boneMappingData.Data[i].BoneIndex[5] + " " + (index + 5) + " ");
-                    vertices.Append(boneMappingData.Data[i].BoneIndex[6] + " " + (index + 6) + " ");
-                    vertices.Append(boneMappingData.Data[i].BoneIndex[7] + " " + (index + 7) + " ");
+                    vertices.Append(boneMappingData[i].BoneIndex[4] + " " + (index + 4) + " ");
+                    vertices.Append(boneMappingData[i].BoneIndex[5] + " " + (index + 5) + " ");
+                    vertices.Append(boneMappingData[i].BoneIndex[6] + " " + (index + 6) + " ");
+                    vertices.Append(boneMappingData[i].BoneIndex[7] + " " + (index + 7) + " ");
                     index += 4;
                 }
                 index += 4;

@@ -218,7 +218,7 @@ public sealed record MeshBoneMapping
 {
     public int BoneInfluenceCount { get; set; } = 4; // Number of bones influencing this vertex.
     // 4 bones, 4 weights for each vertex mapping.
-    public required int[] BoneIndex;
+    public required ushort[] BoneIndex;
     public required float[] Weight;
 }
 
@@ -281,8 +281,9 @@ public struct IntSkinVertex
     public Vector3 Obsolete0;
     public Vector3 Position;
     public Vector3 Obsolete2;
-    public ushort[] BoneIDs;     // 4 bone IDs
-    public float[] Weights;     // Should be 4 of these
+    public MeshBoneMapping BoneMapping; // 4 bone IDs and weights
+    //public ushort[] BoneIDs;     // 4 bone IDs
+    //public float[] Weights;     // Should be 4 of these
     public IRGBA Color;
 }
 
