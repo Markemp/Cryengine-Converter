@@ -213,7 +213,6 @@ public sealed record VertUV
     public byte[]? Skipped { get; init; }
 }
 
-
 public sealed record MeshBoneMapping
 {
     public int BoneInfluenceCount { get; set; } = 4; // Number of bones influencing this vertex.

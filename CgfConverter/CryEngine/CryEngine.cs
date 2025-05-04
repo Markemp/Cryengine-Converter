@@ -301,44 +301,31 @@ public partial class CryEngine
 
         SkinningInfo skin = new();
 
-        foreach(var chunk in models.SelectMany(x => x.ChunkMap.Values))
+        foreach (var chunk in models.SelectMany(x => x.ChunkMap.Values))
         {
-            if (chunk is ChunkCompiledExtToIntMap extToIntMap)
-                skin.Ext2IntMap = extToIntMap.Source?.ToList();
-
-            if (chunk is ChunkCompiledBones compiledBones)
-                skin.CompiledBones = compiledBones.BoneList;
-
-            if (chunk is ChunkCompiledIntFaces intFaces)
-                skin.IntFaces = intFaces.Faces?.ToList();
-
-            if (chunk is ChunkCompiledIntSkinVertices intVertices)
-                skin.IntVertices = intVertices.IntSkinVertices?.ToList();
-
-            //if (chunk is ChunkCompiledLookDirectionBlends lookDirBlends)
-            //    skin.LookDirectionBlends = lookDirBlends.Blends;
-
-            //if (chunk is ChunkCompiledMorphTargets morphTargets)
-            //    skin.MorphTargets = morphTargets.MorphTargetVertices?.ToList();
-
-            //if (chunk is ChunkCompiledPhysicalBones physicalBoneMeshes)
-            //    skin.PhysicalBoneMeshes = physicalBoneMeshes.  .Meshes;
-
-            //if (chunk is ChunkBoneEntities boneEntities)
-            //    skin.BoneEntities = boneEntities.Entities;
-
-            //if (chunk is ChunkCompiledBones boneMappings)
-            //    skin.BoneMappings = boneMappings.Mappings;
-
-            //if (chunk is ChunkCollisions collisions)
-            //    skin.Collisions = collisions.Data;
-            if (chunk is ChunkIvoSkinMesh ivoSkinMesh)
+            switch (chunk)
             {
-                skin.BoneMappings = ivoSkinMesh.BoneMappings.Data.ToList();
+                case ChunkCompiledExtToIntMap extToIntMap:
+                    skin.Ext2IntMap = extToIntMap.Source?.ToList();
+                    break;
+
+                case ChunkCompiledBones compiledBones:
+                    skin.CompiledBones = compiledBones.BoneList;
+                    break;
+
+                case ChunkCompiledIntFaces intFaces:
+                    skin.IntFaces = intFaces.Faces?.ToList();
+                    break;
+
+                case ChunkCompiledIntSkinVertices intVertices:
+                    skin.IntVertices = intVertices.IntSkinVertices?.ToList();
+                    break;
+
+                case ChunkIvoSkinMesh ivoSkinMesh:
+                    skin.BoneMappings = ivoSkinMesh.BoneMappings?.Data.ToList();
+                    break;
             }
         }
-
-        // For Ivo skins, the bone mapping is in the skin mesh chunk.
 
         return skin;
     }

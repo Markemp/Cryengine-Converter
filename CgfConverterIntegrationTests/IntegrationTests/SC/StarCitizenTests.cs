@@ -757,6 +757,32 @@ public class StarCitizenTests
     }
 
     [TestMethod]
+    public void m_qrt_specialist_heavy_arms_01_cgfm_Ivo41()
+    {
+        // mtlname chunk doesn't match any material file.  Create dummy mats.
+        var args = new string[] {
+            $@"{objectDir41}\Objects\Characters\Human\male_v7\armor\qrt\quirinus\m_qrt_specialist_heavy_arms_01.cgf", "-dds", "-dae",
+            "-objectdir", objectDir41 };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+
+        var daeObject = colladaData.DaeObject;
+        var scene = daeObject.Library_Visual_Scene.Visual_Scene[0];
+        var geometry = daeObject.Library_Geometries.Geometry[0];
+        var materials = daeObject.Library_Materials;
+
+        Assert.AreEqual("m_qrt_specialist_heavy_arms_01", scene.Node[0].ID);
+        Assert.AreEqual("m_qrt_specialist_heavy_arms_01-mesh", geometry.ID);
+        Assert.AreEqual(2, geometry.Mesh.Triangles.Length);
+        Assert.AreEqual(2, materials.Material.Length);
+    }
+
+    [TestMethod]
     public void med_bay_wall_bed_extender_a_Ivo()
     {
         var args = new string[]
