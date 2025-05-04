@@ -164,7 +164,7 @@ public partial class BaseGltfRenderer
         out int joints,
         CryEngine cryData,
         GltfNode rootNode,
-        SkinningInfo skinningInfo, // TODO:  Remove skinning info
+        SkinningInfo skinningInfo,
         IDictionary<uint, int> controllerIdToNodeIndex)
     {
         if (!skinningInfo.HasSkinningInfo)
@@ -179,14 +179,6 @@ public partial class BaseGltfRenderer
         var boneMappingData = nodeChunk.MeshData?.GeometryInfo?.BoneMappings;
 
         weights =
-            GetAccessorOrDefault(baseName, 0, boneMappingData.Data.Length)
-                //skinningInfo.IntVertices is null ? skinningInfo.BoneMappings.Count : skinningInfo.Ext2IntMap.Count)
-            ?? AddAccessor(baseName, -1, null,
-                boneMappingData.Data
-                    .Select(x => new Vector4(x.Weight[0], x.Weight[1], x.Weight[2], x.Weight[3]))
-                    .ToArray());
-
-        var weights2 =
             GetAccessorOrDefault(baseName, 0,
                 skinningInfo.IntVertices is null ? skinningInfo.BoneMappings.Count : skinningInfo.Ext2IntMap.Count)
             ?? AddAccessor(baseName, -1, null,

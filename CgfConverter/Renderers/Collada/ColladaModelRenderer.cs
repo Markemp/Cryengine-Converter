@@ -1087,6 +1087,9 @@ public class ColladaModelRenderer : IRenderer
             #endregion
 
             #region Weights Source
+            var skinningInfo = _cryData.SkinningInfo;
+            var nodeChunk = _cryData.RootNode;
+
             ColladaSource weightArraySource = new()
             {
                 ID = "Controller-weights",
@@ -1098,25 +1101,29 @@ public class ColladaModelRenderer : IRenderer
             {
                 ID = "Controller-weights-array",
             };
-            StringBuilder weights = new();
-            var nodeChunk = _cryData.RootNode;
-            var boneMappingData = _cryData.SkinningInfo.IntVertices is null
-                ? nodeChunk.MeshData?.GeometryInfo?.BoneMappings.Data.ToList()
-                : _cryData.SkinningInfo.IntVertices.Select(x => x.BoneMapping).ToList();
-            if (boneMappingData is null) return;
 
-            var numberOfWeights = boneMappingData.Count();
+            var numberOfWeights = skinningInfo.IntVertices is null ? skinningInfo.BoneMappings.Count : skinningInfo.Ext2IntMap.Count;
             var boneInfluenceCount =
                 nodeChunk.MeshData?.GeometryInfo?.BoneMappings?.Data[0].BoneInfluenceCount == 8
                     ? 8
                     : 4;
 
-            weightArraySource.Float_Array.Count = (int)numberOfWeights;
+            var boneMappingData = skinningInfo.IntVertices is null
+                ? nodeChunk.MeshData?.GeometryInfo?.BoneMappings.Data.ToList()
+                : skinningInfo.Ext2IntMap
+                    .Select(x => skinningInfo.IntVertices[x])
+                    .Select(x => x.BoneMapping)
+                    .ToList();
+
+            if (boneMappingData is null) return;
+
+            StringBuilder weights = new();
+            weightArraySource.Float_Array.Count = numberOfWeights;
             for (int i = 0; i < numberOfWeights; i++)
             {
                 for (int j = 0; j < boneInfluenceCount; j++)
                 {
-                    weights.Append((boneMappingData[i].Weight[j]).ToString() + " ");
+                    weights.Append(boneMappingData[i].Weight[j].ToString() + " ");
                 }
             };
             accessor.Count = (uint)(numberOfWeights * boneInfluenceCount);
