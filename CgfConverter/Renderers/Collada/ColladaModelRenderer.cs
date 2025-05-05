@@ -960,7 +960,8 @@ public class ColladaModelRenderer : IRenderer
         };
         material.Instance_Effect.URL = "#" + matName + "-effect";
 
-        AddTexturesToTextureLibrary(matKey, submat);
+        if (!_args.NoTextures)
+            AddTexturesToTextureLibrary(matKey, submat);
         return material;
     }
 
