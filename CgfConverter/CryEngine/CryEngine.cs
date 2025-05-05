@@ -125,11 +125,14 @@ public partial class CryEngine
             if (hasValidNodeMeshCombo)
             {
                 // SkinMesh has the mesh and meshsubset info, as well as all the datastreams
-                var skinMesh = Models[1].ChunkMap.Values.FirstOrDefault(x => x.ChunkType == ChunkType.IvoSkin || x.ChunkType == ChunkType.IvoSkin2) as ChunkIvoSkinMesh;
-                var geometryMeshDetails = skinMesh.MeshDetails;
+                var skinMesh = Models.Count > 1
+                    ? Models[1].ChunkMap.Values.FirstOrDefault(x => x.ChunkType == ChunkType.IvoSkin || x.ChunkType == ChunkType.IvoSkin2) as ChunkIvoSkinMesh
+                    : null;
 
-                var stringTable = comboChunk.NodeNames;
-                var materialTable = comboChunk.MaterialIndices;
+                var geometryMeshDetails = skinMesh?.MeshDetails;
+
+                var stringTable = comboChunk?.NodeNames ?? [];
+                var materialTable = comboChunk?.MaterialIndices ?? [];
                 var materialFileName = Materials.Keys.First();
 
                 // create node chunks
@@ -138,7 +141,7 @@ public partial class CryEngine
                     var index = comboChunk.NodeMeshCombos.IndexOf(node);
 
                     // Create meshsubsets for this node.  This is all meshSubsets where the meshParent equals the node index
-                    var subsets = skinMesh.MeshSubsets.Where(x => x.NodeParentIndex == index).ToList();
+                    var subsets = skinMesh?.MeshSubsets.Where(x => x.NodeParentIndex == index).ToList() ?? [];
 
                     ChunkMesh chunkMesh = new ChunkMesh_802();
 

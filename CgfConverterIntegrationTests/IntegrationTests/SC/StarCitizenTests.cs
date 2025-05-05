@@ -948,6 +948,26 @@ public class StarCitizenTests
         var daeObject = colladaData.DaeObject;
     }
 
+    // D:\depot\sc4.1\data\objects\spaceships\turrets\rsi\polaris\rsi_polaris_seataccess_turret_sideleft.cga
+    [TestMethod]
+    public void Rsi_polaris_seataccess_turret_sideleft_Cga()
+    {
+        // No geometry file, just the .cga.
+        var args = new string[]
+        {
+            $@"{objectDir41}\objects\spaceships\turrets\rsi\polaris\rsi_polaris_seataccess_turret_sideleft.cga", "-dds", "-dae",
+            "-objectdir", objectDir41
+        };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+    }
+
     [TestMethod]
     public void Teapot_Ivo()
     {
