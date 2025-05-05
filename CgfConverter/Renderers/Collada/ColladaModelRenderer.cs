@@ -368,7 +368,7 @@ public class ColladaModelRenderer : IRenderer
 
         // Create a list for the new_params
         List<ColladaNewParam> newparams = new();
-        if (subMat.Textures is not null)
+        if (subMat.Textures is not null && !_args.NoTextures)
         {
             for (int j = 0; j < subMat.Textures.Length; j++)
             {
@@ -416,7 +416,7 @@ public class ColladaModelRenderer : IRenderer
         bool diffuseFound = false;
         bool specularFound = false;
 
-        if (subMat.Textures is not null)
+        if (subMat.Textures is not null && !_args.NoTextures)
         {
             foreach (var texture in subMat.Textures)
             {
