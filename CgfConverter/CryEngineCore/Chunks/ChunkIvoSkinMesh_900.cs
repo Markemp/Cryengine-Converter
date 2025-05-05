@@ -24,6 +24,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
         {
             MeshSubsets.Add(b.ReadMeshSubset());
         }
+        bool hasReadIndex = false;
 
         while (b.BaseStream.Position != b.BaseStream.Length)  // Read to end.
         {
@@ -34,6 +35,8 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
             switch (ivoDataStreamType)
             {
                 case DatastreamType.IVOINDICES:
+                    if (hasReadIndex) return;
+                    hasReadIndex = true;
                     bytesPerElement = b.ReadUInt32();
                     Datastream<uint> indices = new(
                         DatastreamType.IVOINDICES,
@@ -305,7 +308,7 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                     b.AlignTo(8);
                     break;
                 default:
-                    HelperMethods.Log(LogLevelEnum.Warning, $"***** Unknown DataStream Type {ivoDataStreamType} *****");
+                    HelperMethods.Log(LogLevelEnum.Warning, $"***** Unknown DataStream Type 0x{(int)ivoDataStreamType:X8} *****");
                     b.BaseStream.Position = b.BaseStream.Position + 4;
                     break;
             }
