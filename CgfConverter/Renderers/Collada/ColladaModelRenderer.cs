@@ -531,6 +531,11 @@ public class ColladaModelRenderer : IRenderer
         //foreach (ChunkNode nodeChunk in model.ChunkMap.Values.Where(a => a.ChunkType == ChunkType.Node))
         foreach (ChunkNode nodeChunk in _cryData.Nodes)
         {
+            if (nodeChunk.Name.Contains((" ")))
+            {
+                nodeChunk.Name = nodeChunk.Name.Replace(" ", "_");
+            }
+
             if (_args.IsNodeNameExcluded(nodeChunk.Name))
             {
                 Log(LogLevelEnum.Debug, $"Excluding node {nodeChunk.Name}");
