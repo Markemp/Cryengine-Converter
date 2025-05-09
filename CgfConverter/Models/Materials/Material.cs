@@ -2,8 +2,14 @@
 
 namespace CgfConverter.Models.Materials;
 
+public class MaterialBase
+{
+    [XmlAttribute]
+    public string? Name { get; set; }
+}
+
 [XmlRoot(ElementName = "Material")]
-public class Material : ISubMaterialItem
+public class Material : MaterialBase
 {
     public Color? DiffuseValue;
     public Color? SpecularValue;
@@ -13,9 +19,6 @@ public class Material : ISubMaterialItem
 
     [XmlIgnore]
     internal string? SourceFileName { get; set; }
-
-    [XmlAttribute(AttributeName = "Name")]
-    public string? Name { get; set; }
 
     [XmlAttribute(AttributeName = "MtlFlags")]
     public string? MtlFlags {
@@ -89,8 +92,6 @@ public class Material : ISubMaterialItem
     [XmlArray(ElementName = "Textures")]
     [XmlArrayItem(ElementName = "Texture")]
     public Texture[]? Textures { get; set; }
-
-    public Material ResolvedMaterial => this;
 
     public override string ToString() => $"Name: {Name}, Shader: {Shader}, Submaterials: {SubMaterials?.Length ?? 0}";
 }

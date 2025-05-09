@@ -344,7 +344,7 @@ public partial class CryEngine
                 var fullyQualifiedMaterialFile = GetFullMaterialFilePath(materialFile);
                 if (fullyQualifiedMaterialFile is not null)
                 {
-                    var materials = MaterialUtilities.FromStream(PackFileSystem.GetStream(fullyQualifiedMaterialFile), materialFile, true);
+                    var materials = MaterialUtilities.FromStream(PackFileSystem.GetStream(fullyQualifiedMaterialFile), materialFile, ObjectDir, closeAfter: true);
                     Materials.Add(key, materials);
                 }
                 else
@@ -373,7 +373,7 @@ public partial class CryEngine
                 var fullyQualifiedMaterialFile = GetFullMaterialFilePath(materialFile);
                 if (fullyQualifiedMaterialFile is not null)
                 {
-                    var materials = MaterialUtilities.FromStream(PackFileSystem.GetStream(fullyQualifiedMaterialFile), materialFile, true);
+                    var materials = MaterialUtilities.FromStream(PackFileSystem.GetStream(fullyQualifiedMaterialFile), materialFile, ObjectDir, closeAfter:true);
                     Materials.Add(key, materials);
                 }
             }

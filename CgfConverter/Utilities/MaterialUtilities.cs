@@ -3,18 +3,20 @@ using System.IO;
 using System;
 using CgfConverter.CryXmlB;
 using CgfConverter.Models.Materials;
+using System.Collections.Generic;
 
 namespace CgfConverter.Utils;
 
 public static class MaterialUtilities
 {
-    public static Material? FromFile(string path, string? materialName) =>
-        FromStream(new FileStream(path, FileMode.Open, FileAccess.Read), materialName, true);
+    public static Material? FromFile(string path, string? materialName, string? objectDir = null) =>
+        FromStream(new FileStream(path, FileMode.Open, FileAccess.Read), materialName, objectDir, true);
 
-    public static Material FromStream(Stream stream, string? materialName, bool closeAfter = false)
+    public static Material FromStream(Stream stream, string? materialName, string? objectDir = null, bool closeAfter = false)
     {
         try
         {
+            var materialsBase = CryXmlSerializer.ExtractMaterials(stream, leaveOpen: true);
             var material = CryXmlSerializer.Deserialize<Material>(stream, closeAfter);
 
             // For basic materials, add the material to submaterials so that all materials are consistent.
@@ -24,6 +26,29 @@ public static class MaterialUtilities
                 material.SubMaterials = new Material[1];
                 material.SubMaterials[0] = material;
             }
+
+            var fullMats = new List<Material>();
+
+            for (int i = 0; i < materialsBase.Count; i++)
+            {
+                var mat = materialsBase[i];
+                if (mat is MaterialRef)
+                {
+                    // read the material from the reference.
+                    var matfile = Path.ChangeExtension(mat.Name, ".mtl");
+                    var matfileName = Path.GetFileNameWithoutExtension(matfile);
+                    if (objectDir is not null)
+                        matfile = Path.Combine(objectDir, matfile);
+                    var refMat = CryXmlSerializer.Deserialize<Material>(new FileStream(matfile, FileMode.Open, FileAccess.Read), closeAfter);
+                    refMat.Name = matfileName;
+                    fullMats.Add(refMat);
+                }
+                else
+                    fullMats.Add(materialsBase[i] as Material);
+            }
+
+            if (fullMats is not null  && fullMats.Count != 0)
+                material.SubMaterials = fullMats.ToArray();
 
             return material;
         }

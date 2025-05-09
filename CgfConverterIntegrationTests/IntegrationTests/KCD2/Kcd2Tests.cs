@@ -49,7 +49,7 @@ public class Kcd2Tests
     [TestMethod]
     public void Kcd2_MaterialFile()
     {
-        var mat = MaterialUtilities.FromFile(@"D:\depot\KCD2\objects\characters\humans\shared\head\lashes.mtl", "lashes");
+        var mat = MaterialUtilities.FromFile(@"D:\depot\KCD2\objects\characters\humans\shared\head\lashes.mtl", "lashes", objectDir);
         Assert.IsNotNull(mat);
         Assert.AreEqual("lashes", mat.Name);
     }

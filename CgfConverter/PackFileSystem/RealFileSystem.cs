@@ -36,7 +36,6 @@ public class RealFileSystem : IPackFileSystem
         }
     }
 
-    // TODO: Rework this.  
     public bool Exists(string path) =>
         File.Exists(FileHandlingExtensions.CombineAndNormalizePath(_rootPath, path));
 

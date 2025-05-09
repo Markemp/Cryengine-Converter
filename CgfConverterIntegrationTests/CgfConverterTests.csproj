@@ -52,5 +52,8 @@
     <None Update="Schemas\XMLSchema.xsd">
       <SubType>Designer</SubType>
     </None>
+    <None Update="TestData\m_head_capon_m01.mtl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>
