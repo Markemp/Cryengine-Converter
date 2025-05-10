@@ -2,9 +2,7 @@
 using CgfConverter.Renderers.Collada;
 using CgfConverterTests.TestUtilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 using System.Globalization;
-using System.Linq;
 using System.Threading;
 
 namespace CgfConverterTests.IntegrationTests;
@@ -18,7 +16,6 @@ public class ArcheAgeTests
     // are referencing the game directory.
     private readonly TestUtils testUtils = new();
     private readonly string objectDir = @"d:\depot\archeage";
-    string userHome;
 
     [TestInitialize]
     public void Initialize()
@@ -26,7 +23,6 @@ public class ArcheAgeTests
         CultureInfo customCulture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
         customCulture.NumberFormat.NumberDecimalSeparator = ".";
         Thread.CurrentThread.CurrentCulture = customCulture;
-        userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
         testUtils.GetSchemaSet();
     }
@@ -43,7 +39,7 @@ public class ArcheAgeTests
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[5]);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[5], objectDir: args[3]);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);

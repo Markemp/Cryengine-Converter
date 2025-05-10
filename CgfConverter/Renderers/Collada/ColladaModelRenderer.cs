@@ -987,7 +987,7 @@ public class ColladaModelRenderer : IRenderer
                 Init_From = new ColladaInitFrom()
             };
             // TODO: Refactor to use fully qualified path, and to use Pack File System.
-            var textureFile = ResolveTextureFile(submat.Textures[i].File, _args.PackFileSystem, [_args.DataDir]);
+            var textureFile = ResolveTextureFile(submat.Textures[i].File, _args.PackFileSystem, [_cryData.ObjectDir]);
 
             if (_args.PngTextures && File.Exists(Path.ChangeExtension(textureFile, ".png")))
                 textureFile = Path.ChangeExtension(textureFile, ".png");

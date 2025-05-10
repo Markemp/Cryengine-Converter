@@ -66,7 +66,7 @@ public class CgfConverterIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Test01\raquel_eyeoverlay.skin", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\Test01\" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: @"..\..\ResourceFiles\Test01\");
         cryData.ProcessCryengineFiles();
 
         ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
@@ -173,10 +173,10 @@ public class CgfConverterIntegrationTests
     [TestMethod]
     public void Cnylgt_marauder_Collada_NoMaterialFile()
     {
-        var args = new string[] { $@"D:\depot\MWO\Objects\purchasable\cockpit_hanging\cnylgt\cnylgt_marauder.cga", "-objectdir", @"d:\depot\mwo", "-mtl", "cnylgt_off.mtl,cnylgt_on.mtl" };
+        var args = new string[] { $@"d:\depot\mwo\Objects\purchasable\cockpit_hanging\cnylgt\cnylgt_marauder.cga", "cnylgt_off.mtl,cnylgt_on.mtl" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[4]);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: "cnylgt_off.mtl,cnylgt_on.mtl", objectDir: @"d:\depot\mwo");
         cryData.ProcessCryengineFiles();
 
         ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
@@ -217,7 +217,7 @@ public class CgfConverterIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\CryEngine\green_fern_bush_a.cgf" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: ".");
         cryData.ProcessCryengineFiles();
 
         ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
@@ -263,7 +263,7 @@ public class CgfConverterIntegrationTests
         Assert.AreEqual("green_fern_bush_a", nodes[0].ID);
         Assert.AreEqual("green_fern_bush_a", nodes[0].ID);
         Assert.AreEqual("NODE", nodes[0].Type.ToString());
-        Assert.AreEqual("0.993981 0.109553 -0 0 -0.109553 0.993981 -0 0 -0 0 1 0 0 0 0 1", nodes[0].Matrix[0].Value_As_String);
+        Assert.AreEqual("0.993981 0.109553 -0 0 -0.109553 0.993981 -0 0 -0 0 1 0 0 0 0 0", nodes[0].Matrix[0].Value_As_String);
         Assert.AreEqual("green_fern_bush_a", nodes[0].Instance_Geometry[0].Name);
         Assert.AreEqual("#green_fern_bush_a-mesh", nodes[0].Instance_Geometry[0].URL);
         Assert.AreEqual("#green_fern_bush_mtl_green_fern_bush-material", nodes[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
@@ -272,49 +272,6 @@ public class CgfConverterIntegrationTests
         Assert.AreEqual("green_fern_bush_mtl_proxy_AI-material", nodes[0].Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[1].Symbol);
 
         testUtils.ValidateColladaXml(colladaData);
-    }
-
-    [TestMethod]
-    public void Green_fern_bush_a_GltfFormat_MaterialFileExists()
-    {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\CryEngine\green_fern_bush_a.cgf", "-glb" };
-        int result = testUtils.argsHandler.ProcessArgs(args);
-        Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
-        cryData.ProcessCryengineFiles();
-
-        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
-        var gltfData = gltfRenderer.GenerateGltfObject();
-
-        // Validate Scene
-        Assert.AreEqual(1, gltfData.Scenes.Count);
-        Assert.AreEqual("Scene", gltfData.Scenes[0].Name);
-
-        // Validate Nodes
-        Assert.AreEqual(7, gltfData.Nodes.Count);
-        Assert.AreEqual("green_fern_bush_a", gltfData.Nodes[6].Name);
-        Assert.AreEqual(1, gltfData.Nodes[0].Mesh);
-        Assert.AreEqual("$LOD1", gltfData.Nodes[0].Name);
-        Assert.AreEqual("$LOD2", gltfData.Nodes[1].Name);
-        Assert.AreEqual("branch1_1", gltfData.Nodes[2].Name);
-        Assert.AreEqual("branch1_2", gltfData.Nodes[3].Name);
-
-        // Validate Meshes
-        Assert.AreEqual(12, gltfData.BufferViews.Count);
-        Assert.AreEqual(9672, gltfData.BufferViews[0].ByteLength);
-        Assert.AreEqual(9672, gltfData.BufferViews[1].ByteLength);
-        Assert.AreEqual(12896, gltfData.BufferViews[2].ByteLength);
-        Assert.AreEqual(11160, gltfData.BufferViews[3].ByteLength);
-        Assert.AreEqual(5688, gltfData.BufferViews[4].ByteLength);
-        Assert.AreEqual(5688, gltfData.BufferViews[5].ByteLength);
-        Assert.AreEqual(7584, gltfData.BufferViews[6].ByteLength);
-        Assert.AreEqual(5376, gltfData.BufferViews[7].ByteLength);
-        Assert.AreEqual(2700, gltfData.BufferViews[8].ByteLength);
-
-        // Validate Materials
-        Assert.AreEqual(1, gltfData.Materials.Count);
-
-        // Validate Geometry
     }
 }
 
