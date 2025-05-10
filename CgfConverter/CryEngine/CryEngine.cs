@@ -327,6 +327,11 @@ public partial class CryEngine
                 case ChunkIvoSkinMesh ivoSkinMesh:
                     skin.BoneMappings = ivoSkinMesh.BoneMappings?.Data.ToList();
                     break;
+
+                case ChunkDataStream dataStream:
+                    if (dataStream.Data is Datastream<MeshBoneMapping> boneMaps)
+                        skin.BoneMappings = boneMaps.Data.ToList();
+                    break;
             }
         }
 

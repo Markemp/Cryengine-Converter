@@ -1,6 +1,6 @@
-﻿using System.Numerics;
+﻿using CgfConverter.Utils;
+using System.Numerics;
 using System.Xml.Serialization;
-using CgfConverter.Utils;
 
 namespace CgfConverter.Models.Materials;
 
