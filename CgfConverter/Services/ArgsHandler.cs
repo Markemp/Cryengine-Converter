@@ -20,7 +20,7 @@ public sealed class ArgsHandler
     /// <summary>Files to process</summary>
     public List<string> InputFiles { get; internal set; }
     /// <summary>Location of the Object Files</summary>
-    public List<string> DataDirs { get; internal set; } = new();
+    public string DataDir { get; internal set; }
     /// <summary>File to render to</summary>
     public string? OutputFile { get; internal set; }
     /// <summary>Directory to render to</summary>
@@ -328,7 +328,7 @@ public sealed class ArgsHandler
             if (Directory.Exists(dir))
             {
                 HelperMethods.Log(LogLevelEnum.Info, "Source [Filesystem]: {0}", dir);
-                DataDirs.Add(dir);
+                DataDir = dir;
                 PackFileSystem.Add(new RealFileSystem(dir));
                 foundAny = true;
             }
@@ -339,7 +339,7 @@ public sealed class ArgsHandler
                         StringComparison.InvariantCultureIgnoreCase))
                 {
                     HelperMethods.Log(LogLevelEnum.Info, "Source [Packfile]: {0}", globbed);
-                    DataDirs.Add(globbed);
+                    DataDir = globbed;
                     PackFileSystem.Add(new WiiuStreamPackFileSystem(PackFileSystem.GetStream(globbed), packFileSystemOptions));
                     foundAny = true;
                 }
@@ -427,5 +427,5 @@ public sealed class ArgsHandler
         Console.WriteLine();
     }
 
-    public override string ToString() => $@"Input file: {InputFiles}, Object Dir: {string.Join(',', DataDirs)}, Output file: {OutputFile}";
+    public override string ToString() => $@"Input file: {InputFiles}, Object Dir: {string.Join(',', DataDir)}, Output file: {OutputFile}";
 }

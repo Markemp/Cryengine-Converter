@@ -24,7 +24,6 @@ using CgfConverter.Renderers.Collada.Collada.Collada_FX.Technique_Common;
 using CgfConverter.Renderers.Collada.Collada.Collada_FX.Texturing;
 using CgfConverter.Renderers.Collada.Collada.Enums;
 using CgfConverter.Renderers.Collada.Collada.Types;
-using CgfConverter.Utilities;
 using Extensions;
 using System;
 using System.Collections.Generic;
@@ -38,6 +37,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using static Extensions.FileHandlingExtensions;
 using static CgfConverter.Utilities.HelperMethods;
+using CgfConverter.Utils;
 
 namespace CgfConverter.Renderers.Collada;
 
@@ -58,10 +58,13 @@ public class ColladaModelRenderer : IRenderer
 
     private readonly Dictionary<uint, string> controllerIdToBoneName = new();
 
+    private readonly TaggedLogger Log;
+
     public ColladaModelRenderer(ArgsHandler argsHandler, CryEngine cryEngine)
     {
         _args = argsHandler;
         _cryData = cryEngine;
+        Log = _cryData.Log;
 
         daeOutputFile = _args.FormatOutputFileName(".dae", _cryData.InputFile);
     }
@@ -71,24 +74,24 @@ public class ColladaModelRenderer : IRenderer
         GenerateDaeObject();
 
         // At this point, we should have a cryData.Asset object, fully populated.
-        Log(LogLevelEnum.Debug);
-        Log(LogLevelEnum.Debug, "*** Starting WriteCOLLADA() ***");
-        Log(LogLevelEnum.Debug);
+        Log.D();
+        Log.D("*** Starting WriteCOLLADA() ***");
+        Log.D();
 
         TextWriter writer = new StreamWriter(daeOutputFile.FullName);
         serializer.Serialize(writer, DaeObject);
 
         writer.Close();
-        Log(LogLevelEnum.Debug, "End of Write Collada.  Export complete.");
+        Log.D("End of Write Collada.  Export complete.");
         return 1;
     }
 
     public void GenerateDaeObject()
     {
-        Log(LogLevelEnum.Debug, "Number of models: {0}", _cryData.Models.Count);
+        Log.D("Number of models: {0}", _cryData.Models.Count);
         for (int i = 0; i < _cryData.Models.Count; i++)
         {
-            Log(LogLevelEnum.Debug, "\tNumber of nodes in model: {0}", _cryData.Models[i].NodeMap.Count);
+            Log.D("\tNumber of nodes in model: {0}", _cryData.Models[i].NodeMap.Count);
         }
 
         WriteColladaRoot(colladaVersion);
@@ -533,7 +536,7 @@ public class ColladaModelRenderer : IRenderer
         {
             if (_args.IsNodeNameExcluded(nodeChunk.Name))
             {
-                Log(LogLevelEnum.Debug, $"Excluding node {nodeChunk.Name}");
+                Log.D($"Excluding node {nodeChunk.Name}");
                 continue;
             }
 
@@ -919,7 +922,10 @@ public class ColladaModelRenderer : IRenderer
         List<ColladaMaterial> colladaMaterials = new();
         List<ColladaEffect> colladaEffects = new();
         if (DaeObject.Library_Materials?.Material is null)
-            DaeObject.Library_Materials.Material = Array.Empty<ColladaMaterial>();
+        {
+            DaeObject.Library_Materials = new();
+            DaeObject.Library_Materials.Material = [];
+        }
 
         foreach (var matKey in _cryData.Materials.Keys)
         {
@@ -981,7 +987,7 @@ public class ColladaModelRenderer : IRenderer
                 Init_From = new ColladaInitFrom()
             };
             // TODO: Refactor to use fully qualified path, and to use Pack File System.
-            var textureFile = ResolveTextureFile(submat.Textures[i].File, _args.PackFileSystem, _args.DataDirs);
+            var textureFile = ResolveTextureFile(submat.Textures[i].File, _args.PackFileSystem, [_args.DataDir]);
 
             if (_args.PngTextures && File.Exists(Path.ChangeExtension(textureFile, ".png")))
                 textureFile = Path.ChangeExtension(textureFile, ".png");
@@ -1377,7 +1383,7 @@ public class ColladaModelRenderer : IRenderer
         {
             if (_args.IsNodeNameExcluded(childNodeChunk.Name))
             {
-                Log(LogLevelEnum.Debug, $"Excluding child node {childNodeChunk.Name}");
+                Log.D($"Excluding child node {childNodeChunk.Name}");
                 continue;
             }
 

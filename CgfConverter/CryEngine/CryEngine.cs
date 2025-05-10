@@ -29,7 +29,7 @@ public partial class CryEngine
         ".dba"
     ];
 
-    protected readonly TaggedLogger Log;
+    public readonly TaggedLogger Log;
 
     public string Name => Path.GetFileNameWithoutExtension(InputFile).ToLower();
     public List<Model> Models { get; internal set; } = []; // All the model files associated with this game object

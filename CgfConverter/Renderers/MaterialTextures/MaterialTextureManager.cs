@@ -40,7 +40,7 @@ public class MaterialTextureManager
             if (!cryTextures.TryGetValue(mapType, out Texture? t))
                 continue;
 
-            string texturePath = FileHandlingExtensions.ResolveTextureFile(t.File, _args.PackFileSystem, _args.DataDirs);
+            string texturePath = FileHandlingExtensions.ResolveTextureFile(t.File, _args.PackFileSystem, [_args.DataDir]);
             string normalizedPath = FileHandlingExtensions.CombineAndNormalizePath(texturePath);
 
             if (!_args.PackFileSystem.Exists(normalizedPath))

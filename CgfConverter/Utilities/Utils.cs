@@ -37,9 +37,7 @@ public static class HelperMethods
     public static LogLevelEnum DebugLevel { get; set; }
 
     /// <summary>Private DataStore for the DateTimeFormats property.summary>
-    private static string[] _dateTimeFormats = new[] {
-        @"yyyy-MM-dd\THHmm", // 2010-12-31T2359
-    };
+    private static string[] _dateTimeFormats = [@"yyyy-MM-dd\THHmm"]; // 2010-12-31T2359
 
     public static double Safe(double value)
     {
@@ -65,7 +63,7 @@ public static class HelperMethods
 
     internal static List<string> GetNullSeparatedStrings(int numberOfNames, BinaryReader b)
     {
-        List<string> names = new();
+        List<string> names = [];
         StringBuilder builder = new();
 
         for (int i = 0; i < numberOfNames; i++)
@@ -88,65 +86,6 @@ public static class HelperMethods
         get { return _dateTimeFormats; }
         set { _dateTimeFormats = value; }
     }
-
-    //    #region Gets the build date and time (by reading the COFF header)
-
-    //    // http://msdn.microsoft.com/en-us/library/ms680313
-
-    //    struct _IMAGE_FILE_HEADER
-    //    {
-    //#pragma warning disable CS0649 // Field 'Utils._IMAGE_FILE_HEADER.Machine' is never assigned to, and will always have its default value 0
-    //        public ushort Machine;
-    //#pragma warning restore CS0649 // Field 'Utils._IMAGE_FILE_HEADER.Machine' is never assigned to, and will always have its default value 0
-    //#pragma warning disable CS0649 // Field 'Utils._IMAGE_FILE_HEADER.NumberOfSections' is never assigned to, and will always have its default value 0
-    //        public ushort NumberOfSections;
-    //#pragma warning restore CS0649 // Field 'Utils._IMAGE_FILE_HEADER.NumberOfSections' is never assigned to, and will always have its default value 0
-    //#pragma warning disable CS0649 // Field 'Utils._IMAGE_FILE_HEADER.TimeDateStamp' is never assigned to, and will always have its default value 0
-    //        public uint TimeDateStamp;
-    //#pragma warning restore CS0649 // Field 'Utils._IMAGE_FILE_HEADER.TimeDateStamp' is never assigned to, and will always have its default value 0
-    //#pragma warning disable CS0649 // Field 'Utils._IMAGE_FILE_HEADER.PointerToSymbolTable' is never assigned to, and will always have its default value 0
-    //        public uint PointerToSymbolTable;
-    //#pragma warning restore CS0649 // Field 'Utils._IMAGE_FILE_HEADER.PointerToSymbolTable' is never assigned to, and will always have its default value 0
-    //#pragma warning disable CS0649 // Field 'Utils._IMAGE_FILE_HEADER.NumberOfSymbols' is never assigned to, and will always have its default value 0
-    //        public uint NumberOfSymbols;
-    //#pragma warning restore CS0649 // Field 'Utils._IMAGE_FILE_HEADER.NumberOfSymbols' is never assigned to, and will always have its default value 0
-    //#pragma warning disable CS0649 // Field 'Utils._IMAGE_FILE_HEADER.SizeOfOptionalHeader' is never assigned to, and will always have its default value 0
-    //        public ushort SizeOfOptionalHeader;
-    //#pragma warning restore CS0649 // Field 'Utils._IMAGE_FILE_HEADER.SizeOfOptionalHeader' is never assigned to, and will always have its default value 0
-    //#pragma warning disable CS0649 // Field 'Utils._IMAGE_FILE_HEADER.Characteristics' is never assigned to, and will always have its default value 0
-    //        public ushort Characteristics;
-    //#pragma warning restore CS0649 // Field 'Utils._IMAGE_FILE_HEADER.Characteristics' is never assigned to, and will always have its default value 0
-    //    };
-
-    //    public static DateTime GetBuildDateTime(Assembly assembly)
-    //    {
-    //        if (File.Exists(assembly.Location))
-    //        {
-    //            var buffer = new byte[Math.Max(Marshal.SizeOf(typeof(_IMAGE_FILE_HEADER)), 4)];
-    //            using (var fileStream = new FileStream(assembly.Location, FileMode.Open, FileAccess.Read))
-    //            {
-    //                fileStream.Position = 0x3C;
-    //                fileStream.Read(buffer, 0, 4);
-    //                fileStream.Position = BitConverter.ToUInt32(buffer, 0); // COFF header offset
-    //                fileStream.Read(buffer, 0, 4); // "PE\0\0"
-    //                fileStream.Read(buffer, 0, buffer.Length);
-    //            }
-    //            var pinnedBuffer = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-    //            try
-    //            {
-    //                var coffHeader = (_IMAGE_FILE_HEADER)Marshal.PtrToStructure(pinnedBuffer.AddrOfPinnedObject(), typeof(_IMAGE_FILE_HEADER));
-
-    //                return TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1) + new TimeSpan(coffHeader.TimeDateStamp * TimeSpan.TicksPerSecond));
-    //            }
-    //            finally
-    //            {
-    //                pinnedBuffer.Free();
-    //            }
-    //        }
-    //        return new DateTime();
-    //    }
-
-    //    #endregion
 
     public static void Log(string? format = null, params object[] args) => Log(LogLevelEnum.Debug, format, args);
 

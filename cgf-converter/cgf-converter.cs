@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace CgfConverter;
 
@@ -116,7 +117,8 @@ public class Program
         var data = new CryEngine(
             inputFile,
             _args.PackFileSystem,
-            materialFiles: _args.MaterialFile);
+            materialFiles: _args.MaterialFile,
+            objectDir: _args.DataDir);
 
         data.ProcessCryengineFiles();
 

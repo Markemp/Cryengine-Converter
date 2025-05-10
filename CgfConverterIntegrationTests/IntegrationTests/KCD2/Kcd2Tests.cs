@@ -32,7 +32,7 @@ public class Kcd2Tests
     {
         var args = new string[]
         {
-            $@"{objectDir}\m_head_capon.skin", "-dds", "-dae",
+            $@"{objectDir}\objects\characters\humans\male\head\m_head_capon\m_head_capon.skin", "-dds", "-dae",
             "-objectdir", $"{objectDir}"
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
@@ -44,6 +44,10 @@ public class Kcd2Tests
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
         testUtils.ValidateColladaXml(colladaData);
+
+        // Verify materials
+        var mats = daeObject.Library_Materials;
+        Assert.AreEqual(5, mats.Material.Length);
     }
 
     [TestMethod]
@@ -52,5 +56,6 @@ public class Kcd2Tests
         var mat = MaterialUtilities.FromFile(@"D:\depot\KCD2\objects\characters\humans\shared\head\lashes.mtl", "lashes", objectDir);
         Assert.IsNotNull(mat);
         Assert.AreEqual("lashes", mat.Name);
+        Assert.AreEqual(1, mat.SubMaterials.Length);
     }
 }
