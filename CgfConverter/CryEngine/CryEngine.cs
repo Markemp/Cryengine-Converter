@@ -406,11 +406,11 @@ public partial class CryEngine
 
             foreach (var materialFile in materialLibraryFiles)
             {
-                var key = Path.GetFileNameWithoutExtension(materialFile);
+                var key = Path.GetFileNameWithoutExtension(materialFile) ?? "unknown";
 
                 if (!Materials.ContainsKey(key))
                 {
-                    MaterialFiles.Add(materialFile);
+                    MaterialFiles.Add(materialFile ?? "unknown");
                     var materials = CreateDefaultMaterials(maxMats);
                     Materials.Add(key, materials);
                 }
@@ -527,6 +527,7 @@ public partial class CryEngine
         {
             foreach (var libraryFile in libraryFileNames)
             {
+                if (libraryFile is null) return null;
                 var testFile = libraryFile;
                 if (!testFile.EndsWith(".mtl"))
                     testFile += ".mtl";

@@ -32,12 +32,11 @@ public class Kcd2Tests
     {
         var args = new string[]
         {
-            $@"{objectDir}\objects\characters\humans\male\head\m_head_capon\m_head_capon.skin", "-dds", "-dae",
-            "-objectdir", $"{objectDir}"
+            $@"{objectDir}\objects\characters\humans\male\head\m_head_capon\m_head_capon.skin", "-dds", "-dae"
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: args[4]);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);

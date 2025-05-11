@@ -1404,7 +1404,7 @@ public class ColladaModelRenderer : IRenderer
             sID = boneName,
             Type = ColladaNodeType.JOINT
         };
-        if (bone.ControllerID != -1)
+        if (bone.ControllerID != -1 && bone.ControllerID != uint.MaxValue)
             controllerIdToBoneName.Add(bone.ControllerID, bone.boneName);
 
         Matrix4x4 localMatrix = bone.LocalTransformMatrix.ConvertToTransformMatrix();

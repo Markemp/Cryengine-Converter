@@ -49,7 +49,6 @@ public static class MaterialUtilities
 
             if (fullMats is not null && fullMats.Count != 0)
                 material.SubMaterials = fullMats.ToArray();
-            Console.WriteLine("Material {0} has {1} submaterials", material.Name, material.SubMaterials.Length);
 
             return material;
         }

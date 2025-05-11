@@ -83,13 +83,11 @@ public class ArcheAgeTests
     {
         var args = new string[]
         {
-            $@"{objectDir}\objects\characters\animals\bird\bird_a.chr",
-            "-dds",
-            "-obj", objectDir
+            $@"{objectDir}\game\objects\characters\animals\bird\bird_a.chr"
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
@@ -105,14 +103,12 @@ public class ArcheAgeTests
         // Camera has controller id 0xffffffff just like parent Bip01.
         var args = new string[]
         {
-            $@"{objectDir}\objects\characters\people\drug_boy01\face\drug_boy01_face01\drug_boy01_face01.chr",
-            "-dds",
-            "-obj", objectDir
+            $@"{objectDir}\game\objects\characters\people\drug_boy01\face\drug_boy01_face01\drug_boy01_face01.chr"
         };
 
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
@@ -125,17 +121,11 @@ public class ArcheAgeTests
     {
         // 2 material files used in this model.  Make sure both are loaded.
         // THe textures for the basket mtl file are missing.
-        var args = new string[]
-        {
-            @"D:\depot\archeage\game\objects\env\01_nuia\001_housing\01_tools\basket_mix_ani.cga",
-            "-dds",
-            "-obj", objectDir,
-            "-mtl", "basket_mix.mtl,tool_farm_d.mtl"
-        };
+        var args = new string[] { @"D:\depot\archeage\game\objects\env\01_nuia\001_housing\01_tools\basket_mix_ani.cga" };
 
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[5]);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: "basket_mix.mtl,tool_farm_d.mtl", objectDir: @"d:\depot\archeage");
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
@@ -174,14 +164,12 @@ public class ArcheAgeTests
         // 2 material files used in this model.  Make sure both are loaded.
         var args = new string[]
         {
-            @"D:\depot\archeage\game\objects\env\01_nuia\001_housing\01_tools\basket_mix_ani.cga",
-            "-dds",
-            "-obj", objectDir
+            @"D:\depot\archeage\game\objects\env\01_nuia\001_housing\01_tools\basket_mix_ani.cga"
         };
 
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);

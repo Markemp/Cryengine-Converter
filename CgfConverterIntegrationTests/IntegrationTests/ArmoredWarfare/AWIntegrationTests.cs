@@ -107,11 +107,11 @@ public class ArmoredWarfareIntegrationTests
     public void Chicken_Dae()
     {
         // Verify bones and materials
-        var args = new string[] { $@"d:\depot\armoredwarfare\objects\characters\animals\birds\chicken\chicken.chr", "-dds", "-objectdir", @"d:\depot\armoredwarfare\" };
+        var args = new string[] { $@"d:\depot\armoredwarfare\objects\characters\animals\birds\chicken\chicken.chr" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
@@ -246,11 +246,11 @@ public class ArmoredWarfareIntegrationTests
     public void Fv721_fox_cannon_l21rarden()
     {
         // spec map channel and gloss map channel uses floats instead of ints.
-        var args = new string[] { $@"D:\depot\ArmoredWarfare\objects\vehicles\afv\fv721-fox\fv721-fox_cannon_milan.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\armoredwarfare" };
+        var args = new string[] { $@"{objectDir}\objects\vehicles\afv\fv721-fox\fv721-fox_cannon_milan.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\armoredwarfare" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
@@ -261,12 +261,12 @@ public class ArmoredWarfareIntegrationTests
     public void T62_Turret()
     {
         // material file doesn't have extension and is in same directory as cgf (t-62_turret_t-62.mtl)
-        var args = new string[] { $@"D:\depot\ArmoredWarfare\objects\vehicles\mbt\t-62\t-62_turret_t-62.cgf", "-dds", "-dae", "-objectdir", @"d:\depot\armoredwarfare\" };
+        var args = new string[] { $@"{objectDir}\objects\vehicles\afv\fv721-fox\fv721-fox_cannon_milan.cgf" };
 
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
