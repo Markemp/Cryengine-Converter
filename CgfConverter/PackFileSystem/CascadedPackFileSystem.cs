@@ -7,7 +7,7 @@ namespace CgfConverter.PackFileSystem;
 
 public class CascadedPackFileSystem : IPackFileSystem, IDisposable
 {
-    private readonly List<IPackFileSystem> _underlying = new();
+    private readonly List<IPackFileSystem> _underlying = [];
 
     public void Add(IPackFileSystem system)
     {

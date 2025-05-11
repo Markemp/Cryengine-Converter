@@ -18,7 +18,7 @@ public class WiiuStreamPackFileSystem : IPackFileSystem, IDisposable
 
     private readonly Stream _stream;
     private readonly Mutex _streamMutex = new();
-    private readonly Dictionary<string, FileEntry> _entries = new();
+    private readonly Dictionary<string, FileEntry> _entries = [];
 
     public WiiuStreamPackFileSystem(Stream stream, Dictionary<string, string> options)
     {

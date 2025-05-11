@@ -12,14 +12,14 @@ namespace CgfConverter;
 public sealed class ArgsHandler
 {
     public readonly CascadedPackFileSystem PackFileSystem = new();
-    public readonly List<Regex> ExcludeNodeNameRegexes = new();
-    public readonly List<Regex> ExcludeMaterialNameRegexes = new();
-    public readonly List<Regex> ExcludeShaderNameRegexes = new();
+    public readonly List<Regex> ExcludeNodeNameRegexes = [];
+    public readonly List<Regex> ExcludeMaterialNameRegexes = [];
+    public readonly List<Regex> ExcludeShaderNameRegexes = [];
     
     public bool Verbose { get; set; }
     /// <summary>Files to process</summary>
     public List<string> InputFiles { get; internal set; }
-    /// <summary>Location of the Object Files</summary>
+    /// <summary>Location of the Game files</summary>
     public string DataDir { get; internal set; }
     /// <summary>File to render to</summary>
     public string? OutputFile { get; internal set; }
@@ -72,10 +72,10 @@ public sealed class ArgsHandler
 
     public ArgsHandler()
     {
-        InputFiles = new List<string>();
-        ExcludeNodeNames = new List<string>();
-        ExcludeMaterialNames = new List<string>();
-        ExcludeShaderNames = new List<string>();
+        InputFiles = [];
+        ExcludeNodeNames = [];
+        ExcludeMaterialNames = [];
+        ExcludeShaderNames = [];
     }
 
     /// <summary>
@@ -127,9 +127,7 @@ public sealed class ArgsHandler
                     }
 
                     if (int.TryParse(inputArgs[i], out var mt) && mt >= 0)
-                    {
                         MaxThreads = mt;
-                    }
                     else
                     {
                         Console.Error.WriteLine("Invalid number of threads {0}, defaulting to 1.", inputArgs[i]);
