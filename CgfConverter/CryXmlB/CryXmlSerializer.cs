@@ -1,12 +1,12 @@
-﻿using System;
+﻿using CgfConverter.Models.Materials;
+using Extensions;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
-using CgfConverter.Models.Materials;
-using Extensions;
 
 namespace CgfConverter.CryXmlB;
 
@@ -33,10 +33,10 @@ public static class CryXmlSerializer
                 if (!leaveOpen)
                     prevStream.Dispose();
             }
-            
+
             peek = peek[..inStream.Read(peek)];
             inStream.Position -= peek.Length;
-            
+
             // There is no way that a text XML file starts with these bytes.
             if (peek.StartsWith(PbxmlMagic.AsSpan()))
                 return LoadPbxmlFile(new(inStream));
@@ -282,7 +282,7 @@ public static class CryXmlSerializer
             else
                 xmlDoc.AppendChild(element);
         }
-        
+
         if (writeLog && bugged)
             Console.WriteLine("XML file had attributes without valid value.");
 
@@ -323,7 +323,7 @@ public static class CryXmlSerializer
 
         XmlSerializer xs = new XmlSerializer(typeof(TObject));
 
-        return (TObject) (xs.Deserialize(ms) ?? throw new NullReferenceException("Deserialize returned null"));
+        return (TObject)(xs.Deserialize(ms) ?? throw new NullReferenceException("Deserialize returned null"));
     }
 
     public static List<MaterialBase> ExtractMaterials(Stream stream, bool writeLog = false, bool leaveOpen = false)
