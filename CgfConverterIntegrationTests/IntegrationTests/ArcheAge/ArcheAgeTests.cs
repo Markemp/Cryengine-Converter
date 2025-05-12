@@ -120,7 +120,7 @@ public class ArcheAgeTests
     public void Basket_Mix_Ani_Cga()
     {
         // 2 material files used in this model.  Make sure both are loaded.
-        // THe textures for the basket mtl file are missing.
+        // The textures for the basket mtl file are missing.
         var args = new string[] { @"D:\depot\archeage\game\objects\env\01_nuia\001_housing\01_tools\basket_mix_ani.cga" };
 
         int result = testUtils.argsHandler.ProcessArgs(args);
