@@ -40,7 +40,7 @@ public partial class CryEngine
     public SkinningInfo? SkinningInfo { get; set; }
     public string InputFile { get; internal set; }
     public IPackFileSystem PackFileSystem { get; internal set; }
-    public List<string>? MaterialFiles { get; set; } = [];
+    public List<string> MaterialFiles { get; set; } = [];
     public string? ObjectDir { get; set; }
 
     /// <summary>Dictionary of Materials.  Key is the mtlName chunk Name property (stripped of path and
@@ -60,7 +60,7 @@ public partial class CryEngine
         Log = new TaggedLogger(Path.GetFileName(filename), parentLogger);
         InputFile = filename;
         PackFileSystem = packFileSystem;
-        MaterialFiles = materialFiles?.Split(',').ToList();
+        MaterialFiles = string.IsNullOrEmpty(materialFiles) ? [] : materialFiles.Split(',').ToList();
         ObjectDir = objectDir;
     }
 
@@ -341,7 +341,7 @@ public partial class CryEngine
     private void CreateMaterials()
     {
         // if -mtl arg is used, try to find the material files, set to the full path, and create materials from it.
-        if (MaterialFiles is not null)
+        if (MaterialFiles.Count != 0)
         {
             foreach (var materialFile in MaterialFiles)
             {
@@ -368,7 +368,7 @@ public partial class CryEngine
         foreach (var file in materialLibraryFiles)
             Log.I($"Material Library File: {file}");
 
-        MaterialFiles = GetMaterialFilesFromMatLibraryChunks(materialLibraryFiles)?.ToList();
+        SetMaterialFilesFromMatLibraryChunks(materialLibraryFiles);
 
         if (MaterialFiles is not null)
         {
@@ -483,26 +483,47 @@ public partial class CryEngine
         }
     }
 
+    // Cache for material file paths to avoid repeated lookups
+    private readonly Dictionary<string, string?> _materialPathCache = new(StringComparer.InvariantCultureIgnoreCase);
+    
     private string? GetFullMaterialFilePath(string materialFile)
     {
-        if (!materialFile.EndsWith(".mtl"))
+        // Check cache first
+        if (_materialPathCache.TryGetValue(materialFile, out var cachedPath))
+            return cachedPath;
+            
+        if (!materialFile.EndsWith(".mtl", StringComparison.InvariantCultureIgnoreCase))
             materialFile += ".mtl";
 
-        // check if file exists as provided
+        string? result = null;
+        
+        // 1. Check if file exists as provided (direct path)
         if (PackFileSystem.Exists(materialFile))
-            return materialFile;
-
-        // Check if it's in the same directory as the model file
-        var modelPath = Path.GetDirectoryName(InputFile);
-        if (modelPath is not null && PackFileSystem.Exists(FileHandlingExtensions.CombineAndNormalizePath(modelPath, materialFile)))
-            return FileHandlingExtensions.CombineAndNormalizePath(modelPath, materialFile);
-
-        // check if relative to objectdir if provided
-        if (ObjectDir is not null && PackFileSystem.Exists(FileHandlingExtensions.CombineAndNormalizePath(ObjectDir, materialFile)))
-            return FileHandlingExtensions.CombineAndNormalizePath(ObjectDir, materialFile);
-
-        // unable to find material file.
-        return null;
+            result = materialFile;
+            
+        // 2. Check if it's in the same directory as the model file
+        if (result == null)
+        {
+            var modelPath = Path.GetDirectoryName(InputFile);
+            if (modelPath is not null)
+            {
+                var modelDirPath = Path.Combine(modelPath, materialFile);
+                if (PackFileSystem.Exists(modelDirPath))
+                    result = modelDirPath;
+            }
+        }
+            
+        // 3. Check if relative to objectdir if provided
+        if (result == null && ObjectDir is not null)
+        {
+            var objectDirPath = Path.Combine(ObjectDir, materialFile);
+            if (PackFileSystem.Exists(objectDirPath))
+                result = objectDirPath;
+        }
+        
+        // Cache the result (even if null) to avoid repeated lookups
+        _materialPathCache[materialFile] = result;
+        return result;
     }
 
     private Material CreateDefaultMaterials(uint maxNumberOfMaterials)
@@ -520,45 +541,39 @@ public partial class CryEngine
     }
 
     // Gets the Library material file if one can be found. File will be the name in the library as it's the dictionary key.
-    private HashSet<string>? GetMaterialFilesFromMatLibraryChunks(IEnumerable<string> libraryFileNames)
+    private void SetMaterialFilesFromMatLibraryChunks(IEnumerable<string> libraryFileNames)
     {
-        HashSet<string> materialFiles = [];
-        if (libraryFileNames is not null)
+        if (libraryFileNames is null)
         {
-            foreach (var libraryFile in libraryFileNames)
-            {
-                if (libraryFile is null) return null;
-                var testFile = libraryFile;
-                if (!testFile.EndsWith(".mtl"))
-                    testFile += ".mtl";
-
-                if (PackFileSystem.Exists(testFile))
-                {
-                    materialFiles.Add(libraryFile);
-                    continue;
-                }
-
-                // Check if testFile + object dir exists
-                var fullObjectDirPath = FileHandlingExtensions.CombineAndNormalizePath(ObjectDir, testFile);
-                if (PackFileSystem.Exists(fullObjectDirPath))
-                {
-                    materialFiles.Add(libraryFile);
-                    continue;
-                }
-
-                // Check in fully qualified current dir
-                var fullPath = FileHandlingExtensions.CombineAndNormalizePath(Path.GetDirectoryName(InputFile), $"{libraryFile}.mtl");
-                if (PackFileSystem.Exists(fullPath))
-                {
-                    materialFiles.Add(libraryFile);
-                    continue;
-                }
-            }
-            return materialFiles;
+            Log.W("Unable to find material file for {0}", InputFile);
+            return;
         }
-
-        Log.W("Unable to find material file for {0}", InputFile);
-        return null;
+        
+        //HashSet<string> materialFiles = [];
+        
+        foreach (var libraryFile in libraryFileNames)
+        {
+            if (libraryFile is null) 
+                return;
+            
+            // Use GetFullMaterialFilePath to leverage caching and consistent path handling
+            if (GetFullMaterialFilePath(libraryFile) != null)
+            {
+                MaterialFiles.Add(libraryFile);
+                continue;
+            }
+            
+            // If we couldn't find it directly, try with .mtl extension explicitly
+            var withExtension = libraryFile;
+            if (!withExtension.EndsWith(".mtl", StringComparison.InvariantCultureIgnoreCase))
+                withExtension += ".mtl";
+                
+            if (GetFullMaterialFilePath(withExtension) != null)
+                MaterialFiles.Add(libraryFile);
+        }
+        
+        if (MaterialFiles.Count == 0)
+            Log.W("Unable to find any material files for {0}", InputFile);
     }
 
     public bool IsIvoFile => Models.First().FileSignature?.Equals("#ivo") ?? false;
