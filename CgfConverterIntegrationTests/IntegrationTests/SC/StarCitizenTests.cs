@@ -110,7 +110,7 @@ public class StarCitizenTests
     [TestMethod]
     public void AEGS_Avenger_Gltf()
     {
-        var args = new string[] {$@"{objectDir}\objects\spaceships\ships\aegs\Avenger\AEGS_Avenger.cga" };
+        var args = new string[] {$@"{objectDir}\objects\spaceships\ships\aegs\Avenger\AEGS_Avenger.cga", "-objectDir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
         CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);

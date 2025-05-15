@@ -110,6 +110,21 @@ public class MWOIntegrationTests
         var daeObject = colladaData.DaeObject;
     }
 
+
+    [TestMethod]
+    public void Teapot_Gltf()
+    {
+        var args = new string[] { $@"{objectDir}\Objects\default\teapot.cgf", "-objectDir", objectDir };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        cryData.ProcessCryengineFiles();
+
+        GltfModelRenderer gltfData = new(testUtils.argsHandler, cryData, false, false);
+        gltfData.GenerateGltfObject();
+    }
+
     [TestMethod]
     public void ClanBanner_Adder_VerifyMaterials()
     {
