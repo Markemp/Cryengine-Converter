@@ -3,7 +3,6 @@ using CgfConverter.CryXmlB;
 using CgfConverter.Models;
 using CgfConverter.PackFileSystem;
 using CgfConverter.Utils;
-using Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;

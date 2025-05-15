@@ -1272,8 +1272,7 @@ public class ColladaModelRenderer : IRenderer
             a.ChunkType == ChunkType.CompiledBonesSC ||
             a.ChunkType == ChunkType.CompiledBones_Ivo2))
         {
-            ColladaNode boneNode = new();
-            boneNode = CreateJointNode(_cryData.Bones.RootBone);
+            ColladaNode boneNode = CreateJointNode(_cryData.SkinningInfo.RootBone);
             nodes.Add(boneNode);
         }
 
@@ -1409,23 +1408,8 @@ public class ColladaModelRenderer : IRenderer
 
         Matrix4x4 localMatrix = bone.LocalTransformMatrix.ConvertToTransformMatrix();
 
-        // Rotate and translate code.
-        //ColladaRotate rotate = new()
-        //{
-        //    sID = "rotate",
-        //    Value_As_String = CreateStringFromVector4(localMatrix.ToAxisAngleDegrees())
-        //};
-        //ColladaTranslate translate = new()
-        //{
-        //    sID = "translate",
-        //    Value_As_String = CreateStringFromVector3(localMatrix.GetTranslation())
-        //};
-        //tmpNode.Rotate = new ColladaRotate[1] { rotate };
-        //tmpNode.Translate = new ColladaTranslate[1] { translate };
-
-        // Matrix code
         ColladaMatrix matrix = new();
-        List<ColladaMatrix> matrices = new();
+        List<ColladaMatrix> matrices = [];
         matrix.Value_As_String = CreateStringFromMatrix4x4(localMatrix);
         matrix.sID = "matrix";
         matrices.Add(matrix);
@@ -1434,8 +1418,8 @@ public class ColladaModelRenderer : IRenderer
         // Recursively call this for each of the child bones to this bone.
         if (bone.numChildren > 0)
         {
-            List<ColladaNode> childNodes = new();
-            var allChildBones = _cryData.Bones.GetChildBones(bone);
+            List<ColladaNode> childNodes = [];
+            var allChildBones = _cryData.SkinningInfo?.GetChildBones(bone) ?? [];
             foreach (CompiledBone childBone in allChildBones)
             {
                 childNodes.Add(CreateJointNode(childBone));

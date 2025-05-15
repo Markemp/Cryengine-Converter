@@ -18,9 +18,6 @@ internal sealed class ChunkCompiledBones_801 : ChunkCompiledBones
             var tempBone = new CompiledBone();
             tempBone.ReadCompiledBone_801(b);
 
-            if (RootBone is null)  // First bone read is root bone
-                RootBone = tempBone;
-
             if (tempBone.offsetParent != 0)
                 tempBone.ParentBone = BoneList[i + tempBone.offsetParent];
 

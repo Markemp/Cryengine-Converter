@@ -15,10 +15,6 @@ internal sealed class ChunkCompiledBones_900 : ChunkCompiledBones
         {
             CompiledBone tempBone = new();
             tempBone.ReadCompiledBone_900(b);
-
-            if (RootBone is null)  // First bone read is root bone
-                RootBone = tempBone;
-
             BoneList.Add(tempBone);
         }
 

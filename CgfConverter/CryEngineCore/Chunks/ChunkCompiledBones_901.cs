@@ -20,8 +20,6 @@ internal class ChunkCompiledBones_901 : ChunkCompiledBones
         {
             CompiledBone tempBone = new();
             tempBone.ReadCompiledBone_901(b);
-            if (RootBone is null)  // First bone read is root bone
-                RootBone = tempBone;
             BoneList.Add(tempBone);
         }
 

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace CgfConverter.Models;
 
@@ -39,5 +40,27 @@ public class SkinningInfo
             return CompiledBones[boneIndex].boneName;
 
         return string.Empty;        // Invalid bone ID
+    }
+
+    public CompiledBone? RootBone {
+        get {
+            if (CompiledBones is null || CompiledBones.Count == 0)
+                return null;
+            
+            return CompiledBones.FirstOrDefault();
+        }
+    }
+
+    public IEnumerable<CompiledBone> GetChildBones(CompiledBone bone)
+    {
+        if (CompiledBones is null) return [];
+
+        var childBones = new List<CompiledBone>();
+        foreach (var bone1 in CompiledBones)
+        {
+            if (bone1.ParentBone == bone)
+                childBones.Add(bone1);
+        }
+        return childBones;
     }
 }

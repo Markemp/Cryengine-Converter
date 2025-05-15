@@ -24,7 +24,7 @@ public sealed class CompiledBone
     // Calculated values
     public Matrix4x4 BindPoseMatrix { get; set; }     // This is the WorldToBone matrix for library_controllers
     public int ParentControllerIndex { get; set; }    // Calculated controllerID of the parent bone put into the Bone Dictionary (the key)
-    public List<int> ChildIDs { get; set; } = new();  // Calculated controllerIDs of the children to this bone.
+    public List<int> ChildIDs { get; set; } = [];     // Calculated controllerIDs of the children to this bone.
 
     public CompiledBone? ParentBone;
 
