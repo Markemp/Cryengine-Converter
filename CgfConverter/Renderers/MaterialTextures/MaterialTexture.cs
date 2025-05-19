@@ -1,7 +1,5 @@
 using System;
-using System.IO;
 using BCnEncoder.Shared;
-using Extensions;
 
 namespace CgfConverter.Renderers.MaterialTextures;
 

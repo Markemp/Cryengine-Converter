@@ -531,7 +531,6 @@ public class ColladaModelRenderer : IRenderer
         List<ColladaGeometry> geometryList = [];
 
         // For each of the nodes, we need to write the geometry.
-        //foreach (ChunkNode nodeChunk in model.ChunkMap.Values.Where(a => a.ChunkType == ChunkType.Node))
         foreach (ChunkNode nodeChunk in _cryData.Nodes)
         {
             if (_args.IsNodeNameExcluded(nodeChunk.Name))
@@ -672,23 +671,25 @@ public class ColladaModelRenderer : IRenderer
 
                 var multiplerVector = Vector3.Abs((meshChunk.MinBound - meshChunk.MaxBound) / 2f);
                 
-                if (multiplerVector.X < 1) { multiplerVector.X = 1; }
-                if (multiplerVector.Y < 1) { multiplerVector.Y = 1; }
-                if (multiplerVector.Z < 1) { multiplerVector.Z = 1; }
-
+                if (multiplerVector.X < 1) multiplerVector.X = 1;
+                if (multiplerVector.Y < 1) multiplerVector.Y = 1;
+                if (multiplerVector.Z < 1) multiplerVector.Z = 1;
                 Vector3 scalingVector = Vector3.One;
 
                 if (meshChunk.ScalingVectors is not null)
                 {
                     scalingVector = Vector3.Abs((meshChunk.ScalingVectors.Max - meshChunk.ScalingVectors.Min) / 2f);
-                    if (scalingVector.X < 1) { scalingVector.X = 1; }
-                    if (scalingVector.Y < 1) { scalingVector.Y = 1; }
-                    if (scalingVector.Z < 1) { scalingVector.Z = 1; }
+                    if (scalingVector.X < 1) scalingVector.X = 1; 
+                    if (scalingVector.Y < 1) scalingVector.Y = 1; 
+                    if (scalingVector.Z < 1) scalingVector.Z = 1; 
                 }
 
                 var boundaryBoxCenter = (meshChunk.MinBound + meshChunk.MaxBound) / 2f;
                 var scalingBoxCenter = meshChunk.ScalingVectors is not null ? (meshChunk.ScalingVectors.Max + meshChunk.ScalingVectors.Min) / 2f : Vector3.Zero;
                 var hasNormals = normals is not null;
+                var useScalingBox = _cryData.InputFile
+                    .EndsWith("cga") || _cryData.InputFile.EndsWith("cgf")
+                    && meshChunk.ScalingVectors is not null;
 
                 // Create Vertices, UV, normals and colors string
                 foreach (var subset in meshChunk.GeometryInfo.GeometrySubsets ?? [])

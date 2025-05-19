@@ -1,5 +1,6 @@
 ﻿using CgfConverter;
 using CgfConverter.CryEngineCore;
+using CgfConverter.Renderers;
 using CgfConverter.Renderers.Collada;
 using CgfConverter.Renderers.Collada.Collada.Enums;
 using CgfConverter.Renderers.Gltf;
@@ -69,6 +70,42 @@ public class StarCitizenTests
     }
 
     [TestMethod]
+    public void AEGS_Avenger_41()
+    {
+        var args = new string[] { $@"{objectDir41}\objects\spaceships\ships\AEGS\Avenger\AEGS_Avenger.cga", "-dds", "-dae", "-objectdir", $"{objectDir}" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir41);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var daeObject = colladaData.DaeObject;
+        colladaData.GenerateDaeObject();
+        testUtils.ValidateColladaXml(colladaData);
+
+        var noseNode = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].node[0];
+        var leftWing = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].node[1].node[0];
+
+        Assert.AreEqual("Nose", noseNode.ID);
+        Assert.AreEqual("hardpoint_radar", noseNode.node[28].ID);
+        Assert.AreEqual("1 0 0 0 0 1 0 3.925374 0 0 1 -1.074105 0 0 0 1", noseNode.node[28].Matrix[0].Value_As_String);
+        Assert.AreEqual("Wing_Left", leftWing.Name);
+        Assert.AreEqual("1 0 0 -5.550000 0 1 0 -0.070000 0 0 1 -0.883000 0 0 0 1", leftWing.Matrix[0].Value_As_String);
+
+        Assert.AreEqual(31, colladaData.DaeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(52, colladaData.DaeObject.Library_Images.Image.Length);
+
+        // Geometry
+        var noseGeo = daeObject.Library_Geometries.Geometry[0];
+        Assert.AreEqual("Nose-mesh", noseGeo.ID);
+        Assert.AreEqual(4, noseGeo.Mesh.Source.Length);
+        Assert.AreEqual(15, noseGeo.Mesh.Triangles.Length);
+        Assert.AreEqual(59817, noseGeo.Mesh.Source[0].Float_Array.Count);
+        Assert.IsTrue(noseGeo.Mesh.Source[0].Float_Array.Value_As_String.StartsWith("4.480176 -3.697465 -0.268108"));
+    }
+
+
+    [TestMethod]
     public void AEGS_Avenger_322()
     {
         var args = new string[] { $@"{objectDir322}\objects\spaceships\ships\AEGS\Avenger\AEGS_Avenger.cga" };
@@ -110,10 +147,10 @@ public class StarCitizenTests
     [TestMethod]
     public void AEGS_Avenger_Gltf()
     {
-        var args = new string[] {$@"{objectDir}\objects\spaceships\ships\aegs\Avenger\AEGS_Avenger.cga", "-objectDir", objectDir };
+        var args = new string[] {$@"{objectDir41}\objects\spaceships\ships\aegs\Avenger\AEGS_Avenger.cga", "-objectDir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir41);
         cryData.ProcessCryengineFiles();
 
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
@@ -517,6 +554,35 @@ public class StarCitizenTests
 
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
         var gltfData = gltfRenderer.GenerateGltfObject();
+    }
+
+    [TestMethod]
+    public void Console_Info_Banu_1_a_Gltf()
+    {
+        var args = new string[] { $@"{objectDir41}\Objects\buildingsets\banu\props\interactive\console\console_info_banu_1_a.cgf", "-objectDir", @"d:\depot\sc4.1\data" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir41);
+        cryData.ProcessCryengineFiles();
+
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        var gltfData = gltfRenderer.GenerateGltfObject();
+    }
+
+    [TestMethod]
+    public void Console_Info_Banu_1_a_Collada()
+    {
+        var args = new string[] { $@"{objectDir41}\Objects\buildingsets\banu\props\interactive\console\console_info_banu_1_a.cgf", "-objectDir", @"d:\depot\sc4.1\data" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir41);
+        cryData.ProcessCryengineFiles();
+
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
     }
 
     [TestMethod]

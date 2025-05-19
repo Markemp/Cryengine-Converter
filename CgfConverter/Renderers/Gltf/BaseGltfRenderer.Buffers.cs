@@ -295,10 +295,12 @@ public partial class BaseGltfRenderer
         Vector3[] data,
         int start = 0, int end = int.MaxValue)
     {
+        var dataFromRange = data.Skip(start).Take(end - start).ToArray();
         if (bufferView == -1)
             bufferView = AddBufferView(baseName, data, bufferViewTarget);
         if (end == int.MaxValue)
             end = data.Length;
+
         Root.Accessors.Add(new GltfAccessor
         {
             Name = baseName is null ? null : $"{baseName}/accessor[{start}:{end}]",

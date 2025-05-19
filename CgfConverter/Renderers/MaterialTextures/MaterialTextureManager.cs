@@ -100,9 +100,7 @@ public class MaterialTextureManager
             if (genMask.UseSpecAlphaInDiffuseMap)
             {
                 if (result.Specular is null)
-                {
                     result.Specular = rawDiffuse;
-                }
                 else
                 {
                     result.Specular = MergeChannels(
@@ -137,15 +135,11 @@ public class MaterialTextureManager
                 result.Glossiness ??= ExtractChannel(rawNormal, MaterialTextureChannel.Blue);
             }
             else
-            {
                 result.Normal = DropAlpha(rawNormal);
-            }
         }
 
         if (result.SpecularGlossiness is null && result.Specular is not null && result.Glossiness is not null)
-        {
             result.SpecularGlossiness = MergeChannels(rgb: result.Specular, a: result.Glossiness);
-        }
 
         if (result.MetallicRoughness is null && result.Glossiness is not null)
         {
