@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using CgfConverter.Renderers.Gltf.Models;
+﻿using CgfConverter.Renderers.Gltf.Models;
 using CgfConverter.Renderers.MaterialTextures;
 using CgfConverter.Utils;
+using System.Collections.Generic;
+using System.IO;
 
 namespace CgfConverter.Renderers.Gltf;
 
@@ -14,11 +14,11 @@ public partial class BaseGltfRenderer
     private readonly bool _writeBinary;
     private readonly Dictionary<(string MaterialFile, string SubMaterialName), WrittenMaterial> _materialMap = new();
 
-    private readonly List<byte[]> _bytesList = new();
-    private readonly Dictionary<string, byte[]> _filesList = new();
+    private readonly List<byte[]> _bytesList = [];
+    private readonly Dictionary<string, byte[]> _filesList = [];
     protected GltfRoot Root = new();
 
-    private MaterialTextureManager _materialTextureManager;
+    private readonly MaterialTextureManager _materialTextureManager;
 
     private int _currentOffset;
 

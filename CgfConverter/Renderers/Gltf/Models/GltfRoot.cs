@@ -13,46 +13,46 @@ public class GltfRoot
     public GltfAsset Asset = new();
 
     [JsonProperty("extensionsUsed")] 
-    public HashSet<string> ExtensionsUsed = new();
+    public HashSet<string> ExtensionsUsed = [];
 
     [JsonProperty("scene")] 
     public int Scene;
 
     [JsonProperty("scenes")] 
-    public List<GltfScene> Scenes = new();
+    public List<GltfScene> Scenes = [];
 
     [JsonProperty("nodes")] 
-    public List<GltfNode> Nodes = new();
+    public List<GltfNode> Nodes = [];
 
     [JsonProperty("animations")] 
-    public List<GltfAnimation> Animations = new();
+    public List<GltfAnimation> Animations = [];
 
     [JsonProperty("materials")] 
-    public List<GltfMaterial> Materials = new();
+    public List<GltfMaterial> Materials = [];
 
     [JsonProperty("meshes")] 
-    public List<GltfMesh> Meshes = new();
+    public List<GltfMesh> Meshes = [];
 
     [JsonProperty("textures")] 
-    public List<GltfTexture> Textures = new();
+    public List<GltfTexture> Textures = [];
 
     [JsonProperty("images")] 
-    public List<GltfImage> Images = new();
+    public List<GltfImage> Images = [];
 
     [JsonProperty("skins")] 
-    public List<GltfSkin> Skins = new();
+    public List<GltfSkin> Skins = [];
 
     [JsonProperty("accessors")] 
-    public List<GltfAccessor> Accessors = new();
+    public List<GltfAccessor> Accessors = [];
 
     [JsonProperty("bufferViews")] 
-    public List<GltfBufferView> BufferViews = new();
+    public List<GltfBufferView> BufferViews = [];
 
     [JsonProperty("samplers")] 
-    public List<GltfSampler> Samplers = new();
+    public List<GltfSampler> Samplers = [];
 
     [JsonProperty("buffers")] 
-    public List<GltfBuffer> Buffers = new();
+    public List<GltfBuffer> Buffers = [];
 
     public bool ShouldSerializeExtensionsUsed() => ExtensionsUsed.Any();
     public bool ShouldSerializeScenes() => Scenes.Any();
