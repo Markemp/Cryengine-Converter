@@ -243,8 +243,8 @@ public class ColladaModelRenderer : IRenderer
         var sampler = new ColladaSampler
         {
             ID = $"{controllerIdBase}_sampler_{animType}",
-            Input = new ColladaInputUnshared[3]
-            {
+            Input =
+            [
                 new ColladaInputUnshared
                 {
                     Semantic = ColladaInputSemantic.INPUT,
@@ -260,7 +260,7 @@ public class ColladaModelRenderer : IRenderer
                     Semantic = ColladaInputSemantic.INTERPOLATION,
                     source = $"#{controllerIdBase}_interpolation"
                 }
-            }
+            ]
         };
         var channel = new ColladaChannel
         {
@@ -295,7 +295,7 @@ public class ColladaModelRenderer : IRenderer
                 Source = $"#{controllerBoneName}_{controllerInfo.ControllerID}_{animType}_time_array",
                 Count = (uint)timeArray.Count,
                 Stride = 1,
-                Param = new ColladaParam[1] { new ColladaParam { Name = "TIME", Type = "float" } }
+                Param = [new ColladaParam { Name = "TIME", Type = "float" }]
             }
         };
 

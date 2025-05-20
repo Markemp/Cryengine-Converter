@@ -8,5 +8,5 @@ public class GltfAsset
     [JsonProperty("generator", NullValueHandling = NullValueHandling.Ignore)]
     public string? Generator = "Cryengine Converter";
 
-    [JsonProperty("version")] public string Version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+    [JsonProperty("version")] public string Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "Unknown version";
 }
