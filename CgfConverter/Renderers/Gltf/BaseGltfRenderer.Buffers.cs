@@ -480,13 +480,81 @@ public partial class BaseGltfRenderer
                 name,
                 materialTexture.Width,
                 materialTexture.Height,
-                materialTexture.Data,
+                materialTexture, // Pass the MaterialTexture object instead of just the Data
                 materialTexture.NumChannels == 4 ? SourceAlphaModes.Enable : SourceAlphaModes.Disable);
         }
 
         return new GltfTextureInfo { Index = index };
     }
 
+    private int AddTexture(string? baseName, int width, int height, MaterialTexture materialTexture, SourceAlphaModes sourceAlphaMode,
+        float? newOpacity = null)
+    {
+        // If we're not embedding textures and we have a MaterialTexture with a FileMaterialTextureKey,
+        // use the original file path instead of converting to PNG
+        if (!Args.EmbedTextures && materialTexture.Key is FileMaterialTextureKey fileKey)
+        {
+            string originalPath = fileKey.Path;
+            string extension = ".dds"; // Default
+            
+            // Determine the extension based on ArgsHandler settings
+            if (Args.PngTextures) extension = ".png";
+            else if (Args.TiffTextures) extension = ".tif";
+            else if (Args.TgaTextures) extension = ".tga";
+            
+            // Use the original path with the appropriate extension
+            string uri = Path.ChangeExtension(originalPath, extension);
+            
+            // Add the texture to the glTF file with the URI
+            return AddTexture(baseName, GetMimeTypeForExtension(extension), null, uri);
+        }
+        
+        // Fallback to the existing PNG conversion code
+        ColorRgba32[] raw = materialTexture.Data;
+        if (sourceAlphaMode == SourceAlphaModes.Automatic)
+        {
+            sourceAlphaMode = GltfRendererUtilities.HasMeaningfulAlphaChannel(raw)
+                ? SourceAlphaModes.Enable
+                : SourceAlphaModes.Disable;
+        }
+
+        using var ms = new MemoryStream();
+        if (newOpacity is not null)
+        {
+            var buf = raw.ToRgba32();
+            if (sourceAlphaMode == SourceAlphaModes.Enable)
+            {
+                for (var i = 0; i < buf.Length; i++)
+                    buf[i].A = (byte) (buf[i].A * newOpacity);
+            }
+            else
+            {
+                var newAlphaByte = (byte) (255 * newOpacity.Value);
+                for (var i = 0; i < buf.Length; i++)
+                    buf[i].A = newAlphaByte;
+            }
+
+            using var image = Image.LoadPixelData(buf, width, height);
+            image.SaveAsPng(ms);
+        }
+        else
+        {
+            if (sourceAlphaMode == SourceAlphaModes.Enable)
+            {
+                using var image = Image.LoadPixelData(raw.ToRgba32(), width, height);
+                image.SaveAsPng(ms);
+            }
+            else
+            {
+                using var image = Image.LoadPixelData(raw.ToRgb24(), width, height);
+                image.SaveAsPng(ms);
+            }
+        }
+
+        return AddTexture(baseName, "image/png", ms.ToArray());
+    }
+
+    // Overload for backward compatibility
     private int AddTexture(string? baseName, int width, int height, ColorRgba32[] raw, SourceAlphaModes sourceAlphaMode,
         float? newOpacity = null)
     {
@@ -533,21 +601,24 @@ public partial class BaseGltfRenderer
         return AddTexture(baseName, "image/png", ms.ToArray());
     }
 
-    private int AddTexture(string? baseName, string mimeType, byte[] textureBytes)
+    private int AddTexture(string? baseName, string mimeType, byte[]? textureBytes, string? uri = null)
     {
         int? bufferViewIndex = null;
-        string? uri = null;
-        if (Args.EmbedTextures)
+        
+        if (textureBytes != null && Args.EmbedTextures)
         {
             bufferViewIndex = AddBufferView(baseName, textureBytes, null);
+            uri = null;
         }
-        else
+        else if (textureBytes != null && uri == null)
         {
+            // Only create a new PNG file if we don't already have a URI
             baseName ??= $"file{_filesList.Count}";
-            baseName = "mat_ " + string.Join("_", baseName.Split(Path.GetInvalidFileNameChars())).TrimEnd('.');
+            baseName = "mat_" + string.Join("_", baseName.Split(Path.GetInvalidFileNameChars())).TrimEnd('.');
             uri = Path.ChangeExtension(baseName, ".png");
             _filesList[uri] = textureBytes;
         }
+        // else uri is already set to the original texture path
 
         Root.Images.Add(new GltfImage
         {
@@ -564,5 +635,20 @@ public partial class BaseGltfRenderer
         });
 
         return Root.Textures.Count - 1;
+    }
+    
+    private string GetMimeTypeForExtension(string extension)
+    {
+        return extension.ToLowerInvariant() switch
+        {
+            ".png" => "image/png",
+            ".jpg" => "image/jpeg",
+            ".jpeg" => "image/jpeg",
+            ".tif" => "image/tiff",
+            ".tiff" => "image/tiff",
+            ".dds" => "image/vnd-ms.dds", // Not a standard MIME type, but used by some applications
+            ".tga" => "image/x-tga", // Not a standard MIME type, but used by some applications
+            _ => "application/octet-stream"
+        };
     }
 }
