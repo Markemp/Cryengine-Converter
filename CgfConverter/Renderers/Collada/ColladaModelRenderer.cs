@@ -1050,7 +1050,7 @@ public class ColladaModelRenderer : IRenderer
             StringBuilder boneNames = new();
             for (int i = 0; i < _cryData.SkinningInfo.CompiledBones.Count; i++)
             {
-                boneNames.Append(_cryData.SkinningInfo.CompiledBones[i].boneName.Replace(' ', '_') + " ");
+                boneNames.Append(_cryData.SkinningInfo.CompiledBones[i].BoneName.Replace(' ', '_') + " ");
             }
             jointsSource.Name_Array.Value_Pre_Parse = boneNames.ToString().TrimEnd();
             jointsSource.Technique_Common = new ColladaTechniqueCommonSource
@@ -1292,7 +1292,7 @@ public class ColladaModelRenderer : IRenderer
                 };
 
                 var skeleton = colladaNode.Instance_Controller[0].Skeleton[0] = new ColladaSkeleton();
-                skeleton.Value = $"#{_cryData.SkinningInfo.CompiledBones[0].boneName}".Replace(' ', '_');
+                skeleton.Value = $"#{_cryData.SkinningInfo.CompiledBones[0].BoneName}".Replace(' ', '_');
                 colladaNode.Instance_Controller[0].Bind_Material = new ColladaBindMaterial[1];
                 ColladaBindMaterial bindMaterial = colladaNode.Instance_Controller[0].Bind_Material[0] = new ColladaBindMaterial();
 
@@ -1395,7 +1395,7 @@ public class ColladaModelRenderer : IRenderer
 
     private ColladaNode CreateJointNode(CompiledBone bone)
     {
-        var boneName = bone.boneName.Replace(' ', '_');
+        var boneName = bone.BoneName.Replace(' ', '_');
 
         ColladaNode tmpNode = new()
         {
@@ -1405,7 +1405,7 @@ public class ColladaModelRenderer : IRenderer
             Type = ColladaNodeType.JOINT
         };
         if (bone.ControllerID != -1 && bone.ControllerID != uint.MaxValue)
-            controllerIdToBoneName.Add(bone.ControllerID, bone.boneName);
+            controllerIdToBoneName.Add(bone.ControllerID, bone.BoneName);
 
         Matrix4x4 localMatrix = bone.LocalTransformMatrix.ConvertToTransformMatrix();
 
@@ -1417,7 +1417,7 @@ public class ColladaModelRenderer : IRenderer
         tmpNode.Matrix = matrices.ToArray();
 
         // Recursively call this for each of the child bones to this bone.
-        if (bone.numChildren > 0)
+        if (bone.NumberOfChildren > 0)
         {
             List<ColladaNode> childNodes = [];
             var allChildBones = _cryData.SkinningInfo?.GetChildBones(bone) ?? [];

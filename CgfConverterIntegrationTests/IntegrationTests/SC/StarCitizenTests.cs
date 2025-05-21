@@ -912,11 +912,11 @@ public class StarCitizenTests
     [TestMethod]
     public void Teapot_Ivo()
     {
-        var args = new string[] { $@"{objectDir}\Objects\default\teapot.cgf", "-dds", "-dae", "-objectdir", objectDir };
+        var args = new string[] { $@"{objectDir41}\Objects\default\teapot.cgf", "-objectdir", objectDir41 };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir41);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);

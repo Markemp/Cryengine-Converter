@@ -41,13 +41,13 @@ internal class ChunkCompiledBones_901 : ChunkCompiledBones
             Matrix4x4.Invert(m, out Matrix4x4 bpm);
             BoneList[i].BindPoseMatrix = bpm;
 
-            BoneList[i].boneName = boneNames[i];
-            if (BoneList[i].offsetParent != -1)
+            BoneList[i].BoneName = boneNames[i];
+            if (BoneList[i].OffsetParent != -1)
             {
-                BoneList[i].ParentBone = BoneList[BoneList[i].offsetParent];
-                BoneList[i].ParentControllerIndex = BoneList[i].offsetParent;
+                BoneList[i].ParentBone = BoneList[BoneList[i].OffsetParent];
+                BoneList[i].ParentControllerIndex = BoneList[i].OffsetParent;
                 BoneList[i].ParentBone.ChildIDs.Add(i);
-                BoneList[i].ParentBone.numChildren++;
+                BoneList[i].ParentBone.NumberOfChildren++;
             }
             BoneList[i].LocalTransformMatrix = Matrix3x4.CreateFromParts(relativeQuat, relativeTranslation);
             BoneList[i].WorldTransformMatrix = Matrix3x4.CreateFromParts(worldQuat, worldTranslation);

@@ -15,7 +15,7 @@ internal sealed class ChunkCompiledBones_900 : ChunkCompiledBones
         {
             CompiledBone tempBone = new();
             tempBone.ReadCompiledBone_900(b);
-            tempBone.offsetParent = i == 0 ? -1 : tempBone.ParentIndex - i;
+            tempBone.OffsetParent = i == 0 ? -1 : tempBone.ParentIndex - i;
             BoneList.Add(tempBone);
         }
 
@@ -25,13 +25,13 @@ internal sealed class ChunkCompiledBones_900 : ChunkCompiledBones
         // Add the ChildID to the parent bone.  This will help with navigation.
         for (int i = 0; i < NumBones; i++)
         {
-            BoneList[i].boneName = boneNames[i];
+            BoneList[i].BoneName = boneNames[i];
             if (BoneList[i].ParentIndex != -1)  // root bone has parent index = -1
             {
                 BoneList[i].ParentBone = BoneList[BoneList[i].ParentIndex];
                 BoneList[i].ParentControllerIndex = BoneList[i].ParentIndex;
                 BoneList[i].ParentBone.ChildIDs.Add(i);
-                BoneList[i].ParentBone.numChildren++;
+                BoneList[i].ParentBone.NumberOfChildren++;
             }
         }
     }

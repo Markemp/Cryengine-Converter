@@ -18,11 +18,11 @@ internal sealed class ChunkCompiledBones_801 : ChunkCompiledBones
             var tempBone = new CompiledBone();
             tempBone.ReadCompiledBone_801(b);
 
-            if (tempBone.offsetParent != 0)
-                tempBone.ParentBone = BoneList[i + tempBone.offsetParent];
+            if (tempBone.OffsetParent != 0)
+                tempBone.ParentBone = BoneList[i + tempBone.OffsetParent];
 
             if (tempBone.ParentBone is not null)
-                tempBone.ParentControllerIndex = BoneList.IndexOf(tempBone) + tempBone.offsetParent;
+                tempBone.ParentControllerIndex = BoneList.IndexOf(tempBone) + tempBone.OffsetParent;
             else
                 tempBone.ParentControllerIndex = 0;
 

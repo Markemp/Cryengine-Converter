@@ -176,31 +176,31 @@ public partial class BaseGltfRenderer
         foreach (var bone in skinningInfo.CompiledBones)
         {
             var boneId = skinningInfo.CompiledBones.IndexOf(bone); // parent bone id is always 0
-            var parentBone = boneId == 0 ? bone : skinningInfo.CompiledBones[boneId + bone.offsetParent];
+            var parentBone = boneId == 0 ? bone : skinningInfo.CompiledBones[boneId + bone.OffsetParent];
             var parentBoneId = skinningInfo.CompiledBones.IndexOf(parentBone);
             var matrix = boneIdToBindPoseMatrices[boneId] = bone.BindPoseMatrix;
 
-            if (bone.offsetParent != 0 && bone.offsetParent != 0xffffffff)
+            if (bone.OffsetParent != 0 && bone.OffsetParent != 0xffffffff)
             {
                 if (!Matrix4x4.Invert(boneIdToBindPoseMatrices[parentBoneId], out var parentMat))
                     return Log.E<bool>("CompiledBone[{0}/{1}]: Failed to invert BindPoseMatrix.",
-                        rootNode.Name, bone.ParentBone?.boneName);
+                        rootNode.Name, bone.ParentBone?.BoneName);
 
                 matrix *= parentMat;
             }
 
             if (!Matrix4x4.Invert(matrix, out matrix))
                 return Log.E<bool>("CompiledBone[{0}/{1}]: Failed to invert BindPoseMatrix.",
-                    rootNode.Name, bone.boneName);
+                    rootNode.Name, bone.BoneName);
 
             matrix = SwapAxes(Matrix4x4.Transpose(matrix));
             if (!Matrix4x4.Decompose(matrix, out var scale, out var rotation, out var translation))
                 return Log.E<bool>("CompiledBone[{0}/{1}]: BindPoseMatrix is not decomposable.",
-                rootNode.Name, bone.boneName);
+                rootNode.Name, bone.BoneName);
 
             var boneNode = new GltfNode
             {
-                Name = bone.boneName,
+                Name = bone.BoneName,
 
                 Scale = (scale - Vector3.One).LengthSquared() > 0.000001
                     ? new List<float> { scale.X, scale.Y, scale.Z }

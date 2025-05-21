@@ -37,7 +37,7 @@ public class SkinningInfo
     {
         int numJoints = CompiledBones.Count;
         if (boneIndex >= 0 && boneIndex < numJoints)
-            return CompiledBones[boneIndex].boneName;
+            return CompiledBones[boneIndex].BoneName;
 
         return string.Empty;        // Invalid bone ID
     }
