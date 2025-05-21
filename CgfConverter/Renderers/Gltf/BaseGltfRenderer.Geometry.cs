@@ -175,12 +175,12 @@ public partial class BaseGltfRenderer
         var boneIdToBindPoseMatrices = new Dictionary<int, Matrix4x4>();
         foreach (var bone in skinningInfo.CompiledBones)
         {
-            var boneId = skinningInfo.CompiledBones.IndexOf(bone);
-            var parentBone = skinningInfo.CompiledBones[boneId + bone.offsetParent];
+            var boneId = skinningInfo.CompiledBones.IndexOf(bone); // parent bone id is always 0
+            var parentBone = boneId == 0 ? bone : skinningInfo.CompiledBones[boneId + bone.offsetParent];
             var parentBoneId = skinningInfo.CompiledBones.IndexOf(parentBone);
-            var matrix = boneIdToBindPoseMatrices[skinningInfo.CompiledBones.IndexOf(bone)] = bone.BindPoseMatrix;
+            var matrix = boneIdToBindPoseMatrices[boneId] = bone.BindPoseMatrix;
 
-            if (bone.offsetParent != 0)
+            if (bone.offsetParent != 0 && bone.offsetParent != 0xffffffff)
             {
                 if (!Matrix4x4.Invert(boneIdToBindPoseMatrices[parentBoneId], out var parentMat))
                     return Log.E<bool>("CompiledBone[{0}/{1}]: Failed to invert BindPoseMatrix.",

@@ -20,7 +20,7 @@ public sealed class CompiledBone
     public int offsetChild;                    // Offset to the first child to this bone in number of CompiledBone structs. Don't use this. Not in Ivo files.
     public int numChildren;                    // Number of children to this bone
     public int objectNodeIndex;                // Points to index of NodeMeshCombo chunk (Ivo file)
-
+    public int ParentIndex { get; set; }       // For 0x900, we don't have parent offset.
     // Calculated values
     public Matrix4x4 BindPoseMatrix { get; set; }     // This is the WorldToBone matrix for library_controllers
     public int ParentControllerIndex { get; set; }    // Calculated controllerID of the parent bone put into the Bone Dictionary (the key)
@@ -76,7 +76,8 @@ public sealed class CompiledBone
     {
         ControllerID = b.ReadUInt32();                 // unique id of bone (generated from bone name)
         limbID = b.ReadUInt32();
-        offsetParent = b.ReadInt32();
+        ParentIndex = b.ReadInt32();
+        // have to compute offsetParent
         Quaternion relativeQuat = b.ReadQuaternion();
         Vector3 relativeTranslation = b.ReadVector3();
         Quaternion worldQuat = b.ReadQuaternion();
