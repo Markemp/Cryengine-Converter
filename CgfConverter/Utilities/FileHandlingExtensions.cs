@@ -1,16 +1,16 @@
+using CgfConverter.PackFileSystem;
+using CgfConverter.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CgfConverter.PackFileSystem;
-using CgfConverter.Utilities;
 
 namespace Extensions;
 
 public static class FileHandlingExtensions
 {
     /// <summary>Material texture file extensions used to search resolve texture paths to files on disk</summary>
-    private static readonly string?[] TextureExtensions = {null, ".dds", ".png", ".tif"};
+    private static readonly string?[] TextureExtensions = { null, ".dds", ".png", ".tif" };
 
     /// <summary>Attempts to resolve a material path to the correct file extension, and normalizes the path separators</summary>
     public static string ResolveTextureFile(string imagePath, IPackFileSystem fs, List<string> dataDirs)
@@ -30,7 +30,7 @@ public static class FileHandlingExtensions
                     var texturePath = Path.Combine(dataDir, img);
                     if (fs.Exists(texturePath))
                         return NormalizePath(texturePath);
-                    
+
                     // Check for Armored warfare split dds files
                     if (fs.Exists(texturePath + ".1"))
                         return NormalizePath(texturePath) + ".1";
@@ -57,7 +57,7 @@ public static class FileHandlingExtensions
         foreach (var ext in TextureExtensions)
         {
             if (ext == null) continue;
-            
+
             var texturePath = Path.Combine("textures", filenameWithoutExt + ext);
             if (fs.Exists(texturePath))
                 return NormalizePath(texturePath);
@@ -68,9 +68,9 @@ public static class FileHandlingExtensions
     }
 
     // Cache frequently normalized paths
-    private static readonly Dictionary<string, string> _normalizedPathCache = 
-        new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
-    
+    private static readonly Dictionary<string, string> _normalizedPathCache =
+        new(StringComparer.InvariantCultureIgnoreCase);
+
     /// <summary>
     /// Combines and normalizes path components that may not exist yet in the local filesystem.
     /// </summary>
@@ -82,25 +82,25 @@ public static class FileHandlingExtensions
         if (pathComponents.Length == 1 && pathComponents[0] != null)
         {
             string singlePath = pathComponents[0]!;
-            
+
             // Check cache first
             if (_normalizedPathCache.TryGetValue(singlePath, out var cachedPath))
                 return cachedPath;
-                
+
             // Simple case: no path separator or ./ or ../ to process
-            if (!singlePath.Contains('/') && !singlePath.Contains('\\') && 
+            if (!singlePath.Contains('/') && !singlePath.Contains('\\') &&
                 !singlePath.Contains("./") && !singlePath.Contains("../"))
             {
                 var trimmed = singlePath.Trim();
                 _normalizedPathCache[singlePath] = trimmed;
                 return trimmed;
             }
-            
+
             // For slightly more complex single path, normalize but still optimize
             if (_normalizedPathCache.Count > 1000)
                 _normalizedPathCache.Clear(); // Prevent unlimited growth
         }
-        
+
         // Original implementation for complex cases
         var parts = pathComponents.Where(x => x is not null).SelectMany(x => x!.Split('/', '\\')).ToList();
         for (var i = 0; i < parts.Count;)
@@ -115,7 +115,7 @@ public static class FileHandlingExtensions
             if (parts[i].Count(x => x == '.') == parts[i].Length)
             {
                 parts.RemoveAt(i);
-                if (i <= 0) 
+                if (i <= 0)
                     continue;
 
                 parts.RemoveAt(i - 1);
@@ -127,11 +127,11 @@ public static class FileHandlingExtensions
         }
 
         var result = string.Join('\\', parts);
-        
+
         // Cache the result if it's a single path component
         if (pathComponents.Length == 1 && pathComponents[0] != null)
             _normalizedPathCache[pathComponents[0]!] = result;
-            
+
         return result;
     }
 }

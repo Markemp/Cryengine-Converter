@@ -345,7 +345,7 @@ public class ColladaModelRenderer : IRenderer
                 Source = $"#{controllerBoneName}_{controllerInfo.ControllerID}_{animType}_interpolation_array",
                 Count = (uint)numberOfTimeFrames,
                 Stride = 1,
-                Param = new ColladaParam[1] { new ColladaParam { Name = "INTERPOLATION", Type = "name" } }
+                Param = [new ColladaParam { Name = "INTERPOLATION", Type = "name" }]
             }
         };
 

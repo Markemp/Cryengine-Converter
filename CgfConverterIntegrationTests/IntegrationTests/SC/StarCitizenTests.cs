@@ -263,7 +263,7 @@ public class StarCitizenTests
         var args = new string[] { $@"{objectDir41}\objects\spaceships\ships\AEGS\LandingGear\Vanguard\AEGS_Vanguard_LandingGear_Front.skin" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir41);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir41);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
@@ -679,7 +679,7 @@ public class StarCitizenTests
     }
 
     [TestMethod]
-    public void M_ccc_vanduul_helmet_01_IvoSkinFile()
+    public void Model_m_ccc_vanduul_helmet_01_IvoSkinFile()
     {
         var args = new string[] { $@"{objectDir}\Objects\Characters\Human\male_v7\armor\ccc\m_ccc_vanduul_helmet_01.skin" };
 
@@ -694,7 +694,7 @@ public class StarCitizenTests
     }
 
     [TestMethod]
-    public void M_ccc_bear_helmet_01_IvoSkinFile()
+    public void Model_m_ccc_bear_helmet_01_IvoSkinFile()
     {
         var args = new string[] { $@"{objectDir41}\Objects\Characters\Human\male_v7\armor\ccc\m_ccc_bear_helmet_01.skin" };
         int result = testUtils.argsHandler.ProcessArgs(args);
@@ -708,7 +708,7 @@ public class StarCitizenTests
     }
 
     [TestMethod]
-    public void m_qrt_specialist_heavy_arms_01_02_Ivo41()
+    public void Model_m_qrt_specialist_heavy_arms_01_02_Ivo41()
     {
         // mtlname chunk doesn't match any material file.  Create dummy mats.
         // Skin not mapping
@@ -735,7 +735,7 @@ public class StarCitizenTests
     }
 
     [TestMethod]
-    public void m_qrt_specialist_heavy_arms_01_cgfm_Ivo41()
+    public void Model_m_qrt_specialist_heavy_arms_01_cgfm_Ivo41()
     {
         // mtlname chunk doesn't match any material file.  Create dummy mats.
         var args = new string[] {
@@ -761,7 +761,7 @@ public class StarCitizenTests
     }
 
     [TestMethod]
-    public void med_bay_wall_bed_extender_a_Ivo()
+    public void Med_bay_wall_bed_extender_a_Ivo()
     {
         var args = new string[] { $@"{objectDir41}\Objects\Spaceships\Ships\AEGS\Idris_Frigate\interior\med_bay\med_bay_wall_bed_extender_a.cgf" };
         int result = testUtils.argsHandler.ProcessArgs(args);

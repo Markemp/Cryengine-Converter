@@ -303,7 +303,7 @@ public class MWOIntegrationTests
     }
 
     [TestMethod]
-    public void adr_right_torso_uac20_bh1_Collada()
+    public void Adr_right_torso_uac20_bh1_Collada()
     {
         // This model has 4 mtl files, all variations of mechdefault.  No mtl file provided, so it should create default materials only.
         var args = new string[] { $@"{objectDir}\objects\mechs\adder\body\adr_right_torso_uac20_bh1.cga", "-dds", "-dae", "-objectdir", objectDir };
@@ -359,7 +359,7 @@ public class MWOIntegrationTests
     }
 
     [TestMethod]
-    public void adr_right_torso_uac20_bh1_Gltf()
+    public void Adr_right_torso_uac20_bh1_Gltf()
     {
         // This model has 4 mtl files, all variations of mechdefault.  No mtl file provided, so it should create default materials only.
         var args = new string[] { $@"d:\depot\mwo\objects\mechs\adder\body\adr_right_torso_uac20_bh1.cga", "-dds", "-gltf", "-objectdir", objectDir };
@@ -375,7 +375,7 @@ public class MWOIntegrationTests
     }
 
     [TestMethod]
-    public void adr_right_torso_uac20_bh1_ProvidedMtlFile()
+    public void Adr_right_torso_uac20_bh1_ProvidedMtlFile()
     {
         // mtl file provided, so materials are created.
         var matFile = @"D:\depot\mwo\Objects\mechs\adder\body\adder_body.mtl";
@@ -699,7 +699,7 @@ public class MWOIntegrationTests
         var args = new string[] { $@"d:\depot\mwo\objects\mechs\hellbringer\body\hbr_right_torso.cga", "-dds", "-dae", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
@@ -715,7 +715,7 @@ public class MWOIntegrationTests
         var args = new string[] { $@"d:\depot\mwo\objects\mechs\hellbringer\body\hbr_right_torso.cga", "-dds", "-dae", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
