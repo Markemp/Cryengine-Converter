@@ -184,20 +184,15 @@ public class MaterialTextureManager
             if (_args.EmbedTextures)
             {
                 DdsFile ddsFile;
-                if (!_args.EmbedTextures)
-                    return new MaterialTexture(key, null, null, null, null);
-                else
-                {
-                    using Stream ddsfs = _args.PackFileSystem.GetStream(path);
-                    ddsFile = DdsFile.Load(ddsfs);
+                using Stream ddsfs = _args.PackFileSystem.GetStream(path);
+                ddsFile = DdsFile.Load(ddsfs);
 
-                    return _textures[key] = new MaterialTexture(
-                        key,
-                        new BcDecoder().Decode(ddsFile),
-                        (int)ddsFile.header.dwWidth,
-                        (int)ddsFile.header.dwHeight,
-                        4);
-                }
+                return _textures[key] = new MaterialTexture(
+                    key,
+                    new BcDecoder().Decode(ddsFile),
+                    (int)ddsFile.header.dwWidth,
+                    (int)ddsFile.header.dwHeight,
+                    4);
             }
             else
             {

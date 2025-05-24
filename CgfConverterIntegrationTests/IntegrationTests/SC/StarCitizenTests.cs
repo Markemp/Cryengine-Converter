@@ -571,6 +571,20 @@ public class StarCitizenTests
     }
 
     [TestMethod]
+    public void Console_Info_Banu_1_a_Gltf_EmbedImages()
+    {
+        var args = new string[] { $@"{objectDir41}\Objects\buildingsets\banu\props\interactive\console\console_info_banu_1_a.cgf", "-objectDir", objectDir41, "-embedtextures" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir41);
+        cryData.ProcessCryengineFiles();
+
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        var gltfData = gltfRenderer.GenerateGltfObject();
+    }
+
+    [TestMethod]
     public void Console_Info_Banu_1_a_Collada()
     {
         var args = new string[] { $@"{objectDir41}\Objects\buildingsets\banu\props\interactive\console\console_info_banu_1_a.cgf", "-objectDir", @"d:\depot\sc4.1\data" };
