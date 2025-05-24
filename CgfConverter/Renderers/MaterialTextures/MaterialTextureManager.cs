@@ -6,6 +6,7 @@ using BCnEncoder.Decoder;
 using BCnEncoder.Shared;
 using BCnEncoder.Shared.ImageFiles;
 using CgfConverter.Models.Materials;
+using CgfConverter.Utilities;
 using CgfConverter.Utils;
 using Extensions;
 
@@ -17,18 +18,134 @@ public class MaterialTextureManager
 
     private readonly ArgsHandler _args;
 
-    private readonly Dictionary<IMaterialTextureKey, MaterialTexture> _textures = new();
+    private readonly Dictionary<IMaterialTextureKey, MaterialTexture> _textures = [];
 
     public MaterialTextureManager(ArgsHandler args)
     {
         _args = args;
     }
 
-    public void Clear()
+    public MaterialTextureSet CreateSet(Material cryMaterial)
     {
-        foreach (MaterialTexture t in _textures.Values)
-            t.Dispose();
-        _textures.Clear();
+        Dictionary<Texture.MapTypeEnum, Texture> texturesDict = cryMaterial.Textures!
+            .Where(
+                x => x.TexType == Texture.TypeEnum.Default
+                    && x.File != "nearest_cubemap"
+                    && !string.IsNullOrWhiteSpace(x.File))
+            .ToDictionary(x => x.Map, x => x);
+
+        MaterialTexture? rawDiffuse, rawNormal, rawSpecular;
+
+        rawDiffuse = FromCryTexture(
+            texturesDict,
+            Texture.MapTypeEnum.TexSlot1,
+            Texture.MapTypeEnum.TexSlot9,
+            Texture.MapTypeEnum.Diffuse);
+        rawNormal = FromCryTexture(
+            texturesDict,
+            Texture.MapTypeEnum.TexSlot2,
+            Texture.MapTypeEnum.Normals);
+        rawSpecular = FromCryTexture(
+            texturesDict,
+            Texture.MapTypeEnum.TexSlot4,
+            Texture.MapTypeEnum.TexSlot10,
+            Texture.MapTypeEnum.Specular);
+
+        ParsedGenMask genMask = new(cryMaterial.StringGenMask);
+
+        MaterialTextureSet materialTextureSet = new();
+
+        if (rawSpecular is not null)
+        {
+            if (genMask.UseGlossInSpecularMap)
+            {
+                materialTextureSet.SpecularGlossiness = rawSpecular;
+                materialTextureSet.Glossiness = _args.EmbedTextures
+                    ? ExtractChannel(materialTextureSet.SpecularGlossiness, MaterialTextureChannel.Alpha)
+                    : rawSpecular; // verify alpha is connected to glossiness
+            }
+
+            materialTextureSet.Specular = DropAlpha(rawSpecular);
+        }
+
+        if (rawDiffuse is not null)
+        {
+            if (genMask.UseSpecAlphaInDiffuseMap)
+            {
+                if (materialTextureSet.Specular is null)
+                    materialTextureSet.Specular = rawDiffuse;
+                else
+                {
+                    materialTextureSet.Specular = _args.EmbedTextures
+                        ? MergeChannels(
+                            rgb: materialTextureSet.Specular,
+                            a: ExtractChannel(rawDiffuse, MaterialTextureChannel.Alpha))
+                        : rawDiffuse;  // verify alpha is connected to specular
+                }
+            }
+
+            materialTextureSet.Diffuse = cryMaterial.AlphaTest == 0
+                ? _args.EmbedTextures ? DropAlpha(rawDiffuse) : rawDiffuse
+                : rawDiffuse;
+        }
+
+        if (rawNormal is not null)
+        {
+            if (genMask.UseScatterGlossInNormalMap)
+            {
+                materialTextureSet.Normal = _args.EmbedTextures
+                    ? MergeChannels(
+                        r: ExtractChannel(rawNormal, MaterialTextureChannel.Green),
+                        g: ExtractChannel(rawNormal, MaterialTextureChannel.Alpha),
+                        b: SolidChannel(rawNormal, 1f),
+                        a: null)
+                    : rawNormal;
+                materialTextureSet.Scatter = _args.EmbedTextures
+                    ? ExtractChannel(rawNormal, MaterialTextureChannel.Red)
+                    : rawNormal;
+                materialTextureSet.Glossiness = _args.EmbedTextures
+                    ? ExtractChannel(rawNormal, MaterialTextureChannel.Blue)
+                    : rawNormal;
+            }
+            else if (genMask.UseHeightGlossInNormalMap)
+            {
+                materialTextureSet.Normal = _args.EmbedTextures
+                    ? MergeChannels(
+                        r: ExtractChannel(rawNormal, MaterialTextureChannel.Green),
+                        g: ExtractChannel(rawNormal, MaterialTextureChannel.Alpha),
+                        b: SolidChannel(rawNormal, 1f),
+                        a: null)
+                    : rawNormal;
+                materialTextureSet.Height = _args.EmbedTextures
+                    ? ExtractChannel(rawNormal, MaterialTextureChannel.Red)
+                    : rawNormal;
+                materialTextureSet.Glossiness = _args.EmbedTextures
+                    ? ExtractChannel(rawNormal, MaterialTextureChannel.Blue)
+                    : rawNormal;
+            }
+            else
+                materialTextureSet.Normal = _args.EmbedTextures
+                    ? DropAlpha(rawNormal)
+                    : rawNormal;
+        }
+
+        if (materialTextureSet.SpecularGlossiness is null && materialTextureSet.Specular is not null && materialTextureSet.Glossiness is not null)
+            materialTextureSet.SpecularGlossiness = _args.EmbedTextures
+                ? MergeChannels(rgb: materialTextureSet.Specular, a: materialTextureSet.Glossiness)
+                : rawSpecular;
+
+        if (materialTextureSet.MetallicRoughness is null && materialTextureSet.Glossiness is not null)
+        {
+            materialTextureSet.MetallicRoughness = _args.EmbedTextures
+                ? MergeChannels(
+                    r: SolidChannel(materialTextureSet.Glossiness, 1f),
+                    g: Invert(materialTextureSet.Glossiness),
+                    b: SolidChannel(materialTextureSet.Glossiness, 1f),
+                    a: null)
+                : null;
+        }
+
+        return materialTextureSet;
     }
 
     public MaterialTexture? FromCryTexture(
@@ -49,111 +166,14 @@ public class MaterialTextureManager
                 continue;
             }
 
-            if (GetTextureFromPath(normalizedPath) is {} tt)
+            if (GetMaterialTextureFromPath(normalizedPath) is { } tt)
                 return tt;
         }
 
         return null;
     }
 
-    public MaterialTextureSet CreateSet(Material cryMaterial)
-    {
-        Dictionary<Texture.MapTypeEnum, Texture> texturesDict = cryMaterial.Textures!
-            .Where(
-                x => x.TexType == Texture.TypeEnum.Default
-                    && x.File != "nearest_cubemap"
-                    && !string.IsNullOrWhiteSpace(x.File))
-            .ToDictionary(x => x.Map, x => x);
-
-        MaterialTexture? rawDiffuse = FromCryTexture(
-            texturesDict,
-            Texture.MapTypeEnum.TexSlot1,
-            Texture.MapTypeEnum.TexSlot9,
-            Texture.MapTypeEnum.Diffuse);
-        MaterialTexture? rawNormal = FromCryTexture(
-            texturesDict,
-            Texture.MapTypeEnum.TexSlot2,
-            Texture.MapTypeEnum.Normals);
-        MaterialTexture? rawSpecular = FromCryTexture(
-            texturesDict,
-            Texture.MapTypeEnum.TexSlot4,
-            Texture.MapTypeEnum.TexSlot10,
-            Texture.MapTypeEnum.Specular);
-
-        ParsedGenMask genMask = new(cryMaterial.StringGenMask);
-
-        MaterialTextureSet result = new();
-
-        if (rawSpecular is not null)
-        {
-            if (genMask.UseGlossInSpecularMap)
-            {
-                result.SpecularGlossiness = rawSpecular;
-                result.Glossiness = ExtractChannel(result.SpecularGlossiness, MaterialTextureChannel.Alpha);
-            }
-
-            result.Specular = DropAlpha(rawSpecular);
-        }
-
-        if (rawDiffuse is not null)
-        {
-            if (genMask.UseSpecAlphaInDiffuseMap)
-            {
-                if (result.Specular is null)
-                    result.Specular = rawDiffuse;
-                else
-                {
-                    result.Specular = MergeChannels(
-                        rgb: result.Specular,
-                        a: ExtractChannel(rawDiffuse, MaterialTextureChannel.Alpha));
-                }
-            }
-
-            result.Diffuse = cryMaterial.AlphaTest == 0 ? DropAlpha(rawDiffuse) : rawDiffuse;
-        }
-
-        if (rawNormal is not null)
-        {
-            if (genMask.UseScatterGlossInNormalMap)
-            {
-                result.Normal = MergeChannels(
-                    r: ExtractChannel(rawNormal, MaterialTextureChannel.Green),
-                    g: ExtractChannel(rawNormal, MaterialTextureChannel.Alpha),
-                    b: SolidChannel(rawNormal, 1f),
-                    a: null);
-                result.Scatter = ExtractChannel(rawNormal, MaterialTextureChannel.Red);
-                result.Glossiness ??= ExtractChannel(rawNormal, MaterialTextureChannel.Blue);
-            }
-            else if (genMask.UseHeightGlossInNormalMap)
-            {
-                result.Normal = MergeChannels(
-                    r: ExtractChannel(rawNormal, MaterialTextureChannel.Green),
-                    g: ExtractChannel(rawNormal, MaterialTextureChannel.Alpha),
-                    b: SolidChannel(rawNormal, 1f),
-                    a: null);
-                result.Height = ExtractChannel(rawNormal, MaterialTextureChannel.Red);
-                result.Glossiness ??= ExtractChannel(rawNormal, MaterialTextureChannel.Blue);
-            }
-            else
-                result.Normal = DropAlpha(rawNormal);
-        }
-
-        if (result.SpecularGlossiness is null && result.Specular is not null && result.Glossiness is not null)
-            result.SpecularGlossiness = MergeChannels(rgb: result.Specular, a: result.Glossiness);
-
-        if (result.MetallicRoughness is null && result.Glossiness is not null)
-        {
-            result.MetallicRoughness = MergeChannels(
-                r: SolidChannel(result.Glossiness, 1f),
-                g: Invert(result.Glossiness),
-                b: SolidChannel(result.Glossiness, 1f),
-                a: null);
-        }
-
-        return result;
-    }
-
-    private MaterialTexture? GetTextureFromPath(string path)
+    private MaterialTexture? GetMaterialTextureFromPath(string path)
     {
         FileMaterialTextureKey key = new(path);
         if (_textures.TryGetValue(key, out MaterialTexture? t))
@@ -161,24 +181,29 @@ public class MaterialTextureManager
 
         try
         {
-            DdsFile ddsFile;
-            if (DDSFileCombiner.IsSplitDDS(path))
+            if (_args.EmbedTextures)
             {
-                using Stream ddsfs = DDSFileCombiner.CombineToStream(path);
-                ddsFile = DdsFile.Load(ddsfs);
+                DdsFile ddsFile;
+                if (!_args.EmbedTextures)
+                    return new MaterialTexture(key, null, null, null, null);
+                else
+                {
+                    using Stream ddsfs = _args.PackFileSystem.GetStream(path);
+                    ddsFile = DdsFile.Load(ddsfs);
+
+                    return _textures[key] = new MaterialTexture(
+                        key,
+                        new BcDecoder().Decode(ddsFile),
+                        (int)ddsFile.header.dwWidth,
+                        (int)ddsFile.header.dwHeight,
+                        4);
+                }
             }
             else
             {
-                using Stream ddsfs = _args.PackFileSystem.GetStream(path);
-                ddsFile = DdsFile.Load(ddsfs);
+                // If not embedding, just return a placeholder texture
+                return _textures[key] = new MaterialTexture(key, null, null, null, null);
             }
-
-            return _textures[key] = new MaterialTexture(
-                key,
-                new BcDecoder().Decode(ddsFile),
-                (int) ddsFile.header.dwWidth,
-                (int) ddsFile.header.dwHeight,
-                4);
         }
         catch (Exception e)
         {
@@ -278,12 +303,12 @@ public class MaterialTextureManager
         if (_textures.TryGetValue(key, out MaterialTexture? mt))
             return mt;
 
-        return _textures[key] = new MaterialTexture(key, rgba.Data.ToArray(), rgba.Width, rgba.Height, 3);
+        return _textures[key] = new MaterialTexture(key, rgba.Data?.ToArray(), rgba.Width, rgba.Height, 3);
     }
 
     private MaterialTexture SolidChannel(MaterialTexture spec, float value)
     {
-        IMaterialTextureKey key = new SolidChannelMaterialTextureKey(value, spec.Width, spec.Height);
+        IMaterialTextureKey key = new SolidChannelMaterialTextureKey(value, spec.Width ?? default, spec.Height ?? default);
         if (_textures.TryGetValue(key, out MaterialTexture? mt))
             return mt;
 
@@ -292,5 +317,12 @@ public class MaterialTextureManager
         foreach (ref ColorRgba32 d in data.AsSpan())
             d.r = bv;
         return _textures[key] = new MaterialTexture(key, data, spec.Width, spec.Height, 1);
+    }
+
+    public void Clear()
+    {
+        foreach (MaterialTexture t in _textures.Values)
+            t.Dispose();
+        _textures.Clear();
     }
 }

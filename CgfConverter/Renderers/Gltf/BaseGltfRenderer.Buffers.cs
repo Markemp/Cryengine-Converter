@@ -478,8 +478,8 @@ public partial class BaseGltfRenderer
         {
             index = AddTexture(
                 name,
-                materialTexture.Width,
-                materialTexture.Height,
+                materialTexture.Width ?? default,
+                materialTexture.Height ?? default,
                 materialTexture, // Pass the MaterialTexture object instead of just the Data
                 materialTexture.NumChannels == 4 ? SourceAlphaModes.Enable : SourceAlphaModes.Disable);
         }
@@ -605,12 +605,12 @@ public partial class BaseGltfRenderer
     {
         int? bufferViewIndex = null;
         
-        if (textureBytes != null && Args.EmbedTextures)
+        if (textureBytes is not null && Args.EmbedTextures)
         {
             bufferViewIndex = AddBufferView(baseName, textureBytes, null);
             uri = null;
         }
-        else if (textureBytes != null && uri == null)
+        else if (textureBytes is not null && uri is null)
         {
             // Only create a new PNG file if we don't already have a URI
             baseName ??= $"file{_filesList.Count}";

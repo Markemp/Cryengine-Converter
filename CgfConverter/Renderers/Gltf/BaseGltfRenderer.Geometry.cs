@@ -9,6 +9,7 @@ using System.Numerics;
 using CgfConverter.Renderers.MaterialTextures;
 using CgfConverter.Models;
 using CgfConverter.Renderers.Collada.Collada.Collada_Core.Scene;
+using CgfConverter.Utilities;
 
 namespace CgfConverter.Renderers.Gltf;
 

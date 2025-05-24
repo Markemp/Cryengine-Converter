@@ -45,7 +45,7 @@ public partial class BaseGltfRenderer
                 return;
             }
 
-            MaterialTextureSet textures = mtm.CreateSet(CryMaterial);
+            MaterialTextureSet textureSet = mtm.CreateSet(CryMaterial);
             GltfMaterial = new GltfMaterial
             {
                 Name = CryMaterial.Name,
@@ -54,22 +54,22 @@ public partial class BaseGltfRenderer
                     ? GltfMaterialAlphaMode.Opaque
                     : GltfMaterialAlphaMode.Mask,
                 DoubleSided = CryMaterial.MaterialFlags.HasFlag(MaterialFlags.TwoSided),
-                NormalTexture = renderer.AddTextureInfo($"{CryMaterial.Name}-normal", textures.Normal),
+                NormalTexture = renderer.AddTextureInfo($"{CryMaterial.Name}-normal", textureSet.Normal),
                 PbrMetallicRoughness = new GltfMaterialPbrMetallicRoughness
                 {
-                    BaseColorTexture = renderer.AddTextureInfo($"{CryMaterial.Name}-diffuse", textures.Diffuse),
-                    BaseColorFactor = new[]
-                    {
+                    BaseColorTexture = renderer.AddTextureInfo($"{CryMaterial.Name}-diffuse", textureSet.Diffuse),
+                    BaseColorFactor =
+                    [
                         CryMaterial.DiffuseValue?.Red ?? 0f,
                         CryMaterial.DiffuseValue?.Green ?? 0f,
                         CryMaterial.DiffuseValue?.Blue ?? 0f,
                         float.Clamp(CryMaterial.OpacityValue ?? 1f, 0f, 1f),
-                    },
+                    ],
                     MetallicFactor = float.Clamp(CryMaterial.PublicParams?.Metalness ?? 0, 0, 1),
                     RoughnessFactor = float.Clamp((255 - (float) CryMaterial.Shininess) / 255f, 0, 1),
                     MetallicRoughnessTexture = renderer.AddTextureInfo(
                         $"{CryMaterial.Name}-metallicroughness",
-                        textures.MetallicRoughness),
+                        textureSet.MetallicRoughness),
                 },
                 Extensions = new GltfExtensions
                 {
@@ -82,7 +82,7 @@ public partial class BaseGltfRenderer
                             CryMaterial.DiffuseValue?.Blue ?? 0f,
                             float.Clamp(CryMaterial.OpacityValue ?? 0f, 0f, 1f),
                         },
-                        DiffuseTexture = renderer.AddTextureInfo($"{CryMaterial.Name}-diffuse", textures.Diffuse),
+                        DiffuseTexture = renderer.AddTextureInfo($"{CryMaterial.Name}-diffuse", textureSet.Diffuse),
                         SpecularFactor = new[]
                         {
                             CryMaterial.SpecularValue?.Red ?? 0f,
@@ -92,7 +92,7 @@ public partial class BaseGltfRenderer
                         GlossinessFactor = float.Clamp((float) CryMaterial.Shininess / 255f, 0f, 1f),
                         SpecularGlossinessTexture = renderer.AddTextureInfo(
                             $"{CryMaterial.Name}-specularglossiness",
-                            textures.SpecularGlossiness),
+                            textureSet.SpecularGlossiness),
                     },
                     KhrMaterialsEmissiveStrength = CryMaterial.GlowAmount <= 0
                         ? null
