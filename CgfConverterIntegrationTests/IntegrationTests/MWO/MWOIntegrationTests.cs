@@ -894,7 +894,7 @@ public class MWOIntegrationTests
 
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
         var gltfData = gltfRenderer.GenerateGltfObject();
-        Assert.AreEqual(2, gltfData.Textures.Count);
+        Assert.AreEqual(1, gltfData.Textures.Count);
         Assert.AreEqual(2, gltfData.Materials.Count);
     }
 

@@ -554,6 +554,17 @@ public class StarCitizenTests
 
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
         var gltfData = gltfRenderer.GenerateGltfObject();
+
+        // Materials checks
+        Assert.AreEqual(3, gltfData.Materials.Count);
+        Assert.AreEqual("grid_grey", gltfData.Materials[0].Name);
+        Assert.AreEqual(2, gltfData.Textures.Count);
+        Assert.AreEqual(2, gltfData.Images.Count);
+        Assert.AreEqual(@"d:\depot\sc4.1\data\Textures\defaults\defaultnouvs.dds", gltfData.Images[0].Uri);
+
+        // Geometry checks
+        Assert.AreEqual(1, gltfData.Meshes.Count);
+        Assert.AreEqual("mesh_box/mesh", gltfData.Meshes[0].Name);
     }
 
     [TestMethod]
@@ -582,6 +593,10 @@ public class StarCitizenTests
 
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
         var gltfData = gltfRenderer.GenerateGltfObject();
+
+        // Verify name for embedded image
+        Assert.AreEqual(@"decal pom-normal/image", gltfData.Images[0].Name);
+        Assert.IsNull(gltfData.Images[0].Uri);
     }
 
     [TestMethod]

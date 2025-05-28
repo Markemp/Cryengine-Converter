@@ -669,7 +669,9 @@ public class ColladaModelRenderer : IRenderer
                 floatArrayColors.Magnitude = 38;
                 floatArrayColors.Count = numberOfElements * 4;
 
-                var multiplerVector = Vector3.Abs((meshChunk.MinBound - meshChunk.MaxBound) / 2f);
+                var multiplerVector = _cryData.IsIvoFile
+                    ? Vector3.Abs((meshChunk.MinBound - meshChunk.MaxBound) / 2f)
+                    : Vector3.One;
                 
                 if (multiplerVector.X < 1) multiplerVector.X = 1;
                 if (multiplerVector.Y < 1) multiplerVector.Y = 1;
@@ -684,13 +686,16 @@ public class ColladaModelRenderer : IRenderer
                     if (scalingVector.Z < 1) scalingVector.Z = 1; 
                 }
 
-                var boundaryBoxCenter = (meshChunk.MinBound + meshChunk.MaxBound) / 2f;
+                var boundaryBoxCenter = _cryData.IsIvoFile 
+                    ? (meshChunk.MinBound + meshChunk.MaxBound) / 2f
+                    : Vector3.Zero;
+
                 var scalingBoxCenter = meshChunk.ScalingVectors is not null ? (meshChunk.ScalingVectors.Max + meshChunk.ScalingVectors.Min) / 2f : Vector3.Zero;
                 var hasNormals = normals is not null;
                 var useScalingBox = _cryData.InputFile
                     .EndsWith("cga") || _cryData.InputFile.EndsWith("cgf")
                     && meshChunk.ScalingVectors is not null;
-
+                
                 // Create Vertices, UV, normals and colors string
                 foreach (var subset in meshChunk.GeometryInfo.GeometrySubsets ?? [])
                 {

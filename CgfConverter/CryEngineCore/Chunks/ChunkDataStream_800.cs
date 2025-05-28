@@ -9,7 +9,7 @@ namespace CgfConverter.CryEngineCore;
 
 internal sealed class ChunkDataStream_800 : ChunkDataStream
 {
-    private short starCitizenFlag = 0;
+    private ushort starCitizenFlag = 0;
 
     public override void Read(BinaryReader b)
     {
@@ -21,7 +21,7 @@ internal sealed class ChunkDataStream_800 : ChunkDataStream
         NumElements = b.ReadUInt32(); // number of elements in this chunk
 
         BytesPerElement = b.ReadUInt16();    // Star Citizen 2.0 is using an int16 here now.
-        starCitizenFlag = b.ReadInt16();     // For Star Citizen files, this is 257.  Other known games (Hunt, Evolve, Prey) are 0.
+        starCitizenFlag = b.ReadUInt16();     // For Star Citizen files, this is 257.  Other known games (Hunt, Evolve, Prey, KCD2) are 0.
 
         SkipBytes(b, 8);  // Reserved1 and Reserved2
 
