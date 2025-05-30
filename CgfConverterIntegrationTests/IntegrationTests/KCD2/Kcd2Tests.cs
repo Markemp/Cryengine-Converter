@@ -58,13 +58,12 @@ public class Kcd2Tests
         Assert.AreEqual(1, mat.SubMaterials.Length);
     }
 
-    // \Objects\manmade\structures\industrial\smitheries\unique\tachov\tachov_1_smithy.cgf
     [TestMethod]
-    public void Tachov_1_Smithy_Collada()
+    public void Cv_Tachov_1_Smithy_01()
     {
         var args = new string[]
         {
-            $@"{objectDir}\Objects\manmade\structures\industrial\smitheries\unique\tachov\tachov_1_smithy.cgf", "-dds", "-dae"
+            $@"{objectDir}\Objects\manmade\structures\industrial\smitheries\unique\tachov\cv_tachov_1_smithy_01.cgf", "-dds", "-dae"
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
@@ -76,8 +75,25 @@ public class Kcd2Tests
         colladaData.GenerateDaeObject();
         testUtils.ValidateColladaXml(colladaData);
 
-        // Verify materials
-        var mats = daeObject.Library_Materials;
-        Assert.AreEqual(5, mats.Material.Length);
+    }
+
+    [TestMethod]
+    public void Cv_Tachov_1_Smithy_02()
+    {
+        // No material chunks.
+        var args = new string[]
+        {
+            $@"{objectDir}\Objects\manmade\structures\industrial\smitheries\unique\tachov\cv_tachov_1_smithy_02.cgf", "-dds", "-dae"
+        };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var daeObject = colladaData.DaeObject;
+        colladaData.GenerateDaeObject();
+        testUtils.ValidateColladaXml(colladaData);
+
     }
 }

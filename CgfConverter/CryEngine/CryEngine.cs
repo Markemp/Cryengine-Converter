@@ -542,7 +542,7 @@ public partial class CryEngine
     // Gets the Library material file if one can be found. File will be the name in the library as it's the dictionary key.
     private void SetMaterialFilesFromMatLibraryChunks(IEnumerable<string> libraryFileNames)
     {
-        if (libraryFileNames is null)
+        if (libraryFileNames is null || libraryFileNames.Count() == 0)
         {
             Log.W("Unable to find material file for {0}", InputFile);
             return;

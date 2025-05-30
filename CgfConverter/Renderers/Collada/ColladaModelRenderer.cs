@@ -24,6 +24,7 @@ using CgfConverter.Renderers.Collada.Collada.Collada_FX.Technique_Common;
 using CgfConverter.Renderers.Collada.Collada.Collada_FX.Texturing;
 using CgfConverter.Renderers.Collada.Collada.Enums;
 using CgfConverter.Renderers.Collada.Collada.Types;
+using CgfConverter.Utils;
 using Extensions;
 using System;
 using System.Collections.Generic;
@@ -35,9 +36,8 @@ using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-using static Extensions.FileHandlingExtensions;
 using static CgfConverter.Utilities.HelperMethods;
-using CgfConverter.Utils;
+using static Extensions.FileHandlingExtensions;
 
 namespace CgfConverter.Renderers.Collada;
 
@@ -672,7 +672,7 @@ public class ColladaModelRenderer : IRenderer
                 var multiplerVector = _cryData.IsIvoFile
                     ? Vector3.Abs((meshChunk.MinBound - meshChunk.MaxBound) / 2f)
                     : Vector3.One;
-                
+
                 if (multiplerVector.X < 1) multiplerVector.X = 1;
                 if (multiplerVector.Y < 1) multiplerVector.Y = 1;
                 if (multiplerVector.Z < 1) multiplerVector.Z = 1;
@@ -681,12 +681,12 @@ public class ColladaModelRenderer : IRenderer
                 if (meshChunk.ScalingVectors is not null)
                 {
                     scalingVector = Vector3.Abs((meshChunk.ScalingVectors.Max - meshChunk.ScalingVectors.Min) / 2f);
-                    if (scalingVector.X < 1) scalingVector.X = 1; 
-                    if (scalingVector.Y < 1) scalingVector.Y = 1; 
-                    if (scalingVector.Z < 1) scalingVector.Z = 1; 
+                    if (scalingVector.X < 1) scalingVector.X = 1;
+                    if (scalingVector.Y < 1) scalingVector.Y = 1;
+                    if (scalingVector.Z < 1) scalingVector.Z = 1;
                 }
 
-                var boundaryBoxCenter = _cryData.IsIvoFile 
+                var boundaryBoxCenter = _cryData.IsIvoFile
                     ? (meshChunk.MinBound + meshChunk.MaxBound) / 2f
                     : Vector3.Zero;
 
@@ -695,7 +695,7 @@ public class ColladaModelRenderer : IRenderer
                 var useScalingBox = _cryData.InputFile
                     .EndsWith("cga") || _cryData.InputFile.EndsWith("cgf")
                     && meshChunk.ScalingVectors is not null;
-                
+
                 // Create Vertices, UV, normals and colors string
                 foreach (var subset in meshChunk.GeometryInfo.GeometrySubsets ?? [])
                 {
@@ -790,7 +790,7 @@ public class ColladaModelRenderer : IRenderer
                 {
                     offsetStart += meshChunk.GeometryInfo.GeometrySubsets[q].NumVertices;
                 }
-                
+
                 for (var k = subsets[j].FirstIndex; k < (subsets[j].FirstIndex + subsets[j].NumIndices); k += 3)
                 {
                     var firstGlobalIndex = indices.Data[subsets[j].FirstIndex];
@@ -1138,7 +1138,8 @@ public class ColladaModelRenderer : IRenderer
                 {
                     weights.Append(boneMappingData[i].Weight[j].ToString() + " ");
                 }
-            };
+            }
+            ;
             accessor.Count = (uint)(numberOfWeights * boneInfluenceCount);
 
             CleanNumbers(weights);
@@ -1191,7 +1192,8 @@ public class ColladaModelRenderer : IRenderer
             for (int i = 0; i < numberOfWeights; i++)
             {
                 vCount.Append($"{boneInfluenceCount} ");
-            };
+            }
+            ;
             vertexWeights.VCount = new ColladaIntArrayString
             {
                 Value_As_String = vCount.ToString().TrimEnd()
@@ -1438,7 +1440,7 @@ public class ColladaModelRenderer : IRenderer
     private ColladaNode CreateGeometryNode(ChunkNode nodeChunk, ChunkMesh tmpMeshChunk, bool isControllerNode)
     {
         ColladaNode colladaNode = new();
-        var meshSubsets =nodeChunk.MeshData.GeometryInfo.GeometrySubsets;
+        var meshSubsets = nodeChunk.MeshData.GeometryInfo.GeometrySubsets;
         var nodeType = ColladaNodeType.NODE;
         colladaNode.Type = nodeType;
         colladaNode.Name = nodeChunk.Name;
