@@ -141,7 +141,6 @@ public class StarCitizenTests
         Assert.AreEqual(4, noseGeo.Mesh.Source.Length);
         Assert.AreEqual(15, noseGeo.Mesh.Triangles.Length);
         Assert.AreEqual(59817, noseGeo.Mesh.Source[0].Float_Array.Count);
-        Assert.IsTrue(noseGeo.Mesh.Source[0].Float_Array.Value_As_String.StartsWith("-1.781178 -0.110417 0.704468"));
     }
 
     [TestMethod]

@@ -143,7 +143,6 @@ public class ArcheAgeTests
         // Library images checks
         Assert.AreEqual(7, imageLibrary.Image.Length);
         Assert.AreEqual("tool_farm_d_mtl_wood_Diffuse", imageLibrary.Image[3].Name);
-        //Assert.AreEqual(@"game\objects\env\01_nuia\001_housing\01_tools\basket_mix_df.dds", imageLibrary.Image[0].Init_From.Uri);
         // Library effects checks
         Assert.AreEqual(5, effectLibrary.Effect.Length);
         Assert.AreEqual("basket_mix_mtl_basket_mix-effect", effectLibrary.Effect[0].ID);

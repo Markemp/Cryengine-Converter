@@ -91,7 +91,7 @@ public partial class CryEngine
         SkinningInfo = ConsolidateSkinningInfo(Models);
 
         CreateMaterials();
-        BuildNodeStructure(); // new way to build the geometry to remove dependency on models
+        BuildNodeStructure();
 
         CreateAnimations();
 
@@ -337,84 +337,191 @@ public partial class CryEngine
         return skin;
     }
 
+
     private void CreateMaterials()
     {
-        // if -mtl arg is used, try to find the material files, set to the full path, and create materials from it.
-        if (MaterialFiles.Count != 0)
+        var materialStrategies = new List<Func<bool>>
         {
-            foreach (var materialFile in MaterialFiles)
-            {
-                var key = Path.GetFileNameWithoutExtension(materialFile);
-                var fullyQualifiedMaterialFile = GetFullMaterialFilePath(materialFile);
-                if (fullyQualifiedMaterialFile is not null)
-                {
-                    var materials = MaterialUtilities.FromStream(PackFileSystem.GetStream(fullyQualifiedMaterialFile), materialFile, ObjectDir, closeAfter: true);
-                    Materials.Add(key, materials);
-                }
-                else
-                    Log.W("Unable to find provided material file {0}.  Checking material library chunks for materials.", materialFile);
-            }
-            AssignMaterialsToNodes();
-            return;
+            TryLoadExplicitMaterialFiles,
+            TryLoadMaterialLibraryFiles,
+            CreateDefaultMaterials
+        };
+
+        foreach (var strategy in materialStrategies)
+        {
+            if (strategy()) return;
+        }
+    }
+
+    private bool TryLoadExplicitMaterialFiles()
+    {
+        if (MaterialFiles.Count == 0) return false;
+
+        Log.I("Loading materials from explicitly provided files");
+
+        var loadedAny = false;
+        foreach (var materialFile in MaterialFiles.ToList()) // ToList to avoid modification during iteration
+        {
+            if (TryLoadSingleMaterialFile(materialFile))
+                loadedAny = true;
+            else
+                Log.W("Unable to find provided material file {0}. Will check material library chunks.", materialFile);
         }
 
-        // No material files provided.  Check the material library chunks for materials.
-        var materialLibraryFiles = Models[0].ChunkMap.Values
+        return loadedAny;
+    }
+
+    private bool TryLoadMaterialLibraryFiles()
+    {
+        var libraryFiles = GetMaterialLibraryFileNames();
+        if (!libraryFiles.Any())
+        {
+            Log.I("No material library files found in model chunks");
+            return false;
+        }
+
+        Log.I("Loading materials from library chunks: {0}", string.Join(", ", libraryFiles));
+
+        var loadedAny = false;
+        foreach (var libraryFile in libraryFiles)
+        {
+            if (TryLoadSingleMaterialFile(libraryFile))
+            {
+                loadedAny = true;
+                // Add to MaterialFiles list for consistency
+                if (!MaterialFiles.Contains(libraryFile))
+                    MaterialFiles.Add(libraryFile);
+            }
+        }
+
+        return loadedAny;
+    }
+
+    private bool CreateDefaultMaterials()
+    {
+        Log.W("Unable to find any material files for this model. Creating dummy materials.");
+
+        var libraryFiles = GetMaterialLibraryFileNames();
+        if (!libraryFiles.Any())
+        {
+            // Create a single default material with unknown key
+            var defaultKey = "default";
+            var maxMats = CalculateMaxMaterialCount();
+            var defaultMaterial = CreateDefaultMaterialSet(maxMats);
+            Materials.Add(defaultKey, defaultMaterial);
+            MaterialFiles.Add(defaultKey);
+            return true;
+        }
+
+        // Create default materials for each library file found
+        var maxMaterials = CalculateMaxMaterialCount();
+        foreach (var libraryFile in libraryFiles)
+        {
+            var key = Path.GetFileNameWithoutExtension(libraryFile) ?? "unknown";
+            if (!Materials.ContainsKey(key))
+            {
+                var defaultMaterial = CreateDefaultMaterialSet(maxMaterials);
+                Materials.Add(key, defaultMaterial);
+                MaterialFiles.Add(libraryFile);
+            }
+        }
+
+        return Materials.Count > 0;
+    }
+
+    private bool TryLoadSingleMaterialFile(string materialFile)
+    {
+        var key = Path.GetFileNameWithoutExtension(materialFile);
+        var fullyQualifiedPath = GetFullMaterialFilePath(materialFile);
+
+        if (fullyQualifiedPath == null)
+            return false;
+
+        try
+        {
+            var materials = MaterialUtilities.FromStream(
+                PackFileSystem.GetStream(fullyQualifiedPath),
+                materialFile,
+                ObjectDir,
+                closeAfter: true);
+
+            Materials.Add(key, materials);
+            Log.D("Successfully loaded material file: {0}", materialFile);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.W("Failed to load material file {0}: {1}", materialFile, ex.Message);
+            return false;
+        }
+    }
+
+    private IEnumerable<string> GetMaterialLibraryFileNames()
+    {
+        return Models[0].ChunkMap.Values
             .OfType<ChunkMtlName>()
-            .Where(x => x.MatType == MtlNameType.Library || x.MatType == MtlNameType.Basic || x.MatType == MtlNameType.Single)
-            .Select(x => x.Name);
+            .Where(x => x.MatType == MtlNameType.Library ||
+                       x.MatType == MtlNameType.Basic ||
+                       x.MatType == MtlNameType.Single)
+            .Select(x => x.Name)
+            .Where(name => !string.IsNullOrEmpty(name))
+            .Distinct();
+    }
 
-        foreach (var file in materialLibraryFiles)
-            Log.I($"Material Library File: {file}");
+    private uint CalculateMaxMaterialCount()
+    {
+        // Get max from mesh subsets
+        var meshSubsets = Models.Last().ChunkMap.Values
+            .OfType<ChunkMeshSubsets>()
+            .SelectMany(c => c.MeshSubsets);
+        var maxFromMeshSubsets = meshSubsets.Any()
+            ? (uint)(meshSubsets.Max(x => x.MatID) + 1)
+            : 0u;
 
-        SetMaterialFilesFromMatLibraryChunks(materialLibraryFiles);
+        // Get max from material name chunks
+        var mtlNameCounts = Models
+            .SelectMany(x => x.ChunkMap.Values.OfType<ChunkMtlName>())
+            .Select(x => x.NumChildren);
+        var maxFromMtlNames = mtlNameCounts.Any() ? mtlNameCounts.Max() : 0u;
 
-        if (MaterialFiles is not null)
+        // Get max from IVO subsets if applicable
+        var maxFromIvoSubsets = 0u;
+        if (Models.Count > 1)
         {
-            foreach (var materialFile in MaterialFiles)
-            {
-                var key = Path.GetFileNameWithoutExtension(materialFile);
-                var fullyQualifiedMaterialFile = GetFullMaterialFilePath(materialFile);
-                if (fullyQualifiedMaterialFile is not null)
-                {
-                    var materials = MaterialUtilities.FromStream(PackFileSystem.GetStream(fullyQualifiedMaterialFile), materialFile, ObjectDir, closeAfter:true);
-                    Materials.Add(key, materials);
-                }
-            }
+            var ivoSubsets = Models[1].ChunkMap.Values
+                .OfType<ChunkIvoSkinMesh>()
+                .SelectMany(x => x.MeshSubsets);
+
+            if (ivoSubsets.Any())
+                maxFromIvoSubsets = (uint)(ivoSubsets.Max(x => x.MatID) + 1);
         }
 
-        // Unable to find any materials.  Create default mats for each library file.
-        if (Materials.Count == 0)
+        var result = Math.Max(Math.Max(maxFromMeshSubsets, maxFromMtlNames), maxFromIvoSubsets);
+        return Math.Max(result, 1u); // Ensure at least 1 material
+    }
+
+    private Material CreateDefaultMaterialSet(uint maxNumberOfMaterials)
+    {
+        var materials = new Material
         {
-            Log.W("Unable to find any material files for this model.  Creating dummy materials.");
-            var meshSubsets = Models.Last().ChunkMap.Values.OfType<ChunkMeshSubsets>()
-                .SelectMany(c => c.MeshSubsets);
+            SubMaterials = new Material[maxNumberOfMaterials],
+            Name = Name
+        };
 
-            var maxChildren = Models
-                .SelectMany(x => x.ChunkMap.Values.OfType<ChunkMtlName>())
-                .Select(x => x.NumChildren)
-                .Max();
+        var random = new Random();
+        for (var i = 0; i < maxNumberOfMaterials; i++)
+        {
+            // Generate random RGB values between 0.0 and 1.0
+            var r = random.NextSingle();
+            var g = random.NextSingle();
+            var b = random.NextSingle();
 
-            var maxMats = (uint)(meshSubsets.Select(x => x.MatID).DefaultIfEmpty(0).Max() + 1);
-
-            var ivoSubsets = Models.Count > 1 ? Models[1].ChunkMap.Values.OfType<ChunkIvoSkinMesh>()
-                .SelectMany(x => x.MeshSubsets) : [];
-            var maxIvoMats = (uint)ivoSubsets.Select(x => x.MatID).DefaultIfEmpty(0).Max() + 1;
-
-            maxMats = Math.Max(Math.Max(maxMats, maxChildren), maxIvoMats);
-
-            foreach (var materialFile in materialLibraryFiles)
-            {
-                var key = Path.GetFileNameWithoutExtension(materialFile) ?? "unknown";
-
-                if (!Materials.ContainsKey(key))
-                {
-                    MaterialFiles.Add(materialFile ?? "unknown");
-                    var materials = CreateDefaultMaterials(maxMats);
-                    Materials.Add(key, materials);
-                }
-            }
+            materials.SubMaterials[i] = MaterialUtilities.CreateDefaultMaterial(
+                $"material{i}",
+                $"{r:F3},{g:F3},{b:F3}");
         }
+
+        return materials;
     }
 
     private void CreateAnimations()
@@ -455,7 +562,8 @@ public partial class CryEngine
 
     private void AssignMaterialsToNodes(bool mtlFilesProvided = true)
     {
-        foreach (var node in Nodes.Where(x => x.MaterialID != 0))
+        //foreach (var node in Nodes.Where(x => x.MaterialID != 0))
+        foreach (var node in Nodes)
         {
             if (mtlFilesProvided && MaterialFiles.Count == 1)
             {
@@ -523,56 +631,6 @@ public partial class CryEngine
         // Cache the result (even if null) to avoid repeated lookups
         _materialPathCache[materialFile] = result;
         return result;
-    }
-
-    private Material CreateDefaultMaterials(uint maxNumberOfMaterials)
-    {
-        var materials = new Material
-        {
-            SubMaterials = new Material[maxNumberOfMaterials],
-            Name = Name
-        };
-
-        for (var i = 0; i < maxNumberOfMaterials; i++)
-            materials.SubMaterials[i] = MaterialUtilities.CreateDefaultMaterial($"material{i}", $"{i / (float)maxNumberOfMaterials},0.5,0.5");
-
-        return materials;
-    }
-
-    // Gets the Library material file if one can be found. File will be the name in the library as it's the dictionary key.
-    private void SetMaterialFilesFromMatLibraryChunks(IEnumerable<string> libraryFileNames)
-    {
-        if (libraryFileNames is null || libraryFileNames.Count() == 0)
-        {
-            Log.W("Unable to find material file for {0}", InputFile);
-            return;
-        }
-        
-        //HashSet<string> materialFiles = [];
-        
-        foreach (var libraryFile in libraryFileNames)
-        {
-            if (libraryFile is null) 
-                return;
-            
-            // Use GetFullMaterialFilePath to leverage caching and consistent path handling
-            if (GetFullMaterialFilePath(libraryFile) != null)
-            {
-                MaterialFiles.Add(libraryFile);
-                continue;
-            }
-            
-            // If we couldn't find it directly, try with .mtl extension explicitly
-            var withExtension = libraryFile;
-            if (!withExtension.EndsWith(".mtl", StringComparison.InvariantCultureIgnoreCase))
-                withExtension += ".mtl";
-                
-            if (GetFullMaterialFilePath(withExtension) != null)
-                MaterialFiles.Add(libraryFile);
-        }
-        
-        if (MaterialFiles.Count == 0)
-            Log.W("Unable to find any material files for {0}", InputFile);
     }
 
     public bool IsIvoFile => Models.First().FileSignature?.Equals("#ivo") ?? false;
