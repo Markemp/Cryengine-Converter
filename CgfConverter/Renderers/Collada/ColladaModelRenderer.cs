@@ -1015,7 +1015,7 @@ public class ColladaModelRenderer : IRenderer
                 Log.W($"Error combining texture {textureFile}: {ex.Message}");
             }
 
-            // textureFile = Path.GetRelativePath(daeOutputFile.DirectoryName, textureFile);
+            textureFile = Path.GetRelativePath(daeOutputFile.DirectoryName, textureFile);
 
             textureFile = textureFile.Replace(" ", @"%20");
             image.Init_From.Uri = textureFile;
