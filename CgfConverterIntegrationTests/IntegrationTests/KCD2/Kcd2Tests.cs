@@ -107,4 +107,34 @@ public class Kcd2Tests
         Assert.AreEqual(1, daeObject.Library_Visual_Scene.Visual_Scene[0].Node.Length);
         Assert.AreEqual("#default_mtl_material0-material", node.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
     }
+
+    [TestMethod]
+    public void Boar_unsplit()
+    {
+        var args = new string[]
+        {
+            $@"{objectDir}\Objects\characters\animals\boar\boar.skin", "-dds", "-dae", "-ut"
+        };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var daeObject = colladaData.DaeObject;
+        colladaData.GenerateDaeObject();
+        testUtils.ValidateColladaXml(colladaData);
+
+        var node = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0];
+        Assert.AreEqual(3, daeObject.Library_Materials.Material.Length);
+        Assert.AreEqual("boar_mtl_boar_hair", daeObject.Library_Materials.Material[0].Name);
+        Assert.AreEqual(2, daeObject.Library_Visual_Scene.Visual_Scene[0].Node.Length);
+
+        // Textures
+        var textures = daeObject.Library_Images.Image;
+        Assert.AreEqual(13, textures.Length);
+        Assert.AreEqual("boar_mtl_boar_hair_Diffuse", textures[0].Name);
+        Assert.AreEqual("./boar_diff.dds", textures[0].Init_From.Uri);
+    }
+
 }

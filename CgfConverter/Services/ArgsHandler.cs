@@ -59,6 +59,8 @@ public sealed class ArgsHandler
     public bool NoTextures { get; internal set; }
     /// <summary>For glTF exports, embed textures into the glTF file instead of external references.</summary>
     public bool EmbedTextures { get; internal set; }
+    /// <summary> Use DDS Unsplitter to combine split texture files into a single file. </summary>
+    public bool UnsplitTextures { get; internal set; }
     /// <summary>Split each layer into different files, if a file does contain multiple layers.</summary>
     public bool SplitLayers { get; internal set; }
     /// <summary>List of node names to skip when rendering</summary>
@@ -184,6 +186,10 @@ public sealed class ArgsHandler
                     break;
                 case "-embedtextures":
                     EmbedTextures = true;
+                    break;
+                case "-unsplittextures":
+                case "-ut":
+                    UnsplitTextures = true;
                     break;
                 case "-tga":
                     TgaTextures = true;
@@ -399,12 +405,14 @@ public sealed class ArgsHandler
         Console.WriteLine("-png:              Change the materials to look for .png files instead of .dds.");
         Console.WriteLine("-tga:              Change the materials to look for .tga files instead of .dds.");
         Console.WriteLine("-embedtextures:    Embed textures into the glTF binary file instead of external references.");
+        Console.WriteLine("-ut/-unsplittextures:");
+        Console.WriteLine("                   Use DDS Unsplitter to combine split texture files into a single file.");
         Console.WriteLine();                        
         Console.WriteLine("-smooth:           Smooth Faces.");
         Console.WriteLine("-group:            Group meshes into single model.");
-        Console.WriteLine("-en/-excludenode < regular expression for node names>:");
+        Console.WriteLine("-en/-excludenode   <regular expression for node names>:");
         Console.WriteLine("                   Exclude matching nodes from rendering. Can be listed multiple times.");
-        Console.WriteLine("-em/-excludemat <r egular expression for material names>:");
+        Console.WriteLine("-em/-excludemat    <regular expression for material names>");
         Console.WriteLine("                   Exclude meshes with matching materials from rendering. Can be listed multiple times.");
         Console.WriteLine("-sm/-excludeshader  <material_name>:");
         Console.WriteLine("                   Exclude meshes with the material using matching shader from rendering. Can be listed multiple times.");

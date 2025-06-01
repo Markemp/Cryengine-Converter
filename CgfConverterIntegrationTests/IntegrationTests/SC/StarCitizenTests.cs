@@ -953,6 +953,21 @@ public class StarCitizenTests
     }
 
     [TestMethod]
+    public void Teapot_Ivo_Unsplit()
+    {
+        var args = new string[] { $@"{objectDir41}\Objects\default\teapot.cgf", "-objectdir", objectDir41, "-ut" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir41);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+    }
+
+    [TestMethod]
     public void Teapot_322()
     {
         var args = new string[] { $@"{objectDir322}\Objects\default\teapot.cgf" };

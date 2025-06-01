@@ -37,6 +37,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using static CgfConverter.Utilities.HelperMethods;
+using static DDSUnsplitter.Library.DDSUnsplitter;
 using static Extensions.FileHandlingExtensions;
 
 namespace CgfConverter.Renderers.Collada;
@@ -925,8 +926,8 @@ public class ColladaModelRenderer : IRenderer
 
     private void CreateMaterials()
     {
-        List<ColladaMaterial> colladaMaterials = new();
-        List<ColladaEffect> colladaEffects = new();
+        List<ColladaMaterial> colladaMaterials = [];
+        List<ColladaEffect> colladaEffects = [];
         if (DaeObject.Library_Materials?.Material is null)
         {
             DaeObject.Library_Materials = new();
@@ -979,7 +980,7 @@ public class ColladaModelRenderer : IRenderer
 
     private void AddTexturesToTextureLibrary(string matKey, Material submat)
     {
-        List<ColladaImage> imageList = new();
+        List<ColladaImage> imageList = [];
         int numberOfTextures = submat.Textures?.Length ?? 0;
 
         for (int i = 0; i < numberOfTextures; i++)
@@ -1001,8 +1002,20 @@ public class ColladaModelRenderer : IRenderer
                 textureFile = Path.ChangeExtension(textureFile, ".tga");
             else if (_args.TiffTextures && File.Exists(Path.ChangeExtension(textureFile, ".tif")))
                 textureFile = Path.ChangeExtension(textureFile, ".tif");
+            try
+            {
+                if (_args.UnsplitTextures)
+                {
+                    Log.I($"Combining texture file {textureFile}");
+                    Combine(textureFile);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.W($"Error combining texture {textureFile}: {ex.Message}");
+            }
 
-            textureFile = Path.GetRelativePath(daeOutputFile.DirectoryName, textureFile);
+            // textureFile = Path.GetRelativePath(daeOutputFile.DirectoryName, textureFile);
 
             textureFile = textureFile.Replace(" ", @"%20");
             image.Init_From.Uri = textureFile;

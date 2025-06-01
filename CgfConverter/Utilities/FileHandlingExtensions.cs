@@ -23,7 +23,7 @@ public static class FileHandlingExtensions
             var img = ext == null ? imagePath : Path.ChangeExtension(imagePath, ext);
 
             // 1. Check in objectDir (most common case for Cryengine)
-            if (dataDirs != null && dataDirs.Count > 0)
+            if (dataDirs is not null && dataDirs.Count > 0)
             {
                 foreach (var dataDir in dataDirs)
                 {
