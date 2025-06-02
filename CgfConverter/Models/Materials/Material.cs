@@ -1,4 +1,5 @@
-﻿using System.Xml.Serialization;
+﻿using System.Collections.Generic;
+using System.Xml.Serialization;
 
 namespace CgfConverter.Models.Materials;
 
@@ -92,6 +93,9 @@ public class Material : MaterialBase
     [XmlArray(ElementName = "Textures")]
     [XmlArrayItem(ElementName = "Texture")]
     public Texture[]? Textures { get; set; }
+
+    [XmlElement(ElementName = "MatLayers")]
+    public MatLayers? MatLayers { get; set; }
 
     public override string ToString() => $"Name: {Name}, Shader: {Shader}, Submaterials: {SubMaterials?.Length ?? 0}";
 }

@@ -63,4 +63,12 @@ public class CryXmlSerializerTests
         var material = MaterialUtilities.FromFile(filename, "m_head_capon_m01", objectDir);
         Assert.AreEqual(5, material.SubMaterials.Count());
     }
+
+    [TestMethod]
+    public void FromFile_clothing_main_m()
+    {
+        var filename = @"..\..\..\TestData\clothing_main_m.mtl";
+        var material = MaterialUtilities.FromFile(filename, "clothing_main_m", objectDir);
+        Assert.AreEqual(1, material.SubMaterials.Count());
+    }
 }
