@@ -5,7 +5,7 @@ using System.Linq;
 namespace CgfConverterTests.IntegrationTests;
 
 [TestClass]
-[TestCategory("unit")]
+[TestCategory("integration")]
 public class CryXmlSerializerTests
 {
     string objectDir = @"d:\depot\kcd2";

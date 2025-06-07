@@ -32,7 +32,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
 	<None Update="TestData\m_head_capon_m01.mtl">
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		<CopyToOutputDirectory>Never</CopyToOutputDirectory>
 	</None>
     <None Update="Schemas\COLLADA_1_5.xsd">
       <SubType>Designer</SubType>
