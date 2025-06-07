@@ -57,8 +57,8 @@ public class StarCitizenTests
         Assert.AreEqual("Wing_Left", leftWing.Name);
         Assert.AreEqual("1 0 0 -5.550000 0 1 0 -0.070000 0 0 1 -0.883000 0 0 0 1", leftWing.Matrix[0].Value_As_String);
 
-        Assert.AreEqual(31, colladaData.DaeObject.Library_Materials.Material.Length);
-        Assert.AreEqual(52, colladaData.DaeObject.Library_Images.Image.Length);
+        Assert.AreEqual(49, colladaData.DaeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(128, colladaData.DaeObject.Library_Images.Image.Length);
 
         // Geometry
         var noseGeo = daeObject.Library_Geometries.Geometry[0];
@@ -92,8 +92,8 @@ public class StarCitizenTests
         Assert.AreEqual("Wing_Left", leftWing.Name);
         Assert.AreEqual("1 0 0 -5.550000 0 1 0 -0.070000 0 0 1 -0.883000 0 0 0 1", leftWing.Matrix[0].Value_As_String);
 
-        Assert.AreEqual(31, colladaData.DaeObject.Library_Materials.Material.Length);
-        Assert.AreEqual(52, colladaData.DaeObject.Library_Images.Image.Length);
+        Assert.AreEqual(49, colladaData.DaeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(128, colladaData.DaeObject.Library_Images.Image.Length);
 
         // Geometry
         var noseGeo = daeObject.Library_Geometries.Geometry[0];
@@ -131,8 +131,8 @@ public class StarCitizenTests
         Assert.AreEqual("Wing_Left", leftWing.Name);
         Assert.AreEqual("1 0 0 -5.550000 0 1 0 -0.070000 0 0 1 -0.883000 0 0 0 0", leftWing.Matrix[0].Value_As_String);
 
-        Assert.AreEqual(31, colladaData.DaeObject.Library_Materials.Material.Length);
-        Assert.AreEqual(53, colladaData.DaeObject.Library_Images.Image.Length);
+        Assert.AreEqual(49, colladaData.DaeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(129, colladaData.DaeObject.Library_Images.Image.Length);
 
 
         // Geometry
@@ -206,7 +206,7 @@ public class StarCitizenTests
 
         Assert.AreEqual("AEGS_Gladius_LandingGear_Front_Anim", scene.Node[0].ID);
         Assert.AreEqual(0, geometry.Geometry.Length);
-        Assert.AreEqual(33, materials.Material.Length);
+        Assert.AreEqual(55, materials.Material.Length);
     }
 
     [TestMethod]
@@ -229,7 +229,7 @@ public class StarCitizenTests
         Assert.AreEqual("AEGS_Idris_holo_viewer", scene.Node[0].ID);
         Assert.AreEqual("AEGS_Idris_holo_viewer-mesh", geometry.ID);
         Assert.AreEqual(4, geometry.Mesh.Triangles.Length);
-        Assert.AreEqual(5, materials.Material.Length);
+        Assert.AreEqual(10, materials.Material.Length);
     }
 
     [TestMethod]
@@ -426,7 +426,7 @@ public class StarCitizenTests
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
 
-        Assert.AreEqual(17, daeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(43, daeObject.Library_Materials.Material.Length);
 
         testUtils.ValidateColladaXml(colladaData);
     }
@@ -678,8 +678,8 @@ public class StarCitizenTests
         Assert.AreEqual("hardpoint_turret_rear_radar", bodyNode.node[28].ID);
         Assert.AreEqual("1 0 0 0.000001 0 1 0 1 0 0 1 -1.350000 0 0 0 1", bodyNode.node[28].Matrix[0].Value_As_String);
 
-        Assert.AreEqual(93, colladaData.DaeObject.Library_Materials.Material.Length);
-        Assert.AreEqual(88, colladaData.DaeObject.Library_Images.Image.Length);
+        Assert.AreEqual(134, colladaData.DaeObject.Library_Materials.Material.Length);
+        Assert.AreEqual(246, colladaData.DaeObject.Library_Images.Image.Length);
         testUtils.ValidateColladaXml(colladaData);
     }
 
@@ -703,7 +703,7 @@ public class StarCitizenTests
 
         // Materials check
         var materials = colladaData.DaeObject.Library_Materials.Material;
-        Assert.AreEqual(25, materials.Length);
+        Assert.AreEqual(39, materials.Length);
     }
 
     [TestMethod]
@@ -863,7 +863,7 @@ public class StarCitizenTests
 
         // Materials check
         var materials = colladaData.DaeObject.Library_Materials.Material;
-        Assert.AreEqual(5, materials.Length);
+        Assert.AreEqual(21, materials.Length);
 
         // Visual scene checks
         var visualScene = colladaData.DaeObject.Library_Visual_Scene.Visual_Scene[0];

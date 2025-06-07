@@ -16,6 +16,8 @@ public class MatLayers : MaterialBase
 [XmlRoot(ElementName = "Layer")]
 public class Layer
 {
+    [XmlAttribute(AttributeName = "Name")]
+    public string? Name { get; set; }
     /// <summary>
     /// Path to the material file, relative to the object directory
     /// </summary>

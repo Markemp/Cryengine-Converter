@@ -4,6 +4,7 @@ using System;
 using CgfConverter.CryXmlB;
 using CgfConverter.Models.Materials;
 using System.Collections.Generic;
+using System.Formats.Tar;
 
 namespace CgfConverter.Utils;
 
@@ -18,6 +19,7 @@ public static class MaterialUtilities
         {
             var materialsBase = CryXmlSerializer.ExtractMaterials(stream, leaveOpen: true);
             var material = CryXmlSerializer.Deserialize<Material>(stream, closeAfter);
+            List<MatLayers> matLayers = [];
 
             // For basic materials, add the material to submaterials so that all materials are consistent.
             if (material.SubMaterials is null)
@@ -44,7 +46,41 @@ public static class MaterialUtilities
                     fullMats.Add(refMat);
                 }
                 else
-                    fullMats.Add(materialsBase[i] as Material);
+                {
+                    Material mat1 = materialsBase[i] as Material;
+
+                    // Add MatLayers
+                    fullMats.Add(mat1);
+                    if (mat1.MatLayers is not null)
+                    {
+                        int numberOfMatLayers = mat1.MatLayers.Layers.Length;
+                        mat1.SubMaterials = new Material[numberOfMatLayers];
+
+                        int index = 0;
+                        foreach (var layer in mat1.MatLayers.Layers)
+                        {
+                            if (objectDir is not null && layer.Path is not null)
+                            {
+                                var layerFileName = Path.Combine(objectDir, layer.Path);
+                                try
+                                {
+                                    var layerMat = CryXmlSerializer.Deserialize<Material>(
+                                        new FileStream(layerFileName,
+                                            FileMode.Open,
+                                            FileAccess.Read),
+                                        closeAfter);
+                                    layerMat.Name = Path.GetFileNameWithoutExtension(layer.Name);
+                                    mat1.SubMaterials[index] = layerMat;
+                                }
+                                catch
+                                {
+                                    Debug.WriteLine($"Failed to deserialize layer material from {layerFileName}");
+                                }
+                            }
+                            index++;
+                        }
+                    }
+                }
             }
 
             if (fullMats is not null && fullMats.Count != 0)

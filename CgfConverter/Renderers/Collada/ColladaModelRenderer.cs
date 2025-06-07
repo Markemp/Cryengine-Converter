@@ -353,10 +353,11 @@ public class ColladaModelRenderer : IRenderer
         return controllerAnimation;
     }
 
-    public ColladaEffect CreateColladaEffect(string matKey, Material subMat)
+    public ColladaEffect? CreateColladaEffect(string matKey, Material subMat)
     {
+        if (subMat is null) return null;
         //TODO: Change this so that it creates an effect for each Shader type.  Parameters will need to be passed in from the material.
-        var effectName = GetMaterialName(matKey, subMat.Name);
+        var effectName = GetMaterialName(matKey, subMat.Name ?? "unknown");
 
         ColladaEffect colladaEffect = new()
         {
@@ -936,14 +937,25 @@ public class ColladaModelRenderer : IRenderer
 
         foreach (var matKey in _cryData.Materials.Keys)
         {
-            foreach (var subMat in _cryData.Materials[matKey].SubMaterials)
+            foreach (var subMat in _cryData.Materials[matKey].SubMaterials ?? [])
             {
                 // Check to see if the collada object already has a material with this name.  If not, add.
                 var matNames = DaeObject.Library_Materials.Material.Select(c => c.Name);
                 if (!matNames.Contains(subMat.Name))
                 {
                     colladaMaterials.Add(AddMaterialToMaterialLibrary(matKey, subMat));
-                    colladaEffects.Add(CreateColladaEffect(matKey, subMat));
+                    var effect = CreateColladaEffect(matKey, subMat);
+                    if (effect is not null)
+                        colladaEffects.Add(effect);
+                }
+                // If there are matlayers, add these too
+                foreach (var matLayer in subMat.MatLayers?.Layers ?? [])
+                {
+                    int index = Array.IndexOf(subMat.MatLayers?.Layers ?? [], matLayer);
+                    colladaMaterials.Add(AddMaterialToMaterialLibrary(matLayer.Path ?? "unknown mat layer", subMat.SubMaterials[index]));
+                    var effect = CreateColladaEffect(matKey, subMat);
+                    if (effect is not null)
+                        colladaEffects.Add(CreateColladaEffect(matLayer.Path ?? "unknown mat layer", subMat.SubMaterials[index]));
                 }
             }
         }
@@ -981,7 +993,7 @@ public class ColladaModelRenderer : IRenderer
     private void AddTexturesToTextureLibrary(string matKey, Material submat)
     {
         List<ColladaImage> imageList = [];
-        int numberOfTextures = submat.Textures?.Length ?? 0;
+        int numberOfTextures = submat?.Textures?.Length ?? 0;
 
         for (int i = 0; i < numberOfTextures; i++)
         {

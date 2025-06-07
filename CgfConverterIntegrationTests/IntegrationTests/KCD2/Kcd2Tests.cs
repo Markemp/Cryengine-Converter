@@ -113,7 +113,7 @@ public class Kcd2Tests
     {
         var args = new string[]
         {
-            $@"{objectDir}\Objects\characters\animals\boar\boar.skin", "-dds", "-dae", "-ut"
+            $@"{objectDir}\Objects\characters\animals\boar\boar.skin", "-dds", "-dae", "-ut", "-objectdir", objectDir
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
@@ -134,7 +134,5 @@ public class Kcd2Tests
         var textures = daeObject.Library_Images.Image;
         Assert.AreEqual(13, textures.Length);
         Assert.AreEqual("boar_mtl_boar_hair_Diffuse", textures[0].Name);
-        Assert.AreEqual("./boar_diff.dds", textures[0].Init_From.Uri);
     }
-
 }

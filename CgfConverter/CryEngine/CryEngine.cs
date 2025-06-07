@@ -434,7 +434,7 @@ public partial class CryEngine
         var key = Path.GetFileNameWithoutExtension(materialFile);
         var fullyQualifiedPath = GetFullMaterialFilePath(materialFile);
 
-        if (fullyQualifiedPath == null)
+        if (fullyQualifiedPath is null)
             return false;
 
         try
