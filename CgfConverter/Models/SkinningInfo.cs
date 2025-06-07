@@ -1,14 +1,14 @@
 ﻿using System.Collections.Generic;
-using CgfConverter.Models.Structs;
+using System.Linq;
 
 namespace CgfConverter.Models;
 
 public class SkinningInfo
 {
     /// <summary> If there is skinning info in the model, set to true. </summary>
-    public bool HasSkinningInfo => CompiledBones is not null ? CompiledBones.Count > 0 : false;
+    public bool HasSkinningInfo => CompiledBones is not null && CompiledBones.Count > 0;
     /// <summary> If there is an internal vertex to external vertex mapping, set to true. </summary>
-    public bool HasIntToExtMapping { get; internal set; }
+    public bool HasIntToExtMapping => Ext2IntMap is not null;
     /// <summary> BoneEntities are the list of the bones in the object.  Contains the info to find each of the necessary skinning components. </summary>
     public List<BoneEntity>? BoneEntities { get; set; }
     public List<CompiledBone>? CompiledBones { get; set; }
@@ -19,7 +19,7 @@ public class SkinningInfo
     public List<IntSkinVertex>? IntVertices { get; set; }
     public List<ushort>? Ext2IntMap { get; set; }
     public List<MeshCollisionInfo>? Collisions { get; set; }
-    public List<MeshBoneMapping>? BoneMapping { get; set; }                  // Bone Mappings are read from a Datastream chunk
+    public List<MeshBoneMapping>? BoneMappings { get; set; }
 
     /// <summary>
     /// Given a bone name, get the bone index.
@@ -37,8 +37,30 @@ public class SkinningInfo
     {
         int numJoints = CompiledBones.Count;
         if (boneIndex >= 0 && boneIndex < numJoints)
-            return CompiledBones[boneIndex].boneName;
+            return CompiledBones[boneIndex].BoneName;
 
         return string.Empty;        // Invalid bone ID
+    }
+
+    public CompiledBone? RootBone {
+        get {
+            if (CompiledBones is null || CompiledBones.Count == 0)
+                return null;
+            
+            return CompiledBones.FirstOrDefault();
+        }
+    }
+
+    public IEnumerable<CompiledBone> GetChildBones(CompiledBone bone)
+    {
+        if (CompiledBones is null) return [];
+
+        var childBones = new List<CompiledBone>();
+        foreach (var bone1 in CompiledBones)
+        {
+            if (bone1.ParentBone == bone)
+                childBones.Add(bone1);
+        }
+        return childBones;
     }
 }

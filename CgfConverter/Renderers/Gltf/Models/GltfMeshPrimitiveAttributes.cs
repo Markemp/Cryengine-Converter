@@ -17,13 +17,6 @@ public class GltfMeshPrimitiveAttributes
     public int? Normal;
 
     /// <summary>
-    /// XYZW vertex tangents where the XYZ portion is normalized,
-    /// and the W component is a sign value (-1 or +1) indicating handedness of the tangent basis.
-    /// </summary>
-    [JsonProperty("TANGENT", NullValueHandling = NullValueHandling.Ignore)]
-    public int? Tangent;
-
-    /// <summary>
     /// ST(UV) texture coordinates.
     /// </summary>
     [JsonProperty("TEXCOORD_0", NullValueHandling = NullValueHandling.Ignore)]

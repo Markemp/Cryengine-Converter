@@ -7,39 +7,28 @@ using System.Numerics;
 
 namespace CgfConverter.Models.Structs;
 
-public struct RangeEntity
+public sealed record RangeEntity
 {
-    public string Name { get; set; } // String32!  32 byte char array.
+    public required string Name { get; set; } // String32!  32 byte char array.
     public int Start { get; set; }
     public int End { get; set; }
 }
 
-/// <summary>Vertex with position p(Vector3) and normal n(Vector3) </summary>
-public struct Vertex
+public sealed record MeshSubset
 {
-    public Vector3 p;  // position
-    public Vector3 n;  // normal
+    public int FirstIndex { get; set; }
+    public int NumIndices { get; set; }
+    public int FirstVertex { get; set; }
+    public int NumVertices { get; set; }
+    public int MatID { get; set; }
+    public float Radius { get; set; }
+    public Vector3 Center { get; set; }
+    public uint? NodeParentIndex { get; set; }
+    public int? Unknown { get; set; }
+    public int? Unknown0 { get; set; }
+    public int? Unknown1 { get; set; }
+    public int? Unknown2 { get; set; }
 }
-
-public struct Face        // mesh face (3 vertex, Material index, smoothing group.  All ints)
-{
-    public int v0; // first vertex
-    public int v1; // second vertex
-    public int v2; // third vertex
-    public int Material; // Material Index
-    public int SmGroup; //smoothing group
-}
-
-public struct MeshSubset
-{
-    public int FirstIndex;
-    public int NumIndices;
-    public int FirstVertex;
-    public int NumVertices;
-    public int MatID;
-    public float Radius;
-    public Vector3 Center;
-}  // Contains data about the parts of a mesh, such as vertices, radius and center.
 
 public struct Key
 {
@@ -51,18 +40,7 @@ public struct Key
     public float[] Unknown2; // If ARG==9?  array length = 2
 }
 
-public struct UV
-{
-    public float U;
-    public float V;
-}
-
-public struct UVFace
-{
-    public int t0; // first vertex index
-    public int t1; // second vertex index
-    public int t2; // third vertex index
-}
+public record struct UV(float U, float V);
 
 public struct ControllerInfo
 {
@@ -73,63 +51,9 @@ public struct ControllerInfo
     public uint RotTrack;
 }
 
-public struct IRGB
-{
-    public byte r; // red
-    public byte g; // green
-    public byte b; // blue
+public sealed record IRGB(float R, float G, float B);
 
-    public IRGB Read(BinaryReader b)
-    {
-        return new IRGB
-        {
-            r = b.ReadByte(),
-            g = b.ReadByte(),
-            b = b.ReadByte()
-        };
-    }
-}
-
-public struct IRGBA
-{
-    public byte r; // red
-    public byte g; // green
-    public byte b; // blue
-    public byte a; // alpha
-    public IRGBA Read(BinaryReader b)
-    {
-        return new IRGBA
-        {
-            r = b.ReadByte(),
-            g = b.ReadByte(),
-            b = b.ReadByte(),
-            a = b.ReadByte()
-        };
-    }
-}
-
-public struct AaBb
-{
-    public Vector3 Min;
-    public Vector3 Max;
-}
-
-public struct Tangent
-{
-    // Tangents.  Divide each component by 32767 to get the actual value
-    public float x;
-    public float y;
-    public float z;
-    public float w;  // Handness?  Either 32767 (+1.0) or -32767 (-1.0)
-}
-
-public struct SkinVertex
-{
-    public int Volumetric;
-    public int[] Index;     // Array of 4 ints
-    public float[] w;       // Array of 4 floats
-    public Matrix3x3 M;
-}
+public sealed record IRGBA(float R, float G, float B, float A);
 
 public struct PhysicsGeometry
 {
@@ -154,6 +78,35 @@ public struct PhysicsGeometry
         framemtx = b.ReadMatrix3x3();
         return;
     }
+}
+
+public sealed record BoundingBox(Vector3 Min, Vector3 Max);
+
+public sealed record IvoMeshSubset
+{
+    public ushort MaterialId { get; set; }
+    public ushort MeshParent { get; set; }
+    public uint FirstIndex { get; set; }
+    public uint NumIndices { get; set; }
+    public uint FirstVertex { get; set; }
+    public uint Unknown { get; set; }
+    public uint NumVertices { get; set; }
+    public Vector3 Center { get; set; }
+    public int Unknown0 { get; set; }
+    public int Unknown1 { get; set; }
+    public int Unknown2 { get; set; }
+}
+
+public sealed record IvoGeometryMeshDetails
+{
+    public uint Flags2 { get; set; }  // 4 = no normals datastream, 5 = has normals datastream.
+    public uint NumberOfVertices { get; set; }
+    public uint NumberOfIndices { get; set; }
+    public uint NumberOfSubmeshes { get; set; }
+    public int Unknown { get; set; }
+    public BoundingBox BoundingBox { get; set; }
+    public BoundingBox ScalingBoundingBox { get; set; }
+    public VertexFormat VertexFormat { get; set; }
 }
 
 public class CompiledPhysicalBone
@@ -251,11 +204,20 @@ public struct BonePhysics           // 26 total words = 104 total bytes
     Matrix3x3 Frame_Matrix;
 }
 
-public struct MeshBoneMapping
+public sealed record VertUV
 {
+    public Vector3 Vertex { get; set; }
+    public IRGBA Color { get; set; }
+    public UV UV { get; set; }
+    public byte[]? Skipped { get; init; }
+}
+
+public sealed record MeshBoneMapping
+{
+    public int BoneInfluenceCount { get; set; } = 4; // Number of bones influencing this vertex.
     // 4 bones, 4 weights for each vertex mapping.
-    public int[] BoneIndex;
-    public int[] Weight;                    // Byte / 256?
+    public required ushort[] BoneIndex;
+    public required float[] Weight;
 }
 
 public struct MeshPhysicalProxyHeader
@@ -298,9 +260,9 @@ public struct MorphTargets
 
 public struct TFace
 {
-    public ushort I0 { get; set; }
-    public ushort I1 { get; set; }
-    public ushort I2 { get; set; }
+    public ushort I0;
+    public ushort I1;
+    public ushort I2;
 }
 
 public class MeshCollisionInfo
@@ -317,8 +279,9 @@ public struct IntSkinVertex
     public Vector3 Obsolete0;
     public Vector3 Position;
     public Vector3 Obsolete2;
-    public ushort[] BoneIDs;     // 4 bone IDs
-    public float[] Weights;     // Should be 4 of these
+    public MeshBoneMapping BoneMapping; // 4 bone IDs and weights
+    //public ushort[] BoneIDs;     // 4 bone IDs
+    //public float[] Weights;     // Should be 4 of these
     public IRGBA Color;
 }
 
@@ -451,7 +414,7 @@ public struct PhysicsStruct50
     public short Unknown24;
 }
 
-public struct ShotInt3Quat
+public struct ShortInt3Quat
 {
     private const float MAX_SHORTINTf = 32767f;
 
@@ -459,12 +422,12 @@ public struct ShotInt3Quat
     public short Y;
     public short Z;
 
-    public ShotInt3Quat()
+    public ShortInt3Quat()
     {
         X = Y = Z = 0;
     }
 
-    public static explicit operator ShotInt3Quat(Quaternion q)
+    public static explicit operator ShortInt3Quat(Quaternion q)
     {
         if (q.W < 0)
         {
@@ -473,7 +436,7 @@ public struct ShotInt3Quat
             q.Z *= -1;
         }
 
-        return new ShotInt3Quat
+        return new ShortInt3Quat
         {
             X = (short)Math.Floor(q.X * MAX_SHORTINTf + 0.5f),
             Y = (short)Math.Floor(q.Y * MAX_SHORTINTf + 0.5f),
@@ -481,7 +444,7 @@ public struct ShotInt3Quat
         };
     }
 
-    public static implicit operator Quaternion(ShotInt3Quat value)
+    public static implicit operator Quaternion(ShortInt3Quat value)
     {
         Quaternion q = new()
         {

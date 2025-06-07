@@ -5,21 +5,22 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using CgfConverter.PackFileSystem;
+using CgfConverter.Utilities;
 
 namespace CgfConverter;
 
 public sealed class ArgsHandler
 {
     public readonly CascadedPackFileSystem PackFileSystem = new();
-    public readonly List<Regex> ExcludeNodeNameRegexes = new();
-    public readonly List<Regex> ExcludeMaterialNameRegexes = new();
-    public readonly List<Regex> ExcludeShaderNameRegexes = new();
+    public readonly List<Regex> ExcludeNodeNameRegexes = [];
+    public readonly List<Regex> ExcludeMaterialNameRegexes = [];
+    public readonly List<Regex> ExcludeShaderNameRegexes = [];
     
     public bool Verbose { get; set; }
     /// <summary>Files to process</summary>
     public List<string> InputFiles { get; internal set; }
-    /// <summary>Location of the Object Files</summary>
-    public List<string> DataDirs { get; internal set; } = new();
+    /// <summary>Location of the Game files</summary>
+    public string DataDir { get; internal set; }
     /// <summary>File to render to</summary>
     public string? OutputFile { get; internal set; }
     /// <summary>Directory to render to</summary>
@@ -58,6 +59,8 @@ public sealed class ArgsHandler
     public bool NoTextures { get; internal set; }
     /// <summary>For glTF exports, embed textures into the glTF file instead of external references.</summary>
     public bool EmbedTextures { get; internal set; }
+    /// <summary> Use DDS Unsplitter to combine split texture files into a single file. </summary>
+    public bool UnsplitTextures { get; internal set; }
     /// <summary>Split each layer into different files, if a file does contain multiple layers.</summary>
     public bool SplitLayers { get; internal set; }
     /// <summary>List of node names to skip when rendering</summary>
@@ -71,10 +74,10 @@ public sealed class ArgsHandler
 
     public ArgsHandler()
     {
-        InputFiles = new List<string>();
-        ExcludeNodeNames = new List<string>();
-        ExcludeMaterialNames = new List<string>();
-        ExcludeShaderNames = new List<string>();
+        InputFiles = [];
+        ExcludeNodeNames = [];
+        ExcludeMaterialNames = [];
+        ExcludeShaderNames = [];
     }
 
     /// <summary>
@@ -126,9 +129,7 @@ public sealed class ArgsHandler
                     }
 
                     if (int.TryParse(inputArgs[i], out var mt) && mt >= 0)
-                    {
                         MaxThreads = mt;
-                    }
                     else
                     {
                         Console.Error.WriteLine("Invalid number of threads {0}, defaulting to 1.", inputArgs[i]);
@@ -148,11 +149,11 @@ public sealed class ArgsHandler
                     }
 
                     if (Enum.TryParse(inputArgs[i], true, out LogLevelEnum level))
-                        Utilities.LogLevel = level;
+                        HelperMethods.LogLevel = level;
                     else
                     {
                         Console.Error.WriteLine("Invalid log level {0}, defaulting to warn", inputArgs[i]);
-                        Utilities.LogLevel = LogLevelEnum.Warning;
+                        HelperMethods.LogLevel = LogLevelEnum.Warning;
                     }
                     break;
                 case "-usage":
@@ -185,6 +186,10 @@ public sealed class ArgsHandler
                     break;
                 case "-embedtextures":
                     EmbedTextures = true;
+                    break;
+                case "-unsplittextures":
+                case "-ut":
+                    UnsplitTextures = true;
                     break;
                 case "-tga":
                     TgaTextures = true;
@@ -272,48 +277,47 @@ public sealed class ArgsHandler
 
         if (MaxThreads == 0)
             MaxThreads = Environment.ProcessorCount;
-        Utilities.Log(LogLevelEnum.Info, $"Using up to {MaxThreads} threads");
         
         if (Smooth)
-            Utilities.Log(LogLevelEnum.Info, "Smoothing Faces");
+            HelperMethods.Log(LogLevelEnum.Info, "Smoothing Faces");
         if (GroupMeshes)
-            Utilities.Log(LogLevelEnum.Info, "Grouping enabled");
+            HelperMethods.Log(LogLevelEnum.Info, "Grouping enabled");
         
         if (NoTextures)
-            Utilities.Log(LogLevelEnum.Info, "Skipping texture output");
+            HelperMethods.Log(LogLevelEnum.Info, "Skipping texture output");
         else if (PngTextures)
-            Utilities.Log(LogLevelEnum.Info, "Using PNG textures");
+            HelperMethods.Log(LogLevelEnum.Info, "Using PNG textures");
         else if (TiffTextures)
-            Utilities.Log(LogLevelEnum.Info, "Using TIF textures");
+            HelperMethods.Log(LogLevelEnum.Info, "Using TIF textures");
         else if (TgaTextures)
-            Utilities.Log(LogLevelEnum.Info, "Using TGA textures");
+            HelperMethods.Log(LogLevelEnum.Info, "Using TGA textures");
         if (MaterialFile is not null)
-            Utilities.Log(LogLevelEnum.Info, $"Using material file: {MaterialFile}");
+            HelperMethods.Log(LogLevelEnum.Info, $"Using material file: {MaterialFile}");
 
         if (OutputWavefront)
-            Utilities.Log(LogLevelEnum.Info, "Output format set to Wavefront (.obj)");
+            HelperMethods.Log(LogLevelEnum.Info, "Output format set to Wavefront (.obj)");
         if (OutputCollada)
-            Utilities.Log(LogLevelEnum.Info, "Output format set to COLLADA (.dae)");
+            HelperMethods.Log(LogLevelEnum.Info, "Output format set to COLLADA (.dae)");
         if (OutputGLTF)
-            Utilities.Log(LogLevelEnum.Info, "Output format set to glTF (.gltf)");
+            HelperMethods.Log(LogLevelEnum.Info, "Output format set to glTF (.gltf)");
         if (OutputGLB)
-            Utilities.Log(LogLevelEnum.Info, "Output format set to glTF Binary (.glb)");
+            HelperMethods.Log(LogLevelEnum.Info, "Output format set to glTF Binary (.glb)");
 
         if (AllowConflicts)
-            Utilities.Log(LogLevelEnum.Info, "Allow conflicts for mtl files enabled");
+            HelperMethods.Log(LogLevelEnum.Info, "Allow conflicts for mtl files enabled");
         if (NoConflicts)
-            Utilities.Log(LogLevelEnum.Info, "Prevent conflicts for mtl files enabled");
+            HelperMethods.Log(LogLevelEnum.Info, "Prevent conflicts for mtl files enabled");
         if (ExcludeNodeNames.Any())
-            Utilities.Log(LogLevelEnum.Info, $"Skipping nodes starting with any of these names: {String.Join(", ", ExcludeNodeNames)}");
+            HelperMethods.Log(LogLevelEnum.Info, $"Skipping nodes starting with any of these names: {String.Join(", ", ExcludeNodeNames)}");
         if (ExcludeMaterialNames.Any())
-            Utilities.Log(LogLevelEnum.Info, $"Skipping meshes using materials named: {String.Join(", ", ExcludeMaterialNames)}");
+            HelperMethods.Log(LogLevelEnum.Info, $"Skipping meshes using materials named: {String.Join(", ", ExcludeMaterialNames)}");
         if (DumpChunkInfo)
-            Utilities.Log(LogLevelEnum.Info, "Output chunk info for missing or invalid chunks.");
+            HelperMethods.Log(LogLevelEnum.Info, "Output chunk info for missing or invalid chunks.");
         if (Throw)
-            Utilities.Log(LogLevelEnum.Info, "Exceptions thrown to debugger");
+            HelperMethods.Log(LogLevelEnum.Info, "Exceptions thrown to debugger");
 
         if (OutputDir != null)
-            Utilities.Log(LogLevelEnum.Info, "Output directory set to {0}", OutputDir);
+            HelperMethods.Log(LogLevelEnum.Info, "Output directory set to {0}", OutputDir);
 
         foreach (var dirAndOptions in lookupDataDirs)
         {
@@ -327,8 +331,8 @@ public sealed class ArgsHandler
             
             if (Directory.Exists(dir))
             {
-                Utilities.Log(LogLevelEnum.Info, "Source [Filesystem]: {0}", dir);
-                DataDirs.Add(dir);
+                HelperMethods.Log(LogLevelEnum.Info, "Source [Filesystem]: {0}", dir);
+                DataDir = dir;
                 PackFileSystem.Add(new RealFileSystem(dir));
                 foundAny = true;
             }
@@ -338,15 +342,15 @@ public sealed class ArgsHandler
                 if (globbed.EndsWith(WiiuStreamPackFileSystem.PackFileNameSuffix,
                         StringComparison.InvariantCultureIgnoreCase))
                 {
-                    Utilities.Log(LogLevelEnum.Info, "Source [Packfile]: {0}", globbed);
-                    DataDirs.Add(globbed);
+                    HelperMethods.Log(LogLevelEnum.Info, "Source [Packfile]: {0}", globbed);
+                    DataDir = globbed;
                     PackFileSystem.Add(new WiiuStreamPackFileSystem(PackFileSystem.GetStream(globbed), packFileSystemOptions));
                     foundAny = true;
                 }
             }
 
             if (!foundAny)
-                Utilities.Log(LogLevelEnum.Warning, "No corresponding source directory exist: {0}", dir);
+                HelperMethods.Log(LogLevelEnum.Warning, "No corresponding source directory exist: {0}", dir);
         }
 
         foreach (var input in lookupInputs)
@@ -354,13 +358,13 @@ public sealed class ArgsHandler
             var foundAny = false;
             foreach (var globbed in PackFileSystem.Glob(input))
             {
-                Utilities.Log(LogLevelEnum.Info, "Found input: {0}", globbed);
+                HelperMethods.Log(LogLevelEnum.Info, "Found input: {0}", globbed);
                 InputFiles.Add(globbed);
                 foundAny = true;
             }
             
             if (!foundAny)
-                Utilities.Log(LogLevelEnum.Warning, "No corresponding input file exist: {0}", input);
+                HelperMethods.Log(LogLevelEnum.Warning, "No corresponding input file exist: {0}", input);
         }
         
         ExcludeNodeNameRegexes.AddRange(ExcludeNodeNames.Select(x => new Regex(x, RegexOptions.Compiled | RegexOptions.IgnoreCase)));
@@ -401,12 +405,14 @@ public sealed class ArgsHandler
         Console.WriteLine("-png:              Change the materials to look for .png files instead of .dds.");
         Console.WriteLine("-tga:              Change the materials to look for .tga files instead of .dds.");
         Console.WriteLine("-embedtextures:    Embed textures into the glTF binary file instead of external references.");
+        Console.WriteLine("-ut/-unsplittextures:");
+        Console.WriteLine("                   Use DDS Unsplitter to combine split texture files into a single file.");
         Console.WriteLine();                        
         Console.WriteLine("-smooth:           Smooth Faces.");
         Console.WriteLine("-group:            Group meshes into single model.");
-        Console.WriteLine("-en/-excludenode < regular expression for node names>:");
+        Console.WriteLine("-en/-excludenode   <regular expression for node names>:");
         Console.WriteLine("                   Exclude matching nodes from rendering. Can be listed multiple times.");
-        Console.WriteLine("-em/-excludemat <r egular expression for material names>:");
+        Console.WriteLine("-em/-excludemat    <regular expression for material names>");
         Console.WriteLine("                   Exclude meshes with matching materials from rendering. Can be listed multiple times.");
         Console.WriteLine("-sm/-excludeshader  <material_name>:");
         Console.WriteLine("                   Exclude meshes with the material using matching shader from rendering. Can be listed multiple times.");
@@ -427,5 +433,5 @@ public sealed class ArgsHandler
         Console.WriteLine();
     }
 
-    public override string ToString() => $@"Input file: {InputFiles}, Object Dir: {string.Join(',', DataDirs)}, Output file: {OutputFile}";
+    public override string ToString() => $@"Input file: {InputFiles}, Object Dir: {string.Join(',', DataDir)}, Output file: {OutputFile}";
 }

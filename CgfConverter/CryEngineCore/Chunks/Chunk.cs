@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using CgfConverter.Models;
 using CgfConverter.Services;
+using CgfConverter.Utilities;
 
 namespace CgfConverter.CryEngineCore;
 
@@ -63,12 +64,13 @@ public abstract class Chunk : IBinaryChunk
             // SC IVO chunks
             ChunkType.MtlNameIvo => Chunk.New<ChunkMtlName>(version),
             ChunkType.MtlNameIvo320 => Chunk.New<ChunkMtlName>(version),
-            ChunkType.CompiledBonesIvo => Chunk.New<ChunkCompiledBones>(version),
-            ChunkType.CompiledBonesIvo320 => Chunk.New<ChunkCompiledBones>(version),
+            ChunkType.CompiledBones_Ivo => Chunk.New<ChunkCompiledBones>(version),
+            ChunkType.CompiledBones_Ivo2 => Chunk.New<ChunkCompiledBones>(version),
             ChunkType.MeshIvo => Chunk.New<ChunkMesh>(version),
-            ChunkType.MeshIvo320 => Chunk.New<ChunkMesh>(version),
-            ChunkType.IvoSkin2 => Chunk.New<ChunkIvoSkin>(version),
-            ChunkType.IvoSkin => Chunk.New<ChunkIvoSkin>(version),
+            ChunkType.MeshInfo => Chunk.New<ChunkMesh>(version),
+            ChunkType.IvoSkin2 => Chunk.New<ChunkIvoSkinMesh>(version),
+            ChunkType.IvoSkin => Chunk.New<ChunkIvoSkinMesh>(version),
+            ChunkType.NodeMeshCombo => Chunk.New<ChunkNodeMeshCombo>(version),
             // Old chunks
             ChunkType.BoneNameList => Chunk.New<ChunkBoneNameList>(version),
             ChunkType.MeshMorphTarget => Chunk.New<ChunkMeshMorphTargets>(version),
@@ -98,7 +100,7 @@ public abstract class Chunk : IBinaryChunk
                         && type.IsClass
                         && !type.IsGenericType
                         && typeof(T).IsAssignableFrom(type)
-                        && type.Name == String.Format("{0}_{1:X}", typeof(T).Name, version));
+                        && type.Name == string.Format("{0}_{1:X}", typeof(T).Name, version));
 
                 if (targetType != null)
                     factory = () => Activator.CreateInstance(targetType) as T;
@@ -125,10 +127,10 @@ public abstract class Chunk : IBinaryChunk
             return;
 
         if ((reader.BaseStream.Position > Offset + Size) && (Size > 0))
-            Utilities.Log(LogLevelEnum.Debug, "Buffer Overflow in {2} 0x{0:X} ({1} bytes)", ID, reader.BaseStream.Position - Offset - Size, GetType().Name);
+            HelperMethods.Log(LogLevelEnum.Debug, "Buffer Overflow in {2} 0x{0:X} ({1} bytes)", ID, reader.BaseStream.Position - Offset - Size, GetType().Name);
 
         if (reader.BaseStream.Length < Offset + Size)
-            Utilities.Log(LogLevelEnum.Debug, "Corrupt Headers in {1} 0x{0:X}", ID, GetType().Name);
+            HelperMethods.Log(LogLevelEnum.Debug, "Corrupt Headers in {1} 0x{0:X}", ID, GetType().Name);
 
         if (!bytesToSkip.HasValue)
             bytesToSkip = (long)(Size - Math.Max(reader.BaseStream.Position - Offset, 0));
@@ -138,22 +140,21 @@ public abstract class Chunk : IBinaryChunk
 
     public virtual void Read(BinaryReader reader)
     {
-        if (reader is null)
-            throw new ArgumentNullException(nameof(reader));
+        ArgumentNullException.ThrowIfNull(reader);
 
         ChunkType = _header.ChunkType;
         VersionRaw = _header.VersionRaw;
         Offset = _header.Offset;
         ID = _header.ID;
         Size = _header.Size;
-        DataSize = Size;          // For SC files, there is no header in chunks.  But need Datasize to calculate things.
+        DataSize = Size;    // For SC files, there is no header in chunks.  But need Datasize to calculate things.
 
         reader.BaseStream.Seek(_header.Offset, SeekOrigin.Begin);
 
         var swappableReader = (EndiannessChangeableBinaryReader)reader;
 
         // Star Citizen files don't have the type, version, offset and ID at the start of a chunk, so don't read them.
-        if (_model.FileVersion == FileVersion.CryTek1And2 || _model.FileVersion == FileVersion.CryTek3)
+        if (_model.FileVersion == FileVersion.x0744 || _model.FileVersion == FileVersion.x0745)
         {
             // This part is always in little endian.
             swappableReader.IsBigEndian = false;
@@ -170,42 +171,21 @@ public abstract class Chunk : IBinaryChunk
             Offset != _header.Offset ||
             ID != _header.ID)
         {
-            Utilities.Log(LogLevelEnum.Debug, "Conflict in chunk definition");
-            Utilities.Log(LogLevelEnum.Debug, "ChunkType=header({0:X}) vs header2({1:X})", (uint)_header.ChunkType, (uint)ChunkType);
-            Utilities.Log(LogLevelEnum.Debug, "VersionRaw=VersionRaw({0:X}) vs header2({1:X})", _header.VersionRaw, VersionRaw);
-            Utilities.Log(LogLevelEnum.Debug, "Offset=header({0:X}) vs header2({1:X})", _header.Offset, Offset);
-            Utilities.Log(LogLevelEnum.Debug, "ID=header({0:X}) vs header2({1:X})", _header.ID, ID);
-            Utilities.Log(LogLevelEnum.Debug, "ChunkType=header({0:X}) vs header2({1:X})", _header.ChunkType, ChunkType);
+            HelperMethods.Log(LogLevelEnum.Debug, "Conflict in chunk definition");
+            HelperMethods.Log(LogLevelEnum.Debug, "ChunkType=header({0:X}) vs header2({1:X})", (uint)_header.ChunkType, (uint)ChunkType);
+            HelperMethods.Log(LogLevelEnum.Debug, "VersionRaw=VersionRaw({0:X}) vs header2({1:X})", _header.VersionRaw, VersionRaw);
+            HelperMethods.Log(LogLevelEnum.Debug, "Offset=header({0:X}) vs header2({1:X})", _header.Offset, Offset);
+            HelperMethods.Log(LogLevelEnum.Debug, "ID=header({0:X}) vs header2({1:X})", _header.ID, ID);
+            HelperMethods.Log(LogLevelEnum.Debug, "ChunkType=header({0:X}) vs header2({1:X})", _header.ChunkType, ChunkType);
         }
 
         // Remainder of the chunk is in whichever endianness specified from version.
         swappableReader.IsBigEndian = IsBigEndian;
     }
 
-    /// <summary>Gets a link to the SkinningInfo model.</summary>
-    public SkinningInfo GetSkinningInfo()
-    {
-        if (_model.SkinningInfo is null)
-            _model.SkinningInfo = new SkinningInfo();
-
-        return _model.SkinningInfo;
-    }
-
     public virtual void Write(BinaryWriter writer) { throw new NotImplementedException(); }
 
     public override string ToString() => $@"Chunk Type: {ChunkType}, Ver: {Version:X}, Offset: {Offset:X}, ID: {ID:X}, Size: {Size}";
-
-    //public static IvoNodeId GetIvoNodeId(ChunkType chunkType)
-    //{
-    //    if (chunkType == ChunkType.Node)
-    //        return IvoNodeId.NodeChunk;
-    //    if (chunkType == ChunkType.Mesh)
-    //        return IvoNodeId.MeshChunk;
-    //    if (chunkType == ChunkType.MeshSubsets)
-    //        return IvoNodeId.MeshSubsets;
-    //    if (chunkType == ChunkType.Data)
-
-    //}
 
     public static int GetNextRandom()
     {

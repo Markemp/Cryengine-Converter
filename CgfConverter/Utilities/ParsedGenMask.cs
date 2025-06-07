@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace CgfConverter.Renderers.MaterialTextures;
+namespace CgfConverter.Utilities;
 
 public class ParsedGenMask : IEnumerable<string>, ICloneable
 {

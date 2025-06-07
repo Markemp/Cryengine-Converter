@@ -3,6 +3,7 @@ using CgfConverter.Renderers.Collada;
 using CgfConverter.Renderers.Gltf;
 using CgfConverter.Renderers.Wavefront;
 using CgfConverter.Terrain;
+using CgfConverter.Utilities;
 using CgfConverter.Utils;
 using System;
 using System.Collections.Generic;
@@ -28,8 +29,8 @@ public class Program
     public static async Task<int> Main(string[] args)
 #endif
     {
-        Utilities.LogLevel = LogLevelEnum.Info;
-        Utilities.DebugLevel = LogLevelEnum.Debug;
+        HelperMethods.LogLevel = LogLevelEnum.Info;
+        HelperMethods.DebugLevel = LogLevelEnum.Debug;
 
         var customCulture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
         customCulture.NumberFormat.NumberDecimalSeparator = ".";
@@ -115,7 +116,8 @@ public class Program
         var data = new CryEngine(
             inputFile,
             _args.PackFileSystem,
-            materialFiles: _args.MaterialFile);
+            materialFiles: _args.MaterialFile,
+            objectDir: _args.DataDir);
 
         data.ProcessCryengineFiles();
 

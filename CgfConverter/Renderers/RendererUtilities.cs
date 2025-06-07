@@ -17,7 +17,8 @@ internal static class RendererUtilities
         string referenceName,
         string? layerName = null)
     {
-        var modelDir = Path.GetDirectoryName(referenceName) ?? ".";
+        var dirName = Path.GetDirectoryName(referenceName);
+        var modelDir = string.IsNullOrEmpty(dirName) ? "." : dirName;
         var outputDir = Path.GetFullPath(string.IsNullOrWhiteSpace(args.OutputDir) ? modelDir : args.OutputDir);
 
         if (args.PreservePath)

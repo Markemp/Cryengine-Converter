@@ -1,4 +1,5 @@
-﻿using CgfConverter.Utililities;
+﻿using CgfConverter.Collada;
+using CgfConverter.Utilities;
 using CgfConverterTests.TestUtilities;
 using NUnit.Framework;
 using Assert = NUnit.Framework.Assert;
@@ -75,6 +76,25 @@ public class CryHalfTests
         float result = CryHalf.ConvertCryHalfToFloat(half);
 
         Assert.That(result, Is.EqualTo(131008.0f).Within(TestUtils.delta));
+    }
+
+    [Test]
+    public void CryHalfToFloat_3405HexValue_ReturnsCorrectResult()
+    {
+        ushort half = 0x3405;
+        float result = CryHalf.ConvertCryHalfToFloat(half);
+
+        Assert.That(result, Is.EqualTo(0.251220703f).Within(TestUtils.delta));
+    }
+
+    [Test]
+    public void CryHalfToFloat_AlmostMaxValue_ReturnsCorrectResult()
+    {
+        ushort half = 0x7FFE;
+
+        float result = CryHalf.ConvertCryHalfToFloat(half);
+
+        Assert.That(result, Is.EqualTo(130944.0f).Within(TestUtils.delta));
     }
 
     [Test]

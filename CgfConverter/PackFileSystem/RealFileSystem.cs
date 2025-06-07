@@ -36,97 +36,68 @@ public class RealFileSystem : IPackFileSystem
         }
     }
 
-    // TODO: Rework this.  
     public bool Exists(string path) =>
         File.Exists(FileHandlingExtensions.CombineAndNormalizePath(_rootPath, path));
 
     public string[] Glob(string pattern)
     {
-        // remainingPattern always contains fully qualified path, but in lowercase.
-        var remainingPatterns = new List<string>
-        {
-            Regex.Replace(FileHandlingExtensions.CombineAndNormalizePath(_rootPath, pattern), "[/\\\\]+", "\\")
-        };
-        var testedPatterns = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+        // Simplified glob method that avoids recursive searching
+        var normalizedPattern = FileHandlingExtensions.CombineAndNormalizePath(_rootPath, pattern);
+        var directory = Path.GetDirectoryName(normalizedPattern) ?? _rootPath;
+        var filePattern = Path.GetFileName(normalizedPattern);
         var foundPaths = new List<string>();
-
-        while (remainingPatterns.Any())
+        
+        // If it's a direct file reference with no wildcards, just check if it exists
+        if (!filePattern.Contains("*") && !filePattern.Contains("?"))
         {
-            pattern = remainingPatterns[^1].ToLowerInvariant();
-            remainingPatterns.RemoveAt(remainingPatterns.Count - 1);
-            if (testedPatterns.Contains(pattern))
-                continue;
-            testedPatterns.Add(pattern);
-
-            if (!pattern.StartsWith(_rootPath, StringComparison.InvariantCultureIgnoreCase))
-                continue;
-
-            if (File.Exists(pattern))
-                foundPaths.Add(pattern[_rootPath.Length..]);
-
-            for (var i = 0; i < pattern.Length;)
+            var exactPath = FileHandlingExtensions.CombineAndNormalizePath(_rootPath, pattern);
+            if (File.Exists(exactPath))
+                return new[] { exactPath[_rootPath.Length..] };
+            return Array.Empty<string>();
+        }
+        
+        // Special case: Double wildcard
+        if (pattern.Contains("**"))
+        {
+            // For specific common patterns we can still do a limited search
+            // Example: "**/*.dds" - search for dds files in current dir only
+            if (pattern.StartsWith("**"))
             {
-                var next = pattern.IndexOf('\\', i + 1);
-                if (next == -1)
-                    next = pattern.Length;
-
-                int pos;
-                if (-1 != (pos = pattern.IndexOf("**", i, next - i, StringComparison.Ordinal)))
+                var fileExtension = Path.GetExtension(pattern);
+                if (!string.IsNullOrEmpty(fileExtension))
                 {
-                    var searchBase = pattern[..i];
-                    var prefix = pattern[(i + 1)..pos];
-                    var suffix = pattern[pos..next].TrimStart('*');
-
-                    var remainingPattern = next == pattern.Length ? string.Empty : pattern[(next + 1)..];
-                    if (!remainingPattern.Contains('\\'))
-                    {
-                        try
-                        {
-                            remainingPatterns.AddRange(
-                                Directory.GetFiles(searchBase, $"{prefix}*{suffix}{remainingPattern}"));
-                        }
-                        catch (Exception)
-                        {
-                            // pass
-                        }
-                    }
-
-                    remainingPattern = $"**{pattern[(pos + 1)..]}";
                     try
                     {
-                        remainingPatterns.AddRange(
-                            Directory.GetDirectories(searchBase, $"{prefix}*")
-                                .Select(x => Path.Join(x, remainingPattern)));
+                        // Only search in the root directory without recursion
+                        var files = Directory.GetFiles(_rootPath, "*" + fileExtension, SearchOption.TopDirectoryOnly);
+                        return files.Select(f => f[_rootPath.Length..]).ToArray();
                     }
                     catch (Exception)
                     {
-                        // pass
-                    } 
-                    break;
-                }
-
-                if (-1 != pattern.IndexOfAny(new[] {'?', '*'}, i, next - i))
-                {
-                    var searchBase = pattern[..i];
-                    var remainingPattern = pattern[next..];
-
-                    try {
-                        remainingPatterns.AddRange(
-                            Directory.GetFileSystemEntries(searchBase, pattern[i..next])
-                                .Select(x => Path.Join(searchBase, x) + remainingPattern));
+                        return Array.Empty<string>();
                     }
-                    catch (Exception)
-                    {
-                        // pass
-                    }
-                    break;
                 }
-
-                i = next;
             }
+            
+            // Default to empty result for other complex patterns
+            return Array.Empty<string>();
         }
 
-        return foundPaths.ToArray();
+        // For simple wildcards, only search in the specified directory, not recursively
+        try
+        {
+            if (Directory.Exists(directory))
+            {
+                var files = Directory.GetFiles(directory, filePattern, SearchOption.TopDirectoryOnly);
+                return files.Select(f => f[_rootPath.Length..]).ToArray();
+            }
+        }
+        catch (Exception)
+        {
+            // Ignore directory access errors
+        }
+        
+        return Array.Empty<string>();
     }
 
     public byte[] ReadAllBytes(string path)

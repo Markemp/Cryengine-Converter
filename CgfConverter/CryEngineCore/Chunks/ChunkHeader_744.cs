@@ -11,6 +11,6 @@ internal sealed class ChunkHeader_744 : ChunkHeader
         VersionRaw = reader.ReadUInt32();
         Offset = reader.ReadUInt32();
         ID = reader.ReadInt32();
-        Size = 0; // TODO: Figure out how to return a size - postprocess header table maybe?
+        Size = 0;
     }
 }

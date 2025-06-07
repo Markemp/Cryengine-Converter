@@ -14,7 +14,7 @@ public partial class BaseGltfRenderer
         IReadOnlyDictionary<int, int> keyTimeAccessors,
         IReadOnlyDictionary<int, int> keyPositionAccessors,
         IReadOnlyDictionary<int, int> keyRotationAccessors,
-        IReadOnlyDictionary<int, int> controllerIdToNodeIndex)
+        IReadOnlyDictionary<uint, int> controllerIdToNodeIndex)
     {
         newAnimation = new GltfAnimation { Name = anim.Name };
 
@@ -89,7 +89,7 @@ public partial class BaseGltfRenderer
 
     private int WriteAnimations(
         IEnumerable<Model> animationContainers,
-        IReadOnlyDictionary<int, int> controllerIdToNodeIndex)
+        IReadOnlyDictionary<uint, int> controllerIdToNodeIndex)
     {
         var numAnimationsWritten = 0;
         var animChunks = animationContainers

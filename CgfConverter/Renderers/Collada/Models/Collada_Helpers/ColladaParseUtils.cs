@@ -1,3 +1,4 @@
+using CgfConverter.Utilities;
 using System;
 
 namespace CgfConverter.Renderers.Collada.Collada.Collada_Helpers;
@@ -15,9 +16,9 @@ public class ColladaParseUtils
         }
         catch (Exception e)
         {
-            Utilities.Log(LogLevelEnum.Error, e.ToString());
-            Utilities.Log(LogLevelEnum.Error);
-            Utilities.Log(LogLevelEnum.Error, int_array);
+            HelperMethods.Log(LogLevelEnum.Error, e.ToString());
+            HelperMethods.Log(LogLevelEnum.Error);
+            HelperMethods.Log(LogLevelEnum.Error, int_array);
         }
         return array;
     }
@@ -33,9 +34,9 @@ public class ColladaParseUtils
         }
         catch (Exception e)
         {
-            Utilities.Log(LogLevelEnum.Error, e.ToString());
-            Utilities.Log(LogLevelEnum.Error);
-            Utilities.Log(LogLevelEnum.Error, float_array);
+            HelperMethods.Log(LogLevelEnum.Error, e.ToString());
+            HelperMethods.Log(LogLevelEnum.Error);
+            HelperMethods.Log(LogLevelEnum.Error, float_array);
         }
         return array;
     }
@@ -51,9 +52,9 @@ public class ColladaParseUtils
         }
         catch (Exception e)
         {
-            Utilities.Log(LogLevelEnum.Error, e.ToString());
-            Utilities.Log(LogLevelEnum.Error);
-            Utilities.Log(LogLevelEnum.Error, bool_array);
+            HelperMethods.Log(LogLevelEnum.Error, e.ToString());
+            HelperMethods.Log(LogLevelEnum.Error);
+            HelperMethods.Log(LogLevelEnum.Error, bool_array);
         }
         return array;
     }

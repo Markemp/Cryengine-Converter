@@ -10,15 +10,17 @@ internal class ChunkMtlName_804 : ChunkMtlName
         base.Read(b);
 
         AssetId = Guid.Parse(b.ReadFString(38));
-
+        Name = AssetId?.ToString() ?? "unknown";
         SkipBytes(b, 26);
 
         // some count followed by 3 emtpy bytes 
-        var count = b.ReadByte();
-        SkipBytes(b, 3);
-        SkipBytes(b, count * 4);
+        NumChildren = b.ReadUInt32();
+        SkipBytes(b, NumChildren * 4);  // Flags.  Usually 0xffffffff
 
-        Name = b.ReadCString();
-        NumChildren = 0;
+        ChildNames = [b.ReadCString()];
+        for (int i = 0; i < NumChildren; i++)
+        {
+            ChildNames.Add(b.ReadCString());
+        }
     }
 }

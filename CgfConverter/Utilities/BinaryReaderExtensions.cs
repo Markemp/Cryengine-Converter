@@ -1,5 +1,6 @@
-﻿using CgfConverter.Models.Structs;
-using CgfConverter.Utililities;
+﻿using CgfConverter;
+using CgfConverter.Structs;
+using CgfConverter.Utilities;
 using System;
 using System.IO;
 using System.Numerics;
@@ -32,6 +33,65 @@ public static class BinaryReaderExtensions
         return new Plane(n, d);
     }
 
+    public static VertUV ReadVertUV (this BinaryReader r, uint bytesPerElement, bool isSC)
+    {
+        switch (bytesPerElement)
+        {
+            case 16:
+                return new VertUV()
+                {
+                    Vertex = isSC ? r.ReadVector3(InputType.DymekHalf) : r.ReadVector3(InputType.Half),
+                    Skipped = r.ReadBytes(2),
+                    Color = r.ReadIRGBA(),
+                    UV = r.ReadUV(InputType.Half)
+                };
+            case 20:
+                return new VertUV()
+                {
+                    Vertex = r.ReadVector3(),
+                    Color = r.ReadIRGBA(),
+                    UV = r.ReadUV(InputType.Half)
+                };
+            default:
+                throw new ArgumentException($"ReadVertUV provided invalid bytesPerElement of {bytesPerElement}");
+        }
+    }
+
+    public static MeshBoneMapping ReadBoneMap(this BinaryReader b, uint bytesPerElement)
+    {
+        MeshBoneMapping boneMap = new()
+        {
+            BoneIndex = new ushort[4],
+            Weight = new float[4]
+        };
+
+        switch (bytesPerElement)
+        {
+            case 8:
+                for (int j = 0; j < 4; j++)         // read the 4 bone indexes first
+                {
+                    boneMap.BoneIndex[j] = b.ReadByte();
+                }
+                for (int j = 0; j < 4; j++)           // read the weights.
+                {
+                    boneMap.Weight[j] = b.ReadByte() / 255.0f;
+                }
+                return boneMap;
+            case 12:
+                for (int j = 0; j < 4; j++)         // read the 4 bone indexes first
+                {
+                    boneMap.BoneIndex[j] = b.ReadUInt16();
+                }
+                for (int j = 0; j < 4; j++)           // read the weights.
+                {
+                    boneMap.Weight[j] = b.ReadByte() / 255.0f;
+                }
+                return boneMap;
+            default:
+                throw new ArgumentException($"ReadBoneMap provided invalid bytesPerElement of {bytesPerElement}");
+        }
+    }
+
     public static Vector3 ReadVector3(this BinaryReader r, InputType inputType = InputType.Single)
     {
         Vector3 v;
@@ -51,6 +111,30 @@ public static class BinaryReaderExtensions
                     X = (float)r.ReadHalf(),
                     Y = (float)r.ReadHalf(),
                     Z = (float)r.ReadHalf()
+                };
+                break;
+            case InputType.SNorm:
+                v = new()
+                {
+                    X = r.ReadInt16() / 32767.0f,
+                    Y = r.ReadInt16() / 32767.0f,
+                    Z = r.ReadInt16() / 32767.0f
+                };
+                break;
+            case InputType.CryHalf:
+                v = new()
+                {
+                    X = CryHalf.ConvertCryHalfToFloat(r.ReadUInt16()),
+                    Y = CryHalf.ConvertCryHalfToFloat(r.ReadUInt16()),
+                    Z = CryHalf.ConvertCryHalfToFloat(r.ReadUInt16())
+                };
+                break;
+            case InputType.DymekHalf:
+                v = new()
+                {
+                    X = CryHalf.ConvertDymekHalfToFloat(r.ReadUInt16()),
+                    Y = CryHalf.ConvertDymekHalfToFloat(r.ReadUInt16()),
+                    Z = CryHalf.ConvertDymekHalfToFloat(r.ReadUInt16())
                 };
                 break;
             default:
@@ -84,6 +168,33 @@ public static class BinaryReaderExtensions
                     W = (float)r.ReadHalf()
                 };
                 break;
+            case InputType.SNorm:
+                q = new Quaternion()
+                {
+                    X = r.ReadInt16() / 32767.0f,
+                    Y = r.ReadInt16() / 32767.0f,
+                    Z = r.ReadInt16() / 32767.0f,
+                    W = r.ReadInt16() / 32767.0f
+                };
+                break;
+            case InputType.CryHalf:
+                q = new Quaternion()
+                {
+                    X = CryHalf.ConvertCryHalfToFloat(r.ReadUInt16()),
+                    Y = CryHalf.ConvertCryHalfToFloat(r.ReadUInt16()),
+                    Z = CryHalf.ConvertCryHalfToFloat(r.ReadUInt16()),
+                    W = CryHalf.ConvertCryHalfToFloat(r.ReadUInt16())
+                };
+                break;
+            case InputType.DymekHalf:
+                q = new Quaternion()
+                {
+                    X = CryHalf.ConvertDymekHalfToFloat(r.ReadUInt16()),
+                    Y = CryHalf.ConvertDymekHalfToFloat(r.ReadUInt16()),
+                    Z = CryHalf.ConvertDymekHalfToFloat(r.ReadUInt16()),
+                    W = CryHalf.ConvertDymekHalfToFloat(r.ReadUInt16())
+                };
+                break;
             default:
                 throw new ArgumentOutOfRangeException("Unable to read Quaternion.");
         }
@@ -91,18 +202,64 @@ public static class BinaryReaderExtensions
         return q;
     }
 
-    public static AaBb ReadAaBb(this BinaryReader reader)
+    public static IvoGeometryMeshDetails ReadMeshDetails(this BinaryReader r)
     {
-        return new AaBb
+        return new IvoGeometryMeshDetails
         {
-            Min = reader.ReadVector3(),
-            Max = reader.ReadVector3(),
+            Flags2 = r.ReadUInt32(),  // 4 = no normals datastream, 5 has normals datastream
+            NumberOfVertices = r.ReadUInt32(),
+            NumberOfIndices = r.ReadUInt32(),
+            NumberOfSubmeshes = r.ReadUInt32(),
+            Unknown = r.ReadInt32(),
+            BoundingBox = r.ReadBoundingBox(),
+            ScalingBoundingBox = r.ReadBoundingBox(),
+            VertexFormat = (VertexFormat)r.ReadUInt32()
         };
     }
 
-    public static ShotInt3Quat ReadShotInt3Quat(this BinaryReader r)
+    public static MeshSubset ReadMeshSubset(this BinaryReader r) =>
+        new()
+        {
+            MatID = r.ReadUInt16(),
+            NodeParentIndex = r.ReadUInt16(),
+            FirstIndex = r.ReadInt32(),
+            NumIndices = r.ReadInt32(),
+            FirstVertex = r.ReadInt32(),
+            Unknown = r.ReadInt32(),
+            NumVertices = r.ReadInt32(),
+            Radius = r.ReadSingle(),
+            Center = r.ReadVector3(),
+            Unknown1 = r.ReadInt32(),
+            Unknown2 = r.ReadInt32()
+        };
+
+    public static BoundingBox ReadBoundingBox(this BinaryReader r) =>
+        new(r.ReadVector3(), r.ReadVector3());
+
+    public static IRGBA ReadIRGB(this BinaryReader reader) =>
+        ReadIRGBA(reader, alpha: 1.0f);
+
+    public static IRGBA ReadIRGBA(this BinaryReader reader, float? alpha = null) =>
+        new(
+            reader.ReadByte() / 255.0f,
+            reader.ReadByte() / 255.0f,
+            reader.ReadByte() / 255.0f,
+            alpha ?? reader.ReadByte() / 255.0f
+        );
+
+    public static UV ReadUV(this BinaryReader reader, InputType inputType = InputType.Single)
     {
-        return new ShotInt3Quat
+        if (inputType == InputType.Single)
+            return new(reader.ReadSingle(), reader.ReadSingle());
+        else if (inputType == InputType.Half)
+            return new((float)reader.ReadHalf(), (float)reader.ReadHalf());
+        else
+            throw new ArgumentOutOfRangeException();
+    }
+
+    public static ShortInt3Quat ReadShortInt3Quat(this BinaryReader r)
+    {
+        return new ShortInt3Quat
         {
             X = r.ReadInt16(),
             Y = r.ReadInt16(),
@@ -146,34 +303,10 @@ public static class BinaryReaderExtensions
         };
     }
 
-    public static IRGBA ReadColor(this BinaryReader r)
-    {
-        var c = new IRGBA()
-        {
-            r = r.ReadByte(),
-            g = r.ReadByte(),
-            b = r.ReadByte(),
-            a = r.ReadByte()
-        };
-        return c;
-    }
-
-    public static IRGBA ReadColorBGRA(this BinaryReader r)
-    {
-        var c = new IRGBA()
-        {
-            b = r.ReadByte(),
-            g = r.ReadByte(),
-            r = r.ReadByte(),
-            a = r.ReadByte()
-        };
-        return c;
-    }
-
     public static Matrix3x3 ReadMatrix3x3(this BinaryReader reader)
     {
         // Reads a Matrix33 structure
-        if (reader == null)
+        if (reader is null)
             throw new ArgumentNullException(nameof(reader));
 
         Matrix3x3 m = new()
@@ -194,7 +327,7 @@ public static class BinaryReaderExtensions
 
     public static Matrix3x4 ReadMatrix3x4(this BinaryReader r)
     {
-        if (r == null)
+        if (r is null)
             throw new ArgumentNullException(nameof(r));
 
         Matrix3x4 m = new()
@@ -218,7 +351,7 @@ public static class BinaryReaderExtensions
 
     public static Matrix4x4 ReadMatrix4x4(this BinaryReader r)
     {
-        if (r == null)
+        if (r is null)
             throw new ArgumentNullException(nameof(r));
 
         Matrix4x4 m = new()
@@ -249,9 +382,11 @@ public static class BinaryReaderExtensions
         Half,
         CryHalf,
         Single,
-        Double
+        Double,
+        SNorm,
+        DymekHalf
     }
-    
+
     public static int ReadCryInt(this Stream stream)
     {
         var current = stream.ReadByte();
@@ -289,21 +424,21 @@ public static class BinaryReaderExtensions
         {
             case 1:
                 var b1 = reader.ReadByte();
-                return *(T*) &b1;
+                return *(T*)&b1;
             case 2:
                 var b2 = reader.ReadUInt16();
-                return *(T*) &b2;
+                return *(T*)&b2;
             case 4:
                 var b4 = reader.ReadUInt32();
-                return *(T*) &b4;
+                return *(T*)&b4;
             case 8:
                 var b8 = reader.ReadUInt64();
-                return *(T*) &b8;
+                return *(T*)&b8;
             default:
                 throw new ArgumentException("Enum is not of size 1, 2, 4, or 8.", nameof(T), null);
         }
     }
-    
+
     public static void ReadInto(this BinaryReader reader, out byte value) => value = reader.ReadByte();
     public static void ReadInto(this BinaryReader reader, out sbyte value) => value = reader.ReadSByte();
     public static void ReadInto(this BinaryReader reader, out ushort value) => value = reader.ReadUInt16();
@@ -314,11 +449,11 @@ public static class BinaryReaderExtensions
     public static void ReadInto(this BinaryReader reader, out long value) => value = reader.ReadInt64();
     public static void ReadInto(this BinaryReader reader, out float value) => value = reader.ReadSingle();
     public static void ReadInto(this BinaryReader reader, out double value) => value = reader.ReadDouble();
-    
+
     public static void ReadInto<T>(this BinaryReader reader, out T value) where T : unmanaged, Enum
         => value = reader.ReadEnum<T>();
 
-    public static void ReadInto(this BinaryReader reader, out AaBb value) => value = reader.ReadAaBb();
+    public static void ReadInto(this BinaryReader reader, out BoundingBox value) => value = reader.ReadBoundingBox();
     public static void ReadInto(this BinaryReader reader, out Plane value) => value = reader.ReadPlane();
     public static void ReadInto(this BinaryReader reader, out Vector3 value) => value = reader.ReadVector3();
     public static void ReadInto(this BinaryReader reader, out Matrix3x4 value) => value = reader.ReadMatrix3x4();

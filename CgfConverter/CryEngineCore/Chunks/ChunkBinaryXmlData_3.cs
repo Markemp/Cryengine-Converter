@@ -1,7 +1,7 @@
-﻿using System;
+﻿using CgfConverter.CryXmlB;
+using System;
 using System.IO;
 using System.Xml;
-using CgfConverter.CryXmlB;
 
 namespace CgfConverter.CryEngineCore;
 
@@ -13,13 +13,11 @@ internal sealed class ChunkBinaryXmlData_3 : ChunkBinaryXmlData     //  0xCCCBF0
     {
         base.Read(b);
 
-        var bytesToRead = (Int32)(this.Size - Math.Max(b.BaseStream.Position - this.Offset, 0));
+        var bytesToRead = (int)(Size - Math.Max(b.BaseStream.Position - Offset, 0));
 
         var buffer = b.ReadBytes(bytesToRead);
 
-        using (var memoryStream = new MemoryStream(buffer))
-        {
-            this.Data = CryXmlSerializer.ReadStream(memoryStream);
-        }
+        using var memoryStream = new MemoryStream(buffer);
+        Data = CryXmlSerializer.ReadStream(memoryStream);
     }
 }

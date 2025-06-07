@@ -1,5 +1,6 @@
 ﻿using CgfConverter.Models.Materials;
 using System;
+using System.Collections.Generic;
 
 namespace CgfConverter.CryEngineCore;
 
@@ -20,7 +21,10 @@ public abstract class ChunkMtlName : Chunk
     
     public uint NFlags2 { get; internal set; }
 
+    // For 0x0804 MtlName chunks.  Also set this to the name
     public Guid? AssetId { get; internal set; }
+
+    public List<string>? ChildNames { get; internal set; }
 
     /// <summary>The actual Material from the mtl file for this chunk.</summary>
     public Material? Material { get; set; }

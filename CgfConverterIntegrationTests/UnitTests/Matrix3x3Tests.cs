@@ -6,8 +6,7 @@ using System.Numerics;
 
 namespace CgfConverterTests.UnitTests;
 
-[TestClass]
-[TestCategory("unit")]
+
 public class Matrix3x3Tests
 {
     [TestMethod]

@@ -21,6 +21,7 @@ using CgfConverter.Renderers.Collada.Collada.Collada_Kinematics.Kinematics_Scene
 using CgfConverter.Renderers.Collada.Collada.Collada_Physics.Physics_Material;
 using CgfConverter.Renderers.Collada.Collada.Collada_Physics.Physics_Model;
 using CgfConverter.Renderers.Collada.Collada.Collada_Physics.Physics_Scene;
+using CgfConverter.Utilities;
 
 namespace CgfConverter.Renderers.Collada.Collada;
 
@@ -142,7 +143,7 @@ public partial class ColladaDoc
         }
         catch (Exception ex)
         {
-            Utilities.Log(LogLevelEnum.Error, ex.ToString());
+            HelperMethods.Log(LogLevelEnum.Error, ex.ToString());
             Console.ReadLine();
             return null;
         }

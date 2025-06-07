@@ -11,8 +11,11 @@ internal sealed class ChunkTimingFormat_918 : ChunkTimingFormat
 
         SecsPerTick = reader.ReadSingle();
         TicksPerFrame = reader.ReadInt32();
-        GlobalRange.Name = reader.ReadFString(32);  // Name is technically a String32, but F those structs
-        GlobalRange.Start = reader.ReadInt32();
-        GlobalRange.End = reader.ReadInt32();
+        GlobalRange = new RangeEntity
+        {
+            Name = reader.ReadFString(32),  // Name is technically a String32
+            Start = reader.ReadInt32(),
+            End = reader.ReadInt32()
+        };
     }
 }

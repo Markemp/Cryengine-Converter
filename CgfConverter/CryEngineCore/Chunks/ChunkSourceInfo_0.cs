@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CgfConverter.Utilities;
+using System;
 using System.IO;
 
 namespace CgfConverter.CryEngineCore;
@@ -25,9 +26,9 @@ internal sealed class ChunkSourceInfo_0 : ChunkSourceInfo
 
         if (Offset != _header.Offset || Size != _header.Size)
         {
-            Utilities.Log(LogLevelEnum.Debug, "Conflict in chunk definition:  SourceInfo chunk");
-            Utilities.Log(LogLevelEnum.Debug, "{0:X}+{1:X}", _header.Offset, _header.Size);
-            Utilities.Log(LogLevelEnum.Debug, "{0:X}+{1:X}", Offset, Size);
+            HelperMethods.Log(LogLevelEnum.Debug, "Conflict in chunk definition:  SourceInfo chunk");
+            HelperMethods.Log(LogLevelEnum.Debug, "{0:X}+{1:X}", _header.Offset, _header.Size);
+            HelperMethods.Log(LogLevelEnum.Debug, "{0:X}+{1:X}", Offset, Size);
         }
 
         ChunkType = ChunkType.SourceInfo; // this chunk doesn't actually have the chunktype header.

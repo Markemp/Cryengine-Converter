@@ -1,6 +1,6 @@
-﻿using System.Numerics;
+﻿using CgfConverter.Utils;
+using System.Numerics;
 using System.Xml.Serialization;
-using CgfConverter.Utils;
 
 namespace CgfConverter.Models.Materials;
 
@@ -97,17 +97,17 @@ public class PublicParams
 
     [XmlIgnore] public float? GlossFromDiffuseBrightness;
 
-    [XmlIgnore] public int? SpecMapChannelR;
+    [XmlIgnore] public float? SpecMapChannelR;
 
-    [XmlIgnore] public int? SpecMapChannelG;
+    [XmlIgnore] public float? SpecMapChannelG;
 
-    [XmlIgnore] public int? SpecMapChannelB;
+    [XmlIgnore] public float? SpecMapChannelB;
 
-    [XmlIgnore] public int? GlossMapChannelR;
+    [XmlIgnore] public float? GlossMapChannelR;
 
-    [XmlIgnore] public int? GlossMapChannelG;
+    [XmlIgnore] public float? GlossMapChannelG;
 
-    [XmlIgnore] public int? GlossMapChannelB;
+    [XmlIgnore] public float? GlossMapChannelB;
 
     [XmlIgnore] public float? FlowTilling;
 
@@ -636,37 +636,37 @@ public class PublicParams
     [XmlAttribute("SpecMapChannelR")]
     public string? SpecMapChannelRString {
         get => SpecMapChannelR?.ToString();
-        set => SpecMapChannelR = value is null ? null : int.Parse(value);
+        set => SpecMapChannelR = value is null ? null : float.Parse(value);
     }
 
     [XmlAttribute("SpecMapChannelG")]
     public string? SpecMapChannelGString {
         get => SpecMapChannelG?.ToString();
-        set => SpecMapChannelG = value is null ? null : int.Parse(value);
+        set => SpecMapChannelG = value is null ? null : float.Parse(value);
     }
 
     [XmlAttribute("SpecMapChannelB")]
     public string? SpecMapChannelBString {
         get => SpecMapChannelB?.ToString();
-        set => SpecMapChannelB = value is null ? null : int.Parse(value);
+        set => SpecMapChannelB = value is null ? null : float.Parse(value);
     }
 
     [XmlAttribute("GlossMapChannelR")]
     public string? GlossMapChannelRString {
         get => GlossMapChannelR?.ToString();
-        set => GlossMapChannelR = value is null ? null : int.Parse(value);
+        set => GlossMapChannelR = value is null ? null : float.Parse(value);
     }
 
     [XmlAttribute("GlossMapChannelG")]
     public string? GlossMapChannelGString {
         get => GlossMapChannelG?.ToString();
-        set => GlossMapChannelG = value is null ? null : int.Parse(value);
+        set => GlossMapChannelG = value is null ? null : float.Parse(value);
     }
 
     [XmlAttribute("GlossMapChannelB")]
     public string? GlossMapChannelBString {
         get => GlossMapChannelB?.ToString();
-        set => GlossMapChannelB = value is null ? null : int.Parse(value);
+        set => GlossMapChannelB = value is null ? null : float.Parse(value);
     }
 
     [XmlAttribute("FlowTilling")]

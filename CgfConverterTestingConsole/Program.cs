@@ -1,34 +1,44 @@
-﻿using CgfConverter.Utililities;
-using System.Numerics;
-using Extensions;
+﻿using CgfConverter;
+using CgfConverter.CryEngineCore;
 
-Console.WriteLine("Bone 5");
-var q = new Quaternion(0.000000f, 0.999048f, 0.000000f, -0.043619f);  // bone 5 quat
-var v = new Vector3(0.022410f, 0.157970f, 0.102130f);
+string startingFilePath = $@"d:\depot\sc3.24\data\objects\";
+string datadir = $@"d:\depot\sc3.24\data\";
 
-var m3 = Matrix4x4.CreateFromQuaternion(q);
-m3.Translation = new Vector3(-0.104450f, 0.078181f, -0.047510f);
-m3.Translation = v;
+ArgsHandler argsHandler = new();
 
-Console.WriteLine($"m3 transform matrix: {m3}");
+//// go through all the files in the directory recursively.  If it ends in .skin, .cgf, .cga or .chr, process it.
+//foreach (string file in Directory.EnumerateFiles(startingFilePath, "*.*", SearchOption.AllDirectories))
+//{
+//    if (file.EndsWith(".skin") || file.EndsWith(".cgf") || file.EndsWith(".cga") || file.EndsWith(".chr"))
+//    {
+//        Console.WriteLine($@"Processing {file}");
+//        CryEngine cryData = new(file, argsHandler.PackFileSystem);
+//        cryData.ProcessCryengineFiles();
 
-Matrix4x4.Invert(m3, out Matrix4x4 m4);  // m3 is right, except scale <-> translation
+//        // See if it has an IVOTangents datastream
+//        var ivoSkinMesh = (ChunkIvoSkinMesh)cryData.Models[1].ChunkMap.FirstOrDefault(x => x.Value.ChunkType == ChunkType.IvoSkin).Value;
+//        if (ivoSkinMesh is null)
+//        {
+//            Console.WriteLine($@"{file}: Found IVOSkin datastream with no IvoSkinMesh!");
+//            Console.WriteLine("Press any key to continue...");
+//            Console.ReadKey();
+//            continue;
+//        }
+//        if (ivoSkinMesh.Tangents.BytesPerElement == 16)
+//        {
+//            Console.WriteLine($@"{file}: Found IVOSkin datastream with 16 bytes per element!");
+//            Console.WriteLine("Press any key to continue...");
+//            Console.ReadKey();
+//        }
+//    }
+//}
 
-Console.WriteLine($"m4 transform matrix: {m4}");
+// Open the file at {startingFilePath\box.cgf and convert it to crydata
+var file = new FileInfo(datadir + $@"objects\default\box.cgf");
+CryEngine cryData = new(file.ToString(), argsHandler.PackFileSystem);
 
-Console.WriteLine();
-Console.WriteLine("Bone 15");
+cryData.ProcessCryengineFiles();
 
-var q2 = new Quaternion(0, 0, 0, 1);
-var v2 = new Vector3(0.000000f, 0.056223f, 0.042497f);
+var ivoSkinMesh = (ChunkIvoSkinMesh)cryData.Models[1].ChunkMap.FirstOrDefault(x => x.Value.ChunkType == ChunkType.IvoSkin || x.Value.ChunkType == ChunkType.IvoSkin2).Value;
 
-var m5 = Matrix4x4.CreateFromQuaternion(q2);
-m5.Translation = v2;
-
-Console.WriteLine($"m5 transform matrix: {m5}");
-
-Matrix4x4.Invert(m5, out Matrix4x4 m6);  // m6 is right, except scale <-> translation
-
-Console.WriteLine($"m6 transform matrix: {m6}");
-
-
+Console.ReadKey();

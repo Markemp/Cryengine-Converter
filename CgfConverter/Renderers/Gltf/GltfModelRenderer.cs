@@ -25,8 +25,11 @@ public class GltfModelRenderer : BaseGltfRenderer, IRenderer
         // Create the root object.
         Reset("Scene");
 
+        var extension = Path.GetExtension(_cryData.InputFile);
+        bool omitSkins = !(extension == ".chr" || extension == ".skin");
+
         // For each root node in the crydata, add to the scene nodes.
-        CreateGltfNodeInto(CurrentScene.Nodes, _cryData);
+        CreateGltfNodeInto(CurrentScene.Nodes, _cryData, omitSkins);
 
         return Root;
     }

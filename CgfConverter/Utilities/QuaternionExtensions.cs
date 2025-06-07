@@ -74,5 +74,65 @@ public static class QuaternionExtensions
         return new Vector4(axis, angle);
     }
 
-    public static List<float> ToGltfList(this Quaternion q) => new List<float>() { q.X, q.Y, q.Z, q.W };
+    /// <summary>
+    /// Gets the normal vector from a quaternion stored as a qtangent.
+    /// Based on CryEngine's qtangent normal calculation.
+    /// </summary>
+    /// <param name="q">The quaternion stored as a qtangent</param>
+    /// <returns>The normal vector</returns>
+    public static Vector3 GetNormalFromQTangent(this Quaternion q)
+    {
+        // Calculate the rotated Z axis (0,0,1) using the quaternion
+        // This is equivalent to GetColumn2() in CryEngine
+        float x = 2.0f * (q.X * q.Z + q.Y * q.W);
+        float y = 2.0f * (q.Y * q.Z - q.X * q.W);
+        float z = 2.0f * (q.Z * q.Z + q.W * q.W) - 1.0f;
+
+        Vector3 normal = new (x, y, z);
+
+        // Normalize the vector
+        normal = Vector3.Normalize(normal);
+
+        // Apply w-sign handling as per CryEngine's GetN()
+        if (q.W < 0.0f)
+            normal = -normal;
+
+        return normal;
+    }
+
+    public static Vector3 GetNormalFromQTangentExact(this Quaternion q)
+    {
+        // Direct port of CryEngine's GetColumn2/GetN with no normalization
+        float x = 2.0f * (q.X * q.Z + q.Y * q.W);
+        float y = 2.0f * (q.Y * q.Z - q.X * q.W);
+        float z = 2.0f * (q.Z * q.Z + q.W * q.W) - 1.0f;
+
+        Vector3 normal = new(x, y, z);
+
+        if (q.W < 0.0f)
+            normal = -normal;
+
+        return normal;
+    }
+
+    public static Vector3 GetNormalFromQTangentPreNormalized(this Quaternion q)
+    {
+        // Normalize quaternion first (in case input isn't normalized)
+        float length = (float)Math.Sqrt(q.X * q.X + q.Y * q.Y + q.Z * q.Z + q.W * q.W);
+        Quaternion normalized = new(q.X / length, q.Y / length, q.Z / length, q.W / length);
+
+        // Then apply the same formula
+        float x = 2.0f * (normalized.X * normalized.Z + normalized.Y * normalized.W);
+        float y = 2.0f * (normalized.Y * normalized.Z - normalized.X * normalized.W);
+        float z = 2.0f * (normalized.Z * normalized.Z + normalized.W * normalized.W) - 1.0f;
+
+        Vector3 normal = new(x, y, z);
+
+        if (normalized.W < 0.0f)
+            normal = -normal;
+
+        return normal;
+    }
+
+    public static List<float> ToGltfList(this Quaternion q) => [q.X, q.Y, q.Z, q.W];
 }

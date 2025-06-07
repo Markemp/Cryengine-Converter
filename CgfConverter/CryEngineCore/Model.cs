@@ -44,13 +44,12 @@ public class Model
     public List<ChunkHeader> chunkHeaders = new();
 
     private Dictionary<int, ChunkNode> nodeMap { get; set; }
-
     /// <summary> All NodeChunks for this model in a dictionary by chunk Id. </summary>
     public Dictionary<int, ChunkNode> NodeMap
     {
         get
         {
-            if (nodeMap == null)
+            if (nodeMap is null)
             {
                 nodeMap = new Dictionary<int, ChunkNode>() { };
                 ChunkNode? rootNode = null;
@@ -76,7 +75,7 @@ public class Model
         }
     }
 
-    public bool HasBones => Bones != null;
+    public bool HasBones => Bones is not null;
 
     public bool HasGeometry
     {
@@ -117,6 +116,10 @@ public class Model
         ReadFileHeader(reader);
         ReadChunkTable(reader);
         ReadChunks(reader);
+
+        // Move this to the parent.  Model should just read a single file.
+        //BuildIvoNodeStructure();
+        
     }
 
     private void ReadFileHeader(BinaryReader b)
@@ -137,7 +140,6 @@ public class Model
             FileVersion = (FileVersion)b.ReadUInt32();  // 0x0900
             NumChunks = b.ReadUInt32();
             ChunkTableOffset = b.ReadInt32();
-            CreateDummyRootNode();
             return;
         }
 
@@ -162,7 +164,7 @@ public class Model
         ChunkNode rootNode = new ChunkNode_823
         {
             Name = Path.GetFileNameWithoutExtension(FileName!),
-            ObjectNodeID = 2,      // No node IDs in #ivo files.  The actual mesh is the only node in the m file.
+            ObjectNodeID = 2,      // No node IDs in #ivo skin files.  The actual mesh is the only node in the m file.
             ParentNodeID = ~0,     // No parent
             NumChildren = 0,     // Single object
             MaterialID = 11,
@@ -190,7 +192,7 @@ public class Model
         // Set sizes for versions that don't have sizes
         for (int i = 0; i < NumChunks; i++)
         {
-            if (FileVersion == FileVersion.CryTek1And2 &&  i < NumChunks - 2)
+            if (FileVersion == FileVersion.x0744 &&  i < NumChunks - 2)
                 chunkHeaders[i].Size = chunkHeaders[i + 1].Offset - chunkHeaders[i].Offset;
         }
     }
@@ -214,8 +216,8 @@ public class Model
             // Add Bones to the model.  We are assuming there is only one CompiledBones chunk per file.
             if (chunkHeaderItem.ChunkType == ChunkType.CompiledBones ||
                 chunkHeaderItem.ChunkType == ChunkType.CompiledBonesSC ||
-                chunkHeaderItem.ChunkType == ChunkType.CompiledBonesIvo ||
-                chunkHeaderItem.ChunkType == ChunkType.CompiledBonesIvo320)
+                //chunkHeaderItem.ChunkType == ChunkType.CompiledBonesIvo ||
+                chunkHeaderItem.ChunkType == ChunkType.CompiledBones_Ivo2)
             {
                 Bones = chunk as ChunkCompiledBones;
             }

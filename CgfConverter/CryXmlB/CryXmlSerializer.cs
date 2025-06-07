@@ -1,11 +1,12 @@
-﻿using System;
+﻿using CgfConverter.Models.Materials;
+using Extensions;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
-using Extensions;
 
 namespace CgfConverter.CryXmlB;
 
@@ -32,10 +33,10 @@ public static class CryXmlSerializer
                 if (!leaveOpen)
                     prevStream.Dispose();
             }
-            
+
             peek = peek[..inStream.Read(peek)];
             inStream.Position -= peek.Length;
-            
+
             // There is no way that a text XML file starts with these bytes.
             if (peek.StartsWith(PbxmlMagic.AsSpan()))
                 return LoadPbxmlFile(new(inStream));
@@ -50,7 +51,7 @@ public static class CryXmlSerializer
         }
         catch (Exception e)
         {
-            throw new InvalidDataException($"Unknown file format(head={peek.ToString()})", e);
+            throw new InvalidDataException($"Unknown file format (head={peek.ToString()})", e);
         }
         finally
         {
@@ -281,7 +282,7 @@ public static class CryXmlSerializer
             else
                 xmlDoc.AppendChild(element);
         }
-        
+
         if (writeLog && bugged)
             Console.WriteLine("XML file had attributes without valid value.");
 
@@ -293,12 +294,15 @@ public static class CryXmlSerializer
         try
         {
             using MemoryStream ms = new();
-            var xs = new XmlSerializer(typeof(TObject));
+            var xs = new XmlSerializer(typeof(TObject), [typeof(Material), typeof(MaterialRef)]);
             var xmlDoc = ReadStream(inStream);
 
             xmlDoc.Save(ms);
             ms.Seek(0, SeekOrigin.Begin);
-            return (TObject) (xs.Deserialize(ms) ?? throw new NullReferenceException("Deserialize returned null"));
+
+            var mats = (TObject)(xs.Deserialize(ms) ?? throw new NullReferenceException("Deserialize returned null"));
+
+            return mats;
         }
         finally
         {
@@ -311,6 +315,7 @@ public static class CryXmlSerializer
     {
         using MemoryStream ms = new MemoryStream();
         var xmlDoc = CryXmlSerializer.ReadFile(inFile);
+        var materials = CryXmlSerializer.ExtractMaterials(xmlDoc);
 
         xmlDoc.Save(ms);
 
@@ -318,6 +323,76 @@ public static class CryXmlSerializer
 
         XmlSerializer xs = new XmlSerializer(typeof(TObject));
 
-        return (TObject) (xs.Deserialize(ms) ?? throw new NullReferenceException("Deserialize returned null"));
+        return (TObject)(xs.Deserialize(ms) ?? throw new NullReferenceException("Deserialize returned null"));
+    }
+
+    public static List<MaterialBase> ExtractMaterials(Stream stream, bool writeLog = false, bool leaveOpen = false)
+    {
+        try
+        {
+            using var streamCopy = new MemoryStream();
+
+            var originalPosition = stream.Position;
+
+            stream.CopyTo(streamCopy);
+            stream.Position = originalPosition;
+            streamCopy.Position = 0;
+
+            var tempDoc = ReadStream(streamCopy, writeLog, leaveOpen: true);
+
+            var subMaterialsNode = tempDoc.SelectSingleNode("//SubMaterials");
+
+            if (subMaterialsNode != null)
+            {
+                // Extract just the SubMaterials node
+                using var subMatStream = new MemoryStream();
+                var subMatDoc = new XmlDocument();
+                var importedNode = subMatDoc.ImportNode(subMaterialsNode, true);
+                subMatDoc.AppendChild(importedNode);
+                subMatDoc.Save(subMatStream);
+                subMatStream.Position = 0;
+
+                // Deserialize the SubMaterials node
+                var serializer = new XmlSerializer(
+                    typeof(SubMaterials),
+                    [typeof(Material), typeof(MaterialRef)]
+                );
+
+                var subMaterials = (SubMaterials)serializer.Deserialize(subMatStream);
+                return subMaterials.Materials ?? new List<MaterialBase>();
+            }
+
+            return new List<MaterialBase>();
+        }
+        finally
+        {
+            if (!leaveOpen)
+                stream.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Extract materials from any XML, whether it's from a file or a stream
+    /// </summary>
+    public static List<MaterialBase> ExtractMaterials(string filePath, bool writeLog = false)
+    {
+        using var fileStream = File.OpenRead(filePath);
+        return ExtractMaterials(fileStream, writeLog);
+    }
+
+    public static List<MaterialBase> ExtractMaterials(XmlDocument xmlDoc)
+    {
+        var subMaterialsNode = xmlDoc.SelectSingleNode("//SubMaterials");
+        if (subMaterialsNode == null)
+            return new List<MaterialBase>();
+
+        var serializer = new XmlSerializer(
+            typeof(SubMaterials),
+            [typeof(Material), typeof(MaterialRef)]
+        );
+
+        using var reader = new XmlNodeReader(subMaterialsNode);
+        var subMaterials = (SubMaterials)serializer.Deserialize(reader);
+        return subMaterials.Materials;
     }
 }

@@ -1,8 +1,13 @@
-﻿using CgfConverter.Models.Structs;
+﻿using CgfConverter;
+using CgfConverter.Structs;
 using CgfConverterIntegrationTests.Extensions;
 using Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace CgfConverterTests.UnitTests;
 
@@ -10,6 +15,8 @@ namespace CgfConverterTests.UnitTests;
 [TestCategory("unit")]
 public class QuaternionExtensionsTests
 {
+    private const float Epsilon = 0.000001f;
+
     [TestMethod]
     public void ArmorWarfare_Chicken_Convert4x4ToGltf()
     {
@@ -204,5 +211,166 @@ public class QuaternionExtensionsTests
         Matrix4x4.Invert(worldMatrix, out Matrix4x4 actualMatrix);
 
         AssertExtensions.AreEqual(expectedMatrix, actualMatrix, 0.0001);
+    }
+
+    [TestMethod]
+    public void GetNormalFromQTangent_Identity_ReturnsUpVector()
+    {
+        var qtangent = Quaternion.Identity;
+        var expectedNormal = Vector3.UnitZ; // Identity quaternion should return (0,0,1)
+        var actualNormal = qtangent.GetNormalFromQTangent();
+
+        AssertVector3Equal(expectedNormal, actualNormal, Epsilon);
+    }
+
+    //[TestMethod]
+    //public void GetNormalFromQTangent_KnownCryEngineValue_ReturnsExpectedNormal()
+    //{
+    //    // Known test value from CryEngine data
+    //    var qtangent = new Quaternion(-0.609729f, 0.055818f, 0.461440f, 0.580248f);
+
+    //    // Expected normal calculated from CryEngine's GetColumn2 formula
+    //    var expectedNormal = new Vector3(-0.528760f, 0.806104f, 0.265723f);
+    //    var actualNormal = qtangent.GetNormalFromQTangent();
+
+    //    AssertVector3Equal(expectedNormal, actualNormal, 0.0001f);
+    //}
+
+    //[TestMethod]
+    //public void GetNormalFromQTangent_NegativeW_FlipsNormal()
+    //{
+    //    // Test quaternion with negative w
+    //    var qtangent = new Quaternion(0.5f, 0.5f, 0.5f, -0.5f);
+    //    var positiveWQuat = new Quaternion(0.5f, 0.5f, 0.5f, 0.5f);
+
+    //    var normalWithNegativeW = qtangent.GetNormalFromQTangent();
+    //    var normalWithPositiveW = positiveWQuat.GetNormalFromQTangent();
+
+    //    // The normals should be opposites of each other
+    //    AssertVector3Equal(normalWithNegativeW, -normalWithPositiveW, Epsilon);
+    //}
+
+    [TestMethod]
+    public void GetNormalFromQTangent_SNormValuesFromBox()
+    {
+        // From box.cgf vertex 0 in sc3.24.  This qtangent is from a triangle on the bottom.
+        // expected normal should be 0,0,-1
+        // Top of box (normal should be 0,0,1)
+        // vertex 4-7: x: -0.000061, y: -0.750053, z: 0.499985, w: -1.000000
+
+        var qtangentBottom = new Quaternion(-0.000061f, 0.249977f, 0.499985f, 0.0f);
+        var qtangentTop = new Quaternion(x: -0.000061f, y: -0.750053f, z: 0.499985f, w: -1.000000f);
+        var qtangentBottomN = Quaternion.Normalize(qtangentTop);
+        var qtangentTopN = Quaternion.Normalize(qtangentTop);
+        var bottomMatrix = qtangentBottomN.ConvertToRotationMatrix();
+        var topMatrix = qtangentTopN.ConvertToRotationMatrix();
+        var col1 = new Vector3(bottomMatrix.M11, bottomMatrix.M21, bottomMatrix.M31);
+        var col2 = new Vector3(bottomMatrix.M12, bottomMatrix.M22, bottomMatrix.M32);
+        var col3 = new Vector3(bottomMatrix.M13, bottomMatrix.M23, bottomMatrix.M33);
+
+        Vector4 vTop = new Vector4(qtangentTop.X, qtangentTop.Y, qtangentTop.Z, qtangentTop.W);
+        Vector4 vTopN = new Vector4(qtangentTopN.X, qtangentTopN.Y, qtangentTopN.Z, qtangentTopN.W);
+        Vector3 normal = XAxis(vTop);
+        Vector3 tangent = YAxis(vTop);
+        Vector3 normalN = XAxis(vTopN);
+        Vector3 tangentN = YAxis(vTopN);
+        //float biNormalReflection = sign(input.qtangent.w); //We ensured in C++ qtangent.w is never 0
+        //Vector3 vBinormal = cross(normal, tangent) * biNormalReflection;
+
+    }
+
+    //[TestMethod]
+    //public void GetNormalFromQTangent_KnownCryEngineValue_ReturnsExpectedNormal2()
+    //{
+    //    var qtangent = new Quaternion(-0.609729f, 0.055818f, 0.461440f, 0.580248f);
+    //    var expectedNormal = new Vector3(-0.528760f, 0.806104f, 0.265723f);
+
+    //    var exactNormal = qtangent.GetNormalFromQTangentExact();
+    //    var preNormalizedNormal = qtangent.GetNormalFromQTangentPreNormalized();
+
+    //    Console.WriteLine("Exact implementation:");
+    //    //AssertVector3Equal(expectedNormal, exactNormal, 0.0001f);
+
+    //    Console.WriteLine("\nPre-normalized implementation:");
+    //    AssertVector3Equal(expectedNormal, preNormalizedNormal, 0.0001f);
+    //}
+
+    [TestMethod]
+    public void GetNormalFromQTangent_ReturnsNormalizedVector()
+    {
+        var qtangent = new Quaternion(0.4f, -0.3f, 0.2f, 0.8f);
+        var normal = qtangent.GetNormalFromQTangent();
+
+        // Check that the length is 1
+        float length = (float)Math.Sqrt(normal.X * normal.X + normal.Y * normal.Y + normal.Z * normal.Z);
+        Assert.AreEqual(1.0f, length, Epsilon);
+    }
+
+    [TestMethod]
+    public void GetNormalFromQTangent_90DegreeRotations()
+    {
+        // 90-degree rotation around X axis
+        var rotateXQuat = Quaternion.CreateFromAxisAngle(Vector3.UnitX, (float)(Math.PI / 2));
+        var expectedXRotated = new Vector3(0, -1, 0);
+        AssertVector3Equal(expectedXRotated, rotateXQuat.GetNormalFromQTangent(), Epsilon);
+
+        // 90-degree rotation around Y axis
+        var rotateYQuat = Quaternion.CreateFromAxisAngle(Vector3.UnitY, (float)(Math.PI / 2));
+        var expectedYRotated = new Vector3(1, 0, 0);
+        AssertVector3Equal(expectedYRotated, rotateYQuat.GetNormalFromQTangent(), Epsilon);
+    }
+
+    private static void AssertVector3Equal(Vector3 expected, Vector3 actual, float epsilon)
+    {
+        var errors = new List<string>();
+
+        if (Math.Abs(expected.X - actual.X) > epsilon)
+            errors.Add($"X component mismatch. Expected: {expected.X}, Actual: {actual.X}");
+
+        if (Math.Abs(expected.Y - actual.Y) > epsilon)
+            errors.Add($"Y component mismatch. Expected: {expected.Y}, Actual: {actual.Y}");
+
+        if (Math.Abs(expected.Z - actual.Z) > epsilon)
+            errors.Add($"Z component mismatch. Expected: {expected.Z}, Actual: {actual.Z}");
+
+        if (errors.Any())
+            Assert.Fail(string.Join("\n", errors));
+    }
+
+    public Vector3 XAxis(Vector4 qQuat)
+    {
+        float fTy = 2.0f * qQuat.Y;
+        float fTz = 2.0f * qQuat.Z;
+        float fTwy = fTy * qQuat.W;
+        float fTwz = fTz * qQuat.W;
+        float fTxy = fTy * qQuat.X;
+        float fTxz = fTz * qQuat.X;
+        float fTyy = fTy * qQuat.Y;
+        float fTzz = fTz * qQuat.Z;
+
+        return new Vector3(
+            1.0f - (fTyy + fTzz),
+            fTxy + fTwz,
+            fTxz - fTwy
+        );
+    }
+
+    public Vector3 YAxis(Vector4 qQuat)
+    {
+        float fTx = 2.0f * qQuat.X;
+        float fTy = 2.0f * qQuat.Y;
+        float fTz = 2.0f * qQuat.Z;
+        float fTwx = fTx * qQuat.W;
+        float fTwz = fTz * qQuat.W;
+        float fTxx = fTx * qQuat.X;
+        float fTxy = fTy * qQuat.X;
+        float fTyz = fTz * qQuat.Y;
+        float fTzz = fTz * qQuat.Z;
+
+        return new Vector3(
+            fTxy - fTwz,
+            1.0f - (fTxx + fTzz),
+            fTyz + fTwx
+        );
     }
 }

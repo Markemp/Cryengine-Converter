@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using CgfConverter.Utilities;
+using System.Numerics;
 
 namespace CgfConverter.CryEngineCore
 {
@@ -19,13 +20,13 @@ namespace CgfConverter.CryEngineCore
 
         public void WriteChunk()
         {
-            Utilities.Log(LogLevelEnum.Verbose, "*** START Helper Chunk ***");
-            Utilities.Log(LogLevelEnum.Verbose, "    ChunkType:   {0}", ChunkType);
-            Utilities.Log(LogLevelEnum.Verbose, "    Version:     {0:X}", Version);
-            Utilities.Log(LogLevelEnum.Verbose, "    ID:          {0:X}", ID);
-            Utilities.Log(LogLevelEnum.Verbose, "    HelperType:  {0}", HelperType);
-            Utilities.Log(LogLevelEnum.Verbose, "    Position:    {0}, {1}, {2}", Pos.X, Pos.Y, Pos.Z);
-            Utilities.Log(LogLevelEnum.Verbose, "*** END Helper Chunk ***");
+            HelperMethods.Log(LogLevelEnum.Verbose, "*** START Helper Chunk ***");
+            HelperMethods.Log(LogLevelEnum.Verbose, "    ChunkType:   {0}", ChunkType);
+            HelperMethods.Log(LogLevelEnum.Verbose, "    Version:     {0:X}", Version);
+            HelperMethods.Log(LogLevelEnum.Verbose, "    ID:          {0:X}", ID);
+            HelperMethods.Log(LogLevelEnum.Verbose, "    HelperType:  {0}", HelperType);
+            HelperMethods.Log(LogLevelEnum.Verbose, "    Position:    {0}, {1}, {2}", Pos.X, Pos.Y, Pos.Z);
+            HelperMethods.Log(LogLevelEnum.Verbose, "*** END Helper Chunk ***");
         }
     }
 }

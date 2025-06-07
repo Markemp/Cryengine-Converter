@@ -11,7 +11,7 @@ public class SOcTreeNodeChunk
 {
     public readonly short ChunkVersion;
     public readonly short ChildsMask;
-    public readonly AaBb NodeBox;
+    public readonly BoundingBox NodeBox;
     public readonly int ObjectsBlockSize;
 
     public readonly SRenderNodeChunk[] Objects;

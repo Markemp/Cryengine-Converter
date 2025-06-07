@@ -1,15 +1,17 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 using CgfConverter.Utils;
+using System.Linq;
 
 namespace CgfConverterTests.IntegrationTests;
 
 [TestClass]
-[TestCategory("unit")]
+[TestCategory("integration")]
 public class CryXmlSerializerTests
 {
+    string objectDir = @"d:\depot\kcd2";
+
     [TestMethod]
-    public void ReadFile_SimpleMaterialXmlFile_NoSubmats()
+    public void FromFile_SimpleMaterialXmlFile_NoSubmats()
     {
         var filename = @"..\..\..\TestData\SimpleMat.xml";
 
@@ -21,7 +23,7 @@ public class CryXmlSerializerTests
     }
 
     [TestMethod]
-    public void ReadFile_MutliMaterialXmlFile_HasSubmats()
+    public void FromFile_MutliMaterialXmlFile_HasSubmats()
     {
         var filename = @"..\..\..\TestData\MultipleMats.xml";
 
@@ -34,7 +36,7 @@ public class CryXmlSerializerTests
     }
 
     [TestMethod]
-    public void ReadFile_StarCitizenBinaryMatFile()
+    public void FromFile_StarCitizenBinaryMatFile()
     {
         var filename = @"..\..\..\TestData\SC_mat.mtl";
 
@@ -52,5 +54,21 @@ public class CryXmlSerializerTests
         Assert.IsNotNull(material.SubMaterials);
         Assert.AreEqual(2, material.SubMaterials.Length);
         Assert.AreEqual("524544", material.MtlFlags);
+    }
+
+    [TestMethod]
+    public void FromFile_M_Head_Capon_M01_mtl()
+    {
+        var filename = $@"{objectDir}\objects\characters\humans\male\head\m_head_capon\m_head_capon_m01.mtl";
+        var material = MaterialUtilities.FromFile(filename, "m_head_capon_m01", objectDir);
+        Assert.AreEqual(5, material.SubMaterials.Count());
+    }
+
+    [TestMethod]
+    public void FromFile_clothing_main_m()
+    {
+        var filename = @"..\..\..\TestData\clothing_main_m.mtl";
+        var material = MaterialUtilities.FromFile(filename, "clothing_main_m", objectDir);
+        Assert.AreEqual(1, material.SubMaterials.Count());
     }
 }

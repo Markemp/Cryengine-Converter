@@ -2,6 +2,7 @@
 using CgfConverter.CryEngineCore;
 using CgfConverter.Renderers.Collada;
 using CgfConverter.Renderers.Collada.Collada;
+using CgfConverter.Renderers.Collada.Collada.Enums;
 using CgfConverter.Renderers.Gltf;
 using CgfConverter.Renderers.USD;
 using CgfConverterIntegrationTests.Extensions;
@@ -24,7 +25,7 @@ public class MWOIntegrationTests
 {
     private readonly TestUtils testUtils = new();
     private readonly string userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-    private readonly string objectDir = @"d:\depot\mwo\";
+    private readonly string objectDir = @"d:\depot\mwo";
 
     [TestInitialize]
     public void Initialize()
@@ -36,14 +37,104 @@ public class MWOIntegrationTests
     }
 
     [TestMethod]
-    public void ClanBanner_Adder_VerifyMaterials()
+    public void Box_Collada()
     {
-        var matFile = @"D:\depot\mwo\Objects\purchasable\cockpit_mounted\clanbanner\clanbanner_a.mtl";
-        var args = new string[] { $@"D:\depot\mwo\Objects\purchasable\cockpit_mounted\clanbanner\clanbanner_a_adder.cga", "-dds", "-dae", "-objectdir", objectDir, "-mtl", matFile };
+        var args = new string[] { $@"{objectDir}\Objects\default\box.cgf", "-dds", "-dae", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, null, matFile);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+
+        // Visual Scene checks
+        var boxNode = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0];
+        Assert.AreEqual("box", boxNode.ID);
+        Assert.AreEqual(ColladaNodeType.NODE, boxNode.Type);
+        Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0", boxNode.Matrix[0].Value_As_String);
+        Assert.AreEqual("#helper_mtl_material0-material", boxNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
+        Assert.AreEqual("helper_mtl_material0-material", boxNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
+
+        // Geometry Checks
+        var geometry = daeObject.Library_Geometries.Geometry[0];
+        Assert.AreEqual("box-mesh", geometry.ID);
+        Assert.AreEqual(1, daeObject.Library_Geometries.Geometry.Length);
+        var mesh = geometry.Mesh;
+        Assert.AreEqual(4, mesh.Source.Length);
+        Assert.AreEqual(2, mesh.Triangles.Length);
+        Assert.AreEqual(12, mesh.Triangles[0].Count);
+        Assert.AreEqual(0, mesh.Triangles[1].Count);
+
+        // Materials Checks
+        var mats = daeObject.Library_Materials;
+        Assert.AreEqual(2, mats.Material.Length);
+        Assert.AreEqual("helper_mtl_material0", mats.Material[0].Name);
+        Assert.AreEqual("helper_mtl_material0-material", mats.Material[0].ID);
+        Assert.AreEqual("#helper_mtl_material0-effect", mats.Material[0].Instance_Effect.URL);
+        Assert.AreEqual("helper_mtl_material1", mats.Material[1].Name);
+        var boundMaterials = boxNode.Instance_Geometry[0].Bind_Material;
+        Assert.AreEqual("#helper_mtl_material0-material", boundMaterials[0].Technique_Common.Instance_Material[0].Target);
+        Assert.AreEqual("helper_mtl_material0-material", boundMaterials[0].Technique_Common.Instance_Material[0].Symbol);
+        Assert.AreEqual("#helper_mtl_material1-material", boundMaterials[0].Technique_Common.Instance_Material[1].Target);
+        Assert.AreEqual("helper_mtl_material1-material", boundMaterials[0].Technique_Common.Instance_Material[1].Symbol);
+    }
+
+    [TestMethod]
+    public void Box_Gltf()
+    {
+        var args = new string[] { $@"{objectDir}\Objects\default\box.cgf", "-dds", "-dae", "-objectdir", objectDir };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        GltfModelRenderer gltfData = new(testUtils.argsHandler, cryData, false, false);
+        gltfData.GenerateGltfObject();
+    }
+
+    [TestMethod]
+    public void Teapot_Collada()
+    {
+        var args = new string[] {$@"{objectDir}\Objects\default\teapot.cgf" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+    }
+
+
+    [TestMethod]
+    public void Teapot_Gltf()
+    {
+        var args = new string[] { $@"{objectDir}\Objects\default\teapot.cgf", "-objectDir", objectDir };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        cryData.ProcessCryengineFiles();
+
+        GltfModelRenderer gltfData = new(testUtils.argsHandler, cryData, false, false);
+        gltfData.GenerateGltfObject();
+    }
+
+    [TestMethod]
+    public void ClanBanner_Adder_VerifyMaterials()
+    {
+        var matFile = $@"{objectDir}\Objects\purchasable\cockpit_mounted\clanbanner\clanbanner_a.mtl";
+        var args = new string[] { $@"{objectDir}\Objects\purchasable\cockpit_mounted\clanbanner\clanbanner_a_adder.cga" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, null, matFile, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
         var mtlChunks = cryData.Chunks.Where(a => a.ChunkType == ChunkType.MtlName).ToList();
@@ -69,11 +160,11 @@ public class MWOIntegrationTests
     [TestMethod]
     public void ClanBanner_Adder_VerifyMaterialsWithNoMtlFileArg()
     {
-        var args = new string[] { $@"D:\depot\mwo\Objects\purchasable\cockpit_mounted\clanbanner\clanbanner_a_adder.cga", "-dds", "-dae", "-objectdir", objectDir };
+        var args = new string[] { $@"D:\depot\mwo\Objects\purchasable\cockpit_mounted\clanbanner\clanbanner_a_adder.cga" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
         var mtlChunks = cryData.Chunks.Where(a => a.ChunkType == ChunkType.MtlName).ToList();
@@ -100,11 +191,11 @@ public class MWOIntegrationTests
     public void AtlasBodyPart_VerifyMaterials()
     {
         var matFile = @"D:\depot\mwo\Objects\mechs\atlas\body\atlas_body.mtl";
-        var args = new string[] { $@"D:\depot\mwo\Objects\mechs\atlas\body\as7_centre_torso.cga", "-dds", "-dae", "-objectdir", objectDir, "-mtl", matFile };
+        var args = new string[] { $@"D:\depot\mwo\Objects\mechs\atlas\body\as7_centre_torso.cga" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, null, matFile);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, null, matFile, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
@@ -193,32 +284,30 @@ public class MWOIntegrationTests
 
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
         var gltfData = gltfRenderer.GenerateGltfObject();
-
     }
 
     [TestMethod]
     public void HarnessCable_VerifyArmatureAndAnimations_Collada()
     {
-        var args = new string[] { @"D:\depot\MWO\Objects\environments\frontend\mechlab_a\mechbay_cables\harness_cable.chr",
+        var args = new string[] { $@"{objectDir}\Objects\environments\frontend\mechlab_a\mechbay_cables\harness_cable.chr",
             "-dds", "-dae",
             "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
-
     }
 
     [TestMethod]
-    public void adr_right_torso_uac20_bh1()
+    public void Adr_right_torso_uac20_bh1_Collada()
     {
         // This model has 4 mtl files, all variations of mechdefault.  No mtl file provided, so it should create default materials only.
-        var args = new string[] { $@"d:\depot\mwo\objects\mechs\adder\body\adr_right_torso_uac20_bh1.cga", "-dds", "-dae", "-objectdir", objectDir };
+        var args = new string[] { $@"{objectDir}\objects\mechs\adder\body\adr_right_torso_uac20_bh1.cga", "-dds", "-dae", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
@@ -271,15 +360,31 @@ public class MWOIntegrationTests
     }
 
     [TestMethod]
-    public void adr_right_torso_uac20_bh1_ProvidedMtlFile()
+    public void Adr_right_torso_uac20_bh1_Gltf()
     {
-        // mtl file provided, so materials are created.
-        var matFile = @"D:\depot\mwo\Objects\mechs\adder\body\adder_body.mtl";
-        var args = new string[] { $@"d:\depot\mwo\objects\mechs\adder\body\adr_right_torso_uac20_bh1.cga", "-dds", "-dae", "-objectdir", objectDir, "-mtl", matFile };
+        // This model has 4 mtl files, all variations of mechdefault.  No mtl file provided, so it should create default materials only.
+        var args = new string[] { $@"d:\depot\mwo\objects\mechs\adder\body\adr_right_torso_uac20_bh1.cga", "-dds", "-gltf", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, null, matFile);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        cryData.ProcessCryengineFiles();
+        var matNameChunks = cryData.Chunks.Where(c => c.ChunkType == ChunkType.MtlName).ToList();
+
+        GltfModelRenderer gltfData = new(testUtils.argsHandler, cryData, false, false);
+        gltfData.GenerateGltfObject();
+    }
+
+    [TestMethod]
+    public void Adr_right_torso_uac20_bh1_ProvidedMtlFile()
+    {
+        // mtl file provided, so materials are created.
+        var matFile = @"D:\depot\mwo\Objects\mechs\adder\body\adder_body.mtl";
+        var args = new string[] { $@"d:\depot\mwo\objects\mechs\adder\body\adr_right_torso_uac20_bh1.cga", objectDir, matFile };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, null, materialFiles: matFile, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
         var matNameChunks = cryData.Chunks.Where(c => c.ChunkType == ChunkType.MtlName).ToList();
 
@@ -325,11 +430,11 @@ public class MWOIntegrationTests
     [TestMethod]
     public void FiftyCalNecklace_ColladaVerifyMaterials()
     {
-        var args = new string[] { $@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.chr", "-dds", "-objectdir", objectDir };
+        var args = new string[] { $@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.chr" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
@@ -362,11 +467,9 @@ public class MWOIntegrationTests
         Assert.AreEqual("hang seg1", gltfData.Nodes[1].Name);
         Assert.AreEqual("hang seg2", gltfData.Nodes[2].Name);
 
-        //AssertExtensions.AreEqual([0, 0, 0, 1], gltfData.Nodes[0].Rotation, TestUtils.delta);
         AssertExtensions.AreEqual([-0.4963841f, -0.5035906f, 0.491474152f, 0.5083822f], gltfData.Nodes[0].Rotation, TestUtils.delta);
         AssertExtensions.AreEqual([0.00154118659f, -0.008913527f, 0.0122360326f, 0.9998842f], gltfData.Nodes[1].Rotation, TestUtils.delta);
 
-        //AssertExtensions.AreEqual([0, 0, 0], gltfData.Nodes[1].Translation, TestUtils.delta);
         AssertExtensions.AreEqual([2.09588125E-13f, 0.0204448365f, -8.731578E-10f], gltfData.Nodes[0].Translation, TestUtils.delta);
         AssertExtensions.AreEqual([-0.0209655762f, -8.90577E-09f, 3.4356154E-10f], gltfData.Nodes[1].Translation, TestUtils.delta);
 
@@ -375,64 +478,13 @@ public class MWOIntegrationTests
         Assert.AreEqual(1, gltfData.Nodes[2].Children.Count);
 
         // Accessors check
-        Assert.AreEqual(8, gltfData.Accessors.Count);
+        Assert.AreEqual(7, gltfData.Accessors.Count);
 
         // Skins check
         Assert.AreEqual(1, gltfData.Skins.Count);
         Assert.AreEqual(8, gltfData.Skins[0].Joints.Count);
-        Assert.AreEqual(7, gltfData.Skins[0].InverseBindMatrices);
+        Assert.AreEqual(6, gltfData.Skins[0].InverseBindMatrices);
         Assert.AreEqual("50calnecklace_a/skin", gltfData.Skins[0].Name);
-    }
-
-    [TestMethod]
-    public void MwoFile_MtlFileWithNoDirInfo_OutputsToCorrectDir()
-    {
-        var args = new string[] { $@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.chr", "-dds", "-objectdir", objectDir, "-mtl", "50calnecklace_a.mtl" };
-        int result = testUtils.argsHandler.ProcessArgs(args);
-        Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[5]);
-        cryData.ProcessCryengineFiles();
-        Assert.AreEqual(@"50calnecklace_a.mtl", cryData.MaterialFiles.First());
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.GenerateDaeObject();
-        var daeObject = colladaData.DaeObject;
-        Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
-        Assert.AreEqual(1, daeObject.Library_Effects.Effect.Length);
-        Assert.AreEqual(4, daeObject.Library_Images.Image.Length);
-    }
-
-    [TestMethod]
-    public void MwoFile_MtlFileWithExtraSlash_OutputsToCorrectDir()
-    {
-        var args = new string[] { $@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.chr", "-dds", "-objectdir", objectDir, "-mtl", "/50calnecklace_a.mtl" };
-        int result = testUtils.argsHandler.ProcessArgs(args);
-        Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[5]);
-        cryData.ProcessCryengineFiles();
-        Assert.AreEqual(@"/50calnecklace_a.mtl", cryData.MaterialFiles.First());
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.GenerateDaeObject();
-        var daeObject = colladaData.DaeObject;
-        Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
-        Assert.AreEqual(1, daeObject.Library_Effects.Effect.Length);
-        Assert.AreEqual(4, daeObject.Library_Images.Image.Length);
-    }
-
-    [TestMethod]
-    public void MwoFile_MtlFileWithCurrentDir_OutputsToCorrectDir()
-    {
-        var args = new string[] { $@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.chr", "-dds", "-objectdir", objectDir, "-mtl", "./50calnecklace_a.mtl" };
-        int result = testUtils.argsHandler.ProcessArgs(args);
-        Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[5]);
-        cryData.ProcessCryengineFiles();
-        Assert.AreEqual(@"./50calnecklace_a.mtl", cryData.MaterialFiles.First());
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.GenerateDaeObject();
-        var daeObject = colladaData.DaeObject;
-        Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
-        Assert.AreEqual(1, daeObject.Library_Effects.Effect.Length);
-        Assert.AreEqual(4, daeObject.Library_Images.Image.Length);
     }
 
     [TestMethod]
@@ -450,12 +502,12 @@ public class MWOIntegrationTests
     }
 
     [TestMethod]
-    public void MWO_industrial_wetlamp_a_MaterialFileNotFound()
+    public void Industrial_wetlamp_a_MaterialFileNotFound()
     {
-        var args = new string[] { $@"D:\depot\MWO\Objects\environments\frontend\mechlab_a\lights\industrial_wetlamp_a.cgf", "-dds", "-dae", "-objectdir", objectDir };
+        var args = new string[] {$@"{objectDir}\Objects\environments\frontend\mechlab_a\lights\industrial_wetlamp_a.cgf" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
         ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
@@ -464,12 +516,12 @@ public class MWOIntegrationTests
     }
 
     [TestMethod]
-    public void MWO_timberwolf_chr()
+    public void Timberwolf_chr()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\timberwolf.chr", "-dds", "-dae", "-objectdir", @"d:\depot\lol\" };
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\timberwolf.chr" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
         ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
@@ -543,7 +595,7 @@ public class MWOIntegrationTests
     }
 
     [TestMethod]
-    public void MWO_candycane_a_MaterialFileNotAvailable()
+    public void Candycane_a_MaterialFileNotAvailable()
     {
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\NoMats\candycane_a.chr", "-dds", "-dae" };
         int result = testUtils.argsHandler.ProcessArgs(args);
@@ -597,12 +649,12 @@ public class MWOIntegrationTests
     }
 
     [TestMethod]
-    public void MWO_candycane_a_WithMaterialFile()
+    public void Candycane_a_WithMaterialFile()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\candycane_a.chr", "-dds", "-dae", "-objectdir", objectDir };
+        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\candycane_a.chr", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
@@ -643,12 +695,12 @@ public class MWOIntegrationTests
     }
 
     [TestMethod]
-    public void MWO_hbr_right_torso_uac5_bh1_cga()
+    public void Hbr_right_torso_uac5_bh1_cga()
     {
         var args = new string[] { $@"d:\depot\mwo\objects\mechs\hellbringer\body\hbr_right_torso.cga", "-dds", "-dae", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
@@ -658,13 +710,13 @@ public class MWOIntegrationTests
     }
 
     [TestMethod]
-    public void MWO_hbr_right_torso_cga()
+    public void Hbr_right_torso_cga()
     {
         // No mtl file provided, so it creates generic mats
         var args = new string[] { $@"d:\depot\mwo\objects\mechs\hellbringer\body\hbr_right_torso.cga", "-dds", "-dae", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
@@ -679,7 +731,7 @@ public class MWOIntegrationTests
         Assert.AreEqual(1, daeObject.Library_Visual_Scene.Visual_Scene[0].Node.Length);
         // Node Matrix check
         var node = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0];
-        const string matrix = "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1";
+        const string matrix = "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0";
         Assert.AreEqual(matrix, node.Matrix[0].Value_As_String);
         Assert.AreEqual("transform", node.Matrix[0].sID);
         // Instance Geometry check
@@ -728,10 +780,10 @@ public class MWOIntegrationTests
     [TestMethod]
     public void HulaGirl_ColladaFormat()
     {
-        var args = new string[] { @"d:\depot\MWO\objects\purchasable\cockpit_standing\hulagirl\hulagirl__gold_a.cga", "-objectdir", objectDir };
+        var args = new string[] { @"d:\depot\MWO\objects\purchasable\cockpit_standing\hulagirl\hulagirl__gold_a.cga" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
         ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
@@ -747,7 +799,7 @@ public class MWOIntegrationTests
         Assert.AreEqual("hulagirl_a", baseNode.Name);
         Assert.AreEqual(2, baseNode.node.Length);
         Assert.IsNull(baseNode.Instance_Geometry);
-        Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1", baseNode.Matrix[0].Value_As_String);
+        Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0", baseNode.Matrix[0].Value_As_String);
 
         // Serialize the object to XML
         XmlSerializer serializer = new(typeof(ColladaDoc));
@@ -810,7 +862,7 @@ public class MWOIntegrationTests
         Assert.AreEqual("HulaGirl_LowerBody", gltfData.Nodes[1].Name);
         Assert.AreEqual("hulagirl_a", gltfData.Nodes[2].Name);
 
-        var rotationMatrix = cryData.RootNode.AllChildNodes.First().Rot.ConvertToRotationMatrix();
+        var rotationMatrix = cryData.RootNode.Children.First().Rot.ConvertToRotationMatrix();
         AssertExtensions.AreEqual([0, 0, 0, 1], gltfData.Nodes[1].Rotation, TestUtils.delta);
         AssertExtensions.AreEqual([-0.10248467f, 0.00384537f, -0.04688235744833946f, 0.9936217f], gltfData.Nodes[0].Rotation, TestUtils.delta);
         AssertExtensions.AreEqual([0, 0, 0, 1], gltfData.Nodes[2].Rotation, TestUtils.delta);
@@ -885,7 +937,7 @@ public class MWOIntegrationTests
 
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
         var gltfData = gltfRenderer.GenerateGltfObject();
-        Assert.AreEqual(2, gltfData.Textures.Count);
+        Assert.AreEqual(1, gltfData.Textures.Count);
         Assert.AreEqual(2, gltfData.Materials.Count);
     }
 

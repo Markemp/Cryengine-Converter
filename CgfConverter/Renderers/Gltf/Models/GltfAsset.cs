@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System.Reflection;
 
 namespace CgfConverter.Renderers.Gltf.Models;
 

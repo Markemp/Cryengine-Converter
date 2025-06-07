@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CgfConverter.Utilities;
+using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -77,7 +78,7 @@ public class TaggedLogger
 
     private void DoLog(LogLevelEnum level, Exception? e, string? format, object?[] args)
     {
-        if (level < Utilities.LogLevel && level < Utilities.DebugLevel)
+        if (level < HelperMethods.LogLevel && level < HelperMethods.DebugLevel)
             return;
 
         var sb = new StringBuilder();
@@ -103,9 +104,9 @@ public class TaggedLogger
             FormatException(sb, e);
 
         var s = sb.ToString();
-        if (level >= Utilities.LogLevel)
+        if (level >= HelperMethods.LogLevel)
             Console.Write(s);
-        if (level >= Utilities.DebugLevel)
+        if (level >= HelperMethods.DebugLevel)
             Debug.Write(s);
     }
 

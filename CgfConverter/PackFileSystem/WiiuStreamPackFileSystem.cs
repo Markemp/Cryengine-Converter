@@ -18,7 +18,7 @@ public class WiiuStreamPackFileSystem : IPackFileSystem, IDisposable
 
     private readonly Stream _stream;
     private readonly Mutex _streamMutex = new();
-    private readonly Dictionary<string, FileEntry> _entries = new();
+    private readonly Dictionary<string, FileEntry> _entries = [];
 
     public WiiuStreamPackFileSystem(Stream stream, Dictionary<string, string> options)
     {
@@ -62,17 +62,71 @@ public class WiiuStreamPackFileSystem : IPackFileSystem, IDisposable
 
     public bool Exists(string path) => _entries.ContainsKey(path.ToLowerInvariant());
 
+    // Simple cache for glob results to avoid regex recompilation
+    private readonly Dictionary<string, string[]> _globCache = new Dictionary<string, string[]>(StringComparer.InvariantCultureIgnoreCase);
+    
     public string[] Glob(string pattern)
     {
-        var regexPattern = new Regex(
-            "^" +
-            string.Join("[\\s\\S]*", Regex.Split(pattern, "\\*{2,}").Select(x =>
-                string.Join("[^/\\\\]*", x.Split("*").Select(y =>
-                    string.Join("[^/\\\\]", y.Split('?').Select(
-                        Regex.Escape)))))) +
-            "$",
-            RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-        return _entries.Values.Where(x => regexPattern.IsMatch(x.InnerPath)).Select(x => x.InnerPath).ToArray();
+        // Check cache first
+        if (_globCache.TryGetValue(pattern, out var cachedResult))
+            return cachedResult;
+            
+        // For exact file references, use direct lookup which is much faster
+        if (!pattern.Contains('*') && !pattern.Contains('?'))
+        {
+            var result = Exists(pattern) ? new[] { pattern } : Array.Empty<string>();
+            _globCache[pattern] = result;
+            return result;
+        }
+        
+        // For simple filename patterns, avoid complex regex
+        if (pattern.StartsWith("**/") && pattern.LastIndexOf('/') == 2)
+        {
+            // Pattern like "**/*.dds" - match by extension or filename
+            var filePattern = pattern.Substring(3);
+            if (filePattern.StartsWith("*."))
+            {
+                // Extension matching - faster than regex for common cases
+                var extension = filePattern.Substring(1);
+                var result = _entries.Values
+                    .Where(x => x.InnerPath.EndsWith(extension, StringComparison.InvariantCultureIgnoreCase))
+                    .Select(x => x.InnerPath)
+                    .ToArray();
+                    
+                _globCache[pattern] = result;
+                return result;
+            }
+        }
+        
+        // Last resort: use regex for complex patterns
+        try
+        {
+            var regexPattern = new Regex(
+                "^" +
+                string.Join("[\\s\\S]*", Regex.Split(pattern, "\\*{2,}").Select(x =>
+                    string.Join("[^/\\\\]*", x.Split("*").Select(y =>
+                        string.Join("[^/\\\\]", y.Split('?').Select(
+                            Regex.Escape)))))) +
+                "$",
+                RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+            
+            var result = _entries.Values
+                .Where(x => regexPattern.IsMatch(x.InnerPath))
+                .Select(x => x.InnerPath)
+                .ToArray();
+                
+            // Only cache if the pattern isn't too complex (to avoid memory issues)
+            if (pattern.Length < 100)
+                _globCache[pattern] = result;
+                
+            return result;
+        }
+        catch (RegexParseException)
+        {
+            // Fallback for invalid regex patterns
+            Log.W("Invalid glob pattern: {0}", pattern);
+            return Array.Empty<string>();
+        }
     }
 
     public byte[] ReadAllBytes(string path)

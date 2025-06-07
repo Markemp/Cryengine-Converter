@@ -7,6 +7,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using CgfConverter.Services;
+using CgfConverter.Utilities;
 using CgfConverter.Utils;
 using Extensions;
 
@@ -139,9 +140,9 @@ internal sealed class ChunkController_905 : ChunkController
                 }
                 
                 if (data.Count != size)
-                    Utilities.Log(LogLevelEnum.Warning, "eBitset: Expected {0} items, got {1} items", size, data.Count);
+                    HelperMethods.Log(LogLevelEnum.Warning, "eBitset: Expected {0} items, got {1} items", size, data.Count);
                 if (data.Any() && Math.Abs(data[^1] - end) > float.Epsilon)
-                    Utilities.Log(LogLevelEnum.Warning, "eBitset: Expected last as {0}, got {1}", end, data[^1]);
+                    HelperMethods.Log(LogLevelEnum.Warning, "eBitset: Expected last as {0}, got {1}", end, data[^1]);
             }
             else
                 throw new Exception("sum(count per format) != count of keytimes");
@@ -174,7 +175,7 @@ internal sealed class ChunkController_905 : ChunkController
             else if (keyPosFormats[(int) ECompressionFormat.eShotInt3Quat] > 0)
             {
                 --keyPosFormats[(int) ECompressionFormat.eShotInt3Quat];
-                data = Enumerable.Range(0, length).Select(_ => ((Quaternion)b.ReadShotInt3Quat()).DropW()).ToList();
+                data = Enumerable.Range(0, length).Select(_ => ((Quaternion)b.ReadShortInt3Quat()).DropW()).ToList();
             }
             else if (keyPosFormats[(int) ECompressionFormat.eSmallTreeDWORDQuat] > 0)
             {
@@ -225,7 +226,7 @@ internal sealed class ChunkController_905 : ChunkController
             else if (keyRotFormats[(int) ECompressionFormat.eShotInt3Quat] > 0)
             {
                 --keyRotFormats[(int) ECompressionFormat.eShotInt3Quat];
-                data = Enumerable.Range(0, length).Select(_ => (Quaternion)b.ReadShotInt3Quat()).ToList();
+                data = Enumerable.Range(0, length).Select(_ => (Quaternion)b.ReadShortInt3Quat()).ToList();
             }
             else if (keyRotFormats[(int) ECompressionFormat.eSmallTreeDWORDQuat] > 0)
             {
@@ -394,7 +395,7 @@ internal sealed class ChunkController_905 : ChunkController
     public struct CControllerInfo
     {
         public const int InvalidTrack = -1;
-        public int ControllerID;
+        public uint ControllerID;
         public int PosKeyTimeTrack;
         public int PosTrack;
         public int RotKeyTimeTrack;
@@ -411,7 +412,7 @@ internal sealed class ChunkController_905 : ChunkController
 
         public CControllerInfo(BinaryReader r)
         {
-            ControllerID = r.ReadInt32();
+            ControllerID = r.ReadUInt32();
             PosKeyTimeTrack = r.ReadInt32();
             PosTrack = r.ReadInt32();
             RotKeyTimeTrack = r.ReadInt32();

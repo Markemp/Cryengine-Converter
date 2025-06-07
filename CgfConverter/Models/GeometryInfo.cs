@@ -1,27 +1,22 @@
-﻿using System.Numerics;
-using CgfConverter.CryEngineCore;
-using CgfConverter.Models.Structs;
+﻿using System.Collections.Generic;
+using System.Numerics;
 
 namespace CgfConverter.Models;
 
 /// <summary>
-/// Geometry info contains all the vertex, color, normal, UV, tangent, index, etc.  Basically if you have a Node chunk with a Mesh and Submesh, 
+/// Geometry info contains all the vertex, color, normal, UV, indices, etc.  Basically if you have a Node chunk with a Mesh and Submesh, 
 /// this will contain the summary of all the datastream chunks that contain geometry info.
 /// </summary>
-public sealed class GeometryInfo
+public sealed record GeometryInfo
 {
-    public ChunkMeshSubsets GeometrySubset { get; set; }
-    public Vector3[] Vertices { get; set; }
-    public Vector3[] Normals { get; set; }
-    public UV[] UVs { get; set; }
-    public IRGBA[]? Colors { get; set; }
-    public uint[] Indices { get; set; }
-    public Tangent[,] Tangents { get; set; }
-
-
-    //public byte[,] ShCoeffs { get; set; }
-    //public byte[,] ShapeDeformation { get; set; }
-    //public byte[,]? BoneMap { get; set; }
-    //public byte[,]? FaceMap { get; set; }
-    //public byte[,]? VertMats { get; set; }
+    public List<MeshSubset>? GeometrySubsets { get; set; } = [];
+    public Datastream<uint>? Indices { get; set; }
+    public Datastream<Vector3>? Vertices { get; set; }
+    public Datastream<UV>? UVs { get; set; }
+    public Datastream<Vector3>? Normals { get; set; }
+    public Datastream<IRGBA>? Colors { get; set; }
+    public Datastream<VertUV>? VertUVs { get; set; }
+    public Datastream<MeshBoneMapping>? BoneMappings { get; set; }
+    public required BoundingBox BoundingBox { get; set; }
+    public PhysicsData? PhysicsData { get; set; }
 }

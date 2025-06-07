@@ -1,6 +1,4 @@
-﻿using CgfConverter.Models;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 
 namespace CgfConverter.CryEngineCore;
 
@@ -15,9 +13,5 @@ internal sealed class ChunkCompiledExtToIntMap_800 : ChunkCompiledExtToIntMap
         {
             Source[i] = b.ReadUInt16();
         }
-        // Add to SkinningInfo
-        SkinningInfo skin = GetSkinningInfo();
-        skin.Ext2IntMap = Source.ToList();
-        skin.HasIntToExtMapping = true;
     }
 }

@@ -22,7 +22,7 @@ internal sealed class ChunkNode_824 : ChunkNode
         SkipBytes(b, 4);
 
         // Read the 4x4 transform matrix.
-        var transform = new Matrix4x4
+        Transform = new Matrix4x4
         {
             M11 = b.ReadSingle(),
             M12 = b.ReadSingle(),
@@ -42,12 +42,7 @@ internal sealed class ChunkNode_824 : ChunkNode
             M44 = b.ReadSingle(),
         };
 
-        //original transform matrix is 3x4 stored as 4x4.
-        transform.M14 = transform.M24 = transform.M34 = 0f;
-        transform.M44 = 1f;
-        Transform = transform;
-
-        Pos = b.ReadVector3() * VERTEX_SCALE;
+        Pos = b.ReadVector3();
         Rot = b.ReadQuaternion();
         Scale = b.ReadVector3();
 

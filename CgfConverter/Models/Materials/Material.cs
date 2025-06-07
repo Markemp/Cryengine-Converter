@@ -1,9 +1,16 @@
-﻿using System.Xml.Serialization;
+﻿using System.Collections.Generic;
+using System.Xml.Serialization;
 
 namespace CgfConverter.Models.Materials;
 
+public class MaterialBase
+{
+    [XmlAttribute]
+    public string? Name { get; set; }
+}
+
 [XmlRoot(ElementName = "Material")]
-public class Material
+public class Material : MaterialBase
 {
     public Color? DiffuseValue;
     public Color? SpecularValue;
@@ -13,9 +20,6 @@ public class Material
 
     [XmlIgnore]
     internal string? SourceFileName { get; set; }
-
-    [XmlAttribute(AttributeName = "Name")]
-    public string? Name { get; set; } = string.Empty;
 
     [XmlAttribute(AttributeName = "MtlFlags")]
     public string? MtlFlags {
@@ -39,21 +43,24 @@ public class Material
     public string? MatTemplate { get; set; }
 
     [XmlAttribute(AttributeName = "Diffuse")]
-    public string? Diffuse {
-        get { return Color.Serialize(DiffuseValue); }
-        set { DiffuseValue = Color.Deserialize(value); }
+    public string? Diffuse
+    {
+        get { return DiffuseValue is null ? null : Color.Serialize(DiffuseValue); }
+        set { DiffuseValue = string.IsNullOrEmpty(value) ? null : Color.Deserialize(value); }
     }
 
     [XmlAttribute(AttributeName = "Specular")]
-    public string? Specular {
-        get { return Color.Serialize(SpecularValue); }
-        set { SpecularValue = Color.Deserialize(value); }
+    public string? Specular
+    {
+        get { return SpecularValue is null ? null : Color.Serialize(SpecularValue); }
+        set { SpecularValue = string.IsNullOrEmpty(value) ? null : Color.Deserialize(value); }
     }
 
     [XmlAttribute(AttributeName = "Emissive")]
-    public string? Emissive {
-        get { return Color.Serialize(EmissiveValue); ; }
-        set { EmissiveValue = Color.Deserialize(value); }
+    public string? Emissive
+    {
+        get { return EmissiveValue is null ? null : Color.Serialize(EmissiveValue); }
+        set { EmissiveValue = string.IsNullOrEmpty(value) ? null : Color.Deserialize(value); }
     }
 
     [XmlAttribute(AttributeName = "Shininess")]
@@ -86,6 +93,9 @@ public class Material
     [XmlArray(ElementName = "Textures")]
     [XmlArrayItem(ElementName = "Texture")]
     public Texture[]? Textures { get; set; }
+
+    [XmlElement(ElementName = "MatLayers")]
+    public MatLayers? MatLayers { get; set; }
 
     public override string ToString() => $"Name: {Name}, Shader: {Shader}, Submaterials: {SubMaterials?.Length ?? 0}";
 }

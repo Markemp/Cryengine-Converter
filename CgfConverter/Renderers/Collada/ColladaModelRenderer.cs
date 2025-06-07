@@ -1,5 +1,6 @@
 ﻿using CgfConverter.Collada;
 using CgfConverter.CryEngineCore;
+using CgfConverter.Models;
 using CgfConverter.Models.Materials;
 using CgfConverter.Renderers.Collada.Collada;
 using CgfConverter.Renderers.Collada.Collada.Collada_B_Rep.Surfaces;
@@ -23,6 +24,7 @@ using CgfConverter.Renderers.Collada.Collada.Collada_FX.Technique_Common;
 using CgfConverter.Renderers.Collada.Collada.Collada_FX.Texturing;
 using CgfConverter.Renderers.Collada.Collada.Enums;
 using CgfConverter.Renderers.Collada.Collada.Types;
+using CgfConverter.Utils;
 using Extensions;
 using System;
 using System.Collections.Generic;
@@ -34,7 +36,8 @@ using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-using static CgfConverter.Utilities;
+using static CgfConverter.Utilities.HelperMethods;
+using static DDSUnsplitter.Library.DDSUnsplitter;
 using static Extensions.FileHandlingExtensions;
 
 namespace CgfConverter.Renderers.Collada;
@@ -50,12 +53,19 @@ public class ColladaModelRenderer : IRenderer
     private readonly XmlSerializer serializer = new(typeof(ColladaDoc));
     private readonly FileInfo daeOutputFile;
 
-    private readonly Dictionary<int, string> controllerIdToBoneName = new();
+    private static readonly Vector3 DefaultNormal = new(0.0f, 0.0f, 0.0f);
+    private static readonly UV DefaultUV = new(0.0f, 0.0f);
+    private static readonly IRGBA DefaultColor = new(1.0f, 1.0f, 1.0f, 1.0f);
+
+    private readonly Dictionary<uint, string> controllerIdToBoneName = new();
+
+    private readonly TaggedLogger Log;
 
     public ColladaModelRenderer(ArgsHandler argsHandler, CryEngine cryEngine)
     {
         _args = argsHandler;
         _cryData = cryEngine;
+        Log = _cryData.Log;
 
         daeOutputFile = _args.FormatOutputFileName(".dae", _cryData.InputFile);
     }
@@ -64,24 +74,25 @@ public class ColladaModelRenderer : IRenderer
     {
         GenerateDaeObject();
 
-        Log(LogLevelEnum.Debug);
-        Log(LogLevelEnum.Debug, "*** Starting Collada Render ***");
-        Log(LogLevelEnum.Debug);
+        // At this point, we should have a cryData.Asset object, fully populated.
+        Log.D();
+        Log.D("*** Starting WriteCOLLADA() ***");
+        Log.D();
 
         TextWriter writer = new StreamWriter(daeOutputFile.FullName);
         serializer.Serialize(writer, DaeObject);
 
         writer.Close();
-        Log(LogLevelEnum.Debug, "End Collada Render.  Export complete.");
-        return 0;
+        Log.D("End of Write Collada.  Export complete.");
+        return 1;
     }
 
     public void GenerateDaeObject()
     {
-        Log(LogLevelEnum.Debug, "Number of models: {0}", _cryData.Models.Count);
+        Log.D("Number of models: {0}", _cryData.Models.Count);
         for (int i = 0; i < _cryData.Models.Count; i++)
         {
-            Log(LogLevelEnum.Debug, "\tNumber of nodes in model: {0}", _cryData.Models[i].NodeMap.Count);
+            Log.D("\tNumber of nodes in model: {0}", _cryData.Models[i].NodeMap.Count);
         }
 
         WriteColladaRoot(colladaVersion);
@@ -96,7 +107,8 @@ public class ColladaModelRenderer : IRenderer
         WriteLibrary_Geometries();
 
         // If there is Skinning info, create the controller library and set up visual scene to refer to it.  Otherwise just write the Visual Scene
-        if (_cryData.SkinningInfo?.HasSkinningInfo ?? false)
+        var extension = Path.GetExtension(_cryData.InputFile);
+        if (extension == ".chr" || extension == ".skin")
         {
             WriteLibrary_Controllers();
             WriteLibrary_VisualScenesWithSkeleton();
@@ -232,8 +244,8 @@ public class ColladaModelRenderer : IRenderer
         var sampler = new ColladaSampler
         {
             ID = $"{controllerIdBase}_sampler_{animType}",
-            Input = new ColladaInputUnshared[3]
-            {
+            Input =
+            [
                 new ColladaInputUnshared
                 {
                     Semantic = ColladaInputSemantic.INPUT,
@@ -249,7 +261,7 @@ public class ColladaModelRenderer : IRenderer
                     Semantic = ColladaInputSemantic.INTERPOLATION,
                     source = $"#{controllerIdBase}_interpolation"
                 }
-            }
+            ]
         };
         var channel = new ColladaChannel
         {
@@ -284,7 +296,7 @@ public class ColladaModelRenderer : IRenderer
                 Source = $"#{controllerBoneName}_{controllerInfo.ControllerID}_{animType}_time_array",
                 Count = (uint)timeArray.Count,
                 Stride = 1,
-                Param = new ColladaParam[1] { new ColladaParam { Name = "TIME", Type = "float" } }
+                Param = [new ColladaParam { Name = "TIME", Type = "float" }]
             }
         };
 
@@ -334,17 +346,18 @@ public class ColladaModelRenderer : IRenderer
                 Source = $"#{controllerBoneName}_{controllerInfo.ControllerID}_{animType}_interpolation_array",
                 Count = (uint)numberOfTimeFrames,
                 Stride = 1,
-                Param = new ColladaParam[1] { new ColladaParam { Name = "INTERPOLATION", Type = "name" } }
+                Param = [new ColladaParam { Name = "INTERPOLATION", Type = "name" }]
             }
         };
 
         return controllerAnimation;
     }
 
-    public ColladaEffect CreateColladaEffect(string matKey, Material subMat)
+    public ColladaEffect? CreateColladaEffect(string matKey, Material subMat)
     {
+        if (subMat is null) return null;
         //TODO: Change this so that it creates an effect for each Shader type.  Parameters will need to be passed in from the material.
-        var effectName = GetMaterialName(matKey, subMat.Name);
+        var effectName = GetMaterialName(matKey, subMat.Name ?? "unknown");
 
         ColladaEffect colladaEffect = new()
         {
@@ -360,33 +373,36 @@ public class ColladaModelRenderer : IRenderer
 
         // Create a list for the new_params
         List<ColladaNewParam> newparams = new();
-        for (int j = 0; j < subMat.Textures.Length; j++)
+        if (subMat.Textures is not null && !_args.NoTextures)
         {
-            // Add the Surface node
-            ColladaNewParam texSurface = new()
+            for (int j = 0; j < subMat.Textures.Length; j++)
             {
-                sID = effectName + "_" + subMat.Textures[j].Map + "-surface"
-            };
-            ColladaSurface surface = new();
-            texSurface.Surface = surface;
-            surface.Init_From = new ColladaInitFrom();
-            texSurface.Surface.Type = "2D";
-            texSurface.Surface.Init_From = new ColladaInitFrom
-            {
-                Uri = effectName + "_" + subMat.Textures[j].Map
-            };
+                // Add the Surface node
+                ColladaNewParam texSurface = new()
+                {
+                    sID = effectName + "_" + subMat.Textures[j].Map + "-surface"
+                };
+                ColladaSurface surface = new();
+                texSurface.Surface = surface;
+                surface.Init_From = new ColladaInitFrom();
+                texSurface.Surface.Type = "2D";
+                texSurface.Surface.Init_From = new ColladaInitFrom
+                {
+                    Uri = effectName + "_" + subMat.Textures[j].Map
+                };
 
-            // Add the Sampler node
-            ColladaNewParam texSampler = new()
-            {
-                sID = effectName + "_" + subMat.Textures[j].Map + "-sampler"
-            };
-            ColladaSampler2D sampler2D = new();
-            texSampler.Sampler2D = sampler2D;
-            texSampler.Sampler2D.Source = texSurface.sID;
+                // Add the Sampler node
+                ColladaNewParam texSampler = new()
+                {
+                    sID = effectName + "_" + subMat.Textures[j].Map + "-sampler"
+                };
+                ColladaSampler2D sampler2D = new();
+                texSampler.Sampler2D = sampler2D;
+                texSampler.Sampler2D.Source = texSurface.sID;
 
-            newparams.Add(texSurface);
-            newparams.Add(texSampler);
+                newparams.Add(texSurface);
+                newparams.Add(texSampler);
+            }
         }
 
         #region Create the Technique
@@ -405,52 +421,55 @@ public class ColladaModelRenderer : IRenderer
         bool diffuseFound = false;
         bool specularFound = false;
 
-        foreach (var texture in subMat.Textures)
+        if (subMat.Textures is not null && !_args.NoTextures)
         {
-            if (texture.Map == Texture.MapTypeEnum.Diffuse)
+            foreach (var texture in subMat.Textures)
             {
-                diffuseFound = true;
-                phong.Diffuse.Texture = new ColladaTexture
+                if (texture.Map == Texture.MapTypeEnum.Diffuse)
                 {
-                    // Texcoord is the ID of the UV source in geometries.  Not needed.
-                    Texture = effectName + "_" + texture.Map + "-sampler",
-                    TexCoord = ""
-                };
-            }
+                    diffuseFound = true;
+                    phong.Diffuse.Texture = new ColladaTexture
+                    {
+                        // Texcoord is the ID of the UV source in geometries.  Not needed.
+                        Texture = effectName + "_" + texture.Map + "-sampler",
+                        TexCoord = ""
+                    };
+                }
 
-            if (texture.Map == Texture.MapTypeEnum.Specular)
-            {
-                specularFound = true;
-                phong.Specular.Texture = new ColladaTexture
+                if (texture.Map == Texture.MapTypeEnum.Specular)
                 {
-                    Texture = effectName + "_" + texture.Map + "-sampler",
-                    TexCoord = ""
-                };
-            }
+                    specularFound = true;
+                    phong.Specular.Texture = new ColladaTexture
+                    {
+                        Texture = effectName + "_" + texture.Map + "-sampler",
+                        TexCoord = ""
+                    };
+                }
 
-            if (texture.Map == Texture.MapTypeEnum.Normals)
-            {
-                // Bump maps go in an extra node.
-                ColladaExtra[] extras = new ColladaExtra[1];
-                ColladaExtra extra = new();
-                extras[0] = extra;
-
-                technique.Extra = extras;
-
-                // Create the technique for the extra
-                ColladaTechnique[] extraTechniques = new ColladaTechnique[1];
-                ColladaTechnique extraTechnique = new();
-                extra.Technique = extraTechniques;
-
-                extraTechniques[0] = extraTechnique;
-                extraTechnique.profile = "FCOLLADA";
-
-                ColladaBumpMap bumpMap = new() { Textures = new ColladaTexture[1] };
-                bumpMap.Textures[0] = new ColladaTexture
+                if (texture.Map == Texture.MapTypeEnum.Normals)
                 {
-                    Texture = effectName + "_" + texture.Map + "-sampler"
-                };
-                extraTechnique.Data = new XmlElement[1] { bumpMap };
+                    // Bump maps go in an extra node.
+                    ColladaExtra[] extras = new ColladaExtra[1];
+                    ColladaExtra extra = new();
+                    extras[0] = extra;
+
+                    technique.Extra = extras;
+
+                    // Create the technique for the extra
+                    ColladaTechnique[] extraTechniques = new ColladaTechnique[1];
+                    ColladaTechnique extraTechnique = new();
+                    extra.Technique = extraTechniques;
+
+                    extraTechniques[0] = extraTechnique;
+                    extraTechnique.profile = "FCOLLADA";
+
+                    ColladaBumpMap bumpMap = new() { Textures = new ColladaTexture[1] };
+                    bumpMap.Textures[0] = new ColladaTexture
+                    {
+                        Texture = effectName + "_" + texture.Map + "-sampler"
+                    };
+                    extraTechnique.Data = new XmlElement[1] { bumpMap };
+                }
             }
         }
 
@@ -502,483 +521,405 @@ public class ColladaModelRenderer : IRenderer
 
     public void WriteLibrary_Geometries()
     {
-        if (_cryData.Models.Count == 1)  // Single file model
-            WriteGeometries(_cryData.Models[0]);
-        else
-            WriteGeometries(_cryData.Models[1]);
+        WriteGeometries();
     }
 
-    public void WriteGeometries(Model model)
+    public void WriteGeometries()
     {
         ColladaLibraryGeometries libraryGeometries = new();
 
         // Make a list for all the geometries objects we will need. Will convert to array at end.  Define the array here as well
         // We have to define a Geometry for EACH meshsubset in the meshsubsets, since the mesh can contain multiple materials
-        List<ColladaGeometry> geometryList = new();
+        List<ColladaGeometry> geometryList = [];
 
         // For each of the nodes, we need to write the geometry.
-        foreach (ChunkNode nodeChunk in model.ChunkMap.Values.Where(a => a.ChunkType == ChunkType.Node))
+        foreach (ChunkNode nodeChunk in _cryData.Nodes)
         {
-            // Create a geometry object.  Use the chunk ID for the geometry ID
-            // Create all the materials used by this chunk.
-            // Will have to be careful with this, since with .cga/.cgam pairs will need to match by Name.
-            // Make the mesh object.  This will have 3 or 4 sources, 1 vertices, and 1 or more Triangles (with material ID)
-            // If the Object ID of Node chunk points to a Helper or a Controller though, place an empty.
-            ChunkDataStream? normals = null;
-            ChunkDataStream? uvs = null;
-            ChunkDataStream? tmpVertices = null;
-            ChunkDataStream? vertsUvs = null;
-            ChunkDataStream? indices = null;
-            ChunkDataStream? colors = null;
-            ChunkDataStream? tangents = null;
-
             if (_args.IsNodeNameExcluded(nodeChunk.Name))
             {
-                Log(LogLevelEnum.Debug, $"Excluding node {nodeChunk.Name}");
+                Log.D($"Excluding node {nodeChunk.Name}");
                 continue;
             }
 
-            if (nodeChunk.ObjectChunk is null)
-            {
-                Log(LogLevelEnum.Warning, "Skipped node with missing Object {0}", nodeChunk.Name);
+            if (nodeChunk.MeshData is not ChunkMesh meshChunk)
                 continue;
-            }
 
-            if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkType.Mesh)
+            if (meshChunk.GeometryInfo is null)  // $physics node
+                continue;
+
+            // Create a geometry object.  Use the chunk ID for the geometry ID
+            // Create all the materials used by this chunk.
+            // Make the mesh object.  This will have 3 or 4 sources, 1 vertices, and 1 or more Triangles (with material ID)
+            // If the Object ID of Node chunk points to a Helper or a Controller, place an empty.
+            var subsets = meshChunk.GeometryInfo.GeometrySubsets;
+            Datastream<uint>? indices = meshChunk.GeometryInfo.Indices;
+            Datastream<UV>? uvs = meshChunk.GeometryInfo.UVs;
+            Datastream<Vector3>? verts = meshChunk.GeometryInfo.Vertices;
+            Datastream<VertUV>? vertsUvs = meshChunk.GeometryInfo.VertUVs;
+            Datastream<Vector3>? normals = meshChunk.GeometryInfo.Normals;
+            Datastream<IRGBA>? colors = meshChunk.GeometryInfo.Colors;
+
+            if (verts is null && vertsUvs is null) // There is no vertex data for this node.  Skip.
+                continue;
+
+            // geometry is a Geometry object for each meshsubset.
+            ColladaGeometry geometry = new()
             {
-                // Create materials collection for this node. Index of collection in meshSubSets determines which mat to use.
-                //CreateMaterialsFromNodeChunk(nodeChunk); // now being created from the crydata Materials object
+                Name = nodeChunk.Name,
+                ID = nodeChunk.Name + "-mesh"
+            };
+            ColladaMesh colladaMesh = new();
+            geometry.Mesh = colladaMesh;
 
-                // Get the mesh chunk and submesh chunk for this node.
-                var meshChunk = (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID];
+            ColladaSource[] source = new ColladaSource[4];   // 4 possible source types.
+            ColladaSource posSource = new();
+            ColladaSource normSource = new();
+            ColladaSource uvSource = new();
+            ColladaSource colorSource = new();
+            source[0] = posSource;
+            source[1] = normSource;
+            source[2] = uvSource;
+            source[3] = colorSource;
+            posSource.ID = nodeChunk.Name + "-mesh-pos";
+            posSource.Name = nodeChunk.Name + "-pos";
+            normSource.ID = nodeChunk.Name + "-mesh-norm";
+            normSource.Name = nodeChunk.Name + "-norm";
+            uvSource.ID = nodeChunk.Name + "-mesh-UV";
+            uvSource.Name = nodeChunk.Name + "-UV";
+            colorSource.ID = nodeChunk.Name + "-mesh-color";
+            colorSource.Name = nodeChunk.Name + "-color";
 
-                // Check to see if the Mesh points to a PhysicsData mesh.  Don't want to write these.
-                //if (meshChunk.MeshPhysicsData != 0)
-                // TODO:  Implement this chunk
+            ColladaVertices vertices = new() { ID = nodeChunk.Name + "-vertices" };
+            geometry.Mesh.Vertices = vertices;
+            ColladaInputUnshared[] inputshared = new ColladaInputUnshared[4];
+            vertices.Input = inputshared;
 
-                if (meshChunk.MeshSubsetsData != 0)   // You can have Mesh chunks with no Mesh Subset.  Need to skip these.  They are in the .cga file and contain no geometry.
+            ColladaInputUnshared posInput = new() { Semantic = ColladaInputSemantic.POSITION };
+            ColladaInputUnshared normInput = new() { Semantic = ColladaInputSemantic.NORMAL };
+            ColladaInputUnshared uvInput = new() { Semantic = ColladaInputSemantic.TEXCOORD };
+            ColladaInputUnshared colorInput = new() { Semantic = ColladaInputSemantic.COLOR };
+
+            posInput.source = "#" + posSource.ID;
+            normInput.source = "#" + normSource.ID;
+            uvInput.source = "#" + uvSource.ID;
+            colorInput.source = "#" + colorSource.ID;
+            inputshared[0] = posInput;
+
+            ColladaFloatArray floatArrayVerts = new();
+            ColladaFloatArray floatArrayNormals = new();
+            ColladaFloatArray floatArrayUVs = new();
+            ColladaFloatArray floatArrayColors = new();
+
+            StringBuilder vertString = new();
+            StringBuilder normString = new();
+            StringBuilder uvString = new();
+            StringBuilder colorString = new();
+
+            var numberOfElements = nodeChunk.MeshData.GeometryInfo.GeometrySubsets.Sum(x => x.NumVertices);
+
+            if (verts is not null)  // Will be null if it's using VertsUVs.
+            {
+                int numVerts = (int)verts.NumElements;
+
+                floatArrayVerts.ID = posSource.ID + "-array";
+                floatArrayVerts.Digits = 6;
+                floatArrayVerts.Magnitude = 38;
+                floatArrayVerts.Count = numVerts * 3;
+                floatArrayUVs.ID = uvSource.ID + "-array";
+                floatArrayUVs.Digits = 6;
+                floatArrayUVs.Magnitude = 38;
+                floatArrayUVs.Count = numVerts * 2;
+                floatArrayNormals.ID = normSource.ID + "-array";
+                floatArrayNormals.Digits = 6;
+                floatArrayNormals.Magnitude = 38;
+                floatArrayNormals.Count = numVerts * 3;
+                floatArrayColors.ID = colorSource.ID + "-array";
+                floatArrayColors.Digits = 6;
+                floatArrayColors.Magnitude = 38;
+                floatArrayColors.Count = numVerts * 4;
+
+                var hasNormals = normals is not null;
+                var hasUVs = uvs is not null;
+                var hasColors = colors is not null;
+                for (uint j = 0; j < numVerts; j++)
                 {
-                    var meshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[meshChunk.MeshSubsetsData];  // Listed as Object ID for the Node
-
-                    if (meshChunk.VerticesData != 0)
-                        tmpVertices = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.VerticesData];
-
-                    if (meshChunk.VertsUVsData != 0)
-                        vertsUvs = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.VertsUVsData];
-
-                    if (tmpVertices is null && vertsUvs is null) // There is no vertex data for this node.  Skip.
-                        continue;
-
-                    if (meshChunk.NormalsData != 0)
-                        normals = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.NormalsData];
-
-                    if (meshChunk.UVsData != 0)
-                        uvs = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.UVsData];
-
-                    if (meshChunk.IndicesData != 0)
-                        indices = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.IndicesData];
-
-                    if (meshChunk.ColorsData != 0)
-                        colors = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.ColorsData];
-
-                    if (meshChunk.TangentsData != 0)
-                        tangents = (ChunkDataStream)nodeChunk._model.ChunkMap[meshChunk.TangentsData];
-
-                    // geometry is a Geometry object for each meshsubset.  Name will be "Nodechunk name_matID".
-                    ColladaGeometry geometry = new()
-                    {
-                        Name = nodeChunk.Name,
-                        ID = nodeChunk.Name + "-mesh"
-                    };
-                    ColladaMesh colladaMesh = new();
-                    geometry.Mesh = colladaMesh;
-
-                    // TODO:  Move the source creation to a separate function.  Too much retyping.
-                    ColladaSource[] source = new ColladaSource[4];   // 4 possible source types.
-                    ColladaSource posSource = new();
-                    ColladaSource normSource = new();
-                    ColladaSource uvSource = new();
-                    ColladaSource colorSource = new();
-                    source[0] = posSource;
-                    source[1] = normSource;
-                    source[2] = uvSource;
-                    source[3] = colorSource;
-                    posSource.ID = nodeChunk.Name + "-mesh-pos";
-                    posSource.Name = nodeChunk.Name + "-pos";
-                    normSource.ID = nodeChunk.Name + "-mesh-norm";
-                    normSource.Name = nodeChunk.Name + "-norm";
-                    uvSource.ID = nodeChunk.Name + "-mesh-UV";
-                    uvSource.Name = nodeChunk.Name + "-UV";
-                    colorSource.ID = nodeChunk.Name + "-mesh-color";
-                    colorSource.Name = nodeChunk.Name + "-color";
-
-                    ColladaVertices vertices = new() { ID = nodeChunk.Name + "-vertices" };
-                    geometry.Mesh.Vertices = vertices;
-                    ColladaInputUnshared[] inputshared = new ColladaInputUnshared[4];
-                    ColladaInputUnshared posInput = new() { Semantic = ColladaInputSemantic.POSITION };
-                    vertices.Input = inputshared;
-
-                    ColladaInputUnshared normInput = new() { Semantic = ColladaInputSemantic.NORMAL };
-                    ColladaInputUnshared uvInput = new() { Semantic = ColladaInputSemantic.TEXCOORD };
-                    ColladaInputUnshared colorInput = new() { Semantic = ColladaInputSemantic.COLOR };
-
-                    posInput.source = "#" + posSource.ID;
-                    normInput.source = "#" + normSource.ID;
-                    uvInput.source = "#" + uvSource.ID;
-                    colorInput.source = "#" + colorSource.ID;
-                    inputshared[0] = posInput;
-
-                    ColladaFloatArray floatArrayVerts = new();
-                    ColladaFloatArray floatArrayNormals = new();
-                    ColladaFloatArray floatArrayUVs = new();
-                    ColladaFloatArray floatArrayColors = new();
-                    ColladaFloatArray floatArrayTangents = new();
-
-                    StringBuilder vertString = new();
-                    StringBuilder normString = new();
-                    StringBuilder uvString = new();
-                    StringBuilder colorString = new();
-
-                    if (tmpVertices is not null)  // Will be null if it's using VertsUVs.
-                    {
-                        floatArrayVerts.ID = posSource.ID + "-array";
-                        floatArrayVerts.Digits = 6;
-                        floatArrayVerts.Magnitude = 38;
-                        floatArrayVerts.Count = (int)tmpVertices.NumElements * 3;
-                        floatArrayUVs.ID = uvSource.ID + "-array";
-                        floatArrayUVs.Digits = 6;
-                        floatArrayUVs.Magnitude = 38;
-                        floatArrayUVs.Count = (int)uvs.NumElements * 2;
-                        floatArrayNormals.ID = normSource.ID + "-array";
-                        floatArrayNormals.Digits = 6;
-                        floatArrayNormals.Magnitude = 38;
-                        if (normals is not null)
-                            floatArrayNormals.Count = (int)normals.NumElements * 3;
-                        floatArrayColors.ID = colorSource.ID + "-array";
-                        floatArrayColors.Digits = 6;
-                        floatArrayColors.Magnitude = 38;
-                        if (colors is not null)
-                        {
-                            floatArrayColors.Count = (int)colors.NumElements * 4;
-                            for (uint j = 0; j < colors.NumElements; j++)  // Create Colors string
-                            {
-                                colorString.AppendFormat(culture, "{0:F7} {1:F7} {2:F7} {3:F7} ",
-                                    colors.Colors[j].r / 255.0,
-                                    colors.Colors[j].g / 255.0,
-                                    colors.Colors[j].b / 255.0,
-                                    colors.Colors[j].a / 255.0);
-                            }
-                        }
-
-                        // Create Vertices and normals string
-                        for (uint j = 0; j < meshChunk.NumVertices; j++)
-                        {
-                            Vector3 vertex = tmpVertices.Vertices[j];
-                            vertString.AppendFormat(culture, "{0:F7} {1:F7} {2:F7} ", vertex.X, vertex.Y, vertex.Z);
-                            Vector3 normal = normals?.Normals[j] ?? tangents?.Normals[j] ?? new Vector3(0.0f, 0.0f, 0.0f);
-                            normString.AppendFormat(culture, "{0:F7} {1:F7} {2:F7} ", Safe(normal.X), Safe(normal.Y), Safe(normal.Z));
-                        }
-                        for (uint j = 0; j < uvs.NumElements; j++)     // Create UV string
-                        {
-                            uvString.AppendFormat(culture, "{0:F7} {1:F7} ", Safe(uvs.UVs[j].U), 1 - Safe(uvs.UVs[j].V));
-                        }
-                    }
-                    else                // VertsUV structure.  Pull out verts and UVs from tmpVertsUVs.
-                    {
-                        floatArrayVerts.ID = posSource.ID + "-array";
-                        floatArrayVerts.Digits = 6;
-                        floatArrayVerts.Magnitude = 38;
-                        floatArrayVerts.Count = (int)vertsUvs.NumElements * 3;
-                        floatArrayUVs.ID = uvSource.ID + "-array";
-                        floatArrayUVs.Digits = 6;
-                        floatArrayUVs.Magnitude = 38;
-                        floatArrayUVs.Count = (int)vertsUvs.NumElements * 2;
-                        floatArrayNormals.ID = normSource.ID + "-array";
-                        floatArrayNormals.Digits = 6;
-                        floatArrayNormals.Magnitude = 38;
-                        floatArrayNormals.Count = (int)vertsUvs.NumElements * 3;
-                        floatArrayColors.ID = colorSource.ID + "-array";
-                        floatArrayColors.Digits = 6;
-                        floatArrayColors.Magnitude = 38;
-                        if (vertsUvs.Colors is not null)
-                        {
-                            floatArrayColors.Count = vertsUvs.Colors.Length * 4;
-                            for (uint j = 0; j < vertsUvs.Colors.Length; j++)  // Create Colors string
-                            {
-                                colorString.AppendFormat(culture, "{0:F7} {1:F7} {2:F7} {3:F7} ",
-                                    vertsUvs.Colors[j].r / 255.0,
-                                    vertsUvs.Colors[j].g / 255.0,
-                                    vertsUvs.Colors[j].b / 255.0,
-                                    vertsUvs.Colors[j].a / 255.0);
-                            }
-                        }
-
-                        // Dymek's code to rescale by bounding box.  Only apply to geometry (cga or cgf), and not skin or chr objects.
-                        // TODO: Move this to the cryengine data.
-                        var multiplerVector = Vector3.Abs((meshChunk.MinBound - meshChunk.MaxBound) / 2f);
-                        if (multiplerVector.X < 1) { multiplerVector.X = 1; }
-                        if (multiplerVector.Y < 1) { multiplerVector.Y = 1; }
-                        if (multiplerVector.Z < 1) { multiplerVector.Z = 1; }
-                        var boundaryBoxCenter = (meshChunk.MinBound + meshChunk.MaxBound) / 2f;
-
-                        // Create Vertices, normals and colors string
-                        for (uint j = 0; j < meshChunk.NumVertices; j++)
-                        {
-                            Vector3 vertex = vertsUvs.Vertices[j];
-                            // Rotate/translate the vertex
-                            if (!_cryData.InputFile.EndsWith("skin") && !_cryData.InputFile.EndsWith("chr"))
-                                vertex = (vertex * multiplerVector) + boundaryBoxCenter;
-
-                            vertString.AppendFormat("{0:F7} {1:F7} {2:F7} ", Safe(vertex.X), Safe(vertex.Y), Safe(vertex.Z));
-
-                            // TODO:  This isn't right?  VertsUvs may always have color as the 3rd element.
-                            // Normals depend on the data size.  16 byte structures have the normals in the Tangents.  20 byte structures are in the VertsUV.
-                            Vector3 normal = new();
-                            if (vertsUvs.Normals is not null)
-                                normal = vertsUvs.Normals[j];
-                            else if (tangents is not null && tangents.Normals is not null)
-                                normal = tangents.Normals[j];
-
-                            normString.AppendFormat("{0:F7} {1:F7} {2:F7} ", Safe(normal.X), Safe(normal.Y), Safe(normal.Z));
-                        }
-                        // Create UV string
-                        for (uint j = 0; j < vertsUvs.NumElements; j++)
-                        {
-                            uvString.AppendFormat("{0:F7} {1:F7} ", Safe(vertsUvs.UVs[j].U), Safe(1 - vertsUvs.UVs[j].V));
-                        }
-                    }
-                    vertString.CleanNumbers();
-                    normString.CleanNumbers();
-                    uvString.CleanNumbers();
-                    colorString.CleanNumbers();
-
-                    #region Create the triangles node.
-                    var triangles = new ColladaTriangles[meshSubsets.NumMeshSubset];
-                    geometry.Mesh.Triangles = triangles;
-
-                    for (uint j = 0; j < meshSubsets.NumMeshSubset; j++) // Need to make a new Triangles entry for each submesh.
-                    {
-                        // Find the material associated with this meshsubset and index.  Normally the nodechunk points to the mtlnamechunk, but
-                        // in mwo models it can point to mechDefault.  First check to see if the material key for the nodechunk's mtlname chunk exists.
-                        // If it does, use that material.  If not, assume just a single materialfile and use that.
-
-                        var mtlNameChunk = (ChunkMtlName)_cryData.Models.Last().ChunkMap[nodeChunk.MaterialID];
-                        var mtlFileName = mtlNameChunk.Name;
-                        var key = Path.GetFileNameWithoutExtension(mtlFileName);
-                        Material[] submats;
-                        if (_cryData.Materials.ContainsKey(key))
-                            submats = _cryData.Materials[key].SubMaterials;
-                        else
-                        {
-                            submats = _cryData.Materials.FirstOrDefault().Value.SubMaterials;
-                            mtlFileName = Path.GetFileNameWithoutExtension(_cryData.MaterialFiles.FirstOrDefault());
-                        }
-
-                        triangles[j] = new ColladaTriangles
-                        {
-                            Count = meshSubsets.MeshSubsets[j].NumIndices / 3,
-                            Material = GetMaterialName(mtlFileName, submats[meshSubsets.MeshSubsets[j].MatID].Name) + "-material"
-                            //Material = GetMaterialId(nodeChunk, meshSubsets, (int)j)
-                        };
-
-                        // Create the inputs.  vertex, normal, texcoord, color
-                        int inputCount = 3;
-                        if (colors != null || vertsUvs?.Colors != null)
-                            inputCount++;
-
-                        triangles[j].Input = new ColladaInputShared[inputCount];
-
-                        triangles[j].Input[0] = new ColladaInputShared
-                        {
-                            Semantic = new ColladaInputSemantic()
-                        };
-                        triangles[j].Input[0].Semantic = ColladaInputSemantic.VERTEX;
-                        triangles[j].Input[0].Offset = 0;
-                        triangles[j].Input[0].source = "#" + vertices.ID;
-                        triangles[j].Input[1] = new ColladaInputShared
-                        {
-                            Semantic = ColladaInputSemantic.NORMAL,
-                            Offset = 1,
-                            source = "#" + normSource.ID
-                        };
-                        triangles[j].Input[2] = new ColladaInputShared
-                        {
-                            Semantic = ColladaInputSemantic.TEXCOORD,
-                            Offset = 2,
-                            source = "#" + uvSource.ID
-                        };
-
-                        int nextInputID = 3;
-                        if (colors != null || vertsUvs?.Colors != null)
-                        {
-                            triangles[j].Input[nextInputID] = new ColladaInputShared
-                            {
-                                Semantic = ColladaInputSemantic.COLOR,
-                                Offset = nextInputID,
-                                source = "#" + colorSource.ID
-                            };
-                            nextInputID++;
-                        }
-
-                        // Create the vcount list.  All triangles, so the subset number of indices.
-                        StringBuilder vc = new();
-                        for (var k = meshSubsets.MeshSubsets[j].FirstIndex; k < (meshSubsets.MeshSubsets[j].FirstIndex + meshSubsets.MeshSubsets[j].NumIndices); k++)
-                        {
-                            int ccount = 3;
-
-                            if (colors != null || vertsUvs?.Colors != null)
-                                ccount++;
-
-                            vc.AppendFormat(culture, String.Format("{0} ", ccount));
-                            k += 2;
-                        }
-
-                        // Create the P node for the Triangles.
-                        StringBuilder p = new();
-                        for (var k = meshSubsets.MeshSubsets[j].FirstIndex; k < (meshSubsets.MeshSubsets[j].FirstIndex + meshSubsets.MeshSubsets[j].NumIndices); k++)
-                        {
-                            int values = 0;
-                            if (colors != null || vertsUvs?.Colors != null)
-                            {
-                                values++;
-                            }
-
-                            List<string> formatlist = new();
-                            formatlist.Add("{0} {0} {0} ");
-                            formatlist.Add("{1} {1} {1} ");
-                            formatlist.Add("{2} {2} {2} ");
-                            for (var valuecount = 0; valuecount < values; valuecount++)
-                            {
-                                formatlist[0] += "{0} ";
-                                formatlist[1] += "{1} ";
-                                formatlist[2] += "{2} ";
-                            }
-                            string finalformat = String.Join("", formatlist);
-                            p.AppendFormat(finalformat, indices.Indices[k], indices.Indices[k + 1], indices.Indices[k + 2]);
-                            k += 2;
-                        }
-                        triangles[j].P = new ColladaIntArrayString
-                        {
-                            Value_As_String = p.ToString().TrimEnd()
-                        };
-                    }
-
-                    #endregion
-
-                    #region Create the source float_array nodes.  Vertex, normal, UV.  May need color as well.
-
-                    floatArrayVerts.Value_As_String = vertString.ToString().TrimEnd();
-                    floatArrayNormals.Value_As_String = normString.ToString().TrimEnd();
-                    floatArrayUVs.Value_As_String = uvString.ToString().TrimEnd();
-                    floatArrayColors.Value_As_String = colorString.ToString();
-
-                    source[0].Float_Array = floatArrayVerts;
-                    source[1].Float_Array = floatArrayNormals;
-                    source[2].Float_Array = floatArrayUVs;
-                    source[3].Float_Array = floatArrayColors;
-                    geometry.Mesh.Source = source;
-
-                    // create the technique_common for each of these
-                    posSource.Technique_Common = new ColladaTechniqueCommonSource
-                    {
-                        Accessor = new ColladaAccessor()
-                    };
-                    posSource.Technique_Common.Accessor.Source = "#" + floatArrayVerts.ID;
-                    posSource.Technique_Common.Accessor.Stride = 3;
-                    posSource.Technique_Common.Accessor.Count = (uint)meshChunk.NumVertices;
-                    ColladaParam[] paramPos = new ColladaParam[3];
-                    paramPos[0] = new ColladaParam();
-                    paramPos[1] = new ColladaParam();
-                    paramPos[2] = new ColladaParam();
-                    paramPos[0].Name = "X";
-                    paramPos[0].Type = "float";
-                    paramPos[1].Name = "Y";
-                    paramPos[1].Type = "float";
-                    paramPos[2].Name = "Z";
-                    paramPos[2].Type = "float";
-                    posSource.Technique_Common.Accessor.Param = paramPos;
-
-                    normSource.Technique_Common = new ColladaTechniqueCommonSource
-                    {
-                        Accessor = new ColladaAccessor
-                        {
-                            Source = "#" + floatArrayNormals.ID,
-                            Stride = 3,
-                            Count = (uint)meshChunk.NumVertices
-                        }
-                    };
-                    ColladaParam[] paramNorm = new ColladaParam[3];
-                    paramNorm[0] = new ColladaParam();
-                    paramNorm[1] = new ColladaParam();
-                    paramNorm[2] = new ColladaParam();
-                    paramNorm[0].Name = "X";
-                    paramNorm[0].Type = "float";
-                    paramNorm[1].Name = "Y";
-                    paramNorm[1].Type = "float";
-                    paramNorm[2].Name = "Z";
-                    paramNorm[2].Type = "float";
-                    normSource.Technique_Common.Accessor.Param = paramNorm;
-
-                    uvSource.Technique_Common = new ColladaTechniqueCommonSource
-                    {
-                        Accessor = new ColladaAccessor
-                        {
-                            Source = "#" + floatArrayUVs.ID,
-                            Stride = 2
-                        }
-                    };
-
-                    if (tmpVertices != null)
-                        uvSource.Technique_Common.Accessor.Count = uvs.NumElements;
-                    else
-                        uvSource.Technique_Common.Accessor.Count = vertsUvs.NumElements;
-
-                    ColladaParam[] paramUV = new ColladaParam[2];
-                    paramUV[0] = new ColladaParam();
-                    paramUV[1] = new ColladaParam();
-                    paramUV[0].Name = "S";
-                    paramUV[0].Type = "float";
-                    paramUV[1].Name = "T";
-                    paramUV[1].Type = "float";
-                    uvSource.Technique_Common.Accessor.Param = paramUV;
-
-                    if (colors != null || vertsUvs?.Colors != null)
-                    {
-                        uint numberOfElements;
-                        if (colors != null)
-                            numberOfElements = colors.NumElements;
-                        else
-                            numberOfElements = (uint)vertsUvs.Colors.Length;
-
-                        colorSource.Technique_Common = new ColladaTechniqueCommonSource
-                        {
-                            Accessor = new ColladaAccessor()
-                        };
-                        colorSource.Technique_Common.Accessor.Source = "#" + floatArrayColors.ID;
-                        colorSource.Technique_Common.Accessor.Stride = 4;
-                        colorSource.Technique_Common.Accessor.Count = numberOfElements;
-                        ColladaParam[] paramColor = new ColladaParam[4];
-                        paramColor[0] = new ColladaParam();
-                        paramColor[1] = new ColladaParam();
-                        paramColor[2] = new ColladaParam();
-                        paramColor[3] = new ColladaParam();
-                        paramColor[0].Name = "R";
-                        paramColor[0].Type = "float";
-                        paramColor[1].Name = "G";
-                        paramColor[1].Type = "float";
-                        paramColor[2].Name = "B";
-                        paramColor[2].Type = "float";
-                        paramColor[3].Name = "A";
-                        paramColor[3].Type = "float";
-                        colorSource.Technique_Common.Accessor.Param = paramColor;
-                    }
-
-                    geometryList.Add(geometry);
-
-                    #endregion
+                    var normal = hasNormals ? normals.Data[j] : DefaultNormal;
+                    var uv = hasUVs ? uvs.Data[j] : DefaultUV;
+                    var color = hasColors ? colors.Data[j] : DefaultColor;
+                    vertString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", verts.Data[j].X, verts.Data[j].Y, verts.Data[j].Z);
+                    normString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", Safe(normal.X), Safe(normal.Y), Safe(normal.Z));
+                    colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ", color.R, color.G, color.B, color.A);
+                    uvString.AppendFormat(culture, "{0:F6} {1:F6} ", Safe(uv.U), 1 - Safe(uv.V));
                 }
             }
+            else    // VertsUV structure.  Pull out verts, colors and UVs from vertsUvs.
+            {
+                floatArrayVerts.ID = posSource.ID + "-array";
+                floatArrayVerts.Digits = 6;
+                floatArrayVerts.Magnitude = 38;
+                floatArrayVerts.Count = numberOfElements * 3;
+                floatArrayUVs.ID = uvSource.ID + "-array";
+                floatArrayUVs.Digits = 6;
+                floatArrayUVs.Magnitude = 38;
+                floatArrayUVs.Count = numberOfElements * 2;
+                floatArrayNormals.ID = normSource.ID + "-array";
+                floatArrayNormals.Digits = 6;
+                floatArrayNormals.Magnitude = 38;
+                floatArrayNormals.Count = numberOfElements * 3;
+                floatArrayColors.ID = colorSource.ID + "-array";
+                floatArrayColors.Digits = 6;
+                floatArrayColors.Magnitude = 38;
+                floatArrayColors.Count = numberOfElements * 4;
+
+                var multiplerVector = _cryData.IsIvoFile
+                    ? Vector3.Abs((meshChunk.MinBound - meshChunk.MaxBound) / 2f)
+                    : Vector3.One;
+
+                if (multiplerVector.X < 1) multiplerVector.X = 1;
+                if (multiplerVector.Y < 1) multiplerVector.Y = 1;
+                if (multiplerVector.Z < 1) multiplerVector.Z = 1;
+                Vector3 scalingVector = Vector3.One;
+
+                if (meshChunk.ScalingVectors is not null)
+                {
+                    scalingVector = Vector3.Abs((meshChunk.ScalingVectors.Max - meshChunk.ScalingVectors.Min) / 2f);
+                    if (scalingVector.X < 1) scalingVector.X = 1;
+                    if (scalingVector.Y < 1) scalingVector.Y = 1;
+                    if (scalingVector.Z < 1) scalingVector.Z = 1;
+                }
+
+                var boundaryBoxCenter = _cryData.IsIvoFile
+                    ? (meshChunk.MinBound + meshChunk.MaxBound) / 2f
+                    : Vector3.Zero;
+
+                var scalingBoxCenter = meshChunk.ScalingVectors is not null ? (meshChunk.ScalingVectors.Max + meshChunk.ScalingVectors.Min) / 2f : Vector3.Zero;
+                var hasNormals = normals is not null;
+                var useScalingBox = _cryData.InputFile
+                    .EndsWith("cga") || _cryData.InputFile.EndsWith("cgf")
+                    && meshChunk.ScalingVectors is not null;
+
+                // Create Vertices, UV, normals and colors string
+                foreach (var subset in meshChunk.GeometryInfo.GeometrySubsets ?? [])
+                {
+                    for (int i = subset.FirstVertex; i < subset.NumVertices + subset.FirstVertex; i++)
+                    {
+                        Vector3 vert = vertsUvs.Data[i].Vertex;
+
+                        if (!_cryData.InputFile.EndsWith("skin") && !_cryData.InputFile.EndsWith("chr"))
+                        {
+                            if (meshChunk.ScalingVectors is null)
+                                vert = (vert * multiplerVector) + boundaryBoxCenter;
+                            else
+                                vert = (vert * scalingVector) + scalingBoxCenter;
+                        }
+
+                        vertString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(vert.X), Safe(vert.Y), Safe(vert.Z));
+                        colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ", vertsUvs.Data[i].Color.R, vertsUvs.Data[i].Color.G, vertsUvs.Data[i].Color.B, vertsUvs.Data[i].Color.A);
+                        uvString.AppendFormat("{0:F6} {1:F6} ", Safe(vertsUvs.Data[i].UV.U), Safe(1 - vertsUvs.Data[i].UV.V));
+
+                        var normal = hasNormals ? normals.Data[i] : DefaultNormal;
+                        normString.AppendFormat("{0:F6} {1:F6} {2:F6} ", Safe(normal.X), Safe(normal.Y), Safe(normal.Z));
+                    }
+                }
+            }
+
+            CleanNumbers(vertString);
+            CleanNumbers(normString);
+            CleanNumbers(uvString);
+            CleanNumbers(colorString);
+
+            #region Create the triangles node.
+            var numberOfMeshSubsets = subsets.Count;
+            var triangles = new ColladaTriangles[numberOfMeshSubsets];
+            geometry.Mesh.Triangles = triangles;
+
+            for (int j = 0; j < numberOfMeshSubsets; j++) // Need to make a new Triangles entry for each submesh.
+            {
+                triangles[j] = new ColladaTriangles
+                {
+                    Count = subsets[j].NumIndices / 3,
+                    Material = GetMaterialName(nodeChunk.MaterialFileName, nodeChunk.Materials.SubMaterials[subsets[j].MatID].Name) + "-material"
+                };
+
+                // Create the inputs.  vertex, normal, texcoord, color
+                int inputCount = 3;
+                if (colors is not null || vertsUvs is not null)
+                    inputCount++;
+
+                triangles[j].Input = new ColladaInputShared[inputCount];
+
+                triangles[j].Input[0] = new ColladaInputShared
+                {
+                    Semantic = ColladaInputSemantic.VERTEX,
+                    Offset = 0,
+                    source = "#" + vertices.ID
+                };
+                triangles[j].Input[1] = new ColladaInputShared
+                {
+                    Semantic = ColladaInputSemantic.NORMAL,
+                    Offset = 1,
+                    source = "#" + normSource.ID
+                };
+                triangles[j].Input[2] = new ColladaInputShared
+                {
+                    Semantic = ColladaInputSemantic.TEXCOORD,
+                    Offset = 2,
+                    source = "#" + uvSource.ID
+                };
+
+                int nextInputID = 3;
+                if (colors is not null || vertsUvs is not null)
+                {
+                    triangles[j].Input[nextInputID] = new ColladaInputShared
+                    {
+                        Semantic = ColladaInputSemantic.COLOR,
+                        Offset = nextInputID,
+                        source = "#" + colorSource.ID
+                    };
+                    nextInputID++;
+                }
+
+                // Create the P node for the Triangles.
+                StringBuilder p = new();
+                string formatString;
+                if (colors is not null || vertsUvs is not null)
+                    formatString = "{0} {0} {0} {0} {1} {1} {1} {1} {2} {2} {2} {2} ";
+                else
+                    formatString = "{0} {0} {0} {1} {1} {1} {2} {2} {2} ";
+
+                var offsetStart = 0;
+                for (int q = 0; q < meshChunk.GeometryInfo.GeometrySubsets.IndexOf(subsets[j]); q++)
+                {
+                    offsetStart += meshChunk.GeometryInfo.GeometrySubsets[q].NumVertices;
+                }
+
+                for (var k = subsets[j].FirstIndex; k < (subsets[j].FirstIndex + subsets[j].NumIndices); k += 3)
+                {
+                    var firstGlobalIndex = indices.Data[subsets[j].FirstIndex];
+                    uint localIndex0 = (uint)((indices.Data[k] - firstGlobalIndex) + offsetStart);
+                    uint localIndex1 = (uint)((indices.Data[k + 1] - firstGlobalIndex) + offsetStart);
+                    uint localIndex2 = (uint)((indices.Data[k + 2] - firstGlobalIndex) + offsetStart);
+
+                    p.AppendFormat(formatString, localIndex0, localIndex1, localIndex2);
+                }
+                triangles[j].P = new ColladaIntArrayString
+                {
+                    Value_As_String = p.ToString().TrimEnd()
+                };
+            }
+
+            #endregion
+
+            #region Create the source float_array nodes.  Vertex, normal, UV.  May need color as well.
+
+            floatArrayVerts.Value_As_String = vertString.ToString().TrimEnd();
+            floatArrayNormals.Value_As_String = normString.ToString().TrimEnd();
+            floatArrayUVs.Value_As_String = uvString.ToString().TrimEnd();
+            floatArrayColors.Value_As_String = colorString.ToString();
+
+            source[0].Float_Array = floatArrayVerts;
+            source[1].Float_Array = floatArrayNormals;
+            source[2].Float_Array = floatArrayUVs;
+            source[3].Float_Array = floatArrayColors;
+            geometry.Mesh.Source = source;
+
+            // create the technique_common for each of these
+            posSource.Technique_Common = new ColladaTechniqueCommonSource
+            {
+                Accessor = new ColladaAccessor()
+            };
+            posSource.Technique_Common.Accessor.Source = "#" + floatArrayVerts.ID;
+            posSource.Technique_Common.Accessor.Stride = 3;
+            posSource.Technique_Common.Accessor.Count = (uint)numberOfElements;
+            ColladaParam[] paramPos = new ColladaParam[3];
+            paramPos[0] = new ColladaParam();
+            paramPos[1] = new ColladaParam();
+            paramPos[2] = new ColladaParam();
+            paramPos[0].Name = "X";
+            paramPos[0].Type = "float";
+            paramPos[1].Name = "Y";
+            paramPos[1].Type = "float";
+            paramPos[2].Name = "Z";
+            paramPos[2].Type = "float";
+            posSource.Technique_Common.Accessor.Param = paramPos;
+
+            normSource.Technique_Common = new ColladaTechniqueCommonSource
+            {
+                Accessor = new ColladaAccessor
+                {
+                    Source = "#" + floatArrayNormals.ID,
+                    Stride = 3,
+                    Count = (uint)numberOfElements
+                }
+            };
+            ColladaParam[] paramNorm = new ColladaParam[3];
+            paramNorm[0] = new ColladaParam();
+            paramNorm[1] = new ColladaParam();
+            paramNorm[2] = new ColladaParam();
+            paramNorm[0].Name = "X";
+            paramNorm[0].Type = "float";
+            paramNorm[1].Name = "Y";
+            paramNorm[1].Type = "float";
+            paramNorm[2].Name = "Z";
+            paramNorm[2].Type = "float";
+            normSource.Technique_Common.Accessor.Param = paramNorm;
+
+            uvSource.Technique_Common = new ColladaTechniqueCommonSource
+            {
+                Accessor = new ColladaAccessor
+                {
+                    Source = "#" + floatArrayUVs.ID,
+                    Stride = 2
+                }
+            };
+
+            uvSource.Technique_Common.Accessor.Count = (uint)numberOfElements;
+
+            ColladaParam[] paramUV = new ColladaParam[2];
+            paramUV[0] = new ColladaParam();
+            paramUV[1] = new ColladaParam();
+            paramUV[0].Name = "S";
+            paramUV[0].Type = "float";
+            paramUV[1].Name = "T";
+            paramUV[1].Type = "float";
+            uvSource.Technique_Common.Accessor.Param = paramUV;
+
+            if (colors is not null || vertsUvs is not null)
+            {
+                colorSource.Technique_Common = new ColladaTechniqueCommonSource
+                {
+                    Accessor = new ColladaAccessor()
+                };
+                colorSource.Technique_Common.Accessor.Source = "#" + floatArrayColors.ID;
+                colorSource.Technique_Common.Accessor.Stride = 4;
+                colorSource.Technique_Common.Accessor.Count = (uint)numberOfElements;
+                ColladaParam[] paramColor = new ColladaParam[4];
+                paramColor[0] = new ColladaParam();
+                paramColor[1] = new ColladaParam();
+                paramColor[2] = new ColladaParam();
+                paramColor[3] = new ColladaParam();
+                paramColor[0].Name = "R";
+                paramColor[0].Type = "float";
+                paramColor[1].Name = "G";
+                paramColor[1].Type = "float";
+                paramColor[2].Name = "B";
+                paramColor[2].Type = "float";
+                paramColor[3].Name = "A";
+                paramColor[3].Type = "float";
+                colorSource.Technique_Common.Accessor.Param = paramColor;
+            }
+
+            geometryList.Add(geometry);
+
+            #endregion
+
             // There is no geometry for a helper or controller node.  Can skip the rest.
+            // Sanity checks
+            var vertcheck = vertString.ToString().TrimEnd().Split(' ');
+            var normcheck = normString.ToString().TrimEnd().Split(' ');
+            var colorcheck = colorString.ToString().TrimEnd().Split(' ');
+            var uvcheck = uvString.ToString().TrimEnd().Split(' ');
+
         }
         libraryGeometries.Geometry = geometryList.ToArray();
         DaeObject.Library_Geometries = libraryGeometries;
@@ -986,21 +927,35 @@ public class ColladaModelRenderer : IRenderer
 
     private void CreateMaterials()
     {
-        List<ColladaMaterial> colladaMaterials = new();
-        List<ColladaEffect> colladaEffects = new();
+        List<ColladaMaterial> colladaMaterials = [];
+        List<ColladaEffect> colladaEffects = [];
         if (DaeObject.Library_Materials?.Material is null)
-            DaeObject.Library_Materials.Material = Array.Empty<ColladaMaterial>();
+        {
+            DaeObject.Library_Materials = new();
+            DaeObject.Library_Materials.Material = [];
+        }
 
         foreach (var matKey in _cryData.Materials.Keys)
         {
-            foreach (var subMat in _cryData.Materials[matKey].SubMaterials)
+            foreach (var subMat in _cryData.Materials[matKey].SubMaterials ?? [])
             {
                 // Check to see if the collada object already has a material with this name.  If not, add.
                 var matNames = DaeObject.Library_Materials.Material.Select(c => c.Name);
                 if (!matNames.Contains(subMat.Name))
                 {
                     colladaMaterials.Add(AddMaterialToMaterialLibrary(matKey, subMat));
-                    colladaEffects.Add(CreateColladaEffect(matKey, subMat));
+                    var effect = CreateColladaEffect(matKey, subMat);
+                    if (effect is not null)
+                        colladaEffects.Add(effect);
+                }
+                // If there are matlayers, add these too
+                foreach (var matLayer in subMat.MatLayers?.Layers ?? [])
+                {
+                    int index = Array.IndexOf(subMat.MatLayers?.Layers ?? [], matLayer);
+                    colladaMaterials.Add(AddMaterialToMaterialLibrary(matLayer.Path ?? "unknown mat layer", subMat.SubMaterials[index]));
+                    var effect = CreateColladaEffect(matKey, subMat);
+                    if (effect is not null)
+                        colladaEffects.Add(CreateColladaEffect(matLayer.Path ?? "unknown mat layer", subMat.SubMaterials[index]));
                 }
             }
         }
@@ -1030,14 +985,15 @@ public class ColladaModelRenderer : IRenderer
         };
         material.Instance_Effect.URL = "#" + matName + "-effect";
 
-        AddTexturesToTextureLibrary(matKey, submat);
+        if (!_args.NoTextures)
+            AddTexturesToTextureLibrary(matKey, submat);
         return material;
     }
 
     private void AddTexturesToTextureLibrary(string matKey, Material submat)
     {
-        List<ColladaImage> imageList = new();
-        int numberOfTextures = submat.Textures?.Length ?? 0;
+        List<ColladaImage> imageList = [];
+        int numberOfTextures = submat?.Textures?.Length ?? 0;
 
         for (int i = 0; i < numberOfTextures; i++)
         {
@@ -1050,7 +1006,7 @@ public class ColladaModelRenderer : IRenderer
                 Init_From = new ColladaInitFrom()
             };
             // TODO: Refactor to use fully qualified path, and to use Pack File System.
-            var textureFile = ResolveTextureFile(submat.Textures[i].File, _args.PackFileSystem, _args.DataDirs);
+            var textureFile = ResolveTextureFile(submat.Textures[i].File, _args.PackFileSystem, [_cryData.ObjectDir]);
 
             if (_args.PngTextures && File.Exists(Path.ChangeExtension(textureFile, ".png")))
                 textureFile = Path.ChangeExtension(textureFile, ".png");
@@ -1058,6 +1014,18 @@ public class ColladaModelRenderer : IRenderer
                 textureFile = Path.ChangeExtension(textureFile, ".tga");
             else if (_args.TiffTextures && File.Exists(Path.ChangeExtension(textureFile, ".tif")))
                 textureFile = Path.ChangeExtension(textureFile, ".tif");
+            try
+            {
+                if (_args.UnsplitTextures)
+                {
+                    Log.I($"Combining texture file {textureFile}");
+                    Combine(textureFile);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.W($"Error combining texture {textureFile}: {ex.Message}");
+            }
 
             textureFile = Path.GetRelativePath(daeOutputFile.DirectoryName, textureFile);
 
@@ -1112,7 +1080,7 @@ public class ColladaModelRenderer : IRenderer
             StringBuilder boneNames = new();
             for (int i = 0; i < _cryData.SkinningInfo.CompiledBones.Count; i++)
             {
-                boneNames.Append(_cryData.SkinningInfo.CompiledBones[i].boneName.Replace(' ', '_') + " ");
+                boneNames.Append(_cryData.SkinningInfo.CompiledBones[i].BoneName.Replace(' ', '_') + " ");
             }
             jointsSource.Name_Array.Value_Pre_Parse = boneNames.ToString().TrimEnd();
             jointsSource.Technique_Common = new ColladaTechniqueCommonSource
@@ -1157,6 +1125,9 @@ public class ColladaModelRenderer : IRenderer
             #endregion
 
             #region Weights Source
+            var skinningInfo = _cryData.SkinningInfo;
+            var nodeChunk = _cryData.RootNode;
+
             ColladaSource weightArraySource = new()
             {
                 ID = "Controller-weights",
@@ -1168,33 +1139,35 @@ public class ColladaModelRenderer : IRenderer
             {
                 ID = "Controller-weights-array",
             };
-            StringBuilder weights = new();
 
-            if (_cryData.SkinningInfo.IntVertices is null)       // This is a case where there are bones, and only Bone Mapping data from a datastream chunk.  Skin files.
+            var numberOfWeights = skinningInfo.IntVertices is null ? skinningInfo.BoneMappings.Count : skinningInfo.Ext2IntMap.Count;
+            var boneInfluenceCount =
+                nodeChunk.MeshData?.GeometryInfo?.BoneMappings?.Data[0].BoneInfluenceCount == 8
+                    ? 8
+                    : 4;
+
+            var boneMappingData = skinningInfo.IntVertices is null
+                ? nodeChunk.MeshData?.GeometryInfo?.BoneMappings.Data.ToList()
+                : skinningInfo.Ext2IntMap
+                    .Select(x => skinningInfo.IntVertices[x])
+                    .Select(x => x.BoneMapping)
+                    .ToList();
+
+            if (boneMappingData is null) return;
+
+            StringBuilder weights = new();
+            weightArraySource.Float_Array.Count = numberOfWeights;
+            for (int i = 0; i < numberOfWeights; i++)
             {
-                weightArraySource.Float_Array.Count = _cryData.SkinningInfo.BoneMapping.Count;
-                for (int i = 0; i < _cryData.SkinningInfo.BoneMapping.Count; i++)
+                for (int j = 0; j < boneInfluenceCount; j++)
                 {
-                    for (int j = 0; j < 4; j++)
-                    {
-                        weights.Append(((float)_cryData.SkinningInfo.BoneMapping[i].Weight[j] / 255).ToString() + " ");
-                    }
-                };
-                accessor.Count = (uint)_cryData.SkinningInfo.BoneMapping.Count * 4;
+                    weights.Append(boneMappingData[i].Weight[j].ToString() + " ");
+                }
             }
-            else                                                // Bones and int verts.  Will use int verts for weights, but this doesn't seem perfect either.
-            {
-                weightArraySource.Float_Array.Count = _cryData.SkinningInfo.Ext2IntMap.Count;
-                for (int i = 0; i < _cryData.SkinningInfo.Ext2IntMap.Count; i++)
-                {
-                    for (int j = 0; j < 4; j++)
-                    {
-                        weights.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].Weights[j] + " ");
-                    }
-                    accessor.Count = (uint)_cryData.SkinningInfo.Ext2IntMap.Count * 4;
-                };
-            }
-            weights.CleanNumbers();
+            ;
+            accessor.Count = (uint)(numberOfWeights * boneInfluenceCount);
+
+            CleanNumbers(weights);
             weightArraySource.Float_Array.Value_As_String = weights.ToString().TrimEnd();
             // Add technique_common part.
             accessor.Source = "#Controller-weights-array";
@@ -1230,7 +1203,7 @@ public class ColladaModelRenderer : IRenderer
 
             #region Vertex Weights
             ColladaVertexWeights vertexWeights = skin.Vertex_Weights = new();
-            vertexWeights.Count = _cryData.SkinningInfo.BoneMapping.Count;
+            vertexWeights.Count = (int)numberOfWeights;
             skin.Vertex_Weights.Input = new ColladaInputShared[2];
             ColladaInputShared jointSemantic = skin.Vertex_Weights.Input[0] = new();
             jointSemantic.Semantic = ColladaInputSemantic.JOINT;
@@ -1241,40 +1214,33 @@ public class ColladaModelRenderer : IRenderer
             weightSemantic.source = "#Controller-weights";
             weightSemantic.Offset = 1;
             StringBuilder vCount = new();
-            //for (int i = 0; i < CryData.Models[0].SkinningInfo.IntVertices.Count; i++)
-            for (int i = 0; i < _cryData.SkinningInfo.BoneMapping.Count; i++)
+            for (int i = 0; i < numberOfWeights; i++)
             {
-                vCount.Append("4 ");
-            };
+                vCount.Append($"{boneInfluenceCount} ");
+            }
+            ;
             vertexWeights.VCount = new ColladaIntArrayString
             {
                 Value_As_String = vCount.ToString().TrimEnd()
             };
             StringBuilder vertices = new();
-            //for (int i = 0; i < CryData.Models[0].SkinningInfo.IntVertices.Count * 4; i++)
             int index = 0;
-            if (!_cryData.SkinningInfo.HasIntToExtMapping)
-            {
-                for (int i = 0; i < _cryData.SkinningInfo.BoneMapping.Count; i++)
-                {
-                    vertices.Append(_cryData.SkinningInfo.BoneMapping[i].BoneIndex[0] + " " + index + " ");
-                    vertices.Append(_cryData.SkinningInfo.BoneMapping[i].BoneIndex[1] + " " + (index + 1) + " ");
-                    vertices.Append(_cryData.SkinningInfo.BoneMapping[i].BoneIndex[2] + " " + (index + 2) + " ");
-                    vertices.Append(_cryData.SkinningInfo.BoneMapping[i].BoneIndex[3] + " " + (index + 3) + " ");
-                    index += 4;
-                }
-            }
-            else
-            {
-                for (int i = 0; i < _cryData.SkinningInfo.Ext2IntMap.Count; i++)
-                {
-                    vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[0] + " " + index + " ");
-                    vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[1] + " " + (index + 1) + " ");
-                    vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[2] + " " + (index + 2) + " ");
-                    vertices.Append(_cryData.SkinningInfo.IntVertices[_cryData.SkinningInfo.Ext2IntMap[i]].BoneIDs[3] + " " + (index + 3) + " ");
 
+            for (int i = 0; i < numberOfWeights; i++)
+            {
+                vertices.Append(boneMappingData[i].BoneIndex[0] + " " + index + " ");
+                vertices.Append(boneMappingData[i].BoneIndex[1] + " " + (index + 1) + " ");
+                vertices.Append(boneMappingData[i].BoneIndex[2] + " " + (index + 2) + " ");
+                vertices.Append(boneMappingData[i].BoneIndex[3] + " " + (index + 3) + " ");
+                if (boneInfluenceCount == 8)
+                {
+                    vertices.Append(boneMappingData[i].BoneIndex[4] + " " + (index + 4) + " ");
+                    vertices.Append(boneMappingData[i].BoneIndex[5] + " " + (index + 5) + " ");
+                    vertices.Append(boneMappingData[i].BoneIndex[6] + " " + (index + 6) + " ");
+                    vertices.Append(boneMappingData[i].BoneIndex[7] + " " + (index + 7) + " ");
                     index += 4;
                 }
+                index += 4;
             }
             vertexWeights.V = new ColladaIntArrayString { Value_As_String = vertices.ToString().TrimEnd() };
             #endregion
@@ -1303,13 +1269,13 @@ public class ColladaModelRenderer : IRenderer
     {
         ColladaLibraryVisualScenes libraryVisualScenes = new();
 
-        List<ColladaVisualScene> visualScenes = new();
+        List<ColladaVisualScene> visualScenes = [];
         ColladaVisualScene visualScene = new();
-        List<ColladaNode> nodes = new();
+        List<ColladaNode> nodes = [];
 
         // THERE CAN BE MULTIPLE ROOT NODES IN EACH FILE!  Check to see if the parentnodeid ~0 and be sure to add a node for it.
-        List<ColladaNode> positionNodes = new();
-        List<ChunkNode> positionRoots = _cryData.Models[0].NodeMap.Values.Where(a => a.ParentNodeID == ~0).ToList();
+        List<ColladaNode> positionNodes = [];
+        List<ChunkNode> positionRoots = _cryData.Nodes.Where(a => a.ParentNodeID == ~0).ToList();
         foreach (ChunkNode root in positionRoots)
         {
             positionNodes.Add(CreateNode(root, false));
@@ -1328,29 +1294,26 @@ public class ColladaModelRenderer : IRenderer
     {
         ColladaLibraryVisualScenes libraryVisualScenes = new();
 
-        List<ColladaVisualScene> visualScenes = new();
+        List<ColladaVisualScene> visualScenes = [];
         ColladaVisualScene visualScene = new();
-        List<ColladaNode> nodes = new();
+        List<ColladaNode> nodes = [];
+
+        List<ChunkNode> positionRoots = _cryData.Nodes.Where(a => a.ParentNodeID == ~0).ToList();
 
         // Check to see if there is a CompiledBones chunk.  If so, add a Node.
         if (_cryData.Chunks.Any(a => a.ChunkType == ChunkType.CompiledBones ||
             a.ChunkType == ChunkType.CompiledBonesSC ||
-            a.ChunkType == ChunkType.CompiledBonesIvo ||
-            a.ChunkType == ChunkType.CompiledBonesIvo320))
+            a.ChunkType == ChunkType.CompiledBones_Ivo2))
         {
-            ColladaNode boneNode = new();
-            boneNode = CreateJointNode(_cryData.Bones.RootBone);
+            ColladaNode boneNode = CreateJointNode(_cryData.SkinningInfo.RootBone);
             nodes.Add(boneNode);
         }
 
-        var hasGeometry = _cryData.Models.Any(x => x.HasGeometry);
+        var hasGeometry = _cryData.Nodes.Any(x => x.MeshData is not null);
 
         if (hasGeometry)
         {
-            var modelIndex = _cryData.Models.First().IsIvoFile ? 1 : 0;
-            var allParentNodes = _cryData.Models[modelIndex].NodeMap.Values.Where(n => n.ParentNodeID != ~1);
-
-            foreach (var node in allParentNodes)
+            foreach (var node in positionRoots)
             {
                 var colladaNode = CreateNode(node, true);
                 colladaNode.Instance_Controller = new ColladaInstanceController[1];
@@ -1361,7 +1324,7 @@ public class ColladaModelRenderer : IRenderer
                 };
 
                 var skeleton = colladaNode.Instance_Controller[0].Skeleton[0] = new ColladaSkeleton();
-                skeleton.Value = $"#{_cryData.Bones.RootBone.boneName}".Replace(' ', '_');
+                skeleton.Value = $"#{_cryData.SkinningInfo.CompiledBones[0].BoneName}".Replace(' ', '_');
                 colladaNode.Instance_Controller[0].Bind_Material = new ColladaBindMaterial[1];
                 ColladaBindMaterial bindMaterial = colladaNode.Instance_Controller[0].Bind_Material[0] = new ColladaBindMaterial();
 
@@ -1369,7 +1332,7 @@ public class ColladaModelRenderer : IRenderer
                 bindMaterial.Technique_Common = new ColladaTechniqueCommonBindMaterial();
                 colladaNode.Instance_Controller[0].Bind_Material[0].Technique_Common.Instance_Material = CreateInstanceMaterials(node);
 
-                foreach (ChunkNode child in node.AllChildNodes)
+                foreach (ChunkNode child in node.Children)
                     CreateChildNodes(child, true);
 
                 nodes.Add(colladaNode);
@@ -1386,30 +1349,13 @@ public class ColladaModelRenderer : IRenderer
 
     private ColladaInstanceMaterialGeometry[] CreateInstanceMaterials(ChunkNode node)
     {
-        // For each mesh subset, we want to create an instance material and add it to instanceMaterials list.
-        List<ColladaInstanceMaterialGeometry> instanceMaterials = new();
-        ChunkMesh meshNode;
-        ChunkMeshSubsets submeshNode;
+        List<ColladaInstanceMaterialGeometry> instanceMaterials = [];
 
-        //ChunkMtlName mtlNameChunk = (ChunkMtlName)_cryData.Models[0].ChunkMap[node.MaterialID];
-        
-        if (_cryData.Models.Count > 1)
-        {
-            // Find the node in model[1] that has the same name as the node.
-            var geoNode = _cryData.Models[1].NodeMap.Values.Where(a => a.Name == node.Name).FirstOrDefault();
-            meshNode = (ChunkMesh)_cryData.Models.Last().ChunkMap[geoNode.ObjectNodeID];
-            submeshNode = (ChunkMeshSubsets)_cryData.Models.Last().ChunkMap[meshNode.MeshSubsetsData];
-        }
-        else
-        {
-            meshNode = (ChunkMesh)_cryData.Models[0].ChunkMap[node.ObjectNodeID];
-            submeshNode = (ChunkMeshSubsets)_cryData.Models[0].ChunkMap[meshNode.MeshSubsetsData];
-        }
+        var matIndices = node.MeshData?.GeometryInfo?.GeometrySubsets?.Select(x => x.MatID) ?? [];
 
-        for (int i = 0; i < submeshNode.MeshSubsets.Length; i++)
+        foreach (var index in matIndices)
         {
-            var matName = GetMaterialId(node, submeshNode, i);
-
+            var matName = GetMaterialName(node.MaterialFileName, node.Materials.SubMaterials[index].Name);
             ColladaInstanceMaterialGeometry instanceMaterial = new();
             instanceMaterial.Target = $"#{matName}-material";
             instanceMaterial.Symbol = $"{matName}-material";
@@ -1421,50 +1367,18 @@ public class ColladaModelRenderer : IRenderer
 
     private ColladaNode CreateNode(ChunkNode nodeChunk, bool isControllerNode)
     {
-        List<ColladaNode> childNodes = new();
         ColladaNode colladaNode = new();
 
-        // Check to see if there is a second model file, and if the mesh chunk is actually there.
-        if (_cryData.Models.Count > 1)
-        {
-            // Geometry file pair.  Get the Node and Mesh chunks from the geometry file, unless it's a Proxy node.
-            string nodeName = nodeChunk.Name;
-            int nodeID = nodeChunk.ID;
+        string nodeName = nodeChunk.Name;
+        int nodeID = nodeChunk.ID;
 
-            // make sure there is a geometry node in the geometry file.  Or with Ivo files, just use the geometry file
-            var modelIndex = nodeChunk._model.IsIvoFile ? 1 : 0;
-            if (_cryData.Models[modelIndex].ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkType.Helper)
-                colladaNode = CreateSimpleNode(nodeChunk, isControllerNode);
-            else
-            {
-                ChunkNode geometryNode = _cryData.Models[1].NodeMap.Values.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
-                ColladaGeometry geometryLibraryObject = DaeObject.Library_Geometries.Geometry.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
-                if (geometryNode is null || geometryLibraryObject is null)
-                    colladaNode = CreateSimpleNode(nodeChunk, isControllerNode);  // Can't find geometry for given node.
-                else
-                {
-                    ChunkMesh geometryMesh = (ChunkMesh)_cryData.Models[1].ChunkMap[geometryNode.ObjectNodeID];
-                    colladaNode = CreateGeometryNode(geometryNode, geometryMesh, isControllerNode);
-                }
-            }
-        }
+        if (nodeChunk.ChunkHelper is not null || nodeChunk.MeshData?.GeometryInfo is null)
+            colladaNode = CreateSimpleNode(nodeChunk, isControllerNode);
         else
         {
-            if (nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID].ChunkType == ChunkType.Mesh)
-            {
-                var meshChunk = (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID];
-                if (meshChunk.MeshSubsetsData == 0 || meshChunk.NumVertices == 0)  // Can have a node with a mesh and meshsubset, but no vertices.  Write as simple node.
-                    colladaNode = CreateSimpleNode(nodeChunk, isControllerNode);
-                else
-                {
-                    if (nodeChunk._model.ChunkMap[meshChunk.MeshSubsetsData].ID != 0)
-                        colladaNode = CreateGeometryNode(nodeChunk, (ChunkMesh)nodeChunk._model.ChunkMap[nodeChunk.ObjectNodeID], isControllerNode);
-                    else
-                        colladaNode = CreateSimpleNode(nodeChunk, isControllerNode);
-                }
-            }
-            else
-                colladaNode = CreateSimpleNode(nodeChunk, isControllerNode);
+            ColladaGeometry geometryLibraryObject = DaeObject.Library_Geometries.Geometry.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
+            ChunkMesh geometryMesh = nodeChunk.MeshData;
+            colladaNode = CreateGeometryNode(nodeChunk, geometryMesh, isControllerNode);
         }
 
         colladaNode.node = CreateChildNodes(nodeChunk, isControllerNode);
@@ -1475,10 +1389,9 @@ public class ColladaModelRenderer : IRenderer
     private ColladaNode CreateSimpleNode(ChunkNode nodeChunk, bool isControllerNode)
     {
         // This will be used to make the Collada node element for Node chunks that point to Helper Chunks and MeshPhysics
-        ColladaNodeType nodeType = ColladaNodeType.NODE;
         ColladaNode colladaNode = new()
         {
-            Type = nodeType,
+            Type = ColladaNodeType.NODE,
             Name = nodeChunk.Name,
             ID = nodeChunk.Name
         };
@@ -1497,16 +1410,16 @@ public class ColladaModelRenderer : IRenderer
     /// <summary>Used by CreateNode and CreateSimpleNodes to create all the child nodes for the given node.</summary>
     private ColladaNode[]? CreateChildNodes(ChunkNode nodeChunk, bool isControllerNode)
     {
-        List<ColladaNode> childNodes = new();
-        foreach (ChunkNode childNodeChunk in nodeChunk.AllChildNodes)
+        List<ColladaNode> childNodes = [];
+        foreach (ChunkNode childNodeChunk in nodeChunk.Children)
         {
             if (_args.IsNodeNameExcluded(childNodeChunk.Name))
             {
-                Log(LogLevelEnum.Debug, $"Excluding child node {childNodeChunk.Name}");
+                Log.D($"Excluding child node {childNodeChunk.Name}");
                 continue;
             }
 
-            ColladaNode childNode = CreateNode(childNodeChunk, isControllerNode); ;
+            ColladaNode childNode = CreateNode(childNodeChunk, isControllerNode);
             childNodes.Add(childNode);
         }
         return childNodes.ToArray();
@@ -1514,7 +1427,7 @@ public class ColladaModelRenderer : IRenderer
 
     private ColladaNode CreateJointNode(CompiledBone bone)
     {
-        var boneName = bone.boneName.Replace(' ', '_');
+        var boneName = bone.BoneName.Replace(' ', '_');
 
         ColladaNode tmpNode = new()
         {
@@ -1523,38 +1436,23 @@ public class ColladaModelRenderer : IRenderer
             sID = boneName,
             Type = ColladaNodeType.JOINT
         };
-        if (bone.ControllerID != -1)
-            controllerIdToBoneName.Add(bone.ControllerID, bone.boneName);
+        if (bone.ControllerID != -1 && bone.ControllerID != uint.MaxValue)
+            controllerIdToBoneName.Add(bone.ControllerID, bone.BoneName);
 
         Matrix4x4 localMatrix = bone.LocalTransformMatrix.ConvertToTransformMatrix();
 
-        // Rotate and translate code.
-        //ColladaRotate rotate = new()
-        //{
-        //    sID = "rotate",
-        //    Value_As_String = CreateStringFromVector4(localMatrix.ToAxisAngleDegrees())
-        //};
-        //ColladaTranslate translate = new()
-        //{
-        //    sID = "translate",
-        //    Value_As_String = CreateStringFromVector3(localMatrix.GetTranslation())
-        //};
-        //tmpNode.Rotate = new ColladaRotate[1] { rotate };
-        //tmpNode.Translate = new ColladaTranslate[1] { translate };
-
-        // Matrix code
         ColladaMatrix matrix = new();
-        List<ColladaMatrix> matrices = new();
+        List<ColladaMatrix> matrices = [];
         matrix.Value_As_String = CreateStringFromMatrix4x4(localMatrix);
         matrix.sID = "matrix";
         matrices.Add(matrix);
         tmpNode.Matrix = matrices.ToArray();
 
         // Recursively call this for each of the child bones to this bone.
-        if (bone.numChildren > 0)
+        if (bone.NumberOfChildren > 0)
         {
-            List<ColladaNode> childNodes = new();
-            var allChildBones = _cryData.Bones.GetChildBones(bone);
+            List<ColladaNode> childNodes = [];
+            var allChildBones = _cryData.SkinningInfo?.GetChildBones(bone) ?? [];
             foreach (CompiledBone childBone in allChildBones)
             {
                 childNodes.Add(CreateJointNode(childBone));
@@ -1567,15 +1465,15 @@ public class ColladaModelRenderer : IRenderer
     private ColladaNode CreateGeometryNode(ChunkNode nodeChunk, ChunkMesh tmpMeshChunk, bool isControllerNode)
     {
         ColladaNode colladaNode = new();
-        var meshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsetsData];
+        var meshSubsets = nodeChunk.MeshData.GeometryInfo.GeometrySubsets;
         var nodeType = ColladaNodeType.NODE;
         colladaNode.Type = nodeType;
         colladaNode.Name = nodeChunk.Name;
         colladaNode.ID = nodeChunk.Name;
 
         // Make the lists necessary for this Node.
-        List<ColladaBindMaterial> bindMaterials = new();
-        List<ColladaMatrix> matrices = new();
+        List<ColladaBindMaterial> bindMaterials = [];
+        List<ColladaMatrix> matrices = [];
         ColladaMatrix matrix = new()
         {
             Value_As_String = CreateStringFromMatrix4x4(nodeChunk.LocalTransform),
@@ -1588,7 +1486,7 @@ public class ColladaModelRenderer : IRenderer
         // Each node will have one instance geometry, although it could be a list.
         if (!isControllerNode)
         {
-            List<ColladaInstanceGeometry> instanceGeometries = new();
+            List<ColladaInstanceGeometry> instanceGeometries = [];
             ColladaInstanceGeometry instanceGeometry = new()
             {
                 Name = nodeChunk.Name,
@@ -1598,7 +1496,7 @@ public class ColladaModelRenderer : IRenderer
             {
                 Technique_Common = new ColladaTechniqueCommonBindMaterial
                 {
-                    Instance_Material = new ColladaInstanceMaterialGeometry[meshSubsets.NumMeshSubset]
+                    Instance_Material = new ColladaInstanceMaterialGeometry[meshSubsets.Count]
                 }
             };
             bindMaterials.Add(bindMaterial);
@@ -1634,22 +1532,6 @@ public class ColladaModelRenderer : IRenderer
         };
         scene.Visual_Scene = visualScene;
         DaeObject.Scene = scene;
-    }
-
-    /// <summary>Get the material name for a given submesh.</summary>
-    private string? GetMaterialId(ChunkNode nodeChunk, ChunkMeshSubsets meshSubsets, int index)
-    {
-        // material id is <node.MaterialFileName>_mtl_<submatName>
-        var materialFileName = nodeChunk.MaterialFileName;  // also the key in Materials
-        if (string.IsNullOrWhiteSpace(materialFileName) && _cryData.Models.Count == 2)
-        {
-            var geometryNodeChunk = _cryData.Models[1].NodeMap.Values.Where(a => a.Name == nodeChunk.Name).FirstOrDefault();
-            materialFileName = geometryNodeChunk?.MaterialFileName ?? string.Empty;
-        }
-        var matindex = meshSubsets.MeshSubsets[index].MatID;
-
-        var materialName = _cryData.Materials[materialFileName]?.SubMaterials?[matindex].Name;
-        return GetMaterialName(materialFileName, materialName ?? "unknown");
     }
 
     private string GetMaterialName(string matKey, string submatName)

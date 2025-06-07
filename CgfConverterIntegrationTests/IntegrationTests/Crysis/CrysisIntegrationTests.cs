@@ -13,7 +13,7 @@ namespace CgfConverterTests.IntegrationTests;
 public class CrysisIntegrationTests
 {
     private readonly TestUtils testUtils = new();
-    private readonly string userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+    private readonly string objectDir = @"d:\depot\crysis";
 
     [TestInitialize]
     public void Initialize()
@@ -27,11 +27,11 @@ public class CrysisIntegrationTests
     [TestMethod]
     public void AlienBase()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Crysis\alienbase.cgf", "-dds", "-dae" };
+        var args = new string[] { $@"{objectDir}\objects\characters\alien\alienbase\alienbase.cgf" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
@@ -41,11 +41,11 @@ public class CrysisIntegrationTests
     [TestMethod]
     public void FemaleArcheologist()
     {
-        var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Crysis\Archaeologist_female_01.chr", "-dds", "-dae" };
+        var args = new string[] { $@"{objectDir}\objects\characters\human\US\Archaeologist\Archaeologist_female_01.chr" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);

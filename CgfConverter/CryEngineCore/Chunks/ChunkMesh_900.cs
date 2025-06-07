@@ -16,6 +16,8 @@ internal sealed class ChunkMesh_900 : ChunkMesh
         MinBound = b.ReadVector3();
         MaxBound = b.ReadVector3();
 
+
+        // TODO: For cgf/cga Ivo files
         ID = 2; // Node chunk ID = 1
 
         IndicesData = 4;
