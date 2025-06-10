@@ -269,6 +269,7 @@ public class UsdRenderer : IRenderer
 
             foreach (var subset in meshChunk.GeometryInfo.GeometrySubsets ?? [])
             {
+
                 var submeshPrim = new UsdGeomSubset(CleanPathString(matName));
                 submeshPrim.Attributes.Add(new UsdUIntList("indices", [.. indices.Data.Skip(subset.FirstIndex).Take(subset.NumIndices)]));
                 //submeshPrim.Attributes.Add(new UsdToken<string>("familyType", "face", true));
@@ -277,12 +278,12 @@ public class UsdRenderer : IRenderer
                 meshPrim.Children.Add(submeshPrim);
 
                 // Assign material to submesh
-                var submatName = _cryData.Materials[matName].SubMaterials[subset.MatID].Name;
+                
                 submeshPrim.Properties = [new UsdProperty(matBindingApi, true)];
                 submeshPrim.Attributes.Add(
                     new UsdRelativePath(
                         "material:binding",
-                        $"/root/_materials/{GetMaterialName("", submatName)}"));
+                        $"/root/_materials/{matName}"));
             }
         }
         else if (vertsUvs is not null)

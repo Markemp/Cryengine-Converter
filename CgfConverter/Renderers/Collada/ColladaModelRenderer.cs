@@ -1546,23 +1546,23 @@ public class ColladaModelRenderer : IRenderer
     private static string CreateStringFromVector3(Vector3 vector)
     {
         StringBuilder vectorValues = new();
-        vectorValues.AppendFormat("{0:F7} {1:F7} {2:F7}", vector.X, vector.Y, vector.Z);
-        vectorValues.CleanNumbers();
+        vectorValues.AppendFormat("{0:F6} {1:F6} {2:F6}", vector.X, vector.Y, vector.Z);
+        CleanNumbers(vectorValues);
         return vectorValues.ToString();
     }
 
     private static string CreateStringFromVector4(Vector4 vector)
     {
         StringBuilder vectorValues = new();
-        vectorValues.AppendFormat("{0:F7} {1:F7} {2:F7} {3:F7}", vector.X, vector.Y, vector.Z, vector.W)
-            .CleanNumbers();
+        vectorValues.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6}", vector.X, vector.Y, vector.Z, vector.W);
+        CleanNumbers(vectorValues);
         return vectorValues.ToString();
     }
 
     private static string CreateStringFromMatrix4x4(Matrix4x4 matrix)
     {
         StringBuilder matrixValues = new();
-        matrixValues.AppendFormat("{0:F7} {1:F7} {2:F7} {3:F7} {4:F7} {5:F7} {6:F7} {7:F7} {8:F7} {9:F7} {10:F7} {11:F7} {12:F7} {13:F7} {14:F7} {15:F7}",
+        matrixValues.AppendFormat("{0:F6} {1:F6} {2:F6} {3:F6} {4:F6} {5:F6} {6:F6} {7:F6} {8:F6} {9:F6} {10:F6} {11:F6} {12:F6} {13:F6} {14:F6} {15:F6}",
             matrix.M11,
             matrix.M12,
             matrix.M13,
@@ -1579,7 +1579,7 @@ public class ColladaModelRenderer : IRenderer
             matrix.M42,
             matrix.M43,
             matrix.M44);
-        matrixValues.CleanNumbers();
+        CleanNumbers(matrixValues);
         return matrixValues.ToString();
     }
 }
