@@ -1,6 +1,7 @@
 ﻿using CgfConverter.CryEngineCore;
 using CgfConverter.CryXmlB;
 using CgfConverter.Models;
+using CgfConverter.Models.Structs;
 using CgfConverter.PackFileSystem;
 using CgfConverter.Utils;
 using System;

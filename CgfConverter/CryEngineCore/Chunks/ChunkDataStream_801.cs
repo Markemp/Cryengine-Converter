@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Numerics;
 using CgfConverter.Models;
+using CgfConverter.Models.Structs;
 using CgfConverter.Utilities;
 using Extensions;
 using static Extensions.BinaryReaderExtensions;

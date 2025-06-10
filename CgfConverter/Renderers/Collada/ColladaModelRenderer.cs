@@ -2,6 +2,7 @@
 using CgfConverter.CryEngineCore;
 using CgfConverter.Models;
 using CgfConverter.Models.Materials;
+using CgfConverter.Models.Structs;
 using CgfConverter.Renderers.Collada.Collada;
 using CgfConverter.Renderers.Collada.Collada.Collada_B_Rep.Surfaces;
 using CgfConverter.Renderers.Collada.Collada.Collada_Core.Animation;

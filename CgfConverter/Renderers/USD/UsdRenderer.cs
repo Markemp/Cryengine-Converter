@@ -1,11 +1,14 @@
 ﻿using CgfConverter.CryEngineCore;
+using CgfConverter.Models;
 using CgfConverter.Models.Materials;
+using CgfConverter.Models.Structs;
 using CgfConverter.Renderers.USD.Attributes;
 using CgfConverter.Renderers.USD.Models;
+using CgfConverter.Utils;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using static CgfConverter.Utilities;
+using System.Numerics;
 using static Extensions.FileHandlingExtensions;
 
 namespace CgfConverter.Renderers.USD;
@@ -16,6 +19,7 @@ public class UsdRenderer : IRenderer
 
     private readonly FileInfo usdOutputFile;
     private UsdSerializer usdSerializer;
+    private readonly TaggedLogger Log;
 
     public UsdRenderer(ArgsHandler argsHandler, CryEngine cryEngine)
     {
@@ -23,15 +27,16 @@ public class UsdRenderer : IRenderer
         _cryData = cryEngine;
         usdOutputFile = _args.FormatOutputFileName(".usda", _cryData.InputFile);
         usdSerializer = new UsdSerializer();
+        Log = _cryData.Log;
     }
 
     public int Render()
     {
         var usdDoc = GenerateUsdObject();
 
-        Log(LogLevelEnum.Debug);
-        Log(LogLevelEnum.Debug, "*** Starting Write USD ***");
-        Log(LogLevelEnum.Debug);
+        Log.D();
+        Log.D("*** Starting Write USD ***");
+        Log.D();
 
         WriteUsdToFile(usdDoc);
 
@@ -47,10 +52,10 @@ public class UsdRenderer : IRenderer
 
     public UsdDoc GenerateUsdObject()
     {
-        Log(LogLevelEnum.Debug, "Number of models: {0}", _cryData.Models.Count);
+        Log.D("Number of models: {0}", _cryData.Models.Count);
         for (int i = 0; i < _cryData.Models.Count; i++)
         {
-            Log(LogLevelEnum.Debug, "\tNumber of nodes in model: {0}", _cryData.Models[i].NodeMap.Count);
+            Log.D("\tNumber of nodes in model: {0}", _cryData.Models[i].NodeMap.Count);
         }
 
         // Create the usd doc
@@ -133,10 +138,10 @@ public class UsdRenderer : IRenderer
 
     private UsdShader? CreateUsdImageTextureShader(Texture texture, string matName)
     {
-        var textureFile = ResolveTextureFile(texture.File, _args.PackFileSystem, _args.DataDirs);
+        var textureFile = ResolveTextureFile(texture.File, _args.PackFileSystem, [_args.DataDir]);
         if (File.Exists(textureFile) == false)
         {
-            Log(LogLevelEnum.Error, "Texture file not found: {0}", texture.File);
+            Log.D("Texture file not found: {0}", texture.File);
             return null;
         }
         var usdImageTexture = new UsdShader(CleanPathString(Path.GetFileNameWithoutExtension(texture.File)));
@@ -144,7 +149,7 @@ public class UsdRenderer : IRenderer
         usdImageTexture.Attributes.Add(new UsdToken<string>("info:id", "UsdUVTexture", true));
         usdImageTexture.Attributes.Add(new UsdToken<string>("inputs:wrapS", "repeat"));
         usdImageTexture.Attributes.Add(new UsdToken<string>("inputs:wrapT", "repeat"));
-        var texturePath = ResolveTextureFile(texture.File, _args.PackFileSystem, _args.DataDirs);
+        var texturePath = ResolveTextureFile(texture.File, _args.PackFileSystem, [_args.DataDir]);
         usdImageTexture.Attributes.Add(new UsdAsset(
             Path.GetFileNameWithoutExtension(texture.File),
             CleanPathString(texturePath)));
@@ -161,7 +166,7 @@ public class UsdRenderer : IRenderer
 
         foreach (ChunkNode root in rootNodes)
         {
-            Log(LogLevelEnum.Debug, "Root node: {0}", root.Name);
+            Log.D("Root node: {0}", root.Name);
             nodes.Add(CreateNode(root, $"/root/{root.Name}"));
         }
 
@@ -184,7 +189,7 @@ public class UsdRenderer : IRenderer
             xform.Children.Add(meshPrim);
 
         // Get all the children of the node
-        var children = node.AllChildNodes;
+        var children = node.Children;
         if (children is not null)
         {
             foreach (var childNode in children)
@@ -203,82 +208,166 @@ public class UsdRenderer : IRenderer
         // geometryNodeChunk may be the same as nodeChunk for single file models.  Otherwise
         // it's the matching node to nodeChunk in the second model.
 
-        string nodeName = nodeChunk.Name;
-        var geometryNodeChunk = _cryData.Models.Last().NodeMap.Values.Where(x => x.Name == nodeName).FirstOrDefault();
-        if (geometryNodeChunk is null)
-            return null;
-
-        var meshNodeId = geometryNodeChunk?.ObjectNodeID;
-
-        var objectNodeChunkType = _cryData.Models.Last().ChunkMap[nodeChunk.ObjectNodeID].GetType();
-        if (!objectNodeChunkType.Name.Contains("ChunkMesh"))
-            return null;
-
-        List<UsdMesh> usdMeshes = new();
-        var meshChunk = (ChunkMesh)_cryData.Models.Last().ChunkMap[geometryNodeChunk.ObjectNodeID];
-        var meshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[meshChunk.MeshSubsetsData];
-        var mtlNameChunk = (ChunkMtlName)_cryData.Models.Last().ChunkMap[nodeChunk.MaterialID];
-        var mtlFileName = mtlNameChunk.Name;
-        var key = Path.GetFileNameWithoutExtension(mtlFileName);
-        var numberOfSubmeshes = meshSubsets.NumMeshSubset;
-
-        // Get materials for this mesh chunk
-        Material[] submats;
-        if (_cryData.Materials.ContainsKey(key))
-            submats = _cryData.Materials[key].SubMaterials;
-        else
+        if (_args.IsNodeNameExcluded(nodeChunk.Name))
         {
-            submats = _cryData.Materials.FirstOrDefault().Value.SubMaterials;
-            mtlFileName = Path.GetFileNameWithoutExtension(_cryData.MaterialFiles.FirstOrDefault());
+            Log.D($"Excluding node {nodeChunk.Name}");
+            return null;
         }
-        //var matName = GetMaterialName(mtlFileName, submats[meshSubsets.MeshSubsets[j].MatID].Name);
+
+        if (nodeChunk.MeshData is not ChunkMesh meshChunk)
+            return null;
+
+        if (meshChunk.GeometryInfo is null)  // $physics node
+            return null;
+
+        string nodeName = nodeChunk.Name;
+
+        var subsets = meshChunk.GeometryInfo.GeometrySubsets;
+        Datastream<uint>? indices = meshChunk.GeometryInfo.Indices;
+        Datastream<UV>? uvs = meshChunk.GeometryInfo.UVs;
+        Datastream<Vector3>? verts = meshChunk.GeometryInfo.Vertices;
+        Datastream<VertUV>? vertsUvs = meshChunk.GeometryInfo.VertUVs;
+        Datastream<Vector3>? normals = meshChunk.GeometryInfo.Normals;
+        Datastream<IRGBA>? colors = meshChunk.GeometryInfo.Colors;
+
+        if (verts is null && vertsUvs is null) // There is no vertex data for this node.  Skip.
+            return null;
+
+        List<UsdMesh> usdMeshes = [];
 
         if (meshChunk.MeshSubsetsData == 0
             || meshChunk.NumVertices == 0
             || nodeChunk._model.ChunkMap[meshChunk.MeshSubsetsData].ID == 0)
             return null;
 
-        // Get datastream chunks for vertices, normals, uvs, indices, colors and tangents
-        var vertexChunk = (ChunkDataStream)_cryData.Models.Last().ChunkMap[meshChunk.VerticesData];
-        var normalChunk = (ChunkDataStream)_cryData.Models.Last().ChunkMap[meshChunk.NormalsData];
-        var uvChunk = (ChunkDataStream)_cryData.Models.Last().ChunkMap[meshChunk.UVsData];
-        var indexChunk = (ChunkDataStream)_cryData.Models.Last().ChunkMap[meshChunk.IndicesData];
-        var colorChunk = (ChunkDataStream)_cryData.Models.Last().ChunkMap[meshChunk.ColorsData];
-        var tangentChunk = (ChunkDataStream)_cryData.Models.Last().ChunkMap[meshChunk.TangentsData];
+        var numberOfElements = nodeChunk.MeshData.GeometryInfo?.GeometrySubsets?.Sum(x => x.NumVertices) ?? 0;
 
         UsdMesh meshPrim = new(CleanPathString(nodeChunk.Name));
-        meshPrim.Attributes.Add(new UsdBool("doubleSided", true, true));
-        meshPrim.Attributes.Add(new UsdVector3dList("extent", [meshChunk.MinBound, meshChunk.MaxBound]));
-        meshPrim.Attributes.Add(new UsdIntList("faceVertexCounts", Enumerable.Repeat(3, (int)indexChunk.NumElements/3).ToList()));
-        meshPrim.Attributes.Add(new UsdIntList("faceVertexIndices", indexChunk.Indices.Select(x => (int)x).ToList()));
-        meshPrim.Attributes.Add(new UsdNormalsList("normals", [.. normalChunk.Normals]));
-        meshPrim.Attributes.Add(new UsdPointsList("points", [.. vertexChunk.Vertices]));
-        meshPrim.Attributes.Add(new UsdColorsList($"{nodeChunk.Name}_color", [.. colorChunk.Colors]));
-        meshPrim.Attributes.Add(new UsdTexCoordsList($"{nodeChunk.Name}_UV", [.. uvChunk.UVs]));
-        meshPrim.Attributes.Add(new UsdToken<string>("subdivisionScheme", "none", true));
-        Dictionary<string, object> matBindingApi = new() { ["apiSchemas"] = "[\"MaterialBindingAPI\"]" };
-        meshPrim.Properties = [new UsdProperty(matBindingApi, true)];
+
+        var matName = GetMaterialName(
+            Path.GetFileNameWithoutExtension(nodeChunk.MaterialFileName),
+            _cryData.Materials[nodeChunk.MaterialFileName].SubMaterials[0].Name);
+
+        if (verts is not null)
+        {
+            int numVerts = (int)verts.NumElements;
+            var hasNormals = normals is not null;
+            var hasUVs = uvs is not null;
+            var hasColors = colors is not null;
+
+            meshPrim.Attributes.Add(new UsdBool("doubleSided", true, true));
+            meshPrim.Attributes.Add(new UsdVector3dList("extent", [meshChunk.MinBound, meshChunk.MaxBound]));
+            meshPrim.Attributes.Add(new UsdIntList("faceVertexCounts", [.. Enumerable.Repeat(3, (int)(indices.NumElements / 3))]));
+            meshPrim.Attributes.Add(new UsdIntList("faceVertexIndices", [.. indices.Data.Select(x => (int)x)]));
+            meshPrim.Attributes.Add(new UsdNormalsList("normals", [.. normals.Data]));
+            meshPrim.Attributes.Add(new UsdPointsList("points", [.. verts.Data]));
+            meshPrim.Attributes.Add(new UsdColorsList($"{nodeChunk.Name}_color", [.. colors.Data]));
+            meshPrim.Attributes.Add(new UsdTexCoordsList($"{nodeChunk.Name}_UV", [.. uvs.Data]));
+            meshPrim.Attributes.Add(new UsdToken<string>("subdivisionScheme", "none", true));
+            Dictionary<string, object> matBindingApi = new() { ["apiSchemas"] = "[\"MaterialBindingAPI\"]" };
+            meshPrim.Properties = [new UsdProperty(matBindingApi, true)];
+
+            foreach (var subset in meshChunk.GeometryInfo.GeometrySubsets ?? [])
+            {
+                var submeshPrim = new UsdGeomSubset(CleanPathString(matName));
+                submeshPrim.Attributes.Add(new UsdUIntList("indices", [.. indices.Data.Skip(subset.FirstIndex).Take(subset.NumIndices)]));
+                //submeshPrim.Attributes.Add(new UsdToken<string>("familyType", "face", true));
+                submeshPrim.Attributes.Add(new UsdToken<string>("elementType", "vertex", true));
+                submeshPrim.Attributes.Add(new UsdToken<string>("familyName", "materialBind", true));
+                meshPrim.Children.Add(submeshPrim);
+
+                // Assign material to submesh
+                var submatName = _cryData.Materials[matName].SubMaterials[subset.MatID].Name;
+                submeshPrim.Properties = [new UsdProperty(matBindingApi, true)];
+                submeshPrim.Attributes.Add(
+                    new UsdRelativePath(
+                        "material:binding",
+                        $"/root/_materials/{GetMaterialName("", submatName)}"));
+            }
+        }
+        else if (vertsUvs is not null)
+        {
+            return null;
+        }
+
+
+
+
+        //var geometryNodeChunk = _cryData.Models.Last().NodeMap.Values.Where(x => x.Name == nodeName).FirstOrDefault();
+        //if (geometryNodeChunk is null)
+        //    return null;
+
+        //var meshNodeId = geometryNodeChunk?.ObjectNodeID;
+
+        //var objectNodeChunkType = _cryData.Models.Last().ChunkMap[nodeChunk.ObjectNodeID].GetType();
+        //if (!objectNodeChunkType.Name.Contains("ChunkMesh"))
+        //    return null;
+
+        //List<UsdMesh> usdMeshes = new();
+        //var meshChunk = (ChunkMesh)_cryData.Models.Last().ChunkMap[geometryNodeChunk.ObjectNodeID];
+        //var meshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[meshChunk.MeshSubsetsData];
+        //var mtlNameChunk = (ChunkMtlName)_cryData.Models.Last().ChunkMap[nodeChunk.MaterialID];
+        //var mtlFileName = mtlNameChunk.Name;
+        //var key = Path.GetFileNameWithoutExtension(mtlFileName);
+        //var numberOfSubmeshes = meshSubsets.NumMeshSubset;
+
+        // Get materials for this mesh chunk
+        //Material[] submats;
+        //if (_cryData.Materials.ContainsKey(key))
+        //    submats = _cryData.Materials[key].SubMaterials;
+        //else
+        //{
+        //    submats = _cryData.Materials.FirstOrDefault().Value.SubMaterials;
+        //    mtlFileName = Path.GetFileNameWithoutExtension(_cryData.MaterialFiles.FirstOrDefault());
+        //}
+        //var matName = GetMaterialName(mtlFileName, submats[meshSubsets.MeshSubsets[j].MatID].Name);
+
+        //if (meshChunk.MeshSubsetsData == 0
+        //    || meshChunk.NumVertices == 0
+        //    || nodeChunk._model.ChunkMap[meshChunk.MeshSubsetsData].ID == 0)
+        //    return null;
+
+        //// Get datastream chunks for vertices, normals, uvs, indices, colors and tangents
+        //var vertexChunk = (ChunkDataStream)_cryData.Models.Last().ChunkMap[meshChunk.VerticesData];
+        //var normalChunk = (ChunkDataStream)_cryData.Models.Last().ChunkMap[meshChunk.NormalsData];
+        //var uvChunk = (ChunkDataStream)_cryData.Models.Last().ChunkMap[meshChunk.UVsData];
+        //var indexChunk = (ChunkDataStream)_cryData.Models.Last().ChunkMap[meshChunk.IndicesData];
+        //var colorChunk = (ChunkDataStream)_cryData.Models.Last().ChunkMap[meshChunk.ColorsData];
+        //var tangentChunk = (ChunkDataStream)_cryData.Models.Last().ChunkMap[meshChunk.TangentsData];
+
+        ////UsdMesh meshPrim = new(CleanPathString(nodeChunk.Name));
+        //meshPrim.Attributes.Add(new UsdBool("doubleSided", true, true));
+        //meshPrim.Attributes.Add(new UsdVector3dList("extent", [meshChunk.MinBound, meshChunk.MaxBound]));
+        //meshPrim.Attributes.Add(new UsdIntList("faceVertexCounts", [.. Enumerable.Repeat(3, (int)indexChunk.NumElements / 3)]));
+        //meshPrim.Attributes.Add(new UsdIntList("faceVertexIndices", indexChunk.Indices.Select(x => (int)x).ToList()));
+        //meshPrim.Attributes.Add(new UsdNormalsList("normals", [.. normalChunk.Normals]));
+        //meshPrim.Attributes.Add(new UsdPointsList("points", [.. vertexChunk.Vertices]));
+        //meshPrim.Attributes.Add(new UsdColorsList($"{nodeChunk.Name}_color", [.. colorChunk.Colors]));
+        //meshPrim.Attributes.Add(new UsdTexCoordsList($"{nodeChunk.Name}_UV", [.. uvChunk.UVs]));
+        //meshPrim.Attributes.Add(new UsdToken<string>("subdivisionScheme", "none", true));
+        //Dictionary<string, object> matBindingApi = new() { ["apiSchemas"] = "[\"MaterialBindingAPI\"]" };
+        //meshPrim.Properties = [new UsdProperty(matBindingApi, true)];
 
         // Add GeomSubset for each submesh
-        for (int j = 0; j < numberOfSubmeshes; j++)
-        {
-            var submesh = meshSubsets.MeshSubsets[j];
-            var submeshName = (Path.GetFileNameWithoutExtension(submats[submesh.MatID].Name));
-            var submeshPrim = new UsdGeomSubset(CleanPathString(submeshName));
-            submeshPrim.Attributes.Add(new UsdUIntList("indices", indexChunk.Indices.Skip(submesh.FirstIndex).Take(submesh.NumIndices).ToList()));
-            //submeshPrim.Attributes.Add(new UsdToken<string>("familyType", "face", true));
-            submeshPrim.Attributes.Add(new UsdToken<string>("elementType", "vertex", true));
-            submeshPrim.Attributes.Add(new UsdToken<string>("familyName", "materialBind", true));
-            meshPrim.Children.Add(submeshPrim);
+        //for (int j = 0; j < numberOfSubmeshes; j++)
+        //{
+        //    var submesh = meshSubsets.MeshSubsets[j];
+        //    var submeshName = (Path.GetFileNameWithoutExtension(submats[submesh.MatID].Name));
+        //    var submeshPrim = new UsdGeomSubset(CleanPathString(submeshName));
+        //    submeshPrim.Attributes.Add(new UsdUIntList("indices", indexChunk.Indices.Skip(submesh.FirstIndex).Take(submesh.NumIndices).ToList()));
+        //    //submeshPrim.Attributes.Add(new UsdToken<string>("familyType", "face", true));
+        //    submeshPrim.Attributes.Add(new UsdToken<string>("elementType", "vertex", true));
+        //    submeshPrim.Attributes.Add(new UsdToken<string>("familyName", "materialBind", true));
+        //    meshPrim.Children.Add(submeshPrim);
 
-            // Assign material to submesh
-            var submatName = _cryData.Materials[key].SubMaterials[submesh.MatID].Name;
-            submeshPrim.Properties = [new UsdProperty(matBindingApi, true)];
-            submeshPrim.Attributes.Add(
-                new UsdRelativePath(
-                    "material:binding",
-                    $"/root/_materials/{GetMaterialName(key, submatName)}"));
-        }
+        //    // Assign material to submesh
+        //    var submatName = _cryData.Materials[key].SubMaterials[submesh.MatID].Name;
+        //    submeshPrim.Properties = [new UsdProperty(matBindingApi, true)];
+        //    submeshPrim.Attributes.Add(
+        //        new UsdRelativePath(
+        //            "material:binding",
+        //            $"/root/_materials/{GetMaterialName(key, submatName)}"));
+        //}
 
         return meshPrim;
     }

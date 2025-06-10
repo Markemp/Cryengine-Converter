@@ -22,7 +22,7 @@ public class UsdColorsList : UsdAttribute
         sb.AppendIndent(indentLevel);
 
         sb.Append($"color3f[] primvars:{Name} = [");
-        sb.AppendJoin(", ", Values.Select(v => $"({v.r / 255:F7}, {v.g / 255:F7}, {v.b / 255:F7})"));
+        sb.AppendJoin(", ", Values.Select(v => $"({v.R / 255:F7}, {v.G / 255:F7}, {v.B / 255:F7})"));
         sb.AppendLine("] (");
         sb.AppendIndent(indentLevel + 1);
         sb.AppendLine("interpolation = \"vertex\"");
