@@ -244,9 +244,7 @@ public class UsdRenderer : IRenderer
 
         UsdMesh meshPrim = new(CleanPathString(nodeChunk.Name));
 
-        var matName = GetMaterialName(
-            Path.GetFileNameWithoutExtension(nodeChunk.MaterialFileName),
-            _cryData.Materials[nodeChunk.MaterialFileName].SubMaterials[0].Name);
+
 
         if (verts is not null)
         {
@@ -269,11 +267,16 @@ public class UsdRenderer : IRenderer
 
             foreach (var subset in meshChunk.GeometryInfo.GeometrySubsets ?? [])
             {
-
+                var index = subset.MatID;
+                var matName = GetMaterialName(
+                    Path.GetFileNameWithoutExtension(nodeChunk.MaterialFileName),
+                    _cryData.Materials[nodeChunk.MaterialFileName].SubMaterials[index].Name);
+                // Submesh name should be material name
+                //var submeshName = 
                 var submeshPrim = new UsdGeomSubset(CleanPathString(matName));
                 submeshPrim.Attributes.Add(new UsdUIntList("indices", [.. indices.Data.Skip(subset.FirstIndex).Take(subset.NumIndices)]));
                 //submeshPrim.Attributes.Add(new UsdToken<string>("familyType", "face", true));
-                submeshPrim.Attributes.Add(new UsdToken<string>("elementType", "vertex", true));
+                submeshPrim.Attributes.Add(new UsdToken<string>("elementType", "face", true));
                 submeshPrim.Attributes.Add(new UsdToken<string>("familyName", "materialBind", true));
                 meshPrim.Children.Add(submeshPrim);
 
