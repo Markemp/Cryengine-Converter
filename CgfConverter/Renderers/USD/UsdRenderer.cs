@@ -181,8 +181,8 @@ public class UsdRenderer : IRenderer
         xform.Attributes.Add(new UsdMatrix4d("xformOp:transform", node.Transform));
         xform.Attributes.Add(new UsdToken<List<string>>("xformOpOrder", ["xformOp:transform"], true));
         // If it's a geometry node, add a UsdMesh
-        var modelIndex = node._model.IsIvoFile ? 1 : 0;
-        ChunkNode geometryNode = _cryData.Models.Last().NodeMap.Values.Where(a => a.Name == node.Name).FirstOrDefault();
+        //var modelIndex = node._model.IsIvoFile ? 1 : 0;
+        //ChunkNode geometryNode = _cryData.Models.Last().NodeMap.Values.Where(a => a.Name == node.Name).FirstOrDefault();
 
         var meshPrim = CreateMeshPrim(node);
         if (meshPrim is not null)
@@ -203,11 +203,6 @@ public class UsdRenderer : IRenderer
 
     private UsdPrim? CreateMeshPrim(ChunkNode nodeChunk)
     {
-        // Find the object node that corresponds with this node chunk.  If it's
-        // a mesh chunk, create a collection of UsdMesh prim for each submesh.
-        // geometryNodeChunk may be the same as nodeChunk for single file models.  Otherwise
-        // it's the matching node to nodeChunk in the second model.
-
         if (_args.IsNodeNameExcluded(nodeChunk.Name))
         {
             Log.D($"Excluding node {nodeChunk.Name}");
@@ -244,8 +239,6 @@ public class UsdRenderer : IRenderer
 
         UsdMesh meshPrim = new(CleanPathString(nodeChunk.Name));
 
-
-
         if (verts is not null)
         {
             int numVerts = (int)verts.NumElements;
@@ -257,10 +250,10 @@ public class UsdRenderer : IRenderer
             meshPrim.Attributes.Add(new UsdVector3dList("extent", [meshChunk.MinBound, meshChunk.MaxBound]));
             meshPrim.Attributes.Add(new UsdIntList("faceVertexCounts", [.. Enumerable.Repeat(3, (int)(indices.NumElements / 3))]));
             meshPrim.Attributes.Add(new UsdIntList("faceVertexIndices", [.. indices.Data.Select(x => (int)x)]));
-            meshPrim.Attributes.Add(new UsdNormalsList("normals", [.. normals.Data]));
             meshPrim.Attributes.Add(new UsdPointsList("points", [.. verts.Data]));
             meshPrim.Attributes.Add(new UsdColorsList($"{nodeChunk.Name}_color", [.. colors.Data]));
             meshPrim.Attributes.Add(new UsdTexCoordsList($"{nodeChunk.Name}_UV", [.. uvs.Data]));
+            meshPrim.Attributes.Add(new UsdNormalsList("normals", [.. normals.Data]));
             meshPrim.Attributes.Add(new UsdToken<string>("subdivisionScheme", "none", true));
             Dictionary<string, object> matBindingApi = new() { ["apiSchemas"] = "[\"MaterialBindingAPI\"]" };
             meshPrim.Properties = [new UsdProperty(matBindingApi, true)];
