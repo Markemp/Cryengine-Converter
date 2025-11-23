@@ -5,6 +5,7 @@ using CgfConverter.Renderers.Collada.Collada;
 using CgfConverter.Renderers.Collada.Collada.Enums;
 using CgfConverter.Renderers.Gltf;
 using CgfConverter.Renderers.USD;
+using CgfConverter.Renderers.USD.Models;
 using CgfConverterIntegrationTests.Extensions;
 using CgfConverterTests.TestUtilities;
 using Extensions;
@@ -13,6 +14,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Threading;
 using System.Xml.Linq;
 using System.Xml.Serialization;
@@ -1064,6 +1066,262 @@ public class MWOIntegrationTests
         var gltfData = gltfRenderer.GenerateGltfObject();
         Assert.AreEqual(1, gltfData.Textures.Count);
         Assert.AreEqual(2, gltfData.Materials.Count);
+    }
+
+    [TestMethod]
+    public void Mechanic_Usd_WithArmature()
+    {
+        var modelFile = $@"{objectDir}\Objects\characters\mechanic\mechanic.chr";
+
+        // Check if file exists
+        if (!File.Exists(modelFile))
+        {
+            Assert.Inconclusive($"Model file not found: {modelFile}");
+            return;
+        }
+
+        var args = new string[] { modelFile, "-objectdir", objectDir };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        // Process CryEngine file with skinning info
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        cryData.ProcessCryengineFiles();
+
+        // Verify skinning info is present
+        Assert.IsNotNull(cryData.SkinningInfo, "SkinningInfo should not be null");
+        Assert.IsTrue(cryData.SkinningInfo.HasSkinningInfo, "Should have skinning info");
+        Assert.IsTrue(cryData.SkinningInfo.CompiledBones.Count > 0, "Should have bones");
+
+        Console.WriteLine($"Model has {cryData.SkinningInfo.CompiledBones.Count} bones");
+        Console.WriteLine($"Root bone: {cryData.SkinningInfo.RootBone?.BoneName}");
+
+        // Generate USD
+        UsdRenderer usdRenderer = new(testUtils.argsHandler, cryData);
+        var usdDoc = usdRenderer.GenerateUsdObject();
+
+        // Serialize to string for inspection
+        var serializer = new UsdSerializer();
+        using var writer = new StringWriter();
+        serializer.Serialize(usdDoc, writer);
+        var usdOutput = writer.ToString();
+
+        // Verify skeleton structure is in output
+        Assert.IsTrue(usdOutput.Contains("def SkelRoot \"Armature\""), "Should have SkelRoot prim");
+        Assert.IsTrue(usdOutput.Contains("def Skeleton \"Skeleton\""), "Should have Skeleton prim");
+        Assert.IsTrue(usdOutput.Contains("prepend apiSchemas = [\"SkelBindingAPI\"]"), "Skeleton should have SkelBindingAPI");
+
+        // Verify skeleton data arrays
+        Assert.IsTrue(usdOutput.Contains("uniform token[] joints"), "Should have joints array");
+        Assert.IsTrue(usdOutput.Contains("uniform matrix4d[] bindTransforms"), "Should have bindTransforms");
+        Assert.IsTrue(usdOutput.Contains("uniform matrix4d[] restTransforms"), "Should have restTransforms");
+
+        // Verify mesh skinning attributes
+        Assert.IsTrue(usdOutput.Contains("primvars:skel:geomBindTransform"), "Should have geomBindTransform");
+        Assert.IsTrue(usdOutput.Contains("primvars:skel:jointIndices"), "Should have jointIndices");
+        Assert.IsTrue(usdOutput.Contains("primvars:skel:jointWeights"), "Should have jointWeights");
+        Assert.IsTrue(usdOutput.Contains("rel skel:skeleton"), "Should have skeleton relationship");
+        Assert.IsTrue(usdOutput.Contains("</root/Armature/Skeleton>"), "Should reference skeleton path");
+
+        // Verify some expected bone names in joint hierarchy
+        Assert.IsTrue(usdOutput.Contains("Bip01"), "Should contain root bone Bip01");
+
+        // Test specific bone transforms against expected values
+        // These values are from the raw bone data and Collada comparison
+
+        // Debug: Print first 10 bone names to see actual format
+        Console.WriteLine("\nFirst 10 bone names:");
+        foreach (var bone in cryData.SkinningInfo.CompiledBones.Take(10))
+        {
+            Console.WriteLine($"  '{bone.BoneName}'");
+        }
+
+        var bip01Bone = cryData.SkinningInfo.CompiledBones.FirstOrDefault(b => b.BoneName == "Bip01");
+        var bip01Pelvis = cryData.SkinningInfo.CompiledBones.FirstOrDefault(b => b.BoneName == "bip_01_Pelvis");
+        var bip01LThigh = cryData.SkinningInfo.CompiledBones.FirstOrDefault(b => b.BoneName == "bip_01_L_Thigh");
+
+        Assert.IsNotNull(bip01Bone, $"Should find Bip01 bone. Found {cryData.SkinningInfo.CompiledBones.Count} bones total.");
+        Assert.IsNotNull(bip01Pelvis, $"Should find bip_01_Pelvis bone");
+        Assert.IsNotNull(bip01LThigh, $"Should find bip_01_L_Thigh bone");
+
+        // Expected values from Collada output (both bind and rest use same values)
+        // Bip01: Translation should be near (0, 0, 0) - root bone
+        // Bip01 Pelvis: Translation should be near (0, 0.950611, 0) in Z-up
+        // These are in LocalTransformMatrix (worldToBone / inverse bind)
+
+        Console.WriteLine($"\nBip01 LocalTransformMatrix (worldToBone):");
+        Console.WriteLine($"  Translation: ({bip01Bone.LocalTransformMatrix.M14:F6}, {bip01Bone.LocalTransformMatrix.M24:F6}, {bip01Bone.LocalTransformMatrix.M34:F6})");
+
+        Console.WriteLine($"\nBip01 Pelvis LocalTransformMatrix (worldToBone):");
+        Console.WriteLine($"  Translation: ({bip01Pelvis.LocalTransformMatrix.M14:F6}, {bip01Pelvis.LocalTransformMatrix.M24:F6}, {bip01Pelvis.LocalTransformMatrix.M34:F6})");
+        Console.WriteLine($"  Expected: (0.000000, 0.000000, -0.950611) [inverted Z from world]");
+
+        Console.WriteLine($"\nBip01 Pelvis WorldTransformMatrix (boneToWorld):");
+        Console.WriteLine($"  Translation: ({bip01Pelvis.WorldTransformMatrix.M14:F6}, {bip01Pelvis.WorldTransformMatrix.M24:F6}, {bip01Pelvis.WorldTransformMatrix.M34:F6})");
+        Console.WriteLine($"  Expected: (0.000000, 0.000000, 0.950611) [Z-up position]");
+
+        // Verify Bip01 Pelvis world translation matches expected (from your raw data)
+        Assert.AreEqual(0.0, bip01Pelvis.WorldTransformMatrix.M14, 0.001, "Bip01 Pelvis X should be ~0");
+        Assert.AreEqual(0.0, bip01Pelvis.WorldTransformMatrix.M24, 0.001, "Bip01 Pelvis Y should be ~0");
+        Assert.AreEqual(0.950611, bip01Pelvis.WorldTransformMatrix.M34, 0.001, "Bip01 Pelvis Z should be ~0.950611");
+
+        // NOW TEST THE ACTUAL USD OUTPUT BY EXAMINING THE RAW BONE DATA
+        // We'll compute what the matrices SHOULD be and compare
+
+        // Expected from working Collada export:
+        // Bip01 bindTransform: ( (1, 0, 0, 0), (0, 0, 1, 0), (0, -1, 0, 0), (0, 0, 0, 1) )
+        // bip01_Pelvis bindTransform: row-major with translation at (0, 0, 0.9506109952926636, 1)
+
+        Console.WriteLine("\n=== EXPECTED USD BIND TRANSFORMS ===");
+        Console.WriteLine("Bip01:");
+        Console.WriteLine($"  BindPoseMatrix from source:");
+        Console.WriteLine($"    ({bip01Bone.BindPoseMatrix.M11:F6}, {bip01Bone.BindPoseMatrix.M12:F6}, {bip01Bone.BindPoseMatrix.M13:F6}, {bip01Bone.BindPoseMatrix.M14:F6})");
+        Console.WriteLine($"    ({bip01Bone.BindPoseMatrix.M21:F6}, {bip01Bone.BindPoseMatrix.M22:F6}, {bip01Bone.BindPoseMatrix.M23:F6}, {bip01Bone.BindPoseMatrix.M24:F6})");
+        Console.WriteLine($"    ({bip01Bone.BindPoseMatrix.M31:F6}, {bip01Bone.BindPoseMatrix.M32:F6}, {bip01Bone.BindPoseMatrix.M33:F6}, {bip01Bone.BindPoseMatrix.M34:F6})");
+        Console.WriteLine($"    ({bip01Bone.BindPoseMatrix.M41:F6}, {bip01Bone.BindPoseMatrix.M42:F6}, {bip01Bone.BindPoseMatrix.M43:F6}, {bip01Bone.BindPoseMatrix.M44:F6})");
+
+        Console.WriteLine($"\n  USD format (AS-IS, no transform):");
+        var bip01Usd = bip01Bone.BindPoseMatrix;
+        Console.WriteLine($"    ({bip01Usd.M11:F6}, {bip01Usd.M12:F6}, {bip01Usd.M13:F6}, {bip01Usd.M14:F6})");
+        Console.WriteLine($"    ({bip01Usd.M21:F6}, {bip01Usd.M22:F6}, {bip01Usd.M23:F6}, {bip01Usd.M24:F6})");
+        Console.WriteLine($"    ({bip01Usd.M31:F6}, {bip01Usd.M32:F6}, {bip01Usd.M33:F6}, {bip01Usd.M34:F6})");
+        Console.WriteLine($"    ({bip01Usd.M41:F6}, {bip01Usd.M42:F6}, {bip01Usd.M43:F6}, {bip01Usd.M44:F6})");
+        Console.WriteLine($"  EXPECTED (from Collada): -0 1 0 -0 -1 -0 -0 -0 -0 -0 1 -0 0 0 0 1");
+
+        // Verify Bip01 matches Collada
+        Assert.AreEqual(0.0, bip01Usd.M11, 0.01, "Bip01 [0,0] should be ~0");
+        Assert.AreEqual(1.0, bip01Usd.M12, 0.01, "Bip01 [0,1] should be ~1");
+        Assert.AreEqual(-1.0, bip01Usd.M21, 0.01, "Bip01 [1,0] should be ~-1");
+        Assert.AreEqual(1.0, bip01Usd.M33, 0.01, "Bip01 [2,2] should be ~1");
+
+        Console.WriteLine("\nbip01_Pelvis:");
+        Console.WriteLine($"  BindPoseMatrix from source:");
+        Console.WriteLine($"    ({bip01Pelvis.BindPoseMatrix.M11:F6}, {bip01Pelvis.BindPoseMatrix.M12:F6}, {bip01Pelvis.BindPoseMatrix.M13:F6}, {bip01Pelvis.BindPoseMatrix.M14:F6})");
+        Console.WriteLine($"    ({bip01Pelvis.BindPoseMatrix.M21:F6}, {bip01Pelvis.BindPoseMatrix.M22:F6}, {bip01Pelvis.BindPoseMatrix.M23:F6}, {bip01Pelvis.BindPoseMatrix.M24:F6})");
+        Console.WriteLine($"    ({bip01Pelvis.BindPoseMatrix.M31:F6}, {bip01Pelvis.BindPoseMatrix.M32:F6}, {bip01Pelvis.BindPoseMatrix.M33:F6}, {bip01Pelvis.BindPoseMatrix.M34:F6})");
+        Console.WriteLine($"    ({bip01Pelvis.BindPoseMatrix.M41:F6}, {bip01Pelvis.BindPoseMatrix.M42:F6}, {bip01Pelvis.BindPoseMatrix.M43:F6}, {bip01Pelvis.BindPoseMatrix.M44:F6})");
+
+        Console.WriteLine($"\n  USD format (AS-IS, no transform):");
+        var pelvisUsd = bip01Pelvis.BindPoseMatrix;
+        Console.WriteLine($"    ({pelvisUsd.M11:F6}, {pelvisUsd.M12:F6}, {pelvisUsd.M13:F6}, {pelvisUsd.M14:F6})");
+        Console.WriteLine($"    ({pelvisUsd.M21:F6}, {pelvisUsd.M22:F6}, {pelvisUsd.M23:F6}, {pelvisUsd.M24:F6})");
+        Console.WriteLine($"    ({pelvisUsd.M31:F6}, {pelvisUsd.M32:F6}, {pelvisUsd.M33:F6}, {pelvisUsd.M34:F6})");
+        Console.WriteLine($"    ({pelvisUsd.M41:F6}, {pelvisUsd.M42:F6}, {pelvisUsd.M43:F6}, {pelvisUsd.M44:F6})");
+        Console.WriteLine($"  EXPECTED (from Collada): 0 0 1 -0.950611 -0.000003 1 -0 -0 -1 -0.000003 0 -0 0 0 0 1");
+
+        // Verify Pelvis matches Collada
+        Assert.AreEqual(0.0, pelvisUsd.M11, 0.001, "Pelvis [0,0] should be ~0");
+        Assert.AreEqual(0.0, pelvisUsd.M12, 0.001, "Pelvis [0,1] should be ~0");
+        Assert.AreEqual(1.0, pelvisUsd.M13, 0.001, "Pelvis [0,2] should be ~1");
+        Assert.AreEqual(-0.950611, pelvisUsd.M14, 0.001, "Pelvis [0,3] translation should be ~-0.950611");
+
+        // NOW TEST LOCAL TRANSFORMS (restTransforms)
+        Console.WriteLine("\n=== REST TRANSFORMS (Local Transforms) ===");
+
+        // For root bone (Bip01), local = world
+        // Use ConvertToUsdTransformMatrix to move translation to row 4 without transposing rotation
+        var bip01Local = bip01Bone.WorldTransformMatrix.ConvertToUsdTransformMatrix();
+        Console.WriteLine($"Bip01 local transform (should equal world):");
+        Console.WriteLine($"  ({bip01Local.M11:F6}, {bip01Local.M12:F6}, {bip01Local.M13:F6}, {bip01Local.M14:F6})");
+        Console.WriteLine($"  ({bip01Local.M21:F6}, {bip01Local.M22:F6}, {bip01Local.M23:F6}, {bip01Local.M24:F6})");
+        Console.WriteLine($"  ({bip01Local.M31:F6}, {bip01Local.M32:F6}, {bip01Local.M33:F6}, {bip01Local.M34:F6})");
+        Console.WriteLine($"  ({bip01Local.M41:F6}, {bip01Local.M42:F6}, {bip01Local.M43:F6}, {bip01Local.M44:F6})");
+
+        // For pelvis, calculate local = inv(parent) * child
+        // Convert to USD format (translation in row 4, rotation as-is)
+        var parentWorld = bip01Bone.WorldTransformMatrix.ConvertToUsdTransformMatrix();
+        var childWorld = bip01Pelvis.WorldTransformMatrix.ConvertToUsdTransformMatrix();
+
+        Console.WriteLine($"\nParent (Bip01) World:");
+        Console.WriteLine($"  Translation: ({parentWorld.M41:F6}, {parentWorld.M42:F6}, {parentWorld.M43:F6})");
+        Console.WriteLine($"\nChild (Pelvis) World:");
+        Console.WriteLine($"  Translation: ({childWorld.M41:F6}, {childWorld.M42:F6}, {childWorld.M43:F6})");
+
+        Matrix4x4.Invert(parentWorld, out var parentInv);
+        var pelvisLocal = parentInv * childWorld;
+
+        Console.WriteLine($"\nPelvis local transform (inv(parent) * child):");
+        Console.WriteLine($"  ({pelvisLocal.M11:F6}, {pelvisLocal.M12:F6}, {pelvisLocal.M13:F6}, {pelvisLocal.M14:F6})");
+        Console.WriteLine($"  ({pelvisLocal.M21:F6}, {pelvisLocal.M22:F6}, {pelvisLocal.M23:F6}, {pelvisLocal.M24:F6})");
+        Console.WriteLine($"  ({pelvisLocal.M31:F6}, {pelvisLocal.M32:F6}, {pelvisLocal.M33:F6}, {pelvisLocal.M34:F6})");
+        Console.WriteLine($"  ({pelvisLocal.M41:F6}, {pelvisLocal.M42:F6}, {pelvisLocal.M43:F6}, {pelvisLocal.M44:F6})");
+        Console.WriteLine($"  Expected translation in Z: 0.950611");
+
+        // Verify pelvis has translation (Matrix4x4 stores translation in row 4: M41, M42, M43)
+        var translationLength = Math.Sqrt(pelvisLocal.M41 * pelvisLocal.M41 +
+                                          pelvisLocal.M42 * pelvisLocal.M42 +
+                                          pelvisLocal.M43 * pelvisLocal.M43);
+        Console.WriteLine($"  Translation magnitude: {translationLength:F6}");
+        Assert.IsTrue(translationLength > 0.9, "Pelvis local transform should have significant translation");
+
+        // NOW TEST ACTUAL USD OUTPUT
+        Console.WriteLine("\n=== ACTUAL USD RESTTRANSFORMS ===");
+
+        // Find skeleton recursively
+        UsdSkeleton? skeleton = null;
+        foreach (var prim in usdDoc.Prims)
+        {
+            skeleton = FindSkeleton(prim);
+            if (skeleton != null) break;
+        }
+
+        if (skeleton == null)
+        {
+            Console.WriteLine("ERROR: No Skeleton prim found in USD output!");
+            Assert.Fail("Skeleton prim not found");
+            return;
+        }
+
+        var restTransformsAttr = skeleton.Attributes.FirstOrDefault(a => a.Name == "restTransforms") as UsdMatrix4dArray;
+        if (restTransformsAttr == null)
+        {
+            Console.WriteLine("ERROR: No restTransforms attribute found!");
+            Console.WriteLine($"Found {skeleton.Attributes.Count} attributes:");
+            foreach (var attr in skeleton.Attributes)
+            {
+                Console.WriteLine($"  - {attr.Name}");
+            }
+            Assert.Fail("restTransforms attribute not found");
+            return;
+        }
+
+        var restTransforms = restTransformsAttr.Matrices;
+        Assert.IsTrue(restTransforms.Count >= 3, "Should have at least 3 bones");
+
+        Console.WriteLine($"Bip01 restTransform:");
+        PrintMatrix(restTransforms[0]);
+        Console.WriteLine($"\nPelvis restTransform:");
+        PrintMatrix(restTransforms[1]);
+        Console.WriteLine($"\nL_Thigh restTransform:");
+        PrintMatrix(restTransforms[2]);
+
+        // Expected values from good USD export
+        Console.WriteLine($"\n=== EXPECTED VALUES ===");
+        Console.WriteLine("Bip01 should be: ( (1, 0, 0, 0), (0, 0, 1, 0), (0, -1, 0, 0), (0, 0, 0, 1) )");
+        Console.WriteLine("Pelvis should be: ( (-4.37e-8, -0.000898, 1, 0), (-8.73e-10, 1, 0.000898, 0), (-1, -8.73e-10, -4.37e-8, 0), (0, 0.9506, 0, 1) )");
+
+        // Optional: write to file for manual inspection
+        // usdRenderer.WriteUsdToFile(usdDoc);
+    }
+
+    private void PrintMatrix(Matrix4x4 m)
+    {
+        Console.WriteLine($"  ( ({m.M11:F6}, {m.M12:F6}, {m.M13:F6}, {m.M14:F6}), ({m.M21:F6}, {m.M22:F6}, {m.M23:F6}, {m.M24:F6}), ({m.M31:F6}, {m.M32:F6}, {m.M33:F6}, {m.M34:F6}), ({m.M41:F6}, {m.M42:F6}, {m.M43:F6}, {m.M44:F6}) )");
+    }
+
+    private UsdSkeleton? FindSkeleton(UsdPrim prim)
+    {
+        if (prim is UsdSkeleton skel)
+            return skel;
+
+        foreach (var child in prim.Children)
+        {
+            var found = FindSkeleton(child);
+            if (found != null)
+                return found;
+        }
+
+        return null;
     }
 
     [TestMethod]
