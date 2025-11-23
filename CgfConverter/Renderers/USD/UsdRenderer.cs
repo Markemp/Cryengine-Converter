@@ -5,6 +5,7 @@ using CgfConverter.Models.Structs;
 using CgfConverter.Renderers.USD.Attributes;
 using CgfConverter.Renderers.USD.Models;
 using CgfConverter.Utils;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -101,6 +102,43 @@ public class UsdRenderer : IRenderer
         // Add the PrincipleBSDF shader
         var principleBSDF = new UsdShader($"Principled_BSDF");
         principleBSDF.Attributes.Add(new UsdToken<string>("info:id", "UsdPreviewSurface", true));
+
+        // Material color properties
+        if (submat.DiffuseValue is not null)
+        {
+            var diffuse = $"{submat.DiffuseValue.Red}, {submat.DiffuseValue.Green}, {submat.DiffuseValue.Blue}";
+            principleBSDF.Attributes.Add(new UsdColor3f("inputs:diffuseColor", diffuse));
+        }
+
+        if (submat.SpecularValue is not null)
+        {
+            var specular = $"{submat.SpecularValue.Red}, {submat.SpecularValue.Green}, {submat.SpecularValue.Blue}";
+            principleBSDF.Attributes.Add(new UsdColor3f("inputs:specularColor", specular));
+        }
+
+        if (submat.EmissiveValue is not null)
+        {
+            var emissive = $"{submat.EmissiveValue.Red}, {submat.EmissiveValue.Green}, {submat.EmissiveValue.Blue}";
+            principleBSDF.Attributes.Add(new UsdColor3f("inputs:emissiveColor", emissive));
+        }
+
+        // Opacity
+        if (submat.OpacityValue.HasValue)
+        {
+            principleBSDF.Attributes.Add(new UsdAttribute<float>("inputs:opacity", submat.OpacityValue.Value));
+        }
+
+        // Roughness - convert from Shininess
+        // Shininess typically ranges from 0-128, where higher = more shiny (less rough)
+        if (submat.Shininess > 0)
+        {
+            float roughness = 1.0f - Math.Clamp((float)(submat.Shininess / 128.0), 0.0f, 1.0f);
+            principleBSDF.Attributes.Add(new UsdAttribute<float>("inputs:roughness", roughness));
+        }
+
+        // Metallic - default to 0 (non-metallic)
+        principleBSDF.Attributes.Add(new UsdAttribute<float>("inputs:metallic", 0.0f));
+
         principleBSDF.Attributes.Add(new UsdAttribute<float>("inputs:clearcoat", 0));
         principleBSDF.Attributes.Add(new UsdAttribute<float>("inputs:clearcoatRoughness", 0.03f));
         principleBSDF.Attributes.Add(new UsdToken<string?>("outputs:surface", null, false));
@@ -119,9 +157,10 @@ public class UsdRenderer : IRenderer
                 if (texture.Map == Texture.MapTypeEnum.Diffuse)
                 {
                     imageTexture.Attributes.Add(new UsdFloat3f("outputs:rgb"));
+                    // Connection paths use angle bracket syntax in USD
                     principleBSDF.Attributes.Add(new UsdColor3f(
                         $"inputs:diffuseColor.connect",
-                        CleanPathString($"/root/_materials/{matName}/{imageTexture.Name}.outputs:rgb")));
+                        $"</root/_materials/{matName}/{imageTexture.Name}.outputs:rgb>"));
                 }
                 else if (texture.Map == Texture.MapTypeEnum.Normals)
                 {
@@ -259,7 +298,12 @@ public class UsdRenderer : IRenderer
             if (hasUVs)
                 meshPrim.Attributes.Add(new UsdTexCoordsList($"{nodeChunk.Name}_UV", [.. uvs.Data]));
             if (hasNormals)
-                meshPrim.Attributes.Add(new UsdNormalsList("normals", [.. normals.Data]));
+            {
+                // For faceVarying normals, expand the normals array to match faceVertexIndices
+                // by indexing into the normals using the same indices as vertices
+                var faceVaryingNormals = indices.Data.Select(idx => normals.Data[(int)idx]).ToList();
+                meshPrim.Attributes.Add(new UsdNormalsList("normals", faceVaryingNormals));
+            }
 
             meshPrim.Attributes.Add(new UsdToken<string>("subdivisionScheme", "none", true));
             Dictionary<string, object> matBindingApi = new() { ["apiSchemas"] = "[\"MaterialBindingAPI\"]" };
@@ -274,7 +318,16 @@ public class UsdRenderer : IRenderer
                 var cleanMatName = CleanPathString(matName);
 
                 var submeshPrim = new UsdGeomSubset(cleanMatName);
-                submeshPrim.Attributes.Add(new UsdUIntList("indices", [.. indices.Data.Skip(subset.FirstIndex).Take(subset.NumIndices)]));
+
+                // Convert vertex index range to face index range
+                // subset.FirstIndex and subset.NumIndices refer to vertex indices
+                // For elementType="face", we need face indices (triangle numbers)
+                // Each face has 3 vertices, so face_index = vertex_index / 3
+                int firstFace = (int)subset.FirstIndex / 3;
+                int numFaces = (int)subset.NumIndices / 3;
+                var faceIndices = Enumerable.Range(firstFace, numFaces).Select(i => (uint)i).ToList();
+
+                submeshPrim.Attributes.Add(new UsdUIntList("indices", faceIndices));
                 //submeshPrim.Attributes.Add(new UsdToken<string>("familyType", "face", true));
                 submeshPrim.Attributes.Add(new UsdToken<string>("elementType", "face", true));
                 submeshPrim.Attributes.Add(new UsdToken<string>("familyName", "materialBind", true));

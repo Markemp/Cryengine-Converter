@@ -171,3 +171,62 @@ The `-objectdir` argument is critical for correct material loading. Without it, 
 
 ### Working with Materials
 Materials are loaded lazily during `CreateMaterials()`. Check `MaterialUtilities.LoadMaterial()` for resolution logic. Binary XML materials require `CryXmlSerializer` - add breakpoints there if materials aren't loading correctly.
+
+## TODO - Renderer Architecture & Maintainability
+
+### Refactor Renderer Organization
+**Problem**: Renderer classes are becoming large monolithic files that are hard to maintain:
+- `ColladaModelRenderer.cs`: **1585 lines** - single file
+- `UsdRenderer.cs`: **463 lines** - growing quickly
+- `GltfRenderer`: Uses partial classes to split concerns (Animation, Material, Buffers, Geometry, SwapAxes)
+
+**Options to Consider**:
+
+1. **Partial Classes** (GltfRenderer approach)
+   - `UsdRenderer.Materials.cs` - Material and shader creation
+   - `UsdRenderer.Geometry.cs` - Mesh and geometry processing
+   - `UsdRenderer.Hierarchy.cs` - Node hierarchy and transforms
+   - `UsdRenderer.cs` - Main coordination and public API
+   - **Pros**: Keeps everything in one logical type, easy navigation, shared private state
+   - **Cons**: Still technically one class, can feel like hiding complexity
+
+2. **Component Classes with Composition**
+   - `UsdMaterialBuilder.cs` - Creates materials/shaders
+   - `UsdGeometryBuilder.cs` - Handles mesh creation
+   - `UsdHierarchyBuilder.cs` - Builds node trees
+   - `UsdRenderer.cs` - Orchestrates components
+   - **Pros**: Better separation of concerns, easier to test components, clearer dependencies
+   - **Cons**: More files, need to manage state sharing, potential over-engineering
+
+3. **Hybrid Approach**
+   - Keep UsdRenderer partial classes for closely coupled logic
+   - Extract independent utilities/builders as separate classes (e.g., `UsdMaterialBuilder`, `UsdTextureResolver`)
+   - **Pros**: Balance of organization without over-abstraction
+   - **Cons**: Need to decide what stays vs. what gets extracted
+
+**Current UsdRenderer responsibilities**:
+- Materials: `CreateMaterials()`, `CreateShaders()`, `CreateUsdImageTextureShader()`, `GetMaterialName()`
+- Hierarchy: `CreateNodeHierarchy()`, `CreateNode()`
+- Geometry: `CreateMeshPrim()`
+- Utilities: `CleanPathString()`, `ResolveTextureFile()`
+- Orchestration: `GenerateUsdObject()`, `Render()`, `WriteUsdToFile()`
+
+**Action Items**:
+- Evaluate which approach best fits the codebase philosophy
+- Consider applying same pattern to ColladaModelRenderer (needs refactoring most urgently)
+- Ensure test coverage before refactoring
+- Document chosen pattern in this file for consistency across renderers
+
+## TODO - USD Export
+
+### Material System Improvements
+- **Metallic detection heuristic**: Investigate using `Shader`, `MtlFlags`, or specular properties to auto-detect metallic materials
+  - Check if `Shader="Metal"` exists in any materials
+  - Consider using `Glossiness` property (currently unused)
+  - Analyze specular color patterns (colored specular might indicate metallic)
+- **Texture support**: Add diffuse/normal/specular texture mapping to USD materials
+- **Material validation**: Ensure all MTL properties map correctly to USD PBR workflow
+
+### Known Issues
+- ~~**GeomSubset indices**: "invalid indices" warning in Blender~~ - FIXED: Convert vertex indices to face indices for elementType="face"
+- ~~**Normal count mismatch**: "Loop normal count mismatch" warning~~ - FIXED: Expand normals array to match faceVertexIndices for faceVarying interpolation

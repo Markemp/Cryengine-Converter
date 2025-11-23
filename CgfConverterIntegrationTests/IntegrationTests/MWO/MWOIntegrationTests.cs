@@ -111,6 +111,61 @@ public class MWOIntegrationTests
     }
 
     [TestMethod]
+    public void Box_Usd_WithMaterials()
+    {
+        var matFile = $@"{objectDir}\Objects\default\box.mtl";
+        var args = new string[] { $@"{objectDir}\Objects\default\box.cgf", "-objectdir", objectDir, "-mat", matFile };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: matFile, objectDir: objectDir);
+        cryData.ProcessCryengineFiles();
+
+        // Verify materials were loaded
+        Assert.IsTrue(cryData.Materials.Count > 0, "Materials should be loaded");
+        var firstMat = cryData.Materials.First().Value;
+        Assert.IsTrue(firstMat.SubMaterials.Length >= 2, "Should have at least 2 submaterials");
+
+        // Generate USD
+        UsdRenderer usdRenderer = new(testUtils.argsHandler, cryData);
+        var usdDoc = usdRenderer.GenerateUsdObject();
+
+        // Serialize to string for inspection
+        var serializer = new UsdSerializer();
+        using var writer = new StringWriter();
+        serializer.Serialize(usdDoc, writer);
+        var usdOutput = writer.ToString();
+
+        // Verify material properties are in output
+        // Material #25: Diffuse="0.588,0.588,0.588" Opacity="1"
+        Assert.IsTrue(usdOutput.Contains("inputs:diffuseColor"), "Should have diffuseColor");
+        Assert.IsTrue(usdOutput.Contains("inputs:opacity"), "Should have opacity");
+        Assert.IsTrue(usdOutput.Contains("inputs:roughness"), "Should have roughness");
+        Assert.IsTrue(usdOutput.Contains("inputs:metallic"), "Should have metallic");
+
+        // Verify colors use parentheses (not angle brackets)
+        Assert.IsTrue(usdOutput.Contains("inputs:diffuseColor = ("), "Color values should use parentheses");
+        Assert.IsFalse(usdOutput.Contains("inputs:diffuseColor = <0"), "Color values should NOT use angle brackets for values");
+
+        // Material #26: Diffuse="0.658824,0,0" (red) Opacity="0.24"
+        Assert.IsTrue(usdOutput.Contains("0.658824"), "Should have red diffuse color from Material #26");
+        Assert.IsTrue(usdOutput.Contains("0.24"), "Should have 0.24 opacity from Material #26");
+
+        // Verify material names are cleaned
+        Assert.IsTrue(usdOutput.Contains("Material__25"), "Material #25 should be cleaned to Material__25");
+        Assert.IsTrue(usdOutput.Contains("Material__26"), "Material #26 should be cleaned to Material__26");
+
+        // Verify GeomSubset uses face indices (not vertex indices)
+        // The box has 12 triangles, so face indices should be 0-11
+        Assert.IsTrue(usdOutput.Contains("elementType = \"face\""), "GeomSubset should use face element type");
+        // Should NOT contain raw vertex indices like [0, 1, 2, 2, 3, 0, ...]
+        Assert.IsFalse(usdOutput.Contains("indices = [0, 1, 2, 2, 3, 0"), "Should not use vertex indices for face elementType");
+
+        // Optional: write to file for manual inspection
+        // usdRenderer.WriteUsdToFile(usdDoc);
+    }
+
+    [TestMethod]
     public void Teapot_Collada()
     {
         var args = new string[] {$@"{objectDir}\Objects\default\teapot.cgf" };

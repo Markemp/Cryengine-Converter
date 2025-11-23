@@ -25,8 +25,12 @@ public class UsdColor3f : UsdAttribute
             sb.Append($"color3f {Name}");
         else
         {
-            var stringValue = FormatStringValue($"<{Value}>");
-            sb.Append($"color3f {Name} = {stringValue}");
+            // Connection paths (starting with </) use angle brackets
+            // Color values use parentheses
+            if (Value.StartsWith("</") && Value.EndsWith(">"))
+                sb.Append($"color3f {Name} = {Value}");
+            else
+                sb.Append($"color3f {Name} = ({Value})");
         }
 
         return sb.ToString();
