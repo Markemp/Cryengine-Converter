@@ -166,6 +166,61 @@ public class MWOIntegrationTests
     }
 
     [TestMethod]
+    public void HulaGirl_Usd_WithMaterials()
+    {
+        var modelFile = $@"{objectDir}\Objects\purchasable\cockpit_standing\hulagirl\hulagirl_a.cga";
+
+        // Check if file exists
+        if (!File.Exists(modelFile))
+        {
+            Assert.Inconclusive($"Model file not found: {modelFile}");
+            return;
+        }
+
+        var args = new string[] { modelFile, "-objectdir", objectDir };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        // Let materials auto-discover from MtlName chunk
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        cryData.ProcessCryengineFiles();
+
+        // Verify materials were loaded
+        Assert.IsTrue(cryData.Materials.Count > 0, "Materials should be loaded");
+
+        // Check if materials have textures
+        var firstMat = cryData.Materials.First().Value;
+        if (firstMat.SubMaterials != null && firstMat.SubMaterials.Length > 0)
+        {
+            var submat = firstMat.SubMaterials[0];
+            if (submat.Textures != null)
+            {
+                foreach (var texture in submat.Textures)
+                {
+                    // This is where you can set a breakpoint to inspect texture.File
+                    Console.WriteLine($"Texture Map: {texture.Map}, File: {texture.File ?? "NULL"}");
+                }
+            }
+        }
+
+        // Generate USD
+        UsdRenderer usdRenderer = new(testUtils.argsHandler, cryData);
+        var usdDoc = usdRenderer.GenerateUsdObject();
+
+        // Serialize to string for inspection
+        var serializer = new UsdSerializer();
+        using var writer = new StringWriter();
+        serializer.Serialize(usdDoc, writer);
+        var usdOutput = writer.ToString();
+
+        // Verify material properties are in output
+        Assert.IsTrue(usdOutput.Contains("inputs:diffuseColor"), "Should have diffuseColor");
+
+        // Optional: write to file for manual inspection
+        // usdRenderer.WriteUsdToFile(usdDoc);
+    }
+
+    [TestMethod]
     public void Teapot_Collada()
     {
         var args = new string[] {$@"{objectDir}\Objects\default\teapot.cgf" };

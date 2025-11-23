@@ -144,11 +144,14 @@ public class UsdRenderer : IRenderer
         principleBSDF.Attributes.Add(new UsdToken<string?>("outputs:surface", null, false));
         shaders.Add(principleBSDF);
 
+        if (submat.Textures == null)
+            return shaders;
+
         foreach (var texture in submat.Textures)
         {
             if (texture.Map == Texture.MapTypeEnum.Env)
                 continue; // Don't add cubemaps as it causes blender to crash
-            var textureName = Path.ChangeExtension(texture.File, ".dds");
+
             var imageTexture = CreateUsdImageTextureShader(texture, matName);
             if (imageTexture is not null)
             {
@@ -179,7 +182,18 @@ public class UsdRenderer : IRenderer
 
     private UsdShader? CreateUsdImageTextureShader(Texture texture, string matName)
     {
-        var textureFile = ResolveTextureFile(texture.File, _args.PackFileSystem, [_args.DataDir]);
+        if (string.IsNullOrEmpty(texture.File))
+        {
+            Log.D("Texture has no file path specified");
+            return null;
+        }
+
+        // Filter out null/empty data directories
+        var dataDirs = new List<string>();
+        if (!string.IsNullOrEmpty(_args.DataDir))
+            dataDirs.Add(_args.DataDir);
+
+        var textureFile = ResolveTextureFile(texture.File, _args.PackFileSystem, dataDirs);
         if (File.Exists(textureFile) == false)
         {
             Log.D("Texture file not found: {0}", texture.File);
@@ -190,10 +204,11 @@ public class UsdRenderer : IRenderer
         usdImageTexture.Attributes.Add(new UsdToken<string>("info:id", "UsdUVTexture", true));
         usdImageTexture.Attributes.Add(new UsdToken<string>("inputs:wrapS", "repeat"));
         usdImageTexture.Attributes.Add(new UsdToken<string>("inputs:wrapT", "repeat"));
-        var texturePath = ResolveTextureFile(texture.File, _args.PackFileSystem, [_args.DataDir]);
-        usdImageTexture.Attributes.Add(new UsdAsset(
-            Path.GetFileNameWithoutExtension(texture.File),
-            CleanPathString(texturePath)));
+
+        // Use forward slashes for USD asset paths (cross-platform compatible)
+        var normalizedPath = textureFile.Replace('\\', '/');
+        usdImageTexture.Attributes.Add(new UsdAsset("file", normalizedPath));
+
         var isBumpmap = texture.Map == Texture.MapTypeEnum.Normals ? "raw" : "sRGB";
         usdImageTexture.Attributes.Add(new UsdToken<string>("inputs:sourceColorSpace", isBumpmap));
 
