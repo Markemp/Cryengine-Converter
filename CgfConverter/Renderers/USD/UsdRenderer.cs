@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Text;
 using static Extensions.FileHandlingExtensions;
 
 namespace CgfConverter.Renderers.USD;
@@ -81,11 +82,12 @@ public class UsdRenderer : IRenderer
             foreach (var submat in _cryData.Materials[matKey].SubMaterials)
             {
                 var matName = GetMaterialName(matKey, submat.Name);
-                var usdMat = new UsdMaterial(CleanPathString(matName));
+                var cleanMatName = CleanPathString(matName);
+                var usdMat = new UsdMaterial(cleanMatName);
                 usdMat.Attributes.Add(new UsdToken<string>(
                     "outputs:surface.connect",
-                    $"</root/_materials/{matName}/Principled_BSDF.outputs:surface>"));
-                usdMat.Children.AddRange(CreateShaders(submat, matKey, matName));
+                    $"</root/_materials/{cleanMatName}/Principled_BSDF.outputs:surface>"));
+                usdMat.Children.AddRange(CreateShaders(submat, matKey, cleanMatName));
                 matList.Add(usdMat);
             }
         }
@@ -251,9 +253,14 @@ public class UsdRenderer : IRenderer
             meshPrim.Attributes.Add(new UsdIntList("faceVertexCounts", [.. Enumerable.Repeat(3, (int)(indices.NumElements / 3))]));
             meshPrim.Attributes.Add(new UsdIntList("faceVertexIndices", [.. indices.Data.Select(x => (int)x)]));
             meshPrim.Attributes.Add(new UsdPointsList("points", [.. verts.Data]));
-            meshPrim.Attributes.Add(new UsdColorsList($"{nodeChunk.Name}_color", [.. colors.Data]));
-            meshPrim.Attributes.Add(new UsdTexCoordsList($"{nodeChunk.Name}_UV", [.. uvs.Data]));
-            meshPrim.Attributes.Add(new UsdNormalsList("normals", [.. normals.Data]));
+
+            if (hasColors)
+                meshPrim.Attributes.Add(new UsdColorsList($"{nodeChunk.Name}_color", [.. colors.Data]));
+            if (hasUVs)
+                meshPrim.Attributes.Add(new UsdTexCoordsList($"{nodeChunk.Name}_UV", [.. uvs.Data]));
+            if (hasNormals)
+                meshPrim.Attributes.Add(new UsdNormalsList("normals", [.. normals.Data]));
+
             meshPrim.Attributes.Add(new UsdToken<string>("subdivisionScheme", "none", true));
             Dictionary<string, object> matBindingApi = new() { ["apiSchemas"] = "[\"MaterialBindingAPI\"]" };
             meshPrim.Properties = [new UsdProperty(matBindingApi, true)];
@@ -264,9 +271,9 @@ public class UsdRenderer : IRenderer
                 var matName = GetMaterialName(
                     Path.GetFileNameWithoutExtension(nodeChunk.MaterialFileName),
                     _cryData.Materials[nodeChunk.MaterialFileName].SubMaterials[index].Name);
-                // Submesh name should be material name
-                //var submeshName = 
-                var submeshPrim = new UsdGeomSubset(CleanPathString(matName));
+                var cleanMatName = CleanPathString(matName);
+
+                var submeshPrim = new UsdGeomSubset(cleanMatName);
                 submeshPrim.Attributes.Add(new UsdUIntList("indices", [.. indices.Data.Skip(subset.FirstIndex).Take(subset.NumIndices)]));
                 //submeshPrim.Attributes.Add(new UsdToken<string>("familyType", "face", true));
                 submeshPrim.Attributes.Add(new UsdToken<string>("elementType", "face", true));
@@ -274,12 +281,11 @@ public class UsdRenderer : IRenderer
                 meshPrim.Children.Add(submeshPrim);
 
                 // Assign material to submesh
-                
                 submeshPrim.Properties = [new UsdProperty(matBindingApi, true)];
                 submeshPrim.Attributes.Add(
                     new UsdRelativePath(
                         "material:binding",
-                        $"/root/_materials/{matName}"));
+                        $"/root/_materials/{cleanMatName}"));
             }
         }
         else if (vertsUvs is not null)
@@ -377,13 +383,28 @@ public class UsdRenderer : IRenderer
         return $"{matKey}_mtl_{matfileName}".Replace(' ', '_');
     }
 
-    /// <summary>If a prim name or value has an @, or starts with a number, it's invalid.
-    /// Replace @ with _, and if it starts with a digit, add an _</summary>
+    /// <summary>Clean a string to be valid USD prim name.
+    /// USD prim names must start with letter/underscore and contain only letters, digits, and underscores.</summary>
     private string CleanPathString(string value)
     {
-        value = value.Replace('@', '_');
-        if (char.IsDigit(value[0]))
-            value = "_" + value;
-        return value;
+        if (string.IsNullOrEmpty(value))
+            return "_";
+
+        // Replace invalid characters with underscore
+        var cleaned = new StringBuilder();
+        foreach (char c in value)
+        {
+            if (char.IsLetterOrDigit(c) || c == '_')
+                cleaned.Append(c);
+            else
+                cleaned.Append('_');
+        }
+
+        // Ensure it starts with letter or underscore
+        var result = cleaned.ToString();
+        if (char.IsDigit(result[0]))
+            result = "_" + result;
+
+        return result;
     }
 }

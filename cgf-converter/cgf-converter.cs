@@ -1,6 +1,7 @@
 ﻿using CgfConverter.Renderers;
 using CgfConverter.Renderers.Collada;
 using CgfConverter.Renderers.Gltf;
+using CgfConverter.Renderers.USD;
 using CgfConverter.Renderers.Wavefront;
 using CgfConverter.Terrain;
 using CgfConverter.Utilities;
@@ -129,6 +130,8 @@ public class Program
             renderers.Add(new ColladaModelRenderer(_args, data));
         if (_args.OutputGLB || _args.OutputGLTF)
             renderers.Add(new GltfModelRenderer(_args, data, _args.OutputGLTF, _args.OutputGLB));
+        if (_args.OutputUSD)
+            renderers.Add(new UsdRenderer(_args, data));
 
         RunRenderersAndThrowAggregateExceptionIfAny(renderers);
     }
