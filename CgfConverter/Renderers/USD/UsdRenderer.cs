@@ -533,39 +533,43 @@ public class UsdRenderer : IRenderer
         {
             if (pathToBone.TryGetValue(jointPath, out var bone))
             {
-                // USD restTransforms are LOCAL transforms (bone-to-parent)
-                // Calculate from world transforms: LocalTransform = inverse(ParentWorld) * ChildWorld
-                Matrix4x4 localTransform;
+                // Following the glTF approach for computing local transforms:
+                // 1. Start with BindPoseMatrix (which is LocalTransformMatrix converted - worldToBone)
+                // 2. If has parent: multiply by inverse of parent's BindPoseMatrix to make relative
+                // 3. Invert the result to get the local boneToParent transform
+                // 4. Convert to USD coordinate system
 
-                if (bone.ParentBone == null)
-                {
-                    // Root bone - use world transform directly
-                    // Just move translation to row 4, don't transpose
-                    localTransform = bone.WorldTransformMatrix.ConvertToUsdTransformMatrix();
-                }
-                else
-                {
-                    // Child bone - compute local transform
-                    // Just move translation to row 4, don't transpose
-                    var parentWorld = bone.ParentBone.WorldTransformMatrix.ConvertToUsdTransformMatrix();
-                    var childWorld = bone.WorldTransformMatrix.ConvertToUsdTransformMatrix();
+                Matrix4x4 matrix = bone.BindPoseMatrix;
 
-                    if (Matrix4x4.Invert(parentWorld, out var parentWorldInv))
+                // If has parent, make transform relative to parent
+                if (bone.ParentBone != null)
+                {
+                    if (Matrix4x4.Invert(bone.ParentBone.BindPoseMatrix, out var parentInv))
                     {
-                        localTransform = parentWorldInv * childWorld;
+                        matrix *= parentInv;
                     }
                     else
                     {
-                        // Fallback if parent can't be inverted
-                        localTransform = childWorld;
+                        Log.W($"Failed to invert parent BindPoseMatrix for bone {bone.BoneName}");
                     }
                 }
 
-                restTransforms.Add(localTransform);
+                // Invert to get local transform (boneToParent instead of worldToBone)
+                if (Matrix4x4.Invert(matrix, out var localTransform))
+                {
+                    // Convert to USD matrix format (transpose to get row 4 as translation)
+                    localTransform = Matrix4x4.Transpose(localTransform);
+                    restTransforms.Add(localTransform);
+                }
+                else
+                {
+                    Log.W($"Failed to invert matrix for bone {bone.BoneName}, using identity");
+                    restTransforms.Add(Matrix4x4.Identity);
+                }
             }
             else
             {
-                // Fallback to identity matrix if bone not found
+                Log.W($"Bone not found for joint path: {jointPath}");
                 restTransforms.Add(Matrix4x4.Identity);
             }
         }
