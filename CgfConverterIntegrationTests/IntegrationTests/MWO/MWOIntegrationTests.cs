@@ -97,6 +97,20 @@ public class MWOIntegrationTests
     }
 
     [TestMethod]
+    public void Box_Usd()
+    {
+        var args = new string[] { $@"{objectDir}\Objects\default\box.cgf", "-dds", "-dae", "-objectdir", objectDir };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        UsdRenderer usdData = new(testUtils.argsHandler, cryData);
+        usdData.GenerateUsdObject();
+    }
+
+    [TestMethod]
     public void Teapot_Collada()
     {
         var args = new string[] {$@"{objectDir}\Objects\default\teapot.cgf" };
