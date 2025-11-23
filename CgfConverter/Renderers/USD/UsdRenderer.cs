@@ -160,10 +160,17 @@ public class UsdRenderer : IRenderer
                 if (texture.Map == Texture.MapTypeEnum.Diffuse)
                 {
                     imageTexture.Attributes.Add(new UsdFloat3f("outputs:rgb"));
+                    imageTexture.Attributes.Add(new UsdFloat("outputs:a"));
+
                     // Connection paths use angle bracket syntax in USD
                     principleBSDF.Attributes.Add(new UsdColor3f(
                         $"inputs:diffuseColor.connect",
                         $"</root/_materials/{matName}/{imageTexture.Name}.outputs:rgb>"));
+
+                    // Connect alpha channel to opacity
+                    principleBSDF.Attributes.Add(new UsdFloat(
+                        $"inputs:opacity.connect",
+                        $"</root/_materials/{matName}/{imageTexture.Name}.outputs:a>"));
                 }
                 else if (texture.Map == Texture.MapTypeEnum.Normals)
                 {

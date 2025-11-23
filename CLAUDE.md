@@ -220,6 +220,12 @@ Materials are loaded lazily during `CreateMaterials()`. Check `MaterialUtilities
 ## TODO - USD Export
 
 ### Material System Improvements
+- **Shader-based material node layout**: Use CryEngine shader definitions (e.g., `MechCockpit.Ext`, `Illum.Ext`) to create accurate material node graphs
+  - Parse shader files from `D:\depot\MWO Shaders\Shaders\` to understand channel mapping rules
+  - Different shaders define different texture channel interpretations (diffuse alpha, specular channels, etc.)
+  - Current implementation naively connects diffuse alpha to opacity, which causes unwanted transparency in some materials
+  - Shader files contain texture slot definitions and channel routing that should inform USD/glTF material creation
+  - Example: MechCockpit shader may use diffuse alpha differently than standard PBR materials
 - **Metallic detection heuristic**: Investigate using `Shader`, `MtlFlags`, or specular properties to auto-detect metallic materials
   - Check if `Shader="Metal"` exists in any materials
   - Consider using `Glossiness` property (currently unused)
