@@ -52,6 +52,10 @@ public partial class UsdRenderer
             materialRules = _shaderRules.GenerateRules(submat, shaderDef);
         }
 
+        // Check for Nodraw shader - these materials should be invisible
+        bool isNodraw = !string.IsNullOrEmpty(submat.Shader) &&
+                        submat.Shader.Equals("Nodraw", StringComparison.OrdinalIgnoreCase);
+
         // Add the PrincipleBSDF shader
         var principleBSDF = new UsdShader($"Principled_BSDF");
         principleBSDF.Attributes.Add(new UsdToken<string>("info:id", "UsdPreviewSurface", true));
@@ -82,18 +86,21 @@ public partial class UsdRenderer
         }
 
         // Opacity
-        if (submat.OpacityValue.HasValue)
+        if (isNodraw)
+        {
+            // Nodraw materials should be fully transparent/invisible
+            principleBSDF.Attributes.Add(new UsdAttribute<float>("inputs:opacity", 0.0f));
+        }
+        else if (submat.OpacityValue.HasValue)
         {
             principleBSDF.Attributes.Add(new UsdAttribute<float>("inputs:opacity", submat.OpacityValue.Value));
         }
 
         // Roughness - convert from Shininess
-        // Shininess typically ranges from 0-128, where higher = more shiny (less rough)
-        if (submat.Shininess > 0)
-        {
-            float roughness = 1.0f - Math.Clamp((float)(submat.Shininess / 128.0), 0.0f, 1.0f);
-            principleBSDF.Attributes.Add(new UsdAttribute<float>("inputs:roughness", roughness));
-        }
+        // Shininess ranges from 0-255, where higher = more shiny (less rough)
+        // Formula matches glTF renderer: roughness = (255 - shininess) / 255
+        float roughness = Math.Clamp((255.0f - (float)submat.Shininess) / 255.0f, 0.0f, 1.0f);
+        principleBSDF.Attributes.Add(new UsdAttribute<float>("inputs:roughness", roughness));
 
         // Metallic - default to 0 (non-metallic)
         principleBSDF.Attributes.Add(new UsdAttribute<float>("inputs:metallic", 0.0f));
@@ -205,6 +212,14 @@ public partial class UsdRenderer
                         $"inputs:roughness.connect",
                         $"</root/_materials/{matName}/{imageTexture.Name}.outputs:a>"));
                 }
+                break;
+
+            case Texture.MapTypeEnum.Opacity:
+                // Opacity maps control transparency
+                imageTexture.Attributes.Add(new UsdFloat("outputs:r"));
+                principleBSDF.Attributes.Add(new UsdFloat(
+                    $"inputs:opacity.connect",
+                    $"</root/_materials/{matName}/{imageTexture.Name}.outputs:r>"));
                 break;
 
             // Additional texture types can be added here
