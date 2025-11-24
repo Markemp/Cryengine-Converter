@@ -196,33 +196,45 @@ public partial class UsdRenderer
         // Add geomBindTransform (usually identity matrix)
         meshPrim.Attributes.Add(new UsdMatrix4d("primvars:skel:geomBindTransform", Matrix4x4.Identity));
 
-        // Get skinning data from IntVertices
+        // Get skinning data
         var skinningInfo = _cryData.SkinningInfo;
-        if (skinningInfo.IntVertices == null || skinningInfo.IntVertices.Count == 0)
-            return;
 
         // Build joint indices and weights arrays
+        // Use Ext2IntMap if available to map external (mesh) vertices to internal (skinning) vertices
         var jointIndices = new List<int>();
         var jointWeights = new List<float>();
-        int maxInfluences = 0;
 
-        foreach (var intVertex in skinningInfo.IntVertices)
+        if (skinningInfo.HasIntToExtMapping && skinningInfo.IntVertices != null)
         {
-            // Count non-zero weights to determine influences per vertex
-            int influences = 0;
-            for (int i = 0; i < 4; i++)
+            // Use Ext2IntMap to properly map skinning data to mesh vertices
+            foreach (var extIndex in skinningInfo.Ext2IntMap)
             {
-                if (intVertex.BoneMapping.Weight[i] > 0)
-                    influences++;
-            }
-            maxInfluences = Math.Max(maxInfluences, influences);
+                var intVertex = skinningInfo.IntVertices[extIndex];
 
-            // Add bone indices and weights (up to 4 influences per vertex)
-            for (int i = 0; i < 4; i++)
-            {
-                jointIndices.Add(intVertex.BoneMapping.BoneIndex[i]);
-                jointWeights.Add(intVertex.BoneMapping.Weight[i]); // Weights are already 0-1 range in MeshBoneMapping
+                // Add bone indices and weights (up to 4 influences per vertex)
+                for (int i = 0; i < 4; i++)
+                {
+                    jointIndices.Add(intVertex.BoneMapping.BoneIndex[i]);
+                    jointWeights.Add(intVertex.BoneMapping.Weight[i]);
+                }
             }
+        }
+        else if (skinningInfo.BoneMappings != null)
+        {
+            // Fall back to BoneMappings for simpler skinning without IntVertices
+            foreach (var boneMapping in skinningInfo.BoneMappings)
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    jointIndices.Add(boneMapping.BoneIndex[i]);
+                    jointWeights.Add(boneMapping.Weight[i]);
+                }
+            }
+        }
+        else
+        {
+            // No skinning data available
+            return;
         }
 
         // Add skinning arrays with elementSize (influences per vertex)
