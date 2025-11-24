@@ -40,11 +40,11 @@ public partial class UsdRenderer
 
     private IEnumerable<UsdShader> CreateShaders(Material submat, string matKey, string matName)
     {
-        List<UsdShader> shaders = new();
+        List<UsdShader> shaders = [];
 
         // Look up shader definition and generate rules
         ShaderDefinition? shaderDef = null;
-        List<MaterialRule> materialRules = new();
+        List<MaterialRule> materialRules = [];
 
         if (!string.IsNullOrEmpty(submat.Shader))
         {
@@ -85,20 +85,14 @@ public partial class UsdRenderer
             principleBSDF.Attributes.Add(new UsdColor3f("inputs:emissiveColor", emissive));
         }
 
-        // Opacity
+        // Opacity.  Nodraw materials should be fully transparent/invisible
         if (isNodraw)
-        {
-            // Nodraw materials should be fully transparent/invisible
             principleBSDF.Attributes.Add(new UsdAttribute<float>("inputs:opacity", 0.0f));
-        }
         else if (submat.OpacityValue.HasValue)
-        {
             principleBSDF.Attributes.Add(new UsdAttribute<float>("inputs:opacity", submat.OpacityValue.Value));
-        }
 
         // Roughness - convert from Shininess
-        // Shininess ranges from 0-255, where higher = more shiny (less rough)
-        // Formula matches glTF renderer: roughness = (255 - shininess) / 255
+        // Shininess ranges from 0-255, where higher = more shiny (less rough) roughness = (255 - shininess) / 255
         float roughness = Math.Clamp((255.0f - (float)submat.Shininess) / 255.0f, 0.0f, 1.0f);
         principleBSDF.Attributes.Add(new UsdAttribute<float>("inputs:roughness", roughness));
 
@@ -110,7 +104,7 @@ public partial class UsdRenderer
         principleBSDF.Attributes.Add(new UsdToken<string?>("outputs:surface", null, false));
         shaders.Add(principleBSDF);
 
-        if (submat.Textures == null)
+        if (submat.Textures is null)
             return shaders;
 
         // Track which textures we've already created to avoid duplicates
@@ -119,18 +113,15 @@ public partial class UsdRenderer
         foreach (var texture in submat.Textures)
         {
             // Skip environment maps (cubemaps cause crashes in Blender)
-            if (texture.Map == Texture.MapTypeEnum.Env)
-                continue;
+            if (texture.Map == Texture.MapTypeEnum.Env) continue;
 
             // Get the shader name we would create
-            if (string.IsNullOrEmpty(texture.File))
-                continue;
+            if (string.IsNullOrEmpty(texture.File)) continue;
 
             var shaderName = CleanPathString(Path.GetFileNameWithoutExtension(texture.File));
 
             // Skip if we've already created a shader for this texture
-            if (createdTextures.Contains(shaderName))
-                continue;
+            if (createdTextures.Contains(shaderName)) continue;
 
             var imageTexture = CreateUsdImageTextureShader(texture, matName);
             if (imageTexture is not null)
@@ -139,7 +130,7 @@ public partial class UsdRenderer
                 shaders.Add(imageTexture);
 
                 // Apply connections based on texture type and shader rules
-                ApplyTextureConnections(imageTexture, texture, principleBSDF, matName, materialRules);
+                ApplyTextureConnections(imageTexture, texture, principleBSDF, matName, materialRules, submat);
             }
         }
 
@@ -154,7 +145,8 @@ public partial class UsdRenderer
         Texture texture,
         UsdShader principleBSDF,
         string matName,
-        List<MaterialRule> rules)
+        List<MaterialRule> rules,
+        Material submat)
     {
         switch (texture.Map)
         {
@@ -215,11 +207,25 @@ public partial class UsdRenderer
                 break;
 
             case Texture.MapTypeEnum.Opacity:
-                // Opacity maps control transparency
-                imageTexture.Attributes.Add(new UsdFloat("outputs:r"));
-                principleBSDF.Attributes.Add(new UsdFloat(
-                    $"inputs:opacity.connect",
-                    $"</root/_materials/{matName}/{imageTexture.Name}.outputs:r>"));
+                // In Cryengine, Opacity maps are primarily for translucency/backlighting effects on vegetation
+                // USD PreviewSurface doesn't support this - only has a single opacity input
+                // If material has AlphaTest set, the diffuse alpha is used for cutout transparency
+                // For now, only use Opacity map if there's no diffuse texture (fallback)
+                var hasDiffuse = submat.Textures.Any(t => t.Map == Texture.MapTypeEnum.Diffuse);
+                if (!hasDiffuse)
+                {
+                    // No diffuse texture, use opacity map as transparency mask
+                    imageTexture.Attributes.Add(new UsdFloat("outputs:r"));
+                    principleBSDF.Attributes.Add(new UsdFloat(
+                        $"inputs:opacity.connect",
+                        $"</root/_materials/{matName}/{imageTexture.Name}.outputs:r>"));
+                }
+                else
+                {
+                    // Diffuse texture exists - its alpha channel handles transparency
+                    // Opacity map is for translucency which USD PreviewSurface doesn't support
+                    Log.D($"Skipping Opacity map for {matName} - USD PreviewSurface doesn't support translucency, using diffuse alpha instead");
+                }
                 break;
 
             // Additional texture types can be added here
