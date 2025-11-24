@@ -86,6 +86,7 @@ Output File (.dae/.gltf/.glb/.obj)
 - `ColladaModelRenderer` - Default, fully featured (.dae)
 - `GltfModelRenderer` - Modern format (.gltf/.glb)
 - `WavefrontModelRenderer` - Deprecated, not supported (.obj)
+- 'UsdRenderer' - Experimental USD export (.usd/.usda/.usdc)
 
 **Material System**: Loads Cryengine .mtl files (text XML or binary CryXmlB format). Supports hierarchical submaterials, texture maps, and material layers. Resolution cascade: explicit paths → ChunkMtlName references → default materials.
 
@@ -236,3 +237,21 @@ Materials are loaded lazily during `CreateMaterials()`. Check `MaterialUtilities
 ### Known Issues
 - ~~**GeomSubset indices**: "invalid indices" warning in Blender~~ - FIXED: Convert vertex indices to face indices for elementType="face"
 - ~~**Normal count mismatch**: "Loop normal count mismatch" warning~~ - FIXED: Expand normals array to match faceVertexIndices for faceVarying interpolation
+
+### Mechanic.chr bone matrices for Bip01, Bip01_Pelvis, Bip01_L_Thigh.  
+
+In Cryengine Matrix3x4 format, where column 4 is translation.  These are row major form.  This information should
+be all that is needed to recreate the restTransforms and bindTransforms for the skeleton.  Z up, Y forward.
+
+- Bip01
+struct MATRIX3x4 worldToBone		32DCh	30h	Fg: Bg:0x000080	[[-0.000000, 1.000000, 0.000000, -0.000000] [-1.000000, -0.000000, -0.000000, -0.000000] [-0.000000, -0.000000, 1.000000, -0.000000]]
+struct MATRIX3x4 boneToWorld		330Ch	30h	Fg: Bg:0x000080	[[-0.000000, -1.000000, -0.000000, -0.000000] [1.000000, -0.000000, -0.000000, 0.000000] [0.000000, -0.000000, 1.000000, 0.000000]]
+
+- Bip01_Pelvis
+struct MATRIX3x4 worldToBone		3524h	30h	Fg: Bg:0x000080	[[0.000000, 0.000000, 1.000000, -0.950611] [-0.000003, 1.000000, -0.000000, -0.000000] [-1.000000, -0.000003, 0.000000, -0.000000]]
+struct MATRIX3x4 boneToWorld		3554h	30h	Fg: Bg:0x000080	[[0.000000, -0.000003, -1.000000, 0.000000] [0.000000, 1.000000, -0.000003, 0.000000] [1.000000, -0.000000, 0.000000, 0.950611]]
+
+- Bip01_L_Thigh
+struct MATRIX3x4 worldToBone		376Ch	30h	Fg: Bg:0x000080	[[-0.141242, -0.078662, -0.986845, 0.920858] [-0.011145, 0.996901, -0.077868, 0.072651] [0.989912, 0.000000, -0.141681, 0.232642]]
+struct MATRIX3x4 boneToWorld		379Ch	30h	Fg: Bg:0x000080	[[-0.141242, -0.011145, 0.989912, -0.099421] [-0.078662, 0.996901, 0.000000, 0.000010] [-0.986845, -0.077868, -0.141681, 0.947363]]
+
