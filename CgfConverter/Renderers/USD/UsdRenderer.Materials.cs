@@ -270,7 +270,7 @@ public partial class UsdRenderer
         return usdImageTexture;
     }
 
-    private string GetMaterialName(string matKey, string submatName)
+    private static string GetMaterialName(string matKey, string submatName)
     {
         // material name is <mtlChunkName>_mtl_<submatName>
         var matfileName = Path.GetFileNameWithoutExtension(submatName);

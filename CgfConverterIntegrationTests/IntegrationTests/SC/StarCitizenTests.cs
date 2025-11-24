@@ -3,6 +3,8 @@ using CgfConverter.CryEngineCore;
 using CgfConverter.Renderers.Collada;
 using CgfConverter.Renderers.Collada.Collada.Enums;
 using CgfConverter.Renderers.Gltf;
+using CgfConverter.Renderers.USD;
+using CgfConverter.Renderers.USD.Models;
 using CgfConverterTests.TestUtilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -964,6 +966,81 @@ public class StarCitizenTests
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
+    }
+
+    [TestMethod]
+    public void Teapot_Ivo_USD()
+    {
+        var args = new string[] { $@"{objectDir41}\Objects\default\teapot.cgf", "-objectdir", objectDir41, "-usd" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir41);
+        cryData.ProcessCryengineFiles();
+
+        var usdRenderer = new UsdRenderer(testUtils.argsHandler, cryData);
+        var usdDoc = usdRenderer.GenerateUsdObject();
+
+        // 1. Verify USD document structure
+        Assert.AreEqual("root", usdDoc.Header.DefaultPrim, "Default prim should be 'root'");
+        Assert.AreEqual("Z", usdDoc.Header.UpAxis, "Up axis should be Z");
+        Assert.AreEqual(1, usdDoc.Header.MetersPerUnit, "MetersPerUnit should be 1");
+
+        // 2. Verify root prim exists
+        var rootPrim = usdDoc.Prims[0];
+        Assert.AreEqual("root", rootPrim.Name, "Root prim should be named 'root'");
+        Assert.IsTrue(rootPrim is UsdXform, "Root prim should be Xform");
+
+        // 3. Verify materials scope was created
+        var materialsScope = rootPrim.Children.FirstOrDefault(x => x.Name == "_materials");
+        Assert.IsNotNull(materialsScope, "Materials scope should exist");
+        Assert.IsTrue(materialsScope is UsdScope, "_materials should be a Scope");
+
+        // 4. Verify at least one material exists
+        Assert.IsTrue(materialsScope.Children.Count > 0, "Should have at least one material");
+        var material = materialsScope.Children.FirstOrDefault(x => x.Name == "teapot_mtl_teapot");
+        Assert.IsNotNull(material, "Should have teapot_mtl_teapot material");
+        Assert.IsTrue(material is UsdMaterial, "Material should be Material type");
+
+        // 5. Verify geometry nodes were created (Ivo format support)
+        var meshNodes = rootPrim.Children.Where(x => x.Name != "_materials").ToList();
+        Assert.IsTrue(meshNodes.Count > 0, "Should have at least one mesh node (Ivo format geometry)");
+
+        // 6. Find the teapot mesh node
+        var teapotXform = meshNodes.FirstOrDefault(x => x.Name == "teapot");
+        Assert.IsNotNull(teapotXform, "Should have a teapot Xform node");
+        Assert.IsTrue(teapotXform is UsdXform, "Teapot node should be Xform");
+
+        // 7. Verify the mesh exists under the Xform
+        var teapotMesh = teapotXform.Children.FirstOrDefault(x => x is UsdMesh);
+        Assert.IsNotNull(teapotMesh, "Should have a Mesh child under teapot Xform");
+
+        // 8. Verify mesh has required attributes
+        var meshAttributes = teapotMesh.Attributes;
+        Assert.IsTrue(meshAttributes.Any(a => a.Name == "points"), "Mesh should have points (vertices)");
+        Assert.IsTrue(meshAttributes.Any(a => a.Name == "faceVertexCounts"), "Mesh should have faceVertexCounts");
+        Assert.IsTrue(meshAttributes.Any(a => a.Name == "faceVertexIndices"), "Mesh should have faceVertexIndices");
+        Assert.IsTrue(meshAttributes.Any(a => a.Name == "extent"), "Mesh should have extent (bounding box)");
+        Assert.IsTrue(meshAttributes.Any(a => a.Name == "normals"), "Mesh should have normals");
+
+        // 9. Verify Ivo-specific attributes (UVs and colors from VertUV)
+        Assert.IsTrue(meshAttributes.Any(a => a.Name.Contains("_UV")), "Mesh should have UV coordinates from VertUV");
+        Assert.IsTrue(meshAttributes.Any(a => a.Name.Contains("_color")), "Mesh should have vertex colors from VertUV");
+
+        // 10. Verify GeomSubset exists for material assignment
+        var geomSubsets = teapotMesh.Children.Where(x => x is UsdGeomSubset).ToList();
+        Assert.IsTrue(geomSubsets.Count > 0, "Mesh should have at least one GeomSubset");
+
+        var subset = geomSubsets.FirstOrDefault(x => x.Name == "teapot_mtl_teapot");
+        Assert.IsNotNull(subset, "Should have teapot_mtl_teapot GeomSubset");
+
+        // 11. Verify GeomSubset has proper material binding
+        var subsetAttributes = subset.Attributes;
+        Assert.IsTrue(subsetAttributes.Any(a => a.Name == "indices"), "GeomSubset should have indices");
+        Assert.IsTrue(subsetAttributes.Any(a => a.Name == "elementType" && a.ToString().Contains("face")),
+            "GeomSubset should have elementType='face'");
+        Assert.IsTrue(subsetAttributes.Any(a => a.Name == "material:binding"),
+            "GeomSubset should have material:binding");
     }
 
     [TestMethod]

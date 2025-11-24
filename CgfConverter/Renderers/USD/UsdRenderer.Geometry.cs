@@ -3,7 +3,6 @@ using CgfConverter.Models;
 using CgfConverter.Models.Structs;
 using CgfConverter.Renderers.USD.Attributes;
 using CgfConverter.Renderers.USD.Models;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -18,7 +17,7 @@ public partial class UsdRenderer
 {
     private List<UsdPrim> CreateNodeHierarchy()
     {
-        List<ChunkNode> rootNodes = _cryData.Models[0].NodeMap.Values.Where(a => a.ParentNodeID == ~0).ToList();
+        List<ChunkNode> rootNodes = _cryData.Nodes.Where(a => a.ParentNodeID == ~0).ToList();
         List<UsdPrim> nodes = [];
 
         foreach (ChunkNode root in rootNodes)
@@ -82,15 +81,22 @@ public partial class UsdRenderer
         Datastream<Vector3>? normals = meshChunk.GeometryInfo.Normals;
         Datastream<IRGBA>? colors = meshChunk.GeometryInfo.Colors;
 
-        if (verts is null && vertsUvs is null) // There is no vertex data for this node.  Skip.
+        // Validation checks - same as glTF renderer
+        if (indices is null)
+        {
+            Log.D($"Mesh[{nodeChunk.Name}]: IndicesData is empty.");
             return null;
-
-        List<UsdMesh> usdMeshes = [];
-
-        if (meshChunk.MeshSubsetsData == 0
-            || meshChunk.NumVertices == 0
-            || nodeChunk._model.ChunkMap[meshChunk.MeshSubsetsData].ID == 0)
+        }
+        if (subsets is null)
+        {
+            Log.D($"Mesh[{nodeChunk.Name}]: GeometrySubsets is empty.");
             return null;
+        }
+        if (verts is null && vertsUvs is null)
+        {
+            Log.D($"Mesh[{nodeChunk.Name}]: both VerticesData and VertsUVsData are empty.");
+            return null;
+        }
 
         var numberOfElements = nodeChunk.MeshData.GeometryInfo?.GeometrySubsets?.Sum(x => x.NumVertices) ?? 0;
 
@@ -164,7 +170,115 @@ public partial class UsdRenderer
             }
         }
         else if (vertsUvs is not null)
-            return null;
+        {
+            // Handle Ivo format (Star Citizen) - combined vertex/UV/color data
+            int numVerts = (int)vertsUvs.NumElements;
+            var hasNormals = normals is not null;
+
+            // Calculate bounding box scaling for Ivo format
+            var multiplerVector = Vector3.Abs((meshChunk.MinBound - meshChunk.MaxBound) / 2f);
+            if (multiplerVector.X < 1) multiplerVector.X = 1;
+            if (multiplerVector.Y < 1) multiplerVector.Y = 1;
+            if (multiplerVector.Z < 1) multiplerVector.Z = 1;
+            var boundaryBoxCenter = (meshChunk.MinBound + meshChunk.MaxBound) / 2f;
+
+            Vector3 scalingVector = Vector3.One;
+            Vector3 scalingBoxCenter = Vector3.Zero;
+            bool useScalingBox = false;
+
+            if (meshChunk.ScalingVectors is not null)
+            {
+                scalingVector = Vector3.Abs((meshChunk.ScalingVectors.Max - meshChunk.ScalingVectors.Min) / 2f);
+                if (scalingVector.X < 1) scalingVector.X = 1;
+                if (scalingVector.Y < 1) scalingVector.Y = 1;
+                if (scalingVector.Z < 1) scalingVector.Z = 1;
+                scalingBoxCenter = (meshChunk.ScalingVectors.Max + meshChunk.ScalingVectors.Min) / 2f;
+                useScalingBox = _cryData.InputFile.EndsWith("cga") || _cryData.InputFile.EndsWith("cgf");
+            }
+
+            // Extract vertices, UVs, and colors from VertUV structures
+            var vertices = new List<Vector3>(numVerts);
+            var uvList = new List<UV>(numVerts);
+            var colorList = new List<IRGBA>(numVerts);
+
+            foreach (var vertUv in vertsUvs.Data)
+            {
+                // Apply bounding box scaling to vertices (skip for .skin and .chr files)
+                Vector3 vertex = vertUv.Vertex;
+                if (!_cryData.InputFile.EndsWith("skin") && !_cryData.InputFile.EndsWith("chr"))
+                {
+                    if (useScalingBox)
+                        vertex = (vertex * scalingVector) + scalingBoxCenter;
+                    else
+                        vertex = (vertex * multiplerVector) + boundaryBoxCenter;
+                }
+
+                vertices.Add(vertex);
+                uvList.Add(vertUv.UV);
+                colorList.Add(vertUv.Color);
+            }
+
+            meshPrim.Attributes.Add(new UsdBool("doubleSided", true, true));
+            meshPrim.Attributes.Add(new UsdVector3dList("extent", [meshChunk.MinBound, meshChunk.MaxBound]));
+            meshPrim.Attributes.Add(new UsdIntList("faceVertexCounts", [.. Enumerable.Repeat(3, (int)(indices.NumElements / 3))]));
+            meshPrim.Attributes.Add(new UsdIntList("faceVertexIndices", [.. indices.Data.Select(x => (int)x)]));
+            meshPrim.Attributes.Add(new UsdPointsList("points", vertices));
+
+            // Add vertex colors from VertUV
+            meshPrim.Attributes.Add(new UsdColorsList($"{CleanPathString(nodeChunk.Name)}_color", colorList));
+
+            // Add UVs from VertUV
+            meshPrim.Attributes.Add(new UsdTexCoordsList($"{CleanPathString(nodeChunk.Name)}_UV", uvList));
+
+            if (hasNormals)
+            {
+                // For faceVarying normals, expand the normals array to match faceVertexIndices
+                // by indexing into the normals using the same indices as vertices
+                var faceVaryingNormals = indices.Data.Select(idx => normals.Data[(int)idx]).ToList();
+                meshPrim.Attributes.Add(new UsdNormalsList("normals", faceVaryingNormals));
+            }
+
+            meshPrim.Attributes.Add(new UsdToken<string>("subdivisionScheme", "none", true));
+            Dictionary<string, object> matBindingApi = new() { ["apiSchemas"] = "[\"MaterialBindingAPI\"]" };
+            meshPrim.Properties = [new UsdProperty(matBindingApi, true)];
+
+            foreach (var subset in meshChunk.GeometryInfo.GeometrySubsets ?? [])
+            {
+                var index = subset.MatID;
+                var matName = GetMaterialName(
+                    Path.GetFileNameWithoutExtension(nodeChunk.MaterialFileName),
+                    _cryData.Materials[nodeChunk.MaterialFileName].SubMaterials[index].Name);
+                var cleanMatName = CleanPathString(matName);
+
+                var submeshPrim = new UsdGeomSubset(cleanMatName);
+
+                // Convert vertex index range to face index range
+                // subset.FirstIndex and subset.NumIndices refer to vertex indices
+                // For elementType="face", we need face indices (triangle numbers)
+                // Each face has 3 vertices, so face_index = vertex_index / 3
+                int firstFace = (int)subset.FirstIndex / 3;
+                int numFaces = (int)subset.NumIndices / 3;
+                var faceIndices = Enumerable.Range(firstFace, numFaces).Select(i => (uint)i).ToList();
+
+                submeshPrim.Attributes.Add(new UsdUIntList("indices", faceIndices));
+                submeshPrim.Attributes.Add(new UsdToken<string>("elementType", "face", true));
+                submeshPrim.Attributes.Add(new UsdToken<string>("familyName", "materialBind", true));
+                meshPrim.Children.Add(submeshPrim);
+
+                // Assign material to submesh
+                submeshPrim.Properties = [new UsdProperty(matBindingApi, true)];
+                submeshPrim.Attributes.Add(
+                    new UsdRelativePath(
+                        "material:binding",
+                        $"/root/_materials/{cleanMatName}"));
+            }
+
+            // Add skinning data if present
+            if (_cryData.SkinningInfo?.HasSkinningInfo ?? false)
+            {
+                AddSkinningAttributes(meshPrim, nodeChunk);
+            }
+        }
 
         return meshPrim;
     }
