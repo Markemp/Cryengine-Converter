@@ -173,65 +173,117 @@ The `-objectdir` argument is critical for correct material loading. Without it, 
 ### Working with Materials
 Materials are loaded lazily during `CreateMaterials()`. Check `MaterialUtilities.LoadMaterial()` for resolution logic. Binary XML materials require `CryXmlSerializer` - add breakpoints there if materials aren't loading correctly.
 
-## TODO - Renderer Architecture & Maintainability
+## Renderer Architecture Pattern
 
-### Refactor Renderer Organization
-**Problem**: Renderer classes are becoming large monolithic files that are hard to maintain:
-- `ColladaModelRenderer.cs`: **1585 lines** - single file
-- `UsdRenderer.cs`: **463 lines** - growing quickly
-- `GltfRenderer`: Uses partial classes to split concerns (Animation, Material, Buffers, Geometry, SwapAxes)
+### Partial Classes Pattern (ADOPTED)
+**Decision**: Use partial classes pattern for renderer organization, following GltfRenderer precedent.
 
-**Options to Consider**:
+**Rationale**:
+- Maintains single logical type with shared private state
+- Easy navigation and IntelliSense support
+- Avoids state management complexity of composition
+- Consistent with existing GltfRenderer architecture
+- Natural fit for tightly coupled rendering operations
 
-1. **Partial Classes** (GltfRenderer approach)
-   - `UsdRenderer.Materials.cs` - Material and shader creation
-   - `UsdRenderer.Geometry.cs` - Mesh and geometry processing
-   - `UsdRenderer.Hierarchy.cs` - Node hierarchy and transforms
-   - `UsdRenderer.cs` - Main coordination and public API
-   - **Pros**: Keeps everything in one logical type, easy navigation, shared private state
-   - **Cons**: Still technically one class, can feel like hiding complexity
+**Standard Organization** (apply to new/refactored renderers):
+- `{Renderer}.cs` - Main class, constructor, public API, orchestration (Render, GenerateObject, WriteToFile)
+- `{Renderer}.Materials.cs` - Material/shader creation, texture handling
+- `{Renderer}.Geometry.cs` - Mesh creation, vertex/index processing
+- `{Renderer}.Skeleton.cs` - Skeletal animation, skinning (if applicable)
+- `{Renderer}.Utilities.cs` - Helper methods (path cleaning, resolvers, etc.)
 
-2. **Component Classes with Composition**
-   - `UsdMaterialBuilder.cs` - Creates materials/shaders
-   - `UsdGeometryBuilder.cs` - Handles mesh creation
-   - `UsdHierarchyBuilder.cs` - Builds node trees
-   - `UsdRenderer.cs` - Orchestrates components
-   - **Pros**: Better separation of concerns, easier to test components, clearer dependencies
-   - **Cons**: More files, need to manage state sharing, potential over-engineering
+**Applied to UsdRenderer** (in progress):
+- `UsdRenderer.cs` - Main orchestration
+- `UsdRenderer.Materials.cs` - CreateMaterials, CreateShaders, shader loading/rules
+- `UsdRenderer.Geometry.cs` - CreateMeshPrim, CreateNodeHierarchy, CreateNode
+- `UsdRenderer.Skeleton.cs` - CreateSkeleton, AddSkinningAttributes, joint transforms
 
-3. **Hybrid Approach**
-   - Keep UsdRenderer partial classes for closely coupled logic
-   - Extract independent utilities/builders as separate classes (e.g., `UsdMaterialBuilder`, `UsdTextureResolver`)
-   - **Pros**: Balance of organization without over-abstraction
-   - **Cons**: Need to decide what stays vs. what gets extracted
+**Future Refactoring**:
+- `ColladaModelRenderer.cs` (**1585 lines**) - Most urgently needs refactoring
+- Consider applying pattern when adding significant features or during major maintenance
 
-**Current UsdRenderer responsibilities**:
-- Materials: `CreateMaterials()`, `CreateShaders()`, `CreateUsdImageTextureShader()`, `GetMaterialName()`
-- Hierarchy: `CreateNodeHierarchy()`, `CreateNode()`
-- Geometry: `CreateMeshPrim()`
-- Utilities: `CleanPathString()`, `ResolveTextureFile()`
-- Orchestration: `GenerateUsdObject()`, `Render()`, `WriteUsdToFile()`
+## USD Export - Active Development
 
-**Action Items**:
-- Evaluate which approach best fits the codebase philosophy
-- Consider applying same pattern to ColladaModelRenderer (needs refactoring most urgently)
-- Ensure test coverage before refactoring
-- Document chosen pattern in this file for consistency across renderers
+### Shader-Based Material System (IN PROGRESS)
 
-## TODO - USD Export
+**Goal**: Implement shader definition parsing to accurately interpret material properties based on `StringGenMask` flags, enabling proper material node graphs in USD format.
 
-### Material System Improvements
-- **Shader-based material node layout**: Use CryEngine shader definitions (e.g., `MechCockpit.Ext`, `Illum.Ext`) to create accurate material node graphs
-  - Parse shader files from `D:\depot\MWO Shaders\Shaders\` to understand channel mapping rules
-  - Different shaders define different texture channel interpretations (diffuse alpha, specular channels, etc.)
-  - Current implementation naively connects diffuse alpha to opacity, which causes unwanted transparency in some materials
-  - Shader files contain texture slot definitions and channel routing that should inform USD/glTF material creation
-  - Example: MechCockpit shader may use diffuse alpha differently than standard PBR materials
+**Shader File Format (.ext)**:
+- Location: `<objectdir>/Shaders/<ShaderName>.ext` (e.g., `d:\depot\mwo\Shaders\MechCockpit.ext`)
+- Text-based property definitions with Name, Mask, Description, Dependencies
+- 40 shader files total in MWO, 17 use `UsesCommonGlobalFlags`
+- Property blocks define how texture channels map to material inputs
+
+**UsesCommonGlobalFlags**: Metadata directive indicating the shader uses standard material properties (diffuse, specular, environment maps, etc.). Not an inheritance mechanism - each .ext file contains complete property definitions. Shaders without this flag are typically post-processing or special effects that don't need material properties. **Decision**: Ignore this directive; parse complete property list from each shader file.
+
+**Example StringGenMask Parsing**:
+- Material has `Shader="mechcockpit"` and `StringGenMask="%ALPHAGLOW%ENVIRONMENT_MAP%GLOSS_MAP%SPECULARPOW_GLOSSALPHA%VERTCOLORS"`
+- Parser splits flags and looks up definitions in MechCockpit.ext:
+  - `%ALPHAGLOW` (Mask 0x2000): "Use alpha channel of diffuse texture for glow" → Connect diffuse.alpha to emissiveColor
+  - `%SPECULARPOW_GLOSSALPHA` (Mask 0x800): "Use specular map alpha channel as gloss map" → Connect specular.alpha to roughness
+  - `%ENVIRONMENT_MAP` (Mask 0x80): "Use environment map as separate texture" → Enable environment mapping
+  - `%GLOSS_MAP` (Mask 0x10): "Use gloss map as separate texture" → Enable gloss texture
+  - `%VERTCOLORS` (Mask 0x400000): "Use vertex colors" → Enable vertex color attribute
+
+**Implementation Plan**:
+
+1. **Data Models** (`CgfConverter/Models/Shaders/`)
+   - `ShaderProperty.cs` - Single property from .ext (Name, Mask, Description, Dependencies)
+   - `ShaderDefinition.cs` - Complete shader (ShaderName, Properties dictionary)
+   - `MaterialRule.cs` - Applied rule (PropertyName, TextureSlot, TargetChannel, OutputTarget)
+
+2. **Parser** (`CgfConverter/Parsers/ShaderExtParser.cs`)
+   - Parse .ext text format property blocks
+   - Build `ShaderDefinition` objects with property dictionaries
+   - Cache parsed shaders for reuse
+
+3. **Rules Engine** (`CgfConverter/Renderers/USD/ShaderRulesEngine.cs`)
+   - Takes Material + ShaderDefinition
+   - Parses StringGenMask into flags (split by '%')
+   - Generates MaterialRule list to apply
+   - Handles channel routing (e.g., diffuse.alpha → emissive vs opacity)
+
+4. **UsdRenderer Refactoring** (Partial Classes - following GltfRenderer pattern)
+   - `UsdRenderer.cs` - Main class, orchestration (Render, GenerateUsdObject, WriteUsdToFile)
+   - `UsdRenderer.Materials.cs` - Material/shader creation (CreateMaterials, CreateShaders, shader loading)
+   - `UsdRenderer.Geometry.cs` - Mesh creation (CreateMeshPrim, CreateNodeHierarchy, CreateNode)
+   - `UsdRenderer.Skeleton.cs` - Skeletal animation (CreateSkeleton, AddSkinningAttributes, etc.)
+   - Shared state via private fields accessible to all partials
+
+5. **Texture Support Extensions**
+   - Specular textures: Connect to `inputs:specularColor` or create channel router nodes
+   - Bumpmap textures: Connect to normal input (may need UsdNormalMap node)
+   - Environment textures: Skip (USD PreviewSurface doesn't support cubemaps)
+   - Detail textures: Handle with blending where applicable
+   - Unknown shader properties: Log at Debug level, continue processing
+
+6. **Material Creation Flow** (in `UsdRenderer.Materials.cs`)
+   ```
+   Startup:
+     - Load all .ext files from <objectdir>/Shaders
+     - Parse and cache ShaderDefinition objects
+
+   Per Material:
+     1. Look up ShaderDefinition from material.Shader property (case-insensitive)
+     2. Parse StringGenMask into active flags
+     3. Use ShaderRulesEngine to generate MaterialRules
+     4. Create texture shader nodes for all supported types (Diffuse, Specular, Bumpmap)
+     5. Apply MaterialRules to configure connections (channel routing, alpha handling)
+     6. Create PrincipledBSDF with all connections based on rules
+   ```
+
+**Test Case**: Adder cockpit (`d:\depot\mwo\objects\mechs\cockpit_standard\adder_a_cockpit_standard.cga`)
+- Material file: `d:\depot\mwo\objects\mechs\adder\cockpit_standard\adder_a_cockpit_standard.mtl`
+- "cockpit_shared" material uses MechCockpit shader with %ALPHAGLOW flag
+- Verify diffuse.alpha connects to emissiveColor (not opacity) in exported USD
+
+**Current Status**: Planning complete, ready to implement data models and parser.
+
+### Future Material Improvements
 - **Metallic detection heuristic**: Investigate using `Shader`, `MtlFlags`, or specular properties to auto-detect metallic materials
   - Check if `Shader="Metal"` exists in any materials
   - Consider using `Glossiness` property (currently unused)
   - Analyze specular color patterns (colored specular might indicate metallic)
-- **Texture support**: Add diffuse/normal/specular texture mapping to USD materials
 - **Material validation**: Ensure all MTL properties map correctly to USD PBR workflow
 
 ### Known Issues

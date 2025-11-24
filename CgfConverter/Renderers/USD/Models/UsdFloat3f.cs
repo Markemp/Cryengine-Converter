@@ -25,8 +25,15 @@ public class UsdFloat3f : UsdAttribute
             sb.Append($"float3 {Name}");
         else
         {
-            var stringValue = FormatStringValue($"<{Value}>");
-            sb.Append($"float3 {Name} = {stringValue}");
+            // Connection paths (starting with </) use angle brackets as-is
+            // Other values need to be wrapped in angle brackets
+            if (Value.StartsWith("</") && Value.EndsWith(">"))
+                sb.Append($"float3 {Name} = {Value}");
+            else
+            {
+                var stringValue = FormatStringValue($"<{Value}>");
+                sb.Append($"float3 {Name} = {stringValue}");
+            }
         }
 
 
