@@ -17,8 +17,9 @@ public partial class UsdRenderer
     /// <summary>
     /// Creates animation prims from CryEngine animation data.
     /// Returns a list of SkelAnimation prims to be added to the scene.
+    /// Also updates the USD header with animation timeline info.
     /// </summary>
-    private List<UsdPrim> CreateAnimations(Dictionary<uint, string> controllerIdToJointPath)
+    private List<UsdPrim> CreateAnimations(Dictionary<uint, string> controllerIdToJointPath, UsdHeader header)
     {
         var animations = new List<UsdPrim>();
 
@@ -27,6 +28,8 @@ public partial class UsdRenderer
             Log.D("No animations found in CryEngine data");
             return animations;
         }
+
+        int maxEndFrame = 0;
 
         // Process each animation chunk (typically from .dba files)
         foreach (var animModel in _cryData.Animations)
@@ -44,14 +47,23 @@ public partial class UsdRenderer
 
                 foreach (var (anim, name) in animChunk.Animations.Zip(names))
                 {
-                    var skelAnim = CreateSkelAnimation(anim, animChunk, controllerIdToJointPath, name);
+                    var (skelAnim, endFrame) = CreateSkelAnimation(anim, animChunk, controllerIdToJointPath, name);
                     if (skelAnim is not null)
                     {
                         animations.Add(skelAnim);
-                        Log.D($"Created animation: {name}");
+                        maxEndFrame = Math.Max(maxEndFrame, endFrame);
+                        Log.D($"Created animation: {name} ({endFrame} frames)");
                     }
                 }
             }
+        }
+
+        // Set header timeline info if we have animations
+        if (animations.Count > 0)
+        {
+            header.TimeCodesPerSecond = 30;
+            header.StartTimeCode = 0;
+            header.EndTimeCode = maxEndFrame;
         }
 
         Log.D($"Created {animations.Count} animation(s)");
@@ -60,8 +72,9 @@ public partial class UsdRenderer
 
     /// <summary>
     /// Creates a single SkelAnimation prim from a CryEngine Animation struct.
+    /// Returns the animation prim and the end frame number.
     /// </summary>
-    private UsdSkelAnimation? CreateSkelAnimation(
+    private (UsdSkelAnimation? skelAnim, int endFrame) CreateSkelAnimation(
         ChunkController_905.Animation anim,
         ChunkController_905 animChunk,
         Dictionary<uint, string> controllerIdToJointPath,
@@ -86,74 +99,84 @@ public partial class UsdRenderer
         if (animatedJoints.Count == 0)
         {
             Log.W($"Animation[{animName}]: No valid controllers found");
-            return null;
+            return (null, 0);
         }
 
-        // Collect all unique time values across all tracks (normalized to seconds at 30fps)
-        var allTimes = new SortedSet<float>();
+        // Collect all unique frame numbers across all tracks
+        // CryEngine keyTimes are already in frames (at 30fps)
+        var allFrames = new SortedSet<int>();
         foreach (var controller in anim.Controllers)
         {
             if (controller.HasPosTrack && animChunk.KeyTimes is not null)
             {
                 var times = animChunk.KeyTimes[controller.PosKeyTimeTrack];
-                var startTime = times.Count > 0 ? times[0] : 0;
+                var startTime = times.Count > 0 ? (int)times[0] : 0;
                 foreach (var t in times)
-                    allTimes.Add((t - startTime) / 30f);
+                    allFrames.Add((int)t - startTime);
             }
             if (controller.HasRotTrack && animChunk.KeyTimes is not null)
             {
                 var times = animChunk.KeyTimes[controller.RotKeyTimeTrack];
-                var startTime = times.Count > 0 ? times[0] : 0;
+                var startTime = times.Count > 0 ? (int)times[0] : 0;
                 foreach (var t in times)
-                    allTimes.Add((t - startTime) / 30f);
+                    allFrames.Add((int)t - startTime);
             }
         }
 
-        if (allTimes.Count == 0)
+        if (allFrames.Count == 0)
         {
             Log.W($"Animation[{animName}]: No keyframes found");
-            return null;
+            return (null, 0);
         }
 
-        // Build time-sampled arrays
+        int endFrame = allFrames.Max;
+
+        // Build time-sampled arrays using frame numbers
         // USD expects all joints' values at each time sample
+        // USD SkelAnimation requires translations, rotations, AND scales to be valid
         var translationSamples = new SortedDictionary<float, List<Vector3>>();
         var rotationSamples = new SortedDictionary<float, List<Quaternion>>();
+        var scaleSamples = new SortedDictionary<float, List<Vector3>>();
 
-        foreach (var time in allTimes)
+        foreach (var frame in allFrames)
         {
             var translations = new List<Vector3>();
             var rotations = new List<Quaternion>();
+            var scales = new List<Vector3>();
 
             foreach (var jointPath in animatedJoints)
             {
                 var controller = controllersByJointPath[jointPath];
 
-                // Get translation for this joint at this time
+                // Get translation for this joint at this frame
                 Vector3 translation = Vector3.Zero;
                 if (controller.HasPosTrack && animChunk.KeyTimes is not null && animChunk.KeyPositions is not null)
                 {
-                    translation = SamplePosition(
+                    translation = SamplePositionAtFrame(
                         animChunk.KeyTimes[controller.PosKeyTimeTrack],
                         animChunk.KeyPositions[controller.PosTrack],
-                        time);
+                        frame);
                 }
                 translations.Add(translation);
 
-                // Get rotation for this joint at this time
+                // Get rotation for this joint at this frame
                 Quaternion rotation = Quaternion.Identity;
                 if (controller.HasRotTrack && animChunk.KeyTimes is not null && animChunk.KeyRotations is not null)
                 {
-                    rotation = SampleRotation(
+                    rotation = SampleRotationAtFrame(
                         animChunk.KeyTimes[controller.RotKeyTimeTrack],
                         animChunk.KeyRotations[controller.RotTrack],
-                        time);
+                        frame);
                 }
                 rotations.Add(rotation);
+
+                // CryEngine animations typically don't have scale, use uniform scale
+                scales.Add(Vector3.One);
             }
 
-            translationSamples[time] = translations;
-            rotationSamples[time] = rotations;
+            translationSamples[frame] = translations;
+            rotationSamples[frame] = rotations;
+            scaleSamples[frame] = scales;
         }
 
         // Create the SkelAnimation prim
@@ -169,67 +192,70 @@ public partial class UsdRenderer
         // Add time-sampled rotations
         skelAnim.Attributes.Add(new UsdTimeSampledQuatfArray("rotations", rotationSamples));
 
-        return skelAnim;
+        // Add time-sampled scales (required by USD SkelAnimation spec)
+        skelAnim.Attributes.Add(new UsdTimeSampledFloat3Array("scales", scaleSamples));
+
+        return (skelAnim, endFrame);
     }
 
     /// <summary>
-    /// Samples position at a given time using linear interpolation.
+    /// Samples position at a given frame using linear interpolation.
     /// </summary>
-    private Vector3 SamplePosition(List<float> keyTimes, List<Vector3> keyPositions, float time)
+    private Vector3 SamplePositionAtFrame(List<float> keyTimes, List<Vector3> keyPositions, int frame)
     {
         if (keyTimes.Count == 0 || keyPositions.Count == 0)
             return Vector3.Zero;
 
-        // Normalize times (same as glTF renderer)
+        // Normalize times to frame numbers relative to start
         float startTime = keyTimes[0];
-        var normalizedTimes = keyTimes.Select(t => (t - startTime) / 30f).ToList();
+        var normalizedFrames = keyTimes.Select(t => (int)(t - startTime)).ToList();
 
         // Find surrounding keyframes
         int i = 0;
-        while (i < normalizedTimes.Count - 1 && normalizedTimes[i + 1] <= time)
+        while (i < normalizedFrames.Count - 1 && normalizedFrames[i + 1] <= frame)
             i++;
 
         if (i >= keyPositions.Count)
             return keyPositions[^1];
 
-        if (i == normalizedTimes.Count - 1 || normalizedTimes[i] >= time)
+        if (i == normalizedFrames.Count - 1 || normalizedFrames[i] >= frame)
             return keyPositions[i];
 
         // Linear interpolation
-        float t0 = normalizedTimes[i];
-        float t1 = normalizedTimes[i + 1];
-        float alpha = (time - t0) / (t1 - t0);
+        int f0 = normalizedFrames[i];
+        int f1 = normalizedFrames[i + 1];
+        float alpha = (float)(frame - f0) / (f1 - f0);
 
         return Vector3.Lerp(keyPositions[i], keyPositions[Math.Min(i + 1, keyPositions.Count - 1)], alpha);
     }
 
     /// <summary>
-    /// Samples rotation at a given time using spherical linear interpolation.
+    /// Samples rotation at a given frame using spherical linear interpolation.
     /// </summary>
-    private Quaternion SampleRotation(List<float> keyTimes, List<Quaternion> keyRotations, float time)
+    private Quaternion SampleRotationAtFrame(List<float> keyTimes, List<Quaternion> keyRotations, int frame)
     {
         if (keyTimes.Count == 0 || keyRotations.Count == 0)
             return Quaternion.Identity;
 
-        // Normalize times (same as glTF renderer)
+        // Normalize times to frame numbers relative to start
         float startTime = keyTimes[0];
-        var normalizedTimes = keyTimes.Select(t => (t - startTime) / 30f).ToList();
+        var normalizedFrames = keyTimes.Select(t => (int)(t - startTime)).ToList();
 
         // Find surrounding keyframes
         int i = 0;
-        while (i < normalizedTimes.Count - 1 && normalizedTimes[i + 1] <= time)
+        while (i < normalizedFrames.Count - 1 && normalizedFrames[i + 1] <= frame)
             i++;
 
         if (i >= keyRotations.Count)
             return keyRotations[^1];
 
-        if (i == normalizedTimes.Count - 1 || normalizedTimes[i] >= time)
+        if (i == normalizedFrames.Count - 1 || normalizedFrames[i] >= frame)
             return keyRotations[i];
 
         // Spherical linear interpolation
-        float t0 = normalizedTimes[i];
-        float t1 = normalizedTimes[i + 1];
-        float alpha = (time - t0) / (t1 - t0);
+        int f0 = normalizedFrames[i];
+        int f1 = normalizedFrames[i + 1];
+        float alpha = (float)(frame - f0) / (f1 - f0);
 
         return Quaternion.Slerp(keyRotations[i], keyRotations[Math.Min(i + 1, keyRotations.Count - 1)], alpha);
     }

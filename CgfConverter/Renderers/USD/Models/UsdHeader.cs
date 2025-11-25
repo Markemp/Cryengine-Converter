@@ -37,7 +37,13 @@ public class UsdHeader
         sb.AppendLine("(");
         sb.AppendLine($"    defaultPrim = \"{DefaultPrim}\"");
         sb.AppendLine($"    doc = \"{Doc}\"");
+        if (EndTimeCode.HasValue)
+            sb.AppendLine($"    endTimeCode = {EndTimeCode.Value}");
         sb.AppendLine($"    metersPerUnit = {MetersPerUnit}");
+        if (StartTimeCode.HasValue)
+            sb.AppendLine($"    startTimeCode = {StartTimeCode.Value}");
+        if (TimeCodesPerSecond.HasValue)
+            sb.AppendLine($"    timeCodesPerSecond = {TimeCodesPerSecond.Value}");
         sb.AppendLine($"    upAxis = \"{UpAxis}\"");
         sb.AppendLine(")");
         return sb.ToString();

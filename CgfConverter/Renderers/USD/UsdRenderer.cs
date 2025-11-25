@@ -121,7 +121,7 @@ public partial class UsdRenderer : IRenderer
             // Create animations if available
             if (_cryData.Animations is not null && _cryData.Animations.Count > 0)
             {
-                var animations = CreateAnimations(controllerIdToJointPath);
+                var animations = CreateAnimations(controllerIdToJointPath, usdDoc.Header);
                 if (animations.Count > 0)
                 {
                     // Add animations under the skeleton root
