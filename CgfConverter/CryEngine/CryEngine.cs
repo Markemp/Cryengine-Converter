@@ -151,8 +151,8 @@ public partial class CryEngine
                     if (hasGeometry)
                     {
                         chunkMesh.ScalingVectors = geometryMeshDetails.ScalingBoundingBox;
-                        chunkMesh.MaxBound = geometryMeshDetails.BoundingBox.Max;
-                        chunkMesh.MinBound = geometryMeshDetails.BoundingBox.Min;
+                        chunkMesh.MaxBound = node.BoundingBoxMax;
+                        chunkMesh.MinBound = node.BoundingBoxMin;
                         chunkMesh.NumVertices = (int)skinMesh.MeshDetails.NumberOfVertices;
                         chunkMesh.NumIndices = (int)skinMesh.MeshDetails.NumberOfIndices;
                         chunkMesh.NumVertSubsets = skinMesh.MeshDetails.NumberOfSubmeshes;
