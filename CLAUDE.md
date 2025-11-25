@@ -124,6 +124,23 @@ Release builds support parallel file processing via `-maxthreads` argument. Debu
 ### Test Categories
 Integration tests use `[TestCategory("unit")]` or `[TestCategory("integration")]` attributes. Unit tests run fast without external dependencies. Integration tests require game asset files and validate XML schema compliance.
 
+### Manual Render Tests (Fast Iteration)
+For quick iteration when developing renderers, use `ManualRenderTests.cs` in `CgfConverterIntegrationTests/IntegrationTests/`. These tests:
+- Run directly from Visual Studio Test Explorer (no publish/command-line needed)
+- Output files to the source asset's directory (e.g., `.usda` next to `.cga`)
+- Are excluded from CI via `[TestCategory("manual")]`
+
+**To add a new test file:**
+```csharp
+[TestMethod]
+public void MWO_YourAsset_USD()
+{
+    RenderToUsd($@"{mwoObjectDir}\path\to\asset.cga", mwoObjectDir);
+}
+```
+
+Helper methods available: `RenderToUsd()`, `RenderToCollada()`, `RenderToGltf()`
+
 ### Material File Resolution
 The `-objectdir` argument is critical for correct material loading. Without it, materials may not be found and defaults will be generated. The resolver caches paths and tries multiple locations (as-provided, same directory, ObjectDir).
 
@@ -291,7 +308,10 @@ Materials are loaded lazily during `CreateMaterials()`. Check `MaterialUtilities
 - ~~**Normal count mismatch**: "Loop normal count mismatch" warning~~ - FIXED: Expand normals array to match faceVertexIndices for faceVarying interpolation
 - ~~**Ivo format file size explosion**: 700MB+ output files~~ - FIXED: Extract only per-subset vertices and remap indices (same fix as Collada/glTF renderers)
 - ~~**Skeleton infinite recursion**: Stack overflow in BuildJointPaths~~ - FIXED: Added cycle detection to skip already-processed bones
-- **Node transforms incorrect**: Child nodes not positioned correctly in complex models (e.g., Avenger spaceship). Need to investigate xformOp:transform matrix handling - likely coordinate system or matrix format mismatch. **Priority: Fix before armature/skinning work.**
+- **Node transforms incorrect**: Child nodes not positioned correctly in complex models (e.g., Avenger spaceship). Currently using `node.Transform` directly. **Attempted fixes that didn't work:**
+  - `node.LocalTransform` (full transpose): Translations lost, all objects at origin
+  - Transpose 3x3 rotation only + move translation to row 4: Translations wrong
+  - **Priority: Fix before armature/skinning work.**
 
 ### Mechanic.chr bone matrices for Bip01, Bip01_Pelvis, Bip01_L_Thigh.  
 
