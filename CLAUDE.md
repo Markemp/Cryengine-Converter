@@ -303,6 +303,22 @@ Materials are loaded lazily during `CreateMaterials()`. Check `MaterialUtilities
   - Analyze specular color patterns (colored specular might indicate metallic)
 - **Material validation**: Ensure all MTL properties map correctly to USD PBR workflow
 
+### Animation Support (IMPLEMENTED for .dba, TODO for .caf)
+
+**Current Status**: USD animation export implemented for `.dba` animation databases via `UsdRenderer.Animation.cs`.
+
+**How it works**:
+- Animations loaded from `.chrparams` file's `$TracksDatabase` entry pointing to a `.dba` file
+- Animation data stored as USD `SkelAnimation` prims with time-sampled translations/rotations
+- First animation automatically bound as skeleton's `skel:animationSource`
+
+**TODO - Individual .caf file support**:
+- `.caf` files are individual animation clips (vs `.dba` which is a database of many animations)
+- `.chrparams` lists individual `.caf` files with animation names (e.g., `<Animation name="walk" path="walk.caf"/>`)
+- Currently only `$TracksDatabase`/`#filepath` entries are processed
+- Need to extend `CryEngine.CreateAnimations()` to also load individual `.caf` files
+- `.caf` files use the same `ChunkController` chunk format as `.dba`
+
 ### Known Issues
 - ~~**GeomSubset indices**: "invalid indices" warning in Blender~~ - FIXED: Convert vertex indices to face indices for elementType="face"
 - ~~**Normal count mismatch**: "Loop normal count mismatch" warning~~ - FIXED: Expand normals array to match faceVertexIndices for faceVarying interpolation

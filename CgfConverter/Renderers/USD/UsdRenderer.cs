@@ -6,6 +6,7 @@ using CgfConverter.Renderers.USD.Models;
 using CgfConverter.Utils;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace CgfConverter.Renderers.USD;
@@ -105,16 +106,37 @@ public partial class UsdRenderer : IRenderer
 
         // Check if this model has skeletal animation
         bool hasSkeleton = _cryData.SkinningInfo?.HasSkinningInfo ?? false;
+        Dictionary<uint, string>? controllerIdToJointPath = null;
 
         if (hasSkeleton)
         {
             // Create skeleton hierarchy
             Log.D("Model has skeleton with {0} bones", _cryData.SkinningInfo.CompiledBones.Count);
-            var skelRoot = CreateSkeleton();
+            var skelRoot = CreateSkeleton(out controllerIdToJointPath);
             rootPrim.Children.Add(skelRoot);
 
             // Add skinned node hierarchy under the skeleton root
             skelRoot.Children.AddRange(CreateNodeHierarchy());
+
+            // Create animations if available
+            if (_cryData.Animations is not null && _cryData.Animations.Count > 0)
+            {
+                var animations = CreateAnimations(controllerIdToJointPath);
+                if (animations.Count > 0)
+                {
+                    // Add animations under the skeleton root
+                    skelRoot.Children.AddRange(animations);
+
+                    // Add animation source relationship to skeleton (use first animation as default)
+                    var firstAnimName = CleanPathString(animations[0].Name);
+                    var skeleton = skelRoot.Children.OfType<UsdSkeleton>().FirstOrDefault();
+                    if (skeleton is not null)
+                    {
+                        skeleton.Attributes.Add(
+                            new UsdRelationship("skel:animationSource", $"</root/Armature/{firstAnimName}>"));
+                    }
+                }
+            }
         }
         else
         {
