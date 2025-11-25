@@ -71,6 +71,12 @@ public class ManualRenderTests
     }
 
     [TestMethod]
+    public void MWO_AdderChr_USD()
+    {
+        RenderToUsd($@"{mwoObjectDir}\objects\mechs\adder\body\adder.chr", mwoObjectDir);
+    }
+
+    [TestMethod]
     public void MWO_Mechanic_Collada()
     {
         RenderToCollada($@"{mwoObjectDir}\objects\characters\mechanic\mechanic.chr", mwoObjectDir);
@@ -104,6 +110,12 @@ public class ManualRenderTests
     public void SC41_Avenger_USD()
     {
         RenderToUsd($@"{sc41ObjectDir}\Objects\Spaceships\Ships\AEGS\Avenger\AEGS_Avenger.cga", sc41ObjectDir);
+    }
+
+    [TestMethod]
+    public void SC41_Avenger_Gltf()
+    {
+        RenderToGltf($@"{sc41ObjectDir}\Objects\Spaceships\Ships\AEGS\Avenger\AEGS_Avenger.cga", sc41ObjectDir);
     }
 
     #endregion
