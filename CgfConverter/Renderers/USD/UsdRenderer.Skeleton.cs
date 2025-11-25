@@ -185,25 +185,10 @@ public partial class UsdRenderer
     /// <summary>Adds skinning attributes to a mesh prim for skeletal animation.</summary>
     private void AddSkinningAttributes(UsdMesh meshPrim, ChunkNode nodeChunk)
     {
-        // Add SkelBindingAPI schema
-        var skelBindingApi = new Dictionary<string, object> { ["apiSchemas"] = "[\"SkelBindingAPI\"]" };
-
-        // Merge with existing properties or create new
-        if (meshPrim.Properties != null && meshPrim.Properties.Count > 0)
-        {
-            // Update existing properties to include SkelBindingAPI
-            meshPrim.Properties[0].Properties["apiSchemas"] = "[\"MaterialBindingAPI\", \"SkelBindingAPI\"]";
-        }
-        else
-            meshPrim.Properties = [new UsdProperty(skelBindingApi, true)];
-
-        // Add geomBindTransform (usually identity matrix)
-        meshPrim.Attributes.Add(new UsdMatrix4d("primvars:skel:geomBindTransform", Matrix4x4.Identity));
-
         // Get skinning data
         var skinningInfo = _cryData.SkinningInfo;
 
-        // Build joint indices and weights arrays
+        // Build joint indices and weights arrays FIRST to check if we have actual skinning data
         // Use Ext2IntMap if available to map external (mesh) vertices to internal (skinning) vertices
         var jointIndices = new List<int>();
         var jointWeights = new List<float>();
@@ -237,9 +222,24 @@ public partial class UsdRenderer
         }
         else
         {
-            // No skinning data available
+            // No skinning data available - don't add SkelBindingAPI
             return;
         }
+
+        // Only add SkelBindingAPI if we have actual skinning data
+        var skelBindingApi = new Dictionary<string, object> { ["apiSchemas"] = "[\"SkelBindingAPI\"]" };
+
+        // Merge with existing properties or create new
+        if (meshPrim.Properties != null && meshPrim.Properties.Count > 0)
+        {
+            // Update existing properties to include SkelBindingAPI
+            meshPrim.Properties[0].Properties["apiSchemas"] = "[\"MaterialBindingAPI\", \"SkelBindingAPI\"]";
+        }
+        else
+            meshPrim.Properties = [new UsdProperty(skelBindingApi, true)];
+
+        // Add geomBindTransform (usually identity matrix)
+        meshPrim.Attributes.Add(new UsdMatrix4d("primvars:skel:geomBindTransform", Matrix4x4.Identity));
 
         // Add skinning arrays with elementSize (influences per vertex)
         int elementSize = 4; // CryEngine uses up to 4 bone influences per vertex
