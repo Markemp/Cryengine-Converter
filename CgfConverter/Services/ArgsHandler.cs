@@ -379,9 +379,9 @@ public sealed class ArgsHandler
         ExcludeMaterialNameRegexes.AddRange(ExcludeMaterialNames.Select(x => new Regex(x, RegexOptions.Compiled | RegexOptions.IgnoreCase)));
         ExcludeShaderNameRegexes.AddRange(ExcludeShaderNames.Select(x => new Regex(x, RegexOptions.Compiled | RegexOptions.IgnoreCase)));
         
-        // Default to Collada format
+        // Default to USD format
         if (!OutputCollada && !OutputWavefront && !OutputGLB && !OutputGLTF && !OutputUSD)
-            OutputCollada = true;
+            OutputUSD = true;
 
         return 0;
     }
@@ -401,11 +401,11 @@ public sealed class ArgsHandler
         Console.WriteLine("                   Defaults to current directory. Some packfile formats may accept additional options in the form of some.pack.file?key=value&key2=value2.");
         Console.WriteLine("-mtl/mat/material:  (Optional) The material file to use.");
         Console.WriteLine();                        
-        Console.WriteLine(" Export formats.   By default -dae is used.");
+        Console.WriteLine(" Export formats.   By default -usd is used.");
+        Console.WriteLine("-usd/-usda:        Export USD format files (default).");
         Console.WriteLine("-dae:              Export Collada format files.");
         Console.WriteLine("-glb:              Export glb (glTF binary) files.");
         Console.WriteLine("-gltf:             Export file pairs of glTF and bin files.");
-        Console.WriteLine("-usd/-usda:        Export USD format files.");
         Console.WriteLine("-obj:              Export Wavefront format files (Not supported).");
         Console.WriteLine();                        
         Console.WriteLine("  Texture Options.   By default the converter will look for DDS files.");
