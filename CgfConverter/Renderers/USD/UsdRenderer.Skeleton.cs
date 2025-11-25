@@ -43,9 +43,13 @@ public partial class UsdRenderer
     }
 
     /// <summary>Recursively builds joint path strings in USD format (e.g., "Bip01/bip_01_Pelvis/bip_01_Spine").</summary>
-    private void BuildJointPaths(CompiledBone bone, string parentPath, List<string> jointPaths, Dictionary<CompiledBone, string> bonePathMap)
+    private void BuildJointPaths(CompiledBone? bone, string parentPath, List<string> jointPaths, Dictionary<CompiledBone, string> bonePathMap)
     {
         if (bone == null)
+            return;
+
+        // Cycle detection: skip bones we've already processed
+        if (bonePathMap.ContainsKey(bone))
             return;
 
         // Clean bone name for USD compliance

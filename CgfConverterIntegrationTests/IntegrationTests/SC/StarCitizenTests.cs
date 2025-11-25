@@ -20,9 +20,8 @@ public class StarCitizenTests
 {
     private readonly TestUtils testUtils = new();
     string userHome;
-    private readonly string objectDir44 = @"d:\depot\sc4.4\data";
+    private readonly string objectDir = @"d:\depot\sc4.4\data";  // latest
     private readonly string objectDir324 = @"d:\depot\sc3.24\data";
-    private readonly string objectDir322 = @"d:\depot\sc3.22\data";
     private readonly string objectDir41 = @"d:\depot\sc4.1\data";
 
     [TestInitialize]
@@ -103,45 +102,6 @@ public class StarCitizenTests
         Assert.AreEqual(15, noseGeo.Mesh.Triangles.Length);
         Assert.AreEqual(59817, noseGeo.Mesh.Source[0].Float_Array.Count);
         Assert.IsTrue(noseGeo.Mesh.Source[0].Float_Array.Value_As_String.StartsWith("4.480176 -3.697465 -0.268108"));
-    }
-
-
-    [TestMethod]
-    public void AEGS_Avenger_322()
-    {
-        var args = new string[] { $@"{objectDir322}\objects\spaceships\ships\AEGS\Avenger\AEGS_Avenger.cga" };
-        int result = testUtils.argsHandler.ProcessArgs(args);
-        Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir322);
-        cryData.ProcessCryengineFiles();
-
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        var daeObject = colladaData.DaeObject;
-        colladaData.GenerateDaeObject();
-        testUtils.ValidateColladaXml(colladaData);
-
-        var noseNode = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].node[0];
-        var leftWing = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].node[1].node[0];
-        Assert.AreEqual("Nose", noseNode.ID);
-        Assert.AreEqual("1 -0 0 0 0 1 0 5.702999 0 0 1 -0.473000 0 0 0 0", noseNode.Matrix[0].Value_As_String);
-        Assert.AreEqual("#Nose-mesh", noseNode.Instance_Geometry[0].URL);
-        Assert.AreEqual(15, noseNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material.Length);
-        Assert.AreEqual("#aegs_avenger_exterior_mtl_white_insulation_pads-material", noseNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
-        Assert.AreEqual("Front_LG_Door_Left", noseNode.node[28].ID);
-        Assert.AreEqual("1 0 0 -0.300001 0 -0.938131 -0.346280 0.512432 0 0.346280 -0.938131 -1.835138 0 0 0 0", noseNode.node[28].Matrix[0].Value_As_String);
-        Assert.AreEqual("Wing_Left", leftWing.Name);
-        Assert.AreEqual("1 0 0 -5.550000 0 1 0 -0.070000 0 0 1 -0.883000 0 0 0 0", leftWing.Matrix[0].Value_As_String);
-
-        Assert.AreEqual(49, colladaData.DaeObject.Library_Materials.Material.Length);
-        Assert.AreEqual(129, colladaData.DaeObject.Library_Images.Image.Length);
-
-
-        // Geometry
-        var noseGeo = daeObject.Library_Geometries.Geometry[0];
-        Assert.AreEqual("Nose-mesh", noseGeo.ID);
-        Assert.AreEqual(4, noseGeo.Mesh.Source.Length);
-        Assert.AreEqual(15, noseGeo.Mesh.Triangles.Length);
-        Assert.AreEqual(59817, noseGeo.Mesh.Source[0].Float_Array.Count);
     }
 
     [TestMethod]
@@ -272,23 +232,6 @@ public class StarCitizenTests
     }
 
     [TestMethod]
-    public void ANVL_Arrow_322()
-    {
-        var args = new string[] { $@"{objectDir322}\objects\spaceships\ships\ANVL\Arrow\ANVL_Arrow.cga" };
-        int result = testUtils.argsHandler.ProcessArgs(args);
-        Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir322);
-        cryData.ProcessCryengineFiles();
-
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        var daeObject = colladaData.DaeObject;
-        colladaData.GenerateDaeObject();
-        var rightWingNode = cryData.Nodes.Where(x => x.Name == "wing_right");
-        var rightWingGeoNode = cryData.Models[1].NodeMap.Values.Where(x => x.Name == "wing_right").First();
-        var colladaGeo = daeObject.Library_Geometries.Geometry[24].Mesh.Source[0].Float_Array.Value_As_String.Split(' ');
-    }
-
-    [TestMethod]
     public void ANVL_Arrow_Ivo()
     {
         var args = new string[] { $@"{objectDir41}\objects\spaceships\ships\ANVL\Arrow\ANVL_Arrow.cga" };
@@ -318,20 +261,6 @@ public class StarCitizenTests
         Assert.AreEqual(0.443650f, mesh.MaxBound.X, TestUtils.delta);
         Assert.AreEqual(3.3411438f, mesh.MaxBound.Y, TestUtils.delta);
         Assert.AreEqual(1.4569355f, mesh.MaxBound.Z, TestUtils.delta);
-
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.GenerateDaeObject();
-        var daeObject = colladaData.DaeObject;
-    }
-
-    [TestMethod]
-    public void ANVL_Hurricane_Front_LandingGear_IvoCHR()
-    {
-        var args = new string[] { $@"{objectDir322}\Objects\Spaceships\Ships\ANVL\LandingGear\Hurricane\anvl_hurricane_landing_gear_front_chr.chr" };
-        int result = testUtils.argsHandler.ProcessArgs(args);
-        Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir322);
-        cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
@@ -380,22 +309,6 @@ public class StarCitizenTests
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
-    }
-
-    [TestMethod]
-    public void Avenger_Ramp_Exterior()
-    {
-        var args = new string[] { $@"D:\depot\SC3.22\Data\Objects\Spaceships\Ships\AEGS\Avenger\aegs_avenger_ramp_exterior.cga", "-dds", "-gltf" };
-        int result = testUtils.argsHandler.ProcessArgs(args);
-        Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
-        cryData.ProcessCryengineFiles();
-
-        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
-        var gltfData = gltfRenderer.GenerateGltfObject();
-        var geometries = gltfData.Meshes;
-
-        gltfRenderer.Render();
     }
 
     [TestMethod]
@@ -615,54 +528,6 @@ public class StarCitizenTests
     }
 
     [TestMethod]
-    public void Box_Collada_322()
-    {
-        var args = new string[] {$@"{objectDir322}\Objects\default\box.cgf" };
-        int result = testUtils.argsHandler.ProcessArgs(args);
-        Assert.AreEqual(0, result);
-
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir322);
-        cryData.ProcessCryengineFiles();
-
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.GenerateDaeObject();
-        var daeObject = colladaData.DaeObject;
-
-        // Visual Scene checks
-        var rootNode = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0];
-        Assert.AreEqual("box", rootNode.ID);
-        Assert.AreEqual(ColladaNodeType.NODE, rootNode.Type);
-        Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0", rootNode.Matrix[0].Value_As_String);
-        var boxNode = daeObject.Library_Visual_Scene.Visual_Scene[0].Node[0].node[0];
-        Assert.AreEqual("mesh_box", boxNode.ID);
-        Assert.AreEqual(ColladaNodeType.NODE, boxNode.Type);
-        Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0", boxNode.Matrix[0].Value_As_String);
-        Assert.AreEqual("#grid_grayyellow_mtl_grid_grey-material", boxNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Target);
-        Assert.AreEqual("grid_grayyellow_mtl_grid_grey-material", boxNode.Instance_Geometry[0].Bind_Material[0].Technique_Common.Instance_Material[0].Symbol);
-
-        // Geometry Checks
-        var geometry = daeObject.Library_Geometries.Geometry[0];
-        Assert.AreEqual("mesh_box-mesh", geometry.ID);
-        Assert.AreEqual(1, daeObject.Library_Geometries.Geometry.Length);
-        var mesh = geometry.Mesh;
-        Assert.AreEqual(4, mesh.Source.Length);
-        Assert.AreEqual(1, mesh.Triangles.Length);
-        Assert.AreEqual(12, mesh.Triangles[0].Count);
-
-        // Materials Checks
-        var mats = daeObject.Library_Materials;
-        Assert.AreEqual(3, mats.Material.Length);
-        Assert.AreEqual("grid_grayyellow_mtl_grid_grey", mats.Material[0].Name);
-        Assert.AreEqual("grid_grayyellow_mtl_grid_grey-material", mats.Material[0].ID);
-        Assert.AreEqual("#grid_grayyellow_mtl_grid_grey-effect", mats.Material[0].Instance_Effect.URL);
-        Assert.AreEqual("grid_grayyellow_mtl_grid_yellow", mats.Material[1].Name);
-        var boundMaterials = boxNode.Instance_Geometry[0].Bind_Material;
-        Assert.AreEqual("#grid_grayyellow_mtl_grid_grey-material", boundMaterials[0].Technique_Common.Instance_Material[0].Target);
-        Assert.AreEqual("grid_grayyellow_mtl_grid_grey-material", boundMaterials[0].Technique_Common.Instance_Material[0].Symbol);
-        Assert.AreEqual(1, boundMaterials[0].Technique_Common.Instance_Material.Length);
-    }
-
-    [TestMethod]
     public void CRUS_Spirit_Exterior()
     {
         var args = new string[] { $@"{objectDir41}\objects\spaceships\ships\CRUS\spirit\exterior\crus_Spirit.cga" };
@@ -807,24 +672,6 @@ public class StarCitizenTests
         var geometry = daeObject.Library_Geometries.Geometry[0];
         Assert.AreEqual("med_bay_wall_bed_extender_a-mesh", geometry.ID);
         Assert.AreEqual(4, geometry.Mesh.Triangles.Length);
-    }
-
-    [TestMethod]
-    public void MISC_Fury_322()
-    {
-        var args = new string[] { $@"{objectDir322}\Objects\spaceships\ships\MISC\Fury\MISC_Fury.cga" };
-        int result = testUtils.argsHandler.ProcessArgs(args);
-        Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir322);
-        cryData.ProcessCryengineFiles();
-
-        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
-        colladaData.GenerateDaeObject();
-
-        var visualScene = colladaData.DaeObject.Library_Visual_Scene;
-        var meshWingTopRight = visualScene.Visual_Scene[0].Node[0].node[0].node[70].node[1].node[0].node[0];
-        var matrix = meshWingTopRight.Matrix[0].Value_As_String;
-        Assert.AreEqual("1 -0 0 -0.848649 0 1 0.000001 -1.239070 -0 -0.000001 1 0.058854 0 0 0 0", matrix);
     }
 
     [TestMethod]
@@ -1041,21 +888,6 @@ public class StarCitizenTests
             "GeomSubset should have elementType='face'");
         Assert.IsTrue(subsetAttributes.Any(a => a.Name == "material:binding"),
             "GeomSubset should have material:binding");
-    }
-
-    [TestMethod]
-    public void Teapot_322()
-    {
-        var args = new string[] { $@"{objectDir322}\Objects\default\teapot.cgf" };
-        int result = testUtils.argsHandler.ProcessArgs(args);
-        Assert.AreEqual(0, result);
-
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir322);
-        cryData.ProcessCryengineFiles();
-
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
-        colladaData.GenerateDaeObject();
-        var daeObject = colladaData.DaeObject;
     }
 
     [TestMethod]

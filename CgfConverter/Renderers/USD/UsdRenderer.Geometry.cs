@@ -172,7 +172,8 @@ public partial class UsdRenderer
         else if (vertsUvs is not null)
         {
             // Handle Ivo format (Star Citizen) - combined vertex/UV/color data
-            int numVerts = (int)vertsUvs.NumElements;
+            // For Ivo format, we must extract only the vertices used by each subset
+            // and remap indices from global to local (same approach as Collada/glTF renderers)
             var hasNormals = normals is not null;
 
             // Calculate bounding box scaling for Ivo format
@@ -196,32 +197,64 @@ public partial class UsdRenderer
                 useScalingBox = _cryData.InputFile.EndsWith("cga") || _cryData.InputFile.EndsWith("cgf");
             }
 
-            // Extract vertices, UVs, and colors from VertUV structures
-            var vertices = new List<Vector3>(numVerts);
-            var uvList = new List<UV>(numVerts);
-            var colorList = new List<IRGBA>(numVerts);
+            // Extract vertices, UVs, colors, and normals PER-SUBSET (not all data)
+            // This is critical for Ivo format where geometry is shared across nodes
+            var vertices = new List<Vector3>();
+            var uvList = new List<UV>();
+            var colorList = new List<IRGBA>();
+            var normalsList = new List<Vector3>();
 
-            foreach (var vertUv in vertsUvs.Data)
+            foreach (var subset in subsets ?? [])
             {
-                // Apply bounding box scaling to vertices (skip for .skin and .chr files)
-                Vector3 vertex = vertUv.Vertex;
-                if (!_cryData.InputFile.EndsWith("skin") && !_cryData.InputFile.EndsWith("chr"))
+                for (int i = subset.FirstVertex; i < subset.FirstVertex + subset.NumVertices; i++)
                 {
-                    if (useScalingBox)
-                        vertex = (vertex * scalingVector) + scalingBoxCenter;
-                    else
-                        vertex = (vertex * multiplerVector) + boundaryBoxCenter;
+                    var vertUv = vertsUvs.Data[i];
+
+                    // Apply bounding box scaling to vertices (skip for .skin and .chr files)
+                    Vector3 vertex = vertUv.Vertex;
+                    if (!_cryData.InputFile.EndsWith("skin") && !_cryData.InputFile.EndsWith("chr"))
+                    {
+                        if (useScalingBox)
+                            vertex = (vertex * scalingVector) + scalingBoxCenter;
+                        else
+                            vertex = (vertex * multiplerVector) + boundaryBoxCenter;
+                    }
+
+                    vertices.Add(vertex);
+                    uvList.Add(vertUv.UV);
+                    colorList.Add(vertUv.Color);
+
+                    if (hasNormals)
+                        normalsList.Add(normals.Data[i]);
+                }
+            }
+
+            // Remap indices from global to local
+            // Each subset's indices point into the global vertex array, but we've extracted
+            // only the subset vertices concatenated together, so we need to remap
+            var remappedIndices = new List<int>();
+            uint currentOffset = 0;
+
+            foreach (var subset in subsets ?? [])
+            {
+                var firstGlobalIndex = indices.Data[subset.FirstIndex];
+
+                for (int i = 0; i < subset.NumIndices; i++)
+                {
+                    uint globalIndex = indices.Data[subset.FirstIndex + i];
+                    int localIndex = (int)((globalIndex - firstGlobalIndex) + currentOffset);
+                    remappedIndices.Add(localIndex);
                 }
 
-                vertices.Add(vertex);
-                uvList.Add(vertUv.UV);
-                colorList.Add(vertUv.Color);
+                currentOffset += (uint)subset.NumVertices;
             }
+
+            int numFaces = remappedIndices.Count / 3;
 
             meshPrim.Attributes.Add(new UsdBool("doubleSided", true, true));
             meshPrim.Attributes.Add(new UsdVector3dList("extent", [meshChunk.MinBound, meshChunk.MaxBound]));
-            meshPrim.Attributes.Add(new UsdIntList("faceVertexCounts", [.. Enumerable.Repeat(3, (int)(indices.NumElements / 3))]));
-            meshPrim.Attributes.Add(new UsdIntList("faceVertexIndices", [.. indices.Data.Select(x => (int)x)]));
+            meshPrim.Attributes.Add(new UsdIntList("faceVertexCounts", [.. Enumerable.Repeat(3, numFaces)]));
+            meshPrim.Attributes.Add(new UsdIntList("faceVertexIndices", remappedIndices));
             meshPrim.Attributes.Add(new UsdPointsList("points", vertices));
 
             // Add vertex colors from VertUV
@@ -233,8 +266,8 @@ public partial class UsdRenderer
             if (hasNormals)
             {
                 // For faceVarying normals, expand the normals array to match faceVertexIndices
-                // by indexing into the normals using the same indices as vertices
-                var faceVaryingNormals = indices.Data.Select(idx => normals.Data[(int)idx]).ToList();
+                // by indexing into the extracted normals using the remapped indices
+                var faceVaryingNormals = remappedIndices.Select(idx => normalsList[idx]).ToList();
                 meshPrim.Attributes.Add(new UsdNormalsList("normals", faceVaryingNormals));
             }
 
@@ -242,6 +275,9 @@ public partial class UsdRenderer
             Dictionary<string, object> matBindingApi = new() { ["apiSchemas"] = "[\"MaterialBindingAPI\"]" };
             meshPrim.Properties = [new UsdProperty(matBindingApi, true)];
 
+            // For Ivo format with remapped indices, GeomSubsets use sequential face ranges
+            // since all indices are now contiguous after remapping
+            int currentFaceOffset = 0;
             foreach (var subset in meshChunk.GeometryInfo.GeometrySubsets ?? [])
             {
                 var index = subset.MatID;
@@ -252,13 +288,10 @@ public partial class UsdRenderer
 
                 var submeshPrim = new UsdGeomSubset(cleanMatName);
 
-                // Convert vertex index range to face index range
-                // subset.FirstIndex and subset.NumIndices refer to vertex indices
-                // For elementType="face", we need face indices (triangle numbers)
-                // Each face has 3 vertices, so face_index = vertex_index / 3
-                int firstFace = (int)subset.FirstIndex / 3;
-                int numFaces = (int)subset.NumIndices / 3;
-                var faceIndices = Enumerable.Range(firstFace, numFaces).Select(i => (uint)i).ToList();
+                // Face indices are now sequential after remapping
+                int subsetNumFaces = (int)subset.NumIndices / 3;
+                var faceIndices = Enumerable.Range(currentFaceOffset, subsetNumFaces).Select(i => (uint)i).ToList();
+                currentFaceOffset += subsetNumFaces;
 
                 submeshPrim.Attributes.Add(new UsdUIntList("indices", faceIndices));
                 submeshPrim.Attributes.Add(new UsdToken<string>("elementType", "face", true));

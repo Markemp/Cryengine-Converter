@@ -289,6 +289,9 @@ Materials are loaded lazily during `CreateMaterials()`. Check `MaterialUtilities
 ### Known Issues
 - ~~**GeomSubset indices**: "invalid indices" warning in Blender~~ - FIXED: Convert vertex indices to face indices for elementType="face"
 - ~~**Normal count mismatch**: "Loop normal count mismatch" warning~~ - FIXED: Expand normals array to match faceVertexIndices for faceVarying interpolation
+- ~~**Ivo format file size explosion**: 700MB+ output files~~ - FIXED: Extract only per-subset vertices and remap indices (same fix as Collada/glTF renderers)
+- ~~**Skeleton infinite recursion**: Stack overflow in BuildJointPaths~~ - FIXED: Added cycle detection to skip already-processed bones
+- **Node transforms incorrect**: Child nodes not positioned correctly in complex models (e.g., Avenger spaceship). Need to investigate xformOp:transform matrix handling - likely coordinate system or matrix format mismatch. **Priority: Fix before armature/skinning work.**
 
 ### Mechanic.chr bone matrices for Bip01, Bip01_Pelvis, Bip01_L_Thigh.  
 
