@@ -71,9 +71,21 @@ public class ManualRenderTests
     }
 
     [TestMethod]
+    public void MWO_Mechanic_Collada()
+    {
+        RenderToCollada($@"{mwoObjectDir}\objects\characters\mechanic\mechanic.chr", mwoObjectDir);
+    }
+
+    [TestMethod]
     public void MWO_Mechanic_USD()
     {
-        RenderToUsd($@"{mwoObjectDir}\objects\characters\introbay_characters\mechanic.chr", mwoObjectDir);
+        RenderToUsd($@"{mwoObjectDir}\objects\characters\mechanic\mechanic.chr", mwoObjectDir);
+    }
+
+    [TestMethod]
+    public void MWO_Mechanic_Gtlf()
+    {
+        RenderToGltf($@"{mwoObjectDir}\objects\characters\mechanic\mechanic.chr", mwoObjectDir);
     }
 
     [TestMethod]
