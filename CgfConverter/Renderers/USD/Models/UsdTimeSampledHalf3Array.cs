@@ -8,17 +8,18 @@ using System.Text;
 namespace CgfConverter.Renderers.USD.Models;
 
 /// <summary>
-/// Represents time-sampled float3 array for skeletal animation translations.
-/// USD format: float3[] translations.timeSamples = { 0: [(x, y, z), ...], 0.033: [...], ... }
+/// Represents time-sampled half3 array for skeletal animation scales.
+/// USD format: half3[] scales.timeSamples = { 0: [(x, y, z), ...], 1: [...], ... }
+/// Note: USD SkelAnimation requires scales to be half3[] (16-bit precision).
 /// </summary>
-public class UsdTimeSampledFloat3Array : UsdAttribute
+public class UsdTimeSampledHalf3Array : UsdAttribute
 {
     /// <summary>
-    /// Time samples mapping frame time (in seconds) to arrays of Vector3 for all joints.
+    /// Time samples mapping frame number to arrays of Vector3 for all joints.
     /// </summary>
     public SortedDictionary<float, List<Vector3>> TimeSamples { get; set; }
 
-    public UsdTimeSampledFloat3Array(string name, SortedDictionary<float, List<Vector3>> timeSamples)
+    public UsdTimeSampledHalf3Array(string name, SortedDictionary<float, List<Vector3>> timeSamples)
         : base(name, false)
     {
         TimeSamples = timeSamples;
@@ -28,7 +29,7 @@ public class UsdTimeSampledFloat3Array : UsdAttribute
     {
         var sb = new StringBuilder();
         sb.AppendIndent(indentLevel);
-        sb.AppendLine($"float3[] {Name}.timeSamples = {{");
+        sb.AppendLine($"half3[] {Name}.timeSamples = {{");
 
         foreach (var kvp in TimeSamples)
         {
@@ -41,7 +42,6 @@ public class UsdTimeSampledFloat3Array : UsdAttribute
             {
                 if (!first) sb.Append(", ");
                 first = false;
-                // Use fixed-point notation to avoid scientific notation
                 sb.AppendFormat(CultureInfo.InvariantCulture,
                     "({0:0.######}, {1:0.######}, {2:0.######})",
                     v.X, v.Y, v.Z);

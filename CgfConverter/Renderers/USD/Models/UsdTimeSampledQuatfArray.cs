@@ -34,7 +34,7 @@ public class UsdTimeSampledQuatfArray : UsdAttribute
         foreach (var kvp in TimeSamples)
         {
             sb.AppendIndent(indentLevel + 1);
-            sb.Append(kvp.Key.ToString("G", CultureInfo.InvariantCulture));
+            sb.Append(kvp.Key.ToString("0", CultureInfo.InvariantCulture));
             sb.Append(": [");
 
             bool first = true;
@@ -43,8 +43,9 @@ public class UsdTimeSampledQuatfArray : UsdAttribute
                 if (!first) sb.Append(", ");
                 first = false;
                 // USD quaternion format: (real, i, j, k) = (w, x, y, z)
+                // Use fixed-point notation to avoid scientific notation
                 sb.AppendFormat(CultureInfo.InvariantCulture,
-                    "({0:G}, {1:G}, {2:G}, {3:G})",
+                    "({0:0.######}, {1:0.######}, {2:0.######}, {3:0.######})",
                     q.W, q.X, q.Y, q.Z);
             }
 

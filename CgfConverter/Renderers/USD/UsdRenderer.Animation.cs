@@ -192,8 +192,8 @@ public partial class UsdRenderer
         // Add time-sampled rotations
         skelAnim.Attributes.Add(new UsdTimeSampledQuatfArray("rotations", rotationSamples));
 
-        // Add time-sampled scales (required by USD SkelAnimation spec)
-        skelAnim.Attributes.Add(new UsdTimeSampledFloat3Array("scales", scaleSamples));
+        // Add time-sampled scales (required by USD SkelAnimation spec, must be half3[])
+        skelAnim.Attributes.Add(new UsdTimeSampledHalf3Array("scales", scaleSamples));
 
         return (skelAnim, endFrame);
     }
