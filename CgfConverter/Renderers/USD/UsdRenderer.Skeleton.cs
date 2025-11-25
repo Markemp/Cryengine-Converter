@@ -71,7 +71,7 @@ public partial class UsdRenderer
         }
     }
 
-    /// <summary>Gets bind transforms (inverse bind matrices) in joint order.</summary>
+    /// <summary>Gets bind transforms (world-space bone transforms) in joint order.</summary>
     private List<Matrix4x4> GetBindTransforms(List<string> jointPaths, Dictionary<CompiledBone, string> bonePathMap)
     {
         var bindTransforms = new List<Matrix4x4>();
@@ -83,11 +83,18 @@ public partial class UsdRenderer
         {
             if (pathToBone.TryGetValue(jointPath, out var bone))
             {
-                // USD bindTransforms are inverse bind matrices (world-to-bone)
-                // BindPoseMatrix has translation in M14/M24/M34 (column 4)
-                // But USD needs translation in M41/M42/M43 (row 4)
-                // Convert the matrix format
-                bindTransforms.Add(MoveTranslationToRow4(bone.BindPoseMatrix));
+                // USD bindTransforms are world-space transforms (bone-to-world)
+                // CryEngine BindPoseMatrix is worldToBone, so we need to invert it
+                // Then transpose to convert from column-major to row-major for USD
+                if (Matrix4x4.Invert(bone.BindPoseMatrix, out var boneToWorld))
+                {
+                    bindTransforms.Add(Matrix4x4.Transpose(boneToWorld));
+                }
+                else
+                {
+                    Log.W($"Failed to invert BindPoseMatrix for bone {bone.BoneName}, using identity");
+                    bindTransforms.Add(Matrix4x4.Identity);
+                }
             }
             else
             {
@@ -97,33 +104,6 @@ public partial class UsdRenderer
         }
 
         return bindTransforms;
-    }
-
-    /// <summary>
-    /// Converts a Matrix4x4 with translation in column 4 (M14/M24/M34)
-    /// to USD format: move translation to row 4 (M41/M42/M43), keep rotation as-is.
-    /// </summary>
-    private static Matrix4x4 MoveTranslationToRow4(Matrix4x4 source)
-    {
-        return new Matrix4x4
-        {
-            M11 = source.M11,
-            M12 = source.M12,
-            M13 = source.M13,
-            M14 = 0,
-            M21 = source.M21,
-            M22 = source.M22,
-            M23 = source.M23,
-            M24 = 0,
-            M31 = source.M31,
-            M32 = source.M32,
-            M33 = source.M33,
-            M34 = 0,
-            M41 = source.M14,  // Move translation from column 4 to row 4
-            M42 = source.M24,
-            M43 = source.M34,
-            M44 = source.M44
-        };
     }
 
     /// <summary>Gets rest transforms (local-space bone transforms) in joint order.</summary>
@@ -138,39 +118,43 @@ public partial class UsdRenderer
         {
             if (pathToBone.TryGetValue(jointPath, out var bone))
             {
-                // Following the glTF approach for computing local transforms:
-                // 1. Start with BindPoseMatrix (which is LocalTransformMatrix converted - worldToBone)
-                // 2. If has parent: multiply by inverse of parent's BindPoseMatrix to make relative
-                // 3. Invert the result to get the local boneToParent transform
-                // 4. Convert to USD coordinate system
+                // restTransforms are local-space transforms (bone relative to parent)
+                // For root bones: use world transform (boneToWorld)
+                // For child bones: compute relative to parent
 
-                Matrix4x4 matrix = bone.BindPoseMatrix;
+                Matrix4x4 restMatrix;
 
-                // If has parent, make transform relative to parent
-                if (bone.ParentBone != null)
+                if (bone.ParentBone == null)
                 {
-                    if (Matrix4x4.Invert(bone.ParentBone.BindPoseMatrix, out var parentInv))
+                    // Root bone: local = world, invert BindPoseMatrix to get boneToWorld
+                    if (Matrix4x4.Invert(bone.BindPoseMatrix, out var boneToWorld))
                     {
-                        matrix *= parentInv;
+                        restMatrix = boneToWorld;
                     }
                     else
                     {
-                        Log.W($"Failed to invert parent BindPoseMatrix for bone {bone.BoneName}");
+                        Log.W($"Failed to invert BindPoseMatrix for root bone {bone.BoneName}");
+                        restMatrix = Matrix4x4.Identity;
                     }
-                }
-
-                // Invert to get local transform (boneToParent instead of worldToBone)
-                if (Matrix4x4.Invert(matrix, out var localTransform))
-                {
-                    // Convert to USD matrix format (transpose to get row 4 as translation)
-                    localTransform = Matrix4x4.Transpose(localTransform);
-                    restTransforms.Add(localTransform);
                 }
                 else
                 {
-                    Log.W($"Failed to invert matrix for bone {bone.BoneName}, using identity");
-                    restTransforms.Add(Matrix4x4.Identity);
+                    // Child bone: compute local transform relative to parent
+                    // localTransform = parentWorldToBone * childBoneToWorld
+                    //                = parent.BindPoseMatrix * inverse(child.BindPoseMatrix)
+                    if (Matrix4x4.Invert(bone.BindPoseMatrix, out var childBoneToWorld))
+                    {
+                        restMatrix = bone.ParentBone.BindPoseMatrix * childBoneToWorld;
+                    }
+                    else
+                    {
+                        Log.W($"Failed to invert BindPoseMatrix for bone {bone.BoneName}");
+                        restMatrix = Matrix4x4.Identity;
+                    }
                 }
+
+                // Transpose to convert from column-major to row-major for USD
+                restTransforms.Add(Matrix4x4.Transpose(restMatrix));
             }
             else
             {
