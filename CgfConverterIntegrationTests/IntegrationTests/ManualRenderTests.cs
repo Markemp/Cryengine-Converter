@@ -35,6 +35,12 @@ public class ManualRenderTests
     #region MWO Test Files
 
     [TestMethod]
+    public void _50Cal_Necklace_USD()
+    {
+        RenderToUsd($@"{mwoObjectDir}\Objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.chr", mwoObjectDir);
+    }
+
+    [TestMethod]
     public void MWO_Box_USD()
     {
         RenderToUsd($@"{mwoObjectDir}\Objects\default\box.cgf", mwoObjectDir);
