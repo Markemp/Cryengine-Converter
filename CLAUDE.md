@@ -215,9 +215,14 @@ Materials are loaded lazily during `CreateMaterials()`. Check `MaterialUtilities
 - `UsdRenderer.Geometry.cs` - CreateMeshPrim, CreateNodeHierarchy, CreateNode
 - `UsdRenderer.Skeleton.cs` - CreateSkeleton, AddSkinningAttributes, joint transforms
 
-**Future Refactoring**:
-- `ColladaModelRenderer.cs` (**1585 lines**) - Most urgently needs refactoring
-- Consider applying pattern when adding significant features or during major maintenance
+**Applied to ColladaModelRenderer** (COMPLETED):
+- `ColladaModelRenderer.cs` - Main orchestration (144 lines)
+- `ColladaModelRenderer.Animation.cs` - Animation export with matrix-based keyframes (322 lines)
+- `ColladaModelRenderer.Materials.cs` - Material/texture creation (324 lines)
+- `ColladaModelRenderer.Geometry.cs` - Mesh processing (429 lines)
+- `ColladaModelRenderer.Skeleton.cs` - Controller/bone/skinning (292 lines)
+- `ColladaModelRenderer.Nodes.cs` - Visual scene hierarchy (239 lines)
+- `ColladaModelRenderer.Utilities.cs` - String formatting helpers (51 lines)
 
 ## USD Export - Active Development
 
@@ -328,6 +333,33 @@ Materials are loaded lazily during `CreateMaterials()`. Check `MaterialUtilities
   - `node.LocalTransform` (full transpose): Translations lost, all objects at origin
   - Transpose 3x3 rotation only + move translation to row 4: Translations wrong
   - **Priority: Fix before armature/skinning work.**
+
+### Multiple UV Layer Support (IN PROGRESS)
+
+**Status**: USD renderer infrastructure complete. Parsing not yet implemented.
+
+**USD Support**: Fully supported via primvars. Each UV set is a separate named primvar:
+- Primary UV: `primvars:{nodeName}_UV` (texCoord2f[])
+- Secondary UV: `primvars:{nodeName}_UV2` (texCoord2f[])
+- Shaders reference UV sets via `UsdPrimvarReader_float2` with `varname` input
+
+**Implementation**:
+- `GeometryInfo.UVs2` property added for second UV layer
+- `UsdRenderer.Geometry.cs` outputs `_UV2` primvar when `UVs2` is populated
+- Collada multi-UV support: TODO (uses multiple `<source>` elements with `TEXCOORD` semantic and `set` indices)
+
+**CryEngine Data Sources** (research needed):
+- Vertex format `eVF_P3S_C4B_T2S_T2S` exists in `Enums.cs` with comment "For UV2 support"
+- Vertex format `eVF_P3F_C4B_T2F_T2F` also supports dual texture coordinates
+- These formats are defined but **not yet parsed** in `ChunkDataStream`
+- Need to identify which games/assets actually use dual-UV vertex formats
+- Parsing would occur in `ChunkDataStream_800.cs` / `ChunkDataStream_801.cs` in the `VERTSUVS` case
+
+**Next Steps**:
+1. Find sample assets that use dual-UV vertex formats
+2. Extend `ChunkDataStream` parsing to extract second UV set
+3. Populate `GeometryInfo.UVs2` during geometry aggregation
+4. Test with USD export to verify primvar output
 
 ### Mechanic.chr bone matrices for Bip01, Bip01_Pelvis, Bip01_L_Thigh.  
 

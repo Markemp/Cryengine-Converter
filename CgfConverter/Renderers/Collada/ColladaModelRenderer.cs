@@ -1,9 +1,7 @@
-using CgfConverter.Collada;
 using CgfConverter.CryEngineCore;
 using CgfConverter.Models.Structs;
 using CgfConverter.Renderers.Collada.Collada;
 using CgfConverter.Renderers.Collada.Collada.Collada_Core.Metadata;
-using CgfConverter.Renderers.Collada.Collada.Collada_Core.Scene;
 using CgfConverter.Utils;
 using System;
 using System.Collections.Generic;
