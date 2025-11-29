@@ -9,6 +9,7 @@ using CgfConverter.Renderers.Collada.Collada.Collada_Core.Technique_Common;
 using CgfConverter.Renderers.Collada.Collada.Collada_Core.Transform;
 using CgfConverter.Renderers.Collada.Collada.Enums;
 using CgfConverter.Renderers.Collada.Collada.Types;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -258,12 +259,51 @@ public partial class ColladaModelRenderer
 
         Matrix4x4 localMatrix = bone.LocalTransformMatrix.ConvertToTransformMatrix();
 
-        ColladaMatrix matrix = new();
-        List<ColladaMatrix> matrices = [];
-        matrix.Value_As_String = CreateStringFromMatrix4x4(localMatrix);
-        matrix.sID = "matrix";
-        matrices.Add(matrix);
-        tmpNode.Matrix = matrices.ToArray();
+        // Decompose the matrix into translation and rotation for Blender compatibility
+        // Blender's Collada importer cannot import matrix-based animations, only decomposed transforms
+        Matrix4x4.Decompose(localMatrix, out var scale, out var rotation, out var translation);
+
+        // Convert quaternion to Euler angles (in radians, then to degrees)
+        var euler = QuaternionToEulerDegrees(rotation);
+
+        // Set decomposed transforms with proper SIDs that animation channels can target
+        // Order: translate -> rotateZ -> rotateY -> rotateX -> scale (Blender convention)
+        tmpNode.Translate =
+        [
+            new ColladaTranslate
+            {
+                sID = "location",
+                Value_As_String = $"{translation.X:F6} {translation.Y:F6} {translation.Z:F6}"
+            }
+        ];
+
+        tmpNode.Rotate =
+        [
+            new ColladaRotate
+            {
+                sID = "rotationZ",
+                Value_As_String = $"0 0 1 {euler.Z:F6}"
+            },
+            new ColladaRotate
+            {
+                sID = "rotationY",
+                Value_As_String = $"0 1 0 {euler.Y:F6}"
+            },
+            new ColladaRotate
+            {
+                sID = "rotationX",
+                Value_As_String = $"1 0 0 {euler.X:F6}"
+            }
+        ];
+
+        tmpNode.Scale =
+        [
+            new ColladaScale
+            {
+                sID = "scale",
+                Value_As_String = $"{scale.X:F6} {scale.Y:F6} {scale.Z:F6}"
+            }
+        ];
 
         // Recursively call this for each of the child bones to this bone.
         if (bone.NumberOfChildren > 0)
