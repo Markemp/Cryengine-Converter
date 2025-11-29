@@ -17,12 +17,14 @@ public partial class ColladaAnimation
     [XmlAttribute("name")]
     public string Name;
 
+    // Element order matters for Collada spec compliance!
+    // Correct order: asset, animation, source, sampler, channel, extra
+
+    [XmlElement(ElementName = "asset")]
+    public ColladaAsset Asset;
 
     [XmlElement(ElementName = "animation")]
     public ColladaAnimation[] Animation;
-
-    [XmlElement(ElementName = "channel")]
-    public ColladaChannel[] Channel;
 
     [XmlElement(ElementName = "source")]
     public ColladaSource[] Source;
@@ -30,8 +32,8 @@ public partial class ColladaAnimation
     [XmlElement(ElementName = "sampler")]
     public ColladaSampler[] Sampler;
 
-    [XmlElement(ElementName = "asset")]
-    public ColladaAsset Asset;
+    [XmlElement(ElementName = "channel")]
+    public ColladaChannel[] Channel;
 
     [XmlElement(ElementName = "extra")]
     public ColladaExtra[] Extra;
