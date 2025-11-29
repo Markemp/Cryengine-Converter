@@ -366,10 +366,15 @@ Materials are loaded lazily during `CreateMaterials()`. Check `MaterialUtilities
 ### Problem
 Animations exported to Collada were not importing into Blender. Blender reported "removed X unused curves".
 
-### Root Cause
+### Root Causes (Two Issues)
+
+1. **Wrong SID**: Joint nodes used `sid="matrix"` instead of `sid="transform"`
+2. **Wrong element order**: Animation XML had `<channel>` before `<source>` elements
+
 Blender's Collada importer expects:
 - Joint nodes with `<matrix sid="transform">` (not decomposed transforms or `sid="matrix"`)
 - Animation channels targeting `BoneName/transform`
+- Animation elements in order: `source`, `sampler`, `channel` (not `channel` first)
 
 ### Solution Implemented
 Changed joint nodes and animations to use matrix-based transforms with SID `transform`:
@@ -395,6 +400,7 @@ Changed joint nodes and animations to use matrix-based transforms with SID `tran
 - Channel targets use `/transform` suffix to match joint's matrix SID
 - Removed `library_animation_clips` (Blender doesn't require it)
 - Matrices built from position (Vector3) + rotation (Quaternion) at each keyframe
+- **Element order fix** in `ColladaAnimation.cs`: Reordered property declarations so XML serializer outputs `source`, `sampler`, `channel` in correct Collada spec order
 
 ### Mechanic.chr bone matrices for Bip01, Bip01_Pelvis, Bip01_L_Thigh.  
 
