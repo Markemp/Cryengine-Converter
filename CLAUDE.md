@@ -361,6 +361,41 @@ Materials are loaded lazily during `CreateMaterials()`. Check `MaterialUtilities
 3. Populate `GeometryInfo.UVs2` during geometry aggregation
 4. Test with USD export to verify primvar output
 
+## Collada Animation Export - Blender Compatibility (FIXED)
+
+### Problem
+Animations exported to Collada were not importing into Blender. Blender reported "removed X unused curves".
+
+### Root Cause
+Blender's Collada importer expects:
+- Joint nodes with `<matrix sid="transform">` (not decomposed transforms or `sid="matrix"`)
+- Animation channels targeting `BoneName/transform`
+
+### Solution Implemented
+Changed joint nodes and animations to use matrix-based transforms with SID `transform`:
+
+**Joint nodes** (`ColladaModelRenderer.Skeleton.cs`):
+```xml
+<node id="Bip01" name="Bip01" sid="Bip01" type="JOINT">
+  <matrix sid="transform">...</matrix>
+</node>
+```
+
+**Animation channels** (`ColladaModelRenderer.Animation.cs`):
+```xml
+<source id="anim_Bip01_output">
+  <float_array count="...">/* 16 floats per keyframe */</float_array>
+  <accessor stride="16"><param type="float4x4"/></accessor>
+</source>
+<channel source="#sampler" target="Bip01/transform"/>
+```
+
+### Key Technical Details
+- Animation output uses `float4x4` matrices (16 values per keyframe)
+- Channel targets use `/transform` suffix to match joint's matrix SID
+- Removed `library_animation_clips` (Blender doesn't require it)
+- Matrices built from position (Vector3) + rotation (Quaternion) at each keyframe
+
 ### Mechanic.chr bone matrices for Bip01, Bip01_Pelvis, Bip01_L_Thigh.  
 
 In Cryengine Matrix3x4 format, where column 4 is translation.  These are row major form.  This information should

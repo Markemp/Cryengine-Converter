@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Text;
+using static CgfConverter.Utilities.HelperMethods;
 
 namespace CgfConverter.Renderers.Collada;
 
@@ -28,7 +30,6 @@ public partial class ColladaModelRenderer
 
         var animationLibrary = new ColladaLibraryAnimations();
         var allAnimations = new List<ColladaAnimation>();
-        var animationClips = new List<ColladaAnimationClip>();
 
         // Find all the 905 controller chunks from animation files (.dba)
         foreach (var animChunk in _cryData.Animations
@@ -41,7 +42,7 @@ public partial class ColladaModelRenderer
             foreach (var animation in animChunk.Animations)
             {
                 var animationName = CleanAnimationName(animation.Name);
-                var (boneAnimations, startTime, endTime) = CreateDecomposedAnimationsForClip(animation, animChunk, animationName);
+                var boneAnimations = CreateMatrixAnimationsForClip(animation, animChunk, animationName);
 
                 if (boneAnimations.Count > 0)
                 {
@@ -54,18 +55,7 @@ public partial class ColladaModelRenderer
                     };
                     allAnimations.Add(rootAnimation);
 
-                    // Create animation clip that references this animation
-                    var clip = new ColladaAnimationClip
-                    {
-                        ID = $"{animationName}_clip",
-                        Name = animationName,
-                        Start = startTime,
-                        End = endTime,
-                        Instance_Animation = [new ColladaInstanceAnimation { URL = $"#{animationName}_animation" }]
-                    };
-                    animationClips.Add(clip);
-
-                    Log.D($"Created animation: {animationName} with {boneAnimations.Count} bone channels ({startTime:F2}s - {endTime:F2}s)");
+                    Log.D($"Created animation: {animationName} with {boneAnimations.Count} bone channels");
                 }
             }
         }
@@ -75,28 +65,20 @@ public partial class ColladaModelRenderer
             animationLibrary.Animation = allAnimations.ToArray();
             DaeObject.Library_Animations = animationLibrary;
 
-            // Add animation clips library so Blender can recognize separate actions
-            DaeObject.Library_Animation_Clips = new ColladaLibraryAnimationClips
-            {
-                Animation_Clip = animationClips.ToArray()
-            };
-
             Log.I($"Exported {allAnimations.Count} animation(s)");
         }
     }
 
     /// <summary>
-    /// Creates decomposed animations for all bones in a single animation clip.
-    /// Returns the bone animations along with the start and end times in seconds.
+    /// Creates matrix-based animations for all bones in a single animation clip.
+    /// Uses float4x4 matrices with channel target "/transform" for Blender compatibility.
     /// </summary>
-    private (List<ColladaAnimation> animations, double startTime, double endTime) CreateDecomposedAnimationsForClip(
+    private List<ColladaAnimation> CreateMatrixAnimationsForClip(
         ChunkController_905.Animation animation,
         ChunkController_905 animChunk,
         string animationName)
     {
         var boneAnimations = new List<ColladaAnimation>();
-        double minTime = double.MaxValue;
-        double maxTime = double.MinValue;
 
         foreach (var controller in animation.Controllers)
         {
@@ -109,35 +91,26 @@ public partial class ColladaModelRenderer
             if (!controller.HasPosTrack && !controller.HasRotTrack)
                 continue;
 
-            var (componentAnims, boneStartTime, boneEndTime) = CreateBoneDecomposedAnimations(controller, animChunk, boneName, animationName);
-            if (componentAnims.Count > 0)
+            var boneAnim = CreateBoneMatrixAnimation(controller, animChunk, boneName, animationName);
+            if (boneAnim is not null)
             {
-                boneAnimations.AddRange(componentAnims);
-                minTime = Math.Min(minTime, boneStartTime);
-                maxTime = Math.Max(maxTime, boneEndTime);
+                boneAnimations.Add(boneAnim);
             }
         }
 
-        // Default to 0 if no animations found
-        if (minTime == double.MaxValue) minTime = 0;
-        if (maxTime == double.MinValue) maxTime = 0;
-
-        return (boneAnimations, minTime, maxTime);
+        return boneAnimations;
     }
 
     /// <summary>
-    /// Creates decomposed animations for a single bone (location + rotation channels).
-    /// Blender's Collada importer requires decomposed transforms, not matrices.
-    /// Returns the animations and the start/end times in seconds.
+    /// Creates a matrix-based animation for a single bone.
+    /// Outputs float4x4 matrices targeting the bone's "transform" SID.
     /// </summary>
-    private (List<ColladaAnimation> animations, double startTime, double endTime) CreateBoneDecomposedAnimations(
+    private ColladaAnimation? CreateBoneMatrixAnimation(
         ChunkController_905.CControllerInfo controller,
         ChunkController_905 animChunk,
         string boneName,
         string animationName)
     {
-        var animations = new List<ColladaAnimation>();
-
         // Collect all unique frame times from both position and rotation tracks
         var frameTimes = new SortedSet<float>();
 
@@ -154,90 +127,51 @@ public partial class ColladaModelRenderer
         }
 
         if (frameTimes.Count == 0)
-            return (animations, 0, 0);
+            return null;
 
         var frameList = frameTimes.ToList();
         var startFrame = frameList[0];
-        var endFrame = frameList[^1];
+        var keyframeCount = frameList.Count;
 
-        // Convert frames to seconds at 30fps
-        double startTimeSeconds = 0;  // Animation starts at 0
-        double endTimeSeconds = (endFrame - startFrame) / 30.0;
-
-        // Sample position and rotation at each frame
-        var positions = new List<Vector3>();
-        var rotations = new List<Vector3>();  // Euler angles in degrees
+        // Build time and matrix output strings
+        var timeValues = new StringBuilder();
+        var matrixValues = new StringBuilder();
 
         foreach (var frame in frameList)
         {
+            // Time in seconds (normalized to start at 0)
+            var timeInSeconds = (frame - startFrame) / 30f;
+            timeValues.Append($"{timeInSeconds:F6} ");
+
+            // Sample position and rotation at this frame
             var position = SamplePositionAtFrame(controller, animChunk, frame);
             var rotation = SampleRotationAtFrame(controller, animChunk, frame);
-            var euler = QuaternionToEulerDegrees(rotation);
 
-            positions.Add(position);
-            rotations.Add(euler);
+            // Build transform matrix from position and rotation
+            var matrix = Matrix4x4.CreateFromQuaternion(rotation);
+            matrix.Translation = position;
+
+            // Append matrix values (row-major for Collada)
+            matrixValues.Append(CreateStringFromMatrix4x4(matrix) + " ");
         }
 
-        var sourceIdBase = $"{animationName}_{boneName}";
-
-        // Create shared time source
-        var timeValues = string.Join(" ", frameList.Select(t => ((t - startFrame) / 30f).ToString("F6")));
-
-        // Create location animations (X, Y, Z)
-        if (controller.HasPosTrack)
-        {
-            animations.Add(CreateComponentAnimation(sourceIdBase, "location_X", boneName, "location.X",
-                frameList.Count, timeValues, positions.Select(p => p.X)));
-            animations.Add(CreateComponentAnimation(sourceIdBase, "location_Y", boneName, "location.Y",
-                frameList.Count, timeValues, positions.Select(p => p.Y)));
-            animations.Add(CreateComponentAnimation(sourceIdBase, "location_Z", boneName, "location.Z",
-                frameList.Count, timeValues, positions.Select(p => p.Z)));
-        }
-
-        // Create rotation animations (rotationX.ANGLE, rotationY.ANGLE, rotationZ.ANGLE)
-        if (controller.HasRotTrack)
-        {
-            animations.Add(CreateComponentAnimation(sourceIdBase, "rotationX", boneName, "rotationX.ANGLE",
-                frameList.Count, timeValues, rotations.Select(r => r.X)));
-            animations.Add(CreateComponentAnimation(sourceIdBase, "rotationY", boneName, "rotationY.ANGLE",
-                frameList.Count, timeValues, rotations.Select(r => r.Y)));
-            animations.Add(CreateComponentAnimation(sourceIdBase, "rotationZ", boneName, "rotationZ.ANGLE",
-                frameList.Count, timeValues, rotations.Select(r => r.Z)));
-        }
-
-        return (animations, startTimeSeconds, endTimeSeconds);
-    }
-
-    /// <summary>
-    /// Creates a single-component animation (e.g., location.X or rotationZ.ANGLE).
-    /// </summary>
-    private static ColladaAnimation CreateComponentAnimation(
-        string sourceIdBase,
-        string componentName,
-        string boneName,
-        string targetPath,
-        int keyframeCount,
-        string timeValues,
-        IEnumerable<float> outputValues)
-    {
-        var componentId = $"{sourceIdBase}_{componentName}";
+        var animId = $"{animationName}_{boneName}";
 
         // Time source
         var timeSource = new ColladaSource
         {
-            ID = $"{componentId}_time",
-            Name = $"{componentId}_time",
+            ID = $"{animId}_time",
             Float_Array = new ColladaFloatArray
             {
-                ID = $"{componentId}_time_array",
+                ID = $"{animId}_time_array",
                 Count = keyframeCount,
-                Value_As_String = timeValues
+                Value_As_String = timeValues.ToString().TrimEnd()
             },
             Technique_Common = new ColladaTechniqueCommonSource
             {
                 Accessor = new ColladaAccessor
                 {
-                    Source = $"#{componentId}_time_array",
+                    Source = $"#{animId}_time_array",
                     Count = (uint)keyframeCount,
                     Stride = 1,
                     Param = [new ColladaParam { Name = "TIME", Type = "float" }]
@@ -245,25 +179,24 @@ public partial class ColladaModelRenderer
             }
         };
 
-        // Output source (single float per keyframe)
+        // Output source (float4x4 matrices)
         var outputSource = new ColladaSource
         {
-            ID = $"{componentId}_output",
-            Name = $"{componentId}_output",
+            ID = $"{animId}_output",
             Float_Array = new ColladaFloatArray
             {
-                ID = $"{componentId}_output_array",
-                Count = keyframeCount,
-                Value_As_String = string.Join(" ", outputValues.Select(v => v.ToString("F6")))
+                ID = $"{animId}_output_array",
+                Count = keyframeCount * 16,
+                Value_As_String = matrixValues.ToString().TrimEnd()
             },
             Technique_Common = new ColladaTechniqueCommonSource
             {
                 Accessor = new ColladaAccessor
                 {
-                    Source = $"#{componentId}_output_array",
+                    Source = $"#{animId}_output_array",
                     Count = (uint)keyframeCount,
-                    Stride = 1,
-                    Param = [new ColladaParam { Name = "VALUE", Type = "float" }]
+                    Stride = 16,
+                    Param = [new ColladaParam { Name = "TRANSFORM", Type = "float4x4" }]
                 }
             }
         };
@@ -271,11 +204,10 @@ public partial class ColladaModelRenderer
         // Interpolation source
         var interpolationSource = new ColladaSource
         {
-            ID = $"{componentId}_interpolation",
-            Name = $"{componentId}_interpolation",
+            ID = $"{animId}_interpolation",
             Name_Array = new ColladaNameArray
             {
-                ID = $"{componentId}_interpolation_array",
+                ID = $"{animId}_interpolation_array",
                 Count = keyframeCount,
                 Value_Pre_Parse = string.Join(" ", Enumerable.Repeat("LINEAR", keyframeCount))
             },
@@ -283,7 +215,7 @@ public partial class ColladaModelRenderer
             {
                 Accessor = new ColladaAccessor
                 {
-                    Source = $"#{componentId}_interpolation_array",
+                    Source = $"#{animId}_interpolation_array",
                     Count = (uint)keyframeCount,
                     Stride = 1,
                     Param = [new ColladaParam { Name = "INTERPOLATION", Type = "name" }]
@@ -294,57 +226,30 @@ public partial class ColladaModelRenderer
         // Sampler
         var sampler = new ColladaSampler
         {
-            ID = $"{componentId}_sampler",
+            ID = $"{animId}_sampler",
             Input =
             [
-                new ColladaInputUnshared { Semantic = ColladaInputSemantic.INPUT, source = $"#{componentId}_time" },
-                new ColladaInputUnshared { Semantic = ColladaInputSemantic.OUTPUT, source = $"#{componentId}_output" },
-                new ColladaInputUnshared { Semantic = ColladaInputSemantic.INTERPOLATION, source = $"#{componentId}_interpolation" }
+                new ColladaInputUnshared { Semantic = ColladaInputSemantic.INPUT, source = $"#{animId}_time" },
+                new ColladaInputUnshared { Semantic = ColladaInputSemantic.OUTPUT, source = $"#{animId}_output" },
+                new ColladaInputUnshared { Semantic = ColladaInputSemantic.INTERPOLATION, source = $"#{animId}_interpolation" }
             ]
         };
 
-        // Channel targeting the bone's decomposed transform
+        // Channel targeting the bone's transform SID (critical: use /transform not /matrix)
         var channel = new ColladaChannel
         {
-            Source = $"#{componentId}_sampler",
-            Target = $"{boneName}/{targetPath}"
+            Source = $"#{animId}_sampler",
+            Target = $"{boneName}/transform"
         };
 
         return new ColladaAnimation
         {
-            ID = $"{componentId}_animation",
-            Name = $"{boneName}_{componentName}",
+            ID = $"{animId}_animation",
+            Name = $"{boneName}_transform",
             Source = [timeSource, outputSource, interpolationSource],
             Sampler = [sampler],
             Channel = [channel]
         };
-    }
-
-    /// <summary>
-    /// Converts a quaternion to Euler angles in degrees (XYZ order).
-    /// </summary>
-    private static Vector3 QuaternionToEulerDegrees(Quaternion q)
-    {
-        // Convert quaternion to Euler angles (radians)
-        // Using ZYX rotation order (which corresponds to XYZ when reading the angles)
-        float sinr_cosp = 2 * (q.W * q.X + q.Y * q.Z);
-        float cosr_cosp = 1 - 2 * (q.X * q.X + q.Y * q.Y);
-        float rollX = MathF.Atan2(sinr_cosp, cosr_cosp);
-
-        float sinp = 2 * (q.W * q.Y - q.Z * q.X);
-        float pitchY;
-        if (MathF.Abs(sinp) >= 1)
-            pitchY = MathF.CopySign(MathF.PI / 2, sinp); // Use 90 degrees if out of range
-        else
-            pitchY = MathF.Asin(sinp);
-
-        float siny_cosp = 2 * (q.W * q.Z + q.X * q.Y);
-        float cosy_cosp = 1 - 2 * (q.Y * q.Y + q.Z * q.Z);
-        float yawZ = MathF.Atan2(siny_cosp, cosy_cosp);
-
-        // Convert to degrees
-        const float radToDeg = 180f / MathF.PI;
-        return new Vector3(rollX * radToDeg, pitchY * radToDeg, yawZ * radToDeg);
     }
 
     /// <summary>
