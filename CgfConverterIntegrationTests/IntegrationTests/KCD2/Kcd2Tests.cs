@@ -135,4 +135,23 @@ public class Kcd2Tests
         Assert.AreEqual(13, textures.Length);
         Assert.AreEqual("boar_mtl_boar_hair_Diffuse", textures[0].Name);
     }
+
+    [TestMethod]
+    public void lvl2_door_a_left_skin()
+    {
+        var args = new string[]
+        {
+            $@"{objectDir}\Objects\characters\assets\doors\lvl2_door_a_left.skin", "-dds", "-dae", "-ut", "-objectdir", objectDir
+        };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var daeObject = colladaData.DaeObject;
+        colladaData.GenerateDaeObject();
+        testUtils.ValidateColladaXml(colladaData);
+
+    }
 }

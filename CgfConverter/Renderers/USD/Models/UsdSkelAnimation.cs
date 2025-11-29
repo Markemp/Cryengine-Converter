@@ -4,13 +4,13 @@ using System.Collections.Generic;
 namespace CgfConverter.Renderers.USD.Models;
 
 /// <summary>
-/// SkelRoot prim marks the scope of skeletal data.
-/// Must be parent to both Skeleton and skinned Meshes.
+/// SkelAnimation prim contains animation data for skeletal animation.
+/// Stores joint transforms as time-sampled arrays.
 /// </summary>
-[UsdElement("SkelRoot")]
-public class UsdSkelRoot : UsdPrim
+[UsdElement("SkelAnimation")]
+public class UsdSkelAnimation : UsdPrim
 {
-    public UsdSkelRoot(string name, List<UsdProperty>? properties = null) : base(name, properties)
+    public UsdSkelAnimation(string name, List<UsdProperty>? properties = null) : base(name, properties)
     {
     }
 

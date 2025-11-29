@@ -86,6 +86,7 @@ Output File (.dae/.gltf/.glb/.obj)
 - `ColladaModelRenderer` - Default, fully featured (.dae)
 - `GltfModelRenderer` - Modern format (.gltf/.glb)
 - `WavefrontModelRenderer` - Deprecated, not supported (.obj)
+- 'UsdRenderer' - Experimental USD export (.usd/.usda/.usdc)
 
 **Material System**: Loads Cryengine .mtl files (text XML or binary CryXmlB format). Supports hierarchical submaterials, texture maps, and material layers. Resolution cascade: explicit paths → ChunkMtlName references → default materials.
 
@@ -122,6 +123,23 @@ Release builds support parallel file processing via `-maxthreads` argument. Debu
 
 ### Test Categories
 Integration tests use `[TestCategory("unit")]` or `[TestCategory("integration")]` attributes. Unit tests run fast without external dependencies. Integration tests require game asset files and validate XML schema compliance.
+
+### Manual Render Tests (Fast Iteration)
+For quick iteration when developing renderers, use `ManualRenderTests.cs` in `CgfConverterIntegrationTests/IntegrationTests/`. These tests:
+- Run directly from Visual Studio Test Explorer (no publish/command-line needed)
+- Output files to the source asset's directory (e.g., `.usda` next to `.cga`)
+- Are excluded from CI via `[TestCategory("manual")]`
+
+**To add a new test file:**
+```csharp
+[TestMethod]
+public void MWO_YourAsset_USD()
+{
+    RenderToUsd($@"{mwoObjectDir}\path\to\asset.cga", mwoObjectDir);
+}
+```
+
+Helper methods available: `RenderToUsd()`, `RenderToCollada()`, `RenderToGltf()`
 
 ### Material File Resolution
 The `-objectdir` argument is critical for correct material loading. Without it, materials may not be found and defaults will be generated. The resolver caches paths and tries multiple locations (as-provided, same directory, ObjectDir).
@@ -171,3 +189,192 @@ The `-objectdir` argument is critical for correct material loading. Without it, 
 
 ### Working with Materials
 Materials are loaded lazily during `CreateMaterials()`. Check `MaterialUtilities.LoadMaterial()` for resolution logic. Binary XML materials require `CryXmlSerializer` - add breakpoints there if materials aren't loading correctly.
+
+## Renderer Architecture Pattern
+
+### Partial Classes Pattern (ADOPTED)
+**Decision**: Use partial classes pattern for renderer organization, following GltfRenderer precedent.
+
+**Rationale**:
+- Maintains single logical type with shared private state
+- Easy navigation and IntelliSense support
+- Avoids state management complexity of composition
+- Consistent with existing GltfRenderer architecture
+- Natural fit for tightly coupled rendering operations
+
+**Standard Organization** (apply to new/refactored renderers):
+- `{Renderer}.cs` - Main class, constructor, public API, orchestration (Render, GenerateObject, WriteToFile)
+- `{Renderer}.Materials.cs` - Material/shader creation, texture handling
+- `{Renderer}.Geometry.cs` - Mesh creation, vertex/index processing
+- `{Renderer}.Skeleton.cs` - Skeletal animation, skinning (if applicable)
+- `{Renderer}.Utilities.cs` - Helper methods (path cleaning, resolvers, etc.)
+
+**Applied to UsdRenderer** (in progress):
+- `UsdRenderer.cs` - Main orchestration
+- `UsdRenderer.Materials.cs` - CreateMaterials, CreateShaders, shader loading/rules
+- `UsdRenderer.Geometry.cs` - CreateMeshPrim, CreateNodeHierarchy, CreateNode
+- `UsdRenderer.Skeleton.cs` - CreateSkeleton, AddSkinningAttributes, joint transforms
+
+**Applied to ColladaModelRenderer** (COMPLETED):
+- `ColladaModelRenderer.cs` - Main orchestration (144 lines)
+- `ColladaModelRenderer.Animation.cs` - Animation export with matrix-based keyframes (322 lines)
+- `ColladaModelRenderer.Materials.cs` - Material/texture creation (324 lines)
+- `ColladaModelRenderer.Geometry.cs` - Mesh processing (429 lines)
+- `ColladaModelRenderer.Skeleton.cs` - Controller/bone/skinning (292 lines)
+- `ColladaModelRenderer.Nodes.cs` - Visual scene hierarchy (239 lines)
+- `ColladaModelRenderer.Utilities.cs` - String formatting helpers (51 lines)
+
+## USD Export - Active Development
+
+### Shader-Based Material System (IN PROGRESS)
+
+**Goal**: Implement shader definition parsing to accurately interpret material properties based on `StringGenMask` flags, enabling proper material node graphs in USD format.
+
+**Shader File Format (.ext)**:
+- Location: `<objectdir>/Shaders/<ShaderName>.ext` (e.g., `d:\depot\mwo\Shaders\MechCockpit.ext`)
+- Text-based property definitions with Name, Mask, Description, Dependencies
+- 40 shader files total in MWO, 17 use `UsesCommonGlobalFlags`
+- Property blocks define how texture channels map to material inputs
+
+**UsesCommonGlobalFlags**: Metadata directive indicating the shader uses standard material properties (diffuse, specular, environment maps, etc.). Not an inheritance mechanism - each .ext file contains complete property definitions. Shaders without this flag are typically post-processing or special effects that don't need material properties. **Decision**: Ignore this directive; parse complete property list from each shader file.
+
+**Example StringGenMask Parsing**:
+- Material has `Shader="mechcockpit"` and `StringGenMask="%ALPHAGLOW%ENVIRONMENT_MAP%GLOSS_MAP%SPECULARPOW_GLOSSALPHA%VERTCOLORS"`
+- Parser splits flags and looks up definitions in MechCockpit.ext:
+  - `%ALPHAGLOW` (Mask 0x2000): "Use alpha channel of diffuse texture for glow" → Connect diffuse.alpha to emissiveColor
+  - `%SPECULARPOW_GLOSSALPHA` (Mask 0x800): "Use specular map alpha channel as gloss map" → Connect specular.alpha to roughness
+  - `%ENVIRONMENT_MAP` (Mask 0x80): "Use environment map as separate texture" → Enable environment mapping
+  - `%GLOSS_MAP` (Mask 0x10): "Use gloss map as separate texture" → Enable gloss texture
+  - `%VERTCOLORS` (Mask 0x400000): "Use vertex colors" → Enable vertex color attribute
+
+**Implementation Plan**:
+
+1. **Data Models** (`CgfConverter/Models/Shaders/`)
+   - `ShaderProperty.cs` - Single property from .ext (Name, Mask, Description, Dependencies)
+   - `ShaderDefinition.cs` - Complete shader (ShaderName, Properties dictionary)
+   - `MaterialRule.cs` - Applied rule (PropertyName, TextureSlot, TargetChannel, OutputTarget)
+
+2. **Parser** (`CgfConverter/Parsers/ShaderExtParser.cs`)
+   - Parse .ext text format property blocks
+   - Build `ShaderDefinition` objects with property dictionaries
+   - Cache parsed shaders for reuse
+
+3. **Rules Engine** (`CgfConverter/Renderers/USD/ShaderRulesEngine.cs`)
+   - Takes Material + ShaderDefinition
+   - Parses StringGenMask into flags (split by '%')
+   - Generates MaterialRule list to apply
+   - Handles channel routing (e.g., diffuse.alpha → emissive vs opacity)
+
+4. **UsdRenderer Refactoring** (Partial Classes - following GltfRenderer pattern)
+   - `UsdRenderer.cs` - Main class, orchestration (Render, GenerateUsdObject, WriteUsdToFile)
+   - `UsdRenderer.Materials.cs` - Material/shader creation (CreateMaterials, CreateShaders, shader loading)
+   - `UsdRenderer.Geometry.cs` - Mesh creation (CreateMeshPrim, CreateNodeHierarchy, CreateNode)
+   - `UsdRenderer.Skeleton.cs` - Skeletal animation (CreateSkeleton, AddSkinningAttributes, etc.)
+   - Shared state via private fields accessible to all partials
+
+5. **Texture Support Extensions**
+   - Specular textures: Connect to `inputs:specularColor` or create channel router nodes
+   - Bumpmap textures: Connect to normal input (may need UsdNormalMap node)
+   - Environment textures: Skip (USD PreviewSurface doesn't support cubemaps)
+   - Detail textures: Handle with blending where applicable
+   - Unknown shader properties: Log at Debug level, continue processing
+
+6. **Material Creation Flow** (in `UsdRenderer.Materials.cs`)
+   ```
+   Startup:
+     - Load all .ext files from <objectdir>/Shaders
+     - Parse and cache ShaderDefinition objects
+
+   Per Material:
+     1. Look up ShaderDefinition from material.Shader property (case-insensitive)
+     2. Parse StringGenMask into active flags
+     3. Use ShaderRulesEngine to generate MaterialRules
+     4. Create texture shader nodes for all supported types (Diffuse, Specular, Bumpmap)
+     5. Apply MaterialRules to configure connections (channel routing, alpha handling)
+     6. Create PrincipledBSDF with all connections based on rules
+   ```
+
+**Test Case**: Adder cockpit (`d:\depot\mwo\objects\mechs\cockpit_standard\adder_a_cockpit_standard.cga`)
+- Material file: `d:\depot\mwo\objects\mechs\adder\cockpit_standard\adder_a_cockpit_standard.mtl`
+- "cockpit_shared" material uses MechCockpit shader with %ALPHAGLOW flag
+- Verify diffuse.alpha connects to emissiveColor (not opacity) in exported USD
+
+**Current Status**: Planning complete, ready to implement data models and parser.
+
+### Future Material Improvements
+- **Metallic detection heuristic**: Investigate using `Shader`, `MtlFlags`, or specular properties to auto-detect metallic materials
+  - Check if `Shader="Metal"` exists in any materials
+  - Consider using `Glossiness` property (currently unused)
+  - Analyze specular color patterns (colored specular might indicate metallic)
+- **Material validation**: Ensure all MTL properties map correctly to USD PBR workflow
+
+### Animation Support (IMPLEMENTED for .dba, TODO for .caf)
+
+**Current Status**: USD animation export implemented for `.dba` animation databases via `UsdRenderer.Animation.cs`.
+
+**How it works**:
+- Animations loaded from `.chrparams` file's `$TracksDatabase` entry pointing to a `.dba` file
+- Animation data stored as USD `SkelAnimation` prims with time-sampled translations/rotations
+- First animation automatically bound as skeleton's `skel:animationSource`
+
+**TODO - Individual .caf file support**:
+- `.caf` files are individual animation clips (vs `.dba` which is a database of many animations)
+- `.chrparams` lists individual `.caf` files with animation names (e.g., `<Animation name="walk" path="walk.caf"/>`)
+- Currently only `$TracksDatabase`/`#filepath` entries are processed
+- Need to extend `CryEngine.CreateAnimations()` to also load individual `.caf` files
+- `.caf` files use the same `ChunkController` chunk format as `.dba`
+
+### Known Issues
+- ~~**GeomSubset indices**: "invalid indices" warning in Blender~~ - FIXED: Convert vertex indices to face indices for elementType="face"
+- ~~**Normal count mismatch**: "Loop normal count mismatch" warning~~ - FIXED: Expand normals array to match faceVertexIndices for faceVarying interpolation
+- ~~**Ivo format file size explosion**: 700MB+ output files~~ - FIXED: Extract only per-subset vertices and remap indices (same fix as Collada/glTF renderers)
+- ~~**Skeleton infinite recursion**: Stack overflow in BuildJointPaths~~ - FIXED: Added cycle detection to skip already-processed bones
+- **Node transforms incorrect**: Child nodes not positioned correctly in complex models (e.g., Avenger spaceship). Currently using `node.Transform` directly. **Attempted fixes that didn't work:**
+  - `node.LocalTransform` (full transpose): Translations lost, all objects at origin
+  - Transpose 3x3 rotation only + move translation to row 4: Translations wrong
+  - **Priority: Fix before armature/skinning work.**
+
+### Multiple UV Layer Support (IN PROGRESS)
+
+**Status**: USD renderer infrastructure complete. Parsing not yet implemented.
+
+**USD Support**: Fully supported via primvars. Each UV set is a separate named primvar:
+- Primary UV: `primvars:{nodeName}_UV` (texCoord2f[])
+- Secondary UV: `primvars:{nodeName}_UV2` (texCoord2f[])
+- Shaders reference UV sets via `UsdPrimvarReader_float2` with `varname` input
+
+**Implementation**:
+- `GeometryInfo.UVs2` property added for second UV layer
+- `UsdRenderer.Geometry.cs` outputs `_UV2` primvar when `UVs2` is populated
+- Collada multi-UV support: TODO (uses multiple `<source>` elements with `TEXCOORD` semantic and `set` indices)
+
+**CryEngine Data Sources** (research needed):
+- Vertex format `eVF_P3S_C4B_T2S_T2S` exists in `Enums.cs` with comment "For UV2 support"
+- Vertex format `eVF_P3F_C4B_T2F_T2F` also supports dual texture coordinates
+- These formats are defined but **not yet parsed** in `ChunkDataStream`
+- Need to identify which games/assets actually use dual-UV vertex formats
+- Parsing would occur in `ChunkDataStream_800.cs` / `ChunkDataStream_801.cs` in the `VERTSUVS` case
+
+**Next Steps**:
+1. Find sample assets that use dual-UV vertex formats
+2. Extend `ChunkDataStream` parsing to extract second UV set
+3. Populate `GeometryInfo.UVs2` during geometry aggregation
+4. Test with USD export to verify primvar output
+
+### Mechanic.chr bone matrices for Bip01, Bip01_Pelvis, Bip01_L_Thigh.  
+
+In Cryengine Matrix3x4 format, where column 4 is translation.  These are row major form.  This information should
+be all that is needed to recreate the restTransforms and bindTransforms for the skeleton.  Z up, Y forward.
+
+- Bip01
+struct MATRIX3x4 worldToBone		32DCh	30h	Fg: Bg:0x000080	[[-0.000000, 1.000000, 0.000000, -0.000000] [-1.000000, -0.000000, -0.000000, -0.000000] [-0.000000, -0.000000, 1.000000, -0.000000]]
+struct MATRIX3x4 boneToWorld		330Ch	30h	Fg: Bg:0x000080	[[-0.000000, -1.000000, -0.000000, -0.000000] [1.000000, -0.000000, -0.000000, 0.000000] [0.000000, -0.000000, 1.000000, 0.000000]]
+
+- Bip01_Pelvis
+struct MATRIX3x4 worldToBone		3524h	30h	Fg: Bg:0x000080	[[0.000000, 0.000000, 1.000000, -0.950611] [-0.000003, 1.000000, -0.000000, -0.000000] [-1.000000, -0.000003, 0.000000, -0.000000]]
+struct MATRIX3x4 boneToWorld		3554h	30h	Fg: Bg:0x000080	[[0.000000, -0.000003, -1.000000, 0.000000] [0.000000, 1.000000, -0.000003, 0.000000] [1.000000, -0.000000, 0.000000, 0.950611]]
+
+- Bip01_L_Thigh
+struct MATRIX3x4 worldToBone		376Ch	30h	Fg: Bg:0x000080	[[-0.141242, -0.078662, -0.986845, 0.920858] [-0.011145, 0.996901, -0.077868, 0.072651] [0.989912, 0.000000, -0.141681, 0.232642]]
+struct MATRIX3x4 boneToWorld		379Ch	30h	Fg: Bg:0x000080	[[-0.141242, -0.011145, 0.989912, -0.099421] [-0.078662, 0.996901, 0.000000, 0.000010] [-0.986845, -0.077868, -0.141681, 0.947363]]
+

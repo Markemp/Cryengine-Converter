@@ -151,8 +151,8 @@ public partial class CryEngine
                     if (hasGeometry)
                     {
                         chunkMesh.ScalingVectors = geometryMeshDetails.ScalingBoundingBox;
-                        chunkMesh.MaxBound = geometryMeshDetails.BoundingBox.Max;
-                        chunkMesh.MinBound = geometryMeshDetails.BoundingBox.Min;
+                        chunkMesh.MaxBound = node.BoundingBoxMax;
+                        chunkMesh.MinBound = node.BoundingBoxMin;
                         chunkMesh.NumVertices = (int)skinMesh.MeshDetails.NumberOfVertices;
                         chunkMesh.NumIndices = (int)skinMesh.MeshDetails.NumberOfIndices;
                         chunkMesh.NumVertSubsets = skinMesh.MeshDetails.NumberOfSubmeshes;
@@ -529,18 +529,38 @@ public partial class CryEngine
     {
         try
         {
+            // Build chrparams path relative to input file's directory
+            var modelDir = Path.GetDirectoryName(InputFile);
+            var chrparamsFileName = Path.ChangeExtension(Path.GetFileName(InputFile), ".chrparams");
+            var chrparamsPath = string.IsNullOrEmpty(modelDir)
+                ? chrparamsFileName
+                : Path.Combine(modelDir, chrparamsFileName);
+
+            Log.D("Looking for chrparams at: {0}", chrparamsPath);
+            Log.D("InputFile: {0}, modelDir: {1}", InputFile, modelDir ?? "(null)");
+
             var chrparams = CryXmlSerializer.Deserialize<ChrParams.ChrParams>(
-                PackFileSystem.GetStream(Path.ChangeExtension(InputFile, ".chrparams")));
-            var trackFilePath = chrparams.Animations?.FirstOrDefault(x => x.Name == "$TracksDatabase" || x.Name == "#filepath")?.Path;
+                PackFileSystem.GetStream(chrparamsPath));
+
+            Log.D("Successfully loaded chrparams, animations count: {0}", chrparams.Animations?.Length ?? 0);
+
+            // Prefer $TracksDatabase (explicit .dba path) over #filepath (base directory for .caf files)
+            var trackFilePath = chrparams.Animations?.FirstOrDefault(x => x.Name == "$TracksDatabase")?.Path
+                ?? chrparams.Animations?.FirstOrDefault(x => x.Name == "#filepath")?.Path;
+            Log.D("$TracksDatabase or #filepath path: {0}", trackFilePath ?? "(not found)");
+
             if (trackFilePath is null)
-                throw new FileNotFoundException();
-            if (Path.GetExtension(trackFilePath) != "dba")
-                trackFilePath = Path.ChangeExtension(trackFilePath, "dba");
-            Log.D("Associated animation track database file found at {0}", trackFilePath);
+                throw new FileNotFoundException("No $TracksDatabase or #filepath entry in chrparams");
+            if (Path.GetExtension(trackFilePath) != ".dba")
+                trackFilePath = Path.ChangeExtension(trackFilePath, ".dba");
+
+            Log.D("Attempting to load animation database from: {0}", trackFilePath);
             Animations.Add(Model.FromStream(trackFilePath, PackFileSystem.GetStream(trackFilePath), true));
+            Log.D("Successfully loaded animation database");
         }
-        catch (FileNotFoundException)
+        catch (FileNotFoundException ex)
         {
+            Log.D("Animation file not found: {0}", ex.Message);
             Log.I("Unable to find associated animation track database file.");
         }
     }

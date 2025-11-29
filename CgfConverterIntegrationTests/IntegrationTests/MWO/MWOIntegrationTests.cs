@@ -5,6 +5,7 @@ using CgfConverter.Renderers.Collada.Collada;
 using CgfConverter.Renderers.Collada.Collada.Enums;
 using CgfConverter.Renderers.Gltf;
 using CgfConverter.Renderers.USD;
+using CgfConverter.Renderers.USD.Models;
 using CgfConverterIntegrationTests.Extensions;
 using CgfConverterTests.TestUtilities;
 using Extensions;
@@ -13,6 +14,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Threading;
 using System.Xml.Linq;
 using System.Xml.Serialization;
@@ -94,6 +96,130 @@ public class MWOIntegrationTests
 
         GltfModelRenderer gltfData = new(testUtils.argsHandler, cryData, false, false);
         gltfData.GenerateGltfObject();
+    }
+
+    [TestMethod]
+    public void Box_Usd()
+    {
+        var args = new string[] { $@"{objectDir}\Objects\default\box.cgf", "-dds", "-dae", "-objectdir", objectDir };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        UsdRenderer usdData = new(testUtils.argsHandler, cryData);
+        usdData.GenerateUsdObject();
+    }
+
+    [TestMethod]
+    public void Box_Usd_WithMaterials()
+    {
+        var matFile = $@"{objectDir}\Objects\default\box.mtl";
+        var args = new string[] { $@"{objectDir}\Objects\default\box.cgf", "-objectdir", objectDir, "-mat", matFile };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: matFile, objectDir: objectDir);
+        cryData.ProcessCryengineFiles();
+
+        // Verify materials were loaded
+        Assert.IsTrue(cryData.Materials.Count > 0, "Materials should be loaded");
+        var firstMat = cryData.Materials.First().Value;
+        Assert.IsTrue(firstMat.SubMaterials.Length >= 2, "Should have at least 2 submaterials");
+
+        // Generate USD
+        UsdRenderer usdRenderer = new(testUtils.argsHandler, cryData);
+        var usdDoc = usdRenderer.GenerateUsdObject();
+
+        // Serialize to string for inspection
+        var serializer = new UsdSerializer();
+        using var writer = new StringWriter();
+        serializer.Serialize(usdDoc, writer);
+        var usdOutput = writer.ToString();
+
+        // Verify material properties are in output
+        // Material #25: Diffuse="0.588,0.588,0.588" Opacity="1"
+        Assert.IsTrue(usdOutput.Contains("inputs:diffuseColor"), "Should have diffuseColor");
+        Assert.IsTrue(usdOutput.Contains("inputs:opacity"), "Should have opacity");
+        Assert.IsTrue(usdOutput.Contains("inputs:roughness"), "Should have roughness");
+        Assert.IsTrue(usdOutput.Contains("inputs:metallic"), "Should have metallic");
+
+        // Verify colors use parentheses (not angle brackets)
+        Assert.IsTrue(usdOutput.Contains("inputs:diffuseColor = ("), "Color values should use parentheses");
+        Assert.IsFalse(usdOutput.Contains("inputs:diffuseColor = <0"), "Color values should NOT use angle brackets for values");
+
+        // Material #26: Diffuse="0.658824,0,0" (red) Opacity="0.24"
+        Assert.IsTrue(usdOutput.Contains("0.658824"), "Should have red diffuse color from Material #26");
+        Assert.IsTrue(usdOutput.Contains("0.24"), "Should have 0.24 opacity from Material #26");
+
+        // Verify material names are cleaned
+        Assert.IsTrue(usdOutput.Contains("Material__25"), "Material #25 should be cleaned to Material__25");
+        Assert.IsTrue(usdOutput.Contains("Material__26"), "Material #26 should be cleaned to Material__26");
+
+        // Verify GeomSubset uses face indices (not vertex indices)
+        // The box has 12 triangles, so face indices should be 0-11
+        Assert.IsTrue(usdOutput.Contains("elementType = \"face\""), "GeomSubset should use face element type");
+        // Should NOT contain raw vertex indices like [0, 1, 2, 2, 3, 0, ...]
+        Assert.IsFalse(usdOutput.Contains("indices = [0, 1, 2, 2, 3, 0"), "Should not use vertex indices for face elementType");
+
+        // Optional: write to file for manual inspection
+        // usdRenderer.WriteUsdToFile(usdDoc);
+    }
+
+    [TestMethod]
+    public void HulaGirl_Usd_WithMaterials()
+    {
+        var modelFile = $@"{objectDir}\Objects\purchasable\cockpit_standing\hulagirl\hulagirl_a.cga";
+
+        // Check if file exists
+        if (!File.Exists(modelFile))
+        {
+            Assert.Inconclusive($"Model file not found: {modelFile}");
+            return;
+        }
+
+        var args = new string[] { modelFile, "-objectdir", objectDir };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        // Let materials auto-discover from MtlName chunk
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        cryData.ProcessCryengineFiles();
+
+        // Verify materials were loaded
+        Assert.IsTrue(cryData.Materials.Count > 0, "Materials should be loaded");
+
+        // Check if materials have textures
+        var firstMat = cryData.Materials.First().Value;
+        if (firstMat.SubMaterials != null && firstMat.SubMaterials.Length > 0)
+        {
+            var submat = firstMat.SubMaterials[0];
+            if (submat.Textures != null)
+            {
+                foreach (var texture in submat.Textures)
+                {
+                    // This is where you can set a breakpoint to inspect texture.File
+                    Console.WriteLine($"Texture Map: {texture.Map}, File: {texture.File ?? "NULL"}");
+                }
+            }
+        }
+
+        // Generate USD
+        UsdRenderer usdRenderer = new(testUtils.argsHandler, cryData);
+        var usdDoc = usdRenderer.GenerateUsdObject();
+
+        // Serialize to string for inspection
+        var serializer = new UsdSerializer();
+        using var writer = new StringWriter();
+        serializer.Serialize(usdDoc, writer);
+        var usdOutput = writer.ToString();
+
+        // Verify material properties are in output
+        Assert.IsTrue(usdOutput.Contains("inputs:diffuseColor"), "Should have diffuseColor");
+
+        // Optional: write to file for manual inspection
+        // usdRenderer.WriteUsdToFile(usdDoc);
     }
 
     [TestMethod]
@@ -940,6 +1066,151 @@ public class MWOIntegrationTests
         var gltfData = gltfRenderer.GenerateGltfObject();
         Assert.AreEqual(1, gltfData.Textures.Count);
         Assert.AreEqual(2, gltfData.Materials.Count);
+    }
+
+    [TestMethod]
+    public void Mechanic_Usd_WithArmature()
+    {
+        var modelFile = $@"{objectDir}\Objects\characters\mechanic\mechanic.chr";
+
+        // Check if file exists
+        if (!File.Exists(modelFile))
+        {
+            Assert.Inconclusive($"Model file not found: {modelFile}");
+            return;
+        }
+
+        var args = new string[] { modelFile, "-objectdir", objectDir };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        // Process CryEngine file with skinning info
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        cryData.ProcessCryengineFiles();
+
+        // Verify skinning info is present
+        Assert.IsNotNull(cryData.SkinningInfo, "SkinningInfo should not be null");
+        Assert.IsTrue(cryData.SkinningInfo.HasSkinningInfo, "Should have skinning info");
+        Assert.IsTrue(cryData.SkinningInfo.CompiledBones.Count > 0, "Should have bones");
+
+        Console.WriteLine($"Model has {cryData.SkinningInfo.CompiledBones.Count} bones");
+        Console.WriteLine($"Root bone: {cryData.SkinningInfo.RootBone?.BoneName}");
+
+        // Generate USD
+        UsdRenderer usdRenderer = new(testUtils.argsHandler, cryData);
+        var usdDoc = usdRenderer.GenerateUsdObject();
+
+        // Serialize to string for inspection
+        var serializer = new UsdSerializer();
+        using var writer = new StringWriter();
+        serializer.Serialize(usdDoc, writer);
+        var usdOutput = writer.ToString();
+
+        // Verify skeleton structure is in output
+        Assert.IsTrue(usdOutput.Contains("def SkelRoot \"Armature\""), "Should have SkelRoot prim");
+        Assert.IsTrue(usdOutput.Contains("def Skeleton \"Skeleton\""), "Should have Skeleton prim");
+        Assert.IsTrue(usdOutput.Contains("prepend apiSchemas = [\"SkelBindingAPI\"]"), "Skeleton should have SkelBindingAPI");
+
+        // Verify skeleton data arrays
+        Assert.IsTrue(usdOutput.Contains("uniform token[] joints"), "Should have joints array");
+        Assert.IsTrue(usdOutput.Contains("uniform matrix4d[] bindTransforms"), "Should have bindTransforms");
+        Assert.IsTrue(usdOutput.Contains("uniform matrix4d[] restTransforms"), "Should have restTransforms");
+
+        // Verify mesh skinning attributes
+        Assert.IsTrue(usdOutput.Contains("primvars:skel:geomBindTransform"), "Should have geomBindTransform");
+        Assert.IsTrue(usdOutput.Contains("primvars:skel:jointIndices"), "Should have jointIndices");
+        Assert.IsTrue(usdOutput.Contains("primvars:skel:jointWeights"), "Should have jointWeights");
+        Assert.IsTrue(usdOutput.Contains("rel skel:skeleton"), "Should have skeleton relationship");
+        Assert.IsTrue(usdOutput.Contains("</root/Armature/Skeleton>"), "Should reference skeleton path");
+
+        // Verify some expected bone names in joint hierarchy
+        Assert.IsTrue(usdOutput.Contains("Bip01"), "Should contain root bone Bip01");
+
+        // Test specific bone transforms against expected values
+        // These values are from the raw bone data and Collada comparison
+
+        var bip01Bone = cryData.SkinningInfo.CompiledBones.FirstOrDefault(b => b.BoneName == "Bip01");
+        var bip01Pelvis = cryData.SkinningInfo.CompiledBones.FirstOrDefault(b => b.BoneName == "bip_01_Pelvis");
+        var bip01LThigh = cryData.SkinningInfo.CompiledBones.FirstOrDefault(b => b.BoneName == "bip_01_L_Thigh");
+
+        Assert.IsNotNull(bip01Bone, $"Should find Bip01 bone. Found {cryData.SkinningInfo.CompiledBones.Count} bones total.");
+        Assert.IsNotNull(bip01Pelvis, $"Should find bip_01_Pelvis bone");
+        Assert.IsNotNull(bip01LThigh, $"Should find bip_01_L_Thigh bone");
+
+        // Expected values from Collada output (both bind and rest use same values)
+        // Bip01: Translation should be near (0, 0, 0) - root bone
+        // Bip01 Pelvis: Translation should be near (0, 0.950611, 0) in Z-up
+        // These are in LocalTransformMatrix (worldToBone / inverse bind)
+
+        Console.WriteLine($"\nBip01 LocalTransformMatrix (worldToBone):");
+        Console.WriteLine($"  Translation: ({bip01Bone.LocalTransformMatrix.M14:F6}, {bip01Bone.LocalTransformMatrix.M24:F6}, {bip01Bone.LocalTransformMatrix.M34:F6})");
+
+        Console.WriteLine($"\nBip01 Pelvis LocalTransformMatrix (worldToBone):");
+        Console.WriteLine($"  Translation: ({bip01Pelvis.LocalTransformMatrix.M14:F6}, {bip01Pelvis.LocalTransformMatrix.M24:F6}, {bip01Pelvis.LocalTransformMatrix.M34:F6})");
+        Console.WriteLine($"  Expected: (0.000000, 0.000000, -0.950611) [inverted Z from world]");
+
+        Console.WriteLine($"\nBip01 Pelvis WorldTransformMatrix (boneToWorld):");
+        Console.WriteLine($"  Translation: ({bip01Pelvis.WorldTransformMatrix.M14:F6}, {bip01Pelvis.WorldTransformMatrix.M24:F6}, {bip01Pelvis.WorldTransformMatrix.M34:F6})");
+        Console.WriteLine($"  Expected: (0.000000, 0.000000, 0.950611) [Z-up position]");
+
+        // Verify Bip01 Pelvis world translation matches expected (from your raw data)
+        Assert.AreEqual(0.0, bip01Pelvis.WorldTransformMatrix.M14, 0.001, "Bip01 Pelvis X should be ~0");
+        Assert.AreEqual(0.0, bip01Pelvis.WorldTransformMatrix.M24, 0.001, "Bip01 Pelvis Y should be ~0");
+        Assert.AreEqual(0.950611, bip01Pelvis.WorldTransformMatrix.M34, 0.001, "Bip01 Pelvis Z should be ~0.950611");
+
+        // Find skeleton recursively
+        UsdSkeleton? skeleton = null;
+        foreach (var prim in usdDoc.Prims)
+        {
+            skeleton = FindSkeleton(prim);
+            if (skeleton is not null) break;
+        }
+
+        if (skeleton == null)
+        {
+            Console.WriteLine("ERROR: No Skeleton prim found in USD output!");
+            Assert.Fail("Skeleton prim not found");
+            return;
+        }
+
+        var restTransformsAttr = skeleton.Attributes.FirstOrDefault(a => a.Name == "restTransforms") as UsdMatrix4dArray;
+        if (restTransformsAttr == null)
+        {
+            Console.WriteLine("ERROR: No restTransforms attribute found!");
+            Console.WriteLine($"Found {skeleton.Attributes.Count} attributes:");
+            foreach (var attr in skeleton.Attributes)
+            {
+                Console.WriteLine($"  - {attr.Name}");
+            }
+            Assert.Fail("restTransforms attribute not found");
+            return;
+        }
+
+        var restTransforms = restTransformsAttr.Matrices;
+        Assert.IsTrue(restTransforms.Count >= 3, "Should have at least 3 bones");
+
+        // Optional: write to file for manual inspection
+        // usdRenderer.WriteUsdToFile(usdDoc);
+    }
+
+    private void PrintMatrix(Matrix4x4 m)
+    {
+        Console.WriteLine($"  ( ({m.M11:F6}, {m.M12:F6}, {m.M13:F6}, {m.M14:F6}), ({m.M21:F6}, {m.M22:F6}, {m.M23:F6}, {m.M24:F6}), ({m.M31:F6}, {m.M32:F6}, {m.M33:F6}, {m.M34:F6}), ({m.M41:F6}, {m.M42:F6}, {m.M43:F6}, {m.M44:F6}) )");
+    }
+
+    private UsdSkeleton? FindSkeleton(UsdPrim prim)
+    {
+        if (prim is UsdSkeleton skel)
+            return skel;
+
+        foreach (var child in prim.Children)
+        {
+            var found = FindSkeleton(child);
+            if (found != null)
+                return found;
+        }
+
+        return null;
     }
 
     [TestMethod]
