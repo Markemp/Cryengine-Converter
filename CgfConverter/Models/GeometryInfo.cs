@@ -14,6 +14,7 @@ public sealed record GeometryInfo
     public Datastream<uint>? Indices { get; set; }
     public Datastream<Vector3>? Vertices { get; set; }
     public Datastream<UV>? UVs { get; set; }
+    public Datastream<UV>? UVs2 { get; set; }  // Second UV layer (for games supporting multiple UV sets)
     public Datastream<Vector3>? Normals { get; set; }
     public Datastream<IRGBA>? Colors { get; set; }
     public Datastream<VertUV>? VertUVs { get; set; }

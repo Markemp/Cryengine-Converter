@@ -76,6 +76,7 @@ public partial class UsdRenderer
         var subsets = meshChunk.GeometryInfo.GeometrySubsets;
         Datastream<uint>? indices = meshChunk.GeometryInfo.Indices;
         Datastream<UV>? uvs = meshChunk.GeometryInfo.UVs;
+        Datastream<UV>? uvs2 = meshChunk.GeometryInfo.UVs2;  // Second UV layer (if available)
         Datastream<Vector3>? verts = meshChunk.GeometryInfo.Vertices;
         Datastream<VertUV>? vertsUvs = meshChunk.GeometryInfo.VertUVs;
         Datastream<Vector3>? normals = meshChunk.GeometryInfo.Normals;
@@ -107,6 +108,7 @@ public partial class UsdRenderer
             int numVerts = (int)verts.NumElements;
             var hasNormals = normals is not null;
             var hasUVs = uvs is not null;
+            var hasUVs2 = uvs2 is not null;  // Second UV layer
             var hasColors = colors is not null;
 
             meshPrim.Attributes.Add(new UsdBool("doubleSided", true, true));
@@ -119,6 +121,8 @@ public partial class UsdRenderer
                 meshPrim.Attributes.Add(new UsdColorsList($"{CleanPathString(nodeChunk.Name)}_color", [.. colors.Data]));
             if (hasUVs)
                 meshPrim.Attributes.Add(new UsdTexCoordsList($"{CleanPathString(nodeChunk.Name)}_UV", [.. uvs.Data]));
+            if (hasUVs2)
+                meshPrim.Attributes.Add(new UsdTexCoordsList($"{CleanPathString(nodeChunk.Name)}_UV2", [.. uvs2.Data]));
             if (hasNormals)
             {
                 // For faceVarying normals, expand the normals array to match faceVertexIndices
