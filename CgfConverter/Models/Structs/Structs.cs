@@ -503,7 +503,8 @@ public struct SmallTreeDWORDQuat
             shift += 10;
         }
 
-        comp[maxComponentIndex] = (float)Math.Sqrt(1.0f - sqrsumm);
+        // Clamp to avoid NaN from sqrt of negative number (can happen with precision issues)
+        comp[maxComponentIndex] = (float)Math.Sqrt(Math.Max(0.0f, 1.0f - sqrsumm));
         return new Quaternion(comp[0], comp[1], comp[2], comp[3]);
     }
 }
@@ -559,7 +560,8 @@ public struct SmallTree48BitQuat
             shift += 15;
         }
 
-        comp[maxComponentIndex] = (float)Math.Sqrt(1.0f - sqrsumm);
+        // Clamp to avoid NaN from sqrt of negative number (can happen with precision issues)
+        comp[maxComponentIndex] = (float)Math.Sqrt(Math.Max(0.0f, 1.0f - sqrsumm));
         return new Quaternion(comp[0], comp[1], comp[2], comp[3]);
     }
 }
@@ -619,7 +621,8 @@ public struct SmallTree64BitQuat
             shift += 20;
         }
 
-        comp[maxComponentIndex] = (float)Math.Sqrt(1.0f - sqrsumm);
+        // Clamp to avoid NaN from sqrt of negative number (can happen with precision issues)
+        comp[maxComponentIndex] = (float)Math.Sqrt(Math.Max(0.0f, 1.0f - sqrsumm));
         return new Quaternion(comp[0], comp[1], comp[2], comp[3]);
     }
 }
@@ -701,7 +704,8 @@ public struct SmallTree64BitExtQuat
             }
         }
 
-        comp[maxComponentIndex] = (float)Math.Sqrt(1.0f - sqrsumm);
+        // Clamp to avoid NaN from sqrt of negative number (can happen with precision issues)
+        comp[maxComponentIndex] = (float)Math.Sqrt(Math.Max(0.0f, 1.0f - sqrsumm));
         return new Quaternion(comp[0], comp[1], comp[2], comp[3]);
     }
 }

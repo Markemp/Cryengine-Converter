@@ -73,37 +73,61 @@ internal sealed class ChunkController_831 : ChunkController
         PositionTimeFormat = b.ReadByte();
         TracksAligned = b.ReadByte();
 
-        // Align to 4-byte boundary if needed
+        // Data layout (v0831):
+        // [Rotation Values] -> [padding] -> [Rotation Times] -> [padding] ->
+        // [Position Values] -> [padding] -> [Position Times (if PositionKeysInfo != 0)]
+
+        // Read rotation values first
+        KeyRotations = ReadRotations(b, NumRotationKeys, RotationFormat);
+        AlignTo4Bytes(b);
+
+        // Read rotation time keys
+        RotationKeyTimes = ReadKeyTimes(b, NumRotationKeys, RotationTimeFormat);
+        AlignTo4Bytes(b);
+
+        // Read position values
+        KeyPositions = ReadPositions(b, NumPositionKeys, PositionFormat);
+        AlignTo4Bytes(b);
+
+        // Position time keys only if PositionKeysInfo != 0, otherwise shares rotation times
+        if (PositionKeysInfo != 0)
+        {
+            PositionKeyTimes = ReadKeyTimes(b, NumPositionKeys, PositionTimeFormat);
+        }
+        else
+        {
+            PositionKeyTimes = RotationKeyTimes;
+        }
+    }
+
+    private void AlignTo4Bytes(BinaryReader b)
+    {
         if (TracksAligned != 0)
         {
             var pos = b.BaseStream.Position;
-            var aligned = (pos + 3) & ~3;
-            if (aligned > pos)
-                b.BaseStream.Seek(aligned - pos, SeekOrigin.Current);
+            var remainder = pos % 4;
+            if (remainder != 0)
+                b.ReadBytes((int)(4 - remainder));
         }
-
-        // Read rotation track
-        RotationKeyTimes = ReadKeyTimes(b, NumRotationKeys, RotationTimeFormat);
-        KeyRotations = ReadRotations(b, NumRotationKeys, RotationFormat);
-
-        // Read position track
-        PositionKeyTimes = ReadKeyTimes(b, NumPositionKeys, PositionTimeFormat);
-        KeyPositions = ReadPositions(b, NumPositionKeys, PositionFormat);
     }
 
     private List<float> ReadKeyTimes(BinaryReader b, int count, byte format)
     {
         var times = new List<float>(count);
 
-        // Time format: 0 = byte, 1 = uint16, 2 = float
+        // EKeyTimesFormat: 0 = eF32 (float), 1 = eUINT16, 2 = eByte
         for (int i = 0; i < count; i++)
         {
             float time = format switch
             {
-                0 => b.ReadByte(),
-                1 => b.ReadUInt16(),
-                2 => b.ReadSingle(),
-                _ => b.ReadUInt16() // Default to uint16
+                0 => b.ReadSingle(),      // eF32 - 4 bytes
+                1 => b.ReadUInt16(),      // eUINT16 - 2 bytes
+                2 => b.ReadByte(),        // eByte - 1 byte
+                3 => b.ReadSingle(),      // eF32StartStop
+                4 => b.ReadUInt16(),      // eUINT16StartStop
+                5 => b.ReadByte(),        // eByteStartStop
+                6 => b.ReadUInt16(),      // eBitset
+                _ => b.ReadSingle()       // Default to float
             };
             times.Add(time);
         }
