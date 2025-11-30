@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
@@ -88,13 +87,9 @@ internal sealed class ChunkController_829 : ChunkController
 
         // Position time keys only if PositionKeysInfo != 0, otherwise shares rotation times
         if (PositionKeysInfo != 0)
-        {
             PositionKeyTimes = ReadKeyTimes(b, NumPositionKeys, PositionTimeFormat);
-        }
         else
-        {
             PositionKeyTimes = RotationKeyTimes;
-        }
     }
 
     private void AlignTo4Bytes(BinaryReader b)

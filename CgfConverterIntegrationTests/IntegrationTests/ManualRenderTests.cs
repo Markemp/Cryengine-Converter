@@ -21,6 +21,7 @@ namespace CgfConverterTests.IntegrationTests;
 public class ManualRenderTests
 {
     private readonly ArgsHandler argsHandler = new();
+    private readonly string armedWarfareObjectDir = @"d:\depot\armoredwarfare";
     private readonly string mwoObjectDir = @"d:\depot\mwo";
     private readonly string sc41ObjectDir = @"d:\depot\sc4.1\data";
 
@@ -31,6 +32,16 @@ public class ManualRenderTests
         customCulture.NumberFormat.NumberDecimalSeparator = ".";
         Thread.CurrentThread.CurrentCulture = customCulture;
     }
+
+    #region Armored Warfare Test Files
+
+    [TestMethod]
+    public void Chicken_USD()
+    {
+        RenderToUsd($@"{armedWarfareObjectDir}\Objects\characters\animals\birds\chicken\chicken.chr", armedWarfareObjectDir);
+    }
+
+    #endregion
 
     #region MWO Test Files
 
@@ -103,6 +114,7 @@ public class ManualRenderTests
     // Add more test files here as needed...
 
     #endregion
+
 
     #region SC test files
 
