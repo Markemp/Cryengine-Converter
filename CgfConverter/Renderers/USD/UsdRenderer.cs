@@ -71,6 +71,11 @@ public partial class UsdRenderer : IRenderer
         return shaders;
     }
 
+    // Cached skeleton data for multi-file animation export
+    private Dictionary<uint, string>? _controllerIdToJointPath;
+    private List<string>? _jointPaths;
+    private Dictionary<CompiledBone, string>? _bonePathMap;
+
     public int Render()
     {
         var usdDoc = GenerateUsdObject();
@@ -80,6 +85,17 @@ public partial class UsdRenderer : IRenderer
         Log.D();
 
         WriteUsdToFile(usdDoc);
+
+        // Export individual animation files for Blender NLA workflow
+        // (Blender only imports single bound animation, so we export each separately)
+        if (_controllerIdToJointPath is not null && _jointPaths is not null && _bonePathMap is not null)
+        {
+            var animCount = ExportAnimationFiles(_controllerIdToJointPath, _jointPaths, _bonePathMap);
+            if (animCount > 0)
+            {
+                Log.I($"Exported {animCount} separate animation files for Blender NLA workflow");
+            }
+        }
 
         return 0;
     }
@@ -106,28 +122,28 @@ public partial class UsdRenderer : IRenderer
 
         // Check if this model has skeletal animation
         bool hasSkeleton = _cryData.SkinningInfo?.HasSkinningInfo ?? false;
-        Dictionary<uint, string>? controllerIdToJointPath = null;
 
         if (hasSkeleton)
         {
-            // Create skeleton hierarchy
+            // Create skeleton hierarchy and cache data for multi-file animation export
             Log.D("Model has skeleton with {0} bones", _cryData.SkinningInfo.CompiledBones.Count);
-            var skelRoot = CreateSkeleton(out controllerIdToJointPath);
+            var skelRoot = CreateSkeleton(out _controllerIdToJointPath, out _jointPaths, out _bonePathMap);
             rootPrim.Children.Add(skelRoot);
 
             // Add skinned node hierarchy under the skeleton root
             skelRoot.Children.AddRange(CreateNodeHierarchy());
 
             // Create animations if available
+            // Only include animation in main file if there's exactly one.
+            // Multiple animations go to separate files for Blender NLA workflow.
             if (_cryData.Animations is not null && _cryData.Animations.Count > 0)
             {
-                var animations = CreateAnimations(controllerIdToJointPath, usdDoc.Header);
-                if (animations.Count > 0)
+                var animations = CreateAnimations(_controllerIdToJointPath, usdDoc.Header);
+                if (animations.Count == 1)
                 {
-                    // Add animations under the skeleton root
+                    // Single animation - include it in the main file
                     skelRoot.Children.AddRange(animations);
 
-                    // Add animation source relationship to skeleton (use first animation as default)
                     var firstAnimName = CleanPathString(animations[0].Name);
                     var skeleton = skelRoot.Children.OfType<UsdSkeleton>().FirstOrDefault();
                     if (skeleton is not null)
@@ -135,6 +151,12 @@ public partial class UsdRenderer : IRenderer
                         skeleton.Attributes.Add(
                             new UsdRelationship("skel:animationSource", $"</root/Armature/{firstAnimName}>"));
                     }
+                }
+                else if (animations.Count > 1)
+                {
+                    // Multiple animations - they'll be exported to separate files
+                    // Main file gets skeleton + mesh only (no animation bound)
+                    Log.D($"Multiple animations ({animations.Count}) found - excluding from main file, will export separately");
                 }
             }
         }

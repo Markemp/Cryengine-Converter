@@ -303,4 +303,131 @@ public partial class UsdRenderer
             .Select(parts => string.Join("/", parts.Skip(commonPrefixLen)))
             .ToList();
     }
+
+    /// <summary>
+    /// Exports individual animation files for Blender NLA workflow.
+    /// Blender's USD importer only reads the single bound animation, so we export
+    /// each animation as a separate file with skeleton + that animation bound.
+    /// </summary>
+    /// <param name="controllerIdToJointPath">Mapping from bone controller IDs to USD joint paths.</param>
+    /// <param name="jointPaths">Ordered list of joint paths for skeleton.</param>
+    /// <param name="bonePathMap">Mapping from CompiledBone to joint path.</param>
+    /// <returns>Number of animation files exported.</returns>
+    private int ExportAnimationFiles(
+        Dictionary<uint, string> controllerIdToJointPath,
+        List<string> jointPaths,
+        Dictionary<CompiledBone, string> bonePathMap)
+    {
+        if (_cryData.Animations is null || _cryData.Animations.Count == 0)
+            return 0;
+
+        int exportedCount = 0;
+        var baseFileName = Path.GetFileNameWithoutExtension(usdOutputFile.FullName);
+        var outputDir = usdOutputFile.DirectoryName ?? ".";
+
+        // Collect all animations with their metadata
+        var allAnimations = new List<(string name, UsdSkelAnimation skelAnim, int endFrame)>();
+
+        foreach (var animModel in _cryData.Animations)
+        {
+            var animChunks = animModel.ChunkMap.Values.OfType<ChunkController_905>().ToList();
+
+            foreach (var animChunk in animChunks)
+            {
+                if (animChunk.Animations is null)
+                    continue;
+
+                var names = StripCommonParentPaths(
+                    animChunk.Animations.Select(x => Path.ChangeExtension(x.Name, null)).ToList());
+
+                foreach (var (anim, name) in animChunk.Animations.Zip(names))
+                {
+                    var (skelAnim, endFrame) = CreateSkelAnimation(anim, animChunk, controllerIdToJointPath, name);
+                    if (skelAnim is not null)
+                    {
+                        allAnimations.Add((name, skelAnim, endFrame));
+                    }
+                }
+            }
+        }
+
+        // Skip if only one animation (already in main file)
+        if (allAnimations.Count <= 1)
+        {
+            Log.D("Only one animation found, skipping separate animation file export");
+            return 0;
+        }
+
+        Log.D($"Exporting {allAnimations.Count} animation files for Blender NLA workflow...");
+
+        // Export each animation as a separate file
+        foreach (var (animName, skelAnim, endFrame) in allAnimations)
+        {
+            var cleanAnimName = CleanPathString(animName);
+            var animFileName = $"{baseFileName}_anim_{cleanAnimName}.usda";
+            var animFilePath = Path.Combine(outputDir, animFileName);
+
+            var animDoc = CreateAnimationOnlyDoc(skelAnim, endFrame, jointPaths, bonePathMap);
+
+            using (var writer = new StreamWriter(animFilePath))
+            {
+                usdSerializer.Serialize(animDoc, writer);
+            }
+
+            Log.D($"  Exported: {animFileName}");
+            exportedCount++;
+        }
+
+        return exportedCount;
+    }
+
+    /// <summary>
+    /// Creates a USD document containing only skeleton + single animation.
+    /// This is for Blender import workflow where each animation needs its own file.
+    /// </summary>
+    private UsdDoc CreateAnimationOnlyDoc(
+        UsdSkelAnimation skelAnim,
+        int endFrame,
+        List<string> jointPaths,
+        Dictionary<CompiledBone, string> bonePathMap)
+    {
+        var usdDoc = new UsdDoc
+        {
+            Header = new UsdHeader
+            {
+                TimeCodesPerSecond = 30,
+                StartTimeCode = 0,
+                EndTimeCode = endFrame
+            }
+        };
+
+        // Create root
+        usdDoc.Prims.Add(new UsdXform("root", "/"));
+        var rootPrim = usdDoc.Prims[0];
+
+        // Create skeleton structure (same as main export but without mesh)
+        var skelRoot = new UsdSkelRoot("Armature");
+        var skeleton = new UsdSkeleton("Skeleton");
+
+        // Add joint names array
+        skeleton.Attributes.Add(new UsdTokenArray("joints", jointPaths, isUniform: true));
+
+        // Add bind transforms
+        var bindTransforms = GetBindTransforms(jointPaths, bonePathMap);
+        skeleton.Attributes.Add(new UsdMatrix4dArray("bindTransforms", bindTransforms, isUniform: true));
+
+        // Add rest transforms
+        var restTransforms = GetRestTransforms(jointPaths, bonePathMap);
+        skeleton.Attributes.Add(new UsdMatrix4dArray("restTransforms", restTransforms, isUniform: true));
+
+        // Bind this animation to the skeleton
+        var animPath = $"</root/Armature/{skelAnim.Name}>";
+        skeleton.Attributes.Add(new UsdRelationship("skel:animationSource", animPath));
+
+        skelRoot.Children.Add(skeleton);
+        skelRoot.Children.Add(skelAnim);
+        rootPrim.Children.Add(skelRoot);
+
+        return usdDoc;
+    }
 }
