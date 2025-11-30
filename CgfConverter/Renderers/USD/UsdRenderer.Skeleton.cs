@@ -18,15 +18,20 @@ public partial class UsdRenderer
 
     /// <summary>Creates a USD skeleton hierarchy for skinned meshes.</summary>
     /// <param name="controllerIdToJointPath">Output mapping from bone controller IDs to USD joint paths for animation binding.</param>
+    /// <param name="jointPaths">Output list of joint paths in order.</param>
+    /// <param name="bonePathMap">Output mapping from CompiledBone to joint path.</param>
     /// <returns>The SkelRoot prim containing the skeleton.</returns>
-    private UsdSkelRoot CreateSkeleton(out Dictionary<uint, string> controllerIdToJointPath)
+    private UsdSkelRoot CreateSkeleton(
+        out Dictionary<uint, string> controllerIdToJointPath,
+        out List<string> jointPaths,
+        out Dictionary<CompiledBone, string> bonePathMap)
     {
         var skelRoot = new UsdSkelRoot("Armature");
         var skeleton = new UsdSkeleton("Skeleton");
 
         // Build joint paths (hierarchical bone names)
-        var jointPaths = new List<string>();
-        var bonePathMap = new Dictionary<CompiledBone, string>();
+        jointPaths = new List<string>();
+        bonePathMap = new Dictionary<CompiledBone, string>();
         BuildJointPaths(_cryData.SkinningInfo.RootBone, "", jointPaths, bonePathMap);
 
         // Build controller ID to joint path mapping for animation binding
