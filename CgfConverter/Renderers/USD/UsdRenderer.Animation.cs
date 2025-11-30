@@ -91,6 +91,9 @@ public partial class UsdRenderer
         CafAnimation cafAnim,
         Dictionary<uint, string> controllerIdToJointPath)
     {
+        // Build rest translation mapping for bones without position animation
+        var jointPathToRestTranslation = BuildRestTranslationMapping();
+
         // Map controller IDs to joint paths
         var animatedJoints = new List<string>();
         var tracksByJointPath = new Dictionary<string, BoneTrack>();
@@ -177,8 +180,13 @@ public partial class UsdRenderer
             {
                 var track = tracksByJointPath[jointPath];
 
-                // Sample position at this frame
-                Vector3 position = SampleCafPosition(track, frame + startFrame);
+                // Get rest translation for this joint (used when no position animation)
+                var restTranslation = jointPathToRestTranslation.TryGetValue(jointPath, out var rest)
+                    ? rest
+                    : Vector3.Zero;
+
+                // Sample position at this frame, using rest translation for bones without position animation
+                Vector3 position = SampleCafPosition(track, frame + startFrame, restTranslation);
                 translations.Add(position);
 
                 // Sample rotation at this frame
@@ -207,12 +215,69 @@ public partial class UsdRenderer
     }
 
     /// <summary>
-    /// Samples position from a CAF bone track at a given frame.
+    /// Builds a mapping from joint path to rest pose translation.
+    /// Used for bones without position animation to maintain their skeleton structure.
     /// </summary>
-    private static Vector3 SampleCafPosition(BoneTrack track, float frame)
+    private Dictionary<string, Vector3> BuildRestTranslationMapping()
     {
+        var mapping = new Dictionary<string, Vector3>();
+
+        if (_bonePathMap is null)
+            return mapping;
+
+        foreach (var (bone, jointPath) in _bonePathMap)
+        {
+            // Compute rest translation: local position of this bone relative to parent
+            Matrix4x4 restMatrix;
+
+            if (bone.ParentBone == null)
+            {
+                // Root bone: local = world, invert BindPoseMatrix to get boneToWorld
+                if (Matrix4x4.Invert(bone.BindPoseMatrix, out var boneToWorld))
+                {
+                    restMatrix = boneToWorld;
+                }
+                else
+                {
+                    restMatrix = Matrix4x4.Identity;
+                }
+            }
+            else
+            {
+                // Child bone: compute local transform relative to parent
+                // localTransform = parentWorldToBone * childBoneToWorld
+                if (Matrix4x4.Invert(bone.BindPoseMatrix, out var childBoneToWorld))
+                {
+                    restMatrix = bone.ParentBone.BindPoseMatrix * childBoneToWorld;
+                }
+                else
+                {
+                    restMatrix = Matrix4x4.Identity;
+                }
+            }
+
+            // Extract translation from the rest matrix
+            // CryEngine matrices are column-major with translation in column 4 (M14, M24, M34)
+            // (GetRestTransforms transposes this to M41, M42, M43 for USD output)
+            var translation = new Vector3(restMatrix.M14, restMatrix.M24, restMatrix.M34);
+            mapping[jointPath] = translation;
+        }
+
+        return mapping;
+    }
+
+    /// <summary>
+    /// Samples position from a CAF bone track at a given frame.
+    /// If no position keyframes exist, uses the rest translation to maintain skeleton structure.
+    /// </summary>
+    /// <param name="track">The bone animation track.</param>
+    /// <param name="frame">The frame number to sample.</param>
+    /// <param name="restTranslation">The rest pose translation to use when no position animation exists.</param>
+    private static Vector3 SampleCafPosition(BoneTrack track, float frame, Vector3 restTranslation)
+    {
+        // If no position animation, use rest pose translation to maintain skeleton structure
         if (track.Positions.Count == 0)
-            return Vector3.Zero;
+            return restTranslation;
 
         if (track.Positions.Count == 1 || track.KeyTimes.Count == 0)
             return track.Positions[0];

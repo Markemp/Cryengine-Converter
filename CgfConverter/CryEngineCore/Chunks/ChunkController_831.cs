@@ -163,15 +163,12 @@ internal sealed class ChunkController_831 : ChunkController
 
         for (int i = 0; i < count; i++)
         {
+            // Per 010 template: positions only use eNoCompress or eNoCompressVec3 (both read as Vector3)
+            // Other formats are not used for position data in 831 chunks
             Vector3 pos = (ECompressionFormat)format switch
             {
+                ECompressionFormat.eNoCompress => b.ReadVector3(),
                 ECompressionFormat.eNoCompressVec3 => b.ReadVector3(),
-                ECompressionFormat.eNoCompressQuat => b.ReadQuaternion().DropW(),
-                ECompressionFormat.eShotInt3Quat => ((Quaternion)b.ReadShortInt3Quat()).DropW(),
-                ECompressionFormat.eSmallTreeDWORDQuat => ((Quaternion)b.ReadSmallTreeDWORDQuat()).DropW(),
-                ECompressionFormat.eSmallTree48BitQuat => ((Quaternion)b.ReadSmallTree48BitQuat()).DropW(),
-                ECompressionFormat.eSmallTree64BitQuat => ((Quaternion)b.ReadSmallTree64BitQuat()).DropW(),
-                ECompressionFormat.eSmallTree64BitExtQuat => ((Quaternion)b.ReadSmallTree64BitExtQuat()).DropW(),
                 _ => Vector3.Zero
             };
             positions.Add(pos);
