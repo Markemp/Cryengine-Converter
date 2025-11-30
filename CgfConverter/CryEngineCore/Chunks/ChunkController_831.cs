@@ -2,17 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
+using CgfConverter.Models.Structs;
 using CgfConverter.Services;
 using Extensions;
 
-namespace CgfConverter.CryEngineCore.Chunks;
+namespace CgfConverter.CryEngineCore;
 
 /// <summary>
-/// Controller chunk version 0x829 - Compressed format with separate rotation/position tracks.
+/// Controller chunk version 0x831 - Compressed format with separate rotation/position tracks.
 /// Used in CAF animation files. Each chunk contains animation data for a single bone.
-/// Same structure as 0x831 but for older CryEngine versions.
 /// </summary>
-internal sealed class ChunkController_829 : ChunkController
+internal sealed class ChunkController_831 : ChunkController
 {
     /// <summary>CRC32 of the bone name this controller animates.</summary>
     public uint ControllerId { get; internal set; }
@@ -171,5 +171,5 @@ internal sealed class ChunkController_829 : ChunkController
     }
 
     public override string ToString() =>
-        $"ChunkController_829: ID={ID:X}, ControllerId={ControllerId:X}, RotKeys={NumRotationKeys}, PosKeys={NumPositionKeys}";
+        $"ChunkController_831: ID={ID:X}, ControllerId={ControllerId:X}, RotKeys={NumRotationKeys}, PosKeys={NumPositionKeys}";
 }

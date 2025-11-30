@@ -22,52 +22,250 @@ public partial class UsdRenderer
     private List<UsdPrim> CreateAnimations(Dictionary<uint, string> controllerIdToJointPath, UsdHeader header)
     {
         var animations = new List<UsdPrim>();
-
-        if (_cryData.Animations is null || _cryData.Animations.Count == 0)
-        {
-            Log.D("No animations found in CryEngine data");
-            return animations;
-        }
-
         int maxEndFrame = 0;
 
-        // Process each animation chunk (typically from .dba files)
-        foreach (var animModel in _cryData.Animations)
+        // Process DBA animations (ChunkController_905)
+        if (_cryData.Animations is not null && _cryData.Animations.Count > 0)
         {
-            var animChunks = animModel.ChunkMap.Values.OfType<ChunkController_905>().ToList();
-
-            foreach (var animChunk in animChunks)
+            foreach (var animModel in _cryData.Animations)
             {
-                if (animChunk.Animations is null)
-                    continue;
+                var animChunks = animModel.ChunkMap.Values.OfType<ChunkController_905>().ToList();
 
-                // Get stripped names for cleaner animation names
-                var names = StripCommonParentPaths(
-                    animChunk.Animations.Select(x => Path.ChangeExtension(x.Name, null)).ToList());
-
-                foreach (var (anim, name) in animChunk.Animations.Zip(names))
+                foreach (var animChunk in animChunks)
                 {
-                    var (skelAnim, endFrame) = CreateSkelAnimation(anim, animChunk, controllerIdToJointPath, name);
-                    if (skelAnim is not null)
+                    if (animChunk.Animations is null)
+                        continue;
+
+                    // Get stripped names for cleaner animation names
+                    var names = StripCommonParentPaths(
+                        animChunk.Animations.Select(x => Path.ChangeExtension(x.Name, null)).ToList());
+
+                    foreach (var (anim, name) in animChunk.Animations.Zip(names))
                     {
-                        animations.Add(skelAnim);
-                        maxEndFrame = Math.Max(maxEndFrame, endFrame);
-                        Log.D($"Created animation: {name} ({endFrame} frames)");
+                        var (skelAnim, endFrame) = CreateSkelAnimation(anim, animChunk, controllerIdToJointPath, name);
+                        if (skelAnim is not null)
+                        {
+                            animations.Add(skelAnim);
+                            maxEndFrame = Math.Max(maxEndFrame, endFrame);
+                            Log.D($"Created DBA animation: {name} ({endFrame} frames)");
+                        }
                     }
                 }
             }
         }
 
-        // Set header timeline info if we have animations
-        if (animations.Count > 0)
+        // Process CAF animations
+        if (_cryData.CafAnimations is not null && _cryData.CafAnimations.Count > 0)
         {
-            header.TimeCodesPerSecond = 30;
-            header.StartTimeCode = 0;
-            header.EndTimeCode = maxEndFrame;
+            foreach (var cafAnim in _cryData.CafAnimations)
+            {
+                var (skelAnim, endFrame) = CreateSkelAnimationFromCaf(cafAnim, controllerIdToJointPath);
+                if (skelAnim is not null)
+                {
+                    animations.Add(skelAnim);
+                    maxEndFrame = Math.Max(maxEndFrame, endFrame);
+                    Log.D($"Created CAF animation: {cafAnim.Name} ({endFrame} frames)");
+                }
+            }
         }
+
+        if (animations.Count == 0)
+        {
+            Log.D("No animations found in CryEngine data");
+            return animations;
+        }
+
+        // Set header timeline info if we have animations
+        header.TimeCodesPerSecond = 30;
+        header.StartTimeCode = 0;
+        header.EndTimeCode = maxEndFrame;
 
         Log.D($"Created {animations.Count} animation(s)");
         return animations;
+    }
+
+    /// <summary>
+    /// Creates a SkelAnimation prim from a CafAnimation.
+    /// </summary>
+    private (UsdSkelAnimation? skelAnim, int endFrame) CreateSkelAnimationFromCaf(
+        CafAnimation cafAnim,
+        Dictionary<uint, string> controllerIdToJointPath)
+    {
+        // Map controller IDs to joint paths
+        var animatedJoints = new List<string>();
+        var tracksByJointPath = new Dictionary<string, BoneTrack>();
+
+        foreach (var (controllerId, track) in cafAnim.BoneTracks)
+        {
+            // Try to find joint path by controller ID
+            if (!controllerIdToJointPath.TryGetValue(controllerId, out var jointPath))
+            {
+                // Try using bone name from CAF's bone name list
+                if (cafAnim.ControllerIdToBoneName.TryGetValue(controllerId, out var boneName))
+                {
+                    // Search for matching joint path by bone name
+                    jointPath = controllerIdToJointPath.Values
+                        .FirstOrDefault(jp => jp.EndsWith("/" + boneName) || jp == boneName);
+                }
+
+                if (jointPath is null)
+                {
+                    Log.D($"CAF[{cafAnim.Name}]: Controller 0x{controllerId:X08} not found in skeleton");
+                    continue;
+                }
+            }
+
+            animatedJoints.Add(jointPath);
+            tracksByJointPath[jointPath] = track;
+        }
+
+        if (animatedJoints.Count == 0)
+        {
+            Log.W($"CAF[{cafAnim.Name}]: No valid bone tracks found");
+            return (null, 0);
+        }
+
+        // Calculate frame range
+        int startFrame = cafAnim.StartFrame;
+        int endFrame = cafAnim.EndFrame;
+
+        // If timing chunk didn't have valid range, calculate from keyframes
+        if (endFrame <= startFrame)
+        {
+            foreach (var track in tracksByJointPath.Values)
+            {
+                if (track.KeyTimes.Count > 0)
+                {
+                    endFrame = Math.Max(endFrame, (int)track.KeyTimes.Max());
+                }
+            }
+        }
+
+        // Normalize frame range
+        int durationFrames = endFrame - startFrame;
+        if (durationFrames <= 0)
+            durationFrames = 1;
+
+        // Collect all unique frame numbers
+        var allFrames = new SortedSet<int>();
+        foreach (var track in tracksByJointPath.Values)
+        {
+            foreach (var t in track.KeyTimes)
+            {
+                int frame = (int)t - startFrame;
+                if (frame >= 0 && frame <= durationFrames)
+                    allFrames.Add(frame);
+            }
+        }
+
+        // Ensure we have at least frame 0 and end frame
+        allFrames.Add(0);
+        allFrames.Add(durationFrames);
+
+        // Build time-sampled arrays
+        var translationSamples = new SortedDictionary<float, List<Vector3>>();
+        var rotationSamples = new SortedDictionary<float, List<Quaternion>>();
+        var scaleSamples = new SortedDictionary<float, List<Vector3>>();
+
+        foreach (var frame in allFrames)
+        {
+            var translations = new List<Vector3>();
+            var rotations = new List<Quaternion>();
+            var scales = new List<Vector3>();
+
+            foreach (var jointPath in animatedJoints)
+            {
+                var track = tracksByJointPath[jointPath];
+
+                // Sample position at this frame
+                Vector3 position = SampleCafPosition(track, frame + startFrame);
+                translations.Add(position);
+
+                // Sample rotation at this frame
+                Quaternion rotation = SampleCafRotation(track, frame + startFrame);
+                rotations.Add(rotation);
+
+                // CAF animations don't typically have scale
+                scales.Add(Vector3.One);
+            }
+
+            translationSamples[frame] = translations;
+            rotationSamples[frame] = rotations;
+            scaleSamples[frame] = scales;
+        }
+
+        // Create the SkelAnimation prim
+        var cleanName = CleanPathString(cafAnim.Name);
+        var skelAnim = new UsdSkelAnimation(cleanName);
+
+        skelAnim.Attributes.Add(new UsdTokenArray("joints", animatedJoints, isUniform: true));
+        skelAnim.Attributes.Add(new UsdTimeSampledFloat3Array("translations", translationSamples));
+        skelAnim.Attributes.Add(new UsdTimeSampledQuatfArray("rotations", rotationSamples));
+        skelAnim.Attributes.Add(new UsdTimeSampledHalf3Array("scales", scaleSamples));
+
+        return (skelAnim, durationFrames);
+    }
+
+    /// <summary>
+    /// Samples position from a CAF bone track at a given frame.
+    /// </summary>
+    private static Vector3 SampleCafPosition(BoneTrack track, float frame)
+    {
+        if (track.Positions.Count == 0)
+            return Vector3.Zero;
+
+        if (track.Positions.Count == 1 || track.KeyTimes.Count == 0)
+            return track.Positions[0];
+
+        // Find surrounding keyframes
+        int i = 0;
+        while (i < track.KeyTimes.Count - 1 && track.KeyTimes[i + 1] <= frame)
+            i++;
+
+        if (i >= track.Positions.Count)
+            return track.Positions[^1];
+
+        if (i == track.KeyTimes.Count - 1 || track.KeyTimes[i] >= frame)
+            return i < track.Positions.Count ? track.Positions[i] : track.Positions[^1];
+
+        // Linear interpolation
+        float t0 = track.KeyTimes[i];
+        float t1 = track.KeyTimes[i + 1];
+        float alpha = (frame - t0) / (t1 - t0);
+
+        int i1 = Math.Min(i + 1, track.Positions.Count - 1);
+        return Vector3.Lerp(track.Positions[i], track.Positions[i1], alpha);
+    }
+
+    /// <summary>
+    /// Samples rotation from a CAF bone track at a given frame.
+    /// </summary>
+    private static Quaternion SampleCafRotation(BoneTrack track, float frame)
+    {
+        if (track.Rotations.Count == 0)
+            return Quaternion.Identity;
+
+        if (track.Rotations.Count == 1 || track.KeyTimes.Count == 0)
+            return track.Rotations[0];
+
+        // Find surrounding keyframes
+        int i = 0;
+        while (i < track.KeyTimes.Count - 1 && track.KeyTimes[i + 1] <= frame)
+            i++;
+
+        if (i >= track.Rotations.Count)
+            return track.Rotations[^1];
+
+        if (i == track.KeyTimes.Count - 1 || track.KeyTimes[i] >= frame)
+            return i < track.Rotations.Count ? track.Rotations[i] : track.Rotations[^1];
+
+        // Spherical linear interpolation
+        float t0 = track.KeyTimes[i];
+        float t1 = track.KeyTimes[i + 1];
+        float alpha = (frame - t0) / (t1 - t0);
+
+        int i1 = Math.Min(i + 1, track.Rotations.Count - 1);
+        return Quaternion.Slerp(track.Rotations[i], track.Rotations[i1], alpha);
     }
 
     /// <summary>
@@ -318,7 +516,11 @@ public partial class UsdRenderer
         List<string> jointPaths,
         Dictionary<CompiledBone, string> bonePathMap)
     {
-        if (_cryData.Animations is null || _cryData.Animations.Count == 0)
+        // Check if we have any animations (DBA or CAF)
+        bool hasDbaAnimations = _cryData.Animations is not null && _cryData.Animations.Count > 0;
+        bool hasCafAnimations = _cryData.CafAnimations is not null && _cryData.CafAnimations.Count > 0;
+
+        if (!hasDbaAnimations && !hasCafAnimations)
             return 0;
 
         int exportedCount = 0;
@@ -328,25 +530,42 @@ public partial class UsdRenderer
         // Collect all animations with their metadata
         var allAnimations = new List<(string name, UsdSkelAnimation skelAnim, int endFrame)>();
 
-        foreach (var animModel in _cryData.Animations)
+        // Process DBA animations
+        if (hasDbaAnimations)
         {
-            var animChunks = animModel.ChunkMap.Values.OfType<ChunkController_905>().ToList();
-
-            foreach (var animChunk in animChunks)
+            foreach (var animModel in _cryData.Animations!)
             {
-                if (animChunk.Animations is null)
-                    continue;
+                var animChunks = animModel.ChunkMap.Values.OfType<ChunkController_905>().ToList();
 
-                var names = StripCommonParentPaths(
-                    animChunk.Animations.Select(x => Path.ChangeExtension(x.Name, null)).ToList());
-
-                foreach (var (anim, name) in animChunk.Animations.Zip(names))
+                foreach (var animChunk in animChunks)
                 {
-                    var (skelAnim, endFrame) = CreateSkelAnimation(anim, animChunk, controllerIdToJointPath, name);
-                    if (skelAnim is not null)
+                    if (animChunk.Animations is null)
+                        continue;
+
+                    var names = StripCommonParentPaths(
+                        animChunk.Animations.Select(x => Path.ChangeExtension(x.Name, null)).ToList());
+
+                    foreach (var (anim, name) in animChunk.Animations.Zip(names))
                     {
-                        allAnimations.Add((name, skelAnim, endFrame));
+                        var (skelAnim, endFrame) = CreateSkelAnimation(anim, animChunk, controllerIdToJointPath, name);
+                        if (skelAnim is not null)
+                        {
+                            allAnimations.Add((name, skelAnim, endFrame));
+                        }
                     }
+                }
+            }
+        }
+
+        // Process CAF animations
+        if (hasCafAnimations)
+        {
+            foreach (var cafAnim in _cryData.CafAnimations!)
+            {
+                var (skelAnim, endFrame) = CreateSkelAnimationFromCaf(cafAnim, controllerIdToJointPath);
+                if (skelAnim is not null)
+                {
+                    allAnimations.Add((cafAnim.Name, skelAnim, endFrame));
                 }
             }
         }

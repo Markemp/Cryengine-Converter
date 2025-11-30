@@ -33,7 +33,8 @@ public partial class CryEngine
 
     public string Name => Path.GetFileNameWithoutExtension(InputFile).ToLower();
     public List<Model> Models { get; internal set; } = []; // All the model files associated with this game object
-    public List<Model> Animations { get; internal set; } = [];  // Animation files for this object
+    public List<Model> Animations { get; internal set; } = [];  // Animation files for this object (DBA format)
+    public List<CafAnimation> CafAnimations { get; internal set; } = [];  // CAF animation files
     public List<ChunkNode> Nodes { get; internal set; } = []; // node hierarchy.
     public ChunkNode RootNode { get; internal set; } // can get node hierarchy from here
     public ChunkCompiledBones Bones { get; internal set; }  // move to skinning info
@@ -544,25 +545,286 @@ public partial class CryEngine
 
             Log.D("Successfully loaded chrparams, animations count: {0}", chrparams.Animations?.Length ?? 0);
 
-            // Prefer $TracksDatabase (explicit .dba path) over #filepath (base directory for .caf files)
-            var trackFilePath = chrparams.Animations?.FirstOrDefault(x => x.Name == "$TracksDatabase")?.Path
-                ?? chrparams.Animations?.FirstOrDefault(x => x.Name == "#filepath")?.Path;
-            Log.D("$TracksDatabase or #filepath path: {0}", trackFilePath ?? "(not found)");
+            // Try to load DBA database first (preferred for batch animations)
+            var trackFilePath = chrparams.Animations?.FirstOrDefault(x => x.Name == "$TracksDatabase")?.Path;
+            if (trackFilePath is not null)
+            {
+                if (Path.GetExtension(trackFilePath) != ".dba")
+                    trackFilePath = Path.ChangeExtension(trackFilePath, ".dba");
 
-            if (trackFilePath is null)
-                throw new FileNotFoundException("No $TracksDatabase or #filepath entry in chrparams");
-            if (Path.GetExtension(trackFilePath) != ".dba")
-                trackFilePath = Path.ChangeExtension(trackFilePath, ".dba");
+                Log.D("Attempting to load animation database from: {0}", trackFilePath);
+                try
+                {
+                    Animations.Add(Model.FromStream(trackFilePath, PackFileSystem.GetStream(trackFilePath), true));
+                    Log.D("Successfully loaded animation database with DBA format");
+                }
+                catch (FileNotFoundException)
+                {
+                    Log.D("DBA file not found: {0}", trackFilePath);
+                }
+            }
 
-            Log.D("Attempting to load animation database from: {0}", trackFilePath);
-            Animations.Add(Model.FromStream(trackFilePath, PackFileSystem.GetStream(trackFilePath), true));
-            Log.D("Successfully loaded animation database");
+            // Also load individual CAF files from animation entries
+            LoadCafAnimations(chrparams);
         }
         catch (FileNotFoundException ex)
         {
             Log.D("Animation file not found: {0}", ex.Message);
-            Log.I("Unable to find associated animation track database file.");
+            Log.I("Unable to find associated animation files.");
         }
+    }
+
+    /// <summary>
+    /// Loads individual CAF animation files listed in chrparams.
+    /// </summary>
+    private void LoadCafAnimations(ChrParams.ChrParams chrparams)
+    {
+        if (chrparams.Animations is null)
+            return;
+
+        // Get base path for CAF files (from #filepath entry)
+        var basePath = chrparams.Animations.FirstOrDefault(x => x.Name == "#filepath")?.Path ?? "";
+        Log.D("CAF base path: {0}", basePath);
+
+        // Find all animation entries that aren't special directives
+        var cafEntries = chrparams.Animations
+            .Where(a => !string.IsNullOrEmpty(a.Name)
+                     && !a.Name.StartsWith("$")
+                     && !a.Name.StartsWith("#")
+                     && !string.IsNullOrEmpty(a.Path))
+            .ToList();
+
+        Log.D("Found {0} potential CAF animation entries", cafEntries.Count);
+
+        foreach (var entry in cafEntries)
+        {
+            try
+            {
+                // Build full path pattern
+                var cafPattern = entry.Path!;
+                if (!Path.IsPathRooted(cafPattern) && !string.IsNullOrEmpty(basePath))
+                {
+                    cafPattern = Path.Combine(basePath, cafPattern);
+                }
+
+                // Check if this is a wildcard pattern
+                if (cafPattern.Contains('*') || cafPattern.Contains('?'))
+                {
+                    // Expand wildcard pattern to find matching files
+                    var cafFiles = ExpandCafWildcard(cafPattern);
+                    Log.D("Wildcard pattern '{0}' matched {1} files", cafPattern, cafFiles.Count);
+
+                    foreach (var cafPath in cafFiles)
+                    {
+                        LoadSingleCafFile(cafPath);
+                    }
+                }
+                else
+                {
+                    // Single file path
+                    if (Path.GetExtension(cafPattern).ToLowerInvariant() != ".caf")
+                        cafPattern = Path.ChangeExtension(cafPattern, ".caf");
+
+                    LoadSingleCafFile(cafPattern, entry.Name!);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.D("Error processing CAF entry {0}: {1}", entry.Path, ex.Message);
+            }
+        }
+
+        if (CafAnimations.Count > 0)
+            Log.I("Loaded {0} CAF animation(s)", CafAnimations.Count);
+    }
+
+    /// <summary>
+    /// Expands a wildcard pattern to find matching CAF files.
+    /// </summary>
+    private List<string> ExpandCafWildcard(string pattern)
+    {
+        var results = new List<string>();
+
+        try
+        {
+            // Get the directory portion and file pattern
+            var directory = Path.GetDirectoryName(pattern) ?? "";
+            var filePattern = Path.GetFileName(pattern);
+
+            // Resolve relative paths against ObjectDir
+            if (!Path.IsPathRooted(directory) && !string.IsNullOrEmpty(ObjectDir))
+            {
+                directory = Path.Combine(ObjectDir, directory);
+            }
+
+            if (Directory.Exists(directory))
+            {
+                // Use Directory.GetFiles for wildcard matching
+                var matchingFiles = Directory.GetFiles(directory, filePattern, SearchOption.TopDirectoryOnly);
+                results.AddRange(matchingFiles.Where(f =>
+                    f.EndsWith(".caf", StringComparison.OrdinalIgnoreCase)));
+            }
+            else
+            {
+                Log.D("Directory not found for wildcard expansion: {0}", directory);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.D("Error expanding wildcard pattern {0}: {1}", pattern, ex.Message);
+        }
+
+        return results;
+    }
+
+    /// <summary>
+    /// Loads a single CAF file.
+    /// </summary>
+    private void LoadSingleCafFile(string cafPath, string? animationName = null)
+    {
+        try
+        {
+            // Resolve relative paths against ObjectDir
+            var fullPath = cafPath;
+            if (!Path.IsPathRooted(fullPath) && !string.IsNullOrEmpty(ObjectDir))
+            {
+                fullPath = Path.Combine(ObjectDir, fullPath);
+            }
+
+            // Use filename without extension as animation name if not specified
+            animationName ??= Path.GetFileNameWithoutExtension(fullPath);
+
+            Log.D("Loading CAF: {0} (name: {1})", fullPath, animationName);
+
+            var cafModel = Model.FromStream(fullPath, PackFileSystem.GetStream(fullPath), true);
+            var cafAnimation = ParseCafModel(cafModel, animationName, fullPath);
+
+            if (cafAnimation is not null)
+            {
+                CafAnimations.Add(cafAnimation);
+                Log.D("Successfully loaded CAF animation: {0}", animationName);
+            }
+        }
+        catch (FileNotFoundException)
+        {
+            Log.D("CAF file not found: {0}", cafPath);
+        }
+        catch (Exception ex)
+        {
+            Log.D("Error loading CAF {0}: {1}", cafPath, ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Parses a CAF Model into a CafAnimation structure.
+    /// </summary>
+    private CafAnimation? ParseCafModel(Model cafModel, string animationName, string filePath)
+    {
+        var animation = new CafAnimation
+        {
+            Name = animationName,
+            FilePath = filePath
+        };
+
+        // Get timing info from timing chunk
+        var timingChunk = cafModel.ChunkMap.Values.OfType<ChunkTimingFormat>().FirstOrDefault();
+        if (timingChunk is not null)
+        {
+            animation.SecsPerTick = timingChunk.SecsPerTick;
+            animation.TicksPerFrame = timingChunk.TicksPerFrame;
+            animation.StartFrame = timingChunk.GlobalRange.Start;
+            animation.EndFrame = timingChunk.GlobalRange.End;
+        }
+
+        // Get bone name mapping from BoneNameList chunk
+        var boneNameList = cafModel.ChunkMap.Values.OfType<ChunkBoneNameList>().FirstOrDefault();
+        if (boneNameList is not null)
+        {
+            // Build CRC32 -> bone name mapping
+            foreach (var boneName in boneNameList.BoneNames)
+            {
+                var crc = ComputeBoneNameCrc32(boneName);
+                animation.ControllerIdToBoneName[crc] = boneName;
+            }
+        }
+
+        // Process controller chunks (829/831 = compressed, 830 = uncompressed CryKeyPQLog)
+        var controllers829 = cafModel.ChunkMap.Values.OfType<CryEngineCore.Chunks.ChunkController_829>().ToList();
+        var controllers830 = cafModel.ChunkMap.Values.OfType<ChunkController_830>().ToList();
+        var controllers831 = cafModel.ChunkMap.Values.OfType<ChunkController_831>().ToList();
+
+        foreach (var ctrl in controllers830)
+        {
+            var track = new BoneTrack
+            {
+                ControllerId = ctrl.ControllerId,
+                KeyTimes = ctrl.KeyTimes.Select(t => (float)t).ToList(),
+                Positions = ctrl.KeyPositions.ToList(),
+                Rotations = ctrl.KeyRotations.ToList()
+            };
+            animation.BoneTracks[ctrl.ControllerId] = track;
+        }
+
+        // 829 and 831 have the same structure (separate rotation/position tracks)
+        foreach (var ctrl in controllers829)
+        {
+            var track = new BoneTrack
+            {
+                ControllerId = ctrl.ControllerId,
+                KeyTimes = ctrl.RotationKeyTimes.Count > 0
+                    ? ctrl.RotationKeyTimes.ToList()
+                    : ctrl.PositionKeyTimes.ToList(),
+                Positions = ctrl.KeyPositions.ToList(),
+                Rotations = ctrl.KeyRotations.ToList()
+            };
+            animation.BoneTracks[ctrl.ControllerId] = track;
+        }
+
+        foreach (var ctrl in controllers831)
+        {
+            var track = new BoneTrack
+            {
+                ControllerId = ctrl.ControllerId,
+                KeyTimes = ctrl.RotationKeyTimes.Count > 0
+                    ? ctrl.RotationKeyTimes.ToList()
+                    : ctrl.PositionKeyTimes.ToList(),
+                Positions = ctrl.KeyPositions.ToList(),
+                Rotations = ctrl.KeyRotations.ToList()
+            };
+            animation.BoneTracks[ctrl.ControllerId] = track;
+        }
+
+        if (animation.BoneTracks.Count == 0)
+        {
+            Log.D("No controller chunks found in CAF file: {0}", filePath);
+            return null;
+        }
+
+        Log.D("Parsed CAF with {0} bone tracks, frames {1}-{2}",
+            animation.BoneTracks.Count, animation.StartFrame, animation.EndFrame);
+
+        return animation;
+    }
+
+    /// <summary>
+    /// Computes CRC32 of a bone name (lowercase) for controller ID matching.
+    /// </summary>
+    private static uint ComputeBoneNameCrc32(string boneName)
+    {
+        // CryEngine uses lowercase CRC32 for bone names
+        var bytes = System.Text.Encoding.ASCII.GetBytes(boneName.ToLowerInvariant());
+        uint crc = 0xFFFFFFFF;
+
+        foreach (byte b in bytes)
+        {
+            crc ^= b;
+            for (int i = 0; i < 8; i++)
+            {
+                crc = (crc >> 1) ^ (0xEDB88320 & ~((crc & 1) - 1));
+            }
+        }
+
+        return ~crc;
     }
 
     private GeometryInfo BuildNodeGeometryInfo(ChunkIvoSkinMesh skinMesh, IEnumerable<MeshSubset> subsets)
