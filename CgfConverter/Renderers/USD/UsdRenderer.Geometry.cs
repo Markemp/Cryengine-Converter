@@ -127,7 +127,9 @@ public partial class UsdRenderer
             {
                 // For faceVarying normals, expand the normals array to match faceVertexIndices
                 // by indexing into the normals using the same indices as vertices
-                var faceVaryingNormals = indices.Data.Select(idx => normals.Data[(int)idx]).ToList();
+                var faceVaryingNormals = indices.Data
+                    .Select(idx => (int)idx < normals.Data.Length ? normals.Data[(int)idx] : Vector3.UnitY)
+                    .ToList();
                 meshPrim.Attributes.Add(new UsdNormalsList("normals", faceVaryingNormals));
             }
 
@@ -138,9 +140,19 @@ public partial class UsdRenderer
             foreach (var subset in meshChunk.GeometryInfo.GeometrySubsets ?? [])
             {
                 var index = subset.MatID;
+
+                // Bounds check for material lookup
+                if (!_cryData.Materials.TryGetValue(nodeChunk.MaterialFileName, out var material) ||
+                    material?.SubMaterials is null ||
+                    index < 0 || index >= material.SubMaterials.Length)
+                {
+                    Log.D($"Mesh[{nodeChunk.Name}]: Material index {index} out of bounds or material not found.");
+                    continue;
+                }
+
                 var matName = GetMaterialName(
                     Path.GetFileNameWithoutExtension(nodeChunk.MaterialFileName),
-                    _cryData.Materials[nodeChunk.MaterialFileName].SubMaterials[index].Name);
+                    material.SubMaterials[index].Name);
                 var cleanMatName = CleanPathString(matName);
 
                 var submeshPrim = new UsdGeomSubset(cleanMatName);
@@ -271,7 +283,9 @@ public partial class UsdRenderer
             {
                 // For faceVarying normals, expand the normals array to match faceVertexIndices
                 // by indexing into the extracted normals using the remapped indices
-                var faceVaryingNormals = remappedIndices.Select(idx => normalsList[idx]).ToList();
+                var faceVaryingNormals = remappedIndices
+                    .Select(idx => idx >= 0 && idx < normalsList.Count ? normalsList[idx] : Vector3.UnitY)
+                    .ToList();
                 meshPrim.Attributes.Add(new UsdNormalsList("normals", faceVaryingNormals));
             }
 
@@ -285,9 +299,21 @@ public partial class UsdRenderer
             foreach (var subset in meshChunk.GeometryInfo.GeometrySubsets ?? [])
             {
                 var index = subset.MatID;
+
+                // Bounds check for material lookup
+                if (!_cryData.Materials.TryGetValue(nodeChunk.MaterialFileName, out var material) ||
+                    material?.SubMaterials is null ||
+                    index < 0 || index >= material.SubMaterials.Length)
+                {
+                    Log.D($"Mesh[{nodeChunk.Name}]: Material index {index} out of bounds or material not found.");
+                    // Still need to update face offset even if we skip this subset
+                    currentFaceOffset += (int)subset.NumIndices / 3;
+                    continue;
+                }
+
                 var matName = GetMaterialName(
                     Path.GetFileNameWithoutExtension(nodeChunk.MaterialFileName),
-                    _cryData.Materials[nodeChunk.MaterialFileName].SubMaterials[index].Name);
+                    material.SubMaterials[index].Name);
                 var cleanMatName = CleanPathString(matName);
 
                 var submeshPrim = new UsdGeomSubset(cleanMatName);
