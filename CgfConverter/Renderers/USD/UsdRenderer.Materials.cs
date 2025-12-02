@@ -19,6 +19,7 @@ public partial class UsdRenderer
     {
         var scope = new UsdScope("_materials");
         var matList = new List<UsdMaterial>();
+        var createdMaterialNames = new HashSet<string>();  // Track created materials to avoid duplicates
 
         foreach (var matKey in _cryData.Materials.Keys) // Each mtl file is a Key
         {
@@ -26,6 +27,15 @@ public partial class UsdRenderer
             {
                 var matName = GetMaterialName(matKey, submat.Name);
                 var cleanMatName = CleanPathString(matName);
+
+                // Skip if we've already created a material with this name
+                if (createdMaterialNames.Contains(cleanMatName))
+                {
+                    Log.D($"Skipping duplicate material: {cleanMatName}");
+                    continue;
+                }
+                createdMaterialNames.Add(cleanMatName);
+
                 var usdMat = new UsdMaterial(cleanMatName);
                 usdMat.Attributes.Add(new UsdToken<string>(
                     "outputs:surface.connect",
