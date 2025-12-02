@@ -3,6 +3,7 @@ using CgfConverter.Utilities;
 using Extensions;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using System.Text;
 
@@ -194,12 +195,35 @@ internal sealed class ChunkIvoCAF_900 : ChunkIvoCAF
 
     private static List<float> ReadKeyTimes(BinaryReader b, int count)
     {
-        var times = new List<float>(count);
-
+        // Read raw uint16 time keys
+        var rawTimes = new List<ushort>(count);
         for (int i = 0; i < count; i++)
         {
-            // Time keys are typically stored as uint16
-            times.Add(b.ReadUInt16());
+            rawTimes.Add(b.ReadUInt16());
+        }
+
+        // Normalize time keys to frame indices (0 to count-1)
+        // Raw uint16 values represent normalized time where max = animation end
+        var times = new List<float>(count);
+        if (rawTimes.Count == 0)
+            return times;
+
+        ushort maxTime = rawTimes.Max();
+        if (maxTime == 0)
+        {
+            // All zeros - use sequential frame numbers
+            for (int i = 0; i < count; i++)
+                times.Add(i);
+        }
+        else
+        {
+            // Normalize to 0.0-1.0, then scale to frame count
+            float frameCount = count - 1;
+            foreach (var t in rawTimes)
+            {
+                float normalized = (float)t / maxTime;
+                times.Add(normalized * frameCount);
+            }
         }
 
         return times;
