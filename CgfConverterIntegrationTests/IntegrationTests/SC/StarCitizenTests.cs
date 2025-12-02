@@ -919,4 +919,71 @@ public class StarCitizenTests
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
     }
+
+    [TestMethod]
+    public void Aloprat_Skel_USD_WithCAF()
+    {
+        // Test the aloprat skeleton with #ivo CAF animation files
+        var skeletonPath = $@"{objectDir41}\Objects\Characters\Creatures\aloprat\aloprat_skel.chr";
+
+        var args = new string[] { skeletonPath, "-objectdir", objectDir41, "-usd" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        // Load and process the skeleton
+        CryEngine cryData = new(skeletonPath, testUtils.argsHandler.PackFileSystem, objectDir: objectDir41);
+        cryData.ProcessCryengineFiles();
+
+        // Log diagnostic info about CAF animations
+        Console.WriteLine($"CafAnimations count: {cryData.CafAnimations.Count}");
+        foreach (var anim in cryData.CafAnimations)
+        {
+            Console.WriteLine($"  Animation: {anim.Name}, Tracks: {anim.BoneTracks.Count}");
+        }
+
+        // Generate USD output
+        var usdRenderer = new UsdRenderer(testUtils.argsHandler, cryData);
+        var usdDoc = usdRenderer.GenerateUsdObject();
+        usdRenderer.Render();
+
+        // Basic structure checks
+        Assert.AreEqual("root", usdDoc.Header.DefaultPrim);
+        Assert.AreEqual("Z", usdDoc.Header.UpAxis);
+
+        // Verify skeleton was created
+        var rootPrim = usdDoc.Prims[0];
+        Assert.IsNotNull(rootPrim);
+
+        // Verify CAF animations were loaded
+        Assert.IsTrue(cryData.CafAnimations.Count > 0, "Should have loaded CAF animations from chrparams wildcards");
+    }
+
+    [TestMethod]
+    public void Aloprat_CAF_IvoAnimation()
+    {
+        // Test loading a Star Citizen #ivo CAF animation file directly
+        var cafPath = $@"{objectDir41}\Animations\Characters\Creatures\aloprat\ai_aloprat_stand_idle_01.caf";
+
+        var args = new string[] { cafPath, "-objectdir", objectDir41 };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        // Load the CAF file
+        CryEngine cryData = new(cafPath, testUtils.argsHandler.PackFileSystem, objectDir: objectDir41);
+        cryData.ProcessCryengineFiles();
+
+        // Check that models were loaded
+        Assert.IsNotNull(cryData.Models);
+        Assert.IsTrue(cryData.Models.Count > 0, "Should have at least one model loaded");
+
+        // Check for animation-related chunks (IvoCAFData, IvoAnimInfo)
+        var model = cryData.Models[0];
+        var chunks = model.ChunkMap.Values.ToList();
+
+        // Log chunk types for debugging
+        foreach (var chunk in chunks)
+        {
+            Console.WriteLine($"Chunk: {chunk.GetType().Name}");
+        }
+    }
 }

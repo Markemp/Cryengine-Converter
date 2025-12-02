@@ -75,6 +75,11 @@ public abstract class Chunk : IBinaryChunk
             ChunkType.BoneNameList => Chunk.New<ChunkBoneNameList>(version),
             ChunkType.MeshMorphTarget => Chunk.New<ChunkMeshMorphTargets>(version),
             ChunkType.BinaryXmlDataSC => Chunk.New<ChunkBinaryXmlData>(version),
+            // Star Citizen #ivo animation chunks
+            ChunkType.IvoCAFData => Chunk.New<ChunkIvoCAF>(version),
+            ChunkType.IvoAnimInfo => Chunk.New<ChunkIvoAnimInfo>(version),
+            ChunkType.IvoDBAData => Chunk.New<ChunkIvoDBAData>(version),
+            ChunkType.IvoDBAMetadata => Chunk.New<ChunkIvoDBAMetadata>(version),
             _ => new ChunkUnknown(),
         };
     }

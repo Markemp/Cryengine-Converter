@@ -108,6 +108,12 @@ public enum ChunkType : uint    // complete
     BShapesGPU = 0x57A3BEFD,
     BShapes = 0x875CCB28,
 
+    // Star Citizen #ivo animation chunks
+    IvoAnimInfo = 0x4733C6ED,       // Animation info chunk (CAF), v901
+    IvoCAFData = 0xA9496CB5,        // #caf animation data
+    IvoDBAData = 0x194FBC50,        // #dba animation data blocks (was SpeedInfoSC)
+    IvoDBAMetadata = 0xF7351608,    // DBA metadata/string table
+
     BinaryXmlDataSC = 0xcccbf004,
 }
 

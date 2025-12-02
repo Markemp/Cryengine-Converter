@@ -640,6 +640,7 @@ public partial class CryEngine
 
     /// <summary>
     /// Expands a wildcard pattern to find matching CAF files.
+    /// Handles wildcards in both directory path (e.g., "path/*/*.caf") and filename (e.g., "path/*.caf").
     /// </summary>
     private List<string> ExpandCafWildcard(string pattern)
     {
@@ -647,26 +648,57 @@ public partial class CryEngine
 
         try
         {
-            // Get the directory portion and file pattern
-            var directory = Path.GetDirectoryName(pattern) ?? "";
-            var filePattern = Path.GetFileName(pattern);
+            // Normalize path separators
+            pattern = pattern.Replace('\\', '/');
 
-            // Resolve relative paths against ObjectDir
-            if (!Path.IsPathRooted(directory) && !string.IsNullOrEmpty(ObjectDir))
-            {
-                directory = Path.Combine(ObjectDir, directory);
-            }
+            // Check if the directory portion contains wildcards
+            var lastSlash = pattern.LastIndexOf('/');
+            var filePattern = lastSlash >= 0 ? pattern[(lastSlash + 1)..] : pattern;
+            var directoryPattern = lastSlash >= 0 ? pattern[..lastSlash] : "";
 
-            if (Directory.Exists(directory))
+            // Find the first wildcard in the directory path
+            var firstWildcardIndex = directoryPattern.IndexOfAny(['*', '?']);
+
+            string baseDirectory;
+            bool searchRecursively = false;
+
+            if (firstWildcardIndex >= 0)
             {
-                // Use Directory.GetFiles for wildcard matching
-                var matchingFiles = Directory.GetFiles(directory, filePattern, SearchOption.TopDirectoryOnly);
-                results.AddRange(matchingFiles.Where(f =>
-                    f.EndsWith(".caf", StringComparison.OrdinalIgnoreCase)));
+                // There's a wildcard in the directory path - need to search recursively
+                // Find the last slash before the wildcard to get the base directory
+                var lastSlashBeforeWildcard = directoryPattern.LastIndexOf('/', firstWildcardIndex);
+                baseDirectory = lastSlashBeforeWildcard >= 0
+                    ? directoryPattern[..lastSlashBeforeWildcard]
+                    : "";
+                searchRecursively = true;
             }
             else
             {
-                Log.D("Directory not found for wildcard expansion: {0}", directory);
+                baseDirectory = directoryPattern;
+            }
+
+            // Resolve relative paths against ObjectDir
+            if (!Path.IsPathRooted(baseDirectory) && !string.IsNullOrEmpty(ObjectDir))
+            {
+                baseDirectory = Path.Combine(ObjectDir, baseDirectory);
+            }
+
+            // Normalize again after Path.Combine
+            baseDirectory = baseDirectory.Replace('\\', '/');
+
+            if (Directory.Exists(baseDirectory))
+            {
+                var searchOption = searchRecursively ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+                var matchingFiles = Directory.GetFiles(baseDirectory, filePattern, searchOption);
+                results.AddRange(matchingFiles.Where(f =>
+                    f.EndsWith(".caf", StringComparison.OrdinalIgnoreCase)));
+
+                Log.D("Searched '{0}' with pattern '{1}', recursive={2}, found {3} files",
+                    baseDirectory, filePattern, searchRecursively, results.Count);
+            }
+            else
+            {
+                Log.D("Directory not found for wildcard expansion: {0}", baseDirectory);
             }
         }
         catch (Exception ex)
@@ -792,6 +824,37 @@ public partial class CryEngine
                 Rotations = ctrl.KeyRotations.ToList()
             };
             animation.BoneTracks[ctrl.ControllerId] = track;
+        }
+
+        // Process Star Citizen #ivo CAF chunks
+        var ivoCAFs = cafModel.ChunkMap.Values.OfType<ChunkIvoCAF>().ToList();
+        foreach (var ivoCaf in ivoCAFs)
+        {
+            // Each bone hash maps to rotation/position data
+            foreach (var boneHash in ivoCaf.BoneHashes)
+            {
+                // Get rotation data
+                ivoCaf.Rotations.TryGetValue(boneHash, out var rotations);
+                ivoCaf.RotationTimes.TryGetValue(boneHash, out var rotTimes);
+                ivoCaf.Positions.TryGetValue(boneHash, out var positions);
+                ivoCaf.PositionTimes.TryGetValue(boneHash, out var posTimes);
+
+                // Determine key times - prefer rotation times, fall back to position times
+                var keyTimes = rotTimes ?? posTimes ?? [];
+
+                var track = new BoneTrack
+                {
+                    ControllerId = boneHash,
+                    Rotations = rotations ?? [],
+                    Positions = positions ?? [],
+                    KeyTimes = keyTimes
+                };
+
+                if (track.Rotations.Count > 0 || track.Positions.Count > 0)
+                {
+                    animation.BoneTracks[boneHash] = track;
+                }
+            }
         }
 
         if (animation.BoneTracks.Count == 0)
