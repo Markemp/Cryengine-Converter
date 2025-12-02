@@ -167,7 +167,8 @@ public partial class CryEngine
                         ParentNodeIndex = node.ParentIndex,
                         ParentNodeID = node.ParentIndex == 0xffff ? -1 : node.ParentIndex,
                         NumChildren = node.NumberOfChildren,
-                        MaterialID = node.GeometryType == IvoGeometryType.Geometry ? materialTable[index] : 0,
+                        // Get material ID from mesh subsets (not materialTable which uses mesh subset indices, not node indices)
+                        MaterialID = hasGeometry ? subsets[0].MatID : 0,
                         Transform = node.BoneToWorld.ConvertToLocalTransformMatrix(),
                         ChunkType = ChunkType.Node,
                         ID = (int)node.Id,
