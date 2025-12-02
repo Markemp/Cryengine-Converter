@@ -75,6 +75,7 @@ public partial class UsdRenderer : IRenderer
     private Dictionary<uint, string>? _controllerIdToJointPath;
     private List<string>? _jointPaths;
     private Dictionary<CompiledBone, string>? _bonePathMap;
+    private int[]? _compiledBoneIndexToJointIndex;  // Maps CompiledBones array index to jointPaths array index
 
     public int Render()
     {
@@ -127,7 +128,7 @@ public partial class UsdRenderer : IRenderer
         {
             // Create skeleton hierarchy and cache data for multi-file animation export
             Log.D("Model has skeleton with {0} bones", _cryData.SkinningInfo.CompiledBones.Count);
-            var skelRoot = CreateSkeleton(out _controllerIdToJointPath, out _jointPaths, out _bonePathMap);
+            var skelRoot = CreateSkeleton(out _controllerIdToJointPath, out _jointPaths, out _bonePathMap, out _compiledBoneIndexToJointIndex);
             rootPrim.Children.Add(skelRoot);
 
             // Add skinned node hierarchy under the skeleton root

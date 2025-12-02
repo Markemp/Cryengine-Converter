@@ -334,16 +334,7 @@ Materials are loaded lazily during `CreateMaterials()`. Check `MaterialUtilities
   - Transpose 3x3 rotation only + move translation to row 4: Translations wrong
   - **Priority: Fix before armature/skinning work.**
 
-- **USD Skinning: Bone-to-vertex mapping incorrect for Star Citizen .skin files**: When exporting `aloprat.skin` to USD, the armature imports correctly but bones influence wrong vertices. Examples observed:
-  - `R_UpperArm` bone influences vertices in the head
-  - `Tail1` bone influences back right toe vertices
-  - This suggests the joint indices in `skel:jointIndices` don't match the joint order in the skeleton's `joints` array
-  - **Likely causes to investigate:**
-    1. Joint index remapping issue: The bone indices stored in `ChunkCompiledIntSkinVertices` may use a different ordering than the skeleton joint list
-    2. Ext2Int mapping: Star Citizen uses `ChunkCompiledExtToIntMap` to map external vertex indices to internal - this mapping may need to be applied to skinning weights too
-    3. Bone hash vs bone index: CAF animations use bone hashes; skinning may need similar hash-based lookup instead of direct indices
-  - **Files to investigate:** `UsdRenderer.Skeleton.cs` (AddSkinningAttributes), `SkinningInfo.cs`, `ChunkCompiledIntSkinVertices`
-  - **Test file:** `d:\depot\SC4.1\Data\Objects\Characters\Creatures\aloprat\aloprat.skin`
+- ~~**USD Skinning: Bone-to-vertex mapping incorrect for Star Citizen .skin files**~~ - FIXED: The issue was that `BoneIndex` values in skinning data (from `IntSkinVertex.BoneMapping`) are indices into the `CompiledBones` array order, but USD's `skel:jointIndices` expects indices into the `joints` array built from `jointPaths`. Since `BuildJointPaths()` walks the bone hierarchy depth-first, it produces a different ordering than the linear `CompiledBones` array. The fix adds `_compiledBoneIndexToJointIndex` mapping in `CreateSkeleton()` and uses it in `AddSkinningAttributes()` to remap bone indices before outputting to USD.
 
 ### Multiple UV Layer Support (IN PROGRESS)
 

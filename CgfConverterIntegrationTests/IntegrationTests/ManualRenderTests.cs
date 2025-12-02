@@ -142,6 +142,12 @@ public class ManualRenderTests
         RenderToUsd($@"{sc41ObjectDir}\Objects\Characters\Creatures\aloprat\aloprat_skel.chr", sc41ObjectDir);
     }
 
+    [TestMethod]
+    public void Aloprat_Skin_USD()
+    {
+        RenderToUsd($@"{sc41ObjectDir}\Objects\Characters\Creatures\aloprat\aloprat.skin", sc41ObjectDir);
+    }
+
     #endregion
 
     #region Helper Methods

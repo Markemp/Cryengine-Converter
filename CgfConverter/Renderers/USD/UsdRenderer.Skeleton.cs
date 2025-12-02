@@ -20,11 +20,13 @@ public partial class UsdRenderer
     /// <param name="controllerIdToJointPath">Output mapping from bone controller IDs to USD joint paths for animation binding.</param>
     /// <param name="jointPaths">Output list of joint paths in order.</param>
     /// <param name="bonePathMap">Output mapping from CompiledBone to joint path.</param>
+    /// <param name="compiledBoneIndexToJointIndex">Output mapping from CompiledBones array index to jointPaths array index.</param>
     /// <returns>The SkelRoot prim containing the skeleton.</returns>
     private UsdSkelRoot CreateSkeleton(
         out Dictionary<uint, string> controllerIdToJointPath,
         out List<string> jointPaths,
-        out Dictionary<CompiledBone, string> bonePathMap)
+        out Dictionary<CompiledBone, string> bonePathMap,
+        out int[] compiledBoneIndexToJointIndex)
     {
         var skelRoot = new UsdSkelRoot("Armature");
         var skeleton = new UsdSkeleton("Skeleton");
@@ -39,6 +41,37 @@ public partial class UsdRenderer
         foreach (var kvp in bonePathMap)
         {
             controllerIdToJointPath[kvp.Key.ControllerID] = kvp.Value;
+        }
+
+        // Build mapping from CompiledBones array index to jointPaths array index
+        // This is critical because:
+        // - IntSkinVertex.BoneMapping.BoneIndex contains indices into CompiledBones array order
+        // - USD skel:jointIndices expects indices into jointPaths array order
+        // - These orders may differ due to depth-first vs linear traversal
+        var compiledBones = _cryData.SkinningInfo.CompiledBones;
+        compiledBoneIndexToJointIndex = new int[compiledBones.Count];
+
+        // Build reverse lookup from path to jointPaths index
+        var pathToJointIndex = new Dictionary<string, int>();
+        for (int i = 0; i < jointPaths.Count; i++)
+        {
+            pathToJointIndex[jointPaths[i]] = i;
+        }
+
+        // Map each CompiledBone index to its corresponding jointPaths index
+        for (int compiledIndex = 0; compiledIndex < compiledBones.Count; compiledIndex++)
+        {
+            var bone = compiledBones[compiledIndex];
+            if (bonePathMap.TryGetValue(bone, out var path) && pathToJointIndex.TryGetValue(path, out var jointIndex))
+            {
+                compiledBoneIndexToJointIndex[compiledIndex] = jointIndex;
+            }
+            else
+            {
+                // Fallback to same index if bone wasn't found (shouldn't happen with valid data)
+                Log.W($"Bone at index {compiledIndex} ({bone?.BoneName}) not found in joint paths, using index as-is");
+                compiledBoneIndexToJointIndex[compiledIndex] = compiledIndex;
+            }
         }
 
         // Add joint names array
@@ -186,8 +219,18 @@ public partial class UsdRenderer
         // Get skinning data
         var skinningInfo = _cryData.SkinningInfo;
 
+        // Ensure we have the bone index mapping (set up by CreateSkeleton)
+        if (_compiledBoneIndexToJointIndex is null)
+        {
+            Log.W("Skinning attributes requested but bone index mapping not initialized");
+            return;
+        }
+
         // Build joint indices and weights arrays FIRST to check if we have actual skinning data
         // Use Ext2IntMap if available to map external (mesh) vertices to internal (skinning) vertices
+        // IMPORTANT: BoneIndex values in skinning data are indices into CompiledBones array,
+        // but USD expects indices into the joints array (jointPaths). We must remap using
+        // _compiledBoneIndexToJointIndex to fix bone-to-vertex mapping.
         var jointIndices = new List<int>();
         var jointWeights = new List<float>();
 
@@ -201,7 +244,12 @@ public partial class UsdRenderer
                 // Add bone indices and weights (up to 4 influences per vertex)
                 for (int i = 0; i < 4; i++)
                 {
-                    jointIndices.Add(intVertex.BoneMapping.BoneIndex[i]);
+                    // Remap from CompiledBones index to jointPaths index
+                    int compiledBoneIndex = intVertex.BoneMapping.BoneIndex[i];
+                    int jointIndex = compiledBoneIndex < _compiledBoneIndexToJointIndex.Length
+                        ? _compiledBoneIndexToJointIndex[compiledBoneIndex]
+                        : compiledBoneIndex;
+                    jointIndices.Add(jointIndex);
                     jointWeights.Add(intVertex.BoneMapping.Weight[i]);
                 }
             }
@@ -213,7 +261,12 @@ public partial class UsdRenderer
             {
                 for (int i = 0; i < 4; i++)
                 {
-                    jointIndices.Add(boneMapping.BoneIndex[i]);
+                    // Remap from CompiledBones index to jointPaths index
+                    int compiledBoneIndex = boneMapping.BoneIndex[i];
+                    int jointIndex = compiledBoneIndex < _compiledBoneIndexToJointIndex.Length
+                        ? _compiledBoneIndexToJointIndex[compiledBoneIndex]
+                        : compiledBoneIndex;
+                    jointIndices.Add(jointIndex);
                     jointWeights.Add(boneMapping.Weight[i]);
                 }
             }
