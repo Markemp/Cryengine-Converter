@@ -173,7 +173,6 @@ public class ManualRenderTests
         RenderToCollada($@"{archeageObjectDir}\game\objects\env\01_nuia\001_housing\01_tools\basket_mix_ani.cga", archeageObjectDir);
     }
 
-
     #endregion
 
     #region Helper Methods
