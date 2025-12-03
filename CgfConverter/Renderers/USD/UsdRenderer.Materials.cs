@@ -23,7 +23,14 @@ public partial class UsdRenderer
 
         foreach (var matKey in _cryData.Materials.Keys) // Each mtl file is a Key
         {
-            foreach (var submat in _cryData.Materials[matKey].SubMaterials)
+            var material = _cryData.Materials[matKey];
+            if (material?.SubMaterials is null)
+            {
+                Log.D($"Skipping material '{matKey}' - no submaterials");
+                continue;
+            }
+
+            foreach (var submat in material.SubMaterials)
             {
                 var matName = GetMaterialName(matKey, submat.Name);
                 var cleanMatName = CleanPathString(matName);
