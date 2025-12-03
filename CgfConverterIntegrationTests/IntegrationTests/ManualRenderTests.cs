@@ -24,6 +24,8 @@ public class ManualRenderTests
     private readonly string armedWarfareObjectDir = @"d:\depot\armoredwarfare";
     private readonly string mwoObjectDir = @"d:\depot\mwo";
     private readonly string sc41ObjectDir = @"d:\depot\sc4.1\data";
+    private readonly string sc44ObjectDir = @"d:\depot\sc4.4\data";
+    private readonly string archeageObjectDir = @"d:\depot\archeage";
 
     [TestInitialize]
     public void Initialize()
@@ -147,6 +149,30 @@ public class ManualRenderTests
     {
         RenderToUsd($@"{sc41ObjectDir}\Objects\Characters\Creatures\aloprat\aloprat.skin", sc41ObjectDir);
     }
+
+
+    [TestMethod]
+    public void GLSN_Shiv_Door_Ramp_Cga_USD()
+    {
+        RenderToUsd($@"{sc44ObjectDir}\objects\spaceships\ships\GLSN\shiv\Maelstrom\GLSN_Shiv_Door_Ramp.cga", sc41ObjectDir);
+    }
+
+    #endregion
+
+    #region ArcheAge tests
+
+    [TestMethod]
+    public void Basket_Mix_Ani_USD() // has 2 material libraries
+    {
+        RenderToUsd($@"{archeageObjectDir}\game\objects\env\01_nuia\001_housing\01_tools\basket_mix_ani.cga", archeageObjectDir);
+    }
+
+    [TestMethod]
+    public void Basket_Mix_Ani_Collada() // has 2 material libraries
+    {
+        RenderToCollada($@"{archeageObjectDir}\game\objects\env\01_nuia\001_housing\01_tools\basket_mix_ani.cga", archeageObjectDir);
+    }
+
 
     #endregion
 

@@ -156,7 +156,7 @@ public class Model
             return;
         }
 
-        throw new NotSupportedException($"Unsupported FileS ignature {FileSignature}");
+        throw new NotSupportedException($"Unsupported File Signature {FileSignature}");
     }
 
     private void CreateDummyRootNode()
