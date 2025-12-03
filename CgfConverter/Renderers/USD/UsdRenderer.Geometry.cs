@@ -137,6 +137,10 @@ public partial class UsdRenderer
             Dictionary<string, object> matBindingApi = new() { ["apiSchemas"] = "[\"MaterialBindingAPI\"]" };
             meshPrim.Properties = [new UsdProperty(matBindingApi, true)];
 
+            // Collect face indices per material to avoid duplicate GeomSubset prims
+            // Multiple mesh subsets may use the same material
+            var materialFaceIndices = new Dictionary<string, List<uint>>();
+
             foreach (var subset in meshChunk.GeometryInfo.GeometrySubsets ?? [])
             {
                 var index = subset.MatID;
@@ -155,18 +159,25 @@ public partial class UsdRenderer
                     material.SubMaterials[index].Name);
                 var cleanMatName = CleanPathString(matName);
 
-                var submeshPrim = new UsdGeomSubset(cleanMatName);
-
                 // Convert vertex index range to face index range
-                // subset.FirstIndex and subset.NumIndices refer to vertex indices
-                // For elementType="face", we need face indices (triangle numbers)
-                // Each face has 3 vertices, so face_index = vertex_index / 3
                 int firstFace = (int)subset.FirstIndex / 3;
                 int numFaces = (int)subset.NumIndices / 3;
-                var faceIndices = Enumerable.Range(firstFace, numFaces).Select(i => (uint)i).ToList();
+                var faceIndices = Enumerable.Range(firstFace, numFaces).Select(i => (uint)i);
 
+                // Merge face indices for subsets using the same material
+                if (!materialFaceIndices.ContainsKey(cleanMatName))
+                    materialFaceIndices[cleanMatName] = new List<uint>();
+                materialFaceIndices[cleanMatName].AddRange(faceIndices);
+            }
+
+            // Create one GeomSubset per unique material
+            foreach (var kvp in materialFaceIndices)
+            {
+                var cleanMatName = kvp.Key;
+                var faceIndices = kvp.Value;
+
+                var submeshPrim = new UsdGeomSubset(cleanMatName);
                 submeshPrim.Attributes.Add(new UsdUIntList("indices", faceIndices));
-                //submeshPrim.Attributes.Add(new UsdToken<string>("familyType", "face", true));
                 submeshPrim.Attributes.Add(new UsdToken<string>("elementType", "face", true));
                 submeshPrim.Attributes.Add(new UsdToken<string>("familyName", "materialBind", true));
                 meshPrim.Children.Add(submeshPrim);
@@ -293,12 +304,17 @@ public partial class UsdRenderer
             Dictionary<string, object> matBindingApi = new() { ["apiSchemas"] = "[\"MaterialBindingAPI\"]" };
             meshPrim.Properties = [new UsdProperty(matBindingApi, true)];
 
+            // Collect face indices per material to avoid duplicate GeomSubset prims
+            // Multiple mesh subsets may use the same material
+            var materialFaceIndices = new Dictionary<string, List<uint>>();
+
             // For Ivo format with remapped indices, GeomSubsets use sequential face ranges
             // since all indices are now contiguous after remapping
             int currentFaceOffset = 0;
             foreach (var subset in meshChunk.GeometryInfo.GeometrySubsets ?? [])
             {
                 var index = subset.MatID;
+                int subsetNumFaces = (int)subset.NumIndices / 3;
 
                 // Bounds check for material lookup
                 if (!_cryData.Materials.TryGetValue(nodeChunk.MaterialFileName, out var material) ||
@@ -307,7 +323,7 @@ public partial class UsdRenderer
                 {
                     Log.D($"Mesh[{nodeChunk.Name}]: Material index {index} out of bounds or material not found.");
                     // Still need to update face offset even if we skip this subset
-                    currentFaceOffset += (int)subset.NumIndices / 3;
+                    currentFaceOffset += subsetNumFaces;
                     continue;
                 }
 
@@ -316,13 +332,23 @@ public partial class UsdRenderer
                     material.SubMaterials[index].Name);
                 var cleanMatName = CleanPathString(matName);
 
-                var submeshPrim = new UsdGeomSubset(cleanMatName);
-
                 // Face indices are now sequential after remapping
-                int subsetNumFaces = (int)subset.NumIndices / 3;
-                var faceIndices = Enumerable.Range(currentFaceOffset, subsetNumFaces).Select(i => (uint)i).ToList();
+                var faceIndices = Enumerable.Range(currentFaceOffset, subsetNumFaces).Select(i => (uint)i);
                 currentFaceOffset += subsetNumFaces;
 
+                // Merge face indices for subsets using the same material
+                if (!materialFaceIndices.ContainsKey(cleanMatName))
+                    materialFaceIndices[cleanMatName] = new List<uint>();
+                materialFaceIndices[cleanMatName].AddRange(faceIndices);
+            }
+
+            // Create one GeomSubset per unique material
+            foreach (var kvp in materialFaceIndices)
+            {
+                var cleanMatName = kvp.Key;
+                var faceIndices = kvp.Value;
+
+                var submeshPrim = new UsdGeomSubset(cleanMatName);
                 submeshPrim.Attributes.Add(new UsdUIntList("indices", faceIndices));
                 submeshPrim.Attributes.Add(new UsdToken<string>("elementType", "face", true));
                 submeshPrim.Attributes.Add(new UsdToken<string>("familyName", "materialBind", true));
