@@ -7,7 +7,7 @@ using System.Globalization;
 using System.IO;
 using System.Threading;
 
-namespace CgfConverterTests.IntegrationTests;
+namespace CgfConverterTests.ManualTests;
 
 /// <summary>
 /// Manual render tests that write output files to the source file's directory.
@@ -74,13 +74,7 @@ public class ManualRenderTests
     [TestMethod]
     public void MWO_AdderCockpit_USD()
     {
-        RenderToUsd($@"{mwoObjectDir}\objects\mechs\cockpit_standard\adder_a_cockpit_standard.cga", mwoObjectDir);
-    }
-
-    [TestMethod]
-    public void MWO_AdderBody_USD()
-    {
-        RenderToUsd($@"{mwoObjectDir}\objects\mechs\adder\body\adder_body.cga", mwoObjectDir);
+        RenderToUsd($@"{mwoObjectDir}\objects\mechs\adder\cockpit\adder_a_cockpit_standard.cga", mwoObjectDir);
     }
 
     [TestMethod]
