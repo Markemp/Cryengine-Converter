@@ -2,6 +2,7 @@ using CgfConverter;
 using CgfConverter.Renderers.Collada;
 using CgfConverter.Renderers.Gltf;
 using CgfConverter.Renderers.USD;
+using CgfConverter.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Globalization;
 using System.IO;
@@ -33,6 +34,9 @@ public class ManualRenderTests
         CultureInfo customCulture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
         customCulture.NumberFormat.NumberDecimalSeparator = ".";
         Thread.CurrentThread.CurrentCulture = customCulture;
+
+        // Enable debug logging for manual tests
+        HelperMethods.LogLevel = LogLevelEnum.Debug;
     }
 
     #region Armored Warfare Test Files
@@ -74,7 +78,7 @@ public class ManualRenderTests
     [TestMethod]
     public void MWO_AdderCockpit_USD()
     {
-        RenderToUsd($@"{mwoObjectDir}\objects\mechs\adder\cockpit\adder_a_cockpit_standard.cga", mwoObjectDir);
+        RenderToUsd($@"{mwoObjectDir}\objects\mechs\adder\cockpit_standard\adder_a_cockpit_standard.cga", mwoObjectDir);
     }
 
     [TestMethod]
