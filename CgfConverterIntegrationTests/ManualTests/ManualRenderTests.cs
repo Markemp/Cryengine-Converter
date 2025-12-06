@@ -6,6 +6,7 @@ using CgfConverter.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Threading;
 
 namespace CgfConverterTests.ManualTests;
@@ -94,6 +95,12 @@ public class ManualRenderTests
     }
 
     [TestMethod]
+    public void MWO_AdderChr_Gltf()
+    {
+        RenderToGltf($@"{mwoObjectDir}\objects\mechs\adder\body\adder.chr", mwoObjectDir);
+    }
+
+    [TestMethod]
     public void MWO_Mechanic_Collada()
     {
         RenderToCollada($@"{mwoObjectDir}\objects\characters\mechanic\mechanic.chr", mwoObjectDir);
@@ -109,6 +116,81 @@ public class ManualRenderTests
     public void MWO_Mechanic_Gtlf()
     {
         RenderToGltf($@"{mwoObjectDir}\objects\characters\mechanic\mechanic.chr", mwoObjectDir);
+    }
+
+    [TestMethod]
+    public void MWO_Pilot_Gtlf()
+    {
+        RenderToGltf($@"{mwoObjectDir}\objects\characters\pilot\pilot.chr", mwoObjectDir);
+    }
+
+    [TestMethod]
+    public void MWO_Pilot_Diagnostic()
+    {
+        var inputFile = $@"{mwoObjectDir}\objects\characters\pilot\pilot.chr";
+        var args = new string[] { inputFile, "-gltf", "-objectdir", mwoObjectDir };
+        argsHandler.ProcessArgs(args);
+
+        var cryData = new CryEngine(inputFile, argsHandler.PackFileSystem, objectDir: mwoObjectDir);
+        cryData.ProcessCryengineFiles();
+
+        var rootNode = cryData.RootNode;
+        var meshData = rootNode?.MeshData;
+        var geomInfo = meshData?.GeometryInfo;
+        var skinningInfo = cryData.SkinningInfo;
+
+        System.Console.WriteLine($"=== PILOT.CHR DIAGNOSTIC ===");
+        System.Console.WriteLine($"RootNode: {rootNode?.Name}");
+
+        if (geomInfo != null)
+        {
+            System.Console.WriteLine($"\n--- Geometry Info ---");
+            System.Console.WriteLine($"Vertices count: {geomInfo.Vertices?.Data.Length ?? 0}");
+            System.Console.WriteLine($"Indices count: {geomInfo.Indices?.Data.Length ?? 0}");
+            System.Console.WriteLine($"Normals count: {geomInfo.Normals?.Data.Length ?? 0}");
+            System.Console.WriteLine($"UVs count: {geomInfo.UVs?.Data.Length ?? 0}");
+
+            var subsets = geomInfo.GeometrySubsets;
+            System.Console.WriteLine($"\n--- Geometry Subsets ({subsets?.Count ?? 0}) ---");
+            int totalSubsetVerts = 0;
+            if (subsets != null)
+            {
+                foreach (var (subset, idx) in subsets.Select((s, i) => (s, i)))
+                {
+                    System.Console.WriteLine($"  Subset {idx}: FirstVertex={subset.FirstVertex}, NumVertices={subset.NumVertices}, FirstIndex={subset.FirstIndex}, NumIndices={subset.NumIndices}");
+                    totalSubsetVerts += subset.NumVertices;
+                }
+            }
+            System.Console.WriteLine($"Sum of NumVertices: {totalSubsetVerts}");
+        }
+
+        if (skinningInfo != null)
+        {
+            System.Console.WriteLine($"\n--- Skinning Info ---");
+            System.Console.WriteLine($"HasSkinningInfo: {skinningInfo.HasSkinningInfo}");
+            System.Console.WriteLine($"BoneMappings count: {skinningInfo.BoneMappings?.Count ?? 0}");
+            System.Console.WriteLine($"IntVertices count: {skinningInfo.IntVertices?.Count ?? 0}");
+            System.Console.WriteLine($"Ext2IntMap count: {skinningInfo.Ext2IntMap?.Count ?? 0}");
+            System.Console.WriteLine($"HasIntToExtMapping: {skinningInfo.HasIntToExtMapping}");
+            System.Console.WriteLine($"CompiledBones count: {skinningInfo.CompiledBones?.Count ?? 0}");
+        }
+
+        // Check for index out of bounds
+        if (geomInfo?.Indices != null && geomInfo?.Vertices != null)
+        {
+            var maxIndex = geomInfo.Indices.Data.Max();
+            var vertCount = geomInfo.Vertices.Data.Length;
+            System.Console.WriteLine($"\n--- Index Bounds Check ---");
+            System.Console.WriteLine($"Max index value: {maxIndex}");
+            System.Console.WriteLine($"Vertex count: {vertCount}");
+            System.Console.WriteLine($"Index within bounds: {maxIndex < vertCount}");
+        }
+    }
+
+    [TestMethod]
+    public void MWO_Pilot_Usdf()
+    {
+        RenderToUsd($@"{mwoObjectDir}\objects\characters\pilot\pilot.chr", mwoObjectDir);
     }
 
     [TestMethod]
@@ -213,7 +295,7 @@ public class ManualRenderTests
         var cryData = new CryEngine(inputFile, argsHandler.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
-        var renderer = new GltfModelRenderer(argsHandler, cryData, false, false);
+        var renderer = new GltfModelRenderer(argsHandler, cryData, writeText: true, writeBinary: false);
         renderer.Render();
 
         var outputPath = Path.ChangeExtension(inputFile, ".gltf");

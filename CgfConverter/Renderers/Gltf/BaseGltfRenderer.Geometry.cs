@@ -74,15 +74,17 @@ public partial class BaseGltfRenderer
         var controllerIdToNodeIndex = new Dictionary<uint, int>();
 
         // Create this node and add to GltfRoot.Nodes
-        var rotationQuat = Quaternion.CreateFromRotationMatrix(cryNode.LocalTransform);
-        var translation = cryNode.LocalTransform.GetTranslation();
+        // Use the transformed matrix directly to preserve correct coordinate transformation
+        // This avoids issues with TRS decomposition when axes are swapped and negated
+        // Note: CryEngine uses row-major with translation in last row (row-vector convention)
+        // glTF uses column-major with translation in last column (column-vector convention)
+        // MatrixToGltfList outputs in column-major format which naturally transposes
+        var transformedMatrix = SwapAxes(cryNode.LocalTransform);
 
         node = new GltfNode
         {
             Name = cryNode.Name,
-            Translation = SwapAxesForPosition(translation).ToGltfList(),
-            Rotation = SwapAxesForLayout(rotationQuat).ToGltfList(),
-            Scale = Vector3.One.ToGltfList()
+            Matrix = MatrixToGltfList(transformedMatrix)
         };
 
         // Add mesh if needed
@@ -124,8 +126,12 @@ public partial class BaseGltfRenderer
 
         if (cryData.SkinningInfo is { HasSkinningInfo: true } skinningInfo)
         {
+            var geometrySubsets = meshChunk?.GeometryInfo?.GeometrySubsets;
+            // Ivo format (VertUVs) requires per-subset extraction; traditional format (Vertices) uses raw arrays
+            bool usePerSubsetExtraction = meshChunk?.GeometryInfo?.VertUVs is not null;
+
             if (WriteSkinOrLogError(out var newSkin, out var weights, out var joints, cryData, gltfNode, skinningInfo,
-                controllerIdToNodeIndex))
+                controllerIdToNodeIndex, geometrySubsets, usePerSubsetExtraction))
             {
                 gltfNode.Skin = AddSkin(newSkin);
                 foreach (var prim in gltfMesh.Primitives)
@@ -146,7 +152,9 @@ public partial class BaseGltfRenderer
         CryEngine cryData,
         GltfNode rootNode,
         SkinningInfo skinningInfo,
-        IDictionary<uint, int> controllerIdToNodeIndex)
+        IDictionary<uint, int> controllerIdToNodeIndex,
+        List<MeshSubset>? geometrySubsets,
+        bool usePerSubsetExtraction)
     {
         if (!skinningInfo.HasSkinningInfo)
             throw new ArgumentException("HasSkinningInfo must be true", nameof(skinningInfo));
@@ -159,20 +167,50 @@ public partial class BaseGltfRenderer
         var nodeChunk = cryData.RootNode;
         var boneMappingData = nodeChunk.MeshData?.GeometryInfo?.BoneMappings;
 
-        weights =
-            GetAccessorOrDefault(baseName, 0,
-                skinningInfo.IntVertices is null ? skinningInfo.BoneMappings.Count : skinningInfo.Ext2IntMap.Count)
-            ?? AddAccessor(baseName, -1, null,
-                skinningInfo.IntVertices is null
-                    ? skinningInfo.BoneMappings
-                        .Select(x => new Vector4(
-                            x.Weight[0], x.Weight[1], x.Weight[2], x.Weight[3]))
-                        .ToArray()
-                    : skinningInfo.Ext2IntMap
-                        .Select(x => skinningInfo.IntVertices[x])
-                        .Select(x => new Vector4(
-                            x.BoneMapping.Weight[0], x.BoneMapping.Weight[1], x.BoneMapping.Weight[2], x.BoneMapping.Weight[3]))
-                        .ToArray());
+        if (usePerSubsetExtraction)
+        {
+            // Ivo format: extract weights per-subset to match per-subset vertex extraction
+            var subsets = geometrySubsets ?? [];
+            var numberOfElements = subsets.Sum(x => x.NumVertices);
+
+            weights =
+                GetAccessorOrDefault(baseName, 0, numberOfElements)
+                ?? AddAccessor(baseName, -1, null,
+                    skinningInfo.IntVertices is null
+                        ? subsets
+                            .SelectMany(subset => Enumerable
+                                .Range(subset.FirstVertex, subset.NumVertices)
+                                .Select(i => skinningInfo.BoneMappings[i])
+                                .Select(x => new Vector4(
+                                    x.Weight[0], x.Weight[1], x.Weight[2], x.Weight[3])))
+                            .ToArray()
+                        : subsets
+                            .SelectMany(subset => Enumerable
+                                .Range(subset.FirstVertex, subset.NumVertices)
+                                .Select(i => skinningInfo.IntVertices[skinningInfo.Ext2IntMap[i]])
+                                .Select(x => new Vector4(
+                                    x.BoneMapping.Weight[0], x.BoneMapping.Weight[1], x.BoneMapping.Weight[2], x.BoneMapping.Weight[3])))
+                            .ToArray());
+        }
+        else
+        {
+            // Traditional format: use raw skinning data (like USD renderer)
+            var skinCount = skinningInfo.IntVertices is null ? skinningInfo.BoneMappings.Count : skinningInfo.Ext2IntMap.Count;
+
+            weights =
+                GetAccessorOrDefault(baseName, 0, skinCount)
+                ?? AddAccessor(baseName, -1, null,
+                    skinningInfo.IntVertices is null
+                        ? skinningInfo.BoneMappings
+                            .Select(x => new Vector4(
+                                x.Weight[0], x.Weight[1], x.Weight[2], x.Weight[3]))
+                            .ToArray()
+                        : skinningInfo.Ext2IntMap
+                            .Select(x => skinningInfo.IntVertices[x])
+                            .Select(x => new Vector4(
+                                x.BoneMapping.Weight[0], x.BoneMapping.Weight[1], x.BoneMapping.Weight[2], x.BoneMapping.Weight[3]))
+                            .ToArray());
+        }
 
         var boneIdToBindPoseMatrices = new Dictionary<int, Matrix4x4>();
         foreach (var bone in skinningInfo.CompiledBones)
@@ -224,26 +262,58 @@ public partial class BaseGltfRenderer
         }
 
         baseName = $"{rootNode.Name}/bone/joint";
-        joints =
-            GetAccessorOrDefault(
-                baseName,
-                0,
-                skinningInfo.IntVertices is null ? skinningInfo.BoneMappings.Count : skinningInfo.Ext2IntMap.Count)
-            ?? AddAccessor(
-                baseName,
-                -1,
-                null,
-                skinningInfo is { HasIntToExtMapping: true, IntVertices: { } }
-                    ? skinningInfo.Ext2IntMap
-                        .Select(x => skinningInfo.IntVertices[x])
-                        .Select(x => new TypedVec4<ushort>(
-                            x.BoneMapping.BoneIndex[0], x.BoneMapping.BoneIndex[1], x.BoneMapping.BoneIndex[2], x.BoneMapping.BoneIndex[3]))
-                        .ToArray()
-                    : skinningInfo.BoneMappings
-                        .Select(x => new TypedVec4<ushort>(
-                            (ushort)x.BoneIndex[0], (ushort)x.BoneIndex[1], (ushort)x.BoneIndex[2],
-                            (ushort)x.BoneIndex[3]))
-                        .ToArray());
+        if (usePerSubsetExtraction)
+        {
+            // Ivo format: extract joints per-subset to match per-subset vertex extraction
+            var subsets = geometrySubsets ?? [];
+            var numberOfElements = subsets.Sum(x => x.NumVertices);
+
+            joints =
+                GetAccessorOrDefault(baseName, 0, numberOfElements)
+                ?? AddAccessor(
+                    baseName,
+                    -1,
+                    null,
+                    skinningInfo is { HasIntToExtMapping: true, IntVertices: { } }
+                        ? subsets
+                            .SelectMany(subset => Enumerable
+                                .Range(subset.FirstVertex, subset.NumVertices)
+                                .Select(i => skinningInfo.IntVertices[skinningInfo.Ext2IntMap[i]])
+                                .Select(x => new TypedVec4<ushort>(
+                                    x.BoneMapping.BoneIndex[0], x.BoneMapping.BoneIndex[1], x.BoneMapping.BoneIndex[2], x.BoneMapping.BoneIndex[3])))
+                            .ToArray()
+                        : subsets
+                            .SelectMany(subset => Enumerable
+                                .Range(subset.FirstVertex, subset.NumVertices)
+                                .Select(i => skinningInfo.BoneMappings[i])
+                                .Select(x => new TypedVec4<ushort>(
+                                    (ushort)x.BoneIndex[0], (ushort)x.BoneIndex[1], (ushort)x.BoneIndex[2],
+                                    (ushort)x.BoneIndex[3])))
+                            .ToArray());
+        }
+        else
+        {
+            // Traditional format: use raw skinning data (like USD renderer)
+            var skinCount = skinningInfo.IntVertices is null ? skinningInfo.BoneMappings.Count : skinningInfo.Ext2IntMap.Count;
+
+            joints =
+                GetAccessorOrDefault(baseName, 0, skinCount)
+                ?? AddAccessor(
+                    baseName,
+                    -1,
+                    null,
+                    skinningInfo is { HasIntToExtMapping: true, IntVertices: { } }
+                        ? skinningInfo.Ext2IntMap
+                            .Select(x => skinningInfo.IntVertices[x])
+                            .Select(x => new TypedVec4<ushort>(
+                                x.BoneMapping.BoneIndex[0], x.BoneMapping.BoneIndex[1], x.BoneMapping.BoneIndex[2], x.BoneMapping.BoneIndex[3]))
+                            .ToArray()
+                        : skinningInfo.BoneMappings
+                            .Select(x => new TypedVec4<ushort>(
+                                (ushort)x.BoneIndex[0], (ushort)x.BoneIndex[1], (ushort)x.BoneIndex[2],
+                                (ushort)x.BoneIndex[3]))
+                            .ToArray());
+        }
 
         baseName = $"{rootNode.Name}/inverseBindMatrix";
         var inverseBindMatricesAccessor =
@@ -300,10 +370,15 @@ public partial class BaseGltfRenderer
 
         string baseName;
 
+        // Track whether we're using per-subset extraction (Ivo format) or raw arrays (traditional)
+        bool usePerSubsetExtraction = vertsUvs is not null;
+
         if (verts is not null || vertsUvs is not null)
         {
             if (verts is not null)
             {
+                // Traditional format: use raw vertex array directly (like USD renderer)
+                // No per-subset extraction needed - indices reference vertices directly
                 baseName = $"{gltfNode.Name}/vertex";
                 accessors.Position =
                     GetAccessorOrDefault(baseName, 0, verts.Data.Length)
@@ -320,7 +395,7 @@ public partial class BaseGltfRenderer
                             ?? AddAccessor($"{nodeChunk.Name}/uv", -1, GltfBufferViewTarget.ArrayBuffer, uvs.Data);
                 }
             }
-            else  // VertsUVs.
+            else  // VertsUVs (Ivo format) - requires per-subset extraction
             {
                 baseName = $"{gltfNode.Name}/vertex";
 
@@ -389,64 +464,96 @@ public partial class BaseGltfRenderer
 
             var normalsArray = normals?.Data;
             baseName = $"{gltfNode.Name}/normal";
-            accessors.Normal = normalsArray is null
-                ? null
-                : GetAccessorOrDefault(baseName, 0, normalsArray.Length)
-                  ?? AddAccessor(baseName, -1, GltfBufferViewTarget.ArrayBuffer,
-                      (meshChunk.GeometryInfo.GeometrySubsets ?? [])
-                          .SelectMany(subset => Enumerable
-                              .Range(subset.FirstVertex, subset.NumVertices)
-                              .Select(i => SwapAxesForPosition(normalsArray[i])))
-                          .ToArray());
+            if (usePerSubsetExtraction)
+            {
+                // Ivo format: extract normals per-subset
+                accessors.Normal = normalsArray is null
+                    ? null
+                    : GetAccessorOrDefault(baseName, 0, normalsArray.Length)
+                      ?? AddAccessor(baseName, -1, GltfBufferViewTarget.ArrayBuffer,
+                          (meshChunk.GeometryInfo.GeometrySubsets ?? [])
+                              .SelectMany(subset => Enumerable
+                                  .Range(subset.FirstVertex, subset.NumVertices)
+                                  .Select(i => SwapAxesForPosition(normalsArray[i])))
+                              .ToArray());
+            }
+            else
+            {
+                // Traditional format: use raw normals array
+                accessors.Normal = normalsArray is null
+                    ? null
+                    : GetAccessorOrDefault(baseName, 0, normalsArray.Length)
+                      ?? AddAccessor(baseName, -1, GltfBufferViewTarget.ArrayBuffer,
+                          normalsArray.Select(SwapAxesForPosition).ToArray());
+            }
 
             baseName = $"{gltfNode.Name}/colors";
-            accessors.Color0 = colors is null
-                ? null
-                : (GetAccessorOrDefault(baseName, 0, colors.Data.Length)
-                    ?? AddAccessor(
-                        baseName,
-                        -1,
-                        GltfBufferViewTarget.ArrayBuffer,
-                        (meshChunk.GeometryInfo.GeometrySubsets ?? [])
-                            .SelectMany(subset => Enumerable
-                                .Range(subset.FirstVertex, subset.NumVertices)
-                                .Select(i => new Vector4(colors.Data[i].R, colors.Data[i].G, colors.Data[i].B, colors.Data[i].A) / 255f))
-                            .ToArray()));
+            if (usePerSubsetExtraction)
+            {
+                // Ivo format: extract colors per-subset
+                accessors.Color0 = colors is null
+                    ? null
+                    : (GetAccessorOrDefault(baseName, 0, colors.Data.Length)
+                        ?? AddAccessor(
+                            baseName,
+                            -1,
+                            GltfBufferViewTarget.ArrayBuffer,
+                            (meshChunk.GeometryInfo.GeometrySubsets ?? [])
+                                .SelectMany(subset => Enumerable
+                                    .Range(subset.FirstVertex, subset.NumVertices)
+                                    .Select(i => new Vector4(colors.Data[i].R, colors.Data[i].G, colors.Data[i].B, colors.Data[i].A) / 255f))
+                                .ToArray()));
+            }
+            else
+            {
+                // Traditional format: use raw colors array
+                accessors.Color0 = colors is null
+                    ? null
+                    : (GetAccessorOrDefault(baseName, 0, colors.Data.Length)
+                        ?? AddAccessor(
+                            baseName,
+                            -1,
+                            GltfBufferViewTarget.ArrayBuffer,
+                            colors.Data.Select(c => new Vector4(c.R, c.G, c.B, c.A) / 255f).ToArray()));
+            }
 
             baseName = $"${gltfNode.Name}/tangent";
         }
 
         baseName = $"${gltfNode.Name}/index";
-        var remappedIndices = new uint[indices.Data.Length];
-        // Create a map of global indices to local indices
-        var localIndexMap = new Dictionary<uint, uint>();
-        uint currentOffset = 0;
+        uint[] finalIndices;
 
-        foreach (var subset in meshChunk.GeometryInfo.GeometrySubsets ?? [])
+        if (usePerSubsetExtraction)
         {
-            var firstGlobalIndex = indices.Data[subset.FirstIndex];
+            // Ivo format: remap indices per-subset to reference extracted vertex positions.
+            // Each subset's indices reference original vertices [FirstVertex, FirstVertex+NumVertices)
+            // which get extracted to positions [currentOffset, currentOffset+NumVertices)
+            var remappedIndices = new uint[indices.Data.Length];
+            uint currentOffset = 0;
 
-            for (int i = 0; i < subset.NumIndices; i++)
+            foreach (var subset in meshChunk.GeometryInfo.GeometrySubsets ?? [])
             {
-                uint globalIndex = indices.Data[subset.FirstIndex + i];
-                uint localIndex = (uint)((globalIndex - firstGlobalIndex) + currentOffset);
+                var firstGlobalIndex = indices.Data[subset.FirstIndex];
 
-                // Map the global index to its local counterpart
-                localIndexMap[globalIndex] = localIndex;
+                for (int i = 0; i < subset.NumIndices; i++)
+                {
+                    uint globalIndex = indices.Data[subset.FirstIndex + i];
+                    uint localIndex = (uint)((globalIndex - firstGlobalIndex) + currentOffset);
+                    remappedIndices[subset.FirstIndex + i] = localIndex;
+                }
+
+                currentOffset += (uint)subset.NumVertices;
             }
-
-            currentOffset += (uint)subset.NumVertices;
+            finalIndices = remappedIndices;
         }
-
-        for (int i = 0; i < indices.Data.Length; i++)
+        else
         {
-            remappedIndices[i] = localIndexMap.TryGetValue(indices.Data[i], out uint localIndex)
-                ? localIndex
-                : indices.Data[i]; // Fallback to original index if not found in map
+            // Traditional format: use raw indices directly (like USD renderer)
+            finalIndices = indices.Data;
         }
 
         var indexBufferView = GetBufferViewOrDefault(baseName) ??
-                      AddBufferView(baseName, remappedIndices, GltfBufferViewTarget.ElementArrayBuffer);
+                      AddBufferView(baseName, finalIndices, GltfBufferViewTarget.ElementArrayBuffer);
 
         newMesh = new GltfMesh
         {
