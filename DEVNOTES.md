@@ -81,19 +81,86 @@ Active development notes, debugging history, and in-progress feature work for Cr
 
 ### Animation Support
 
-**Current Status**: USD animation export implemented for `.dba` animation databases via `UsdRenderer.Animation.cs`.
+**Current Status**: USD animation export fully working for MWO. Both `.dba` (animation databases) and `.caf` (individual clips) are supported.
 
-**How it works**:
-- Animations loaded from `.chrparams` file's `$TracksDatabase` entry pointing to a `.dba` file
-- Animation data stored as USD `SkelAnimation` prims with time-sampled translations/rotations
+#### What's Working
+- **MWO mech animations**: All power up/down animations from `.dba` files import perfectly into Blender
+- **MWO pilot.chr**: Full skeleton with all CAF animations (joystick, throttle, etc.) working correctly
+- Animations exported as separate `.usda` files for Blender NLA workflow (one file per animation)
 - First animation automatically bound as skeleton's `skel:animationSource`
 
-**TODO - Individual .caf file support**:
-- `.caf` files are individual animation clips (vs `.dba` which is a database of many animations)
-- `.chrparams` lists individual `.caf` files with animation names (e.g., `<Animation name="walk" path="walk.caf"/>`)
-- Currently only `$TracksDatabase`/`#filepath` entries are processed
-- Need to extend `CryEngine.CreateAnimations()` to also load individual `.caf` files
-- `.caf` files use the same `ChunkController` chunk format as `.dba`
+#### What Needs Testing/Fixing
+- **Kingdom Come Deliverance 2 (KCD2)**: Animation support untested
+- **Star Citizen**: Animation support untested (uses #ivo format which may have different animation chunks)
+- **Archeage**: Animation support untested
+
+#### Animation File Formats
+
+**DBA Files** (Animation Databases):
+- Container format holding multiple animations
+- Referenced via `.chrparams` file's `$TracksDatabase` entry
+- Parsed by `ChunkController_905` which contains:
+  - `NumAnims` animations, each with `MotionParams905` metadata
+  - Compressed keyframe data (positions, rotations, times)
+  - Per-animation `AssetFlags` in `MotionParams905.AssetFlags`
+
+**CAF Files** (Individual Animation Clips):
+- Single animation per file
+- Referenced via `.chrparams` `<Animation name="..." path="..."/>` entries
+- Support wildcard patterns (e.g., `animations/pilot/*.caf`)
+- Animation metadata in `ChunkGlobalAnimationHeaderCAF` chunk (version 971)
+- Controller data in `ChunkController_829`, `ChunkController_830`, `ChunkController_831`
+- Star Citizen uses `ChunkIvoCAF` for #ivo format animations
+
+#### Animation Asset Flags
+
+Defined in `ChunkController_905.AssetFlags` (also applies to CAF via `ChunkGlobalAnimationHeaderCAF.Flags`):
+
+| Flag | Value | Meaning |
+|------|-------|---------|
+| `Additive` | 0x001 | Animation stores deltas from rest pose, not absolute transforms |
+| `Cycle` | 0x002 | Animation is meant to loop (not used in export - Blender controls this) |
+| `Loaded` | 0x004 | Runtime flag |
+| `Lmg` | 0x008 | Locomotion group |
+| `LmgValid` | 0x020 | Locomotion group valid |
+| `Created` | 0x800 | Runtime flag |
+| `Aimpose` | 0x4000 | Aim pose animation |
+| `BigEndian` | 0x80000000 | File is big-endian |
+
+#### Additive Animation Handling (FIXED)
+
+**Problem**: Additive animations (like `additive_pilot_joystick_down`) store bone transforms as *deltas* from the rest pose. When exported directly to USD, the skeleton collapses because translations are near-zero and rotations are near-identity.
+
+**Identification**:
+- CAF files: Check `ChunkGlobalAnimationHeaderCAF.Flags & 0x001`
+- DBA files: Check `MotionParams905.AssetFlags.Additive`
+- Naming convention: Often prefixed with `additive_`
+
+**Solution** (implemented in `UsdRenderer.Animation.cs`):
+```csharp
+if (isAdditive)
+{
+    // Convert additive deltas to absolute transforms
+    absolute_rotation = restRotation * additiveRotation;
+    absolute_translation = restTranslation + additiveTranslation;
+}
+```
+
+The `BuildRestRotationMapping()` and `BuildRestTranslationMapping()` methods extract rest pose from the skeleton's bind matrices for this conversion.
+
+#### Key Implementation Files
+
+- `CgfConverter/CryEngine/CryEngine.cs`: `LoadCafAnimations()`, `ParseCafModel()` - loads CAF files from chrparams
+- `CgfConverter/Models/CafAnimation.cs`: Animation data model with `IsAdditive` property
+- `CgfConverter/CryEngineCore/Chunks/ChunkController_905.cs`: DBA animation parsing, `AssetFlags` enum
+- `CgfConverter/CryEngineCore/Chunks/ChunkGlobalAnimationHeaderCAF_971.cs`: CAF header with flags
+- `CgfConverter/Renderers/USD/UsdRenderer.Animation.cs`: USD export, additive conversion, per-animation file export
+
+#### Blender Import Notes
+
+- USD SkelAnimation has no native looping property - cycle behavior controlled in Blender's NLA editor
+- Each animation exported as separate `.usda` file (e.g., `model_anim_walk.usda`) for NLA workflow
+- Blender only reads the single bound animation per file, hence separate files needed
 
 ### Known Issues
 

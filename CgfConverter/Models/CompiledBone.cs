@@ -58,18 +58,36 @@ public sealed class CompiledBone
     public void ReadCompiledBone_801(BinaryReader b)
     {
         // Reads just a single 324 byte entry of a bone.
+        // Unlike 0x800 which stores both W2B and B2W matrices, 0x801 only stores B2W (boneToWorld).
+        // We must compute W2B by inverting B2W.
         ControllerID = b.ReadUInt32();        // Bone controller.  Can be 0xFFFFFFFF
         LimbId = b.ReadUInt32();
         PhysicsGeometry = new PhysicsGeometry[2];
-        PhysicsGeometry[0].ReadPhysicsGeometry(b);     // LOD 0 is the physics of alive body, 
+        PhysicsGeometry[0].ReadPhysicsGeometry(b);     // LOD 0 is the physics of alive body,
         PhysicsGeometry[1].ReadPhysicsGeometry(b);     // LOD 1 is the physics of a dead body
         BoneName = b.ReadFString(48);
         OffsetParent = b.ReadInt32();
         NumberOfChildren = b.ReadInt32();
         OffsetChild = b.ReadInt32();
-        LocalTransformMatrix = b.ReadMatrix3x4();
-        BindPoseMatrix = LocalTransformMatrix.ConvertToTransformMatrix();
-        WorldTransformMatrix = new(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0);
+
+        // The matrix stored in 0x801 is B2W (boneToWorld), not W2B like in 0x800
+        WorldTransformMatrix = b.ReadMatrix3x4();
+
+        // Compute W2B (worldToBone) by inverting B2W - this is the bind pose matrix
+        var boneToWorld = WorldTransformMatrix.ConvertToTransformMatrix();
+        if (Matrix4x4.Invert(boneToWorld, out var worldToBone))
+        {
+            BindPoseMatrix = worldToBone;
+        }
+        else
+        {
+            // Fallback to identity if inversion fails
+            BindPoseMatrix = Matrix4x4.Identity;
+        }
+
+        // LocalTransformMatrix will be computed after parent relationships are established
+        // For now, use the B2W matrix (actual local will be computed in ChunkCompiledBones_801)
+        LocalTransformMatrix = WorldTransformMatrix;
     }
 
     public void ReadCompiledBone_900(BinaryReader b)

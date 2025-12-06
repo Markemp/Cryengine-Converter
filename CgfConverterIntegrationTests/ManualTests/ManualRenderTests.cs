@@ -258,6 +258,12 @@ public class ManualRenderTests
         RenderToCollada($@"{archeageObjectDir}\game\objects\env\01_nuia\001_housing\01_tools\basket_mix_ani.cga", archeageObjectDir);
     }
 
+    [TestMethod]
+    public void ArcheAge_Chicken_USD() // 0x801 compiled bones format
+    {
+        RenderToUsd($@"{archeageObjectDir}\game\objects\characters\animals\chicken\chicken.chr", archeageObjectDir);
+    }
+
     #endregion
 
     #region Helper Methods
