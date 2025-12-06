@@ -188,18 +188,23 @@ public class ManualRenderTests
     }
 
     [TestMethod]
-    public void MWO_Pilot_Usdf()
+    public void MWO_Pilot_Usd()
     {
         RenderToUsd($@"{mwoObjectDir}\objects\characters\pilot\pilot.chr", mwoObjectDir);
     }
 
     [TestMethod]
-    public void MWO_Hatchetman_USD()
+    public void MWO_Pilot_AdditiveCaf_USD()
     {
-        RenderToUsd($@"{mwoObjectDir}\objects\mechs\hatchetman\body\hatchetman_body.cga", mwoObjectDir);
-    }
+        // Test additive CAF animation (joystick_down) - should be converted to absolute for proper import
+        // The animation name in chrparams is "additive_pilot_joystick_down" which loads from
+        // d:\depot\mwo\animations\characters\pilot\pilot_joystick_down.caf
+        RenderToUsd($@"{mwoObjectDir}\objects\characters\pilot\pilot.chr", mwoObjectDir);
 
-    // Add more test files here as needed...
+        // After rendering, the generated _anim_additive_pilot_joystick_down.usda file should have
+        // proper bone transforms (not zero translations) because the additive deltas are applied
+        // to rest poses during export.
+    }
 
     #endregion
 

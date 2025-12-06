@@ -769,6 +769,16 @@ public partial class CryEngine
             animation.EndFrame = timingChunk.GlobalRange.End;
         }
 
+        // Check for additive animation flag from GlobalAnimationHeaderCAF chunk
+        var animHeaderChunk = cafModel.ChunkMap.Values.OfType<ChunkGlobalAnimationHeaderCAF>().FirstOrDefault();
+        if (animHeaderChunk is not null)
+        {
+            // AssetFlags.Additive = 0x001
+            animation.IsAdditive = (animHeaderChunk.Flags & 0x001) != 0;
+            if (animation.IsAdditive)
+                Log.D($"CAF animation '{animationName}' is additive (flags=0x{animHeaderChunk.Flags:X})");
+        }
+
         // Get bone name mapping from BoneNameList chunk
         var boneNameList = cafModel.ChunkMap.Values.OfType<ChunkBoneNameList>().FirstOrDefault();
         if (boneNameList is not null)

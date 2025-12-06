@@ -28,6 +28,12 @@ public class CafAnimation
     public int EndFrame { get; set; }
 
     /// <summary>
+    /// Whether this is an additive animation (stores deltas from rest pose).
+    /// Additive animations need to be converted to absolute transforms for export.
+    /// </summary>
+    public bool IsAdditive { get; set; }
+
+    /// <summary>
     /// Per-bone animation tracks, keyed by controller ID (CRC32 of bone name).
     /// </summary>
     public Dictionary<uint, BoneTrack> BoneTracks { get; } = [];

@@ -86,13 +86,20 @@ public partial class UsdRenderer
 
     /// <summary>
     /// Creates a SkelAnimation prim from a CafAnimation.
+    /// Handles both absolute and additive animations - additive animations are converted
+    /// to absolute by applying deltas to the rest pose.
     /// </summary>
     private (UsdSkelAnimation? skelAnim, int endFrame) CreateSkelAnimationFromCaf(
         CafAnimation cafAnim,
         Dictionary<uint, string> controllerIdToJointPath)
     {
-        // Build rest translation mapping for bones without position animation
+        // Build rest pose mappings
         var jointPathToRestTranslation = BuildRestTranslationMapping();
+        var jointPathToRestRotation = BuildRestRotationMapping();
+
+        bool isAdditive = cafAnim.IsAdditive;
+        if (isAdditive)
+            Log.D($"CAF[{cafAnim.Name}]: Converting additive animation to absolute");
 
         // Map controller IDs to joint paths
         var animatedJoints = new List<string>();
@@ -180,17 +187,28 @@ public partial class UsdRenderer
             {
                 var track = tracksByJointPath[jointPath];
 
-                // Get rest translation for this joint (used when no position animation)
-                var restTranslation = jointPathToRestTranslation.TryGetValue(jointPath, out var rest)
-                    ? rest
+                // Get rest pose for this joint
+                var restTranslation = jointPathToRestTranslation.TryGetValue(jointPath, out var restT)
+                    ? restT
                     : Vector3.Zero;
+                var restRotation = jointPathToRestRotation.TryGetValue(jointPath, out var restR)
+                    ? restR
+                    : Quaternion.Identity;
 
-                // Sample position at this frame, using rest translation for bones without position animation
+                // Sample position and rotation at this frame
                 Vector3 position = SampleCafPosition(track, frame + startFrame, restTranslation);
-                translations.Add(position);
-
-                // Sample rotation at this frame
                 Quaternion rotation = SampleCafRotation(track, frame + startFrame);
+
+                if (isAdditive)
+                {
+                    // Convert additive deltas to absolute transforms:
+                    // Additive rotation: absolute = rest * delta
+                    // Additive translation: absolute = rest + delta
+                    rotation = restRotation * rotation;
+                    position = restTranslation + position;
+                }
+
+                translations.Add(position);
                 rotations.Add(rotation);
 
                 // CAF animations don't typically have scale
@@ -267,6 +285,62 @@ public partial class UsdRenderer
     }
 
     /// <summary>
+    /// Builds a mapping from joint path to rest pose rotation.
+    /// Used for converting additive animations to absolute.
+    /// </summary>
+    private Dictionary<string, Quaternion> BuildRestRotationMapping()
+    {
+        var mapping = new Dictionary<string, Quaternion>();
+
+        if (_bonePathMap is null)
+            return mapping;
+
+        foreach (var (bone, jointPath) in _bonePathMap)
+        {
+            // Compute rest rotation: local rotation of this bone relative to parent
+            Matrix4x4 restMatrix;
+
+            if (bone.ParentBone == null)
+            {
+                // Root bone: local = world, invert BindPoseMatrix to get boneToWorld
+                if (Matrix4x4.Invert(bone.BindPoseMatrix, out var boneToWorld))
+                {
+                    restMatrix = boneToWorld;
+                }
+                else
+                {
+                    restMatrix = Matrix4x4.Identity;
+                }
+            }
+            else
+            {
+                // Child bone: compute local transform relative to parent
+                // localTransform = parentWorldToBone * childBoneToWorld
+                if (Matrix4x4.Invert(bone.BindPoseMatrix, out var childBoneToWorld))
+                {
+                    restMatrix = bone.ParentBone.BindPoseMatrix * childBoneToWorld;
+                }
+                else
+                {
+                    restMatrix = Matrix4x4.Identity;
+                }
+            }
+
+            // Extract rotation from the rest matrix
+            if (Matrix4x4.Decompose(restMatrix, out _, out var rotation, out _))
+            {
+                mapping[jointPath] = rotation;
+            }
+            else
+            {
+                mapping[jointPath] = Quaternion.Identity;
+            }
+        }
+
+        return mapping;
+    }
+
+    /// <summary>
     /// Samples position from a CAF bone track at a given frame.
     /// If no position keyframes exist, uses the rest translation to maintain skeleton structure.
     /// </summary>
@@ -335,6 +409,8 @@ public partial class UsdRenderer
 
     /// <summary>
     /// Creates a single SkelAnimation prim from a CryEngine Animation struct.
+    /// Handles both absolute and additive animations - additive animations are converted
+    /// to absolute by applying deltas to the rest pose.
     /// Returns the animation prim and the end frame number.
     /// </summary>
     private (UsdSkelAnimation? skelAnim, int endFrame) CreateSkelAnimation(
@@ -343,6 +419,15 @@ public partial class UsdRenderer
         Dictionary<uint, string> controllerIdToJointPath,
         string animName)
     {
+        // Check if this is an additive animation
+        bool isAdditive = (anim.MotionParams.AssetFlags & ChunkController_905.AssetFlags.Additive) != 0;
+        if (isAdditive)
+            Log.D($"DBA[{animName}]: Converting additive animation to absolute");
+
+        // Build rest pose mappings for additive conversion
+        var jointPathToRestTranslation = isAdditive ? BuildRestTranslationMapping() : null;
+        var jointPathToRestRotation = isAdditive ? BuildRestRotationMapping() : null;
+
         // Collect all joint paths that have animation in this clip
         var animatedJoints = new List<string>();
         var controllersByJointPath = new Dictionary<string, ChunkController_905.CControllerInfo>();
@@ -420,7 +505,6 @@ public partial class UsdRenderer
                         animChunk.KeyPositions[controller.PosTrack],
                         frame);
                 }
-                translations.Add(translation);
 
                 // Get rotation for this joint at this frame
                 Quaternion rotation = Quaternion.Identity;
@@ -431,6 +515,24 @@ public partial class UsdRenderer
                         animChunk.KeyRotations[controller.RotTrack],
                         frame);
                 }
+
+                if (isAdditive)
+                {
+                    // Convert additive deltas to absolute transforms:
+                    // Additive rotation: absolute = rest * delta
+                    // Additive translation: absolute = rest + delta
+                    var restTranslation = jointPathToRestTranslation!.TryGetValue(jointPath, out var restT)
+                        ? restT
+                        : Vector3.Zero;
+                    var restRotation = jointPathToRestRotation!.TryGetValue(jointPath, out var restR)
+                        ? restR
+                        : Quaternion.Identity;
+
+                    rotation = restRotation * rotation;
+                    translation = restTranslation + translation;
+                }
+
+                translations.Add(translation);
                 rotations.Add(rotation);
 
                 // CryEngine animations typically don't have scale, use uniform scale
