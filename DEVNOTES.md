@@ -81,18 +81,19 @@ Active development notes, debugging history, and in-progress feature work for Cr
 
 ### Animation Support
 
-**Current Status**: USD animation export fully working for MWO. Both `.dba` (animation databases) and `.caf` (individual clips) are supported.
+**Current Status**: USD animation export fully working for MWO, Armored Warfare, and ArcheAge. Both `.dba` (animation databases) and `.caf` (individual clips) are supported.
 
 #### What's Working
 - **MWO mech animations**: All power up/down animations from `.dba` files import perfectly into Blender
 - **MWO pilot.chr**: Full skeleton with all CAF animations (joystick, throttle, etc.) working correctly
+- **Armored Warfare**: CAF animations via ChunkController_829 fully working (chicken walk/idle)
+- **ArcheAge**: CAF animations fully working (chicken uses ChunkCompiledBones_801 + .cal file)
 - Animations exported as separate `.usda` files for Blender NLA workflow (one file per animation)
 - First animation automatically bound as skeleton's `skel:animationSource`
 
 #### What Needs Testing/Fixing
 - **Kingdom Come Deliverance 2 (KCD2)**: Animation support untested
 - **Star Citizen**: Animation support untested (uses #ivo format which may have different animation chunks)
-- **Archeage**: Animation support untested
 
 #### Animation File Formats
 
@@ -173,6 +174,7 @@ This section documents the vetted animation pipeline to help implement support f
 | Chunk Type | Version | Game | Status |
 |------------|---------|------|--------|
 | `ChunkCompiledBones` | 0x800 | MWO | ✅ Vetted |
+| `ChunkCompiledBones` | 0x801 | ArcheAge | ✅ Vetted |
 | `ChunkController` | 0x905 | MWO (DBA) | ✅ Vetted |
 | `ChunkController` | 0x829 | Armored Warfare (CAF) | ✅ Vetted |
 | `ChunkCompiledBones` | 0x900, 0x901 | Armored Warfare | ⚠️ Works but less tested |
