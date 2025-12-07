@@ -2,9 +2,12 @@
 using CgfConverter.Renderers.Collada;
 using CgfConverter.Renderers.Collada.Collada.Enums;
 using CgfConverter.Renderers.Gltf;
+using CgfConverter.Renderers.USD;
+using CgfConverter.Renderers.USD.Models;
 using CgfConverterTests.TestUtilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading;
 
@@ -271,5 +274,123 @@ public class ArmoredWarfareIntegrationTests
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
+    }
+
+    [TestMethod]
+    public void Chicken_Usd()
+    {
+        // Verify skeleton, joints, and skinning for chicken model (ChunkController_829)
+        var args = new string[] { $@"d:\depot\armoredwarfare\objects\characters\animals\birds\chicken\chicken.chr" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        cryData.ProcessCryengineFiles();
+
+        // Generate USD
+        UsdRenderer usdRenderer = new(testUtils.argsHandler, cryData);
+        var usdDoc = usdRenderer.GenerateUsdObject();
+
+        // Serialize to string for inspection
+        var serializer = new UsdSerializer();
+        using var writer = new StringWriter();
+        serializer.Serialize(usdDoc, writer);
+        var usdOutput = writer.ToString();
+
+        // Verify basic structure
+        Assert.IsTrue(usdOutput.Contains("def SkelRoot \"Armature\""), "Should have SkelRoot");
+        Assert.IsTrue(usdOutput.Contains("def Skeleton \"Skeleton\""), "Should have Skeleton");
+
+        // Verify skeleton data arrays
+        Assert.IsTrue(usdOutput.Contains("uniform token[] joints"), "Should have joints array");
+        Assert.IsTrue(usdOutput.Contains("uniform matrix4d[] bindTransforms"), "Should have bindTransforms");
+        Assert.IsTrue(usdOutput.Contains("uniform matrix4d[] restTransforms"), "Should have restTransforms");
+
+        // Verify joint hierarchy (15 joints total)
+        Assert.IsTrue(usdOutput.Contains("\"Bip01_\""), "Should have root joint Bip01_");
+        Assert.IsTrue(usdOutput.Contains("\"Bip01_/Bip01_Pelvis\""), "Should have Pelvis joint");
+        Assert.IsTrue(usdOutput.Contains("\"Bip01_/Bip01_Pelvis/Bip01_LLegThigh\""), "Should have LLegThigh joint");
+        Assert.IsTrue(usdOutput.Contains("\"Bip01_/Bip01_Pelvis/Bip01_RLegThigh\""), "Should have RLegThigh joint");
+        Assert.IsTrue(usdOutput.Contains("\"Bip01_/Bip01_Pelvis/Bip01_Spine1\""), "Should have Spine1 joint");
+        Assert.IsTrue(usdOutput.Contains("\"Bip01_/Bip01_Pelvis/Bip01_Tail\""), "Should have Tail joint");
+        Assert.IsTrue(usdOutput.Contains("\"Bip01_/Bip01_Pelvis/Bip01_Spine1/Bip01_Spine2/Bip01_Spine3/Bip01_Head\""), "Should have Head joint");
+
+        // Verify mesh skinning attributes
+        Assert.IsTrue(usdOutput.Contains("primvars:skel:geomBindTransform"), "Should have geomBindTransform");
+        Assert.IsTrue(usdOutput.Contains("primvars:skel:jointIndices"), "Should have jointIndices");
+        Assert.IsTrue(usdOutput.Contains("primvars:skel:jointWeights"), "Should have jointWeights");
+        Assert.IsTrue(usdOutput.Contains("rel skel:skeleton"), "Should have skeleton relationship");
+        Assert.IsTrue(usdOutput.Contains("</root/Armature/Skeleton>"), "Should reference skeleton path");
+
+        // Verify mesh geometry
+        Assert.IsTrue(usdOutput.Contains("def Mesh \"Chicken\""), "Should have Chicken mesh");
+    }
+
+    [TestMethod]
+    public void Chicken_WalkAnimation_Usd()
+    {
+        // Verify animation export for chicken walk loop (ChunkController_829 animation)
+        // The chrparams file at chicken.chrparams defines animations that are auto-loaded
+        // When multiple animations exist, they're exported to separate files
+        var modelFile = $@"d:\depot\armoredwarfare\objects\characters\animals\birds\chicken\chicken.chr";
+        var modelDir = Path.GetDirectoryName(modelFile)!;
+
+        var args = new string[] { modelFile, "-usd", "-objectdir", objectDir };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(modelFile, testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        cryData.ProcessCryengineFiles();
+
+        // Animations are loaded automatically via chrparams
+        Assert.IsNotNull(cryData.CafAnimations, "Should have CAF animations loaded");
+        Assert.IsTrue(cryData.CafAnimations.Count >= 2, "Should have at least 2 CAF animations (walk_loop, idle01)");
+
+        // Verify walk_loop animation is present
+        var walkAnimation = cryData.CafAnimations.FirstOrDefault(a => a.Name.Contains("walk_loop"));
+        Assert.IsNotNull(walkAnimation, "Should have walk_loop animation");
+
+        // Verify animation has bone tracks (14 bones animated, Tail excluded)
+        Assert.AreEqual(14, walkAnimation.BoneTracks.Count, "Walk loop should have 14 bone tracks");
+
+        // Generate and write USD (animations go to separate files)
+        UsdRenderer usdRenderer = new(testUtils.argsHandler, cryData);
+        usdRenderer.Render();
+
+        // Verify animation file was created
+        var walkAnimFile = Path.Combine(modelDir, "chicken_anim_walk_loop.usda");
+        Assert.IsTrue(File.Exists(walkAnimFile), $"Animation file should exist: {walkAnimFile}");
+
+        // Read the animation file to verify content
+        var animContent = File.ReadAllText(walkAnimFile);
+
+        // Verify animation structure
+        Assert.IsTrue(animContent.Contains("def SkelAnimation"), "Should have SkelAnimation");
+        Assert.IsTrue(animContent.Contains("walk_loop"), "Should have walk_loop animation name");
+
+        // Verify animation has timeSamples
+        Assert.IsTrue(animContent.Contains("translations.timeSamples"), "Should have translation timeSamples");
+        Assert.IsTrue(animContent.Contains("rotations.timeSamples"), "Should have rotation timeSamples");
+        Assert.IsTrue(animContent.Contains("scales.timeSamples"), "Should have scale timeSamples");
+
+        // Verify animation time range (31 frames, 0-30)
+        Assert.IsTrue(animContent.Contains("startTimeCode = 0"), "Should start at frame 0");
+        Assert.IsTrue(animContent.Contains("endTimeCode = 30"), "Should end at frame 30");
+
+        // Verify animation joints (14 animated joints, excludes Tail)
+        Assert.IsTrue(animContent.Contains("\"Bip01_/Bip01_Pelvis\""), "Animation should have Pelvis joint");
+        Assert.IsTrue(animContent.Contains("\"Bip01_/Bip01_Pelvis/Bip01_LLegThigh\""), "Animation should have LLegThigh joint");
+
+        // Verify skeleton reference
+        Assert.IsTrue(animContent.Contains("rel skel:animationSource"), "Should have animationSource relationship");
+
+        // Verify pelvis translation values are reasonable (not doubled due to previous bug)
+        // Frame 0 pelvis: (-0, 0.007701, 0.102881) - Z should be ~0.10, not ~0.22
+        Assert.IsTrue(animContent.Contains("0.102881") || animContent.Contains("0.10288"),
+            "Pelvis Z translation at frame 0 should be ~0.102881 (not doubled)");
+
+        // Verify frame 7 pelvis Z (highest value ~0.120)
+        Assert.IsTrue(animContent.Contains("0.120023") || animContent.Contains("0.12002"),
+            "Pelvis Z translation at frame 7 should be ~0.120023");
     }
 }
