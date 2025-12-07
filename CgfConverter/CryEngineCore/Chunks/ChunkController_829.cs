@@ -8,13 +8,10 @@ namespace CgfConverter.CryEngineCore.Chunks;
 
 /// <summary>
 /// Controller chunk version 0x829 - Compressed format with separate rotation/position tracks.
-/// Used in CAF animation files. Each chunk contains animation data for a single bone.
+/// Used in CAF animation files (Armored Warfare). Each chunk contains animation data for a single bone.
 /// Similar to 0x831 but without the Flags field (16-byte header with 2-byte padding vs 18-byte).
 ///
-/// WARNING: This chunk version has NOT been validated for animation export.
-/// Only ChunkController_905 has been vetted for animations (with MWO DBA files).
-/// The keyframe data parsing here may not be correct - do not trust animation
-/// data from this chunk until it has been properly validated.
+/// Vetted: Armored Warfare chicken walk/idle animations export correctly to USD/Blender.
 /// </summary>
 internal sealed class ChunkController_829 : ChunkController
 {

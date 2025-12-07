@@ -174,8 +174,8 @@ This section documents the vetted animation pipeline to help implement support f
 |------------|---------|------|--------|
 | `ChunkCompiledBones` | 0x800 | MWO | ✅ Vetted |
 | `ChunkController` | 0x905 | MWO (DBA) | ✅ Vetted |
+| `ChunkController` | 0x829 | Armored Warfare (CAF) | ✅ Vetted |
 | `ChunkCompiledBones` | 0x900, 0x901 | Armored Warfare | ⚠️ Works but less tested |
-| `ChunkController` | 0x829 | Armored Warfare (CAF) | ⚠️ Works but less tested |
 
 ### CryEngine Matrix Convention
 
