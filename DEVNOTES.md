@@ -162,6 +162,184 @@ The `BuildRestRotationMapping()` and `BuildRestTranslationMapping()` methods ext
 - Each animation exported as separate `.usda` file (e.g., `model_anim_walk.usda`) for NLA workflow
 - Blender only reads the single bound animation per file, hence separate files needed
 
+---
+
+## Animation Data Flow: CryEngine → USD (Reference for New Chunk Support)
+
+This section documents the vetted animation pipeline to help implement support for new CompiledBones and Controller chunk versions.
+
+### Vetted Chunks (Known Working)
+
+| Chunk Type | Version | Game | Status |
+|------------|---------|------|--------|
+| `ChunkCompiledBones` | 0x800 | MWO | ✅ Vetted |
+| `ChunkController` | 0x905 | MWO (DBA) | ✅ Vetted |
+| `ChunkCompiledBones` | 0x900, 0x901 | Armored Warfare | ⚠️ Works but less tested |
+| `ChunkController` | 0x829 | Armored Warfare (CAF) | ⚠️ Works but less tested |
+
+### CryEngine Matrix Convention
+
+**CRITICAL**: CryEngine stores translation in **column 4** (M14, M24, M34), not row 4.
+
+```
+CryEngine Matrix3x4 layout (row-major storage):
+┌─────────────────────────────────┐
+│ M11  M12  M13  M14 (trans X)    │  Row 1
+│ M21  M22  M23  M24 (trans Y)    │  Row 2
+│ M31  M32  M33  M34 (trans Z)    │  Row 3
+└─────────────────────────────────┘
+         ↑
+    Column 4 = Translation
+```
+
+When converted to `System.Numerics.Matrix4x4` via `Matrix3x4.ConvertToTransformMatrix()`:
+- Translation stays in M14, M24, M34
+- M41, M42, M43 are set to 0
+- M44 is set to 1
+
+**WARNING**: `Matrix4x4.Translation` property reads M41, M42, M43 (row 4) - this returns ZEROS for CryEngine matrices! Always extract translation manually:
+```csharp
+var translation = new Vector3(matrix.M14, matrix.M24, matrix.M34);  // Correct
+var translation = matrix.Translation;  // WRONG - returns zeros!
+```
+
+### ChunkCompiledBones_800 (Vetted)
+
+**Data per bone** (584 bytes):
+- `ControllerID` (uint32): CRC32 hash for animation binding
+- `PhysicsGeometry[2]`: Physics data (live/ragdoll)
+- `Mass` (float)
+- `LocalTransformMatrix` (Matrix3x4): Local bone transform, used directly as BindPoseMatrix
+- `WorldTransformMatrix` (Matrix3x4): World space transform
+- `BoneName` (256 chars)
+- `LimbId`, `OffsetParent`, `NumberOfChildren`, `OffsetChild`
+
+**BindPoseMatrix calculation**:
+```csharp
+LocalTransformMatrix = b.ReadMatrix3x4();
+BindPoseMatrix = LocalTransformMatrix.ConvertToTransformMatrix();
+```
+
+### ChunkController_905 (Vetted - DBA Animations)
+
+**Structure**:
+- Header: `NumKeyPos`, `NumKeyRot`, `NumKeyTime`, `NumAnims`
+- Track data: Compressed keyframes (positions as Vector3, rotations as Quaternion)
+- Per-animation: `MotionParams905` + `CControllerInfo[]`
+
+**Key fields in CControllerInfo**:
+- `ControllerID`: CRC32 of bone name for skeleton binding
+- `PosKeyTimeTrack`, `PosTrack`: Indices into KeyTimes/KeyPositions arrays
+- `RotKeyTimeTrack`, `RotTrack`: Indices into KeyTimes/KeyRotations arrays
+
+**Position data**: Stored as **absolute local transforms**, not deltas from rest pose.
+
+### USD SkelAnimation Requirements
+
+USD `SkelAnimation` needs these attributes for Blender import:
+
+```usda
+def SkelAnimation "AnimationName"
+{
+    uniform token[] joints = ["Bip01", "Bip01/Pelvis", ...]  # Joint paths
+
+    float3[] translations.timeSamples = {
+        0: [(x,y,z), (x,y,z), ...],  # One Vector3 per joint per frame
+        1: [...],
+    }
+
+    quatf[] rotations.timeSamples = {
+        0: [(w,x,y,z), (w,x,y,z), ...],  # One Quaternion per joint per frame
+        1: [...],
+    }
+
+    half3[] scales.timeSamples = {
+        0: [(1,1,1), (1,1,1), ...],  # Usually uniform scale
+        1: [...],
+    }
+}
+```
+
+**Joint path format**: Hierarchical with `/` separator (e.g., `Bip01/bip_01_Pelvis/bip_01_Spine`)
+
+### Translation Handling (The Critical Fix)
+
+**For bones WITH position animation**: Use animation data directly (it's absolute local position)
+
+**For bones WITHOUT position animation**: Use rest pose translation from skeleton
+
+```csharp
+Vector3 position = SamplePosition(track, frame, restTranslation);
+// If track has position data → returns interpolated animation position
+// If track has NO position data → returns restTranslation
+```
+
+**Rest translation extraction** (from `BuildRestTranslationMapping()`):
+```csharp
+// Compute local transform relative to parent
+if (bone.ParentBone == null)
+{
+    // Root: invert BindPoseMatrix to get boneToWorld
+    Matrix4x4.Invert(bone.BindPoseMatrix, out var boneToWorld);
+    restMatrix = boneToWorld;
+}
+else
+{
+    // Child: localTransform = parentWorldToBone * childBoneToWorld
+    Matrix4x4.Invert(bone.BindPoseMatrix, out var childBoneToWorld);
+    restMatrix = bone.ParentBone.BindPoseMatrix * childBoneToWorld;
+}
+
+// Extract translation from column 4 (NOT .Translation property!)
+var translation = new Vector3(restMatrix.M14, restMatrix.M24, restMatrix.M34);
+```
+
+### Adding Support for New Chunk Versions
+
+When implementing a new `ChunkCompiledBones_XXX`:
+
+1. **Identify how BindPoseMatrix is stored/computed**
+   - Is it stored directly as Matrix3x4?
+   - Is it computed from quaternion + translation?
+   - Where is translation stored (column 4 or row 4)?
+
+2. **Ensure translation ends up in M14, M24, M34**
+   - Use `Matrix3x4.ConvertToTransformMatrix()` if reading Matrix3x4
+   - If building from quat+translation: `m.M14 = t.X; m.M24 = t.Y; m.M34 = t.Z;`
+
+3. **Test with non-additive animation first** (simpler code path)
+
+4. **Verify rest translations are non-zero** for child bones
+
+When implementing a new `ChunkController_XXX`:
+
+1. **Identify position data format**
+   - Absolute local transforms? (like 905) → Use directly
+   - Deltas from rest pose? → Add to rest translation
+
+2. **Identify key time format**
+   - Float frames? UInt16? Byte?
+   - Separate times for position vs rotation?
+
+3. **Map ControllerID to skeleton bones**
+   - Usually CRC32 of bone name
+   - Check case sensitivity (some games use lowercase)
+
+### Debugging Animation Issues
+
+**Symptom: All bones collapse to one point**
+- Check rest translations - are they all zeros?
+- Likely cause: extracting translation from wrong matrix elements
+
+**Symptom: Animation floats/offset from rest pose**
+- Check if position data is being treated as delta when it's absolute (or vice versa)
+- Compare animation position values to rest translation values
+
+**Symptom: Bones don't match between skeleton and animation**
+- Check ControllerID matching (CRC32 hash)
+- Check case sensitivity of bone names in hash
+- Log which controllers couldn't find matching bones
+
 ### Known Issues
 
 #### Fixed Issues

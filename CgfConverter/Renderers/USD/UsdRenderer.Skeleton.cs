@@ -2,6 +2,7 @@ using CgfConverter.CryEngineCore;
 using CgfConverter.Models;
 using CgfConverter.Renderers.USD.Attributes;
 using CgfConverter.Renderers.USD.Models;
+using CgfConverter.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,10 +38,34 @@ public partial class UsdRenderer
         BuildJointPaths(_cryData.SkinningInfo.RootBone, "", jointPaths, bonePathMap);
 
         // Build controller ID to joint path mapping for animation binding
+        // Add both stored controller IDs and computed CRC32 hashes of bone names
+        // (CAF animations may use either for matching)
         controllerIdToJointPath = new Dictionary<uint, string>();
         foreach (var kvp in bonePathMap)
         {
-            controllerIdToJointPath[kvp.Key.ControllerID] = kvp.Value;
+            var bone = kvp.Key;
+            var jointPath = kvp.Value;
+
+            // Add stored controller ID if valid
+            if (bone.ControllerID != 0xFFFFFFFF && bone.ControllerID != 0)
+            {
+                controllerIdToJointPath[bone.ControllerID] = jointPath;
+            }
+
+            // Also add CRC32 hash of bone name for CAF matching
+            // Different games use different conventions - add both original case and lowercase CRC32
+            if (!string.IsNullOrEmpty(bone.BoneName))
+            {
+                // Original case CRC32 (used by ArcheAge)
+                var crc32Original = Crc32CryEngine.Compute(bone.BoneName);
+                Log.D($"Bone '{bone.BoneName}' -> CRC32 = 0x{crc32Original:X08}");
+                controllerIdToJointPath.TryAdd(crc32Original, jointPath);
+
+                // Lowercase CRC32 (used by some other games)
+                var crc32Lower = Crc32CryEngine.Compute(bone.BoneName.ToLowerInvariant());
+                if (crc32Lower != crc32Original)
+                    controllerIdToJointPath.TryAdd(crc32Lower, jointPath);
+            }
         }
 
         // Build mapping from CompiledBones array index to jointPaths array index

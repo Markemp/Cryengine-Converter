@@ -62,12 +62,20 @@ public class BoneTrack
     /// <summary>Controller ID (CRC32 of bone name).</summary>
     public uint ControllerId { get; init; }
 
-    /// <summary>Keyframe times (in ticks or frames depending on source).</summary>
-    public List<float> KeyTimes { get; init; } = [];
+    /// <summary>Rotation keyframe times (in ticks or frames depending on source).</summary>
+    public List<float> RotationKeyTimes { get; init; } = [];
+
+    /// <summary>Position keyframe times (in ticks or frames depending on source).</summary>
+    public List<float> PositionKeyTimes { get; init; } = [];
 
     /// <summary>Position keyframes.</summary>
     public List<Vector3> Positions { get; init; } = [];
 
     /// <summary>Rotation keyframes.</summary>
     public List<Quaternion> Rotations { get; init; } = [];
+
+    /// <summary>
+    /// Legacy property for backward compatibility. Returns rotation key times.
+    /// </summary>
+    public List<float> KeyTimes => RotationKeyTimes.Count > 0 ? RotationKeyTimes : PositionKeyTimes;
 }

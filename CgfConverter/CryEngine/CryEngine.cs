@@ -1,4 +1,5 @@
-﻿using CgfConverter.CryEngineCore;
+﻿using CgfConverter.Cal;
+using CgfConverter.CryEngineCore;
 using CgfConverter.CryXmlB;
 using CgfConverter.Models;
 using CgfConverter.Models.Structs;
@@ -529,17 +530,32 @@ public partial class CryEngine
 
     private void CreateAnimations()
     {
+        var modelDir = Path.GetDirectoryName(InputFile);
+
+        // Try chrparams first (XML format used by MWO, Star Citizen, etc.)
+        if (TryLoadChrParamsAnimations(modelDir))
+            return;
+
+        // Fall back to .cal files (ArcheAge format)
+        if (TryLoadCalAnimations(modelDir))
+            return;
+
+        Log.D("No animation configuration files found (.chrparams or .cal)");
+    }
+
+    /// <summary>
+    /// Attempts to load animations from a .chrparams file.
+    /// </summary>
+    private bool TryLoadChrParamsAnimations(string? modelDir)
+    {
         try
         {
-            // Build chrparams path relative to input file's directory
-            var modelDir = Path.GetDirectoryName(InputFile);
             var chrparamsFileName = Path.ChangeExtension(Path.GetFileName(InputFile), ".chrparams");
             var chrparamsPath = string.IsNullOrEmpty(modelDir)
                 ? chrparamsFileName
                 : Path.Combine(modelDir, chrparamsFileName);
 
             Log.D("Looking for chrparams at: {0}", chrparamsPath);
-            Log.D("InputFile: {0}, modelDir: {1}", InputFile, modelDir ?? "(null)");
 
             var chrparams = CryXmlSerializer.Deserialize<ChrParams.ChrParams>(
                 PackFileSystem.GetStream(chrparamsPath));
@@ -567,11 +583,141 @@ public partial class CryEngine
 
             // Also load individual CAF files from animation entries
             LoadCafAnimations(chrparams);
+            return true;
         }
-        catch (FileNotFoundException ex)
+        catch (FileNotFoundException)
         {
-            Log.D("Animation file not found: {0}", ex.Message);
-            Log.I("Unable to find associated animation files.");
+            Log.D("No chrparams file found");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Attempts to load animations from a .cal file (ArcheAge format).
+    /// </summary>
+    private bool TryLoadCalAnimations(string? modelDir)
+    {
+        try
+        {
+            var calFileName = Path.ChangeExtension(Path.GetFileName(InputFile), ".cal");
+            var calPath = string.IsNullOrEmpty(modelDir)
+                ? calFileName
+                : Path.Combine(modelDir, calFileName);
+
+            Log.D("Looking for cal file at: {0}", calPath);
+
+            var calFile = CalFile.ParseWithIncludes(calPath, PackFileSystem);
+
+            Log.D("Successfully loaded cal file, filepath: {0}, animations count: {1}",
+                calFile.FilePath ?? "(none)", calFile.Animations.Count);
+
+            if (calFile.Animations.Count == 0)
+            {
+                Log.D("No animations found in cal file");
+                return false;
+            }
+
+            // Load CAF files from cal entries
+            LoadCafAnimationsFromCal(calFile);
+            return true;
+        }
+        catch (FileNotFoundException)
+        {
+            Log.D("No cal file found");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Loads CAF animation files from a parsed .cal file.
+    /// </summary>
+    private void LoadCafAnimationsFromCal(CalFile calFile)
+    {
+        var basePath = calFile.FilePath ?? "";
+        Log.D("CAF base path from cal: {0}", basePath);
+
+        foreach (var (name, relativePath) in calFile.Animations)
+        {
+            try
+            {
+                // Build full path
+                var cafPath = relativePath;
+                if (!Path.IsPathRooted(cafPath) && !string.IsNullOrEmpty(basePath))
+                {
+                    cafPath = Path.Combine(basePath, cafPath);
+                }
+
+                // Ensure .caf extension
+                if (!cafPath.EndsWith(".caf", StringComparison.OrdinalIgnoreCase))
+                    cafPath = Path.ChangeExtension(cafPath, ".caf");
+
+                // Try loading with multiple path resolutions
+                if (!TryLoadCafWithPathVariants(cafPath, name))
+                {
+                    Log.D("CAF file not found: {0}", cafPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.D("Error loading CAF {0}: {1}", name, ex.Message);
+            }
+        }
+
+        if (CafAnimations.Count > 0)
+            Log.I("Loaded {0} CAF animation(s) from cal file", CafAnimations.Count);
+    }
+
+    /// <summary>
+    /// Tries to load a CAF file with multiple path variants (for ArcheAge's "game" subdirectory).
+    /// </summary>
+    private bool TryLoadCafWithPathVariants(string cafPath, string animationName)
+    {
+        // Try path as-is first
+        if (TryLoadSingleCafFile(cafPath, animationName))
+            return true;
+
+        // Try with "game\" prefix (ArcheAge stores files under game/ subdirectory)
+        var gamePathPrefixed = Path.Combine("game", cafPath);
+        if (TryLoadSingleCafFile(gamePathPrefixed, animationName))
+            return true;
+
+        return false;
+    }
+
+    /// <summary>
+    /// Attempts to load a single CAF file. Returns true on success, false if file not found.
+    /// </summary>
+    private bool TryLoadSingleCafFile(string cafPath, string animationName)
+    {
+        // Resolve relative paths against ObjectDir
+        var fullPath = cafPath;
+        if (!Path.IsPathRooted(fullPath) && !string.IsNullOrEmpty(ObjectDir))
+        {
+            fullPath = Path.Combine(ObjectDir, fullPath);
+        }
+
+        // Check if file exists via PackFileSystem
+        try
+        {
+            var cafModel = Model.FromStream(fullPath, PackFileSystem.GetStream(fullPath), true);
+            var cafAnimation = ParseCafModel(cafModel, animationName, fullPath);
+
+            if (cafAnimation is not null)
+            {
+                CafAnimations.Add(cafAnimation);
+                Log.D("Successfully loaded CAF animation: {0} from {1}", animationName, fullPath);
+                return true;
+            }
+            return false;
+        }
+        catch (FileNotFoundException)
+        {
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Log.D("Error loading CAF {0}: {1}", fullPath, ex.Message);
+            return false;
         }
     }
 
@@ -779,7 +925,7 @@ public partial class CryEngine
                 Log.D($"CAF animation '{animationName}' is additive (flags=0x{animHeaderChunk.Flags:X})");
         }
 
-        // Get bone name mapping from BoneNameList chunk
+        // Get bone name mapping from BoneNameList chunk (if present)
         var boneNameList = cafModel.ChunkMap.Values.OfType<ChunkBoneNameList>().FirstOrDefault();
         if (boneNameList is not null)
         {
@@ -796,27 +942,30 @@ public partial class CryEngine
         var controllers830 = cafModel.ChunkMap.Values.OfType<ChunkController_830>().ToList();
         var controllers831 = cafModel.ChunkMap.Values.OfType<ChunkController_831>().ToList();
 
+        // 830 uses unified key times for both rotation and position
         foreach (var ctrl in controllers830)
         {
+            var keyTimes = ctrl.KeyTimes.Select(t => (float)t).ToList();
             var track = new BoneTrack
             {
                 ControllerId = ctrl.ControllerId,
-                KeyTimes = ctrl.KeyTimes.Select(t => (float)t).ToList(),
+                RotationKeyTimes = keyTimes,
+                PositionKeyTimes = keyTimes,
                 Positions = ctrl.KeyPositions.ToList(),
                 Rotations = ctrl.KeyRotations.ToList()
             };
             animation.BoneTracks[ctrl.ControllerId] = track;
         }
 
-        // 829 and 831 have the same structure (separate rotation/position tracks)
+        // 829 and 831 have separate rotation/position key times
+        // Key times are stored as actual frame numbers (byte/uint16/float format just determines storage size)
         foreach (var ctrl in controllers829)
         {
             var track = new BoneTrack
             {
                 ControllerId = ctrl.ControllerId,
-                KeyTimes = ctrl.RotationKeyTimes.Count > 0
-                    ? ctrl.RotationKeyTimes.ToList()
-                    : ctrl.PositionKeyTimes.ToList(),
+                RotationKeyTimes = ctrl.RotationKeyTimes.ToList(),
+                PositionKeyTimes = ctrl.PositionKeyTimes.ToList(),
                 Positions = ctrl.KeyPositions.ToList(),
                 Rotations = ctrl.KeyRotations.ToList()
             };
@@ -828,9 +977,8 @@ public partial class CryEngine
             var track = new BoneTrack
             {
                 ControllerId = ctrl.ControllerId,
-                KeyTimes = ctrl.RotationKeyTimes.Count > 0
-                    ? ctrl.RotationKeyTimes.ToList()
-                    : ctrl.PositionKeyTimes.ToList(),
+                RotationKeyTimes = ctrl.RotationKeyTimes.ToList(),
+                PositionKeyTimes = ctrl.PositionKeyTimes.ToList(),
                 Positions = ctrl.KeyPositions.ToList(),
                 Rotations = ctrl.KeyRotations.ToList()
             };
@@ -850,15 +998,13 @@ public partial class CryEngine
                 ivoCaf.Positions.TryGetValue(boneHash, out var positions);
                 ivoCaf.PositionTimes.TryGetValue(boneHash, out var posTimes);
 
-                // Determine key times - prefer rotation times, fall back to position times
-                var keyTimes = rotTimes ?? posTimes ?? [];
-
                 var track = new BoneTrack
                 {
                     ControllerId = boneHash,
                     Rotations = rotations ?? [],
                     Positions = positions ?? [],
-                    KeyTimes = keyTimes
+                    RotationKeyTimes = rotTimes ?? [],
+                    PositionKeyTimes = posTimes ?? []
                 };
 
                 if (track.Rotations.Count > 0 || track.Positions.Count > 0)

@@ -134,10 +134,13 @@ public partial class UsdRenderer : IRenderer
             // Add skinned node hierarchy under the skeleton root
             skelRoot.Children.AddRange(CreateNodeHierarchy());
 
-            // Create animations if available
+            // Create animations if available (DBA or CAF)
             // Only include animation in main file if there's exactly one.
             // Multiple animations go to separate files for Blender NLA workflow.
-            if (_cryData.Animations is not null && _cryData.Animations.Count > 0)
+            bool hasDbaAnimations = _cryData.Animations is not null && _cryData.Animations.Count > 0;
+            bool hasCafAnimations = _cryData.CafAnimations is not null && _cryData.CafAnimations.Count > 0;
+
+            if (hasDbaAnimations || hasCafAnimations)
             {
                 var animations = CreateAnimations(_controllerIdToJointPath, usdDoc.Header);
                 if (animations.Count == 1)

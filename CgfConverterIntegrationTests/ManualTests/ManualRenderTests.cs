@@ -43,7 +43,7 @@ public class ManualRenderTests
     #region Armored Warfare Test Files
 
     [TestMethod]
-    public void Chicken_USD()
+    public void ArmoredWarfare_Chicken_USD()
     {
         RenderToUsd($@"{armedWarfareObjectDir}\Objects\characters\animals\birds\chicken\chicken.chr", armedWarfareObjectDir);
     }

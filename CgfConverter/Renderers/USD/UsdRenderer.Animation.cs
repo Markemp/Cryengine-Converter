@@ -97,6 +97,13 @@ public partial class UsdRenderer
         var jointPathToRestTranslation = BuildRestTranslationMapping();
         var jointPathToRestRotation = BuildRestRotationMapping();
 
+        Log.D($"CAF[{cafAnim.Name}]: Rest translation mapping has {jointPathToRestTranslation.Count} entries");
+        if (jointPathToRestTranslation.Count > 0)
+        {
+            var first = jointPathToRestTranslation.First();
+            Log.D($"CAF[{cafAnim.Name}]: First rest translation: '{first.Key}' = {first.Value}");
+        }
+
         bool isAdditive = cafAnim.IsAdditive;
         if (isAdditive)
             Log.D($"CAF[{cafAnim.Name}]: Converting additive animation to absolute");
@@ -133,6 +140,17 @@ public partial class UsdRenderer
         {
             Log.W($"CAF[{cafAnim.Name}]: No valid bone tracks found");
             return (null, 0);
+        }
+
+        // Debug: Check how many animated joints have rest translations
+        int foundRestCount = animatedJoints.Count(jp => jointPathToRestTranslation.ContainsKey(jp));
+        Log.D($"CAF[{cafAnim.Name}]: {animatedJoints.Count} animated joints, {foundRestCount} have rest translations");
+        if (animatedJoints.Count > 0 && foundRestCount == 0)
+        {
+            Log.W($"CAF[{cafAnim.Name}]: No rest translations found for animated joints!");
+            Log.D($"CAF[{cafAnim.Name}]: First animated joint: '{animatedJoints[0]}'");
+            if (jointPathToRestTranslation.Count > 0)
+                Log.D($"CAF[{cafAnim.Name}]: First rest key: '{jointPathToRestTranslation.Keys.First()}'");
         }
 
         // Calculate frame range
@@ -188,24 +206,23 @@ public partial class UsdRenderer
                 var track = tracksByJointPath[jointPath];
 
                 // Get rest pose for this joint
-                var restTranslation = jointPathToRestTranslation.TryGetValue(jointPath, out var restT)
-                    ? restT
-                    : Vector3.Zero;
+                bool foundRest = jointPathToRestTranslation.TryGetValue(jointPath, out var restT);
+                var restTranslation = foundRest ? restT : Vector3.Zero;
                 var restRotation = jointPathToRestRotation.TryGetValue(jointPath, out var restR)
                     ? restR
                     : Quaternion.Identity;
 
                 // Sample position and rotation at this frame
+                // CAF positions are absolute local transforms, not deltas from rest pose
+                // For bones WITH position animation: use animation data directly
+                // For bones WITHOUT position animation: SampleCafPosition returns restTranslation
                 Vector3 position = SampleCafPosition(track, frame + startFrame, restTranslation);
                 Quaternion rotation = SampleCafRotation(track, frame + startFrame);
 
                 if (isAdditive)
                 {
-                    // Convert additive deltas to absolute transforms:
-                    // Additive rotation: absolute = rest * delta
-                    // Additive translation: absolute = rest + delta
+                    // Additive animations: rotation is also a delta from rest
                     rotation = restRotation * rotation;
-                    position = restTranslation + position;
                 }
 
                 translations.Add(position);
@@ -241,7 +258,13 @@ public partial class UsdRenderer
         var mapping = new Dictionary<string, Vector3>();
 
         if (_bonePathMap is null)
+        {
+            Log.W("BuildRestTranslationMapping: _bonePathMap is null!");
             return mapping;
+        }
+
+        Log.D($"BuildRestTranslationMapping: Processing {_bonePathMap.Count} bones");
+        int zeroCount = 0;
 
         foreach (var (bone, jointPath) in _bonePathMap)
         {
@@ -275,12 +298,28 @@ public partial class UsdRenderer
             }
 
             // Extract translation from the rest matrix
-            // CryEngine matrices are column-major with translation in column 4 (M14, M24, M34)
-            // (GetRestTransforms transposes this to M41, M42, M43 for USD output)
+            // CryEngine matrices store translation in column 4 (M14, M24, M34), not row 4.
+            // Matrix3x4.ConvertToTransformMatrix() preserves this layout.
+            // System.Numerics.Matrix4x4.Translation reads M41, M42, M43 (row 4) which would be wrong.
             var translation = new Vector3(restMatrix.M14, restMatrix.M24, restMatrix.M34);
+
+            // Sanity check: if translation values are garbage (very large), use zero
+            // This can happen if the skeleton matrices are corrupted or incompatible
+            if (Math.Abs(translation.X) > 1e6 || Math.Abs(translation.Y) > 1e6 || Math.Abs(translation.Z) > 1e6 ||
+                float.IsNaN(translation.X) || float.IsNaN(translation.Y) || float.IsNaN(translation.Z) ||
+                float.IsInfinity(translation.X) || float.IsInfinity(translation.Y) || float.IsInfinity(translation.Z))
+            {
+                Log.W($"  Bone '{bone.BoneName}': garbage translation {translation}, using zero");
+                translation = Vector3.Zero;
+            }
+
+            if (translation == Vector3.Zero)
+                zeroCount++;
+
             mapping[jointPath] = translation;
         }
 
+        Log.D($"BuildRestTranslationMapping: {zeroCount}/{mapping.Count} bones have zero translation");
         return mapping;
     }
 
@@ -353,27 +392,59 @@ public partial class UsdRenderer
         if (track.Positions.Count == 0)
             return restTranslation;
 
-        if (track.Positions.Count == 1 || track.KeyTimes.Count == 0)
-            return track.Positions[0];
+        var keyTimes = track.PositionKeyTimes;
 
-        // Find surrounding keyframes
+        if (track.Positions.Count == 1 || keyTimes.Count == 0)
+        {
+            var pos = track.Positions[0];
+            return IsValidPosition(pos) ? pos : restTranslation;
+        }
+
+        // Find surrounding keyframes using position key times
         int i = 0;
-        while (i < track.KeyTimes.Count - 1 && track.KeyTimes[i + 1] <= frame)
+        while (i < keyTimes.Count - 1 && keyTimes[i + 1] <= frame)
             i++;
 
         if (i >= track.Positions.Count)
-            return track.Positions[^1];
+        {
+            var pos = track.Positions[^1];
+            return IsValidPosition(pos) ? pos : restTranslation;
+        }
 
-        if (i == track.KeyTimes.Count - 1 || track.KeyTimes[i] >= frame)
-            return i < track.Positions.Count ? track.Positions[i] : track.Positions[^1];
+        if (i == keyTimes.Count - 1 || keyTimes[i] >= frame)
+        {
+            var pos = i < track.Positions.Count ? track.Positions[i] : track.Positions[^1];
+            return IsValidPosition(pos) ? pos : restTranslation;
+        }
 
         // Linear interpolation
-        float t0 = track.KeyTimes[i];
-        float t1 = track.KeyTimes[i + 1];
+        float t0 = keyTimes[i];
+        float t1 = keyTimes[i + 1];
         float alpha = (frame - t0) / (t1 - t0);
 
         int i1 = Math.Min(i + 1, track.Positions.Count - 1);
-        return Vector3.Lerp(track.Positions[i], track.Positions[i1], alpha);
+        var p0 = track.Positions[i];
+        var p1 = track.Positions[i1];
+
+        // If either position is invalid, fall back to rest translation
+        if (!IsValidPosition(p0) || !IsValidPosition(p1))
+            return restTranslation;
+
+        return Vector3.Lerp(p0, p1, alpha);
+    }
+
+    /// <summary>
+    /// Checks if a position vector has valid (non-garbage) values.
+    /// Positions in character animations should be small (within a few meters).
+    /// </summary>
+    private static bool IsValidPosition(Vector3 pos)
+    {
+        const float maxValidPosition = 1e6f;
+        return Math.Abs(pos.X) < maxValidPosition &&
+               Math.Abs(pos.Y) < maxValidPosition &&
+               Math.Abs(pos.Z) < maxValidPosition &&
+               !float.IsNaN(pos.X) && !float.IsNaN(pos.Y) && !float.IsNaN(pos.Z) &&
+               !float.IsInfinity(pos.X) && !float.IsInfinity(pos.Y) && !float.IsInfinity(pos.Z);
     }
 
     /// <summary>
@@ -384,23 +455,25 @@ public partial class UsdRenderer
         if (track.Rotations.Count == 0)
             return Quaternion.Identity;
 
-        if (track.Rotations.Count == 1 || track.KeyTimes.Count == 0)
+        var keyTimes = track.RotationKeyTimes;
+
+        if (track.Rotations.Count == 1 || keyTimes.Count == 0)
             return track.Rotations[0];
 
-        // Find surrounding keyframes
+        // Find surrounding keyframes using rotation key times
         int i = 0;
-        while (i < track.KeyTimes.Count - 1 && track.KeyTimes[i + 1] <= frame)
+        while (i < keyTimes.Count - 1 && keyTimes[i + 1] <= frame)
             i++;
 
         if (i >= track.Rotations.Count)
             return track.Rotations[^1];
 
-        if (i == track.KeyTimes.Count - 1 || track.KeyTimes[i] >= frame)
+        if (i == keyTimes.Count - 1 || keyTimes[i] >= frame)
             return i < track.Rotations.Count ? track.Rotations[i] : track.Rotations[^1];
 
         // Spherical linear interpolation
-        float t0 = track.KeyTimes[i];
-        float t1 = track.KeyTimes[i + 1];
+        float t0 = keyTimes[i];
+        float t1 = keyTimes[i + 1];
         float alpha = (frame - t0) / (t1 - t0);
 
         int i1 = Math.Min(i + 1, track.Rotations.Count - 1);

@@ -9,7 +9,12 @@ namespace CgfConverter.CryEngineCore.Chunks;
 /// <summary>
 /// Controller chunk version 0x829 - Compressed format with separate rotation/position tracks.
 /// Used in CAF animation files. Each chunk contains animation data for a single bone.
-/// Similar to 0x831 but without the Flags field (14-byte header vs 18-byte).
+/// Similar to 0x831 but without the Flags field (16-byte header with 2-byte padding vs 18-byte).
+///
+/// WARNING: This chunk version has NOT been validated for animation export.
+/// Only ChunkController_905 has been vetted for animations (with MWO DBA files).
+/// The keyframe data parsing here may not be correct - do not trust animation
+/// data from this chunk until it has been properly validated.
 /// </summary>
 internal sealed class ChunkController_829 : ChunkController
 {
@@ -69,27 +74,41 @@ internal sealed class ChunkController_829 : ChunkController
         PositionTimeFormat = b.ReadByte();
         TracksAligned = b.ReadByte();
 
-        // Data layout (v0829):
-        // [Rotation Values] -> [padding] -> [Rotation Times] -> [padding] ->
-        // [Position Values] -> [padding] -> [Position Times (if PositionKeysInfo != 0)]
+        // Per 010 template: 2 bytes of padding after header (unconditional)
+        b.ReadUInt16(); // padding
 
-        // Read rotation values first
-        KeyRotations = ReadRotations(b, NumRotationKeys, RotationFormat);
-        AlignTo4Bytes(b);
+        // Data layout (v0829) - 16 byte header, then:
+        // [Rotation Values] -> [conditional padding] -> [Rotation Times] -> [conditional padding] ->
+        // [Position Values] -> [conditional padding] -> [Position Times (if PositionKeysInfo != 0)]
 
-        // Read rotation time keys
-        RotationKeyTimes = ReadKeyTimes(b, NumRotationKeys, RotationTimeFormat);
-        AlignTo4Bytes(b);
+        // Read rotation values
+        if (NumRotationKeys > 0)
+        {
+            KeyRotations = ReadRotations(b, NumRotationKeys, RotationFormat);
+            AlignTo4Bytes(b);
+
+            // Read rotation time keys
+            RotationKeyTimes = ReadKeyTimes(b, NumRotationKeys, RotationTimeFormat);
+            AlignTo4Bytes(b);
+        }
 
         // Read position values
-        KeyPositions = ReadPositions(b, NumPositionKeys, PositionFormat);
-        AlignTo4Bytes(b);
+        if (NumPositionKeys > 0)
+        {
+            KeyPositions = ReadPositions(b, NumPositionKeys, PositionFormat);
+            AlignTo4Bytes(b);
 
-        // Position time keys only if PositionKeysInfo != 0, otherwise shares rotation times
-        if (PositionKeysInfo != 0)
-            PositionKeyTimes = ReadKeyTimes(b, NumPositionKeys, PositionTimeFormat);
-        else
-            PositionKeyTimes = RotationKeyTimes;
+            // Position time keys only if PositionKeysInfo != 0, otherwise shares rotation times
+            if (PositionKeysInfo != 0)
+            {
+                PositionKeyTimes = ReadKeyTimes(b, NumPositionKeys, PositionTimeFormat);
+                AlignTo4Bytes(b);
+            }
+            else
+            {
+                PositionKeyTimes = RotationKeyTimes;
+            }
+        }
     }
 
     private void AlignTo4Bytes(BinaryReader b)
@@ -156,7 +175,6 @@ internal sealed class ChunkController_829 : ChunkController
         for (int i = 0; i < count; i++)
         {
             // Per 010 template: positions only use eNoCompress or eNoCompressVec3 (both read as Vector3)
-            // Other formats are not used for position data in 829 chunks
             Vector3 pos = (ECompressionFormat)format switch
             {
                 ECompressionFormat.eNoCompress => b.ReadVector3(),
