@@ -215,9 +215,48 @@ Renderers use partial classes for organization, following the GltfRenderer prece
 - **UsdRenderer**: `.cs`, `.Animation.cs`, `.Materials.cs`, `.Geometry.cs`, `.Skeleton.cs`
 - **GltfModelRenderer**: Uses partial classes in `Renderers/Gltf/` with Models subdirectory for data types
 
+## Animation Support
+
+### Supported Animation Formats
+
+**DBA Files** (Animation Databases):
+- Container format holding multiple animations
+- Referenced via `.chrparams` file's `$TracksDatabase` entry (supports wildcards like `*.dba`)
+- Parsed by `ChunkController_905` with two storage modes:
+  - **Standard mode**: Positive offsets relative to start of track data
+  - **In-place streaming mode**: Negative offsets relative to end of track data (detected by `keyTimeOffsets[0] < 0`)
+
+**CAF Files** (Individual Animation Clips):
+- Single animation per file
+- Referenced via `.chrparams` `<Animation name="..." path="..."/>` entries
+- Support wildcard patterns (e.g., `animations/pilot/*.caf`)
+- Controller versions: `ChunkController_829`, `ChunkController_830`, `ChunkController_831`
+
+**CAL Files** (Animation Lists):
+- XML files defining animation sets (used by ArcheAge)
+- Reference `.caf` files with additional metadata
+- Loaded via `LoadCalAnimations()` in `CryEngine.cs`
+
+### Critical Animation Implementation Details
+
+**CryEngine Matrix Convention**: Translation stored in column 4 (M14, M24, M34), NOT row 4. **Never use `Matrix4x4.Translation` property** - it reads M41/M42/M43 which are zeros.
+
+**Rest Translation Fallback**: Bones without position animation must use rest translation from skeleton bind pose. Otherwise skeleton collapses.
+
+**Additive Animations**: Detected via `AssetFlags.Additive` (0x001). Must convert deltas to absolute transforms: `absolute = rest * additive`
+
+### Key Animation Files
+
+- `CgfConverter/CryEngine/CryEngine.cs`: `LoadCafAnimations()`, `LoadCalAnimations()`, `ExpandCafWildcard()`, `ExpandDbaWildcard()`
+- `CgfConverter/Models/CafAnimation.cs`: Animation data model
+- `CgfConverter/CryEngineCore/Chunks/ChunkController_905.cs`: DBA parsing (both storage modes)
+- `CgfConverter/CryEngineCore/Chunks/ChunkController_829.cs`: CAF parsing
+- `CgfConverter/Renderers/USD/UsdRenderer.Animation.cs`: USD export with additive conversion
+
 ## Active Development Notes
 
 See `DEVNOTES.md` for:
 - USD shader-based material system planning
 - Known issues and debugging history
 - In-progress feature work
+- Star Citizen #ivo animation format (next target)

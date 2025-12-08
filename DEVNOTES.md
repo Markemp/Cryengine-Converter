@@ -93,7 +93,7 @@ Active development notes, debugging history, and in-progress feature work for Cr
 - First animation automatically bound as skeleton's `skel:animationSource`
 
 #### What Needs Testing/Fixing
-- **Star Citizen**: Animation support untested (uses #ivo format which may have different animation chunks)
+- **Star Citizen #ivo animations**: Next target for animation support (see section below)
 
 #### Animation File Formats
 
@@ -346,6 +346,33 @@ When implementing a new `ChunkController_XXX`:
 - Check ControllerID matching (CRC32 hash)
 - Check case sensitivity of bone names in hash
 - Log which controllers couldn't find matching bones
+
+### Star Citizen #ivo Animation Format (NEXT TARGET)
+
+**Status**: Not yet implemented. Mesh/geometry export works, but animation support is untested.
+
+**Background**: Star Citizen 3.23+ uses a proprietary "#ivo" format that differs significantly from traditional CryEngine. The geometry pipeline (`ChunkNodeMeshCombo`, `ChunkIvoSkinMesh`) is working, but animation chunks are different.
+
+**Known Animation Chunks**:
+- `ChunkIvoCAF` - Exists in codebase, may need verification against actual files
+- Animation format likely differs from traditional CAF (ChunkController_829) and DBA (ChunkController_905)
+
+**Expected Challenges** (based on DBA/CAF experience):
+1. **Offset calculations**: #ivo may use different data layout patterns
+2. **Bone identification**: CRC32 hashes may use different conventions
+3. **Rest translation**: Need to identify where rest pose comes from
+4. **Key time normalization**: May need adjustment for different time formats
+5. **Additive detection**: May use different flags or naming conventions
+
+**Research Needed**:
+- Find sample .chr/.skin files with associated animation files
+- Create/verify 010 Editor templates for #ivo animation structures
+- Compare to existing Animation.bt template (010-Templates repo) which has some #ivo structures
+- Identify `.chrparams` equivalent for Star Citizen (animation definitions)
+
+**Reference Files**:
+- `CgfConverter/CryEngineCore/Chunks/ChunkIvoCAF.cs` - Existing stub implementation
+- `010-Templates/chunks/Animation.bt` - Has `CAFChunk_Ivo` and `AnimControllerEntry_Ivo` structures
 
 ### Known Issues
 

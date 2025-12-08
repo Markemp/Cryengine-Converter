@@ -60,19 +60,13 @@ public class CalFile
             // Strip inline comments from value (// style)
             var commentIndex = value.IndexOf("//");
             if (commentIndex >= 0)
-            {
                 value = value[..commentIndex].Trim();
-            }
 
             // Handle special directives
             if (key.Equals("#filepath", StringComparison.OrdinalIgnoreCase))
-            {
                 cal.FilePath = value;
-            }
             else if (key.Equals("$Include", StringComparison.OrdinalIgnoreCase))
-            {
                 cal.Includes.Add(value);
-            }
             else if (key.StartsWith("$") || key.StartsWith("#"))
             {
                 // Other special directives (ignored for now)
@@ -106,8 +100,7 @@ public class CalFile
         foreach (var includePath in mainCal.Includes)
         {
             var includedCal = TryLoadInclude(includePath, calDirectory, packFileSystem);
-            if (includedCal is null)
-                continue;
+            if (includedCal is null) continue;
 
             // Merge included animations (don't override existing)
             foreach (var (name, path) in includedCal.Animations)
@@ -117,9 +110,7 @@ public class CalFile
 
             // If main cal doesn't have a filepath, inherit from included
             if (string.IsNullOrEmpty(mainCal.FilePath) && !string.IsNullOrEmpty(includedCal.FilePath))
-            {
                 mainCal.FilePath = includedCal.FilePath;
-            }
         }
 
         return mainCal;
@@ -141,9 +132,7 @@ public class CalFile
 
         // 3. Try relative to the including cal file's directory
         if (!string.IsNullOrEmpty(calDirectory))
-        {
             pathsToTry.Add(Path.Combine(calDirectory, includePath));
-        }
 
         foreach (var path in pathsToTry)
         {
