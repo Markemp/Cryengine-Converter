@@ -201,6 +201,9 @@ public class Model
     {
         foreach (ChunkHeader chunkHeaderItem in chunkHeaders)
         {
+            Utilities.HelperMethods.Log(Utilities.LogLevelEnum.Debug,
+                $"[{Path.GetFileName(FileName)}] Reading chunk: Type={chunkHeaderItem.ChunkType}, Version=0x{chunkHeaderItem.Version:X}, ID={chunkHeaderItem.ID}, Offset=0x{chunkHeaderItem.Offset:X}, Size={chunkHeaderItem.Size}");
+
             var chunk = Chunk.New(chunkHeaderItem.ChunkType, chunkHeaderItem.Version);
             ChunkMap[chunkHeaderItem.ID] = chunk;
 

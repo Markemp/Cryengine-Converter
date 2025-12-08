@@ -570,14 +570,37 @@ public partial class CryEngine
                     trackFilePath = Path.ChangeExtension(trackFilePath, ".dba");
 
                 Log.D("Attempting to load animation database from: {0}", trackFilePath);
-                try
+
+                // Check if this is a wildcard pattern
+                if (trackFilePath.Contains('*') || trackFilePath.Contains('?'))
                 {
-                    Animations.Add(Model.FromStream(trackFilePath, PackFileSystem.GetStream(trackFilePath), true));
-                    Log.D("Successfully loaded animation database with DBA format");
+                    var dbaFiles = ExpandDbaWildcard(trackFilePath);
+                    Log.D("Wildcard pattern '{0}' matched {1} DBA files", trackFilePath, dbaFiles.Count);
+
+                    foreach (var dbaPath in dbaFiles)
+                    {
+                        try
+                        {
+                            Animations.Add(Model.FromStream(dbaPath, PackFileSystem.GetStream(dbaPath), true));
+                            Log.D("Successfully loaded animation database: {0}", dbaPath);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.D("Error loading DBA file {0}: {1}", dbaPath, ex.Message);
+                        }
+                    }
                 }
-                catch (FileNotFoundException)
+                else
                 {
-                    Log.D("DBA file not found: {0}", trackFilePath);
+                    try
+                    {
+                        Animations.Add(Model.FromStream(trackFilePath, PackFileSystem.GetStream(trackFilePath), true));
+                        Log.D("Successfully loaded animation database with DBA format");
+                    }
+                    catch (FileNotFoundException)
+                    {
+                        Log.D("DBA file not found: {0}", trackFilePath);
+                    }
                 }
             }
 
@@ -851,6 +874,75 @@ public partial class CryEngine
         catch (Exception ex)
         {
             Log.D("Error expanding wildcard pattern {0}: {1}", pattern, ex.Message);
+        }
+
+        return results;
+    }
+
+    /// <summary>
+    /// Expands a wildcard pattern to find matching DBA files.
+    /// </summary>
+    private List<string> ExpandDbaWildcard(string pattern)
+    {
+        var results = new List<string>();
+
+        try
+        {
+            // Normalize path separators
+            pattern = pattern.Replace('\\', '/');
+
+            // Check if the directory portion contains wildcards
+            var lastSlash = pattern.LastIndexOf('/');
+            var filePattern = lastSlash >= 0 ? pattern[(lastSlash + 1)..] : pattern;
+            var directoryPattern = lastSlash >= 0 ? pattern[..lastSlash] : "";
+
+            // Find the first wildcard in the directory path
+            var firstWildcardIndex = directoryPattern.IndexOfAny(['*', '?']);
+
+            string baseDirectory;
+            bool searchRecursively = false;
+
+            if (firstWildcardIndex >= 0)
+            {
+                // There's a wildcard in the directory path - need to search recursively
+                var lastSlashBeforeWildcard = directoryPattern.LastIndexOf('/', firstWildcardIndex);
+                baseDirectory = lastSlashBeforeWildcard >= 0
+                    ? directoryPattern[..lastSlashBeforeWildcard]
+                    : "";
+                searchRecursively = true;
+            }
+            else
+            {
+                baseDirectory = directoryPattern;
+            }
+
+            // Resolve relative paths against ObjectDir
+            if (!Path.IsPathRooted(baseDirectory) && !string.IsNullOrEmpty(ObjectDir))
+            {
+                baseDirectory = Path.Combine(ObjectDir, baseDirectory);
+            }
+
+            // Normalize again after Path.Combine
+            baseDirectory = baseDirectory.Replace('\\', '/');
+
+            if (Directory.Exists(baseDirectory))
+            {
+                var searchOption = searchRecursively ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+                var matchingFiles = Directory.GetFiles(baseDirectory, filePattern, searchOption);
+                results.AddRange(matchingFiles.Where(f =>
+                    f.EndsWith(".dba", StringComparison.OrdinalIgnoreCase)));
+
+                Log.D("Searched '{0}' with pattern '{1}', recursive={2}, found {3} DBA files",
+                    baseDirectory, filePattern, searchRecursively, results.Count);
+            }
+            else
+            {
+                Log.D("Directory not found for DBA wildcard expansion: {0}", baseDirectory);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.D("Error expanding DBA wildcard pattern {0}: {1}", pattern, ex.Message);
         }
 
         return results;

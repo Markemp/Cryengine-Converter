@@ -497,8 +497,10 @@ public partial class UsdRenderer
         if (isAdditive)
             Log.D($"DBA[{animName}]: Converting additive animation to absolute");
 
-        // Build rest pose mappings for additive conversion
-        var jointPathToRestTranslation = isAdditive ? BuildRestTranslationMapping() : null;
+        // Build rest pose mappings - needed for:
+        // 1. Additive animation conversion
+        // 2. Bones without position animation (must use rest translation to maintain skeleton structure)
+        var jointPathToRestTranslation = BuildRestTranslationMapping();
         var jointPathToRestRotation = isAdditive ? BuildRestRotationMapping() : null;
 
         // Collect all joint paths that have animation in this clip
@@ -569,8 +571,14 @@ public partial class UsdRenderer
             {
                 var controller = controllersByJointPath[jointPath];
 
+                // Get rest translation for this joint (used when no position animation)
+                var restTranslation = jointPathToRestTranslation.TryGetValue(jointPath, out var restT)
+                    ? restT
+                    : Vector3.Zero;
+
                 // Get translation for this joint at this frame
-                Vector3 translation = Vector3.Zero;
+                // If no position track exists, use rest translation to maintain skeleton structure
+                Vector3 translation = restTranslation;
                 if (controller.HasPosTrack && animChunk.KeyTimes is not null && animChunk.KeyPositions is not null)
                 {
                     translation = SamplePositionAtFrame(
@@ -593,16 +601,15 @@ public partial class UsdRenderer
                 {
                     // Convert additive deltas to absolute transforms:
                     // Additive rotation: absolute = rest * delta
-                    // Additive translation: absolute = rest + delta
-                    var restTranslation = jointPathToRestTranslation!.TryGetValue(jointPath, out var restT)
-                        ? restT
-                        : Vector3.Zero;
+                    // Additive translation: absolute = rest + delta (translation already has rest if no pos track)
                     var restRotation = jointPathToRestRotation!.TryGetValue(jointPath, out var restR)
                         ? restR
                         : Quaternion.Identity;
 
                     rotation = restRotation * rotation;
-                    translation = restTranslation + translation;
+                    // For additive with position track, add animation delta to rest
+                    if (controller.HasPosTrack)
+                        translation = restTranslation + translation;
                 }
 
                 translations.Add(translation);

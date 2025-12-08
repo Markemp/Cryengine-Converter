@@ -88,22 +88,27 @@ Active development notes, debugging history, and in-progress feature work for Cr
 - **MWO pilot.chr**: Full skeleton with all CAF animations (joystick, throttle, etc.) working correctly
 - **Armored Warfare**: CAF animations via ChunkController_829 fully working (chicken walk/idle)
 - **ArcheAge**: CAF animations fully working (chicken uses ChunkCompiledBones_801 + .cal file)
+- **Kingdom Come Deliverance 2 (KCD2)**: DBA animations working (pig skeleton uses ChunkController_905 in-place streaming mode)
 - Animations exported as separate `.usda` files for Blender NLA workflow (one file per animation)
 - First animation automatically bound as skeleton's `skel:animationSource`
 
 #### What Needs Testing/Fixing
-- **Kingdom Come Deliverance 2 (KCD2)**: Animation support untested
 - **Star Citizen**: Animation support untested (uses #ivo format which may have different animation chunks)
 
 #### Animation File Formats
 
 **DBA Files** (Animation Databases):
 - Container format holding multiple animations
-- Referenced via `.chrparams` file's `$TracksDatabase` entry
+- Referenced via `.chrparams` file's `$TracksDatabase` entry (supports wildcards like `*.dba`)
 - Parsed by `ChunkController_905` which contains:
   - `NumAnims` animations, each with `MotionParams905` metadata
   - Compressed keyframe data (positions, rotations, times)
   - Per-animation `AssetFlags` in `MotionParams905.AssetFlags`
+- **Two storage modes** detected via offset sign:
+  - **Standard mode** (positive offsets): Track data → Animation entries → Controllers
+  - **In-place streaming mode** (negative offsets): Padding → Animation entries → Controllers → Track data
+  - In-place mode: offsets are relative to END of track data block (add negative offset to trackDataEnd)
+  - 4-byte alignment required before track data in in-place mode
 
 **CAF Files** (Individual Animation Clips):
 - Single animation per file
@@ -173,11 +178,11 @@ This section documents the vetted animation pipeline to help implement support f
 
 | Chunk Type | Version | Game | Status |
 |------------|---------|------|--------|
-| `ChunkCompiledBones` | 0x800 | MWO | ✅ Vetted |
+| `ChunkCompiledBones` | 0x800 | MWO, KCD2 | ✅ Vetted |
 | `ChunkCompiledBones` | 0x801 | ArcheAge | ✅ Vetted |
-| `ChunkController` | 0x905 | MWO (DBA) | ✅ Vetted |
+| `ChunkController` | 0x905 | MWO (DBA), KCD2 (DBA in-place streaming) | ✅ Vetted |
 | `ChunkController` | 0x829 | Armored Warfare (CAF) | ✅ Vetted |
-| `ChunkCompiledBones` | 0x900, 0x901 | Armored Warfare | ⚠️ Works but less tested |
+| `ChunkCompiledBones` | 0x900, 0x901 | Unknown | ⚠️ Untested for animations |
 
 ### CryEngine Matrix Convention
 

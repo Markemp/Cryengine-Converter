@@ -24,6 +24,7 @@ public class ManualRenderTests
 {
     private readonly ArgsHandler argsHandler = new();
     private readonly string armedWarfareObjectDir = @"d:\depot\armoredwarfare";
+    private readonly string kcd2ObjectDir = @"d:\depot\kcd2";
     private readonly string mwoObjectDir = @"d:\depot\mwo";
     private readonly string sc41ObjectDir = @"d:\depot\sc4.1\data";
     private readonly string sc44ObjectDir = @"d:\depot\sc4.4\data";
@@ -46,6 +47,17 @@ public class ManualRenderTests
     public void ArmoredWarfare_Chicken_USD()
     {
         RenderToUsd($@"{armedWarfareObjectDir}\Objects\characters\animals\birds\chicken\chicken.chr", armedWarfareObjectDir);
+    }
+
+    #endregion
+
+    #region KCD2 Test Files
+
+
+    [TestMethod]
+    public void Kcd2_Skeleton_Pig_USD()
+    {
+        RenderToUsd($@"{kcd2ObjectDir}\Objects\characters\animals\boar\skeleton_pig_01.chr", kcd2ObjectDir);
     }
 
     #endregion
@@ -207,7 +219,6 @@ public class ManualRenderTests
     }
 
     #endregion
-
 
     #region SC test files
 
