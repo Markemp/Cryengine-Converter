@@ -98,7 +98,10 @@ public partial class BaseGltfRenderer
         }
 
         if (!omitSkins)
+        {
             _ = WriteAnimations(cryData.Animations, controllerIdToNodeIndex);
+            _ = WriteCafAnimations(cryData.CafAnimations, controllerIdToNodeIndex);
+        }
 
         // For each child, recursively call this method to add the child to GltfRoot.Nodes.
         foreach (ChunkNode cryChildNode in cryNode.Children)

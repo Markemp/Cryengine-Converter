@@ -49,6 +49,12 @@ public class ManualRenderTests
         RenderToUsd($@"{armedWarfareObjectDir}\Objects\characters\animals\birds\chicken\chicken.chr", armedWarfareObjectDir);
     }
 
+    [TestMethod]
+    public void ArmoredWarfare_Chicken_Gltf()
+    {
+        RenderToGltf($@"{armedWarfareObjectDir}\Objects\characters\animals\birds\chicken\chicken.chr", armedWarfareObjectDir);
+    }
+
     #endregion
 
     #region KCD2 Test Files

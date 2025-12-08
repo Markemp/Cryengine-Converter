@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using CgfConverter.CryEngineCore;
+using CgfConverter.Models;
 using CgfConverter.Renderers.Gltf.Models;
 
 namespace CgfConverter.Renderers.Gltf;
@@ -145,5 +147,143 @@ public partial class BaseGltfRenderer
         }
 
         return numAnimationsWritten;
+    }
+
+    /// <summary>
+    /// Writes CAF animations (from .caf files and .cal animation lists) to glTF.
+    /// </summary>
+    private int WriteCafAnimations(
+        IEnumerable<CafAnimation>? cafAnimations,
+        IReadOnlyDictionary<uint, int> controllerIdToNodeIndex)
+    {
+        if (cafAnimations is null)
+            return 0;
+
+        var cafList = cafAnimations.ToList();
+        if (cafList.Count == 0)
+            return 0;
+
+        var numAnimationsWritten = 0;
+
+        foreach (var cafAnim in cafList)
+        {
+            if (!CreateCafAnimation(out var newAnimation, cafAnim, controllerIdToNodeIndex))
+                continue;
+
+            AddAnimation(newAnimation);
+            numAnimationsWritten++;
+        }
+
+        return numAnimationsWritten;
+    }
+
+    /// <summary>
+    /// Creates a glTF animation from a CAF animation.
+    /// </summary>
+    private bool CreateCafAnimation(
+        out GltfAnimation newAnimation,
+        CafAnimation cafAnim,
+        IReadOnlyDictionary<uint, int> controllerIdToNodeIndex)
+    {
+        var cleanName = Path.GetFileNameWithoutExtension(cafAnim.Name);
+        newAnimation = new GltfAnimation { Name = cleanName };
+
+        foreach (var (controllerId, track) in cafAnim.BoneTracks)
+        {
+            // Try to find node by controller ID
+            if (!controllerIdToNodeIndex.TryGetValue(controllerId, out var nodeIndex))
+            {
+                // Try using bone name from CAF's bone name list
+                if (cafAnim.ControllerIdToBoneName.TryGetValue(controllerId, out var boneName))
+                {
+                    // Search for matching node by name - this requires iterating controllerIdToNodeIndex
+                    // Since we don't have reverse mapping, log and skip
+                    Log.D("CAF[{0}]: Controller 0x{1:X08} ({2}) not found in skeleton",
+                        cafAnim.Name, controllerId, boneName);
+                }
+                else
+                {
+                    Log.D("CAF[{0}]: Controller 0x{1:X08} not found in skeleton",
+                        cafAnim.Name, controllerId);
+                }
+                continue;
+            }
+
+            // Create position animation channel if we have position data
+            if (track.Positions.Count > 0)
+            {
+                var keyTimes = track.PositionKeyTimes.Count > 0
+                    ? track.PositionKeyTimes
+                    : track.KeyTimes;
+
+                if (keyTimes.Count > 0)
+                {
+                    // Normalize key times to seconds (assuming 30fps if times look like frame numbers)
+                    var startTime = keyTimes[0];
+                    var timeAccessor = AddAccessor(
+                        $"caf/{cleanName}/pos_time/{controllerId:X08}", -1, null,
+                        keyTimes.Select(t => (t - startTime) / 30f).ToArray());
+
+                    var posAccessor = AddAccessor(
+                        $"caf/{cleanName}/pos/{controllerId:X08}", -1, null,
+                        track.Positions.Select(SwapAxesForPosition).ToArray());
+
+                    newAnimation.Samplers.Add(new GltfAnimationSampler
+                    {
+                        Input = timeAccessor,
+                        Output = posAccessor,
+                        Interpolation = GltfAnimationSamplerInterpolation.Linear,
+                    });
+                    newAnimation.Channels.Add(new GltfAnimationChannel
+                    {
+                        Sampler = newAnimation.Samplers.Count - 1,
+                        Target = new GltfAnimationChannelTarget
+                        {
+                            Node = nodeIndex,
+                            Path = GltfAnimationChannelTargetPath.Translation,
+                        },
+                    });
+                }
+            }
+
+            // Create rotation animation channel if we have rotation data
+            if (track.Rotations.Count > 0)
+            {
+                var keyTimes = track.RotationKeyTimes.Count > 0
+                    ? track.RotationKeyTimes
+                    : track.KeyTimes;
+
+                if (keyTimes.Count > 0)
+                {
+                    // Normalize key times to seconds
+                    var startTime = keyTimes[0];
+                    var timeAccessor = AddAccessor(
+                        $"caf/{cleanName}/rot_time/{controllerId:X08}", -1, null,
+                        keyTimes.Select(t => (t - startTime) / 30f).ToArray());
+
+                    var rotAccessor = AddAccessor(
+                        $"caf/{cleanName}/rot/{controllerId:X08}", -1, null,
+                        track.Rotations.Select(SwapAxesForAnimations).ToArray());
+
+                    newAnimation.Samplers.Add(new GltfAnimationSampler
+                    {
+                        Input = timeAccessor,
+                        Output = rotAccessor,
+                        Interpolation = GltfAnimationSamplerInterpolation.Linear,
+                    });
+                    newAnimation.Channels.Add(new GltfAnimationChannel
+                    {
+                        Sampler = newAnimation.Samplers.Count - 1,
+                        Target = new GltfAnimationChannelTarget
+                        {
+                            Node = nodeIndex,
+                            Path = GltfAnimationChannelTargetPath.Rotation,
+                        },
+                    });
+                }
+            }
+        }
+
+        return newAnimation.Samplers.Count > 0 && newAnimation.Channels.Count > 0;
     }
 }
