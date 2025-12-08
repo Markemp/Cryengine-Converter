@@ -41,6 +41,35 @@ public class ManualRenderTests
         HelperMethods.LogLevel = LogLevelEnum.Debug;
     }
 
+
+    #region ArcheAge tests
+
+    [TestMethod]
+    public void Basket_Mix_Ani_USD() // has 2 material libraries
+    {
+        RenderToUsd($@"{archeageObjectDir}\game\objects\env\01_nuia\001_housing\01_tools\basket_mix_ani.cga", archeageObjectDir);
+    }
+
+    [TestMethod]
+    public void Basket_Mix_Ani_Collada() // has 2 material libraries
+    {
+        RenderToCollada($@"{archeageObjectDir}\game\objects\env\01_nuia\001_housing\01_tools\basket_mix_ani.cga", archeageObjectDir);
+    }
+
+    [TestMethod]
+    public void ArcheAge_Chicken_USD() // 0x801 compiled bones format
+    {
+        RenderToUsd($@"{archeageObjectDir}\game\objects\characters\animals\chicken\chicken.chr", archeageObjectDir);
+    }
+
+    [TestMethod]
+    public void ArcheAge_Chicken_Gltf() // 0x801 compiled bones format
+    {
+        RenderToGltf($@"{archeageObjectDir}\game\objects\characters\animals\chicken\chicken.chr", archeageObjectDir);
+    }
+
+    #endregion
+
     #region Armored Warfare Test Files
 
     [TestMethod]
@@ -59,11 +88,28 @@ public class ManualRenderTests
 
     #region KCD2 Test Files
 
+    [TestMethod]
+    public void Kcd2_Boar_Usd()
+    {
+        RenderToUsd($@"{kcd2ObjectDir}\Objects\characters\animals\boar\boar.chr", kcd2ObjectDir);
+    }
 
     [TestMethod]
     public void Kcd2_Skeleton_Pig_USD()
     {
         RenderToUsd($@"{kcd2ObjectDir}\Objects\characters\animals\boar\skeleton_pig_01.chr", kcd2ObjectDir);
+    }
+
+    [TestMethod]
+    public void Kcd2_Boar_Gltf()
+    {
+        RenderToGltf($@"{kcd2ObjectDir}\Objects\characters\animals\boar\boar.chr", kcd2ObjectDir);
+    }
+
+    [TestMethod]
+    public void Kcd2_Skeleton_Pig_Gltf()
+    {
+        RenderToGltf($@"{kcd2ObjectDir}\Objects\characters\animals\boar\skeleton_pig_01.chr", kcd2ObjectDir);
     }
 
     #endregion
@@ -257,28 +303,6 @@ public class ManualRenderTests
     public void GLSN_Shiv_Door_Ramp_Cga_USD()
     {
         RenderToUsd($@"{sc44ObjectDir}\objects\spaceships\ships\GLSN\shiv\Maelstrom\GLSN_Shiv_Door_Ramp.cga", sc41ObjectDir);
-    }
-
-    #endregion
-
-    #region ArcheAge tests
-
-    [TestMethod]
-    public void Basket_Mix_Ani_USD() // has 2 material libraries
-    {
-        RenderToUsd($@"{archeageObjectDir}\game\objects\env\01_nuia\001_housing\01_tools\basket_mix_ani.cga", archeageObjectDir);
-    }
-
-    [TestMethod]
-    public void Basket_Mix_Ani_Collada() // has 2 material libraries
-    {
-        RenderToCollada($@"{archeageObjectDir}\game\objects\env\01_nuia\001_housing\01_tools\basket_mix_ani.cga", archeageObjectDir);
-    }
-
-    [TestMethod]
-    public void ArcheAge_Chicken_USD() // 0x801 compiled bones format
-    {
-        RenderToUsd($@"{archeageObjectDir}\game\objects\characters\animals\chicken\chicken.chr", archeageObjectDir);
     }
 
     #endregion

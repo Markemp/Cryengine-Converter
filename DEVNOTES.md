@@ -389,6 +389,12 @@ When implementing a new `ChunkController_XXX`:
   - Attempted: Transpose 3x3 rotation only + move translation to row 4 - Translations wrong
   - **Priority**: Fix before armature/skinning work on complex multi-node models
 
+- **glTF: ArcheAge models skeleton/geometry incorrect**: ArcheAge uses `ChunkCompiledBones_801` which stores B2W (boneToWorld) matrix and computes BindPoseMatrix (W2B) by inversion. The glTF bone hierarchy building produces incorrect results - skeleton and geometry are malformed in Blender. USD export works correctly for the same files.
+  - Tested with: `archeage/game/objects/characters/animals/chicken/chicken.chr`
+  - Multiple fix attempts: changed root bone detection, rewrote bone transform computation to match USD approach, tried two-pass bone index mapping
+  - Symptoms: Geometry appears but skeleton is collapsed/wrong, bone transforms incorrect
+  - **Workaround**: Use USD export for ArcheAge models (works correctly with animations)
+
 ### Multiple UV Layer Support (IN PROGRESS)
 
 **Status**: USD renderer infrastructure complete. Parsing not yet implemented.

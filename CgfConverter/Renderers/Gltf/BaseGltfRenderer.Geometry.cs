@@ -215,31 +215,52 @@ public partial class BaseGltfRenderer
                             .ToArray());
         }
 
-        var boneIdToBindPoseMatrices = new Dictionary<int, Matrix4x4>();
-        foreach (var bone in skinningInfo.CompiledBones)
+        // Build bone index to node index mapping first
+        var boneIndexToNodeIndex = new Dictionary<int, int>();
+
+        for (int boneIndex = 0; boneIndex < skinningInfo.CompiledBones.Count; boneIndex++)
         {
-            var boneId = skinningInfo.CompiledBones.IndexOf(bone); // parent bone id is always 0
-            var parentBone = boneId == 0 ? bone : skinningInfo.CompiledBones[boneId + bone.OffsetParent];
-            var parentBoneId = skinningInfo.CompiledBones.IndexOf(parentBone);
-            var matrix = boneIdToBindPoseMatrices[boneId] = bone.BindPoseMatrix;
+            var bone = skinningInfo.CompiledBones[boneIndex];
 
-            if (bone.OffsetParent != 0 && bone.OffsetParent != 0xffffffff)
+            // Compute local transform using same approach as USD renderer
+            Matrix4x4 localMatrix;
+
+            if (bone.ParentBone == null)
             {
-                if (!Matrix4x4.Invert(boneIdToBindPoseMatrices[parentBoneId], out var parentMat))
-                    return Log.E<bool>("CompiledBone[{0}/{1}]: Failed to invert BindPoseMatrix.",
-                        rootNode.Name, bone.ParentBone?.BoneName);
-
-                matrix *= parentMat;
+                // Root bone: local = world, invert BindPoseMatrix to get boneToWorld
+                if (!Matrix4x4.Invert(bone.BindPoseMatrix, out localMatrix))
+                {
+                    Log.W("CompiledBone[{0}/{1}]: Failed to invert BindPoseMatrix for root",
+                        rootNode.Name, bone.BoneName);
+                    localMatrix = Matrix4x4.Identity;
+                }
+            }
+            else
+            {
+                // Child bone: compute local transform relative to parent
+                // localTransform = parentWorldToBone * childBoneToWorld
+                //                = parent.BindPoseMatrix * inverse(child.BindPoseMatrix)
+                if (Matrix4x4.Invert(bone.BindPoseMatrix, out var childBoneToWorld))
+                {
+                    localMatrix = bone.ParentBone.BindPoseMatrix * childBoneToWorld;
+                }
+                else
+                {
+                    Log.W("CompiledBone[{0}/{1}]: Failed to invert BindPoseMatrix",
+                        rootNode.Name, bone.BoneName);
+                    localMatrix = Matrix4x4.Identity;
+                }
             }
 
-            if (!Matrix4x4.Invert(matrix, out matrix))
-                return Log.E<bool>("CompiledBone[{0}/{1}]: Failed to invert BindPoseMatrix.",
-                    rootNode.Name, bone.BoneName);
-
-            matrix = SwapAxes(Matrix4x4.Transpose(matrix));
+            // Transpose and swap axes for glTF coordinate system (Y-up)
+            var matrix = SwapAxes(Matrix4x4.Transpose(localMatrix));
             if (!Matrix4x4.Decompose(matrix, out var scale, out var rotation, out var translation))
-                return Log.E<bool>("CompiledBone[{0}/{1}]: BindPoseMatrix is not decomposable.",
-                rootNode.Name, bone.BoneName);
+            {
+                Log.W("CompiledBone[{0}/{1}]: BindPoseMatrix is not decomposable", rootNode.Name, bone.BoneName);
+                scale = Vector3.One;
+                rotation = Quaternion.Identity;
+                translation = Vector3.Zero;
+            }
 
             var boneNode = new GltfNode
             {
@@ -255,13 +276,45 @@ public partial class BaseGltfRenderer
                     ? new List<float> { rotation.X, rotation.Y, rotation.Z, rotation.W }
                     : null
             };
-            controllerIdToNodeIndex[bone.ControllerID] = AddNode(boneNode);
+            var nodeIndex = AddNode(boneNode);
+            boneIndexToNodeIndex[boneIndex] = nodeIndex;
+            controllerIdToNodeIndex[bone.ControllerID] = nodeIndex;
+        }
 
-            if (bone.ParentControllerIndex == 0)
-                CurrentScene.Nodes.Add(controllerIdToNodeIndex[bone.ControllerID]);
+        // Now set up parent-child relationships using bone index
+        for (int boneIndex = 0; boneIndex < skinningInfo.CompiledBones.Count; boneIndex++)
+        {
+            var bone = skinningInfo.CompiledBones[boneIndex];
+            var nodeIndex = boneIndexToNodeIndex[boneIndex];
+
+            if (bone.ParentBone == null)
+            {
+                // Root bone
+                CurrentScene.Nodes.Add(nodeIndex);
+            }
             else
-                Root.Nodes[controllerIdToNodeIndex[parentBone.ControllerID]].Children
-                    .Add(controllerIdToNodeIndex[bone.ControllerID]);
+            {
+                // Find parent bone index
+                var parentBoneIndex = skinningInfo.CompiledBones.IndexOf(bone.ParentBone);
+                if (parentBoneIndex >= 0 && boneIndexToNodeIndex.TryGetValue(parentBoneIndex, out var parentNodeIndex))
+                {
+                    if (parentNodeIndex != nodeIndex)
+                    {
+                        Root.Nodes[parentNodeIndex].Children.Add(nodeIndex);
+                    }
+                    else
+                    {
+                        Log.W("Bone[{0}]: Self-reference detected, treating as root", bone.BoneName);
+                        CurrentScene.Nodes.Add(nodeIndex);
+                    }
+                }
+                else
+                {
+                    Log.W("Bone[{0}]: Parent bone '{1}' not found in bone list, treating as root",
+                        bone.BoneName, bone.ParentBone.BoneName);
+                    CurrentScene.Nodes.Add(nodeIndex);
+                }
+            }
         }
 
         baseName = $"{rootNode.Name}/bone/joint";
