@@ -239,6 +239,8 @@ public partial class UsdRenderer
     }
 
     /// <summary>Adds skinning attributes to a mesh prim for skeletal animation.</summary>
+    /// <param name="meshPrim">The mesh prim to add skinning to.</param>
+    /// <param name="nodeChunk">The node chunk containing mesh data.</param>
     private void AddSkinningAttributes(UsdMesh meshPrim, ChunkNode nodeChunk)
     {
         // Get skinning data
@@ -298,7 +300,7 @@ public partial class UsdRenderer
         }
         else
         {
-            // No skinning data available - don't add SkelBindingAPI
+            // No skinning data available
             return;
         }
 

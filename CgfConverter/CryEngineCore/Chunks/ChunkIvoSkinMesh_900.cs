@@ -303,9 +303,36 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                     b.AlignTo(8);
                     Colors = colors;
                     break;
-                case DatastreamType.IVOUNKNOWN:
+                case DatastreamType.IVOSIMPLEBONEMAP:
+                    // Simple bone mapping: single ushort bone index per vertex
+                    // Used for rigid attachment meshes where each vertex is influenced by a single bone
+                    // Weight is implied 1.0 (100%) since there's only one influence
                     bytesPerElement = b.ReadUInt32();
-                    SkipBytes(b, bytesPerElement * meshDetails.NumberOfVertices);
+                    if (bytesPerElement == 2)
+                    {
+                        Datastream<MeshBoneMapping> simpleBoneMaps = new(
+                            DatastreamType.IVOSIMPLEBONEMAP,
+                            meshDetails.NumberOfVertices,
+                            bytesPerElement,
+                            new MeshBoneMapping[meshDetails.NumberOfVertices]);
+                        for (int i = 0; i < meshDetails.NumberOfVertices; i++)
+                        {
+                            ushort boneIndex = b.ReadUInt16();
+                            MeshBoneMapping bm = new()
+                            {
+                                BoneInfluenceCount = 1,
+                                BoneIndex = [boneIndex, 0, 0, 0],
+                                Weight = [1.0f, 0, 0, 0]
+                            };
+                            simpleBoneMaps.Data[i] = bm;
+                        }
+                        BoneMappings = simpleBoneMaps;
+                    }
+                    else
+                    {
+                        HelperMethods.Log(LogLevelEnum.Warning, $"Unexpected simple bone map bytes per element: {bytesPerElement}");
+                        SkipBytes(b, bytesPerElement * meshDetails.NumberOfVertices);
+                    }
                     b.AlignTo(8);
                     break;
                 default:
