@@ -10,13 +10,10 @@ public struct IvoAnimBlockHeader
     /// <summary>Signature: "#caf" or "#dba".</summary>
     public string Signature { get; set; }
 
-    /// <summary>Number of bones in this animation.</summary>
-    public byte BoneCount { get; set; }
+    /// <summary>Number of bones in this animation (CryEngine supports up to 1024).</summary>
+    public ushort BoneCount { get; set; }
 
-    /// <summary>Padding byte (always 0).</summary>
-    public byte Padding { get; set; }
-
-    /// <summary>Magic number (0xAA55).</summary>
+    /// <summary>Magic number (0xAA55 for DBA, 0xFFFF for CAF).</summary>
     public ushort Magic { get; set; }
 
     /// <summary>Total size of block data after header.</summary>
@@ -25,40 +22,53 @@ public struct IvoAnimBlockHeader
 
 /// <summary>
 /// Controller entry for per-bone animation data (24 bytes).
-/// Format flags: 0x80xx = rotation only, 0xC0xx = has position.
-/// Low byte: 0x42 = SmallTree48BitQuat, 0x43 = SmallTree64BitQuat, 0x00 = NoCompressQuat.
+/// Structure has separate rotation track (12 bytes) and position track (12 bytes).
+/// All offsets are relative to the START of this controller entry (not the keyframe data start).
 /// </summary>
+/// <remarks>
+/// Format flags breakdown (low nibble determines time format: 0=ubyte, 2=uint16 header):
+/// - Rotation: 0x8040 = ubyte time array, uncompressed quaternions
+///             0x8042 = uint16 time header (8 bytes), uncompressed quaternions
+/// - Position: 0xC040 = ubyte time, numPosKeys positions
+///             0xC142 = uint16 time header (8 bytes), 2 positions
+///             0xC242 = uint16 time header (8 bytes), data header (8 bytes), 1 position
+///             0x0000 = no position track
+/// </remarks>
 public struct IvoAnimControllerEntry
 {
-    /// <summary>Number of keyframes.</summary>
-    public byte NumKeys { get; set; }
+    // Rotation track info (12 bytes)
 
-    /// <summary>Padding byte (always 0).</summary>
-    public byte Padding { get; set; }
+    /// <summary>Number of rotation keyframes.</summary>
+    public ushort NumRotKeys { get; set; }
 
-    /// <summary>Format flags (high byte = has pos, low byte = compression format).</summary>
-    public ushort FormatFlags { get; set; }
+    /// <summary>Rotation format flags. 0x8042 = standard rotation track.</summary>
+    public ushort RotFormatFlags { get; set; }
 
-    /// <summary>Offset to rotation data (relative to block start).</summary>
-    public uint RotDataOffset { get; set; }
-
-    /// <summary>Offset to rotation time keys.</summary>
+    /// <summary>Offset to rotation time keys (relative to controller start).</summary>
     public uint RotTimeOffset { get; set; }
 
-    /// <summary>Offset to position data (0 if rotation only).</summary>
-    public uint PosDataOffset { get; set; }
+    /// <summary>Offset to rotation quaternion data (relative to controller start).</summary>
+    public uint RotDataOffset { get; set; }
 
-    /// <summary>Offset to position time keys (0 if rotation only).</summary>
+    // Position track info (12 bytes)
+
+    /// <summary>Number of position keyframes. Meaning varies by format flag.</summary>
+    public ushort NumPosKeys { get; set; }
+
+    /// <summary>Position format flags. See remarks for valid values.</summary>
+    public ushort PosFormatFlags { get; set; }
+
+    /// <summary>Offset to position time keys (relative to controller start).</summary>
     public uint PosTimeOffset { get; set; }
 
-    /// <summary>Reserved/padding.</summary>
-    public uint Reserved { get; set; }
+    /// <summary>Offset to position vector data (relative to controller start).</summary>
+    public uint PosDataOffset { get; set; }
 
     /// <summary>Returns true if this controller has position data.</summary>
-    public readonly bool HasPosition => (FormatFlags & 0xC000) == 0xC000;
+    public readonly bool HasPosition => PosFormatFlags != 0;
 
-    /// <summary>Gets the compression format from the low byte.</summary>
-    public readonly byte CompressionFormat => (byte)(FormatFlags & 0xFF);
+    /// <summary>Returns true if this controller has rotation data.</summary>
+    public readonly bool HasRotation => RotFormatFlags != 0;
 }
 
 /// <summary>

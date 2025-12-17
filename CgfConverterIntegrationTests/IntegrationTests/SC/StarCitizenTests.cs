@@ -962,7 +962,7 @@ public class StarCitizenTests
     public void Aloprat_CAF_IvoAnimation()
     {
         // Test loading a Star Citizen #ivo CAF animation file directly
-        var cafPath = $@"{objectDir41}\Animations\Characters\Creatures\aloprat\ai_aloprat_stand_idle_01.caf";
+        var cafPath = $@"{objectDir41}\Animations\Characters\Creatures\aloprat\ai_aloprat_stand_walk_forward_01.caf";
 
         var args = new string[] { cafPath, "-objectdir", objectDir41 };
         int result = testUtils.argsHandler.ProcessArgs(args);
@@ -984,6 +984,31 @@ public class StarCitizenTests
         foreach (var chunk in chunks)
         {
             Console.WriteLine($"Chunk: {chunk.GetType().Name}");
+
+            // Debug: output IvoCAF controller details
+            if (chunk is CgfConverter.CryEngineCore.ChunkIvoCAF ivoCaf)
+            {
+                Console.WriteLine($"  BoneHashes: {ivoCaf.BoneHashes.Length}, Controllers: {ivoCaf.Controllers.Length}");
+                for (int i = 0; i < Math.Min(5, ivoCaf.Controllers.Length); i++)
+                {
+                    var ctrl = ivoCaf.Controllers[i];
+                    Console.WriteLine($"  [{i}] Hash=0x{ivoCaf.BoneHashes[i]:X08}: " +
+                        $"Rot={ctrl.NumRotKeys}@0x{ctrl.RotDataOffset:X} (flags=0x{ctrl.RotFormatFlags:X4}), " +
+                        $"Pos={ctrl.NumPosKeys}@0x{ctrl.PosDataOffset:X} (flags=0x{ctrl.PosFormatFlags:X4})");
+                }
+
+                // Show first position data for bones that have it
+                Console.WriteLine($"  Position tracks: {ivoCaf.Positions.Count}");
+                int posCount = 0;
+                foreach (var (hash, positions) in ivoCaf.Positions)
+                {
+                    if (positions.Count > 0)
+                    {
+                        Console.WriteLine($"    0x{hash:X08}: first pos = {positions[0]}");
+                        if (++posCount >= 5) break;
+                    }
+                }
+            }
         }
     }
 }

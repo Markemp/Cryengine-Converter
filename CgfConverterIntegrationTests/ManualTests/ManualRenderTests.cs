@@ -302,7 +302,13 @@ public class ManualRenderTests
     [TestMethod]
     public void GLSN_Shiv_Door_Ramp_Cga_USD()
     {
-        RenderToUsd($@"{sc44ObjectDir}\objects\spaceships\ships\GLSN\shiv\Maelstrom\GLSN_Shiv_Door_Ramp.cga", sc41ObjectDir);
+        RenderToUsd($@"{sc41ObjectDir}\objects\spaceships\ships\GLSN\shiv\Maelstrom\GLSN_Shiv_Door_Ramp.cga", sc41ObjectDir);
+    }
+
+    [TestMethod]
+    public void mgzn_s04_behr_40gb_01_spin_01_USD()
+    {
+        RenderToUsd($@"{sc41ObjectDir}\objects\fps_weapons\attachments\magazines\behr\mgzn_s04_behr_40gb_01.cga", sc41ObjectDir);
     }
 
     #endregion

@@ -347,32 +347,214 @@ When implementing a new `ChunkController_XXX`:
 - Check case sensitivity of bone names in hash
 - Log which controllers couldn't find matching bones
 
-### Star Citizen #ivo Animation Format (NEXT TARGET)
+### Star Citizen #ivo Animation Format (IN PROGRESS)
 
-**Status**: Not yet implemented. Mesh/geometry export works, but animation support is untested.
+**Status**: Rotation animation parsing implemented and working. Position animation skipped (compression not decoded). Armature still has issues - translations correct in edit mode but wrong in pose/object mode.
 
-**Background**: Star Citizen 3.23+ uses a proprietary "#ivo" format that differs significantly from traditional CryEngine. The geometry pipeline (`ChunkNodeMeshCombo`, `ChunkIvoSkinMesh`) is working, but animation chunks are different.
+**Test Asset**: `aloprat_skel.chr` with 13 CAF animations from `aloprat/*.caf`
 
-**Known Animation Chunks**:
-- `ChunkIvoCAF` - Exists in codebase, may need verification against actual files
-- Animation format likely differs from traditional CAF (ChunkController_829) and DBA (ChunkController_905)
+#### What's Implemented
 
-**Expected Challenges** (based on DBA/CAF experience):
-1. **Offset calculations**: #ivo may use different data layout patterns
-2. **Bone identification**: CRC32 hashes may use different conventions
-3. **Rest translation**: Need to identify where rest pose comes from
-4. **Key time normalization**: May need adjustment for different time formats
-5. **Additive detection**: May use different flags or naming conventions
+**ChunkIvoCAF_900** (`CgfConverter/CryEngineCore/Chunks/ChunkIvoCAF_900.cs`):
+- Parses `#caf` signature block (magic 0xAA55 for DBA, 0xFFFF for CAF)
+- Reads bone hash array (CRC32 identifiers for each bone)
+- Reads controller entries (24 bytes each): rotation track (12 bytes) + position track (12 bytes)
+- Parses rotation keyframe data (supports formats 0x40, 0x42, 0x43)
+- Parses rotation time keys (uint16 normalized to frame indices)
 
-**Research Needed**:
-- Find sample .chr/.skin files with associated animation files
-- Create/verify 010 Editor templates for #ivo animation structures
-- Compare to existing Animation.bt template (010-Templates repo) which has some #ivo structures
-- Identify `.chrparams` equivalent for Star Citizen (animation definitions)
+**Controller Entry Structure** (per 010 template `Animation.bt`):
+```
+// 24 bytes per bone
+struct AnimControllerEntry_Ivo {
+    // Rotation track (12 bytes)
+    uint16 numRotKeys;        // Number of rotation keyframes
+    uint16 rotFormatFlags;    // e.g., 0x8042
+    uint32 rotTimeOffset;     // Offset from controller start to time data
+    uint32 rotDataOffset;     // Offset from controller start to rotation data
 
-**Reference Files**:
-- `CgfConverter/CryEngineCore/Chunks/ChunkIvoCAF.cs` - Existing stub implementation
-- `010-Templates/chunks/Animation.bt` - Has `CAFChunk_Ivo` and `AnimControllerEntry_Ivo` structures
+    // Position track (12 bytes)
+    uint16 numPosKeys;        // Meaning varies by format - NOT always a count
+    uint16 posFormatFlags;    // e.g., 0xC040, 0xC142, 0xC242
+    uint32 posTimeOffset;     // Offset from controller start to time data
+    uint32 posDataOffset;     // Offset from controller start to position data
+};
+```
+
+**IMPORTANT**: All offsets are relative to the **start of each controller**, not the start of the controllers array.
+
+**Rotation Format Flags** (0x80xx) - determines time structure:
+| Flag | Time Format | Data Format |
+|------|-------------|-------------|
+| `0x8040` | ubyte array[numRotKeys] (padded to 4 bytes) | numRotKeys × Quaternion (16 bytes each) |
+| `0x8042` | 8-byte header (uint16 × 2 + uint32 marker) | numRotKeys × Quaternion (16 bytes each) |
+
+**Rotation Time Header** (for 0x8042):
+- 8-byte header: `uint16 startTime`, `uint16 endTime`, `uint32 marker`
+- Followed by `numRotKeys` quaternions (16 bytes each, uncompressed)
+
+**Position Format Flags** (0xC0xx) - determines structure:
+| Flag | Time Format | Data Format | numPosKeys Meaning |
+|------|-------------|-------------|-------------------|
+| `0xC040` | ubyte array[numPosKeys] | numPosKeys × Vector3, no header | Actual position count |
+| `0xC142` | 8-byte header (uint16 × 2 + uint32 marker) | 2 × Vector3, no header | Unknown (not count) |
+| `0xC242` | 8-byte header (uint16 × 2 + uint32 marker) | 8-byte header + 1 × Vector3 | Unknown (not count) |
+
+**Position Time Header** (for 0xC142, 0xC242):
+```
+struct PosTimeBlock {
+    uint16 timeStart;    // Usually 0
+    uint16 timeEnd;      // Usually 30 (0x1E)
+    uint32 marker;       // e.g., 0x65294A55
+};
+```
+
+**Position Data Header** (for 0xC242 only):
+- 8 bytes including a NaN marker (0x7F7FFFFF pattern observed)
+- Followed by 1 Vector3
+
+**Format Flags Breakdown** (Unvetted - Under Investigation):
+
+Flag Structure: `0xABCD` (16-bit)
+
+| Nibble | Position | Values Observed | Meaning |
+|--------|----------|-----------------|---------|
+| A | 1st | 8, C | Data type: 8 = Quaternion (rotation), C = Vec3 (position) |
+| B | 2nd | 0, 1, 2 | Compression/format variant (see below) |
+| C | 3rd | 4 (always) | Likely indicates uncompressed/raw data |
+| D | 4th | 0, 2 | Time format: 0 = ubyte, 2 = ushort |
+
+**Rotation Flags (Nibble A = 8)**:
+
+| Flag | Time Format | Data Format |
+|------|-------------|-------------|
+| 0x8040 | ubyte | Uncompressed Quat (4 floats, 16 bytes/key) |
+| 0x8042 | ushort | Uncompressed Quat (4 floats, 16 bytes/key) |
+
+**Position Flags (Nibble A = C)**:
+
+| Flag | Time Format | Data Format | Notes |
+|------|-------------|-------------|-------|
+| 0xC040 | ubyte | Full Vec3 (3 floats, 12 bytes/key) | Standard uncompressed |
+| 0xC042 | ushort | Full Vec3 (3 floats, 12 bytes/key) | Standard uncompressed |
+| 0xC140 | ubyte | Unknown variant | Possibly CryHalf3? |
+| 0xC142 | ushort | Unknown variant | Possibly CryHalf3? |
+| 0xC240 | ubyte | Compressed - possibly SNORM16×2 + shared Z | See notes below |
+| 0xC242 | ushort | Compressed - base Vec3 + delta indices? | See notes below |
+
+**2nd Nibble Hypothesis (Position Compression Level)**:
+
+| Value | Likely Meaning |
+|-------|----------------|
+| 0 | Full precision (3 × float32 = 12 bytes/key) |
+| 1 | Half precision (3 × float16 = 6-8 bytes/key)? |
+| 2 | Delta/indexed compression (base Vec3 + uint16 offsets) |
+
+**0xC240 Format (Observed)**:
+
+For a 3-key static position:
+- `[SNORM16 x][SNORM16 y]` × 3 keys = 12 bytes
+- `[float32 Z or scale]` = 4 bytes
+- `0xFFFF` as SNORM16 ≈ 0.0
+- `0x7F7F` as SNORM16 ≈ 0.996 (near 1.0)
+
+**0xC242 Format (Under Investigation)**:
+
+For 14 keys, data structure appears to be:
+- `[4 bytes header?]` 00 00 1E 00
+- `[unknown 8 bytes]`
+- `[Base Vec3]` 3 floats (12 bytes)
+- `[possible 4th float]`
+- `[14 × uint16 delta/index values]`
+
+The repeating pattern `03 02 01 00 06 02 00 00` suggests indexed or delta-encoded positions referencing the base Vec3.
+
+**Reference: Lumberyard SNORM16 Packing** (from `VertexFormats.h` PackingSNorm namespace):
+```cpp
+int16 tPackF2B(float f) { return (int16)(f * 32767.0f); }
+float tPackB2F(int16 i) { return (float)i / 32767.0f; }
+```
+- `0x7FFF` (32767) = +1.0
+- `0x8001` (-32767) = -1.0
+- `0x0000` = 0.0
+
+**Reference: Lumberyard Time Formats** (`EKeyTimesFormat`):
+
+| Value | Name | Description |
+|-------|------|-------------|
+| 0 | eF32 | 32-bit float |
+| 1 | eUINT16 | 16-bit unsigned |
+| 2 | eByte | 8-bit unsigned |
+| 6 | eBitset | Bitset encoded |
+
+Note: Star Citizen may have remapped these values (0=byte, 2=ushort observed)
+
+**Lumberyard Reference Files**:
+- `Code/CryEngine/CryCommon/CryCharAnimationParams.h` - Animation flag enums
+- `Code/CryEngine/CryCommon/CryHalf.inl` - CryHalf implementation
+- `Code/CryEngine/CryCommon/VertexFormats.h` - SNORM packing (PackingSNorm)
+- `Code/Tools/RC/ResourceCompilerPC/CGA/ControllerPQ.h` - Controller formats
+- `Gems/CryLegacy/Code/Source/CryAnimation/ControllerOpt.h` - Runtime controller
+
+**DONE**: Warnings are now logged in `ChunkIvoCAF_900.cs` when encountering format flags not in the known set (0x8040/0x8042 for rotation, 0xC040/0xC142/0xC242 for position).
+
+#### Current Issues
+
+**Position data not usable**:
+- Format `0x40` positions appear to be root motion direction vectors (unit length ~1.0), not bone translations
+- Format `0x42` positions use SmallTree compression (6 bytes) which we can't decode as 12-byte Vector3
+- Reading compressed data as uncompressed produces garbage that looks valid (e.g., `(0.619, 0.778, -0.178)`)
+- **Current workaround**: Skip all CAF position tracks, use rest translations from skeleton
+
+**Armature display issue**:
+- Edit mode: Armature looks correct (restTransforms working)
+- Pose/Object mode: Armature positions are wrong (animation translations issue)
+- Translations in USD are all rest pose values (constant across frames) since we skip position tracks
+- Rotations are being read and vary per frame
+- Issue may be in rotation data interpretation or bone ordering
+
+**Observed symptoms in Blender** (walk animation):
+- World bone at (0,0,0) - correct
+- Lower leg/tail/foot bones clustered near origin with small offsets
+- Spine2 significantly offset (was reading garbage before position skip fix)
+- Spine3 ~1m off with another cluster (arms, head, etc.)
+- Animation plays but skeleton structure is wrong
+
+#### Research Needed
+
+1. **SmallTree position compression**: The 6-byte position format (0x42) needs reverse engineering
+   - May be similar to SmallTree48BitQuat but for Vector3
+   - Could be quantized/normalized positions requiring scale factor
+
+2. **Root motion data**: Format 0x40 positions look like direction vectors
+   - Need to understand what this data represents
+   - May need to extract root motion separately from bone animation
+
+3. **Rotation data validation**: Even with position fix, armature is wrong
+   - Verify quaternion decoding for all formats
+   - Check if rotation data is local or world space
+   - Verify bone hash to joint path mapping is correct
+
+4. **Bone ordering**: Animation joints array order may matter
+   - Currently built from `cafAnim.BoneTracks` dictionary iteration order
+   - May need to match skeleton's joint order
+
+#### Key Files
+
+- `CgfConverter/CryEngineCore/Chunks/ChunkIvoCAF_900.cs` - Main #ivo CAF parser
+- `CgfConverter/CryEngineCore/Chunks/ChunkIvoCAF.cs` - Base class with dictionaries for rotation/position data
+- `CgfConverter/Models/Structs/IvoAnimationStructs.cs` - Controller entry struct
+- `CgfConverter/Renderers/USD/UsdRenderer.Animation.cs` - USD export (CreateSkelAnimationFromCaf)
+- `010-Templates/chunks/Animation.bt` - 010 Editor template with format documentation
+
+#### Test Commands
+
+```bash
+# Run aloprat CAF animation test
+dotnet test --filter "FullyQualifiedName~Aloprat_Skel_USD_WithCAF"
+
+# Output files generated at:
+# D:\depot\SC4.1\Data\Objects\Characters\Creatures\aloprat\aloprat_skel_anim_*.usda
+```
 
 ### Known Issues
 

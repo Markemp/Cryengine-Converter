@@ -20,6 +20,9 @@ public class ChunkIvoCAF : Chunk
     /// <summary>Controller entries for each bone.</summary>
     public IvoAnimControllerEntry[] Controllers { get; set; } = [];
 
+    /// <summary>File offsets where each controller starts (for relative offset calculations).</summary>
+    public long[] ControllerOffsets { get; set; } = [];
+
     /// <summary>Raw keyframe data.</summary>
     public byte[] KeyframeData { get; set; } = [];
 

@@ -36,8 +36,7 @@ internal sealed class ChunkIvoDBAData_900 : ChunkIvoDBAData
             var header = new IvoAnimBlockHeader
             {
                 Signature = sig,
-                BoneCount = b.ReadByte(),
-                Padding = b.ReadByte(),
+                BoneCount = b.ReadUInt16(),
                 Magic = b.ReadUInt16(),
                 DataSize = b.ReadUInt32()
             };
@@ -56,20 +55,25 @@ internal sealed class ChunkIvoDBAData_900 : ChunkIvoDBAData
                 boneHashes[i] = b.ReadUInt32();
             }
 
-            // Read controller entries
+            // Read controller entries (24 bytes per bone)
+            // Per 010 template: rotation track (12 bytes) + position track (12 bytes)
+            // Note: For DBA, offsets are relative to keyframe data start (different from CAF)
             var controllers = new IvoAnimControllerEntry[numBones];
             for (int i = 0; i < numBones; i++)
             {
                 controllers[i] = new IvoAnimControllerEntry
                 {
-                    NumKeys = b.ReadByte(),
-                    Padding = b.ReadByte(),
-                    FormatFlags = b.ReadUInt16(),
-                    RotDataOffset = b.ReadUInt32(),
+                    // Rotation track info (12 bytes)
+                    NumRotKeys = b.ReadUInt16(),
+                    RotFormatFlags = b.ReadUInt16(),
                     RotTimeOffset = b.ReadUInt32(),
-                    PosDataOffset = b.ReadUInt32(),
+                    RotDataOffset = b.ReadUInt32(),
+
+                    // Position track info (12 bytes)
+                    NumPosKeys = b.ReadUInt16(),
+                    PosFormatFlags = b.ReadUInt16(),
                     PosTimeOffset = b.ReadUInt32(),
-                    Reserved = b.ReadUInt32()
+                    PosDataOffset = b.ReadUInt32()
                 };
             }
 
