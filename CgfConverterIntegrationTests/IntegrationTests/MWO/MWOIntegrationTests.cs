@@ -382,12 +382,162 @@ public class MWOIntegrationTests
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
+
+        // === Library Materials ===
+        var materials = daeObject.Library_Materials;
+        Assert.AreEqual(11, materials.Material.Length);
+        Assert.AreEqual("adder_mtl_centre_torso", materials.Material[0].Name);
+        Assert.AreEqual("adder_mtl_centre_torso-material", materials.Material[0].ID);
+        Assert.AreEqual("#adder_mtl_centre_torso-effect", materials.Material[0].Instance_Effect.URL);
+        Assert.AreEqual("adder_mtl_right_torso", materials.Material[1].Name);
+        Assert.AreEqual("adder_mtl_left_torso", materials.Material[2].Name);
+        Assert.AreEqual("adder_mtl_left_arm", materials.Material[3].Name);
+        Assert.AreEqual("adder_mtl_right_arm", materials.Material[4].Name);
+        Assert.AreEqual("adder_mtl_left_leg", materials.Material[5].Name);
+        Assert.AreEqual("adder_mtl_right_leg", materials.Material[6].Name);
+        Assert.AreEqual("adder_mtl_head", materials.Material[7].Name);
+
+        // === Library Images (no textures in this test) ===
+        Assert.AreEqual(0, daeObject.Library_Images.Image.Length);
+
+        // === Library Geometries ===
+        var geometries = daeObject.Library_Geometries;
+        Assert.AreEqual(1, geometries.Geometry.Length);
+        var geometry = geometries.Geometry[0];
+        Assert.AreEqual("adder-mesh", geometry.ID);
+        Assert.AreEqual("adder", geometry.Name);
+
+        var mesh = geometry.Mesh;
+        Assert.AreEqual(4, mesh.Source.Length); // pos, norm, UV, color
+
+        // Verify positions source
+        var posSource = mesh.Source.First(s => s.ID == "adder-mesh-pos");
+        Assert.AreEqual(9, posSource.Float_Array.Count); // 3 vertices * 3 components
+        Assert.AreEqual("adder-mesh-pos-array", posSource.Float_Array.ID);
+        Assert.AreEqual((uint)3, posSource.Technique_Common.Accessor.Count); // 3 vertices
+        Assert.AreEqual((uint)3, posSource.Technique_Common.Accessor.Stride); // x, y, z
+
+        // Verify normals source
+        var normSource = mesh.Source.First(s => s.ID == "adder-mesh-norm");
+        Assert.AreEqual(9, normSource.Float_Array.Count);
+        Assert.AreEqual("adder-mesh-norm-array", normSource.Float_Array.ID);
+
+        // Verify UV source
+        var uvSource = mesh.Source.First(s => s.ID == "adder-mesh-UV");
+        Assert.AreEqual(6, uvSource.Float_Array.Count); // 3 UVs * 2 components
+        Assert.AreEqual("adder-mesh-UV-array", uvSource.Float_Array.ID);
+        Assert.AreEqual((uint)3, uvSource.Technique_Common.Accessor.Count);
+        Assert.AreEqual((uint)2, uvSource.Technique_Common.Accessor.Stride); // s, t
+
+        // Verify triangles
+        Assert.AreEqual(1, mesh.Triangles.Length);
+        Assert.AreEqual(1, mesh.Triangles[0].Count); // 1 triangle
+        Assert.AreEqual("adder_mtl_centre_torso-material", mesh.Triangles[0].Material);
+
+        // Verify vertices reference
+        Assert.AreEqual("adder-vertices", mesh.Vertices.ID);
+        Assert.AreEqual("#adder-mesh-pos", mesh.Vertices.Input[0].source);
+
+        // === Library Controllers ===
+        var controllers = daeObject.Library_Controllers;
+        Assert.AreEqual(1, controllers.Controller.Length);
+        var controller = controllers.Controller[0];
+        Assert.AreEqual("Controller", controller.ID);
+
+        var skin = controller.Skin;
+        Assert.AreEqual("#adder-mesh", skin.source);
+        Assert.AreEqual("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1", skin.Bind_Shape_Matrix.Value_As_String);
+
+        // Verify joints source
+        Assert.AreEqual(3, skin.Source.Length);
+        var jointsSource = skin.Source.First(s => s.ID == "Controller-joints");
+        Assert.AreEqual(73, jointsSource.Name_Array.Count);
+        Assert.AreEqual("Controller-joints-array", jointsSource.Name_Array.ID);
+        var jointNames = jointsSource.Name_Array.Value();
+        Assert.AreEqual(73, jointNames.Length);
+        Assert.AreEqual("Bip01", jointNames[0]);
+        Assert.AreEqual("Bip01_Pelvis", jointNames[1]);
+        Assert.AreEqual("Bip01_L_Hip", jointNames[2]);
+        Assert.IsTrue(jointNames.Contains("Bip01_R_Toe0Nub")); // Last joint
+
+        // Verify bind poses source
+        var bindPosesSource = skin.Source.First(s => s.ID == "Controller-bind_poses");
+        Assert.AreEqual(1168, bindPosesSource.Float_Array.Count); // 73 joints * 16 matrix elements
+        Assert.AreEqual("Controller-bind_poses-array", bindPosesSource.Float_Array.ID);
+        Assert.AreEqual((uint)73, bindPosesSource.Technique_Common.Accessor.Count);
+        Assert.AreEqual((uint)16, bindPosesSource.Technique_Common.Accessor.Stride);
+
+        // Verify weights source
+        var weightsSource = skin.Source.First(s => s.ID == "Controller-weights");
+        Assert.AreEqual((uint)12, weightsSource.Technique_Common.Accessor.Count);
+        Assert.AreEqual("Controller-weights-array", weightsSource.Float_Array.ID);
+
+        // Verify vertex_weights
+        Assert.AreEqual(3, skin.Vertex_Weights.Count);
+
+        // === Library Visual Scenes ===
+        var visualScene = daeObject.Library_Visual_Scene.Visual_Scene[0];
+        Assert.AreEqual("Scene", visualScene.ID);
+
+        // Verify armature root node (Bip01)
+        var rootNode = visualScene.Node[0];
+        Assert.AreEqual("Bip01", rootNode.ID);
+        Assert.AreEqual("Bip01", rootNode.Name);
+        Assert.AreEqual("Bip01", rootNode.sID);
+        Assert.AreEqual(ColladaNodeType.JOINT, rootNode.Type);
+        Assert.AreEqual("-0 1 -0 0 -1 -0 0 0 0 0 1 -0 0 0 0 1", rootNode.Matrix[0].Value_As_String);
+
+        // Verify Bip01_Pelvis child node
+        var pelvisNode = rootNode.node[0];
+        Assert.AreEqual("Bip01_Pelvis", pelvisNode.ID);
+        Assert.AreEqual("Bip01_Pelvis", pelvisNode.Name);
+        Assert.AreEqual(ColladaNodeType.JOINT, pelvisNode.Type);
+        Assert.AreEqual("-0 -0 1 -6.997413 -0 1 0 -0 -1 -0 -0 0 0 0 0 1", pelvisNode.Matrix[0].Value_As_String);
+
+        // Verify pelvis has correct children (L_Hip, Pitch, R_Hip)
+        Assert.AreEqual(3, pelvisNode.node.Length);
+        var leftHipNode = pelvisNode.node.FirstOrDefault(n => n.ID == "Bip01_L_Hip");
+        var pitchNode = pelvisNode.node.FirstOrDefault(n => n.ID == "Bip01_Pitch");
+        var rightHipNode = pelvisNode.node.FirstOrDefault(n => n.ID == "Bip01_R_Hip");
+        Assert.IsNotNull(leftHipNode);
+        Assert.IsNotNull(pitchNode);
+        Assert.IsNotNull(rightHipNode);
+
+        // Verify L_Hip transform
+        Assert.AreEqual("-1 -0 -0 -0.971270 -0 -0.022217 0.999753 -6.995683 -0 0.999753 0.022217 -0.155460 0 0 0 1", leftHipNode.Matrix[0].Value_As_String);
+
+        // Verify Pitch transform
+        Assert.AreEqual("-0 -0 1 -7.570391 -0 1 0 -0 -1 -0 -0 0 0 0 0 1", pitchNode.Matrix[0].Value_As_String);
+
+        // Verify geometry node with controller instance
+        Assert.AreEqual(2, visualScene.Node.Length);
+        var geometryNode = visualScene.Node[1];
+        Assert.AreEqual("adder", geometryNode.ID);
+        Assert.AreEqual("adder", geometryNode.Name);
+        Assert.AreEqual(ColladaNodeType.NODE, geometryNode.Type);
+        Assert.IsNull(geometryNode.Instance_Geometry); // No direct geometry, uses controller
+        Assert.AreEqual(1, geometryNode.Instance_Controller.Length);
+        Assert.AreEqual("#Controller", geometryNode.Instance_Controller[0].URL);
+        Assert.AreEqual("#Bip01", geometryNode.Instance_Controller[0].Skeleton[0].Value);
+
+        // Verify material binding on controller instance
+        var bindMaterial = geometryNode.Instance_Controller[0].Bind_Material[0];
+        Assert.IsNotNull(bindMaterial);
+        Assert.AreEqual(1, bindMaterial.Technique_Common.Instance_Material.Length);
+        Assert.AreEqual("adder_mtl_centre_torso-material", bindMaterial.Technique_Common.Instance_Material[0].Symbol);
+        Assert.AreEqual("#adder_mtl_centre_torso-material", bindMaterial.Technique_Common.Instance_Material[0].Target);
+
+        // === Library Animations ===
+        Assert.IsNotNull(daeObject.Library_Animations);
+        Assert.IsTrue(daeObject.Library_Animations.Animation.Length > 0, "Should have animations from DBA files");
+
+        testUtils.ValidateColladaXml(colladaData);
     }
 
     [TestMethod]
     public void Adder_VerifyArmatureAndAnimations_Gltf()
     {
-        var args = new string[] { $@"d:\depot\mwo\objects\mechs\adder\body\adder.chr", "-dds", "-dae", "-objectdir", objectDir };
+        var args = new string[] { $@"d:\depot\mwo\objects\mechs\adder\body\adder.chr", "-dds", "-gltf", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
@@ -396,6 +546,82 @@ public class MWOIntegrationTests
 
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
         var gltfData = gltfRenderer.GenerateGltfObject();
+
+        // === Materials ===
+        Assert.AreEqual(11, gltfData.Materials.Count);
+        Assert.AreEqual("centre_torso", gltfData.Materials[0].Name);
+        Assert.AreEqual("right_torso", gltfData.Materials[1].Name);
+        Assert.AreEqual("left_torso", gltfData.Materials[2].Name);
+        Assert.AreEqual("left_arm", gltfData.Materials[3].Name);
+        Assert.AreEqual("right_arm", gltfData.Materials[4].Name);
+        Assert.AreEqual("left_leg", gltfData.Materials[5].Name);
+        Assert.AreEqual("right_leg", gltfData.Materials[6].Name);
+        Assert.AreEqual("head", gltfData.Materials[7].Name);
+
+        // === Meshes ===
+        Assert.AreEqual(1, gltfData.Meshes.Count);
+        Assert.AreEqual("adder/mesh", gltfData.Meshes[0].Name);
+        Assert.AreEqual(1, gltfData.Meshes[0].Primitives.Count);
+
+        // === Nodes (skeleton) ===
+        Assert.IsTrue(gltfData.Nodes.Count >= 73, "Should have at least 73 bone nodes");
+        Assert.AreEqual("Bip01", gltfData.Nodes[0].Name);
+        Assert.AreEqual("Bip01 Pelvis", gltfData.Nodes[1].Name); // glTF uses spaces, not underscores
+
+        // Verify root bone rotation (Bip01 transform) - quaternion [x, y, z, w]
+        AssertExtensions.AreEqual([0.0f, 0.70710677f, 0.0f, 0.70710677f], gltfData.Nodes[0].Rotation, 1e-5f);
+
+        // === Skins ===
+        Assert.AreEqual(1, gltfData.Skins.Count);
+        Assert.AreEqual(73, gltfData.Skins[0].Joints.Count);
+        Assert.AreEqual("adder/skin", gltfData.Skins[0].Name);
+
+        // === Animations ===
+        Assert.IsTrue(gltfData.Animations.Count > 0, "Should have animations from DBA files");
+    }
+
+    [TestMethod]
+    public void Adder_VerifyArmatureAndAnimations_Usd()
+    {
+        var args = new string[] { $@"d:\depot\mwo\objects\mechs\adder\body\adder.chr", "-usd", "-objectdir", objectDir };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        cryData.ProcessCryengineFiles();
+
+        UsdRenderer usdRenderer = new(testUtils.argsHandler, cryData);
+        var usdDoc = usdRenderer.GenerateUsdObject();
+
+        // Serialize to string for inspection
+        var serializer = new UsdSerializer();
+        using var writer = new StringWriter();
+        serializer.Serialize(usdDoc, writer);
+        var usdOutput = writer.ToString();
+
+        // Verify root prim exists
+        Assert.IsTrue(usdOutput.Contains("def Xform \"adder\""), "Should have root prim");
+
+        // Verify skeleton exists
+        Assert.IsTrue(usdOutput.Contains("def Skeleton \"Skeleton\""), "Should have skeleton");
+
+        // Verify mesh exists with skin binding
+        Assert.IsTrue(usdOutput.Contains("def Mesh \"adder\"") || usdOutput.Contains("def Mesh \"Mesh\""), "Should have mesh");
+
+        // Verify skeleton joints include key bones
+        Assert.IsTrue(usdOutput.Contains("Bip01"), "Skeleton should include Bip01");
+        Assert.IsTrue(usdOutput.Contains("Bip01_Pelvis"), "Skeleton should include Bip01_Pelvis");
+        Assert.IsTrue(usdOutput.Contains("Bip01_L_Hip"), "Skeleton should include Bip01_L_Hip");
+        Assert.IsTrue(usdOutput.Contains("Bip01_R_Hip"), "Skeleton should include Bip01_R_Hip");
+
+        // Verify materials
+        Assert.IsTrue(usdOutput.Contains("adder_mtl_centre_torso"), "Should have centre_torso material");
+
+        // Verify points (geometry)
+        Assert.IsTrue(usdOutput.Contains("point3f[] points"), "Should have geometry points");
+
+        // Verify normals
+        Assert.IsTrue(usdOutput.Contains("normal3f[] normals"), "Should have normals");
     }
 
     [TestMethod]
