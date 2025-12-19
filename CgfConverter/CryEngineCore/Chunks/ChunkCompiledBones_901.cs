@@ -19,7 +19,7 @@ internal class ChunkCompiledBones_901 : ChunkCompiledBones
         base.Read(b);
 
         NumBones = b.ReadInt32();
-        var _ = b.ReadInt32(); // String table size.  Won't use.
+        var stringTableSize = b.ReadInt32();
         Flags1 = b.ReadInt32();
         Flags2 = b.ReadInt32();
 
@@ -30,7 +30,7 @@ internal class ChunkCompiledBones_901 : ChunkCompiledBones
             BoneList.Add(tempBone);
         }
 
-        var boneNames = GetNullSeparatedStrings(NumBones, b);
+        var boneNames = GetNullSeparatedStrings(NumBones, stringTableSize, b);
 
         // Post bone read setup.  Parents, children, etc.
         // Add the ChildID to the parent bone.  This will help with navigation.
