@@ -270,6 +270,20 @@ public class ManualRenderTests
         // to rest poses during export.
     }
 
+    [TestMethod]
+    public void MWO_Turret_Collada()
+    {
+        // Small animation file (~46KB) - good for testing Collada animation rest pose fallback
+        RenderToCollada($@"{mwoObjectDir}\objects\gamemodes\turret\turret_a.chr", mwoObjectDir);
+    }
+
+    [TestMethod]
+    public void MWO_Turret_USD()
+    {
+        // Small animation file (~46KB) - good for testing USD animation export
+        RenderToUsd($@"{mwoObjectDir}\objects\gamemodes\turret\turret_a.chr", mwoObjectDir);
+    }
+
     #endregion
 
     #region SC test files

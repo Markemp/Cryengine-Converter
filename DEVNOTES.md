@@ -649,6 +649,84 @@ Changed joint nodes and animations to use matrix-based transforms with SID `tran
 
 ---
 
+## Collada Animation - Blender Multi-Animation Limitation
+
+### Problem
+When importing a Collada file with multiple animations (e.g., `turret_a.dae` with `turret_a_open`, `turret_a_close`, etc.), Blender:
+1. Only creates **one action** named "ArmatureAction"
+2. Merges all animation curves from all clips into that single action
+3. Ignores any `<animation_clip>` elements that might group animations
+
+### Root Cause (Blender Source Code Analysis)
+
+**Blender source location**: `source/blender/io/collada/` (prior to removal in Blender 4.5)
+
+1. **Action naming** (`source/blender/animrig/intern/animdata.cc:195-249`):
+   ```cpp
+   SNPRINTF_UTF8(actname, DATA_("%sAction"), id->name + 2);
+   ```
+   The action name is generated from the Blender object's name, not from Collada XML. For an Armature named "Armature", this creates "ArmatureAction".
+
+2. **`<animation_clip>` support never implemented** (`DocumentImporter.cpp:1076`):
+   ```cpp
+   bool DocumentImporter::writeAnimationClip(const COLLADAFW::AnimationClip *animationClip)
+   {
+     return true;
+     /* TODO: implement import of AnimationClips */
+   }
+   ```
+   This function is a no-op. Animation clips are parsed by OpenCollada but completely ignored by Blender.
+
+3. **All animations merged** (`AnimationImporter.cpp`):
+   - `translate_Animations()` is called per node
+   - All FCurves from all `<animation>` elements are attached to one action via `ensure_action_and_slot_for_id()`
+   - No boundary checking between different animation clips
+
+### Collada Spec Support (Not Used by Blender)
+
+The Collada 1.4.1 spec supports multiple animation clips via:
+```xml
+<library_animation_clips>
+  <animation_clip id="walk" name="Walk Cycle" start="0" end="1.0">
+    <instance_animation url="#walk_Root_anim"/>
+    <instance_animation url="#walk_Pelvis_anim"/>
+  </animation_clip>
+  <animation_clip id="run" name="Run Cycle" start="0" end="0.5">
+    <instance_animation url="#run_Root_anim"/>
+    <instance_animation url="#run_Pelvis_anim"/>
+  </animation_clip>
+</library_animation_clips>
+```
+
+But Blender's importer ignores this entirely.
+
+### Solution: Separate .dae Files Per Animation
+
+Since Blender cannot import multiple animations from a single Collada file, we export each animation to a separate file (same approach as USD renderer):
+
+- `model.dae` - Base model with skeleton and geometry
+- `model_anim_walk.dae` - Walk animation only
+- `model_anim_run.dae` - Run animation only
+
+This allows users to import each animation as a separate action in Blender.
+
+### Additional Issues Found and Fixed
+
+1. **Matrix translation convention** (FIXED):
+   - Animation code was using `matrix.Translation = position` which sets M41/M42/M43
+   - CryEngine/Collada stores translation in column 4 (M14/M24/M34)
+   - Fixed by setting `matrix.M14 = position.X`, etc.
+
+2. **Rest pose fallback** (FIXED):
+   - Bones without position tracks were getting `Vector3.Zero` translation
+   - Fixed by storing rest transforms and using them as fallback
+
+### References
+- Blender Collada importer was deprecated in 4.2 and removed in 4.5
+- glTF is the preferred format for multi-animation import in Blender
+
+---
+
 ## Reference Data
 
 ### Mechanic.chr Bone Matrices (for skeleton debugging)

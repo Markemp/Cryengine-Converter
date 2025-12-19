@@ -41,6 +41,7 @@ public partial class ColladaModelRenderer : IRenderer
     private static readonly IRGBA DefaultColor = new(1.0f, 1.0f, 1.0f, 1.0f);
 
     private readonly Dictionary<uint, string> controllerIdToBoneName = new();
+    private readonly Dictionary<uint, (Vector3 Position, Quaternion Rotation)> controllerIdToRestTransform = new();
 
     private readonly TaggedLogger Log;
 
@@ -67,6 +68,12 @@ public partial class ColladaModelRenderer : IRenderer
 
         writer.Close();
         Log.D("End of Write Collada.  Export complete.");
+
+        // Export separate animation files for Blender compatibility
+        // Blender's Collada importer merges all animations into one action,
+        // so we export each animation as a separate file for NLA workflow
+        ExportAnimationFiles();
+
         return 1;
     }
 
@@ -99,9 +106,9 @@ public partial class ColladaModelRenderer : IRenderer
         else
             WriteLibrary_VisualScenes();
 
-        // Write animations (requires skeleton to be created first for bone name mapping)
-        if (_cryData.Animations is not null && _cryData.Animations.Count > 0)
-            WriteLibrary_Animations();
+        // Note: Animations are exported to separate files for Blender compatibility.
+        // Blender's Collada importer merges all animations into one action, so we
+        // don't include animations in the main geometry file. See ExportAnimationFiles().
     }
 
     protected void WriteColladaRoot(string version)
