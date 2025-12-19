@@ -284,6 +284,13 @@ public class ManualRenderTests
         RenderToUsd($@"{mwoObjectDir}\objects\gamemodes\turret\turret_a.chr", mwoObjectDir);
     }
 
+    [TestMethod]
+    public void MWO_Turret_Gltf()
+    {
+        // Small animation file (~46KB) - good for testing USD animation export
+        RenderToGltf($@"{mwoObjectDir}\objects\gamemodes\turret\turret_a.chr", mwoObjectDir);
+    }
+
     #endregion
 
     #region SC test files
