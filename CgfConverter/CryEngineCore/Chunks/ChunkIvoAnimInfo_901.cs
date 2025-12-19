@@ -1,3 +1,4 @@
+using Extensions;
 using System.IO;
 
 namespace CgfConverter.CryEngineCore.Chunks;
@@ -13,22 +14,15 @@ internal sealed class ChunkIvoAnimInfo_901 : ChunkIvoAnimInfo
         base.Read(b);
 
         Flags = b.ReadUInt32();
-        Unknown1 = b.ReadUInt16();
+        FramesPerSecond = b.ReadUInt16();
         NumBones = b.ReadUInt16();
-        Unknown2 = b.ReadUInt32();
-        NumPositionTracks = b.ReadUInt32();
-
-        BoundMin[0] = b.ReadSingle();
-        BoundMin[1] = b.ReadSingle();
-        BoundMin[2] = b.ReadSingle();
-        Scale = b.ReadSingle();
-
-        Precision = b.ReadDouble();
-
-        Padding[0] = b.ReadUInt32();
-        Padding[1] = b.ReadUInt32();
+        Reserved = b.ReadUInt32();
+        EndFrame = b.ReadUInt32();
+        StartRotation = b.ReadQuaternion();
+        StartPosition = b.ReadVector3();
+        Padding = b.ReadUInt32();
     }
 
     public override string ToString() =>
-        $"ChunkIvoAnimInfo_901: Bones={NumBones}, PosTracks={NumPositionTracks}, Scale={Scale:F4}";
+        $"ChunkIvoAnimInfo_901: Bones={NumBones}, FPS={FramesPerSecond}, EndFrame={EndFrame}";
 }

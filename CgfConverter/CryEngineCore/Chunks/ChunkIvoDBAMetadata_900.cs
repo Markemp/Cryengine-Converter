@@ -16,20 +16,20 @@ internal sealed class ChunkIvoDBAMetadata_900 : ChunkIvoDBAMetadata
         base.Read(b);
 
         AnimCount = b.ReadUInt32();
-        Reserved = b.ReadUInt32();
 
         // Read metadata entries (44 bytes each)
+        // Layout: Flags(4), FPS(2), NumControllers(2), Unknown1(4), Unknown2(4), StartRotation(16), StartPosition(12)
         for (int i = 0; i < AnimCount; i++)
         {
             var entry = new IvoDBAMetaEntry
             {
-                NumKeys = b.ReadUInt16(),
-                BoneCount = b.ReadUInt16(),
                 Flags = b.ReadUInt32(),
-                PathLength = b.ReadUInt32(),
-                StartPosition = b.ReadVector3(),
+                FramesPerSecond = b.ReadUInt16(),
+                NumControllers = b.ReadUInt16(),
+                Unknown1 = b.ReadUInt32(),
+                Unknown2 = b.ReadUInt32(),
                 StartRotation = b.ReadQuaternion(),
-                Padding = b.ReadUInt32()
+                StartPosition = b.ReadVector3()
             };
             Entries.Add(entry);
         }

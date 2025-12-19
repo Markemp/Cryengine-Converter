@@ -20,44 +20,39 @@ internal sealed class ChunkIvoDBAMetadata_901 : ChunkIvoDBAMetadata
         HelperMethods.Log(LogLevelEnum.Debug, $"ChunkIvoDBAMetadata_901: Reading at offset 0x{startOffset:X}");
 
         AnimCount = b.ReadUInt32();
-        Reserved = b.ReadUInt32();
 
-        HelperMethods.Log(LogLevelEnum.Debug, $"ChunkIvoDBAMetadata_901: AnimCount={AnimCount}, Reserved=0x{Reserved:X8}");
+        HelperMethods.Log(LogLevelEnum.Debug, $"ChunkIvoDBAMetadata_901: AnimCount={AnimCount}");
 
         // Read metadata entries (44 bytes each)
+        // Layout: Flags(4), FPS(2), NumControllers(2), Unknown1(4), Unknown2(4), StartRotation(16), StartPosition(12)
         for (int i = 0; i < AnimCount; i++)
         {
             long entryOffset = b.BaseStream.Position;
             var entry = new IvoDBAMetaEntry
             {
-                NumKeys = b.ReadUInt16(),
-                BoneCount = b.ReadUInt16(),
                 Flags = b.ReadUInt32(),
-                PathLength = b.ReadUInt32(),
-                StartPosition = b.ReadVector3(),
+                FramesPerSecond = b.ReadUInt16(),
+                NumControllers = b.ReadUInt16(),
+                Unknown1 = b.ReadUInt32(),
+                Unknown2 = b.ReadUInt32(),
                 StartRotation = b.ReadQuaternion(),
-                Padding = b.ReadUInt32()
+                StartPosition = b.ReadVector3()
             };
             Entries.Add(entry);
 
-            // Format quaternion without curly braces to avoid String.Format issues
             var rot = entry.StartRotation;
             var pos = entry.StartPosition;
             HelperMethods.Log(LogLevelEnum.Debug,
                 $"ChunkIvoDBAMetadata_901: Entry[{i}] @ 0x{entryOffset:X}: " +
-                $"NumKeys={entry.NumKeys}, BoneCount={entry.BoneCount}, Flags=0x{entry.Flags:X8}, " +
-                $"PathLength={entry.PathLength}, StartPos=({pos.X:F3}, {pos.Y:F3}, {pos.Z:F3}), " +
-                $"StartRot=({rot.X:F3}, {rot.Y:F3}, {rot.Z:F3}, {rot.W:F3}), Padding=0x{entry.Padding:X8}");
+                $"Flags=0x{entry.Flags:X}, FPS={entry.FramesPerSecond}, Controllers={entry.NumControllers}, " +
+                $"Unknown1=0x{entry.Unknown1:X}, Unknown2=0x{entry.Unknown2:X}, " +
+                $"StartRot=({rot.X:F3}, {rot.Y:F3}, {rot.Z:F3}, {rot.W:F3}), " +
+                $"StartPos=({pos.X:F3}, {pos.Y:F3}, {pos.Z:F3})");
         }
 
         // Read string table - null-terminated animation paths
-        // Version 901: String table appears to start 4 bytes earlier than expected
-        // (last entry's "Padding" field contains first 4 chars of first string)
-        // Seek back 4 bytes to capture the full first string
-        b.BaseStream.Seek(-4, SeekOrigin.Current);
-
         long stringTableOffset = b.BaseStream.Position;
-        HelperMethods.Log(LogLevelEnum.Debug, $"ChunkIvoDBAMetadata_901: String table at offset 0x{stringTableOffset:X} (adjusted -4 bytes)");
+        HelperMethods.Log(LogLevelEnum.Debug, $"ChunkIvoDBAMetadata_901: String table at offset 0x{stringTableOffset:X}");
 
         for (int i = 0; i < AnimCount; i++)
         {

@@ -97,10 +97,15 @@ internal sealed class ChunkIvoCAF_900 : ChunkIvoCAF
             }
 
             // Warn about unknown position format flags
-            if (ctrl.HasPosition && ctrl.PosFormatFlags != 0xC040 && ctrl.PosFormatFlags != 0xC142 && ctrl.PosFormatFlags != 0xC242)
+            // Known formats: 0xC0xx (float), 0xC1xx (SNORM full), 0xC2xx (SNORM packed)
+            if (ctrl.HasPosition)
             {
-                HelperMethods.Log(LogLevelEnum.Warning,
-                    $"ChunkIvoCAF_900: Bone {i} (0x{BoneHashes[i]:X08}) has unknown position format flag 0x{ctrl.PosFormatFlags:X4} (expected 0xC040, 0xC142, or 0xC242)");
+                var posFormat = IvoAnimationHelpers.GetPositionFormat(ctrl.PosFormatFlags);
+                if (posFormat == IvoPositionFormat.None)
+                {
+                    HelperMethods.Log(LogLevelEnum.Warning,
+                        $"ChunkIvoCAF_900: Bone {i} (0x{BoneHashes[i]:X08}) has unknown position format flag 0x{ctrl.PosFormatFlags:X4}");
+                }
             }
 
             // Debug: Log controller entry details
@@ -130,36 +135,17 @@ internal sealed class ChunkIvoCAF_900 : ChunkIvoCAF
             // Parse rotation data (if present)
             if (ctrl.HasRotation && ctrl.NumRotKeys > 0)
             {
-                // Parse rotation time keys based on format flag
-                // Low nibble: 0x40 = ubyte time array, 0x42 = uint16 time with 8-byte header
-                var times = new List<float>(ctrl.NumRotKeys);
-                byte rotTimeFormat = (byte)(ctrl.RotFormatFlags & 0x0F);
-
+                // Parse rotation time keys using shared helper
+                List<float> times;
                 if (ctrl.RotTimeOffset > 0)
                 {
                     b.BaseStream.Seek(controllerStart + ctrl.RotTimeOffset, SeekOrigin.Begin);
-
-                    if (rotTimeFormat == 0x00)
-                    {
-                        // 0x8040: ubyte time array (padded to 4-byte boundary)
-                        for (int t = 0; t < ctrl.NumRotKeys; t++)
-                            times.Add(b.ReadByte());
-                    }
-                    else
-                    {
-                        // 0x8042: 8-byte time header (startTime uint16, endTime uint16, marker uint32)
-                        // followed by uint16 time values
-                        b.ReadUInt16(); // startTime
-                        b.ReadUInt16(); // endTime
-                        b.ReadUInt32(); // marker
-                        // Time values would follow, but we use sequential for now
-                        for (int t = 0; t < ctrl.NumRotKeys; t++)
-                            times.Add(t);
-                    }
+                    times = IvoAnimationHelpers.ReadTimeKeys(b, ctrl.NumRotKeys, ctrl.RotFormatFlags);
                 }
                 else
                 {
                     // No time offset - use sequential frame numbers
+                    times = new List<float>(ctrl.NumRotKeys);
                     for (int t = 0; t < ctrl.NumRotKeys; t++)
                         times.Add(t);
                 }
@@ -172,19 +158,33 @@ internal sealed class ChunkIvoCAF_900 : ChunkIvoCAF
                 Rotations[boneHash] = rotations;
             }
 
-            // Skip position data for #ivo CAF animations
-            // Position format codes determined by format flags:
-            // - 0xC040 = ubyte time array, numPosKeys positions
-            // - 0xC142 = uint16 time header (8 bytes), 2 positions
-            // - 0xC242 = uint16 time header (8 bytes), data header (8 bytes), 1 position
-            //
-            // Character animations typically only animate rotations. Position data in #ivo CAF
-            // appears to be either root motion direction vectors or uses compression we can't decode.
-            // The skeleton's rest pose provides correct bone translations.
+            // Parse position data (if present)
             if (ctrl.HasPosition && ctrl.NumPosKeys > 0)
             {
-                HelperMethods.Log(LogLevelEnum.Debug,
-                    $"  Bone {i} (0x{boneHash:X08}): Skipping position track (format=0x{ctrl.PosFormatFlags:X4}, {ctrl.NumPosKeys} keys) - using rest pose");
+                // Parse position time keys using shared helper
+                List<float> posTimes;
+                if (ctrl.PosTimeOffset > 0)
+                {
+                    b.BaseStream.Seek(controllerStart + ctrl.PosTimeOffset, SeekOrigin.Begin);
+                    posTimes = IvoAnimationHelpers.ReadTimeKeys(b, ctrl.NumPosKeys, ctrl.PosFormatFlags);
+                }
+                else
+                {
+                    // No time offset - use sequential frame numbers
+                    posTimes = new List<float>(ctrl.NumPosKeys);
+                    for (int t = 0; t < ctrl.NumPosKeys; t++)
+                        posTimes.Add(t);
+                }
+
+                PositionTimes[boneHash] = posTimes;
+
+                // Parse position data based on format (high byte)
+                b.BaseStream.Seek(controllerStart + ctrl.PosDataOffset, SeekOrigin.Begin);
+                var positions = ReadPositionKeys(b, ctrl.NumPosKeys, ctrl.PosFormatFlags, boneHash);
+                if (positions.Count > 0)
+                {
+                    Positions[boneHash] = positions;
+                }
             }
         }
 
@@ -213,6 +213,103 @@ internal sealed class ChunkIvoCAF_900 : ChunkIvoCAF
         }
 
         return rotations;
+    }
+
+    /// <summary>
+    /// Reads position keyframes based on format flags.
+    /// </summary>
+    /// <param name="b">Binary reader positioned at position data.</param>
+    /// <param name="count">Number of position keys.</param>
+    /// <param name="formatFlags">Position format flags (high byte determines format).</param>
+    /// <param name="boneHash">Bone hash for logging.</param>
+    private List<Vector3> ReadPositionKeys(BinaryReader b, int count, ushort formatFlags, uint boneHash)
+    {
+        var positions = new List<Vector3>(count);
+        var format = IvoAnimationHelpers.GetPositionFormat(formatFlags);
+
+        switch (format)
+        {
+            case IvoPositionFormat.FloatVector3:
+                // 0xC0xx: Float Vector3 (12 bytes per key), no header
+                for (int i = 0; i < count; i++)
+                {
+                    positions.Add(b.ReadVector3());
+                }
+                HelperMethods.Log(LogLevelEnum.Debug,
+                    $"    Position (0xC0 float): {count} keys");
+                break;
+
+            case IvoPositionFormat.SNormFull:
+                // 0xC1xx: SNORM with 24-byte header, all channels (6 bytes per key)
+                {
+                    // Read 24-byte header: channelMask (12 bytes) + scale (12 bytes)
+                    Vector3 channelMask = b.ReadVector3();
+                    Vector3 scale = b.ReadVector3();
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        short sx = b.ReadInt16();
+                        short sy = b.ReadInt16();
+                        short sz = b.ReadInt16();
+
+                        float x = IvoAnimationHelpers.DecompressSNorm(sx, scale.X);
+                        float y = IvoAnimationHelpers.DecompressSNorm(sy, scale.Y);
+                        float z = IvoAnimationHelpers.DecompressSNorm(sz, scale.Z);
+
+                        positions.Add(new Vector3(x, y, z));
+                    }
+                    HelperMethods.Log(LogLevelEnum.Debug,
+                        $"    Position (0xC1 SNORM full): {count} keys, scale=({scale.X:F4}, {scale.Y:F4}, {scale.Z:F4})");
+                }
+                break;
+
+            case IvoPositionFormat.SNormPacked:
+                // 0xC2xx: SNORM with 24-byte header, packed active channels only
+                {
+                    // Read 24-byte header: channelMask (12 bytes) + scale (12 bytes)
+                    Vector3 channelMask = b.ReadVector3();
+                    Vector3 scale = b.ReadVector3();
+
+                    bool xActive = IvoAnimationHelpers.IsChannelActive(channelMask.X);
+                    bool yActive = IvoAnimationHelpers.IsChannelActive(channelMask.Y);
+                    bool zActive = IvoAnimationHelpers.IsChannelActive(channelMask.Z);
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        float x = 0, y = 0, z = 0;
+
+                        if (xActive)
+                        {
+                            short sx = b.ReadInt16();
+                            x = IvoAnimationHelpers.DecompressSNorm(sx, scale.X);
+                        }
+                        if (yActive)
+                        {
+                            short sy = b.ReadInt16();
+                            y = IvoAnimationHelpers.DecompressSNorm(sy, scale.Y);
+                        }
+                        if (zActive)
+                        {
+                            short sz = b.ReadInt16();
+                            z = IvoAnimationHelpers.DecompressSNorm(sz, scale.Z);
+                        }
+
+                        positions.Add(new Vector3(x, y, z));
+                    }
+
+                    string activeChannels = $"{(xActive ? "X" : "")}{(yActive ? "Y" : "")}{(zActive ? "Z" : "")}";
+                    HelperMethods.Log(LogLevelEnum.Debug,
+                        $"    Position (0xC2 SNORM packed): {count} keys, active=[{activeChannels}], scale=({scale.X:F4}, {scale.Y:F4}, {scale.Z:F4})");
+                }
+                break;
+
+            default:
+                HelperMethods.Log(LogLevelEnum.Warning,
+                    $"ChunkIvoCAF_900: Bone 0x{boneHash:X08} has unknown position format 0x{formatFlags:X4}");
+                break;
+        }
+
+        return positions;
     }
 
     public override string ToString() =>

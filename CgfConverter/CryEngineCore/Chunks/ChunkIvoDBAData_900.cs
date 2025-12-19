@@ -1,13 +1,15 @@
 using CgfConverter.Models.Structs;
 using CgfConverter.Utilities;
+using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 using System.Text;
 
 namespace CgfConverter.CryEngineCore.Chunks;
 
 /// <summary>
 /// DBA animation data chunk version 0x900.
-/// Parses multiple #dba animation blocks.
+/// Parses multiple #dba animation blocks with full keyframe data.
 /// </summary>
 internal sealed class ChunkIvoDBAData_900 : ChunkIvoDBAData
 {
@@ -20,6 +22,7 @@ internal sealed class ChunkIvoDBAData_900 : ChunkIvoDBAData
         long dataEnd = b.BaseStream.Position + TotalDataSize - 4;
 
         // Parse #dba blocks until we reach the end
+        int blockIndex = 0;
         while (b.BaseStream.Position < dataEnd)
         {
             // Check for #dba signature
@@ -47,6 +50,9 @@ internal sealed class ChunkIvoDBAData_900 : ChunkIvoDBAData
             }
 
             int numBones = header.BoneCount;
+            long blockEnd = blockStart + header.DataSize;
+
+            HelperMethods.Log(LogLevelEnum.Debug, $"ChunkIvoDBAData_900: Block {blockIndex} - {numBones} bones, size={header.DataSize}");
 
             // Read bone hash array
             var boneHashes = new uint[numBones];
@@ -56,11 +62,13 @@ internal sealed class ChunkIvoDBAData_900 : ChunkIvoDBAData
             }
 
             // Read controller entries (24 bytes per bone)
-            // Per 010 template: rotation track (12 bytes) + position track (12 bytes)
-            // Note: For DBA, offsets are relative to keyframe data start (different from CAF)
+            // Offsets are relative to the start of each controller entry (same as CAF)
             var controllers = new IvoAnimControllerEntry[numBones];
+            var controllerOffsets = new long[numBones];
             for (int i = 0; i < numBones; i++)
             {
+                controllerOffsets[i] = b.BaseStream.Position;
+
                 controllers[i] = new IvoAnimControllerEntry
                 {
                     // Rotation track info (12 bytes)
@@ -77,31 +85,99 @@ internal sealed class ChunkIvoDBAData_900 : ChunkIvoDBAData
                 };
             }
 
-            // Read keyframe data
-            long keyframeDataStart = b.BaseStream.Position;
-            long blockEnd = blockStart + 12 + header.DataSize;
-            int keyframeDataSize = (int)(blockEnd - keyframeDataStart);
-
-            byte[] keyframeData;
-            if (keyframeDataSize > 0)
-            {
-                keyframeData = b.ReadBytes(keyframeDataSize);
-            }
-            else
-            {
-                keyframeData = [];
-            }
-
-            AnimationBlocks.Add(new IvoAnimationBlock
+            // Create animation block with parsed data
+            var animBlock = new IvoAnimationBlock
             {
                 Header = header,
                 BoneHashes = boneHashes,
                 Controllers = controllers,
-                KeyframeData = keyframeData
-            });
+                ControllerOffsets = controllerOffsets
+            };
+
+            // Parse keyframe data for each bone
+            ParseAnimationData(b, animBlock);
+
+            AnimationBlocks.Add(animBlock);
+
+            // Seek to end of block for next iteration
+            b.BaseStream.Seek(blockEnd, SeekOrigin.Begin);
+            blockIndex++;
         }
 
         HelperMethods.Log(LogLevelEnum.Debug, $"ChunkIvoDBAData_900: Parsed {AnimationBlocks.Count} animation blocks");
+    }
+
+    private void ParseAnimationData(BinaryReader b, IvoAnimationBlock block)
+    {
+        int rotationCount = 0;
+        int positionCount = 0;
+
+        for (int i = 0; i < block.Controllers.Length; i++)
+        {
+            var ctrl = block.Controllers[i];
+            uint boneHash = block.BoneHashes[i];
+            long controllerStart = block.ControllerOffsets[i];
+
+            // Parse rotation data (if present)
+            if (ctrl.HasRotation && ctrl.NumRotKeys > 0)
+            {
+                // Parse rotation time keys
+                List<float> rotTimes;
+                if (ctrl.RotTimeOffset > 0)
+                {
+                    b.BaseStream.Seek(controllerStart + ctrl.RotTimeOffset, SeekOrigin.Begin);
+                    rotTimes = IvoAnimationHelpers.ReadTimeKeys(b, ctrl.NumRotKeys, ctrl.RotFormatFlags);
+                }
+                else
+                {
+                    // No time offset - use sequential frame numbers
+                    rotTimes = new List<float>(ctrl.NumRotKeys);
+                    for (int t = 0; t < ctrl.NumRotKeys; t++)
+                        rotTimes.Add(t);
+                }
+
+                block.RotationTimes[boneHash] = rotTimes;
+
+                // Parse rotation data
+                b.BaseStream.Seek(controllerStart + ctrl.RotDataOffset, SeekOrigin.Begin);
+                var rotations = IvoAnimationHelpers.ReadRotationKeys(b, ctrl.NumRotKeys);
+                block.Rotations[boneHash] = rotations;
+                rotationCount++;
+            }
+
+            // Parse position data (if present)
+            if (ctrl.HasPosition && ctrl.NumPosKeys > 0)
+            {
+                // Parse position time keys
+                List<float> posTimes;
+                if (ctrl.PosTimeOffset > 0)
+                {
+                    b.BaseStream.Seek(controllerStart + ctrl.PosTimeOffset, SeekOrigin.Begin);
+                    posTimes = IvoAnimationHelpers.ReadTimeKeys(b, ctrl.NumPosKeys, ctrl.PosFormatFlags);
+                }
+                else
+                {
+                    // No time offset - use sequential frame numbers
+                    posTimes = new List<float>(ctrl.NumPosKeys);
+                    for (int t = 0; t < ctrl.NumPosKeys; t++)
+                        posTimes.Add(t);
+                }
+
+                block.PositionTimes[boneHash] = posTimes;
+
+                // Parse position data
+                b.BaseStream.Seek(controllerStart + ctrl.PosDataOffset, SeekOrigin.Begin);
+                var positions = IvoAnimationHelpers.ReadPositionKeys(b, ctrl.NumPosKeys, ctrl.PosFormatFlags);
+                if (positions.Count > 0)
+                {
+                    block.Positions[boneHash] = positions;
+                    positionCount++;
+                }
+            }
+        }
+
+        HelperMethods.Log(LogLevelEnum.Debug,
+            $"  Parsed {rotationCount} rotation tracks, {positionCount} position tracks");
     }
 
     public override string ToString() =>
