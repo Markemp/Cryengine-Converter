@@ -38,127 +38,31 @@ public partial class UsdRenderer
     }
 
     /// <summary>
-    /// Creates USD node hierarchy for Ivo format with skeletal skinning.
-    /// Builds bone Xform hierarchy first, then attaches meshes directly to corresponding bones.
-    /// This prevents double transforms that occur when meshes are nested under each other.
+    /// Creates flat mesh list for Ivo format with skeletal skinning.
+    /// Meshes are placed at SkelRoot level with identity transforms.
+    /// All positioning comes purely from skeletal skinning (skel:jointIndices/Weights).
+    /// This avoids double transforms from scene graph inheritance + skinning.
     /// </summary>
     private List<UsdPrim> CreateIvoSkeletonNodes()
     {
         var nodes = new List<UsdPrim>();
-        var skinningInfo = _cryData.SkinningInfo;
 
-        // Build mapping from bone index to bone Xform prim
-        var boneIndexToXform = new Dictionary<int, UsdXform>();
-
-        // Build mapping from ObjectNodeIndex (ChunkNode index) to bone index
-        var nodeIndexToBoneIndex = new Dictionary<int, int>();
-        for (int boneIndex = 0; boneIndex < skinningInfo.CompiledBones.Count; boneIndex++)
+        // Simply create mesh prims for all nodes with geometry
+        // They will be placed as siblings of Skeleton under SkelRoot
+        foreach (var cryNode in _cryData.Nodes)
         {
-            var bone = skinningInfo.CompiledBones[boneIndex];
-            if (bone.ObjectNodeIndex >= 0)
-            {
-                nodeIndexToBoneIndex[bone.ObjectNodeIndex] = boneIndex;
-            }
-        }
-
-        // Get all ChunkNodes indexed by their position
-        var allNodes = _cryData.Nodes;
-        var nodeIndexToChunkNode = new Dictionary<int, ChunkNode>();
-        for (int i = 0; i < allNodes.Count; i++)
-        {
-            nodeIndexToChunkNode[i] = allNodes[i];
-        }
-
-        // Step 1: Create bone Xform hierarchy (matching skeleton joint paths)
-        for (int boneIndex = 0; boneIndex < skinningInfo.CompiledBones.Count; boneIndex++)
-        {
-            var bone = skinningInfo.CompiledBones[boneIndex];
-            string cleanBoneName = CleanPathString(bone.BoneName ?? "bone");
-
-            var boneXform = new UsdXform(cleanBoneName, "");
-
-            // Compute local transform (same as skeleton rest transform calculation)
-            Matrix4x4 localMatrix;
-            if (bone.ParentBone == null)
-            {
-                if (!Matrix4x4.Invert(bone.BindPoseMatrix, out localMatrix))
-                {
-                    Log.W($"Bone[{bone.BoneName}]: Failed to invert BindPoseMatrix for root");
-                    localMatrix = Matrix4x4.Identity;
-                }
-            }
-            else
-            {
-                if (Matrix4x4.Invert(bone.BindPoseMatrix, out var childBoneToWorld))
-                {
-                    localMatrix = bone.ParentBone.BindPoseMatrix * childBoneToWorld;
-                }
-                else
-                {
-                    Log.W($"Bone[{bone.BoneName}]: Failed to invert BindPoseMatrix");
-                    localMatrix = Matrix4x4.Identity;
-                }
-            }
-
-            // Transpose for USD row-major format
-            var transformMatrix = Matrix4x4.Transpose(localMatrix);
-            boneXform.Attributes.Insert(0, new UsdToken<List<string>>("xformOpOrder", ["xformOp:transform"], true));
-            boneXform.Attributes.Insert(0, new UsdMatrix4d("xformOp:transform", transformMatrix));
-
-            boneIndexToXform[boneIndex] = boneXform;
-        }
-
-        // Step 2: Set up bone parent-child relationships
-        for (int boneIndex = 0; boneIndex < skinningInfo.CompiledBones.Count; boneIndex++)
-        {
-            var bone = skinningInfo.CompiledBones[boneIndex];
-            var boneXform = boneIndexToXform[boneIndex];
-
-            if (bone.ParentBone == null)
-            {
-                // Root bone - add to output nodes
-                nodes.Add(boneXform);
-            }
-            else
-            {
-                // Find parent bone index and add as child
-                var parentBoneIndex = skinningInfo.CompiledBones.IndexOf(bone.ParentBone);
-                if (parentBoneIndex >= 0 && boneIndexToXform.TryGetValue(parentBoneIndex, out var parentXform))
-                {
-                    parentXform.Children.Add(boneXform);
-                }
-                else
-                {
-                    Log.W($"Bone[{bone.BoneName}]: Parent bone not found, treating as root");
-                    nodes.Add(boneXform);
-                }
-            }
-        }
-
-        // Step 3: Attach meshes to their corresponding bone Xforms
-        foreach (var kvp in nodeIndexToBoneIndex)
-        {
-            var chunkNodeIndex = kvp.Key;
-            var boneIndex = kvp.Value;
-
-            if (!nodeIndexToChunkNode.TryGetValue(chunkNodeIndex, out var cryNode))
-                continue;
-
             var meshPrim = CreateMeshPrim(cryNode);
             if (meshPrim is null)
                 continue;
 
-            // Attach mesh to bone Xform with identity transform (skinning handles positioning)
+            // Use identity transform - all positioning comes from skeletal skinning
             meshPrim.Attributes.RemoveAll(a => a is UsdMatrix4d m && m.Name == "xformOp:transform");
             meshPrim.Attributes.RemoveAll(a => a is UsdToken<List<string>> t && t.Name == "xformOpOrder");
             meshPrim.Attributes.Insert(0, new UsdToken<List<string>>("xformOpOrder", ["xformOp:transform"], true));
             meshPrim.Attributes.Insert(0, new UsdMatrix4d("xformOp:transform", Matrix4x4.Identity));
 
-            if (boneIndexToXform.TryGetValue(boneIndex, out var boneXform))
-            {
-                boneXform.Children.Add(meshPrim);
-                Log.D($"Attached mesh '{cryNode.Name}' to bone '{boneXform.Name}'");
-            }
+            nodes.Add(meshPrim);
+            Log.D($"Created skinned mesh '{cryNode.Name}' with identity transform");
         }
 
         return nodes;
