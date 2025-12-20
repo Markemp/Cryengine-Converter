@@ -58,8 +58,8 @@ public partial class BaseGltfRenderer
     }
 
     /// <summary>
-    /// Creates skeleton with meshes attached directly to bone nodes (Ivo format).
-    /// This ensures geometry moves with the skeleton.
+    /// Creates skeleton and mesh hierarchy for Ivo format.
+    /// Skeleton provides the armature for animation, meshes are attached with skinning.
     /// </summary>
     private void CreateIvoSkeletonWithMeshes(List<int> nodes, CryEngine cryData, SkinningInfo skinningInfo)
     {
@@ -85,12 +85,12 @@ public partial class BaseGltfRenderer
             nodeIndexToChunkNode[i] = allNodes[i];
         }
 
-        // Create all bone nodes first
+        // === STEP 1: Create skeleton (bone nodes) ===
         for (int boneIndex = 0; boneIndex < skinningInfo.CompiledBones.Count; boneIndex++)
         {
             var bone = skinningInfo.CompiledBones[boneIndex];
 
-            // Compute local transform using same approach as existing code
+            // Compute local transform
             Matrix4x4 localMatrix;
 
             if (bone.ParentBone == null)
@@ -151,12 +151,10 @@ public partial class BaseGltfRenderer
 
             if (bone.ParentBone == null)
             {
-                // Root bone - add to scene
                 nodes.Add(nodeIndex);
             }
             else
             {
-                // Find parent bone index and add as child
                 var parentBoneIndex = skinningInfo.CompiledBones.IndexOf(bone.ParentBone);
                 if (parentBoneIndex >= 0 && boneIndexToNodeIndex.TryGetValue(parentBoneIndex, out var parentNodeIndex))
                 {
@@ -170,7 +168,11 @@ public partial class BaseGltfRenderer
             }
         }
 
-        // Attach meshes to corresponding bone nodes
+        // === STEP 2: Attach meshes to skeleton nodes with skinning ===
+        // Create a single shared skin for all meshes (named after the model)
+        GltfSkin? sharedSkin = null;
+        int? sharedSkinIndex = null;
+
         foreach (var kvp in nodeIndexToBoneIndex)
         {
             var chunkNodeIndex = kvp.Key;
@@ -185,8 +187,52 @@ public partial class BaseGltfRenderer
             var boneNodeIndex = boneIndexToNodeIndex[boneIndex];
             var boneNode = Root.Nodes[boneNodeIndex];
 
-            // Add mesh to this bone node
-            AddMeshToExistingNode(cryData, cryNode, boneNode, controllerIdToNodeIndex, skinningInfo);
+            var accessors = new GltfMeshPrimitiveAttributes();
+            var meshChunk = cryNode.MeshData;
+
+            if (!WriteMeshOrLogError(out var gltfMesh, cryData, boneNode, cryNode, meshChunk!, accessors))
+                continue;
+
+            boneNode.Mesh = AddMesh(gltfMesh);
+
+            // Create shared skin on first mesh
+            if (sharedSkin == null)
+            {
+                var geometrySubsets = meshChunk?.GeometryInfo?.GeometrySubsets;
+                bool usePerSubsetExtraction = meshChunk?.GeometryInfo?.VertUVs is not null;
+
+                if (WriteSkinningDataOnly(out sharedSkin, out var weights, out var joints, boneNode, skinningInfo,
+                    controllerIdToNodeIndex, geometrySubsets, usePerSubsetExtraction))
+                {
+                    // Use model name for skin instead of node name
+                    sharedSkin.Name = $"{cryData.Name}/skin";
+                    sharedSkinIndex = AddSkin(sharedSkin);
+
+                    boneNode.Skin = sharedSkinIndex;
+                    foreach (var prim in gltfMesh.Primitives)
+                    {
+                        prim.Attributes.Joints0 = joints;
+                        prim.Attributes.Weights0 = weights;
+                    }
+                }
+            }
+            else if (sharedSkinIndex.HasValue)
+            {
+                // Reuse shared skin for subsequent meshes
+                var geometrySubsets = meshChunk?.GeometryInfo?.GeometrySubsets;
+                bool usePerSubsetExtraction = meshChunk?.GeometryInfo?.VertUVs is not null;
+
+                if (WriteSkinningDataOnly(out _, out var weights, out var joints, boneNode, skinningInfo,
+                    controllerIdToNodeIndex, geometrySubsets, usePerSubsetExtraction))
+                {
+                    boneNode.Skin = sharedSkinIndex;
+                    foreach (var prim in gltfMesh.Primitives)
+                    {
+                        prim.Attributes.Joints0 = joints;
+                        prim.Attributes.Weights0 = weights;
+                    }
+                }
+            }
         }
 
         // Write animations using the skeleton mapping

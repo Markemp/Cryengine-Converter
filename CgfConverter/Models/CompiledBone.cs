@@ -19,7 +19,7 @@ public sealed class CompiledBone
     public int OffsetParent { get; set; }                   // offset to the parent in number of CompiledBone structs (584 bytes)
     public int OffsetChild { get; set; }                    // Offset to the first child to this bone in number of CompiledBone structs. Don't use this. Not in Ivo files.
     public int NumberOfChildren { get; set; }                    // Number of children to this bone
-    public int ObjectNodeIndex { get; set; }                // Points to index of NodeMeshCombo chunk (Ivo file)
+    public int ObjectNodeIndex { get; set; } = -1;          // Points to index of NodeMeshCombo chunk (Ivo file only, -1 = not set)
     public int ParentIndex { get; set; }       // For 0x900, we don't have parent offset.
     // Calculated values
     public Matrix4x4 BindPoseMatrix { get; set; }     // This is the WorldToBone matrix for library_controllers
