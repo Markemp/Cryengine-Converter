@@ -310,6 +310,22 @@ public class StarCitizenTests
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
     }
+        
+    [TestMethod]
+    public void BEHR_LaserCannon_S2_Usd()
+    {
+        var args = new string[] { $@"{objectDir41}\objects\spaceships\Weapons\BEHR\BEHR_LaserCannon_S2\BEHR_LaserCannon_S2.cga" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir41);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+
+        testUtils.ValidateColladaXml(colladaData);
+    }
 
     [TestMethod]
     public void BehrRifle_324IvoCgfFile()

@@ -29,32 +29,51 @@ public partial class UsdRenderer
         return nodes;
     }
 
-    private UsdXform CreateNode(ChunkNode node, string parentPath)
+    /// <summary>
+    /// Creates a USD prim for a CryEngine node.
+    /// If the node has geometry, returns a Mesh prim with transforms.
+    /// If no geometry, returns an Xform prim.
+    /// This avoids unnecessary Xform > Mesh nesting.
+    /// </summary>
+    private UsdPrim CreateNode(ChunkNode node, string parentPath)
     {
         string cleanNodeName = CleanPathString(node.Name);
-        var xform = new UsdXform(cleanNodeName, parentPath);
 
-        xform.Attributes.Add(new UsdMatrix4d("xformOp:transform", node.Transform));
-        xform.Attributes.Add(new UsdToken<List<string>>("xformOpOrder", ["xformOp:transform"], true));
-        // If it's a geometry node, add a UsdMesh
-        //var modelIndex = node._model.IsIvoFile ? 1 : 0;
-        //ChunkNode geometryNode = _cryData.Models.Last().NodeMap.Values.Where(a => a.Name == node.Name).FirstOrDefault();
-
+        // Try to create mesh geometry first
         var meshPrim = CreateMeshPrim(node);
+
+        // Use Mesh as the node if geometry exists, otherwise use Xform
+        UsdPrim nodePrim;
         if (meshPrim is not null)
-            xform.Children.Add(meshPrim);
+        {
+            // Mesh with transforms - no need for Xform wrapper
+            nodePrim = meshPrim;
+            // Mesh name was set in CreateMeshPrim, but we need to use node name for hierarchy
+            nodePrim.Name = cleanNodeName;
+        }
+        else
+        {
+            // No geometry - use Xform for transform-only nodes
+            nodePrim = new UsdXform(cleanNodeName, parentPath);
+        }
+
+        // Add transform attributes
+        nodePrim.Attributes.Insert(0, new UsdToken<List<string>>("xformOpOrder", ["xformOp:transform"], true));
+        nodePrim.Attributes.Insert(0, new UsdMatrix4d("xformOp:transform", node.Transform));
 
         // Get all the children of the node
         var children = node.Children;
         if (children is not null)
         {
+            // Build path for children based on parent path and this node's name
+            string nodePath = string.IsNullOrEmpty(parentPath) ? $"/{cleanNodeName}" : $"{parentPath}/{cleanNodeName}";
             foreach (var childNode in children)
             {
-                xform.Children.Add(CreateNode(childNode, xform.Path));
+                nodePrim.Children.Add(CreateNode(childNode, nodePath));
             }
         }
 
-        return xform;
+        return nodePrim;
     }
 
     private UsdPrim? CreateMeshPrim(ChunkNode nodeChunk)
@@ -190,10 +209,10 @@ public partial class UsdRenderer
                         $"/root/_materials/{cleanMatName}"));
             }
 
-            // Add skinning data if present
+            // Add skinning data if present (traditional format - no per-subset extraction)
             if (_cryData.SkinningInfo?.HasSkinningInfo ?? false)
             {
-                AddSkinningAttributes(meshPrim, nodeChunk);
+                AddSkinningAttributes(meshPrim, nodeChunk, subsets: null);
             }
         }
         else if (vertsUvs is not null)
@@ -362,10 +381,10 @@ public partial class UsdRenderer
                         $"/root/_materials/{cleanMatName}"));
             }
 
-            // Add skinning data if present
+            // Add skinning data if present (Ivo format - use per-subset extraction)
             if (_cryData.SkinningInfo?.HasSkinningInfo ?? false)
             {
-                AddSkinningAttributes(meshPrim, nodeChunk);
+                AddSkinningAttributes(meshPrim, nodeChunk, subsets);
             }
         }
 

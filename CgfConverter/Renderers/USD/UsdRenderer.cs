@@ -131,8 +131,11 @@ public partial class UsdRenderer : IRenderer
             var skelRoot = CreateSkeleton(out _controllerIdToJointPath, out _jointPaths, out _bonePathMap, out _compiledBoneIndexToJointIndex);
             rootPrim.Children.Add(skelRoot);
 
-            // Add skinned node hierarchy under the skeleton root
-            skelRoot.Children.AddRange(CreateNodeHierarchy());
+            // Add skinned node hierarchy as children of the Skeleton prim
+            // This creates proper parent-child relationship that Blender USD importer
+            // interprets as "mesh objects parented to armature" in object mode
+            var skeletonPrim = skelRoot.Children.OfType<UsdSkeleton>().First();
+            skeletonPrim.Children.AddRange(CreateNodeHierarchy());
 
             // Create animations if available (DBA or CAF)
             // Only include animation in main file if there's exactly one.

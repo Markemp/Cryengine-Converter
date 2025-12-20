@@ -1,5 +1,6 @@
 using CgfConverter.CryEngineCore;
 using CgfConverter.Models;
+using CgfConverter.Models.Structs;
 using CgfConverter.Renderers.USD.Attributes;
 using CgfConverter.Renderers.USD.Models;
 using CgfConverter.Utilities;
@@ -241,7 +242,8 @@ public partial class UsdRenderer
     /// <summary>Adds skinning attributes to a mesh prim for skeletal animation.</summary>
     /// <param name="meshPrim">The mesh prim to add skinning to.</param>
     /// <param name="nodeChunk">The node chunk containing mesh data.</param>
-    private void AddSkinningAttributes(UsdMesh meshPrim, ChunkNode nodeChunk)
+    /// <param name="subsets">Geometry subsets for per-subset vertex extraction (Ivo format).</param>
+    private void AddSkinningAttributes(UsdMesh meshPrim, ChunkNode nodeChunk, IEnumerable<MeshSubset>? subsets = null)
     {
         // Get skinning data
         var skinningInfo = _cryData.SkinningInfo;
@@ -283,18 +285,52 @@ public partial class UsdRenderer
         }
         else if (skinningInfo.BoneMappings != null)
         {
-            // Fall back to BoneMappings for simpler skinning without IntVertices
-            foreach (var boneMapping in skinningInfo.BoneMappings)
+            // For Ivo format with per-subset vertex extraction, extract bone mappings per-subset
+            // to match the per-subset vertex extraction in CreateMeshPrim
+            if (subsets != null)
             {
-                for (int i = 0; i < 4; i++)
+                foreach (var subset in subsets)
                 {
-                    // Remap from CompiledBones index to jointPaths index
-                    int compiledBoneIndex = boneMapping.BoneIndex[i];
-                    int jointIndex = compiledBoneIndex < _compiledBoneIndexToJointIndex.Length
-                        ? _compiledBoneIndexToJointIndex[compiledBoneIndex]
-                        : compiledBoneIndex;
-                    jointIndices.Add(jointIndex);
-                    jointWeights.Add(boneMapping.Weight[i]);
+                    for (int vertexIndex = subset.FirstVertex; vertexIndex < subset.FirstVertex + subset.NumVertices; vertexIndex++)
+                    {
+                        if (vertexIndex >= skinningInfo.BoneMappings.Count)
+                        {
+                            Log.W($"Bone mapping index {vertexIndex} out of bounds (count: {skinningInfo.BoneMappings.Count})");
+                            // Add default mapping (bone 0 with weight 1)
+                            jointIndices.AddRange([0, 0, 0, 0]);
+                            jointWeights.AddRange([1.0f, 0, 0, 0]);
+                            continue;
+                        }
+
+                        var boneMapping = skinningInfo.BoneMappings[vertexIndex];
+                        for (int i = 0; i < 4; i++)
+                        {
+                            // Remap from CompiledBones index to jointPaths index
+                            int compiledBoneIndex = boneMapping.BoneIndex[i];
+                            int jointIndex = compiledBoneIndex < _compiledBoneIndexToJointIndex.Length
+                                ? _compiledBoneIndexToJointIndex[compiledBoneIndex]
+                                : compiledBoneIndex;
+                            jointIndices.Add(jointIndex);
+                            jointWeights.Add(boneMapping.Weight[i]);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Traditional format: use all bone mappings in order
+                foreach (var boneMapping in skinningInfo.BoneMappings)
+                {
+                    for (int i = 0; i < 4; i++)
+                    {
+                        // Remap from CompiledBones index to jointPaths index
+                        int compiledBoneIndex = boneMapping.BoneIndex[i];
+                        int jointIndex = compiledBoneIndex < _compiledBoneIndexToJointIndex.Length
+                            ? _compiledBoneIndexToJointIndex[compiledBoneIndex]
+                            : compiledBoneIndex;
+                        jointIndices.Add(jointIndex);
+                        jointWeights.Add(boneMapping.Weight[i]);
+                    }
                 }
             }
         }

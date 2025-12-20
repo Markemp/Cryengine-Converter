@@ -41,7 +41,6 @@ public class ManualRenderTests
         HelperMethods.LogLevel = LogLevelEnum.Debug;
     }
 
-
     #region ArcheAge tests
 
     [TestMethod]
@@ -319,6 +318,23 @@ public class ManualRenderTests
         RenderToUsd($@"{sc41ObjectDir}\Objects\Characters\Creatures\aloprat\aloprat.skin", sc41ObjectDir);
     }
 
+    [TestMethod]
+    public void BEHR_LaserCannon_S2_Usd()
+    {
+        RenderToUsd($@"{sc41ObjectDir}\objects\spaceships\Weapons\BEHR\BEHR_LaserCannon_S2\BEHR_LaserCannon_S2.cga", sc41ObjectDir);
+    }
+
+    [TestMethod]
+    public void BEHR_LaserCannon_S2_gltf()
+    {
+        RenderToGltf($@"{sc41ObjectDir}\objects\spaceships\Weapons\BEHR\BEHR_LaserCannon_S2\BEHR_LaserCannon_S2.cga", sc41ObjectDir);
+    }
+
+    [TestMethod]
+    public void BEHR_LaserCannon_S2_Collada()
+    {
+        RenderToCollada($@"{sc41ObjectDir}\objects\spaceships\Weapons\BEHR\BEHR_LaserCannon_S2\BEHR_LaserCannon_S2.cga", sc41ObjectDir);
+    }
 
     [TestMethod]
     public void GLSN_Shiv_Door_Ramp_Cga_USD()

@@ -338,6 +338,53 @@ public partial class CryEngine
             }
         }
 
+        // For Ivo format files, the bone indices in BoneMappings refer to NodeMeshCombo indices,
+        // not CompiledBone indices. We need to remap using ObjectNodeIndex.
+        // Build a map: ObjectNodeIndex (NodeMeshCombo index) → bone index (position in CompiledBones)
+        if (skin.BoneMappings is not null && skin.CompiledBones is not null)
+        {
+            var nodeMeshComboToBoneIndex = new Dictionary<int, int>();
+            for (int boneIndex = 0; boneIndex < skin.CompiledBones.Count; boneIndex++)
+            {
+                var bone = skin.CompiledBones[boneIndex];
+                // ObjectNodeIndex maps bone to its corresponding NodeMeshCombo
+                // Only add if ObjectNodeIndex is valid (some bones may not have mesh associations)
+                if (bone.ObjectNodeIndex >= 0)
+                {
+                    nodeMeshComboToBoneIndex[bone.ObjectNodeIndex] = boneIndex;
+                }
+            }
+
+            // Only remap if we found any ObjectNodeIndex mappings (indicates Ivo format)
+            if (nodeMeshComboToBoneIndex.Count > 0)
+            {
+                for (int i = 0; i < skin.BoneMappings.Count; i++)
+                {
+                    var mapping = skin.BoneMappings[i];
+                    var remappedBoneIndex = new ushort[4];
+                    for (int j = 0; j < 4; j++)
+                    {
+                        int nodeMeshComboIndex = mapping.BoneIndex[j];
+                        if (nodeMeshComboToBoneIndex.TryGetValue(nodeMeshComboIndex, out int actualBoneIndex))
+                        {
+                            remappedBoneIndex[j] = (ushort)actualBoneIndex;
+                        }
+                        else
+                        {
+                            // Keep original index if no mapping found (fallback)
+                            remappedBoneIndex[j] = (ushort)nodeMeshComboIndex;
+                        }
+                    }
+                    skin.BoneMappings[i] = new MeshBoneMapping
+                    {
+                        BoneInfluenceCount = mapping.BoneInfluenceCount,
+                        BoneIndex = remappedBoneIndex,
+                        Weight = mapping.Weight
+                    };
+                }
+            }
+        }
+
         return skin;
     }
 

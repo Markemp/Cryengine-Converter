@@ -49,12 +49,12 @@ internal class ChunkCompiledBones_901 : ChunkCompiledBones
             BoneList[i].BindPoseMatrix = bpm;
 
             BoneList[i].BoneName = boneNames[i];
-            if (BoneList[i].OffsetParent != -1)
+            // ParentControllerIndex is read in ReadCompiledBone_901 as the parent bone index
+            // A value of -1 (or 0xFFFF as signed short) means no parent (root bone)
+            if (BoneList[i].ParentControllerIndex >= 0 && BoneList[i].ParentControllerIndex < BoneList.Count)
             {
-                BoneList[i].ParentBone = BoneList[BoneList[i].OffsetParent];
-                BoneList[i].ParentControllerIndex = BoneList[i].OffsetParent;
+                BoneList[i].ParentBone = BoneList[BoneList[i].ParentControllerIndex];
                 BoneList[i].ParentBone.ChildIDs.Add(i);
-                BoneList[i].ParentBone.NumberOfChildren++;
             }
             BoneList[i].LocalTransformMatrix = Matrix3x4.CreateFromParts(relativeQuat, relativeTranslation);
             BoneList[i].WorldTransformMatrix = Matrix3x4.CreateFromParts(worldQuat, worldTranslation);
