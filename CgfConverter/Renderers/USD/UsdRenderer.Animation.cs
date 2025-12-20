@@ -1,5 +1,6 @@
 using CgfConverter.CryEngineCore;
 using CgfConverter.Models;
+using CgfConverter.Models.Structs;
 using CgfConverter.Renderers.USD.Models;
 using System;
 using System.Collections.Generic;
@@ -24,11 +25,12 @@ public partial class UsdRenderer
         var animations = new List<UsdPrim>();
         int maxEndFrame = 0;
 
-        // Process DBA animations (ChunkController_905)
+        // Process DBA animations (ChunkController_905 for non-Ivo, ChunkIvoDBAData for Ivo)
         if (_cryData.Animations is not null && _cryData.Animations.Count > 0)
         {
             foreach (var animModel in _cryData.Animations)
             {
+                // Try standard DBA format first (ChunkController_905)
                 var animChunks = animModel.ChunkMap.Values.OfType<ChunkController_905>().ToList();
 
                 foreach (var animChunk in animChunks)
@@ -48,6 +50,38 @@ public partial class UsdRenderer
                             animations.Add(skelAnim);
                             maxEndFrame = Math.Max(maxEndFrame, endFrame);
                             Log.D($"Created DBA animation: {name} ({endFrame} frames)");
+                        }
+                    }
+                }
+
+                // Try Ivo DBA format (ChunkIvoDBAData + ChunkIvoDBAMetadata)
+                var ivoDbaData = animModel.ChunkMap.Values.OfType<ChunkIvoDBAData>().FirstOrDefault();
+                var ivoDbaMetadata = animModel.ChunkMap.Values.OfType<ChunkIvoDBAMetadata>().FirstOrDefault();
+
+                if (ivoDbaData is not null && ivoDbaData.AnimationBlocks.Count > 0)
+                {
+                    Log.D($"Found Ivo DBA with {ivoDbaData.AnimationBlocks.Count} animation blocks");
+
+                    // Get animation names from metadata if available
+                    var animNames = ivoDbaMetadata?.AnimPaths ?? [];
+                    var animEntries = ivoDbaMetadata?.Entries ?? [];
+
+                    for (int i = 0; i < ivoDbaData.AnimationBlocks.Count; i++)
+                    {
+                        var block = ivoDbaData.AnimationBlocks[i];
+                        var animName = i < animNames.Count
+                            ? Path.GetFileNameWithoutExtension(animNames[i])
+                            : $"animation_{i}";
+                        var fps = i < animEntries.Count ? animEntries[i].FramesPerSecond : 30;
+
+                        var (skelAnim, endFrame) = CreateSkelAnimationFromIvoDBA(
+                            block, animName, fps, controllerIdToJointPath);
+
+                        if (skelAnim is not null)
+                        {
+                            animations.Add(skelAnim);
+                            maxEndFrame = Math.Max(maxEndFrame, endFrame);
+                            Log.D($"Created Ivo DBA animation: {animName} ({endFrame} frames)");
                         }
                     }
                 }
@@ -247,6 +281,194 @@ public partial class UsdRenderer
         skelAnim.Attributes.Add(new UsdTimeSampledHalf3Array("scales", scaleSamples));
 
         return (skelAnim, durationFrames);
+    }
+
+    /// <summary>
+    /// Creates a SkelAnimation prim from an Ivo DBA animation block.
+    /// Ivo DBA uses bone hashes (CRC32) instead of controller IDs.
+    /// </summary>
+    private (UsdSkelAnimation? skelAnim, int endFrame) CreateSkelAnimationFromIvoDBA(
+        IvoAnimationBlock block,
+        string animName,
+        int fps,
+        Dictionary<uint, string> controllerIdToJointPath)
+    {
+        // Build rest pose mapping for bones without position animation
+        var jointPathToRestTranslation = BuildRestTranslationMapping();
+
+        // Map bone hashes to joint paths
+        var animatedJoints = new List<string>();
+        var tracksByJointPath = new Dictionary<string, (List<Quaternion>? rotations, List<float>? rotTimes,
+            List<Vector3>? positions, List<float>? posTimes)>();
+
+        foreach (var boneHash in block.BoneHashes)
+        {
+            // Try to find joint path by bone hash (same as controller ID for Ivo)
+            if (!controllerIdToJointPath.TryGetValue(boneHash, out var jointPath))
+            {
+                Log.D($"IvoDBA[{animName}]: Bone hash 0x{boneHash:X08} not found in skeleton");
+                continue;
+            }
+
+            block.Rotations.TryGetValue(boneHash, out var rotations);
+            block.RotationTimes.TryGetValue(boneHash, out var rotTimes);
+            block.Positions.TryGetValue(boneHash, out var positions);
+            block.PositionTimes.TryGetValue(boneHash, out var posTimes);
+
+            // Only add if there's actual animation data
+            if ((rotations is not null && rotations.Count > 0) ||
+                (positions is not null && positions.Count > 0))
+            {
+                animatedJoints.Add(jointPath);
+                tracksByJointPath[jointPath] = (rotations, rotTimes, positions, posTimes);
+            }
+        }
+
+        if (animatedJoints.Count == 0)
+        {
+            Log.W($"IvoDBA[{animName}]: No valid bone tracks found");
+            return (null, 0);
+        }
+
+        // Calculate frame range from all tracks
+        var allFrames = new SortedSet<int>();
+        foreach (var (_, (_, rotTimes, _, posTimes)) in tracksByJointPath)
+        {
+            if (rotTimes is not null)
+            {
+                foreach (var t in rotTimes)
+                    allFrames.Add((int)t);
+            }
+            if (posTimes is not null)
+            {
+                foreach (var t in posTimes)
+                    allFrames.Add((int)t);
+            }
+        }
+
+        // Ensure at least one frame
+        if (allFrames.Count == 0)
+            allFrames.Add(0);
+
+        int endFrame = allFrames.Count > 0 ? allFrames.Max() : 0;
+
+        // Build time-sampled arrays
+        var translationSamples = new SortedDictionary<float, List<Vector3>>();
+        var rotationSamples = new SortedDictionary<float, List<Quaternion>>();
+        var scaleSamples = new SortedDictionary<float, List<Vector3>>();
+
+        foreach (var frame in allFrames)
+        {
+            var translations = new List<Vector3>();
+            var rotations = new List<Quaternion>();
+            var scales = new List<Vector3>();
+
+            foreach (var jointPath in animatedJoints)
+            {
+                var (trackRots, rotTimes, trackPos, posTimes) = tracksByJointPath[jointPath];
+
+                // Get rest translation for fallback
+                var restTranslation = jointPathToRestTranslation.TryGetValue(jointPath, out var restT)
+                    ? restT
+                    : Vector3.Zero;
+
+                // Sample position
+                Vector3 position = restTranslation;
+                if (trackPos is not null && trackPos.Count > 0)
+                {
+                    position = SampleIvoPosition(trackPos, posTimes, frame, restTranslation);
+                }
+
+                // Sample rotation
+                Quaternion rotation = Quaternion.Identity;
+                if (trackRots is not null && trackRots.Count > 0)
+                {
+                    rotation = SampleIvoRotation(trackRots, rotTimes, frame);
+                }
+
+                translations.Add(position);
+                rotations.Add(rotation);
+                scales.Add(Vector3.One);
+            }
+
+            translationSamples[frame] = translations;
+            rotationSamples[frame] = rotations;
+            scaleSamples[frame] = scales;
+        }
+
+        // Create the SkelAnimation prim
+        var cleanName = CleanPathString(animName);
+        var skelAnim = new UsdSkelAnimation(cleanName);
+
+        skelAnim.Attributes.Add(new UsdTokenArray("joints", animatedJoints, isUniform: true));
+        skelAnim.Attributes.Add(new UsdTimeSampledFloat3Array("translations", translationSamples));
+        skelAnim.Attributes.Add(new UsdTimeSampledQuatfArray("rotations", rotationSamples));
+        skelAnim.Attributes.Add(new UsdTimeSampledHalf3Array("scales", scaleSamples));
+
+        Log.D($"IvoDBA[{animName}]: Created animation with {animatedJoints.Count} joints, {allFrames.Count} frames");
+        return (skelAnim, endFrame);
+    }
+
+    /// <summary>
+    /// Samples position from Ivo animation data at a given frame.
+    /// </summary>
+    private static Vector3 SampleIvoPosition(List<Vector3> positions, List<float>? keyTimes, int frame, Vector3 restTranslation)
+    {
+        if (positions.Count == 0)
+            return restTranslation;
+
+        if (positions.Count == 1 || keyTimes is null || keyTimes.Count == 0)
+            return positions[0];
+
+        // Find surrounding keyframes
+        int i = 0;
+        while (i < keyTimes.Count - 1 && keyTimes[i + 1] <= frame)
+            i++;
+
+        if (i >= positions.Count)
+            return positions[^1];
+
+        if (i == keyTimes.Count - 1 || keyTimes[i] >= frame)
+            return i < positions.Count ? positions[i] : positions[^1];
+
+        // Linear interpolation
+        float t0 = keyTimes[i];
+        float t1 = keyTimes[i + 1];
+        float alpha = (frame - t0) / (t1 - t0);
+
+        int i1 = Math.Min(i + 1, positions.Count - 1);
+        return Vector3.Lerp(positions[i], positions[i1], alpha);
+    }
+
+    /// <summary>
+    /// Samples rotation from Ivo animation data at a given frame.
+    /// </summary>
+    private static Quaternion SampleIvoRotation(List<Quaternion> rotations, List<float>? keyTimes, int frame)
+    {
+        if (rotations.Count == 0)
+            return Quaternion.Identity;
+
+        if (rotations.Count == 1 || keyTimes is null || keyTimes.Count == 0)
+            return rotations[0];
+
+        // Find surrounding keyframes
+        int i = 0;
+        while (i < keyTimes.Count - 1 && keyTimes[i + 1] <= frame)
+            i++;
+
+        if (i >= rotations.Count)
+            return rotations[^1];
+
+        if (i == keyTimes.Count - 1 || keyTimes[i] >= frame)
+            return i < rotations.Count ? rotations[i] : rotations[^1];
+
+        // Spherical linear interpolation
+        float t0 = keyTimes[i];
+        float t1 = keyTimes[i + 1];
+        float alpha = (frame - t0) / (t1 - t0);
+
+        int i1 = Math.Min(i + 1, rotations.Count - 1);
+        return Quaternion.Slerp(rotations[i], rotations[i1], alpha);
     }
 
     /// <summary>
@@ -777,11 +999,12 @@ public partial class UsdRenderer
         // Collect all animations with their metadata
         var allAnimations = new List<(string name, UsdSkelAnimation skelAnim, int endFrame)>();
 
-        // Process DBA animations
+        // Process DBA animations (both standard ChunkController_905 and Ivo format)
         if (hasDbaAnimations)
         {
             foreach (var animModel in _cryData.Animations!)
             {
+                // Try standard DBA format (ChunkController_905)
                 var animChunks = animModel.ChunkMap.Values.OfType<ChunkController_905>().ToList();
 
                 foreach (var animChunk in animChunks)
@@ -798,6 +1021,33 @@ public partial class UsdRenderer
                         if (skelAnim is not null)
                         {
                             allAnimations.Add((name, skelAnim, endFrame));
+                        }
+                    }
+                }
+
+                // Try Ivo DBA format (ChunkIvoDBAData + ChunkIvoDBAMetadata)
+                var ivoDbaData = animModel.ChunkMap.Values.OfType<ChunkIvoDBAData>().FirstOrDefault();
+                var ivoDbaMetadata = animModel.ChunkMap.Values.OfType<ChunkIvoDBAMetadata>().FirstOrDefault();
+
+                if (ivoDbaData is not null && ivoDbaData.AnimationBlocks.Count > 0)
+                {
+                    var animNames = ivoDbaMetadata?.AnimPaths ?? [];
+                    var animEntries = ivoDbaMetadata?.Entries ?? [];
+
+                    for (int i = 0; i < ivoDbaData.AnimationBlocks.Count; i++)
+                    {
+                        var block = ivoDbaData.AnimationBlocks[i];
+                        var animName = i < animNames.Count
+                            ? Path.GetFileNameWithoutExtension(animNames[i])
+                            : $"animation_{i}";
+                        var fps = i < animEntries.Count ? animEntries[i].FramesPerSecond : 30;
+
+                        var (skelAnim, endFrame) = CreateSkelAnimationFromIvoDBA(
+                            block, animName, fps, controllerIdToJointPath);
+
+                        if (skelAnim is not null)
+                        {
+                            allAnimations.Add((animName, skelAnim, endFrame));
                         }
                     }
                 }

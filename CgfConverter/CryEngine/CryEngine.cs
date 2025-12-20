@@ -639,14 +639,21 @@ public partial class CryEngine
                 }
                 else
                 {
+                    // Resolve relative paths against ObjectDir
+                    var fullDbaPath = trackFilePath;
+                    if (!Path.IsPathRooted(fullDbaPath) && !string.IsNullOrEmpty(ObjectDir))
+                    {
+                        fullDbaPath = Path.Combine(ObjectDir, fullDbaPath);
+                    }
+
                     try
                     {
-                        Animations.Add(Model.FromStream(trackFilePath, PackFileSystem.GetStream(trackFilePath), true));
-                        Log.D("Successfully loaded animation database with DBA format");
+                        Animations.Add(Model.FromStream(fullDbaPath, PackFileSystem.GetStream(fullDbaPath), true));
+                        Log.D("Successfully loaded animation database: {0}", fullDbaPath);
                     }
                     catch (FileNotFoundException)
                     {
-                        Log.D("DBA file not found: {0}", trackFilePath);
+                        Log.D("DBA file not found: {0}", fullDbaPath);
                     }
                 }
             }
