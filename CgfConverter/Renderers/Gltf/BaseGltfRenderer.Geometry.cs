@@ -21,6 +21,15 @@ public partial class BaseGltfRenderer
         if (cryData.MaterialFiles is not null)
             WriteMaterial(cryData.MaterialFiles.FirstOrDefault(), cryData.Materials.Values.FirstOrDefault());
 
+        // For Ivo format with skinning, create skeleton first and attach meshes to skeleton nodes
+        // This ensures geometry moves with the skeleton
+        if (!omitSkins && cryData.SkinningInfo is { HasSkinningInfo: true } skinningInfo
+            && HasObjectNodeIndexMappings(skinningInfo))
+        {
+            CreateIvoSkeletonWithMeshes(nodes, cryData, skinningInfo);
+            return;
+        }
+
         // THERE CAN BE MULTIPLE ROOT NODES IN EACH FILE!  Check to see if the parentnodeid ~0 and be sure to add a node for it.
         List<ColladaNode> positionNodes = [];
         List<ChunkNode> positionRoots = cryData.Nodes.Where(a => a.ParentNodeID == ~0).ToList();
@@ -34,6 +43,318 @@ public partial class BaseGltfRenderer
             nodes.Add(Root.Nodes.Count);
             Root.Nodes.Add(childNode);
         }
+    }
+
+    /// <summary>
+    /// Check if skinning info has ObjectNodeIndex mappings (Ivo format).
+    /// </summary>
+    private static bool HasObjectNodeIndexMappings(SkinningInfo skinningInfo)
+    {
+        if (skinningInfo.CompiledBones is null || skinningInfo.CompiledBones.Count == 0)
+            return false;
+
+        // If any bone has a valid ObjectNodeIndex, we have Ivo format
+        return skinningInfo.CompiledBones.Any(b => b.ObjectNodeIndex >= 0);
+    }
+
+    /// <summary>
+    /// Creates skeleton with meshes attached directly to bone nodes (Ivo format).
+    /// This ensures geometry moves with the skeleton.
+    /// </summary>
+    private void CreateIvoSkeletonWithMeshes(List<int> nodes, CryEngine cryData, SkinningInfo skinningInfo)
+    {
+        var controllerIdToNodeIndex = new Dictionary<uint, int>();
+        var boneIndexToNodeIndex = new Dictionary<int, int>();
+
+        // Build mapping from ObjectNodeIndex (ChunkNode index) to bone index
+        var nodeIndexToBoneIndex = new Dictionary<int, int>();
+        for (int boneIndex = 0; boneIndex < skinningInfo.CompiledBones.Count; boneIndex++)
+        {
+            var bone = skinningInfo.CompiledBones[boneIndex];
+            if (bone.ObjectNodeIndex >= 0)
+            {
+                nodeIndexToBoneIndex[bone.ObjectNodeIndex] = boneIndex;
+            }
+        }
+
+        // Get all ChunkNodes indexed by their position (for mesh lookup)
+        var allNodes = cryData.Nodes;
+        var nodeIndexToChunkNode = new Dictionary<int, ChunkNode>();
+        for (int i = 0; i < allNodes.Count; i++)
+        {
+            nodeIndexToChunkNode[i] = allNodes[i];
+        }
+
+        // Create all bone nodes first
+        for (int boneIndex = 0; boneIndex < skinningInfo.CompiledBones.Count; boneIndex++)
+        {
+            var bone = skinningInfo.CompiledBones[boneIndex];
+
+            // Compute local transform using same approach as existing code
+            Matrix4x4 localMatrix;
+
+            if (bone.ParentBone == null)
+            {
+                if (!Matrix4x4.Invert(bone.BindPoseMatrix, out localMatrix))
+                {
+                    Log.W("CompiledBone[{0}]: Failed to invert BindPoseMatrix for root", bone.BoneName);
+                    localMatrix = Matrix4x4.Identity;
+                }
+            }
+            else
+            {
+                if (Matrix4x4.Invert(bone.BindPoseMatrix, out var childBoneToWorld))
+                {
+                    localMatrix = bone.ParentBone.BindPoseMatrix * childBoneToWorld;
+                }
+                else
+                {
+                    Log.W("CompiledBone[{0}]: Failed to invert BindPoseMatrix", bone.BoneName);
+                    localMatrix = Matrix4x4.Identity;
+                }
+            }
+
+            // Transpose and swap axes for glTF coordinate system (Y-up)
+            var matrix = SwapAxes(Matrix4x4.Transpose(localMatrix));
+            if (!Matrix4x4.Decompose(matrix, out var scale, out var rotation, out var translation))
+            {
+                Log.W("CompiledBone[{0}]: BindPoseMatrix is not decomposable", bone.BoneName);
+                scale = Vector3.One;
+                rotation = Quaternion.Identity;
+                translation = Vector3.Zero;
+            }
+
+            var boneNode = new GltfNode
+            {
+                Name = bone.BoneName,
+                Scale = (scale - Vector3.One).LengthSquared() > 0.000001
+                    ? new List<float> { scale.X, scale.Y, scale.Z }
+                    : null,
+                Translation = translation != Vector3.Zero
+                    ? new List<float> { translation.X, translation.Y, translation.Z }
+                    : null,
+                Rotation = rotation != Quaternion.Identity
+                    ? new List<float> { rotation.X, rotation.Y, rotation.Z, rotation.W }
+                    : null
+            };
+
+            var nodeIndex = AddNode(boneNode);
+            boneIndexToNodeIndex[boneIndex] = nodeIndex;
+            controllerIdToNodeIndex[bone.ControllerID] = nodeIndex;
+        }
+
+        // Set up bone parent-child relationships
+        for (int boneIndex = 0; boneIndex < skinningInfo.CompiledBones.Count; boneIndex++)
+        {
+            var bone = skinningInfo.CompiledBones[boneIndex];
+            var nodeIndex = boneIndexToNodeIndex[boneIndex];
+
+            if (bone.ParentBone == null)
+            {
+                // Root bone - add to scene
+                nodes.Add(nodeIndex);
+            }
+            else
+            {
+                // Find parent bone index and add as child
+                var parentBoneIndex = skinningInfo.CompiledBones.IndexOf(bone.ParentBone);
+                if (parentBoneIndex >= 0 && boneIndexToNodeIndex.TryGetValue(parentBoneIndex, out var parentNodeIndex))
+                {
+                    Root.Nodes[parentNodeIndex].Children.Add(nodeIndex);
+                }
+                else
+                {
+                    Log.W("Bone[{0}]: Parent bone not found, treating as root", bone.BoneName);
+                    nodes.Add(nodeIndex);
+                }
+            }
+        }
+
+        // Attach meshes to corresponding bone nodes
+        foreach (var kvp in nodeIndexToBoneIndex)
+        {
+            var chunkNodeIndex = kvp.Key;
+            var boneIndex = kvp.Value;
+
+            if (!nodeIndexToChunkNode.TryGetValue(chunkNodeIndex, out var cryNode))
+                continue;
+
+            if (cryNode.MeshData?.GeometryInfo is null)
+                continue;
+
+            var boneNodeIndex = boneIndexToNodeIndex[boneIndex];
+            var boneNode = Root.Nodes[boneNodeIndex];
+
+            // Add mesh to this bone node
+            AddMeshToExistingNode(cryData, cryNode, boneNode, controllerIdToNodeIndex, skinningInfo);
+        }
+
+        // Write animations using the skeleton mapping
+        _ = WriteAnimations(cryData.Animations, controllerIdToNodeIndex);
+        _ = WriteCafAnimations(cryData.CafAnimations, controllerIdToNodeIndex);
+    }
+
+    /// <summary>
+    /// Adds mesh to an existing node (used for Ivo format where meshes are attached to skeleton bones).
+    /// </summary>
+    private void AddMeshToExistingNode(
+        CryEngine cryData,
+        ChunkNode cryNode,
+        GltfNode gltfNode,
+        Dictionary<uint, int> controllerIdToNodeIndex,
+        SkinningInfo skinningInfo)
+    {
+        var accessors = new GltfMeshPrimitiveAttributes();
+        var meshChunk = cryNode.MeshData;
+
+        if (!WriteMeshOrLogError(out var gltfMesh, cryData, gltfNode, cryNode, meshChunk!, accessors))
+            return;
+
+        gltfNode.Mesh = AddMesh(gltfMesh);
+
+        var geometrySubsets = meshChunk?.GeometryInfo?.GeometrySubsets;
+        bool usePerSubsetExtraction = meshChunk?.GeometryInfo?.VertUVs is not null;
+
+        if (WriteSkinningDataOnly(out var newSkin, out var weights, out var joints, gltfNode, skinningInfo,
+            controllerIdToNodeIndex, geometrySubsets, usePerSubsetExtraction))
+        {
+            gltfNode.Skin = AddSkin(newSkin);
+            foreach (var prim in gltfMesh.Primitives)
+            {
+                prim.Attributes.Joints0 = joints;
+                prim.Attributes.Weights0 = weights;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Writes skinning data (weights, joints, inverse bind matrices) without creating skeleton nodes.
+    /// Used when skeleton nodes are already created separately.
+    /// </summary>
+    private bool WriteSkinningDataOnly(
+        out GltfSkin newSkin,
+        out int weights,
+        out int joints,
+        GltfNode rootNode,
+        SkinningInfo skinningInfo,
+        IDictionary<uint, int> controllerIdToNodeIndex,
+        List<MeshSubset>? geometrySubsets,
+        bool usePerSubsetExtraction)
+    {
+        newSkin = null!;
+        weights = joints = 0;
+
+        var baseName = $"{rootNode.Name}/bone/weight";
+
+        if (usePerSubsetExtraction)
+        {
+            var subsets = geometrySubsets ?? [];
+            var numberOfElements = subsets.Sum(x => x.NumVertices);
+
+            weights =
+                GetAccessorOrDefault(baseName, 0, numberOfElements)
+                ?? AddAccessor(baseName, -1, null,
+                    skinningInfo.IntVertices is null
+                        ? subsets
+                            .SelectMany(subset => Enumerable
+                                .Range(subset.FirstVertex, subset.NumVertices)
+                                .Select(i => skinningInfo.BoneMappings[i])
+                                .Select(x => new Vector4(
+                                    x.Weight[0], x.Weight[1], x.Weight[2], x.Weight[3])))
+                            .ToArray()
+                        : subsets
+                            .SelectMany(subset => Enumerable
+                                .Range(subset.FirstVertex, subset.NumVertices)
+                                .Select(i => skinningInfo.IntVertices[skinningInfo.Ext2IntMap[i]])
+                                .Select(x => new Vector4(
+                                    x.BoneMapping.Weight[0], x.BoneMapping.Weight[1], x.BoneMapping.Weight[2], x.BoneMapping.Weight[3])))
+                            .ToArray());
+        }
+        else
+        {
+            var skinCount = skinningInfo.IntVertices is null ? skinningInfo.BoneMappings.Count : skinningInfo.Ext2IntMap.Count;
+
+            weights =
+                GetAccessorOrDefault(baseName, 0, skinCount)
+                ?? AddAccessor(baseName, -1, null,
+                    skinningInfo.IntVertices is null
+                        ? skinningInfo.BoneMappings
+                            .Select(x => new Vector4(
+                                x.Weight[0], x.Weight[1], x.Weight[2], x.Weight[3]))
+                            .ToArray()
+                        : skinningInfo.Ext2IntMap
+                            .Select(x => skinningInfo.IntVertices[x])
+                            .Select(x => new Vector4(
+                                x.BoneMapping.Weight[0], x.BoneMapping.Weight[1], x.BoneMapping.Weight[2], x.BoneMapping.Weight[3]))
+                            .ToArray());
+        }
+
+        baseName = $"{rootNode.Name}/bone/joint";
+        if (usePerSubsetExtraction)
+        {
+            var subsets = geometrySubsets ?? [];
+            var numberOfElements = subsets.Sum(x => x.NumVertices);
+
+            joints =
+                GetAccessorOrDefault(baseName, 0, numberOfElements)
+                ?? AddAccessor(
+                    baseName,
+                    -1,
+                    null,
+                    skinningInfo is { HasIntToExtMapping: true, IntVertices: { } }
+                        ? subsets
+                            .SelectMany(subset => Enumerable
+                                .Range(subset.FirstVertex, subset.NumVertices)
+                                .Select(i => skinningInfo.IntVertices[skinningInfo.Ext2IntMap[i]])
+                                .Select(x => new TypedVec4<ushort>(
+                                    x.BoneMapping.BoneIndex[0], x.BoneMapping.BoneIndex[1], x.BoneMapping.BoneIndex[2], x.BoneMapping.BoneIndex[3])))
+                            .ToArray()
+                        : subsets
+                            .SelectMany(subset => Enumerable
+                                .Range(subset.FirstVertex, subset.NumVertices)
+                                .Select(i => skinningInfo.BoneMappings[i])
+                                .Select(x => new TypedVec4<ushort>(
+                                    (ushort)x.BoneIndex[0], (ushort)x.BoneIndex[1], (ushort)x.BoneIndex[2],
+                                    (ushort)x.BoneIndex[3])))
+                            .ToArray());
+        }
+        else
+        {
+            var skinCount = skinningInfo.IntVertices is null ? skinningInfo.BoneMappings.Count : skinningInfo.Ext2IntMap.Count;
+
+            joints =
+                GetAccessorOrDefault(baseName, 0, skinCount)
+                ?? AddAccessor(
+                    baseName,
+                    -1,
+                    null,
+                    skinningInfo is { HasIntToExtMapping: true, IntVertices: { } }
+                        ? skinningInfo.Ext2IntMap
+                            .Select(x => skinningInfo.IntVertices[x])
+                            .Select(x => new TypedVec4<ushort>(
+                                x.BoneMapping.BoneIndex[0], x.BoneMapping.BoneIndex[1], x.BoneMapping.BoneIndex[2], x.BoneMapping.BoneIndex[3]))
+                            .ToArray()
+                        : skinningInfo.BoneMappings
+                            .Select(x => new TypedVec4<ushort>(
+                                (ushort)x.BoneIndex[0], (ushort)x.BoneIndex[1], (ushort)x.BoneIndex[2],
+                                (ushort)x.BoneIndex[3]))
+                            .ToArray());
+        }
+
+        baseName = $"{rootNode.Name}/inverseBindMatrix";
+        var inverseBindMatricesAccessor =
+            GetAccessorOrDefault(baseName, 0, skinningInfo.CompiledBones.Count)
+            ?? AddAccessor(baseName, -1, null,
+                skinningInfo.CompiledBones.Select(x => SwapAxes(Matrix4x4.Transpose(x.BindPoseMatrix))).ToArray());
+
+        newSkin = new GltfSkin
+        {
+            InverseBindMatrices = inverseBindMatricesAccessor,
+            Joints = skinningInfo.CompiledBones.Select(x => controllerIdToNodeIndex[x.ControllerID]).ToList(),
+            Name = $"{rootNode.Name}/skin",
+            Skeleton = controllerIdToNodeIndex.Values.Min()  // Root bone node
+        };
+        return true;
     }
 
     protected bool CreateGltfNode(
@@ -64,14 +385,28 @@ public partial class BaseGltfRenderer
         ChunkNode cryNode,
         bool omitSkins)
     {
+        // Create shared dictionary for skeleton - will be populated by first skinned mesh
+        // and reused by subsequent meshes to avoid duplicate skeletons
+        var controllerIdToNodeIndex = new Dictionary<uint, int>();
+        return CreateGltfNode(out node, cryData, cryNode, omitSkins, controllerIdToNodeIndex);
+    }
+
+    /// <summary>
+    /// Recursive method to add a gltf node to the nodes array with shared skeleton dictionary.
+    /// </summary>
+    private bool CreateGltfNode(
+        [MaybeNullWhen(false)] out GltfNode node,
+        CryEngine cryData,
+        ChunkNode cryNode,
+        bool omitSkins,
+        Dictionary<uint, int> controllerIdToNodeIndex)
+    {
         if (Args.IsNodeNameExcluded(cryNode.Name))
         {
             node = null;
             Log.D("NodeChunk[{0}]: Excluded.", cryNode.Name);
             return false;
         }
-
-        var controllerIdToNodeIndex = new Dictionary<uint, int>();
 
         // Create this node and add to GltfRoot.Nodes
         // Use the transformed matrix directly to preserve correct coordinate transformation
@@ -104,9 +439,10 @@ public partial class BaseGltfRenderer
         }
 
         // For each child, recursively call this method to add the child to GltfRoot.Nodes.
+        // Pass the shared controllerIdToNodeIndex so all meshes use the same skeleton.
         foreach (ChunkNode cryChildNode in cryNode.Children)
         {
-            if (!CreateGltfNode(out GltfNode? childNode, cryData, cryChildNode, omitSkins))
+            if (!CreateGltfNode(out GltfNode? childNode, cryData, cryChildNode, omitSkins, controllerIdToNodeIndex))
                 continue;
 
             node.Children.Add(Root.Nodes.Count);
@@ -215,12 +551,21 @@ public partial class BaseGltfRenderer
                             .ToArray());
         }
 
-        // Build bone index to node index mapping first
+        // Build bone index to node index mapping
+        // If skeleton already exists (controllerIdToNodeIndex is populated), reuse those nodes
         var boneIndexToNodeIndex = new Dictionary<int, int>();
+        bool skeletonAlreadyExists = controllerIdToNodeIndex.Count > 0;
 
         for (int boneIndex = 0; boneIndex < skinningInfo.CompiledBones.Count; boneIndex++)
         {
             var bone = skinningInfo.CompiledBones[boneIndex];
+
+            // Check if this bone's node already exists (from a previous mesh)
+            if (controllerIdToNodeIndex.TryGetValue(bone.ControllerID, out int existingNodeIndex))
+            {
+                boneIndexToNodeIndex[boneIndex] = existingNodeIndex;
+                continue;
+            }
 
             // Compute local transform using same approach as USD renderer
             Matrix4x4 localMatrix;
@@ -281,38 +626,41 @@ public partial class BaseGltfRenderer
             controllerIdToNodeIndex[bone.ControllerID] = nodeIndex;
         }
 
-        // Now set up parent-child relationships using bone index
-        for (int boneIndex = 0; boneIndex < skinningInfo.CompiledBones.Count; boneIndex++)
+        // Only set up parent-child relationships if we created new skeleton nodes
+        if (!skeletonAlreadyExists)
         {
-            var bone = skinningInfo.CompiledBones[boneIndex];
-            var nodeIndex = boneIndexToNodeIndex[boneIndex];
+            for (int boneIndex = 0; boneIndex < skinningInfo.CompiledBones.Count; boneIndex++)
+            {
+                var bone = skinningInfo.CompiledBones[boneIndex];
+                var nodeIndex = boneIndexToNodeIndex[boneIndex];
 
-            if (bone.ParentBone == null)
-            {
-                // Root bone
-                CurrentScene.Nodes.Add(nodeIndex);
-            }
-            else
-            {
-                // Find parent bone index
-                var parentBoneIndex = skinningInfo.CompiledBones.IndexOf(bone.ParentBone);
-                if (parentBoneIndex >= 0 && boneIndexToNodeIndex.TryGetValue(parentBoneIndex, out var parentNodeIndex))
+                if (bone.ParentBone == null)
                 {
-                    if (parentNodeIndex != nodeIndex)
-                    {
-                        Root.Nodes[parentNodeIndex].Children.Add(nodeIndex);
-                    }
-                    else
-                    {
-                        Log.W("Bone[{0}]: Self-reference detected, treating as root", bone.BoneName);
-                        CurrentScene.Nodes.Add(nodeIndex);
-                    }
+                    // Root bone
+                    CurrentScene.Nodes.Add(nodeIndex);
                 }
                 else
                 {
-                    Log.W("Bone[{0}]: Parent bone '{1}' not found in bone list, treating as root",
-                        bone.BoneName, bone.ParentBone.BoneName);
-                    CurrentScene.Nodes.Add(nodeIndex);
+                    // Find parent bone index
+                    var parentBoneIndex = skinningInfo.CompiledBones.IndexOf(bone.ParentBone);
+                    if (parentBoneIndex >= 0 && boneIndexToNodeIndex.TryGetValue(parentBoneIndex, out var parentNodeIndex))
+                    {
+                        if (parentNodeIndex != nodeIndex)
+                        {
+                            Root.Nodes[parentNodeIndex].Children.Add(nodeIndex);
+                        }
+                        else
+                        {
+                            Log.W("Bone[{0}]: Self-reference detected, treating as root", bone.BoneName);
+                            CurrentScene.Nodes.Add(nodeIndex);
+                        }
+                    }
+                    else
+                    {
+                        Log.W("Bone[{0}]: Parent bone '{1}' not found in bone list, treating as root",
+                            bone.BoneName, bone.ParentBone.BoneName);
+                        CurrentScene.Nodes.Add(nodeIndex);
+                    }
                 }
             }
         }
