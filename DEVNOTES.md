@@ -349,7 +349,50 @@ When implementing a new `ChunkController_XXX`:
 
 ### Star Citizen #ivo Animation Format (IN PROGRESS)
 
-**Status**: Rotation animation parsing implemented and working. Position animation skipped (compression not decoded). Armature still has issues - translations correct in edit mode but wrong in pose/object mode.
+**Status**: Rotation animation parsing implemented and working. Position animation skipped (compression not decoded). Both USD and glTF renderers have Ivo DBA animation support, but there's a double-transform issue on child meshes.
+
+#### Ivo DBA Animation - Double Transform Issue (UNRESOLVED)
+
+**Test Asset**: `BEHR_LaserCannon_S2.cga` with `BEHR_LaserCannon_S2.dba`
+
+**Symptoms**:
+- Body mesh: Correct position in all modes (edit, object, pose)
+- Barrel mesh: Double transform - positioned too far in +Y and -Z
+- Both USD and glTF exports have the **same issue**, suggesting the problem is in model reading, not rendering
+- Animation playback looks correct (barrel recoil motion is correct relative to body)
+- When `skel:animationSource` is removed from USD, geometry is correct
+
+**Investigation Done**:
+1. Fixed mesh hierarchy in USD - meshes now at SkelRoot level as siblings of Skeleton
+2. Meshes have identity transforms - all positioning should come from skeletal skinning
+3. Added CRC32 bone name hashes for Ivo animation bone matching
+4. Implemented `WriteIvoDbaAnimations` in glTF renderer
+
+**Observations**:
+- glTF imports older CryEngine (ChCr/CryTek) animations perfectly
+- USD still has minor issues with older formats too
+- Issue appears specific to Ivo format skeletal animation
+
+**Hypothesis**: The problem is likely in how Ivo model skinning data is being read or interpreted, not in the renderers. Possibilities:
+1. BindPoseMatrix calculation different for Ivo format
+2. Bone hierarchy interpretation issue
+3. Animation bone-to-vertex mapping using wrong indices
+4. Rest pose vs animated pose calculation
+
+**Files Involved**:
+- `CgfConverter/CryEngineCore/Chunks/ChunkIvoDBAData_900.cs` - Ivo DBA parsing
+- `CgfConverter/CryEngineCore/Chunks/ChunkIvoDBAMetadata_900.cs` - Ivo DBA metadata
+- `CgfConverter/Models/Structs/IvoAnimationStructs.cs` - Animation block structures
+- `CgfConverter/Renderers/USD/UsdRenderer.Animation.cs` - USD Ivo animation export
+- `CgfConverter/Renderers/Gltf/BaseGltfRenderer.Animation.cs` - glTF Ivo animation export
+
+**Next Steps** (when returning to this):
+1. Compare Ivo BindPoseMatrix values to non-Ivo models
+2. Check if Ivo skinning uses different bone index conventions
+3. Investigate if animation applies transforms differently for Ivo format
+4. Test with simpler Ivo model that has single mesh (no child meshes)
+
+---
 
 **Test Asset**: `aloprat_skel.chr` with 13 CAF animations from `aloprat/*.caf`
 

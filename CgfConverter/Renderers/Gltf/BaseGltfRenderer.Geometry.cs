@@ -141,6 +141,18 @@ public partial class BaseGltfRenderer
             var nodeIndex = AddNode(boneNode);
             boneIndexToNodeIndex[boneIndex] = nodeIndex;
             controllerIdToNodeIndex[bone.ControllerID] = nodeIndex;
+
+            // Also add CRC32 hash of bone name for Ivo animation matching
+            // Ivo animations use bone hashes (CRC32) instead of controller IDs
+            if (!string.IsNullOrEmpty(bone.BoneName))
+            {
+                var crc32Original = Crc32CryEngine.Compute(bone.BoneName);
+                controllerIdToNodeIndex.TryAdd(crc32Original, nodeIndex);
+
+                var crc32Lower = Crc32CryEngine.Compute(bone.BoneName.ToLowerInvariant());
+                if (crc32Lower != crc32Original)
+                    controllerIdToNodeIndex.TryAdd(crc32Lower, nodeIndex);
+            }
         }
 
         // Set up bone parent-child relationships
@@ -238,6 +250,7 @@ public partial class BaseGltfRenderer
         // Write animations using the skeleton mapping
         _ = WriteAnimations(cryData.Animations, controllerIdToNodeIndex);
         _ = WriteCafAnimations(cryData.CafAnimations, controllerIdToNodeIndex);
+        _ = WriteIvoDbaAnimations(cryData.Animations, controllerIdToNodeIndex);
     }
 
     /// <summary>
@@ -482,6 +495,7 @@ public partial class BaseGltfRenderer
         {
             _ = WriteAnimations(cryData.Animations, controllerIdToNodeIndex);
             _ = WriteCafAnimations(cryData.CafAnimations, controllerIdToNodeIndex);
+            _ = WriteIvoDbaAnimations(cryData.Animations, controllerIdToNodeIndex);
         }
 
         // For each child, recursively call this method to add the child to GltfRoot.Nodes.
@@ -670,6 +684,18 @@ public partial class BaseGltfRenderer
             var nodeIndex = AddNode(boneNode);
             boneIndexToNodeIndex[boneIndex] = nodeIndex;
             controllerIdToNodeIndex[bone.ControllerID] = nodeIndex;
+
+            // Also add CRC32 hash of bone name for Ivo animation matching
+            // Ivo animations use bone hashes (CRC32) instead of controller IDs
+            if (!string.IsNullOrEmpty(bone.BoneName))
+            {
+                var crc32Original = Crc32CryEngine.Compute(bone.BoneName);
+                controllerIdToNodeIndex.TryAdd(crc32Original, nodeIndex);
+
+                var crc32Lower = Crc32CryEngine.Compute(bone.BoneName.ToLowerInvariant());
+                if (crc32Lower != crc32Original)
+                    controllerIdToNodeIndex.TryAdd(crc32Lower, nodeIndex);
+            }
         }
 
         // Only set up parent-child relationships if we created new skeleton nodes
