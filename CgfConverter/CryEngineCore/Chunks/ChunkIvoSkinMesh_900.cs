@@ -137,40 +137,50 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                     break;
                 case DatastreamType.IVOTANGENTS:
                     bytesPerElement = b.ReadUInt32();
-                    Datastream<Quaternion> tangents = new(
-                        DatastreamType.IVOTANGENTS,
-                        meshDetails.NumberOfVertices,
-                        bytesPerElement,
-                        new Quaternion[meshDetails.NumberOfVertices]);
-                    Datastream<Quaternion> bitangents = new(
-                        DatastreamType.IVOTANGENTS,
-                        meshDetails.NumberOfVertices,
-                        bytesPerElement,
-                        new Quaternion[meshDetails.NumberOfVertices]);
-
                     if (bytesPerElement == 8)
                     {
+                        // 8-byte format uses smallest-three quaternion encoding for TBN matrix
+                        Datastream<Vector3> tangentNormals = new(
+                            DatastreamType.NORMALS,
+                            meshDetails.NumberOfVertices,
+                            bytesPerElement,
+                            new Vector3[meshDetails.NumberOfVertices]);
+
                         for (int i = 0; i < meshDetails.NumberOfVertices; i++)
                         {
-                            tangents.Data[i] = b.ReadQuaternion(InputType.SNorm);
+                            var frame = b.ReadIvoTangentFrame();
+                            var (normal, _, _) = frame.Decode();
+                            tangentNormals.Data[i] = normal;
                         }
+                        Normals = tangentNormals;
                     }
-                    else if (tangents.BytesPerElement == 16)
+                    else if (bytesPerElement == 16)
                     {
+                        Datastream<Quaternion> tangents = new(
+                            DatastreamType.IVOTANGENTS,
+                            meshDetails.NumberOfVertices,
+                            bytesPerElement,
+                            new Quaternion[meshDetails.NumberOfVertices]);
+                        Datastream<Quaternion> bitangents = new(
+                            DatastreamType.IVOTANGENTS,
+                            meshDetails.NumberOfVertices,
+                            bytesPerElement,
+                            new Quaternion[meshDetails.NumberOfVertices]);
+
                         for (int i = 0; i < meshDetails.NumberOfVertices; i++)
                         {
                             tangents.Data[i] = b.ReadQuaternion(InputType.SNorm);
                             bitangents.Data[i] = b.ReadQuaternion(InputType.SNorm);
                         }
+                        Tangents = tangents;
+                        BiTangents = bitangents;
                     }
                     else
-                        throw new NotSupportedException($"Unsupported tangents format: {tangents.BytesPerElement}");
-                    Tangents = tangents;
-                    BiTangents = bitangents;
+                        throw new NotSupportedException($"Unsupported tangents format: {bytesPerElement}");
                     b.AlignTo(8);
                     break;
                 case DatastreamType.IVOQTANGENTS:
-                    // For Ivo files, these are qtangents using SNORM (int16 I think).  8 bytes.
+                    // IVOQTANGENTS uses the same smallest-three format as IVOTANGENTS when 8 bytes
                     bytesPerElement = b.ReadUInt32();
                     Datastream<Quaternion> qtangents = new(
                         DatastreamType.IVOTANGENTS,
@@ -184,18 +194,19 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                         new Vector3[meshDetails.NumberOfVertices]);
                     if (qtangents.BytesPerElement == 8)
                     {
+                        // Use IvoTangentFrame for 8-byte format (smallest-three encoding)
                         for (int i = 0; i < meshDetails.NumberOfVertices; i++)
                         {
-                            Quaternion q = b.ReadQuaternion(InputType.SNorm);
-                            qtangents.Data[i] = q;
-                            normals2.Data[i] = q.GetNormalFromQTangent();
+                            var frame = b.ReadIvoTangentFrame();
+                            var (normal, _, _) = frame.Decode();
+                            normals2.Data[i] = normal;
                         }
                     }
                     else if (qtangents.BytesPerElement == 16)
                     {
                         for (int i = 0; i < meshDetails.NumberOfVertices; i++)
                         {
-                            // TODO: Finish this or ignore.
+                            // 16-byte format uses direct quaternion
                             Quaternion q = b.ReadQuaternion(InputType.Single);
                             qtangents.Data[i] = q;
                             normals2.Data[i] = q.GetNormalFromQTangent();

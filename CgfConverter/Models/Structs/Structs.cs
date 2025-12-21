@@ -709,3 +709,151 @@ public struct SmallTree64BitExtQuat
         return new Quaternion(comp[0], comp[1], comp[2], comp[3]);
     }
 }
+
+/// <summary>
+/// 8-byte tangent frame format used in Star Citizen's #ivo geometry files.
+/// Encodes a full TBN (Tangent-Bitangent-Normal) matrix using smallest-three quaternion compression.
+/// </summary>
+public struct IvoTangentFrame
+{
+    private const float SCALE = 722.0f;
+
+    public ushort Word0;
+    public ushort Word1;
+    public ushort Word2;
+    public ushort Word3;
+
+    /// <summary>
+    /// Decodes the tangent frame into TBN vectors.
+    /// </summary>
+    /// <returns>A tuple containing the Normal, Tangent, and Bitangent vectors.</returns>
+    public readonly (Vector3 Normal, Vector3 Tangent, Vector3 Bitangent) Decode()
+    {
+        // Combine words into 32-bit values
+        uint value1 = Word0 | ((uint)Word1 << 16);
+        uint value2 = Word2 | ((uint)Word3 << 16);
+
+        // Extract dropped index and raw components from first value (10-10-10-2 format)
+        int droppedIndex = (int)((value1 >> 30) & 0x3);
+        int aRaw = (int)(value1 & 0x3FF);
+        int bRaw = (int)((value1 >> 10) & 0x3FF);
+        int cRaw = (int)((value1 >> 20) & 0x3FF);
+
+        // Sign-extend 10-bit values (two's complement)
+        if (aRaw > 511) aRaw -= 1024;
+        if (bRaw > 511) bRaw -= 1024;
+        if (cRaw > 511) cRaw -= 1024;
+
+        // Normalize to float range [-0.707, 0.707]
+        float a = aRaw / SCALE;
+        float b = bRaw / SCALE;
+        float c = cRaw / SCALE;
+
+        // Reconstruct dropped component using unit quaternion constraint
+        float sumSq = a * a + b * b + c * c;
+        float d = sumSq < 1.0f ? MathF.Sqrt(1.0f - sumSq) : 0.0f;
+
+        // Build quaternion based on dropped index (which component was omitted)
+        float qx, qy, qz, qw;
+        switch (droppedIndex)
+        {
+            case 0: qx = d; qy = a; qz = b; qw = c; break;  // X was dropped
+            case 1: qx = a; qy = d; qz = b; qw = c; break;  // Y was dropped
+            case 2: qx = a; qy = b; qz = d; qw = c; break;  // Z was dropped
+            default: qx = a; qy = b; qz = c; qw = d; break; // W was dropped
+        }
+
+        // Extract TBN matrix columns from quaternion
+        // Tangent (first column of rotation matrix)
+        float Tx = 1.0f - 2.0f * (qy * qy + qz * qz);
+        float Ty = 2.0f * (qx * qy + qw * qz);
+        float Tz = 2.0f * (qx * qz - qw * qy);
+
+        // Bitangent (second column of rotation matrix)
+        float Bx = 2.0f * (qx * qy - qw * qz);
+        float By = 1.0f - 2.0f * (qx * qx + qz * qz);
+        float Bz = 2.0f * (qy * qz + qw * qx);
+
+        // Normal (third column of rotation matrix)
+        float Nx = 2.0f * (qx * qz + qw * qy);
+        float Ny = 2.0f * (qy * qz - qw * qx);
+        float Nz = 1.0f - 2.0f * (qx * qx + qy * qy);
+
+        Vector3 tangent = new(Tx, Ty, Tz);
+        Vector3 bitangent = new(Bx, By, Bz);
+        Vector3 normalColumn = new(Nx, Ny, Nz);
+
+        // Extract column selector from second value (bits 30-31)
+        int columnSelector = (int)((value2 >> 30) & 0x3);
+
+        // Select final normal based on column selector
+        Vector3 normal;
+        switch (columnSelector)
+        {
+            case 0:
+                // Negative Bitangent
+                normal = -bitangent;
+                break;
+            case 1:
+                // Heuristic: use -Normal if more horizontal, else -Tangent
+                if (MathF.Abs(Nz) < 0.5f)
+                    normal = -normalColumn;
+                else
+                    normal = -tangent;
+                break;
+            case 2:
+                // Positive Normal (direct)
+                normal = normalColumn;
+                break;
+            case 3:
+                // Negative Tangent
+                normal = -tangent;
+                break;
+            default:
+                normal = normalColumn;
+                break;
+        }
+
+        return (normal, tangent, bitangent);
+    }
+
+    /// <summary>
+    /// Decodes with diagnostic information for debugging.
+    /// </summary>
+    public readonly string GetDiagnostics()
+    {
+        uint value1 = Word0 | ((uint)Word1 << 16);
+        uint value2 = Word2 | ((uint)Word3 << 16);
+
+        int droppedIndex = (int)((value1 >> 30) & 0x3);
+        int aRaw = (int)(value1 & 0x3FF);
+        int bRaw = (int)((value1 >> 10) & 0x3FF);
+        int cRaw = (int)((value1 >> 20) & 0x3FF);
+
+        // Sign-extend
+        int aSigned = aRaw > 511 ? aRaw - 1024 : aRaw;
+        int bSigned = bRaw > 511 ? bRaw - 1024 : bRaw;
+        int cSigned = cRaw > 511 ? cRaw - 1024 : cRaw;
+
+        float a = aSigned / SCALE;
+        float b = bSigned / SCALE;
+        float c = cSigned / SCALE;
+        float sumSq = a * a + b * b + c * c;
+        float d = sumSq < 1.0f ? MathF.Sqrt(1.0f - sumSq) : 0.0f;
+
+        float qx, qy, qz, qw;
+        switch (droppedIndex)
+        {
+            case 0: qx = d; qy = a; qz = b; qw = c; break;
+            case 1: qx = a; qy = d; qz = b; qw = c; break;
+            case 2: qx = a; qy = b; qz = d; qw = c; break;
+            default: qx = a; qy = b; qz = c; qw = d; break;
+        }
+
+        int colSelector = (int)((value2 >> 30) & 0x3);
+
+        return $"dropped={droppedIndex}, raw=({aRaw},{bRaw},{cRaw}), signed=({aSigned},{bSigned},{cSigned}), " +
+               $"abc=({a:F4},{b:F4},{c:F4}), d={d:F4}, sumSq={sumSq:F4}, " +
+               $"quat=({qx:F4},{qy:F4},{qz:F4},{qw:F4}), colSel={colSelector}";
+    }
+}

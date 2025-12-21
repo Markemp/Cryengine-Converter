@@ -348,6 +348,12 @@ public class ManualRenderTests
         RenderToUsd($@"{sc41ObjectDir}\objects\fps_weapons\attachments\magazines\behr\mgzn_s04_behr_40gb_01.cga", sc41ObjectDir);
     }
 
+    [TestMethod]
+    public void Teapot_USD()
+    {
+        RenderToUsd($@"{sc41ObjectDir}\objects\default\teapot.cgf", sc41ObjectDir);
+    }
+
     #endregion
 
     #region Helper Methods
