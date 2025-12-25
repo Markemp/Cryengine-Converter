@@ -168,6 +168,8 @@ The `BuildRestRotationMapping()` and `BuildRestTranslationMapping()` methods ext
 - Each animation exported as separate `.usda` file (e.g., `model_anim_walk.usda`) for NLA workflow
 - Blender only reads the single bound animation per file, hence separate files needed
 
+**glTF Frame Rate**: glTF stores animation times in seconds (not frames), dividing by 30fps during export. When Blender imports, it converts seconds back to frames using Blender's scene frame rate. If Blender is set to 24fps (default), keyframes will appear at different frame numbers than the original. **Set Blender to 30fps before importing glTF animations** to match the original frame timing. USD doesn't have this issue because it includes `TimeCodesPerSecond = 30` metadata.
+
 ---
 
 ## Animation Data Flow: CryEngine → USD (Reference for New Chunk Support)
@@ -349,9 +351,9 @@ When implementing a new `ChunkController_XXX`:
 
 ### Star Citizen #ivo Animation Format (IN PROGRESS)
 
-**Status**: Rotation animation parsing implemented and working. Position animation skipped (compression not decoded). Both USD and glTF renderers have Ivo DBA animation support, but there's a double-transform issue on child meshes.
+**Status**: Rotation animation parsing implemented and working. Position animation skipped (compression not decoded). Both USD and glTF renderers have Ivo DBA animation support. Double-transform issue on child meshes has been diagnosed and solution documented (see below).
 
-#### Ivo DBA Animation - Double Transform Issue (UNRESOLVED)
+#### Ivo DBA Animation - Double Transform Issue (RESOLVED)
 
 **Test Asset**: `BEHR_LaserCannon_S2.cga` with `BEHR_LaserCannon_S2.dba`
 
@@ -362,35 +364,83 @@ When implementing a new `ChunkController_XXX`:
 - Animation playback looks correct (barrel recoil motion is correct relative to body)
 - When `skel:animationSource` is removed from USD, geometry is correct
 
-**Investigation Done**:
-1. Fixed mesh hierarchy in USD - meshes now at SkelRoot level as siblings of Skeleton
-2. Meshes have identity transforms - all positioning should come from skeletal skinning
-3. Added CRC32 bone name hashes for Ivo animation bone matching
-4. Implemented `WriteIvoDbaAnimations` in glTF renderer
+**Root Cause**: Animation values stored as deltas, not absolute local transforms.
 
-**Observations**:
-- glTF imports older CryEngine (ChCr/CryTek) animations perfectly
-- USD still has minor issues with older formats too
-- Issue appears specific to Ivo format skeletal animation
+CryEngine/Ivo stores animation values as **deltas from rest pose**:
+```
+animation_translation = (0, 0.045, 0)  // small recoil delta
+animation_rotation = identity           // no rotation change
+```
 
-**Hypothesis**: The problem is likely in how Ivo model skinning data is being read or interpreted, not in the renderers. Possibilities:
-1. BindPoseMatrix calculation different for Ivo format
-2. Bone hierarchy interpretation issue
-3. Animation bone-to-vertex mapping using wrong indices
-4. Rest pose vs animated pose calculation
+But USD SkelAnimation expects **absolute joint-local transforms**:
+```
+usd_translation = rest_local_translation + animation_delta
+usd_rotation = rest_local_rotation * animation_delta_rotation
+```
 
-**Files Involved**:
-- `CgfConverter/CryEngineCore/Chunks/ChunkIvoDBAData_900.cs` - Ivo DBA parsing
-- `CgfConverter/CryEngineCore/Chunks/ChunkIvoDBAMetadata_900.cs` - Ivo DBA metadata
-- `CgfConverter/Models/Structs/IvoAnimationStructs.cs` - Animation block structures
-- `CgfConverter/Renderers/USD/UsdRenderer.Animation.cs` - USD Ivo animation export
-- `CgfConverter/Renderers/Gltf/BaseGltfRenderer.Animation.cs` - glTF Ivo animation export
+When Blender imports USD, it computes animation curves as:
+```cpp
+// From Blender's usd_skel_convert.cc lines 244-246
+bone_xform = joint_local_xforms[i] * joint_local_bind_xforms[i].GetInverse();
+```
 
-**Next Steps** (when returning to this):
-1. Compare Ivo BindPoseMatrix values to non-Ivo models
-2. Check if Ivo skinning uses different bone index conventions
-3. Investigate if animation applies transforms differently for Ivo format
-4. Test with simpler Ivo model that has single mesh (no child meshes)
+If the animation provides delta `(0, 0.045, 0)` but local_bind is `(0, -0.876, 0.41)`:
+```
+delta = (0, 0.045, 0) * inv((0, -0.876, 0.41))
+      = (0, 0.045, 0) * (0, 0.876, -0.41)
+      = (0, 0.92, -0.41)  // HUGE offset - the "doubling" effect!
+```
+
+**Solution**: Convert animation deltas to absolute local transforms before writing to USD.
+
+For **translations** (additive):
+```csharp
+usd_translation = rest_local_translation + animation_delta_translation;
+// Example: (0, -0.876, 0.41) + (0, 0.045, 0) = (0, -0.831, 0.41)
+```
+
+For **rotations** (quaternion multiplication):
+```csharp
+usd_rotation = rest_local_rotation * animation_delta_rotation;
+// Order matters: rest * delta applies delta in local space
+// Try delta * rest if results are wrong (parent space)
+```
+
+For **scales** (multiplicative):
+```csharp
+usd_scale = rest_local_scale * animation_delta_scale;
+// Usually (1,1,1) * (1,1,1) = (1,1,1) for most animations
+```
+
+**Corrected USD Output Example**:
+```usda
+// WRONG - delta values only:
+float3[] translations.timeSamples = {
+    0: [(0, 0.045113, 0)],   // recoil delta
+    1: [(0, 0, 0)],          // "rest" but actually zero
+}
+
+// CORRECT - absolute local transforms:
+float3[] translations.timeSamples = {
+    0: [(0, -0.831381, 0.410605)],   // rest + recoil delta
+    1: [(0, -0.876494, 0.410605)],   // actual rest position
+}
+```
+
+**Implementation Notes**:
+- The rest local transform can be obtained from `restTransforms` array in the skeleton
+- For bones without animation tracks, use rest transform directly (no conversion needed)
+- This applies to ALL Ivo animations, not just additive ones - the Ivo format stores deltas by default
+
+**Files to Modify**:
+- `CgfConverter/Renderers/USD/UsdRenderer.Animation.cs` - Add rest transform to Ivo animation values
+- `CgfConverter/Renderers/Gltf/BaseGltfRenderer.Animation.cs` - Same fix for glTF export
+
+**Verification**:
+1. Export USDA with animation
+2. Check that animation translation values match rest position (not near-zero)
+3. Import into Blender - child bones should stay attached to parents
+4. Play animation - should see small recoil motion, not large offset
 
 ---
 

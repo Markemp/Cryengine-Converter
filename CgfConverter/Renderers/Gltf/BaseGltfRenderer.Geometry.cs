@@ -250,7 +250,7 @@ public partial class BaseGltfRenderer
         // Write animations using the skeleton mapping
         _ = WriteAnimations(cryData.Animations, controllerIdToNodeIndex);
         _ = WriteCafAnimations(cryData.CafAnimations, controllerIdToNodeIndex);
-        _ = WriteIvoDbaAnimations(cryData.Animations, controllerIdToNodeIndex);
+        _ = WriteIvoDbaAnimations(cryData.Animations, controllerIdToNodeIndex, skinningInfo);
     }
 
     /// <summary>
@@ -495,7 +495,7 @@ public partial class BaseGltfRenderer
         {
             _ = WriteAnimations(cryData.Animations, controllerIdToNodeIndex);
             _ = WriteCafAnimations(cryData.CafAnimations, controllerIdToNodeIndex);
-            _ = WriteIvoDbaAnimations(cryData.Animations, controllerIdToNodeIndex);
+            _ = WriteIvoDbaAnimations(cryData.Animations, controllerIdToNodeIndex, cryData.SkinningInfo);
         }
 
         // For each child, recursively call this method to add the child to GltfRoot.Nodes.

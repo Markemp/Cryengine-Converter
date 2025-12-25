@@ -354,6 +354,17 @@ public class ManualRenderTests
         RenderToUsd($@"{sc41ObjectDir}\objects\default\teapot.cgf", sc41ObjectDir);
     }
 
+    [TestMethod]
+    public void AEGS_Avenger_LandingGear_Back_USD()
+    {
+        RenderToUsd($@"{sc41ObjectDir}\Objects\Spaceships\Ships\AEGS\LandingGear\Avenger\AEGS_Avenger_LandingGear_Back_CHR.chr", sc41ObjectDir);
+    }
+
+    [TestMethod]
+    public void AEGS_Avenger_LandingGear_Back_Gltf()
+    {
+        RenderToGltf($@"{sc41ObjectDir}\Objects\Spaceships\Ships\AEGS\LandingGear\Avenger\AEGS_Avenger_LandingGear_Back_CHR.chr", sc41ObjectDir);
+    }
     #endregion
 
     #region Helper Methods

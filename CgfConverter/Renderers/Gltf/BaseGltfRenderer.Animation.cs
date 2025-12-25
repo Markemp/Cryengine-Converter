@@ -6,6 +6,7 @@ using CgfConverter.CryEngineCore;
 using CgfConverter.Models;
 using CgfConverter.Models.Structs;
 using CgfConverter.Renderers.Gltf.Models;
+using CgfConverter.Utilities;
 
 namespace CgfConverter.Renderers.Gltf;
 
@@ -291,13 +292,28 @@ public partial class BaseGltfRenderer
     /// <summary>
     /// Writes Ivo DBA animations (from Star Citizen #ivo .dba files) to glTF.
     /// Ivo DBA uses ChunkIvoDBAData + ChunkIvoDBAMetadata instead of ChunkController_905.
+    ///
+    /// IMPORTANT: Ivo animations store values as DELTAS from rest pose, not absolute
+    /// local transforms. glTF expects absolute joint-local transforms.
+    /// We must convert: absolute = rest + delta (translation), absolute = rest * delta (rotation)
     /// </summary>
     private int WriteIvoDbaAnimations(
         IEnumerable<Model>? animationContainers,
-        IReadOnlyDictionary<uint, int> controllerIdToNodeIndex)
+        IReadOnlyDictionary<uint, int> controllerIdToNodeIndex,
+        SkinningInfo? skinningInfo = null)
     {
         if (animationContainers is null)
             return 0;
+
+        // Build rest pose mappings for converting Ivo deltas to absolute transforms
+        // Ivo animations store deltas from rest pose, but glTF expects absolute local transforms
+        var controllerIdToRestTranslation = new Dictionary<uint, Vector3>();
+        var controllerIdToRestRotation = new Dictionary<uint, Quaternion>();
+
+        if (skinningInfo?.CompiledBones is not null)
+        {
+            BuildIvoRestPoseMappings(skinningInfo, controllerIdToRestTranslation, controllerIdToRestRotation);
+        }
 
         var numAnimationsWritten = 0;
 
@@ -320,7 +336,8 @@ public partial class BaseGltfRenderer
                     ? Path.GetFileNameWithoutExtension(animNames[i])
                     : $"animation_{i}";
 
-                if (!CreateIvoDbaAnimation(out var newAnimation, block, animName, controllerIdToNodeIndex))
+                if (!CreateIvoDbaAnimation(out var newAnimation, block, animName, controllerIdToNodeIndex,
+                    controllerIdToRestTranslation, controllerIdToRestRotation))
                     continue;
 
                 AddAnimation(newAnimation);
@@ -333,13 +350,91 @@ public partial class BaseGltfRenderer
     }
 
     /// <summary>
+    /// Builds rest pose translation and rotation mappings for Ivo animation conversion.
+    /// Rest pose values are in CryEngine space (before axis swap).
+    /// </summary>
+    private void BuildIvoRestPoseMappings(
+        SkinningInfo skinningInfo,
+        Dictionary<uint, Vector3> controllerIdToRestTranslation,
+        Dictionary<uint, Quaternion> controllerIdToRestRotation)
+    {
+        foreach (var bone in skinningInfo.CompiledBones)
+        {
+            // Compute local transform in CryEngine space (same as skeleton creation)
+            Matrix4x4 localMatrix;
+
+            if (bone.ParentBone == null)
+            {
+                if (!Matrix4x4.Invert(bone.BindPoseMatrix, out localMatrix))
+                {
+                    localMatrix = Matrix4x4.Identity;
+                }
+            }
+            else
+            {
+                if (Matrix4x4.Invert(bone.BindPoseMatrix, out var childBoneToWorld))
+                {
+                    localMatrix = bone.ParentBone.BindPoseMatrix * childBoneToWorld;
+                }
+                else
+                {
+                    localMatrix = Matrix4x4.Identity;
+                }
+            }
+
+            // Extract translation from column 4 (CryEngine convention: M14, M24, M34)
+            var restTranslation = new Vector3(localMatrix.M14, localMatrix.M24, localMatrix.M34);
+
+            // Extract rotation from the 3x3 rotation part
+            // Build a proper rotation matrix by normalizing the 3x3 part
+            var rotMatrix = new Matrix4x4(
+                localMatrix.M11, localMatrix.M12, localMatrix.M13, 0,
+                localMatrix.M21, localMatrix.M22, localMatrix.M23, 0,
+                localMatrix.M31, localMatrix.M32, localMatrix.M33, 0,
+                0, 0, 0, 1);
+
+            Quaternion restRotation;
+            if (Matrix4x4.Decompose(rotMatrix, out _, out restRotation, out _))
+            {
+                // Success
+            }
+            else
+            {
+                restRotation = Quaternion.Identity;
+            }
+
+            // Store by controller ID
+            controllerIdToRestTranslation[bone.ControllerID] = restTranslation;
+            controllerIdToRestRotation[bone.ControllerID] = restRotation;
+
+            // Also store by CRC32 hash of bone name for Ivo matching
+            if (!string.IsNullOrEmpty(bone.BoneName))
+            {
+                var crc32 = Crc32CryEngine.Compute(bone.BoneName);
+                controllerIdToRestTranslation.TryAdd(crc32, restTranslation);
+                controllerIdToRestRotation.TryAdd(crc32, restRotation);
+
+                var crc32Lower = Crc32CryEngine.Compute(bone.BoneName.ToLowerInvariant());
+                if (crc32Lower != crc32)
+                {
+                    controllerIdToRestTranslation.TryAdd(crc32Lower, restTranslation);
+                    controllerIdToRestRotation.TryAdd(crc32Lower, restRotation);
+                }
+            }
+        }
+    }
+
+    /// <summary>
     /// Creates a glTF animation from an Ivo DBA animation block.
+    /// Converts Ivo delta values to absolute transforms before axis swap.
     /// </summary>
     private bool CreateIvoDbaAnimation(
         out GltfAnimation newAnimation,
         IvoAnimationBlock block,
         string animName,
-        IReadOnlyDictionary<uint, int> controllerIdToNodeIndex)
+        IReadOnlyDictionary<uint, int> controllerIdToNodeIndex,
+        IReadOnlyDictionary<uint, Vector3> controllerIdToRestTranslation,
+        IReadOnlyDictionary<uint, Quaternion> controllerIdToRestRotation)
     {
         newAnimation = new GltfAnimation { Name = animName };
 
@@ -351,6 +446,14 @@ public partial class BaseGltfRenderer
                 Log.D("IvoDBA[{0}]: Bone hash 0x{1:X08} not found in skeleton", animName, boneHash);
                 continue;
             }
+
+            // Get rest pose for this bone (in CryEngine space)
+            var restTranslation = controllerIdToRestTranslation.TryGetValue(boneHash, out var restT)
+                ? restT
+                : Vector3.Zero;
+            var restRotation = controllerIdToRestRotation.TryGetValue(boneHash, out var restR)
+                ? restR
+                : Quaternion.Identity;
 
             // Get rotation and position data for this bone
             block.Rotations.TryGetValue(boneHash, out var rotations);
@@ -375,9 +478,15 @@ public partial class BaseGltfRenderer
                         $"ivo_dba/{animName}/pos_time/{boneHash:X08}", -1, null,
                         keyTimes.Select(t => (t - startTime) / 30f).ToArray());
 
+                    // Ivo DBA stores ABSOLUTE local positions, not deltas
+                    // Just swap axes for glTF coordinate system
+                    var absolutePositions = positions
+                        .Select(SwapAxesForPosition)
+                        .ToArray();
+
                     var posAccessor = AddAccessor(
                         $"ivo_dba/{animName}/pos/{boneHash:X08}", -1, null,
-                        positions.Select(SwapAxesForPosition).ToArray());
+                        absolutePositions);
 
                     newAnimation.Samplers.Add(new GltfAnimationSampler
                     {
@@ -414,9 +523,15 @@ public partial class BaseGltfRenderer
                         $"ivo_dba/{animName}/rot_time/{boneHash:X08}", -1, null,
                         keyTimes.Select(t => (t - startTime) / 30f).ToArray());
 
+                    // Ivo DBA stores ABSOLUTE local rotations, not deltas
+                    // Just swap axes for glTF coordinate system
+                    var absoluteRotations = rotations
+                        .Select(SwapAxesForAnimations)
+                        .ToArray();
+
                     var rotAccessor = AddAccessor(
                         $"ivo_dba/{animName}/rot/{boneHash:X08}", -1, null,
-                        rotations.Select(SwapAxesForAnimations).ToArray());
+                        absoluteRotations);
 
                     newAnimation.Samplers.Add(new GltfAnimationSampler
                     {

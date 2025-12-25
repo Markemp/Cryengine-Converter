@@ -50,7 +50,6 @@ internal sealed class ChunkIvoDBAData_900 : ChunkIvoDBAData
             }
 
             int numBones = header.BoneCount;
-            long blockEnd = blockStart + header.DataSize;
 
             HelperMethods.Log(LogLevelEnum.Debug, $"ChunkIvoDBAData_900: Block {blockIndex} - {numBones} bones, size={header.DataSize}");
 
@@ -85,6 +84,12 @@ internal sealed class ChunkIvoDBAData_900 : ChunkIvoDBAData
                 };
             }
 
+            // Save position after controller headers - this is where the next block starts!
+            // DBA format: headers are sequential, keyframe data is at the end accessed via offsets.
+            // The next #dba block starts right after the current block's controller headers,
+            // NOT at blockEnd (which is where this block's keyframe data extends to).
+            long positionAfterHeaders = b.BaseStream.Position;
+
             // Create animation block with parsed data
             var animBlock = new IvoAnimationBlock
             {
@@ -94,13 +99,13 @@ internal sealed class ChunkIvoDBAData_900 : ChunkIvoDBAData
                 ControllerOffsets = controllerOffsets
             };
 
-            // Parse keyframe data for each bone
+            // Parse keyframe data for each bone (this seeks around within the data area)
             ParseAnimationData(b, animBlock);
 
             AnimationBlocks.Add(animBlock);
 
-            // Seek to end of block for next iteration
-            b.BaseStream.Seek(blockEnd, SeekOrigin.Begin);
+            // Restore position to after headers - next block starts here, not at blockEnd
+            b.BaseStream.Seek(positionAfterHeaders, SeekOrigin.Begin);
             blockIndex++;
         }
 

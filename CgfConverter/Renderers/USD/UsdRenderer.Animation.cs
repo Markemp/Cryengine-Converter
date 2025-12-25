@@ -66,24 +66,51 @@ public partial class UsdRenderer
                     var animNames = ivoDbaMetadata?.AnimPaths ?? [];
                     var animEntries = ivoDbaMetadata?.Entries ?? [];
 
+                    // Log animation names from metadata
+                    if (animNames.Count > 0)
+                    {
+                        Log.D($"Ivo DBA metadata has {animNames.Count} animation paths:");
+                        for (int j = 0; j < animNames.Count; j++)
+                        {
+                            Log.D($"  [{j}] {animNames[j]}");
+                        }
+                    }
+                    else
+                    {
+                        Log.D("Ivo DBA has no metadata animation paths");
+                    }
+
+                    int ivoSuccessCount = 0;
+                    int ivoFailCount = 0;
+
                     for (int i = 0; i < ivoDbaData.AnimationBlocks.Count; i++)
                     {
                         var block = ivoDbaData.AnimationBlocks[i];
                         var animName = i < animNames.Count
                             ? Path.GetFileNameWithoutExtension(animNames[i])
                             : $"animation_{i}";
-                        var fps = i < animEntries.Count ? animEntries[i].FramesPerSecond : 30;
+                        var metaEntry = i < animEntries.Count ? animEntries[i] : (IvoDBAMetaEntry?)null;
+
+                        Log.D($"Processing Ivo DBA animation block {i}: '{animName}'");
 
                         var (skelAnim, endFrame) = CreateSkelAnimationFromIvoDBA(
-                            block, animName, fps, controllerIdToJointPath);
+                            block, animName, metaEntry, controllerIdToJointPath);
 
                         if (skelAnim is not null)
                         {
                             animations.Add(skelAnim);
                             maxEndFrame = Math.Max(maxEndFrame, endFrame);
-                            Log.D($"Created Ivo DBA animation: {animName} ({endFrame} frames)");
+                            Log.D($"SUCCESS: Created Ivo DBA animation: {animName} ({endFrame} frames)");
+                            ivoSuccessCount++;
+                        }
+                        else
+                        {
+                            Log.D($"FAILED: Could not create Ivo DBA animation: {animName}");
+                            ivoFailCount++;
                         }
                     }
+
+                    Log.D($"Ivo DBA summary: {ivoSuccessCount} succeeded, {ivoFailCount} failed out of {ivoDbaData.AnimationBlocks.Count} blocks");
                 }
             }
         }
@@ -286,29 +313,50 @@ public partial class UsdRenderer
     /// <summary>
     /// Creates a SkelAnimation prim from an Ivo DBA animation block.
     /// Ivo DBA uses bone hashes (CRC32) instead of controller IDs.
+    ///
+    /// Ivo animations may store values as deltas from a reference pose (StartPosition/StartRotation
+    /// in metadata), or as absolute values. The metadata's StartPosition/StartRotation appears to
+    /// be for the root bone reference.
     /// </summary>
     private (UsdSkelAnimation? skelAnim, int endFrame) CreateSkelAnimationFromIvoDBA(
         IvoAnimationBlock block,
         string animName,
-        int fps,
+        IvoDBAMetaEntry? metaEntry,
         Dictionary<uint, string> controllerIdToJointPath)
     {
-        // Build rest pose mapping for bones without position animation
+        // Get reference pose from metadata (for root bone) and skeleton rest pose (for other bones)
+        var refPosition = metaEntry?.StartPosition ?? Vector3.Zero;
+        var refRotation = metaEntry?.StartRotation ?? Quaternion.Identity;
+
+        Log.D($"IvoDBA[{animName}]: Reference pose from metadata: pos=({refPosition.X:F3}, {refPosition.Y:F3}, {refPosition.Z:F3}), rot=({refRotation.X:F3}, {refRotation.Y:F3}, {refRotation.Z:F3}, {refRotation.W:F3})");
+
+        // Build rest pose mappings for bones without animation
         var jointPathToRestTranslation = BuildRestTranslationMapping();
+        var jointPathToRestRotation = BuildRestRotationMapping();
 
         // Map bone hashes to joint paths
         var animatedJoints = new List<string>();
         var tracksByJointPath = new Dictionary<string, (List<Quaternion>? rotations, List<float>? rotTimes,
             List<Vector3>? positions, List<float>? posTimes)>();
 
+        int matchedBones = 0;
+        int unmatchedBones = 0;
+        int bonesWithData = 0;
+        var unmatchedHashes = new List<uint>();
+
+        Log.D($"IvoDBA[{animName}]: Processing {block.BoneHashes.Length} bone hashes, skeleton has {controllerIdToJointPath.Count} controller IDs");
+
         foreach (var boneHash in block.BoneHashes)
         {
             // Try to find joint path by bone hash (same as controller ID for Ivo)
             if (!controllerIdToJointPath.TryGetValue(boneHash, out var jointPath))
             {
-                Log.D($"IvoDBA[{animName}]: Bone hash 0x{boneHash:X08} not found in skeleton");
+                unmatchedBones++;
+                unmatchedHashes.Add(boneHash);
                 continue;
             }
+
+            matchedBones++;
 
             block.Rotations.TryGetValue(boneHash, out var rotations);
             block.RotationTimes.TryGetValue(boneHash, out var rotTimes);
@@ -319,14 +367,31 @@ public partial class UsdRenderer
             if ((rotations is not null && rotations.Count > 0) ||
                 (positions is not null && positions.Count > 0))
             {
+                bonesWithData++;
                 animatedJoints.Add(jointPath);
                 tracksByJointPath[jointPath] = (rotations, rotTimes, positions, posTimes);
             }
         }
 
+        Log.D($"IvoDBA[{animName}]: Matched {matchedBones}/{block.BoneHashes.Length} bones, {bonesWithData} have animation data, {unmatchedBones} unmatched");
+
+        if (unmatchedBones > 0 && unmatchedBones <= 10)
+        {
+            // Log individual unmatched hashes if there aren't too many
+            foreach (var hash in unmatchedHashes)
+            {
+                Log.D($"IvoDBA[{animName}]: Unmatched bone hash 0x{hash:X08}");
+            }
+        }
+        else if (unmatchedBones > 10)
+        {
+            // Just log the first few if there are many
+            Log.D($"IvoDBA[{animName}]: First 5 unmatched hashes: {string.Join(", ", unmatchedHashes.Take(5).Select(h => $"0x{h:X08}"))}");
+        }
+
         if (animatedJoints.Count == 0)
         {
-            Log.W($"IvoDBA[{animName}]: No valid bone tracks found");
+            Log.W($"IvoDBA[{animName}]: No valid bone tracks found (matched={matchedBones}, withData={bonesWithData}, unmatched={unmatchedBones})");
             return (null, 0);
         }
 
@@ -357,6 +422,9 @@ public partial class UsdRenderer
         var rotationSamples = new SortedDictionary<float, List<Quaternion>>();
         var scaleSamples = new SortedDictionary<float, List<Vector3>>();
 
+        // Log first bone's values to diagnose if Ivo stores absolute or delta values
+        bool loggedFirstBone = false;
+
         foreach (var frame in allFrames)
         {
             var translations = new List<Vector3>();
@@ -367,23 +435,56 @@ public partial class UsdRenderer
             {
                 var (trackRots, rotTimes, trackPos, posTimes) = tracksByJointPath[jointPath];
 
-                // Get rest translation for fallback
+                // Get rest pose for this joint
                 var restTranslation = jointPathToRestTranslation.TryGetValue(jointPath, out var restT)
                     ? restT
                     : Vector3.Zero;
+                var restRotation = jointPathToRestRotation.TryGetValue(jointPath, out var restR)
+                    ? restR
+                    : Quaternion.Identity;
 
                 // Sample position
-                Vector3 position = restTranslation;
+                Vector3 position;
                 if (trackPos is not null && trackPos.Count > 0)
                 {
-                    position = SampleIvoPosition(trackPos, posTimes, frame, restTranslation);
+                    var animValue = SampleIvoPositionDelta(trackPos, posTimes, frame);
+
+                    // Log first frame values for debugging
+                    if (frame == allFrames.Min())
+                    {
+                        Log.D($"  Bone '{jointPath}': rest=({restTranslation.X:F4}, {restTranslation.Y:F4}, {restTranslation.Z:F4}), " +
+                              $"anim=({animValue.X:F4}, {animValue.Y:F4}, {animValue.Z:F4})");
+                    }
+
+                    // Use rest + delta - animation values appear to be deltas from rest
+                    position = restTranslation + animValue;
+                }
+                else
+                {
+                    // No position animation - use rest translation for skeleton structure
+                    position = restTranslation;
                 }
 
                 // Sample rotation
-                Quaternion rotation = Quaternion.Identity;
+                Quaternion rotation;
                 if (trackRots is not null && trackRots.Count > 0)
                 {
-                    rotation = SampleIvoRotation(trackRots, rotTimes, frame);
+                    var animValue = Quaternion.Normalize(SampleIvoRotationDelta(trackRots, rotTimes, frame));
+
+                    // Log first frame values for debugging
+                    if (frame == allFrames.Min())
+                    {
+                        Log.D($"  Bone '{jointPath}': restRot=({restRotation.X:F4}, {restRotation.Y:F4}, {restRotation.Z:F4}, {restRotation.W:F4}), " +
+                              $"animRot=({animValue.X:F4}, {animValue.Y:F4}, {animValue.Z:F4}, {animValue.W:F4})");
+                    }
+
+                    // Use rest * delta - animation values appear to be deltas from rest
+                    rotation = Quaternion.Normalize(restRotation * animValue);
+                }
+                else
+                {
+                    // No rotation animation - use rest rotation for skeleton structure
+                    rotation = restRotation;
                 }
 
                 translations.Add(position);
@@ -410,12 +511,14 @@ public partial class UsdRenderer
     }
 
     /// <summary>
-    /// Samples position from Ivo animation data at a given frame.
+    /// Samples position delta from Ivo animation data at a given frame.
+    /// Returns the animation delta value (NOT absolute position).
+    /// Caller must add rest translation to convert to absolute: absolute = rest + delta
     /// </summary>
-    private static Vector3 SampleIvoPosition(List<Vector3> positions, List<float>? keyTimes, int frame, Vector3 restTranslation)
+    private static Vector3 SampleIvoPositionDelta(List<Vector3> positions, List<float>? keyTimes, int frame)
     {
         if (positions.Count == 0)
-            return restTranslation;
+            return Vector3.Zero;
 
         if (positions.Count == 1 || keyTimes is null || keyTimes.Count == 0)
             return positions[0];
@@ -441,9 +544,11 @@ public partial class UsdRenderer
     }
 
     /// <summary>
-    /// Samples rotation from Ivo animation data at a given frame.
+    /// Samples rotation delta from Ivo animation data at a given frame.
+    /// Returns the animation delta value (NOT absolute rotation).
+    /// Caller must multiply by rest rotation to convert to absolute: absolute = rest * delta
     /// </summary>
-    private static Quaternion SampleIvoRotation(List<Quaternion> rotations, List<float>? keyTimes, int frame)
+    private static Quaternion SampleIvoRotationDelta(List<Quaternion> rotations, List<float>? keyTimes, int frame)
     {
         if (rotations.Count == 0)
             return Quaternion.Identity;
@@ -521,8 +626,6 @@ public partial class UsdRenderer
 
             // Extract translation from the rest matrix
             // CryEngine matrices store translation in column 4 (M14, M24, M34), not row 4.
-            // Matrix3x4.ConvertToTransformMatrix() preserves this layout.
-            // System.Numerics.Matrix4x4.Translation reads M41, M42, M43 (row 4) which would be wrong.
             var translation = new Vector3(restMatrix.M14, restMatrix.M24, restMatrix.M34);
 
             // Sanity check: if translation values are garbage (very large), use zero
@@ -1040,10 +1143,10 @@ public partial class UsdRenderer
                         var animName = i < animNames.Count
                             ? Path.GetFileNameWithoutExtension(animNames[i])
                             : $"animation_{i}";
-                        var fps = i < animEntries.Count ? animEntries[i].FramesPerSecond : 30;
+                        var metaEntry = i < animEntries.Count ? animEntries[i] : (IvoDBAMetaEntry?)null;
 
                         var (skelAnim, endFrame) = CreateSkelAnimationFromIvoDBA(
-                            block, animName, fps, controllerIdToJointPath);
+                            block, animName, metaEntry, controllerIdToJointPath);
 
                         if (skelAnim is not null)
                         {
