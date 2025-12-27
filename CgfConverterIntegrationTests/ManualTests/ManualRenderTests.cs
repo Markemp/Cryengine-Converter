@@ -337,6 +337,12 @@ public class ManualRenderTests
     }
 
     [TestMethod]
+    public void brfl_fps_behr_p4ar_chr_Usd()
+    {
+        RenderToUsd($@"{sc41ObjectDir}\Objects\fps_weapons\weapons_v7\behr\rifle\p4ar\brfl_fps_behr_p4ar.chr", sc41ObjectDir);
+    }
+
+    [TestMethod]
     public void GLSN_Shiv_Door_Ramp_Cga_USD()
     {
         RenderToUsd($@"{sc41ObjectDir}\objects\spaceships\ships\GLSN\shiv\Maelstrom\GLSN_Shiv_Door_Ramp.cga", sc41ObjectDir);

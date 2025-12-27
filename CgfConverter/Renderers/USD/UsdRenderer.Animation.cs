@@ -443,21 +443,14 @@ public partial class UsdRenderer
                     ? restR
                     : Quaternion.Identity;
 
-                // Sample position
+                // Sample position - Ivo DBA stores position DELTAS (not absolute)
+                // Evidence: laser cannon barrel animation shows small delta values (~0.045)
+                // compared to rest position (~0.87). Bolt in p4ar also confirms this.
                 Vector3 position;
                 if (trackPos is not null && trackPos.Count > 0)
                 {
-                    var animValue = SampleIvoPositionDelta(trackPos, posTimes, frame);
-
-                    // Log first frame values for debugging
-                    if (frame == allFrames.Min())
-                    {
-                        Log.D($"  Bone '{jointPath}': rest=({restTranslation.X:F4}, {restTranslation.Y:F4}, {restTranslation.Z:F4}), " +
-                              $"anim=({animValue.X:F4}, {animValue.Y:F4}, {animValue.Z:F4})");
-                    }
-
-                    // Use rest + delta - animation values appear to be deltas from rest
-                    position = restTranslation + animValue;
+                    var animDelta = SampleIvoPositionDelta(trackPos, posTimes, frame);
+                    position = restTranslation + animDelta;
                 }
                 else
                 {
@@ -465,21 +458,15 @@ public partial class UsdRenderer
                     position = restTranslation;
                 }
 
-                // Sample rotation
+                // Sample rotation - Ivo DBA stores ABSOLUTE rotations (not deltas)
+                // Evidence: magAttach in p4ar rifle has rest rotation (0.1248, 0, 0, 0.9922),
+                // and animation frames 0-11 store the SAME value, not identity.
+                // If it were delta, identity would mean "no change". Storing rest value = absolute.
                 Quaternion rotation;
                 if (trackRots is not null && trackRots.Count > 0)
                 {
-                    var animValue = Quaternion.Normalize(SampleIvoRotationDelta(trackRots, rotTimes, frame));
-
-                    // Log first frame values for debugging
-                    if (frame == allFrames.Min())
-                    {
-                        Log.D($"  Bone '{jointPath}': restRot=({restRotation.X:F4}, {restRotation.Y:F4}, {restRotation.Z:F4}, {restRotation.W:F4}), " +
-                              $"animRot=({animValue.X:F4}, {animValue.Y:F4}, {animValue.Z:F4}, {animValue.W:F4})");
-                    }
-
-                    // Use rest * delta - animation values appear to be deltas from rest
-                    rotation = Quaternion.Normalize(restRotation * animValue);
+                    // Use animation value directly - it's the absolute local rotation
+                    rotation = Quaternion.Normalize(SampleIvoRotationDelta(trackRots, rotTimes, frame));
                 }
                 else
                 {
