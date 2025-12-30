@@ -1,39 +1,6 @@
 TODO File
 
-Currently at version 0.1, which can successfully export an obj file to the console, which can be cut/paste and 
-imported into Blender.
+2.0 release
+- Animations
+- USD support
 
-Version 0.8
-- Usage output  **COMPLETE** 7/30 
-- Switch implementation:  **COMPLETE** 8/1
-  - -flipUV (probably default on, since I've never had to not do this)
-  - -obj (export to obj) 
-  - -blend (export to .blend, to be implemented in 1.0) (can be used in conjunction with -obj)
-  - -output <filename> (where to write the output file; default to .cgf/.cga input directory)
-- Figure out how to convert 8 byte vertex info into 3 vertices **COMPLETE** 7/25
-- Refactor to use Where(a=>a.blahblah==blahblahblah) and clean up classes. **COMPLETE** 7/30
-- .mtl files:  Find the associated mtl file for the .cgf file from the MtlName chunk. **COMPLETE** 8/1
-- Add support for Cryengine 3.6 and newer files **COMPLETE** 8/1
-
-Version 0.9
-- .mtl files - convert Cryengine .mtl files to .obj .mtl files.  Better mtl file handling (search given obj dirs) **COMPLETE**
-- Break classes into separate files.      **COMPLETE**
-- Input validation, error checking, etc.  **COMPLETE**
-- Move version, id, type and offset so they are read from the chunk table, not the chunks.  **COMPLETE**  8/29/15
-- add build version into the output       **COMPLETE**
-- Bug fix so some .obj files import properly to Blender (exploded geometry issue)  **COMPLETE** 8/29
-- Output to a user defined file (default to <object name.obj>)    **COMPLETE** 12/2015
-- Icon for the exe. ** COMPLETE 9/18/17 **
-- Implement controller and meshphysics chunks ** COMPLETE 10/31/15 **
-- Collada exporter ** IN PROGRESS - 90% **
-
-Version 1.0
-- Implement animation files.
-- Implement armature files.  ** IN PROGRESS ** (Armatures imported, but can't export yet)
-
-Version 1.1
-- Export directly to .blend files  **IN PROGRESS**
-
-Version 1.2
-- TBD
-  

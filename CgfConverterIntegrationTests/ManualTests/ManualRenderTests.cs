@@ -257,36 +257,20 @@ public class ManualRenderTests
     }
 
     [TestMethod]
-    public void MWO_Pilot_AdditiveCaf_USD()
-    {
-        // Test additive CAF animation (joystick_down) - should be converted to absolute for proper import
-        // The animation name in chrparams is "additive_pilot_joystick_down" which loads from
-        // d:\depot\mwo\animations\characters\pilot\pilot_joystick_down.caf
-        RenderToUsd($@"{mwoObjectDir}\objects\characters\pilot\pilot.chr", mwoObjectDir);
-
-        // After rendering, the generated _anim_additive_pilot_joystick_down.usda file should have
-        // proper bone transforms (not zero translations) because the additive deltas are applied
-        // to rest poses during export.
-    }
-
-    [TestMethod]
     public void MWO_Turret_Collada()
     {
-        // Small animation file (~46KB) - good for testing Collada animation rest pose fallback
         RenderToCollada($@"{mwoObjectDir}\objects\gamemodes\turret\turret_a.chr", mwoObjectDir);
     }
 
     [TestMethod]
     public void MWO_Turret_USD()
     {
-        // Small animation file (~46KB) - good for testing USD animation export
         RenderToUsd($@"{mwoObjectDir}\objects\gamemodes\turret\turret_a.chr", mwoObjectDir);
     }
 
     [TestMethod]
     public void MWO_Turret_Gltf()
     {
-        // Small animation file (~46KB) - good for testing USD animation export
         RenderToGltf($@"{mwoObjectDir}\objects\gamemodes\turret\turret_a.chr", mwoObjectDir);
     }
 

@@ -45,6 +45,7 @@ public abstract class Chunk : IBinaryChunk
             ChunkType.SceneProps => Chunk.New<ChunkSceneProp>(version),
             ChunkType.MeshPhysicsData => Chunk.New<ChunkMeshPhysicsData>(version),
             ChunkType.BoneAnim => Chunk.New<ChunkBoneAnim>(version),
+            ChunkType.MotionParams => Chunk.New<ChunkMotionParameters>(version),
             // Compiled chunks
             ChunkType.CompiledBones => Chunk.New<ChunkCompiledBones>(version),
             ChunkType.CompiledPhysicalProxies => Chunk.New<ChunkCompiledPhysicalProxies>(version),

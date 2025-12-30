@@ -82,7 +82,8 @@ public enum ChunkType : uint    // complete
     BonesBoxes = 0xAAFC0004,        // unknown chunk
     FoliageInfo = 0xAAFC0005,       // unknown chunk
     GlobalAnimationHeaderCAF = 0xAAFC0007,
-    
+    MotionParams = 0x3002,
+
     // Star Citizen versions
     NodeSC = 0xCCCC100B,
     CompiledBonesSC = 0xCCCC1000,
