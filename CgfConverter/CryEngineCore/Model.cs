@@ -190,12 +190,15 @@ public class Model
         }
 
         // Set sizes for versions that don't have sizes (x0744 and x0900 chunk headers don't include size)
-        // Sort headers by offset to calculate sizes from adjacent chunks
-        var sortedHeaders = chunkHeaders.OrderBy(h => h.Offset).ToList();
-        for (int i = 0; i < sortedHeaders.Count - 1; i++)
+        // Use a temporary sorted array to calculate sizes efficiently without modifying original list order
+        // This avoids the expensive ToList() allocation from the previous implementation
+        if (FileVersion == FileVersion.x0744 || FileVersion == FileVersion.x0900)
         {
-            if (FileVersion == FileVersion.x0744 || FileVersion == FileVersion.x0900)
-                sortedHeaders[i].Size = sortedHeaders[i + 1].Offset - sortedHeaders[i].Offset;
+            var sortedHeaders = chunkHeaders.OrderBy(h => h.Offset).ToArray();
+            for (int i = 0; i < sortedHeaders.Length - 1; i++)
+            {
+                sortedHeaders[i].Size = (uint)(sortedHeaders[i + 1].Offset - sortedHeaders[i].Offset);
+            }
         }
     }
 
