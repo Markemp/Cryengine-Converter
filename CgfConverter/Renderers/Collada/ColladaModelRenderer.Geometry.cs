@@ -237,10 +237,11 @@ public partial class ColladaModelRenderer
 
             for (int j = 0; j < numberOfMeshSubsets; j++) // Need to make a new Triangles entry for each submesh.
             {
+                var submatName = GetSafeSubmaterialName(nodeChunk, subsets[j].MatID);
                 triangles[j] = new ColladaTriangles
                 {
                     Count = subsets[j].NumIndices / 3,
-                    Material = GetMaterialName(nodeChunk.MaterialFileName, nodeChunk.Materials.SubMaterials[subsets[j].MatID].Name) + "-material"
+                    Material = GetMaterialName(nodeChunk.MaterialFileName, submatName) + "-material"
                 };
 
                 // Create the inputs.  vertex, normal, texcoord, color

@@ -189,11 +189,13 @@ public class Model
             chunkHeaders.Add(header);
         }
 
-        // Set sizes for versions that don't have sizes
-        for (int i = 0; i < NumChunks; i++)
+        // Set sizes for versions that don't have sizes (x0744 and x0900 chunk headers don't include size)
+        // Sort headers by offset to calculate sizes from adjacent chunks
+        var sortedHeaders = chunkHeaders.OrderBy(h => h.Offset).ToList();
+        for (int i = 0; i < sortedHeaders.Count - 1; i++)
         {
-            if (FileVersion == FileVersion.x0744 &&  i < NumChunks - 2)
-                chunkHeaders[i].Size = chunkHeaders[i + 1].Offset - chunkHeaders[i].Offset;
+            if (FileVersion == FileVersion.x0744 || FileVersion == FileVersion.x0900)
+                sortedHeaders[i].Size = sortedHeaders[i + 1].Offset - sortedHeaders[i].Offset;
         }
     }
 
