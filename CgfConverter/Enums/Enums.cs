@@ -115,6 +115,15 @@ public enum ChunkType : uint    // complete
     IvoDBAData = 0x194FBC50,        // #dba animation data blocks (was SpeedInfoSC)
     IvoDBAMetadata = 0xF7351608,    // DBA metadata/string table
 
+    // Star Citizen 4.5+ new chunk types (introduced Jan 2026)
+    // Analysis: These chunks can be safely skipped - they're metadata or LOD data
+    IvoAssetMetadata = 0xBE5E493E,  // SC 4.5 - Asset metadata: counts + 2x 128-bit GUIDs (128 bytes)
+    IvoLodDistances = 0x9351756F,   // SC 4.5 - LOD distance thresholds: count + float array
+    IvoLodMeshData = 0x58DE1772,    // SC 4.5 - LOD mesh data for LOD1-4 (can be very large ~50MB+)
+    IvoBoundingData = 0x2B7ECF9F,   // SC 4.5 - Bounding/animation data (floats + sparse data)
+    IvoChunkTerminator = 0xE0181074, // SC 4.5 - End-of-file marker in .cgam files (0 bytes)
+    IvoMtlNameVariant = 0x83353533, // SC 4.5 - Material name variant (rare, similar to MtlNameIvo320)
+
     BinaryXmlDataSC = 0xcccbf004,
 }
 
