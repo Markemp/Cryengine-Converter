@@ -164,12 +164,28 @@ public partial class CryEngine
                     return;
                 }
 
-                foreach (var node in comboChunk.NodeMeshCombos)
+                // Pre-group mesh subsets by NodeParentIndex to avoid O(n*m) lookups in the loop
+                var subsetsByNodeIndex = new Dictionary<int, List<MeshSubset>>();
+                if (skinMesh?.MeshSubsets != null)
                 {
-                    var index = comboChunk.NodeMeshCombos.IndexOf(node);
+                    foreach (var subset in skinMesh.MeshSubsets)
+                    {
+                        int nodeIndex = (int)(subset.NodeParentIndex ?? 0);
+                        if (!subsetsByNodeIndex.TryGetValue(nodeIndex, out var list))
+                        {
+                            list = new List<MeshSubset>();
+                            subsetsByNodeIndex[nodeIndex] = list;
+                        }
+                        list.Add(subset);
+                    }
+                }
 
-                    // Create meshsubsets for this node.  This is all meshSubsets where the meshParent equals the node index
-                    var subsets = skinMesh?.MeshSubsets?.Where(x => x.NodeParentIndex == index).ToList() ?? [];
+                for (int index = 0; index < comboChunk.NodeMeshCombos.Count; index++)
+                {
+                    var node = comboChunk.NodeMeshCombos[index];
+
+                    // Get meshsubsets for this node from pre-grouped dictionary (O(1) lookup)
+                    var subsets = subsetsByNodeIndex.TryGetValue(index, out var nodeSubsets) ? nodeSubsets : [];
 
                     ChunkMesh chunkMesh = new ChunkMesh_802();
 
@@ -213,9 +229,9 @@ public partial class CryEngine
                 }
 
                 // build node hierarchy
-                foreach (var node in Nodes)
+                for (int index = 0; index < Nodes.Count; index++)
                 {
-                    var index = Nodes.IndexOf(node);
+                    var node = Nodes[index];
                     if (node.ParentNodeIndex != 0xFFFF && node.ParentNodeIndex >= 0 && node.ParentNodeIndex < Nodes.Count)
                         node.ParentNode = Nodes[node.ParentNodeIndex];
                     else if (node.ParentNodeIndex == 0xFFFF || node.ParentNodeIndex == -1)
@@ -224,10 +240,11 @@ public partial class CryEngine
                         Log.W($"Node {node.Name} has invalid parent index {node.ParentNodeIndex}");
 
                     // Add all child nodes to Children.  A child is where the parent index is current index
-                    var childNodes = Nodes.Where(x => x.ParentNodeIndex == index);
-                    foreach (var child in childNodes)
+                    // Optimize: iterate once instead of using LINQ Where which creates intermediate collections
+                    foreach (var childNode in Nodes)
                     {
-                        node.Children.Add(child);
+                        if (childNode.ParentNodeIndex == index)
+                            node.Children.Add(childNode);
                     }
                 }
             }
@@ -254,13 +271,29 @@ public partial class CryEngine
         }
         else // Traditional Crydata.  Build geometry info from the models.
         {
+            // Pre-group children by parent ID to avoid O(n²) lookups
+            var childrenByParentId = new Dictionary<int, List<ChunkNode>>();
+            foreach (var childNode in Models[0].NodeMap.Values)
+            {
+                if (childNode.ParentNodeID != -1 && childNode.ParentNodeID != ~0)
+                {
+                    if (!childrenByParentId.TryGetValue(childNode.ParentNodeID, out var children))
+                    {
+                        children = new List<ChunkNode>();
+                        childrenByParentId[childNode.ParentNodeID] = children;
+                    }
+                    children.Add(childNode);
+                }
+            }
+
             // Separate datastream for each node.
             // For each ChunkNode in model[0], add it to the Nodes list.
             foreach (var node in Models[0].NodeMap.Values)
             {
                 // Add helper or mesh data to the node
                 var objectChunk = Models[0].ChunkMap[node.ObjectNodeID];
-                node.Children = Models[0].NodeMap.Values.Where(x => x.ParentNodeID == node.ID).ToList();
+                // Get children from pre-grouped dictionary (O(1) lookup)
+                node.Children = childrenByParentId.TryGetValue(node.ID, out var nodeChildren) ? nodeChildren : new List<ChunkNode>();
 
                 if (objectChunk is ChunkHelper helper)
                 {
