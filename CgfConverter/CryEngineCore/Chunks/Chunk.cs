@@ -87,7 +87,7 @@ public abstract class Chunk : IBinaryChunk
             ChunkType.IvoLodMeshData => new ChunkUnknown(),      // LOD1-4 meshes - skip (we export LOD0)
             ChunkType.IvoBoundingData => new ChunkUnknown(),     // Bounding data - skip
             ChunkType.IvoChunkTerminator => new ChunkUnknown(),  // EOF marker - skip
-            ChunkType.IvoMtlNameVariant => new ChunkUnknown(),   // Material variant - skip (rare)
+            ChunkType.IvoMtlNameVariant => Chunk.New<ChunkMtlName>(version),   // Material variant - same structure as MtlNameIvo320
             _ => new ChunkUnknown(),
         };
     }
