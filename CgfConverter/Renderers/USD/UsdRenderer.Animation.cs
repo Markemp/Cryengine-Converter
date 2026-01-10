@@ -76,9 +76,7 @@ public partial class UsdRenderer
                         }
                     }
                     else
-                    {
                         Log.D("Ivo DBA has no metadata animation paths");
-                    }
 
                     int ivoSuccessCount = 0;
                     int ivoFailCount = 0;
@@ -681,6 +679,19 @@ public partial class UsdRenderer
             if (Matrix4x4.Decompose(restMatrix, out _, out var rotation, out _))
             {
                 mapping[jointPath] = rotation;
+
+                // Debug: compare non-transposed vs transposed rest rotation for turret_arm
+                if (bone.ControllerID == 0x9384FC75)
+                {
+                    var transposedMatrix = Matrix4x4.Transpose(restMatrix);
+                    if (Matrix4x4.Decompose(transposedMatrix, out _, out var transposedRot, out _))
+                    {
+                        Log.I($"turret_arm rest rotation comparison:");
+                        Log.I($"  Non-transposed (animation): ({rotation.X:F6}, {rotation.Y:F6}, {rotation.Z:F6}, {rotation.W:F6})");
+                        Log.I($"  Transposed (skeleton):      ({transposedRot.X:F6}, {transposedRot.Y:F6}, {transposedRot.Z:F6}, {transposedRot.W:F6})");
+                        Log.I($"  Conjugate of non-transposed: ({-rotation.X:F6}, {-rotation.Y:F6}, {-rotation.Z:F6}, {rotation.W:F6})");
+                    }
+                }
             }
             else
             {

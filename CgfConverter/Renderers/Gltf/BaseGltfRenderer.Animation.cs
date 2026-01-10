@@ -128,6 +128,28 @@ public partial class BaseGltfRenderer
                         $"animation/rotation/{i}", -1, null,
                         animChunk.KeyRotations[i].Select(SwapAxesForAnimations).ToArray()));
 
+            // Debug: log turret_arm rotation (CtrlID = 0x9384FC75)
+            foreach (var anim in animChunk.Animations)
+            {
+                foreach (var controller in anim.Controllers)
+                {
+                    if (controller.ControllerID == 0x9384FC75 && controller.HasRotTrack)
+                    {
+                        var rawRot = animChunk.KeyRotations[controller.RotTrack][0];
+                        var swappedRot = SwapAxesForAnimations(rawRot);
+                        Log.I($"glTF DBA turret_arm frame 0: raw quat = ({rawRot.X:F6}, {rawRot.Y:F6}, {rawRot.Z:F6}, {rawRot.W:F6})");
+                        Log.I($"glTF DBA turret_arm frame 0: swapped quat = ({swappedRot.X:F6}, {swappedRot.Y:F6}, {swappedRot.Z:F6}, {swappedRot.W:F6})");
+                        var angle = 2 * System.Math.Acos(System.Math.Clamp(rawRot.W, -1, 1)) * 180 / System.Math.PI;
+                        var axis = new Vector3(rawRot.X, rawRot.Y, rawRot.Z);
+                        if (axis.LengthSquared() > 0.0001f)
+                            axis = Vector3.Normalize(axis);
+                        Log.I($"glTF DBA turret_arm frame 0: raw axis=({axis.X:F3}, {axis.Y:F3}, {axis.Z:F3}), angle={angle:F2}°");
+                        goto doneLogging; // Only log once
+                    }
+                }
+            }
+            doneLogging:;
+
             var names = GltfRendererUtilities.StripCommonParentPaths(
                 animChunk.Animations.Select(x => Path.ChangeExtension(x.Name, null)).ToList());
 

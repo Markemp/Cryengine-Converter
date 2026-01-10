@@ -667,6 +667,21 @@ public partial class BaseGltfRenderer
                 translation = Vector3.Zero;
             }
 
+            // Debug: log turret_arm skeleton transform (CtrlID = 0x9384FC75)
+            if (bone.ControllerID == 0x9384FC75)
+            {
+                Log.I($"glTF skeleton turret_arm localMatrix (before transpose/swap):");
+                Log.I($"  [{localMatrix.M11:F6}, {localMatrix.M12:F6}, {localMatrix.M13:F6}, {localMatrix.M14:F6}]");
+                Log.I($"  [{localMatrix.M21:F6}, {localMatrix.M22:F6}, {localMatrix.M23:F6}, {localMatrix.M24:F6}]");
+                Log.I($"  [{localMatrix.M31:F6}, {localMatrix.M32:F6}, {localMatrix.M33:F6}, {localMatrix.M34:F6}]");
+                Log.I($"  [{localMatrix.M41:F6}, {localMatrix.M42:F6}, {localMatrix.M43:F6}, {localMatrix.M44:F6}]");
+                if (Matrix4x4.Decompose(localMatrix, out _, out var rawRot, out _))
+                {
+                    Log.I($"glTF skeleton turret_arm raw rotation (from localMatrix): ({rawRot.X:F6}, {rawRot.Y:F6}, {rawRot.Z:F6}, {rawRot.W:F6})");
+                }
+                Log.I($"glTF skeleton turret_arm final rotation (after swap): ({rotation.X:F6}, {rotation.Y:F6}, {rotation.Z:F6}, {rotation.W:F6})");
+            }
+
             var boneNode = new GltfNode
             {
                 Name = bone.BoneName,
