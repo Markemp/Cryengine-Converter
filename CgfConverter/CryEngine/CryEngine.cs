@@ -1287,43 +1287,7 @@ public partial class CryEngine
             }
 
             // General case: Resolve material based on MaterialID
-            ChunkMtlName? mtlNameChunk = null;
-            
-            // For IVO format (0x900) files, MaterialID is a submaterial index, not a chunk ID
-            // We need to find the ChunkMtlName chunk whose MaterialIndices array contains this MaterialID
-            if (Models.Count > 0 && Models[0].FileVersion == FileVersion.x0900)
-            {
-                // Check ChunkMtlName_900 and ChunkMtlNameVariant_900 for MaterialIndices
-                foreach (var chunk in Chunks.OfType<ChunkMtlName>())
-                {
-                    ushort[]? materialIndices = null;
-                    
-                    // Try to get MaterialIndices from ChunkMtlName_900
-                    if (chunk is ChunkMtlName_900 mtl900)
-                    {
-                        materialIndices = mtl900.MaterialIndices;
-                    }
-                    // Try to get MaterialIndices from ChunkMtlNameVariant_900
-                    else if (chunk is ChunkMtlNameVariant_900 mtlVariant900)
-                    {
-                        materialIndices = mtlVariant900.MaterialIndices;
-                    }
-                    
-                    // Check if this chunk's MaterialIndices array contains the node's MaterialID
-                    if (materialIndices != null && materialIndices.Contains((ushort)node.MaterialID))
-                    {
-                        mtlNameChunk = chunk;
-                        break;
-                    }
-                }
-            }
-            
-            // Fallback: Try matching by chunk ID (for non-IVO formats or if MaterialIndices match failed)
-            if (mtlNameChunk == null)
-            {
-                mtlNameChunk = Chunks.OfType<ChunkMtlName>().Where(x => x.ID == node.MaterialID).FirstOrDefault();
-            }
-            
+            var mtlNameChunk = Chunks.OfType<ChunkMtlName>().Where(x => x.ID == node.MaterialID).FirstOrDefault();
             var mtlNameKey = Path.GetFileNameWithoutExtension(mtlNameChunk?.Name) ?? "default";
 
             if (Materials.ContainsKey(mtlNameKey))
