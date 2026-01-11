@@ -1,5 +1,4 @@
 using CgfConverter.CryEngineCore;
-using CgfConverter.Models;
 using CgfConverter.Models.Structs;
 using CgfConverter.Renderers.USD.Attributes;
 using CgfConverter.Renderers.USD.Models;
@@ -16,6 +15,24 @@ namespace CgfConverter.Renderers.USD;
 /// </summary>
 public partial class UsdRenderer
 {
+    #region Matrix Conversion
+
+    /// <summary>
+    /// Converts a CryEngine matrix to USD format by moving translation from column 4 to row 4.
+    /// CryEngine stores translation in (M14, M24, M34), USD expects it in (M41, M42, M43).
+    /// Unlike Transpose(), this preserves the rotation orientation.
+    /// </summary>
+    private static Matrix4x4 CryEngineToUsdMatrix(Matrix4x4 cryMatrix)
+    {
+        return new Matrix4x4(
+            cryMatrix.M11, cryMatrix.M12, cryMatrix.M13, 0,
+            cryMatrix.M21, cryMatrix.M22, cryMatrix.M23, 0,
+            cryMatrix.M31, cryMatrix.M32, cryMatrix.M33, 0,
+            cryMatrix.M14, cryMatrix.M24, cryMatrix.M34, 1);
+    }
+
+    #endregion
+
     #region Skeleton Methods
 
     /// <summary>Creates a USD skeleton hierarchy for skinned meshes.</summary>
@@ -49,9 +66,7 @@ public partial class UsdRenderer
 
             // Add stored controller ID if valid
             if (bone.ControllerID != 0xFFFFFFFF && bone.ControllerID != 0)
-            {
                 controllerIdToJointPath[bone.ControllerID] = jointPath;
-            }
 
             // Also add CRC32 hash of bone name for CAF matching
             // Different games use different conventions - add both original case and lowercase CRC32
@@ -89,9 +104,7 @@ public partial class UsdRenderer
         {
             var bone = compiledBones[compiledIndex];
             if (bonePathMap.TryGetValue(bone, out var path) && pathToJointIndex.TryGetValue(path, out var jointIndex))
-            {
                 compiledBoneIndexToJointIndex[compiledIndex] = jointIndex;
-            }
             else
             {
                 // Fallback to same index if bone wasn't found (shouldn't happen with valid data)
@@ -118,12 +131,10 @@ public partial class UsdRenderer
     /// <summary>Recursively builds joint path strings in USD format (e.g., "Bip01/bip_01_Pelvis/bip_01_Spine").</summary>
     private void BuildJointPaths(CompiledBone? bone, string parentPath, List<string> jointPaths, Dictionary<CompiledBone, string> bonePathMap)
     {
-        if (bone == null)
-            return;
+        if (bone == null) return;
 
         // Cycle detection: skip bones we've already processed
-        if (bonePathMap.ContainsKey(bone))
-            return;
+        if (bonePathMap.ContainsKey(bone)) return;
 
         // Clean bone name for USD compliance
         string cleanName = CleanPathString(bone.BoneName ?? "bone");
@@ -158,11 +169,10 @@ public partial class UsdRenderer
             {
                 // USD bindTransforms are world-space transforms (bone-to-world)
                 // CryEngine BindPoseMatrix is worldToBone, so we need to invert it
-                // Then transpose to convert from column-major to row-major for USD
+                // Transpose converts from CryEngine convention (translation in column 4)
+                // to USD convention (translation in row 4)
                 if (Matrix4x4.Invert(bone.BindPoseMatrix, out var boneToWorld))
-                {
                     bindTransforms.Add(Matrix4x4.Transpose(boneToWorld));
-                }
                 else
                 {
                     Log.W($"Failed to invert BindPoseMatrix for bone {bone.BoneName}, using identity");
@@ -170,10 +180,7 @@ public partial class UsdRenderer
                 }
             }
             else
-            {
-                // Fallback to identity matrix if bone not found
-                bindTransforms.Add(Matrix4x4.Identity);
-            }
+                bindTransforms.Add(Matrix4x4.Identity); // Fallback to identity matrix if bone not found
         }
 
         return bindTransforms;
@@ -201,9 +208,7 @@ public partial class UsdRenderer
                 {
                     // Root bone: local = world, invert BindPoseMatrix to get boneToWorld
                     if (Matrix4x4.Invert(bone.BindPoseMatrix, out var boneToWorld))
-                    {
                         restMatrix = boneToWorld;
-                    }
                     else
                     {
                         Log.W($"Failed to invert BindPoseMatrix for root bone {bone.BoneName}");
@@ -216,9 +221,7 @@ public partial class UsdRenderer
                     // localTransform = parentWorldToBone * childBoneToWorld
                     //                = parent.BindPoseMatrix * inverse(child.BindPoseMatrix)
                     if (Matrix4x4.Invert(bone.BindPoseMatrix, out var childBoneToWorld))
-                    {
                         restMatrix = bone.ParentBone.BindPoseMatrix * childBoneToWorld;
-                    }
                     else
                     {
                         Log.W($"Failed to invert BindPoseMatrix for bone {bone.BoneName}");
@@ -226,7 +229,24 @@ public partial class UsdRenderer
                     }
                 }
 
-                // Transpose to convert from column-major to row-major for USD
+                // Debug: log turret_arm rest transform (CtrlID = 0x9384FC75)
+                if (bone.ControllerID == 0x9384FC75)
+                {
+                    Log.I($"USD skeleton turret_arm restMatrix (CryEngine format):");
+                    Log.I($"  [{restMatrix.M11:F6}, {restMatrix.M12:F6}, {restMatrix.M13:F6}, {restMatrix.M14:F6}]");
+                    Log.I($"  [{restMatrix.M21:F6}, {restMatrix.M22:F6}, {restMatrix.M23:F6}, {restMatrix.M24:F6}]");
+                    Log.I($"  [{restMatrix.M31:F6}, {restMatrix.M32:F6}, {restMatrix.M33:F6}, {restMatrix.M34:F6}]");
+                    Log.I($"  [{restMatrix.M41:F6}, {restMatrix.M42:F6}, {restMatrix.M43:F6}, {restMatrix.M44:F6}]");
+                    if (Matrix4x4.Decompose(restMatrix, out var s, out var r, out var t))
+                    {
+                        Log.I($"USD skeleton turret_arm rest rotation (from restMatrix): ({r.X:F6}, {r.Y:F6}, {r.Z:F6}, {r.W:F6})");
+                        var angle = 2 * Math.Acos(Math.Clamp(r.W, -1, 1)) * 180 / Math.PI;
+                        Log.I($"USD skeleton turret_arm rest rotation angle: {angle:F2}°");
+                    }
+                }
+
+                // Transpose converts from CryEngine convention (translation in column 4)
+                // to USD convention (translation in row 4)
                 restTransforms.Add(Matrix4x4.Transpose(restMatrix));
             }
             else
