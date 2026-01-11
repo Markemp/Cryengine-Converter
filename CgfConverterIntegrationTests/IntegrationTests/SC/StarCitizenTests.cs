@@ -310,6 +310,22 @@ public class StarCitizenTests
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
     }
+        
+    [TestMethod]
+    public void BEHR_LaserCannon_S2_Usd()
+    {
+        var args = new string[] { $@"{objectDir41}\objects\spaceships\Weapons\BEHR\BEHR_LaserCannon_S2\BEHR_LaserCannon_S2.cga" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir41);
+        cryData.ProcessCryengineFiles();
+
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        colladaData.GenerateDaeObject();
+        var daeObject = colladaData.DaeObject;
+
+        testUtils.ValidateColladaXml(colladaData);
+    }
 
     [TestMethod]
     public void BehrRifle_324IvoCgfFile()
@@ -918,5 +934,97 @@ public class StarCitizenTests
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
+    }
+
+    [TestMethod]
+    public void Aloprat_Skel_USD_WithCAF()
+    {
+        // Test the aloprat skeleton with #ivo CAF animation files
+        var skeletonPath = $@"{objectDir41}\Objects\Characters\Creatures\aloprat\aloprat_skel.chr";
+
+        var args = new string[] { skeletonPath, "-objectdir", objectDir41, "-usd" };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        // Load and process the skeleton
+        CryEngine cryData = new(skeletonPath, testUtils.argsHandler.PackFileSystem, objectDir: objectDir41);
+        cryData.ProcessCryengineFiles();
+
+        // Log diagnostic info about CAF animations
+        Console.WriteLine($"CafAnimations count: {cryData.CafAnimations.Count}");
+        foreach (var anim in cryData.CafAnimations)
+        {
+            Console.WriteLine($"  Animation: {anim.Name}, Tracks: {anim.BoneTracks.Count}");
+        }
+
+        // Generate USD output
+        var usdRenderer = new UsdRenderer(testUtils.argsHandler, cryData);
+        var usdDoc = usdRenderer.GenerateUsdObject();
+        usdRenderer.Render();
+
+        // Basic structure checks
+        Assert.AreEqual("root", usdDoc.Header.DefaultPrim);
+        Assert.AreEqual("Z", usdDoc.Header.UpAxis);
+
+        // Verify skeleton was created
+        var rootPrim = usdDoc.Prims[0];
+        Assert.IsNotNull(rootPrim);
+
+        // Verify CAF animations were loaded
+        Assert.IsTrue(cryData.CafAnimations.Count > 0, "Should have loaded CAF animations from chrparams wildcards");
+    }
+
+    [TestMethod]
+    public void Aloprat_CAF_IvoAnimation()
+    {
+        // Test loading a Star Citizen #ivo CAF animation file directly
+        var cafPath = $@"{objectDir41}\Animations\Characters\Creatures\aloprat\ai_aloprat_stand_walk_forward_01.caf";
+
+        var args = new string[] { cafPath, "-objectdir", objectDir41 };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        // Load the CAF file
+        CryEngine cryData = new(cafPath, testUtils.argsHandler.PackFileSystem, objectDir: objectDir41);
+        cryData.ProcessCryengineFiles();
+
+        // Check that models were loaded
+        Assert.IsNotNull(cryData.Models);
+        Assert.IsTrue(cryData.Models.Count > 0, "Should have at least one model loaded");
+
+        // Check for animation-related chunks (IvoCAFData, IvoAnimInfo)
+        var model = cryData.Models[0];
+        var chunks = model.ChunkMap.Values.ToList();
+
+        // Log chunk types for debugging
+        foreach (var chunk in chunks)
+        {
+            Console.WriteLine($"Chunk: {chunk.GetType().Name}");
+
+            // Debug: output IvoCAF controller details
+            if (chunk is CgfConverter.CryEngineCore.ChunkIvoCAF ivoCaf)
+            {
+                Console.WriteLine($"  BoneHashes: {ivoCaf.BoneHashes.Length}, Controllers: {ivoCaf.Controllers.Length}");
+                for (int i = 0; i < Math.Min(5, ivoCaf.Controllers.Length); i++)
+                {
+                    var ctrl = ivoCaf.Controllers[i];
+                    Console.WriteLine($"  [{i}] Hash=0x{ivoCaf.BoneHashes[i]:X08}: " +
+                        $"Rot={ctrl.NumRotKeys}@0x{ctrl.RotDataOffset:X} (flags=0x{ctrl.RotFormatFlags:X4}), " +
+                        $"Pos={ctrl.NumPosKeys}@0x{ctrl.PosDataOffset:X} (flags=0x{ctrl.PosFormatFlags:X4})");
+                }
+
+                // Show first position data for bones that have it
+                Console.WriteLine($"  Position tracks: {ivoCaf.Positions.Count}");
+                int posCount = 0;
+                foreach (var (hash, positions) in ivoCaf.Positions)
+                {
+                    if (positions.Count > 0)
+                    {
+                        Console.WriteLine($"    0x{hash:X08}: first pos = {positions[0]}");
+                        if (++posCount >= 5) break;
+                    }
+                }
+            }
+        }
     }
 }

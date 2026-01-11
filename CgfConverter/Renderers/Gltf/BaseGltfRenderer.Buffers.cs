@@ -11,6 +11,7 @@ using CgfConverter.Renderers.Gltf.Models;
 using CgfConverter.Renderers.MaterialTextures;
 using Newtonsoft.Json;
 using SixLabors.ImageSharp;
+using static DDSUnsplitter.Library.DDSUnsplitter;
 
 namespace CgfConverter.Renderers.Gltf;
 
@@ -496,16 +497,36 @@ public partial class BaseGltfRenderer
         if (!Args.EmbedTextures && materialTexture.Key is FileMaterialTextureKey fileKey)
         {
             string originalPath = fileKey.Path;
+
+            // Handle Armored Warfare split DDS files (e.g., chicken_d.dds.1)
+            // Strip the .1 suffix before changing extension to avoid chicken_d.dds.dds
+            if (originalPath.EndsWith(".1"))
+                originalPath = originalPath[..^2]; // Remove ".1"
+
+            // Unsplit textures if requested (combines .dds.1, .dds.2, etc. into single .dds)
+            if (Args.UnsplitTextures)
+            {
+                try
+                {
+                    Log.I($"Combining texture file {originalPath}");
+                    Combine(originalPath);
+                }
+                catch (Exception ex)
+                {
+                    Log.W($"Error combining texture {originalPath}: {ex.Message}");
+                }
+            }
+
             string extension = ".dds"; // Default
-            
+
             // Determine the extension based on ArgsHandler settings
             if (Args.PngTextures) extension = ".png";
             else if (Args.TiffTextures) extension = ".tif";
             else if (Args.TgaTextures) extension = ".tga";
-            
+
             // Use the original path with the appropriate extension
             string uri = Path.ChangeExtension(originalPath, extension);
-            
+
             // Add the texture to the glTF file with the URI
             return AddTexture(baseName, GetMimeTypeForExtension(extension), null, uri);
         }

@@ -42,6 +42,7 @@ public partial class BaseGltfRenderer
                 GltfMaterial.AlphaMode = GltfMaterialAlphaMode.Mask;
                 GltfMaterial.AlphaCutoff = 1f; // Fully transparent
                 GltfMaterial.PbrMetallicRoughness.BaseColorFactor = Float4Transparent;
+                Index = renderer.AddMaterial(GltfMaterial);
                 return;
             }
 

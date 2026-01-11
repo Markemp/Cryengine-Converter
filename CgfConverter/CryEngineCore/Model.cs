@@ -156,7 +156,7 @@ public class Model
             return;
         }
 
-        throw new NotSupportedException($"Unsupported FileS ignature {FileSignature}");
+        throw new NotSupportedException($"Unsupported File Signature {FileSignature}");
     }
 
     private void CreateDummyRootNode()
@@ -201,6 +201,9 @@ public class Model
     {
         foreach (ChunkHeader chunkHeaderItem in chunkHeaders)
         {
+            Utilities.HelperMethods.Log(Utilities.LogLevelEnum.Debug,
+                $"[{Path.GetFileName(FileName)}] Reading chunk: Type={chunkHeaderItem.ChunkType}, Version=0x{chunkHeaderItem.Version:X}, ID={chunkHeaderItem.ID}, Offset=0x{chunkHeaderItem.Offset:X}, Size={chunkHeaderItem.Size}");
+
             var chunk = Chunk.New(chunkHeaderItem.ChunkType, chunkHeaderItem.Version);
             ChunkMap[chunkHeaderItem.ID] = chunk;
 
@@ -216,7 +219,7 @@ public class Model
             // Add Bones to the model.  We are assuming there is only one CompiledBones chunk per file.
             if (chunkHeaderItem.ChunkType == ChunkType.CompiledBones ||
                 chunkHeaderItem.ChunkType == ChunkType.CompiledBonesSC ||
-                //chunkHeaderItem.ChunkType == ChunkType.CompiledBonesIvo ||
+                chunkHeaderItem.ChunkType == ChunkType.CompiledBones_Ivo ||
                 chunkHeaderItem.ChunkType == ChunkType.CompiledBones_Ivo2)
             {
                 Bones = chunk as ChunkCompiledBones;

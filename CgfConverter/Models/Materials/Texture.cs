@@ -96,6 +96,7 @@ public class Texture
 
             // Backwards-compatible names
             "Normal" => MapTypeEnum.Normals,
+            "Normalmap" => MapTypeEnum.Normals,
             "GlossNormalA" => MapTypeEnum.Smoothness,
             "Height" => MapTypeEnum.Height,
 

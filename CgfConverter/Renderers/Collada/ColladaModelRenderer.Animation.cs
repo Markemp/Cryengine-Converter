@@ -1,7 +1,10 @@
 using CgfConverter.CryEngineCore;
+using CgfConverter.Renderers.Collada.Collada;
 using CgfConverter.Renderers.Collada.Collada.Collada_Core.Animation;
 using CgfConverter.Renderers.Collada.Collada.Collada_Core.Data_Flow;
+using CgfConverter.Renderers.Collada.Collada.Collada_Core.Metadata;
 using CgfConverter.Renderers.Collada.Collada.Collada_Core.Parameters;
+using CgfConverter.Renderers.Collada.Collada.Collada_Core.Scene;
 using CgfConverter.Renderers.Collada.Collada.Collada_Core.Technique_Common;
 using CgfConverter.Renderers.Collada.Collada.Enums;
 using CgfConverter.Renderers.Collada.Collada.Types;
@@ -91,7 +94,12 @@ public partial class ColladaModelRenderer
             if (!controller.HasPosTrack && !controller.HasRotTrack)
                 continue;
 
-            var boneAnim = CreateBoneMatrixAnimation(controller, animChunk, boneName, animationName);
+            // Get rest transform for this bone (fallback when no position/rotation track exists)
+            var (restPosition, restRotation) = controllerIdToRestTransform.TryGetValue(controller.ControllerID, out var rest)
+                ? rest
+                : (Vector3.Zero, Quaternion.Identity);
+
+            var boneAnim = CreateBoneMatrixAnimation(controller, animChunk, boneName, animationName, restPosition, restRotation);
             if (boneAnim is not null)
             {
                 boneAnimations.Add(boneAnim);
@@ -109,7 +117,9 @@ public partial class ColladaModelRenderer
         ChunkController_905.CControllerInfo controller,
         ChunkController_905 animChunk,
         string boneName,
-        string animationName)
+        string animationName,
+        Vector3 restPosition,
+        Quaternion restRotation)
     {
         // Collect all unique frame times from both position and rotation tracks
         var frameTimes = new SortedSet<float>();
@@ -143,13 +153,17 @@ public partial class ColladaModelRenderer
             var timeInSeconds = (frame - startFrame) / 30f;
             timeValues.Append($"{timeInSeconds:F6} ");
 
-            // Sample position and rotation at this frame
-            var position = SamplePositionAtFrame(controller, animChunk, frame);
-            var rotation = SampleRotationAtFrame(controller, animChunk, frame);
+            // Sample position and rotation at this frame, using rest pose as fallback
+            var position = SamplePositionAtFrame(controller, animChunk, frame, restPosition);
+            var rotation = SampleRotationAtFrame(controller, animChunk, frame, restRotation);
 
             // Build transform matrix from position and rotation
+            // IMPORTANT: CryEngine stores translation in column 4 (M14, M24, M34), NOT row 4
+            // Do NOT use matrix.Translation which sets M41, M42, M43
             var matrix = Matrix4x4.CreateFromQuaternion(rotation);
-            matrix.Translation = position;
+            matrix.M14 = position.X;
+            matrix.M24 = position.Y;
+            matrix.M34 = position.Z;
 
             // Append matrix values (row-major for Collada)
             matrixValues.Append(CreateStringFromMatrix4x4(matrix) + " ");
@@ -254,14 +268,16 @@ public partial class ColladaModelRenderer
 
     /// <summary>
     /// Samples position at a given frame using linear interpolation.
+    /// Falls back to rest position if no position track exists.
     /// </summary>
     private static Vector3 SamplePositionAtFrame(
         ChunkController_905.CControllerInfo controller,
         ChunkController_905 animChunk,
-        float frame)
+        float frame,
+        Vector3 restPosition)
     {
         if (!controller.HasPosTrack || animChunk.KeyTimes is null || animChunk.KeyPositions is null)
-            return Vector3.Zero;
+            return restPosition;
 
         var keyTimes = animChunk.KeyTimes[controller.PosKeyTimeTrack];
         var keyPositions = animChunk.KeyPositions[controller.PosTrack];
@@ -290,14 +306,16 @@ public partial class ColladaModelRenderer
 
     /// <summary>
     /// Samples rotation at a given frame using spherical linear interpolation.
+    /// Falls back to rest rotation if no rotation track exists.
     /// </summary>
     private static Quaternion SampleRotationAtFrame(
         ChunkController_905.CControllerInfo controller,
         ChunkController_905 animChunk,
-        float frame)
+        float frame,
+        Quaternion restRotation)
     {
         if (!controller.HasRotTrack || animChunk.KeyTimes is null || animChunk.KeyRotations is null)
-            return Quaternion.Identity;
+            return restRotation;
 
         var keyTimes = animChunk.KeyTimes[controller.RotKeyTimeTrack];
         var keyRotations = animChunk.KeyRotations[controller.RotTrack];
@@ -332,5 +350,117 @@ public partial class ColladaModelRenderer
         var cleanName = Path.GetFileNameWithoutExtension(name);
         // Replace invalid characters with underscores
         return cleanName.Replace(' ', '_').Replace('/', '_').Replace('\\', '_');
+    }
+
+    /// <summary>
+    /// Exports individual animation files for Blender NLA workflow.
+    /// Blender's Collada importer merges all animations into one action, so we export
+    /// each animation as a separate file with skeleton + that animation only.
+    /// </summary>
+    private void ExportAnimationFiles()
+    {
+        if (_cryData.Animations is null || _cryData.Animations.Count == 0)
+            return;
+
+        if (controllerIdToBoneName.Count == 0)
+            return;
+
+        // Collect all animations with their data
+        var allAnimations = new List<(string name, ColladaAnimation animation)>();
+
+        foreach (var animChunk in _cryData.Animations
+            .SelectMany(x => x.ChunkMap.Values.OfType<ChunkController_905>())
+            .ToList())
+        {
+            if (animChunk?.Animations is null || animChunk.Animations.Count == 0)
+                continue;
+
+            foreach (var animation in animChunk.Animations)
+            {
+                var animationName = CleanAnimationName(animation.Name);
+                var boneAnimations = CreateMatrixAnimationsForClip(animation, animChunk, animationName);
+
+                if (boneAnimations.Count > 0)
+                {
+                    var rootAnimation = new ColladaAnimation
+                    {
+                        Name = animationName,
+                        ID = $"{animationName}_animation",
+                        Animation = boneAnimations.ToArray()
+                    };
+                    allAnimations.Add((animationName, rootAnimation));
+                }
+            }
+        }
+
+        // Skip if no animations
+        if (allAnimations.Count == 0)
+            return;
+
+        Log.D($"Exporting {allAnimations.Count} separate animation files for Blender NLA workflow...");
+
+        var baseFileName = Path.GetFileNameWithoutExtension(daeOutputFile.FullName);
+        var outputDir = daeOutputFile.DirectoryName ?? ".";
+
+        foreach (var (animName, animation) in allAnimations)
+        {
+            var animFileName = $"{baseFileName}_anim_{animName}.dae";
+            var animFilePath = Path.Combine(outputDir, animFileName);
+
+            var animDoc = CreateAnimationOnlyDoc(animation);
+
+            using (var writer = new StreamWriter(animFilePath))
+            {
+                serializer.Serialize(writer, animDoc);
+            }
+
+            Log.D($"  Exported: {animFileName}");
+        }
+    }
+
+    /// <summary>
+    /// Creates a minimal Collada document containing only skeleton + single animation.
+    /// This is for Blender import workflow where each animation needs its own file.
+    /// </summary>
+    private ColladaDoc CreateAnimationOnlyDoc(ColladaAnimation animation)
+    {
+        var animDoc = new ColladaDoc
+        {
+            Collada_Version = "1.4.1"
+        };
+
+        // Asset metadata
+        animDoc.Asset = new ColladaAsset
+        {
+            Created = DateTime.Now,
+            Modified = DateTime.Now,
+            Up_Axis = "Z_UP",
+            Unit = new ColladaAssetUnit { Meter = 1.0, Name = "meter" },
+            Title = animation.Name
+        };
+
+        // Scene reference
+        animDoc.Scene = new ColladaScene
+        {
+            Visual_Scene = new ColladaInstanceVisualScene { URL = "#Scene" }
+        };
+
+        // Copy the skeleton structure from the main document's visual scene
+        // We need the skeleton nodes for the animation to target
+        if (DaeObject.Library_Visual_Scene?.Visual_Scene?.Length > 0)
+        {
+            animDoc.Library_Visual_Scene = new ColladaLibraryVisualScenes
+            {
+                Visual_Scene = DaeObject.Library_Visual_Scene.Visual_Scene
+            };
+        }
+
+        // Add just this animation
+        animDoc.Library_Animations = new ColladaLibraryAnimations
+        {
+            Animation = new[] { animation }
+        };
+
+        return animDoc;
     }
 }

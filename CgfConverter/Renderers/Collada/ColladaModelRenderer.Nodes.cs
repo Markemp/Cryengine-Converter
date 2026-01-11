@@ -54,6 +54,7 @@ public partial class ColladaModelRenderer
         // Check to see if there is a CompiledBones chunk.  If so, add a Node.
         if (_cryData.Chunks.Any(a => a.ChunkType == ChunkType.CompiledBones ||
             a.ChunkType == ChunkType.CompiledBonesSC ||
+            a.ChunkType == ChunkType.CompiledBones_Ivo ||
             a.ChunkType == ChunkType.CompiledBones_Ivo2))
         {
             ColladaNode boneNode = CreateJointNode(_cryData.SkinningInfo.RootBone);

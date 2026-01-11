@@ -75,6 +75,7 @@ public partial class UsdRenderer : IRenderer
     private Dictionary<uint, string>? _controllerIdToJointPath;
     private List<string>? _jointPaths;
     private Dictionary<CompiledBone, string>? _bonePathMap;
+    private int[]? _compiledBoneIndexToJointIndex;  // Maps CompiledBones array index to jointPaths array index
 
     public int Render()
     {
@@ -127,16 +128,21 @@ public partial class UsdRenderer : IRenderer
         {
             // Create skeleton hierarchy and cache data for multi-file animation export
             Log.D("Model has skeleton with {0} bones", _cryData.SkinningInfo.CompiledBones.Count);
-            var skelRoot = CreateSkeleton(out _controllerIdToJointPath, out _jointPaths, out _bonePathMap);
+            var skelRoot = CreateSkeleton(out _controllerIdToJointPath, out _jointPaths, out _bonePathMap, out _compiledBoneIndexToJointIndex);
             rootPrim.Children.Add(skelRoot);
 
-            // Add skinned node hierarchy under the skeleton root
+            // Add skinned meshes as children of SkelRoot (siblings of Skeleton)
+            // All mesh positioning comes from skeletal skinning, not scene graph inheritance
+            // This avoids double-transform issues where meshes would inherit bone Xform transforms
             skelRoot.Children.AddRange(CreateNodeHierarchy());
 
-            // Create animations if available
+            // Create animations if available (DBA or CAF)
             // Only include animation in main file if there's exactly one.
             // Multiple animations go to separate files for Blender NLA workflow.
-            if (_cryData.Animations is not null && _cryData.Animations.Count > 0)
+            bool hasDbaAnimations = _cryData.Animations is not null && _cryData.Animations.Count > 0;
+            bool hasCafAnimations = _cryData.CafAnimations is not null && _cryData.CafAnimations.Count > 0;
+
+            if (hasDbaAnimations || hasCafAnimations)
             {
                 var animations = CreateAnimations(_controllerIdToJointPath, usdDoc.Header);
                 if (animations.Count == 1)

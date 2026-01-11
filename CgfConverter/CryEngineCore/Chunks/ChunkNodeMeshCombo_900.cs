@@ -51,7 +51,7 @@ internal sealed class ChunkNodeMeshCombo_900 : ChunkNodeMeshCombo
             MaterialIndices.Add(b.ReadUInt16());
         }
 
-        NodeNames = GetNullSeparatedStrings(NumberOfNodes, b);
+        NodeNames = GetNullSeparatedStrings(NumberOfNodes, StringTableSize, b);
         // There is more data after here but it's unknown.
     }
 }

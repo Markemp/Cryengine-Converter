@@ -255,7 +255,14 @@ public partial class ColladaModelRenderer
             Type = ColladaNodeType.JOINT
         };
         if (bone.ControllerID != -1 && bone.ControllerID != uint.MaxValue)
+        {
             controllerIdToBoneName.Add(bone.ControllerID, boneName);  // Use sanitized name to match joint node ID
+
+            // Store rest transform for animation fallback (bones without position/rotation tracks)
+            Matrix4x4 localMatrix4x4 = bone.LocalTransformMatrix.ConvertToTransformMatrix();
+            Matrix4x4.Decompose(localMatrix4x4, out _, out var restRotation, out var restPosition);
+            controllerIdToRestTransform.Add(bone.ControllerID, (restPosition, restRotation));
+        }
 
         Matrix4x4 localMatrix = bone.LocalTransformMatrix.ConvertToTransformMatrix();
 

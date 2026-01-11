@@ -61,21 +61,55 @@ public static class HelperMethods
         sb.Replace("-1.000000", "-1");
     }
 
-    internal static List<string> GetNullSeparatedStrings(int numberOfNames, BinaryReader b)
+    /// <summary>
+    /// Reads null-separated strings from a BinaryReader. Prefer the bounded overload when string table size is known.
+    /// </summary>
+    public static List<string> GetNullSeparatedStrings(int numberOfNames, BinaryReader b)
     {
         List<string> names = [];
-        StringBuilder builder = new();
+        List<byte> buffer = [];
 
         for (int i = 0; i < numberOfNames; i++)
         {
-            char c = b.ReadChar();
+            byte c = b.ReadByte();
             while (c != 0)
             {
-                builder.Append(c);
-                c = b.ReadChar();
+                buffer.Add(c);
+                c = b.ReadByte();
             }
-            names.Add(builder.ToString());
-            builder.Clear();
+            names.Add(Encoding.UTF8.GetString(buffer.ToArray()));
+            buffer.Clear();
+        }
+
+        return names;
+    }
+
+    /// <summary>
+    /// Reads null-separated strings from a BinaryReader with a known byte limit.
+    /// This is the safer version - it prevents reading beyond the string table.
+    /// </summary>
+    public static List<string> GetNullSeparatedStrings(int numberOfNames, int byteCount, BinaryReader b)
+    {
+        byte[] buffer = b.ReadBytes(byteCount);
+        return GetNullSeparatedStrings(numberOfNames, buffer);
+    }
+
+    /// <summary>
+    /// Parses null-separated strings from a byte buffer.
+    /// </summary>
+    public static List<string> GetNullSeparatedStrings(int numberOfNames, byte[] buffer)
+    {
+        List<string> names = [];
+        int start = 0;
+
+        for (int i = 0; i < numberOfNames && start < buffer.Length; i++)
+        {
+            int end = Array.IndexOf(buffer, (byte)0, start);
+            if (end < 0)
+                end = buffer.Length;
+
+            names.Add(Encoding.UTF8.GetString(buffer, start, end - start));
+            start = end + 1;
         }
 
         return names;

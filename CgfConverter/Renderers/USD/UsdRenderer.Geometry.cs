@@ -17,6 +17,14 @@ public partial class UsdRenderer
 {
     private List<UsdPrim> CreateNodeHierarchy()
     {
+        // For Ivo format with skinning, use skeleton-based hierarchy to avoid double transforms
+        // Each mesh should be a direct child of its corresponding bone Xform, not nested under other meshes
+        if (_cryData.SkinningInfo?.HasSkinningInfo == true && _bonePathMap is not null)
+        {
+            return CreateIvoSkeletonNodes();
+        }
+
+        // Traditional format: build node hierarchy directly
         List<ChunkNode> rootNodes = _cryData.Nodes.Where(a => a.ParentNodeID == ~0).ToList();
         List<UsdPrim> nodes = [];
 
@@ -29,32 +37,82 @@ public partial class UsdRenderer
         return nodes;
     }
 
-    private UsdXform CreateNode(ChunkNode node, string parentPath)
+    /// <summary>
+    /// Creates flat mesh list for Ivo format with skeletal skinning.
+    /// Meshes are placed at SkelRoot level with identity transforms.
+    /// All positioning comes purely from skeletal skinning (skel:jointIndices/Weights).
+    /// This avoids double transforms from scene graph inheritance + skinning.
+    /// </summary>
+    private List<UsdPrim> CreateIvoSkeletonNodes()
+    {
+        var nodes = new List<UsdPrim>();
+
+        // Simply create mesh prims for all nodes with geometry
+        // They will be placed as siblings of Skeleton under SkelRoot
+        foreach (var cryNode in _cryData.Nodes)
+        {
+            var meshPrim = CreateMeshPrim(cryNode);
+            if (meshPrim is null)
+                continue;
+
+            // Use identity transform - all positioning comes from skeletal skinning
+            meshPrim.Attributes.RemoveAll(a => a is UsdMatrix4d m && m.Name == "xformOp:transform");
+            meshPrim.Attributes.RemoveAll(a => a is UsdToken<List<string>> t && t.Name == "xformOpOrder");
+            meshPrim.Attributes.Insert(0, new UsdToken<List<string>>("xformOpOrder", ["xformOp:transform"], true));
+            meshPrim.Attributes.Insert(0, new UsdMatrix4d("xformOp:transform", Matrix4x4.Identity));
+
+            nodes.Add(meshPrim);
+            Log.D($"Created skinned mesh '{cryNode.Name}' with identity transform");
+        }
+
+        return nodes;
+    }
+
+    /// <summary>
+    /// Creates a USD prim for a CryEngine node.
+    /// If the node has geometry, returns a Mesh prim with transforms.
+    /// If no geometry, returns an Xform prim.
+    /// This avoids unnecessary Xform > Mesh nesting.
+    /// </summary>
+    private UsdPrim CreateNode(ChunkNode node, string parentPath)
     {
         string cleanNodeName = CleanPathString(node.Name);
-        var xform = new UsdXform(cleanNodeName, parentPath);
 
-        xform.Attributes.Add(new UsdMatrix4d("xformOp:transform", node.Transform));
-        xform.Attributes.Add(new UsdToken<List<string>>("xformOpOrder", ["xformOp:transform"], true));
-        // If it's a geometry node, add a UsdMesh
-        //var modelIndex = node._model.IsIvoFile ? 1 : 0;
-        //ChunkNode geometryNode = _cryData.Models.Last().NodeMap.Values.Where(a => a.Name == node.Name).FirstOrDefault();
-
+        // Try to create mesh geometry first
         var meshPrim = CreateMeshPrim(node);
+
+        // Use Mesh as the node if geometry exists, otherwise use Xform
+        UsdPrim nodePrim;
         if (meshPrim is not null)
-            xform.Children.Add(meshPrim);
+        {
+            // Mesh with transforms - no need for Xform wrapper
+            nodePrim = meshPrim;
+            // Mesh name was set in CreateMeshPrim, but we need to use node name for hierarchy
+            nodePrim.Name = cleanNodeName;
+        }
+        else
+        {
+            // No geometry - use Xform for transform-only nodes
+            nodePrim = new UsdXform(cleanNodeName, parentPath);
+        }
+
+        // Add transform attributes
+        nodePrim.Attributes.Insert(0, new UsdToken<List<string>>("xformOpOrder", ["xformOp:transform"], true));
+        nodePrim.Attributes.Insert(0, new UsdMatrix4d("xformOp:transform", node.Transform));
 
         // Get all the children of the node
         var children = node.Children;
         if (children is not null)
         {
+            // Build path for children based on parent path and this node's name
+            string nodePath = string.IsNullOrEmpty(parentPath) ? $"/{cleanNodeName}" : $"{parentPath}/{cleanNodeName}";
             foreach (var childNode in children)
             {
-                xform.Children.Add(CreateNode(childNode, xform.Path));
+                nodePrim.Children.Add(CreateNode(childNode, nodePath));
             }
         }
 
-        return xform;
+        return nodePrim;
     }
 
     private UsdPrim? CreateMeshPrim(ChunkNode nodeChunk)
@@ -127,7 +185,9 @@ public partial class UsdRenderer
             {
                 // For faceVarying normals, expand the normals array to match faceVertexIndices
                 // by indexing into the normals using the same indices as vertices
-                var faceVaryingNormals = indices.Data.Select(idx => normals.Data[(int)idx]).ToList();
+                var faceVaryingNormals = indices.Data
+                    .Select(idx => (int)idx < normals.Data.Length ? normals.Data[(int)idx] : Vector3.UnitY)
+                    .ToList();
                 meshPrim.Attributes.Add(new UsdNormalsList("normals", faceVaryingNormals));
             }
 
@@ -135,26 +195,47 @@ public partial class UsdRenderer
             Dictionary<string, object> matBindingApi = new() { ["apiSchemas"] = "[\"MaterialBindingAPI\"]" };
             meshPrim.Properties = [new UsdProperty(matBindingApi, true)];
 
+            // Collect face indices per material to avoid duplicate GeomSubset prims
+            // Multiple mesh subsets may use the same material
+            var materialFaceIndices = new Dictionary<string, List<uint>>();
+
             foreach (var subset in meshChunk.GeometryInfo.GeometrySubsets ?? [])
             {
                 var index = subset.MatID;
+
+                // Bounds check for material lookup
+                if (!_cryData.Materials.TryGetValue(nodeChunk.MaterialFileName, out var material) ||
+                    material?.SubMaterials is null ||
+                    index < 0 || index >= material.SubMaterials.Length)
+                {
+                    Log.D($"Mesh[{nodeChunk.Name}]: Material index {index} out of bounds or material not found.");
+                    continue;
+                }
+
                 var matName = GetMaterialName(
                     Path.GetFileNameWithoutExtension(nodeChunk.MaterialFileName),
-                    _cryData.Materials[nodeChunk.MaterialFileName].SubMaterials[index].Name);
+                    material.SubMaterials[index].Name);
                 var cleanMatName = CleanPathString(matName);
 
-                var submeshPrim = new UsdGeomSubset(cleanMatName);
-
                 // Convert vertex index range to face index range
-                // subset.FirstIndex and subset.NumIndices refer to vertex indices
-                // For elementType="face", we need face indices (triangle numbers)
-                // Each face has 3 vertices, so face_index = vertex_index / 3
                 int firstFace = (int)subset.FirstIndex / 3;
                 int numFaces = (int)subset.NumIndices / 3;
-                var faceIndices = Enumerable.Range(firstFace, numFaces).Select(i => (uint)i).ToList();
+                var faceIndices = Enumerable.Range(firstFace, numFaces).Select(i => (uint)i);
 
+                // Merge face indices for subsets using the same material
+                if (!materialFaceIndices.ContainsKey(cleanMatName))
+                    materialFaceIndices[cleanMatName] = new List<uint>();
+                materialFaceIndices[cleanMatName].AddRange(faceIndices);
+            }
+
+            // Create one GeomSubset per unique material
+            foreach (var kvp in materialFaceIndices)
+            {
+                var cleanMatName = kvp.Key;
+                var faceIndices = kvp.Value;
+
+                var submeshPrim = new UsdGeomSubset(cleanMatName);
                 submeshPrim.Attributes.Add(new UsdUIntList("indices", faceIndices));
-                //submeshPrim.Attributes.Add(new UsdToken<string>("familyType", "face", true));
                 submeshPrim.Attributes.Add(new UsdToken<string>("elementType", "face", true));
                 submeshPrim.Attributes.Add(new UsdToken<string>("familyName", "materialBind", true));
                 meshPrim.Children.Add(submeshPrim);
@@ -167,10 +248,10 @@ public partial class UsdRenderer
                         $"/root/_materials/{cleanMatName}"));
             }
 
-            // Add skinning data if present
+            // Add skinning data if present (traditional format - no per-subset extraction)
             if (_cryData.SkinningInfo?.HasSkinningInfo ?? false)
             {
-                AddSkinningAttributes(meshPrim, nodeChunk);
+                AddSkinningAttributes(meshPrim, nodeChunk, subsets: null);
             }
         }
         else if (vertsUvs is not null)
@@ -271,7 +352,9 @@ public partial class UsdRenderer
             {
                 // For faceVarying normals, expand the normals array to match faceVertexIndices
                 // by indexing into the extracted normals using the remapped indices
-                var faceVaryingNormals = remappedIndices.Select(idx => normalsList[idx]).ToList();
+                var faceVaryingNormals = remappedIndices
+                    .Select(idx => idx >= 0 && idx < normalsList.Count ? normalsList[idx] : Vector3.UnitY)
+                    .ToList();
                 meshPrim.Attributes.Add(new UsdNormalsList("normals", faceVaryingNormals));
             }
 
@@ -279,24 +362,51 @@ public partial class UsdRenderer
             Dictionary<string, object> matBindingApi = new() { ["apiSchemas"] = "[\"MaterialBindingAPI\"]" };
             meshPrim.Properties = [new UsdProperty(matBindingApi, true)];
 
+            // Collect face indices per material to avoid duplicate GeomSubset prims
+            // Multiple mesh subsets may use the same material
+            var materialFaceIndices = new Dictionary<string, List<uint>>();
+
             // For Ivo format with remapped indices, GeomSubsets use sequential face ranges
             // since all indices are now contiguous after remapping
             int currentFaceOffset = 0;
             foreach (var subset in meshChunk.GeometryInfo.GeometrySubsets ?? [])
             {
                 var index = subset.MatID;
+                int subsetNumFaces = (int)subset.NumIndices / 3;
+
+                // Bounds check for material lookup
+                if (!_cryData.Materials.TryGetValue(nodeChunk.MaterialFileName, out var material) ||
+                    material?.SubMaterials is null ||
+                    index < 0 || index >= material.SubMaterials.Length)
+                {
+                    Log.D($"Mesh[{nodeChunk.Name}]: Material index {index} out of bounds or material not found.");
+                    // Still need to update face offset even if we skip this subset
+                    currentFaceOffset += subsetNumFaces;
+                    continue;
+                }
+
                 var matName = GetMaterialName(
                     Path.GetFileNameWithoutExtension(nodeChunk.MaterialFileName),
-                    _cryData.Materials[nodeChunk.MaterialFileName].SubMaterials[index].Name);
+                    material.SubMaterials[index].Name);
                 var cleanMatName = CleanPathString(matName);
 
-                var submeshPrim = new UsdGeomSubset(cleanMatName);
-
                 // Face indices are now sequential after remapping
-                int subsetNumFaces = (int)subset.NumIndices / 3;
-                var faceIndices = Enumerable.Range(currentFaceOffset, subsetNumFaces).Select(i => (uint)i).ToList();
+                var faceIndices = Enumerable.Range(currentFaceOffset, subsetNumFaces).Select(i => (uint)i);
                 currentFaceOffset += subsetNumFaces;
 
+                // Merge face indices for subsets using the same material
+                if (!materialFaceIndices.ContainsKey(cleanMatName))
+                    materialFaceIndices[cleanMatName] = new List<uint>();
+                materialFaceIndices[cleanMatName].AddRange(faceIndices);
+            }
+
+            // Create one GeomSubset per unique material
+            foreach (var kvp in materialFaceIndices)
+            {
+                var cleanMatName = kvp.Key;
+                var faceIndices = kvp.Value;
+
+                var submeshPrim = new UsdGeomSubset(cleanMatName);
                 submeshPrim.Attributes.Add(new UsdUIntList("indices", faceIndices));
                 submeshPrim.Attributes.Add(new UsdToken<string>("elementType", "face", true));
                 submeshPrim.Attributes.Add(new UsdToken<string>("familyName", "materialBind", true));
@@ -310,10 +420,10 @@ public partial class UsdRenderer
                         $"/root/_materials/{cleanMatName}"));
             }
 
-            // Add skinning data if present
+            // Add skinning data if present (Ivo format - use per-subset extraction)
             if (_cryData.SkinningInfo?.HasSkinningInfo ?? false)
             {
-                AddSkinningAttributes(meshPrim, nodeChunk);
+                AddSkinningAttributes(meshPrim, nodeChunk, subsets);
             }
         }
 

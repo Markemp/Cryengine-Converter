@@ -1,12 +1,10 @@
-﻿using CgfConverter.Renderers.Collada;
-using CgfConverter;
+﻿using CgfConverter;
+using CgfConverter.Renderers.Collada;
+using CgfConverter.Utils;
 using CgfConverterTests.TestUtilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 using System.Globalization;
 using System.Threading;
-using CgfConverter.Utils;
-using System.Linq;
 
 namespace CgfConverterTests.IntegrationTests;
 
@@ -15,7 +13,6 @@ namespace CgfConverterTests.IntegrationTests;
 public class Kcd2Tests
 {
     private readonly TestUtils testUtils = new();
-    string userHome;
     private readonly string objectDir = @"d:\depot\kcd2";
 
     [TestInitialize]
@@ -24,7 +21,6 @@ public class Kcd2Tests
         CultureInfo customCulture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
         customCulture.NumberFormat.NumberDecimalSeparator = ".";
         Thread.CurrentThread.CurrentCulture = customCulture;
-        userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         testUtils.GetSchemaSet();
     }
 

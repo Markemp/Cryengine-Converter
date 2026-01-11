@@ -461,4 +461,13 @@ public static class BinaryReaderExtensions
 
     public static void AlignTo(this BinaryReader reader, int unit) =>
         reader.BaseStream.Position = (reader.BaseStream.Position + unit - 1) / unit * unit;
+
+    public static IvoTangentFrame ReadIvoTangentFrame(this BinaryReader r) =>
+        new()
+        {
+            Word0 = r.ReadUInt16(),
+            Word1 = r.ReadUInt16(),
+            Word2 = r.ReadUInt16(),
+            Word3 = r.ReadUInt16()
+        };
 }
