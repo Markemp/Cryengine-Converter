@@ -16,7 +16,7 @@ public partial class BaseGltfRenderer
             Material source,
             BaseGltfRenderer renderer,
             MaterialTextureManager mtm,
-            ArgsHandler argsHandler)
+            Args argsHandler)
         {
             CryMaterial = source;
             if (argsHandler.IsMaterialExcluded(CryMaterial))
@@ -127,7 +127,7 @@ public partial class BaseGltfRenderer
                 submat,
                 this,
                 _materialTextureManager,
-                Args);
+                _args);
         }
     }
 }

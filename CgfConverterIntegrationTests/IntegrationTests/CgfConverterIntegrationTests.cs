@@ -51,10 +51,10 @@ public class CgfConverterIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\forest_ruin.cgf", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
 
         testUtils.ValidateColladaXml(colladaData);
@@ -66,10 +66,10 @@ public class CgfConverterIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Test01\raquel_eyeoverlay.skin", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\Test01\" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: @"..\..\ResourceFiles\Test01\");
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: @"..\..\ResourceFiles\Test01\");
         cryData.ProcessCryengineFiles();
 
-        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
 
         int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
@@ -84,10 +84,10 @@ public class CgfConverterIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Prey\Dahl_GenMaleBody01.skin", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\Prey\" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
 
         int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
@@ -102,10 +102,10 @@ public class CgfConverterIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Prey\Dahl_GenMaleBody01.skin" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
 
         int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Count();
@@ -120,10 +120,10 @@ public class CgfConverterIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\osv_96_muzzle_brake_01_fp.cgf" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
 
         testUtils.ValidateColladaXml(colladaData);
@@ -135,7 +135,7 @@ public class CgfConverterIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\spriggan_proto_mesh.skin" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         Assert.AreEqual((uint)41, cryData.Models[0].NumChunks);
@@ -145,7 +145,7 @@ public class CgfConverterIntegrationTests
         Assert.AreEqual((uint)12, datastream.BytesPerElement);
         Assert.AreEqual((uint)22252, datastream.NumElements);
 
-        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
 
         testUtils.ValidateColladaXml(colladaData);
@@ -157,10 +157,10 @@ public class CgfConverterIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\spriggan_proto_skel.chr" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
 
         testUtils.ValidateColladaXml(colladaData);
@@ -173,10 +173,10 @@ public class CgfConverterIntegrationTests
         var args = new string[] { $@"d:\depot\mwo\Objects\purchasable\cockpit_hanging\cnylgt\cnylgt_marauder.cga", "cnylgt_off.mtl,cnylgt_on.mtl" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: "cnylgt_off.mtl,cnylgt_on.mtl", objectDir: @"d:\depot\mwo");
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, materialFiles: "cnylgt_off.mtl,cnylgt_on.mtl", objectDir: @"d:\depot\mwo");
         cryData.ProcessCryengineFiles();
 
-        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
     }
 
@@ -186,10 +186,10 @@ public class CgfConverterIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\cnylgt_marauder.cga", "-gltf" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler.Args, cryData);
         var objectData = gltfRenderer.GenerateGltfObject();
 
         // Validate Scene

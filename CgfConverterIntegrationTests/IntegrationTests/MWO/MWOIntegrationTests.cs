@@ -45,10 +45,10 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
 
@@ -91,10 +91,10 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        GltfModelRenderer gltfData = new(testUtils.argsHandler, cryData, false, false);
+        GltfModelRenderer gltfData = new(testUtils.argsHandler.Args, cryData);
         gltfData.GenerateGltfObject();
     }
 
@@ -105,10 +105,10 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        UsdRenderer usdData = new(testUtils.argsHandler, cryData);
+        UsdRenderer usdData = new(testUtils.argsHandler.Args, cryData);
         usdData.GenerateUsdObject();
     }
 
@@ -120,7 +120,7 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: matFile, objectDir: objectDir);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, materialFiles: matFile, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
         // Verify materials were loaded
@@ -129,7 +129,7 @@ public class MWOIntegrationTests
         Assert.IsTrue(firstMat.SubMaterials.Length >= 2, "Should have at least 2 submaterials");
 
         // Generate USD
-        UsdRenderer usdRenderer = new(testUtils.argsHandler, cryData);
+        UsdRenderer usdRenderer = new(testUtils.argsHandler.Args, cryData);
         var usdDoc = usdRenderer.GenerateUsdObject();
 
         // Serialize to string for inspection
@@ -184,7 +184,7 @@ public class MWOIntegrationTests
         Assert.AreEqual(0, result);
 
         // Let materials auto-discover from MtlName chunk
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
         // Verify materials were loaded
@@ -206,7 +206,7 @@ public class MWOIntegrationTests
         }
 
         // Generate USD
-        UsdRenderer usdRenderer = new(testUtils.argsHandler, cryData);
+        UsdRenderer usdRenderer = new(testUtils.argsHandler.Args, cryData);
         var usdDoc = usdRenderer.GenerateUsdObject();
 
         // Serialize to string for inspection
@@ -229,10 +229,10 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
     }
@@ -245,10 +245,10 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
-        GltfModelRenderer gltfData = new(testUtils.argsHandler, cryData, false, false);
+        GltfModelRenderer gltfData = new(testUtils.argsHandler.Args, cryData);
         gltfData.GenerateGltfObject();
     }
 
@@ -260,7 +260,7 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, null, matFile, objectDir: objectDir);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, null, matFile, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
         var mtlChunks = cryData.Chunks.Where(a => a.ChunkType == ChunkType.MtlName).ToList();
@@ -268,7 +268,7 @@ public class MWOIntegrationTests
         Assert.AreEqual(MtlNameType.Library, ((ChunkMtlName)mtlChunks[0]).MatType);
         Assert.AreEqual(MtlNameType.Child, ((ChunkMtlName)mtlChunks[1]).MatType);
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
         Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
@@ -290,7 +290,7 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
         var mtlChunks = cryData.Chunks.Where(a => a.ChunkType == ChunkType.MtlName).ToList();
@@ -298,7 +298,7 @@ public class MWOIntegrationTests
         Assert.AreEqual(MtlNameType.Library, ((ChunkMtlName)mtlChunks[0]).MatType);
         Assert.AreEqual(MtlNameType.Child, ((ChunkMtlName)mtlChunks[1]).MatType);
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
         Assert.AreEqual(1, daeObject.Library_Materials.Material.Length);
@@ -321,10 +321,10 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, null, matFile, objectDir: objectDir);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, null, matFile, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
         Assert.AreEqual(5, daeObject.Library_Materials.Material.Length);
@@ -346,10 +346,10 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
     }
@@ -361,10 +361,10 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
     }
@@ -376,10 +376,10 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
 
@@ -541,10 +541,10 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler.Args, cryData);
         var gltfData = gltfRenderer.GenerateGltfObject();
 
         // === Materials ===
@@ -587,10 +587,10 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        UsdRenderer usdRenderer = new(testUtils.argsHandler, cryData);
+        UsdRenderer usdRenderer = new(testUtils.argsHandler.Args, cryData);
         var usdDoc = usdRenderer.GenerateUsdObject();
 
         // Serialize to string for inspection
@@ -631,10 +631,10 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler.Args, cryData);
         var gltfData = gltfRenderer.GenerateGltfObject();
     }
 
@@ -647,10 +647,10 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
     }
@@ -663,11 +663,11 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
         var matNameChunks = cryData.Chunks.Where(c => c.ChunkType == ChunkType.MtlName).ToList();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
         Assert.AreEqual(0, colladaData.DaeObject.Library_Images.Image.Length);
         Assert.AreEqual(22, colladaData.DaeObject.Library_Materials.Material.Length); // default materials
@@ -719,11 +719,11 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
         var matNameChunks = cryData.Chunks.Where(c => c.ChunkType == ChunkType.MtlName).ToList();
 
-        GltfModelRenderer gltfData = new(testUtils.argsHandler, cryData, false, false);
+        GltfModelRenderer gltfData = new(testUtils.argsHandler.Args, cryData);
         gltfData.GenerateGltfObject();
     }
 
@@ -736,11 +736,11 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, null, materialFiles: matFile, objectDir: objectDir);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, null, materialFiles: matFile, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
         var matNameChunks = cryData.Chunks.Where(c => c.ChunkType == ChunkType.MtlName).ToList();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
 
         var visualSceneLibrary = colladaData.DaeObject.Library_Visual_Scene.Visual_Scene[0];
@@ -786,10 +786,10 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
 
         var daeObject = colladaData.DaeObject;
@@ -804,10 +804,10 @@ public class MWOIntegrationTests
         var args = new string[] { $@"d:\depot\mwo\objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.chr", "-dds", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler.Args, cryData);
         var gltfData = gltfRenderer.GenerateGltfObject();
 
         Assert.AreEqual(1, gltfData.Materials.Count);
@@ -846,10 +846,10 @@ public class MWOIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
 
     }
 
@@ -859,10 +859,10 @@ public class MWOIntegrationTests
         var args = new string[] {$@"{objectDir}\Objects\environments\frontend\mechlab_a\lights\industrial_wetlamp_a.cgf" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
-        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
         testUtils.ValidateColladaXml(colladaData);
     }
@@ -873,10 +873,10 @@ public class MWOIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\timberwolf.chr" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
-        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler.Args, cryData);
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
 
@@ -952,10 +952,10 @@ public class MWOIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\NoMats\candycane_a.chr", "-dds", "-dae" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
 
@@ -1007,10 +1007,10 @@ public class MWOIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\MWO\candycane_a.chr", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
 
@@ -1053,10 +1053,10 @@ public class MWOIntegrationTests
         var args = new string[] { $@"d:\depot\mwo\objects\mechs\hellbringer\body\hbr_right_torso.cga", "-dds", "-dae", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
 
         testUtils.ValidateColladaXml(colladaData);
@@ -1069,10 +1069,10 @@ public class MWOIntegrationTests
         var args = new string[] { $@"d:\depot\mwo\objects\mechs\hellbringer\body\hbr_right_torso.cga", "-dds", "-dae", "-objectdir", objectDir };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
 
@@ -1136,10 +1136,10 @@ public class MWOIntegrationTests
         var args = new string[] { @"d:\depot\MWO\objects\purchasable\cockpit_standing\hulagirl\hulagirl__gold_a.cga" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
-        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
 
         int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
@@ -1200,10 +1200,10 @@ public class MWOIntegrationTests
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[4]);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, materialFiles: args[4]);
         cryData.ProcessCryengineFiles();
 
-        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler.Args, cryData);
         var gltfData = gltfRenderer.GenerateGltfObject();
 
         Assert.AreEqual(1, gltfData.Materials.Count);
@@ -1242,10 +1242,10 @@ public class MWOIntegrationTests
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        UsdRenderer usdRenderer = new(testUtils.argsHandler, cryData);
+        UsdRenderer usdRenderer = new(testUtils.argsHandler.Args, cryData);
         var usdDoc = usdRenderer.GenerateUsdObject();
         usdRenderer.WriteUsdToFile(usdDoc);
         Assert.IsNotNull(usdDoc);
@@ -1265,10 +1265,10 @@ public class MWOIntegrationTests
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        UsdRenderer usdRenderer = new(testUtils.argsHandler, cryData);
+        UsdRenderer usdRenderer = new(testUtils.argsHandler.Args, cryData);
         var usdDoc = usdRenderer.GenerateUsdObject();
         usdRenderer.WriteUsdToFile(usdDoc);
         Assert.IsNotNull(usdDoc);
@@ -1285,10 +1285,10 @@ public class MWOIntegrationTests
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[4]);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, materialFiles: args[4]);
         cryData.ProcessCryengineFiles();
 
-        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler.Args, cryData);
         var gltfData = gltfRenderer.GenerateGltfObject();
         Assert.AreEqual(1, gltfData.Textures.Count);
         Assert.AreEqual(2, gltfData.Materials.Count);
@@ -1311,7 +1311,7 @@ public class MWOIntegrationTests
         Assert.AreEqual(0, result);
 
         // Process CryEngine file with skinning info
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
         // Verify skinning info is present
@@ -1323,7 +1323,7 @@ public class MWOIntegrationTests
         Console.WriteLine($"Root bone: {cryData.SkinningInfo.RootBone?.BoneName}");
 
         // Generate USD
-        UsdRenderer usdRenderer = new(testUtils.argsHandler, cryData);
+        UsdRenderer usdRenderer = new(testUtils.argsHandler.Args, cryData);
         var usdDoc = usdRenderer.GenerateUsdObject();
 
         // Serialize to string for inspection
@@ -1445,10 +1445,10 @@ public class MWOIntegrationTests
         var args = new string[] { $@"d:\depot\mwo\objects\environments\mech_factory\mf_crates\mechfactory_cratesa.cgf" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
     }
 
@@ -1458,10 +1458,10 @@ public class MWOIntegrationTests
         var args = new string[] { $@"D:\depot\mwo\objects\environments\mech_factory\building_blocks\mf_bldg_a_corner_slope_01.cgf", "-objectdir", "d:\\depot\\mwo" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler.Args, cryData);
         var gltfData = gltfRenderer.GenerateGltfObject();
     }
 }

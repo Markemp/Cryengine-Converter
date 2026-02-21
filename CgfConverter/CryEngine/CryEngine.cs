@@ -57,13 +57,16 @@ public partial class CryEngine
         }
     }
 
-    public CryEngine(string filename, IPackFileSystem packFileSystem, TaggedLogger? parentLogger = null, string? materialFiles = null, string? objectDir = null)
+    private readonly bool _includeAnimations;
+
+    public CryEngine(string filename, IPackFileSystem packFileSystem, TaggedLogger? parentLogger = null, string? materialFiles = null, string? objectDir = null, bool includeAnimations = false)
     {
         Log = new TaggedLogger(Path.GetFileName(filename), parentLogger);
         InputFile = filename;
         PackFileSystem = packFileSystem;
         MaterialFiles = string.IsNullOrEmpty(materialFiles) ? [] : materialFiles.Split(',').ToList();
         ObjectDir = objectDir;
+        _includeAnimations = includeAnimations;
     }
 
     public void ProcessCryengineFiles()
@@ -96,7 +99,8 @@ public partial class CryEngine
         CreateMaterials();
         BuildNodeStructure();
 
-        CreateAnimations();
+        if (_includeAnimations)
+            CreateAnimations();
 
         AssignMaterialsToNodes(false);
     }

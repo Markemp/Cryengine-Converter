@@ -10,17 +10,17 @@ namespace CgfConverter.Renderers.Wavefront;
 
 public class WavefrontModelRenderer : IRenderer
 {
-    protected readonly ArgsHandler Args;
-    protected readonly CryEngine CryData;
+    protected readonly Args _args;
+    protected readonly CryEngine _cryData;
     public readonly FileInfo OutputFile_Model;
     public readonly FileInfo OutputFile_Material;
 
-    public WavefrontModelRenderer(ArgsHandler argsHandler, CryEngine cryEngine)
+    public WavefrontModelRenderer(Args argsHandler, CryEngine cryEngine)
     {
-        Args = argsHandler;
-        CryData = cryEngine;
-        OutputFile_Model = Args.FormatOutputFileName(".obj", cryEngine.InputFile);
-        OutputFile_Material = Args.FormatOutputFileName(".mtl", cryEngine.InputFile);
+        _args = argsHandler;
+        _cryData = cryEngine;
+        OutputFile_Model = _args.FormatOutputFileName(".obj", cryEngine.InputFile);
+        OutputFile_Material = _args.FormatOutputFileName(".mtl", cryEngine.InputFile);
     }
 
     public int CurrentVertexPosition { get; internal set; }
@@ -35,21 +35,31 @@ public class WavefrontModelRenderer : IRenderer
     /// </summary>
     public int Render()
     {
-        if (Args.GroupMeshes)
+        if (_args.GroupMeshes)
             GroupOverride = Path.GetFileNameWithoutExtension(OutputFile_Model.Name);
 
         HelperMethods.Log(LogLevelEnum.Info, @"Output file is {0}", OutputFile_Model);
 
         using StreamWriter file = new StreamWriter(OutputFile_Model.FullName);
-        file.WriteLine("# cgf-converter .obj export version {0}", Assembly.GetExecutingAssembly().GetName().Version.ToString());
-        file.WriteLine("#");
+        WriteTo(file);
+
+        return 1;
+    }
+
+    /// <summary>
+    /// Writes OBJ content to the provided writer, enabling testability without file I/O.
+    /// </summary>
+    public void WriteTo(TextWriter writer)
+    {
+        writer.WriteLine("# cgf-converter .obj export version {0}", Assembly.GetExecutingAssembly().GetName().Version.ToString());
+        writer.WriteLine("#");
 
         if (OutputFile_Material.Exists)
-            file.WriteLine("mtllib {0}", OutputFile_Material.Name);
+            writer.WriteLine("mtllib {0}", OutputFile_Material.Name);
 
         FaceIndex = 1;
 
-        var nullParents = CryData.Nodes.Where(p => p.ParentNode is null).ToArray();
+        var nullParents = _cryData.Nodes.Where(p => p.ParentNode is null).ToArray();
 
         if (nullParents.Length > 1)
         {
@@ -59,9 +69,9 @@ public class WavefrontModelRenderer : IRenderer
             }
         }
 
-        foreach (ChunkNode node in CryData.Nodes)
+        foreach (ChunkNode node in _cryData.Nodes)
         {
-            if (Args.IsNodeNameExcluded(node.Name))
+            if (_args.IsNodeNameExcluded(node.Name))
             {
                 HelperMethods.Log(LogLevelEnum.Debug, $"Excluding node {node.Name}");
                 continue;
@@ -74,36 +84,15 @@ public class WavefrontModelRenderer : IRenderer
             }
 
             if (node.MeshData is not null)
-                WriteObjNode(file, node);
-
-            //switch (node.ObjectChunk.ChunkType)
-            //{
-            //    case ChunkType.Mesh:
-            //        if ((node.ParentNode is not null) && (node.ParentNode.ChunkType != ChunkType.Node))
-            //            HelperMethods.Log(LogLevelEnum.Debug, "Rendering {0} to parent {1}", node.Name, node.ParentNode.Name);
-
-            //        // Grab the mesh and process that.
-            //        WriteObjNode(file, node);
-            //        break;
-
-            //    case ChunkType.Helper: // Ignore Helpers nodes
-            //        break;
-
-            //    default:
-            //        // Warn us if we're skipping other nodes of interest
-            //        HelperMethods.Log(LogLevelEnum.Debug, "Skipped a {0} chunk", node.ObjectChunk.ChunkType);
-            //        break;
-            //}
+                WriteObjNode(writer, node);
         }
 
         // If this is a .chr file, just write out the hitbox info.  OBJ files can't do armatures.
-        foreach (CryEngineCore.ChunkCompiledPhysicalProxies tmpProxy in CryData.Chunks.Where(a => a.ChunkType == ChunkType.CompiledPhysicalProxies))
+        foreach (CryEngineCore.ChunkCompiledPhysicalProxies tmpProxy in _cryData.Chunks.Where(a => a.ChunkType == ChunkType.CompiledPhysicalProxies))
         {
             // TODO: align these properly
-            WriteObjHitBox(file, tmpProxy);
+            WriteObjHitBox(writer, tmpProxy);
         }
-
-        return 1;
     }
 
     public static float Safe(float value)
@@ -128,7 +117,7 @@ public class WavefrontModelRenderer : IRenderer
             return node.Transform; // Is this right?
     }
 
-    public void WriteObjNode(StreamWriter f, ChunkNode chunkNode)
+    public void WriteObjNode(TextWriter f, ChunkNode chunkNode)
     {
         if (chunkNode.MeshData is not ChunkMesh meshChunk)
             return;
@@ -228,7 +217,7 @@ public class WavefrontModelRenderer : IRenderer
                 }
             }
 
-            if (Args.Smooth)
+            if (_args.Smooth)
                 f.WriteLine("s {0}", FaceIndex++);
 
             // Now write out the faces info based on the MtlName
@@ -251,7 +240,7 @@ public class WavefrontModelRenderer : IRenderer
         CurrentIndicesPosition = tempIndicesPosition;
     }
 
-    public void WriteObjHitBox(StreamWriter f, CryEngineCore.ChunkCompiledPhysicalProxies chunkProx)  // Pass a bone proxy to write to the stream.  For .chr files (armatures)
+    public void WriteObjHitBox(TextWriter f, CryEngineCore.ChunkCompiledPhysicalProxies chunkProx)  // Pass a bone proxy to write to the stream.  For .chr files (armatures)
     {
         // The chunkProx has the vertex and index info, so much like WriteObjNode just need to write it out.  Much simpler than WriteObjNode though in theory
         // Assume only one CompiledPhysicalProxies per .chr file (or any file for that matter).  May not be a safe bet.

@@ -33,10 +33,10 @@ public class HuntIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Hunt\assassin_good\assassin_christmas_body.skin", "-dds", "-dae" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler.Args, cryData);
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
 
@@ -94,12 +94,12 @@ public class HuntIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Hunt\assassin_bad\assassin_body.skin", "-dds", "-dae" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         Assert.AreEqual(1.00000f, cryData.Models[1].RootNode.LocalTransform.M11, TestUtils.delta);
 
-        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler.Args, cryData);
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
 

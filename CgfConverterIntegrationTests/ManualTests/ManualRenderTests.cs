@@ -23,6 +23,7 @@ namespace CgfConverterTests.ManualTests;
 public class ManualRenderTests
 {
     private readonly ArgsHandler argsHandler = new();
+    private Args args => argsHandler.Args;
     private readonly string armedWarfareObjectDir = @"d:\depot\armoredwarfare";
     private readonly string kcd2ObjectDir = @"d:\depot\kcd2";
     private readonly string mwoObjectDir = @"d:\depot\mwo";
@@ -194,7 +195,7 @@ public class ManualRenderTests
         var args = new string[] { inputFile, "-gltf", "-objectdir", mwoObjectDir };
         argsHandler.ProcessArgs(args);
 
-        var cryData = new CryEngine(inputFile, argsHandler.PackFileSystem, objectDir: mwoObjectDir);
+        var cryData = new CryEngine(inputFile, argsHandler.Args.PackFileSystem, objectDir: mwoObjectDir);
         cryData.ProcessCryengineFiles();
 
         var rootNode = cryData.RootNode;
@@ -361,13 +362,13 @@ public class ManualRenderTests
 
     private void RenderToUsd(string inputFile, string objectDir)
     {
-        var args = new string[] { inputFile, "-usd", "-objectdir", objectDir };
-        argsHandler.ProcessArgs(args);
+        var cliArgs = new string[] { inputFile, "-usd", "-objectdir", objectDir };
+        argsHandler.ProcessArgs(cliArgs);
 
-        var cryData = new CryEngine(inputFile, argsHandler.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(inputFile, args.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
-        var renderer = new UsdRenderer(argsHandler, cryData);
+        var renderer = new UsdRenderer(args, cryData);
         renderer.Render();
 
         var outputPath = Path.ChangeExtension(inputFile, ".usda");
@@ -376,13 +377,13 @@ public class ManualRenderTests
 
     private void RenderToCollada(string inputFile, string objectDir)
     {
-        var args = new string[] { inputFile, "-dae", "-objectdir", objectDir };
-        argsHandler.ProcessArgs(args);
+        var cliArgs = new string[] { inputFile, "-dae", "-objectdir", objectDir };
+        argsHandler.ProcessArgs(cliArgs);
 
-        var cryData = new CryEngine(inputFile, argsHandler.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(inputFile, args.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
-        var renderer = new ColladaModelRenderer(argsHandler, cryData);
+        var renderer = new ColladaModelRenderer(args, cryData);
         renderer.Render();
 
         var outputPath = Path.ChangeExtension(inputFile, ".dae");
@@ -391,13 +392,13 @@ public class ManualRenderTests
 
     private void RenderToGltf(string inputFile, string objectDir)
     {
-        var args = new string[] { inputFile, "-gltf", "-objectdir", objectDir };
-        argsHandler.ProcessArgs(args);
+        var cliArgs = new string[] { inputFile, "-gltf", "-objectdir", objectDir };
+        argsHandler.ProcessArgs(cliArgs);
 
-        var cryData = new CryEngine(inputFile, argsHandler.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(inputFile, args.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
-        var renderer = new GltfModelRenderer(argsHandler, cryData, writeText: true, writeBinary: false);
+        var renderer = new GltfModelRenderer(args, cryData);
         renderer.Render();
 
         var outputPath = Path.ChangeExtension(inputFile, ".gltf");

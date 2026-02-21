@@ -16,11 +16,11 @@ public class MaterialTextureManager
 {
     private readonly TaggedLogger _log = new(nameof(MaterialTextureManager));
 
-    private readonly ArgsHandler _args;
+    private readonly Args _args;
 
     private readonly Dictionary<IMaterialTextureKey, MaterialTexture> _textures = [];
 
-    public MaterialTextureManager(ArgsHandler args)
+    public MaterialTextureManager(Args args)
     {
         _args = args;
     }

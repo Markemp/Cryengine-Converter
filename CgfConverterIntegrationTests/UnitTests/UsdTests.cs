@@ -9,7 +9,7 @@ namespace CgfConverterTests.UnitTests;
 [TestCategory("unit")]
 public class UsdTests
 {
-    private ArgsHandler args = new();
+    private Args args = new();
     private CryEngine cryData;
     private UsdRenderer renderer;
 

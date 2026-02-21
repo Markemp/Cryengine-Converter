@@ -33,10 +33,10 @@ public class Kcd2Tests
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
         testUtils.ValidateColladaXml(colladaData);
@@ -64,10 +64,10 @@ public class Kcd2Tests
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
         testUtils.ValidateColladaXml(colladaData);
@@ -89,10 +89,10 @@ public class Kcd2Tests
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
         testUtils.ValidateColladaXml(colladaData);
@@ -113,10 +113,10 @@ public class Kcd2Tests
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
         testUtils.ValidateColladaXml(colladaData);
@@ -141,10 +141,10 @@ public class Kcd2Tests
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
         testUtils.ValidateColladaXml(colladaData);
