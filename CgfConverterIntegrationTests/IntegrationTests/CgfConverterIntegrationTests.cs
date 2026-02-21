@@ -66,7 +66,7 @@ public class CgfConverterIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Test01\raquel_eyeoverlay.skin", "-dds", "-dae", "-objectdir", @"..\..\ResourceFiles\Test01\" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: @"..\..\ResourceFiles\Test01\");
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: @"..\..\ResourceFiles\Test01\"));
         cryData.ProcessCryengineFiles();
 
         ColladaModelRenderer colladaData = new(testUtils.argsHandler.Args, cryData);
@@ -173,7 +173,7 @@ public class CgfConverterIntegrationTests
         var args = new string[] { $@"d:\depot\mwo\Objects\purchasable\cockpit_hanging\cnylgt\cnylgt_marauder.cga", "cnylgt_off.mtl,cnylgt_on.mtl" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, materialFiles: "cnylgt_off.mtl,cnylgt_on.mtl", objectDir: @"d:\depot\mwo");
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions("cnylgt_off.mtl,cnylgt_on.mtl", @"d:\depot\mwo"));
         cryData.ProcessCryengineFiles();
 
         ColladaModelRenderer colladaData = new(testUtils.argsHandler.Args, cryData);

@@ -59,14 +59,15 @@ public partial class CryEngine
 
     private readonly bool _includeAnimations;
 
-    public CryEngine(string filename, IPackFileSystem packFileSystem, TaggedLogger? parentLogger = null, string? materialFiles = null, string? objectDir = null, bool includeAnimations = false)
+    public CryEngine(string filename, IPackFileSystem packFileSystem,
+        CryEngineOptions? options = null, TaggedLogger? parentLogger = null)
     {
         Log = new TaggedLogger(Path.GetFileName(filename), parentLogger);
         InputFile = filename;
         PackFileSystem = packFileSystem;
-        MaterialFiles = string.IsNullOrEmpty(materialFiles) ? [] : materialFiles.Split(',').ToList();
-        ObjectDir = objectDir;
-        _includeAnimations = includeAnimations;
+        MaterialFiles = string.IsNullOrEmpty(options?.MaterialFiles) ? [] : options.MaterialFiles.Split(',').ToList();
+        ObjectDir = options?.ObjectDir;
+        _includeAnimations = options?.IncludeAnimations ?? false;
     }
 
     public void ProcessCryengineFiles()

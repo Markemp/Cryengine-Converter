@@ -118,9 +118,7 @@ public class Program
         var data = new CryEngine(
             inputFile,
             _args.PackFileSystem,
-            materialFiles: _args.MaterialFile,
-            objectDir: _args.DataDir,
-            includeAnimations: _args.IncludeAnimations);
+            new CryEngineOptions(_args.MaterialFile, _args.DataDir, _args.IncludeAnimations));
 
         data.ProcessCryengineFiles();
 

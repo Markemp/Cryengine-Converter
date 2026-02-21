@@ -32,7 +32,7 @@ public class NewWorldIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, null, objectDir: objectDir);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -47,7 +47,7 @@ public class NewWorldIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, null, objectDir: objectDir, materialFiles: "editorprimitive_b_mat.mtl");
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions("editorprimitive_b_mat.mtl", objectDir));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -68,7 +68,7 @@ public class NewWorldIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, null);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -89,7 +89,7 @@ public class NewWorldIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, null);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -111,7 +111,7 @@ public class NewWorldIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, null, objectDir: objectDir, materialFiles: "hood_mat_matgroup.mtl");
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions("hood_mat_matgroup.mtl", objectDir));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -132,7 +132,7 @@ public class NewWorldIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, null);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);

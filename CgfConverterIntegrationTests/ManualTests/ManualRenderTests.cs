@@ -195,7 +195,7 @@ public class ManualRenderTests
         var args = new string[] { inputFile, "-gltf", "-objectdir", mwoObjectDir };
         argsHandler.ProcessArgs(args);
 
-        var cryData = new CryEngine(inputFile, argsHandler.Args.PackFileSystem, objectDir: mwoObjectDir);
+        var cryData = new CryEngine(inputFile, argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: mwoObjectDir));
         cryData.ProcessCryengineFiles();
 
         var rootNode = cryData.RootNode;
@@ -365,7 +365,7 @@ public class ManualRenderTests
         var cliArgs = new string[] { inputFile, "-usd", "-objectdir", objectDir };
         argsHandler.ProcessArgs(cliArgs);
 
-        var cryData = new CryEngine(inputFile, args.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(inputFile, args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir));
         cryData.ProcessCryengineFiles();
 
         var renderer = new UsdRenderer(args, cryData);
@@ -380,7 +380,7 @@ public class ManualRenderTests
         var cliArgs = new string[] { inputFile, "-dae", "-objectdir", objectDir };
         argsHandler.ProcessArgs(cliArgs);
 
-        var cryData = new CryEngine(inputFile, args.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(inputFile, args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir));
         cryData.ProcessCryengineFiles();
 
         var renderer = new ColladaModelRenderer(args, cryData);
@@ -395,7 +395,7 @@ public class ManualRenderTests
         var cliArgs = new string[] { inputFile, "-gltf", "-objectdir", objectDir };
         argsHandler.ProcessArgs(cliArgs);
 
-        var cryData = new CryEngine(inputFile, args.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(inputFile, args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir));
         cryData.ProcessCryengineFiles();
 
         var renderer = new GltfModelRenderer(args, cryData);

@@ -40,7 +40,7 @@ public class StarCitizenTests
         var args = new string[] { $@"{objectDir324}\objects\spaceships\ships\AEGS\Avenger\AEGS_Avenger.cga", "-dds", "-dae", "-objectdir", $"{objectDir324}" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir324);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir324));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -75,7 +75,7 @@ public class StarCitizenTests
         var args = new string[] { $@"{objectDir41}\objects\spaceships\ships\AEGS\Avenger\AEGS_Avenger.cga", "-dds", "-dae", "-objectdir", $"{objectDir324}" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir41);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir41));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -110,7 +110,7 @@ public class StarCitizenTests
         var args = new string[] {$@"{objectDir41}\objects\spaceships\ships\aegs\Avenger\AEGS_Avenger.cga", "-objectDir", objectDir324 };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir41);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir41));
         cryData.ProcessCryengineFiles();
 
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler.Args, cryData);
@@ -152,7 +152,7 @@ public class StarCitizenTests
         var args = new string[] { $@"{objectDir324}\Objects\Spaceships\Ships\AEGS\LandingGear\Gladius\AEGS_Gladius_LandingGear_Front_CHR.chr" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir324);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir324));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -176,7 +176,7 @@ public class StarCitizenTests
         var args = new string[] { $@"{objectDir41}\Objects\Spaceships\holoviewer_ships\aegs_idris_holo_viewer.cgf" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, null, materialFiles: "aegs_idris_holo_viewer.mtl", objectDir: objectDir41);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions("aegs_idris_holo_viewer.mtl", objectDir41));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -200,7 +200,7 @@ public class StarCitizenTests
         var args = new string[] { $@"{objectDir324}\Objects\Spaceships\holoviewer_ships\AEGS_Idris_holo_01.cga" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, null, materialFiles: "AEGS_Idris_holo.mtl", objectDir: objectDir324);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions("AEGS_Idris_holo.mtl", objectDir324));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -223,7 +223,7 @@ public class StarCitizenTests
         var args = new string[] { $@"{objectDir41}\objects\spaceships\ships\AEGS\LandingGear\Vanguard\AEGS_Vanguard_LandingGear_Front.skin" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir41);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir41));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -237,7 +237,7 @@ public class StarCitizenTests
         var args = new string[] { $@"{objectDir41}\objects\spaceships\ships\ANVL\Arrow\ANVL_Arrow.cga" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir41);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir41));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -252,7 +252,7 @@ public class StarCitizenTests
             $@"{objectDir324}\Objects\Spaceships\Ships\ANVL\LandingGear\Hurricane\anvl_hurricane_landing_gear_front_SKIN.skin" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir324);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir324));
         cryData.ProcessCryengineFiles();
         var mesh = (ChunkMesh)cryData.RootNode.MeshData;
         Assert.AreEqual(-0.443651f, mesh.MinBound.X, TestUtils.delta);
@@ -274,7 +274,7 @@ public class StarCitizenTests
             @$"{objectDir41}\Objects\Spaceships\Turrets\ANVL\Valkyrie\ANVL_Valkyrie_Turret_Bubble.cga" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir41);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir41));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -288,7 +288,7 @@ public class StarCitizenTests
         var args = new string[] { $@"{objectDir41}\Objects\Characters\PowerSuit\ARGO\ATLS\argo_atls_powersuit_l_leg.skin" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir41);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir41));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -303,7 +303,7 @@ public class StarCitizenTests
         var args = new string[] { $@"{objectDir324}\Objects\Spaceships\Ships\AEGS\LandingGear\Avenger\AEGS_Avenger_LandingGear_Back.skin" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir324);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir324));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -317,7 +317,7 @@ public class StarCitizenTests
         var args = new string[] { $@"{objectDir41}\objects\spaceships\Weapons\BEHR\BEHR_LaserCannon_S2\BEHR_LaserCannon_S2.cga" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir41);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir41));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -333,7 +333,7 @@ public class StarCitizenTests
         var args = new string[] { $@"{objectDir324}\Objects\fps_weapons\weapons_v7\behr\rifle\p4ar\brfl_fps_behr_p4ar_stock.cgf" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir324);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir324));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -349,7 +349,7 @@ public class StarCitizenTests
         var args = new string[] { $@"{objectDir324}\Objects\fps_weapons\weapons_v7\behr\rifle\p4ar\brfl_fps_behr_p4ar.chr" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir324);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir324));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -371,7 +371,7 @@ public class StarCitizenTests
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: args[4]);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: args[4]));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -391,7 +391,7 @@ public class StarCitizenTests
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: args[4]);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: args[4]));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -408,7 +408,7 @@ public class StarCitizenTests
 
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir324);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir324));
         cryData.ProcessCryengineFiles();
 
         ColladaModelRenderer colladaData = new(testUtils.argsHandler.Args, cryData);
@@ -433,7 +433,7 @@ public class StarCitizenTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir324);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir324));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -478,7 +478,7 @@ public class StarCitizenTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir41);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir41));
         cryData.ProcessCryengineFiles();
 
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler.Args, cryData);
@@ -503,7 +503,7 @@ public class StarCitizenTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir41);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir41));
         cryData.ProcessCryengineFiles();
 
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler.Args, cryData);
@@ -517,7 +517,7 @@ public class StarCitizenTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir41);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir41));
         cryData.ProcessCryengineFiles();
 
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler.Args, cryData);
@@ -535,7 +535,7 @@ public class StarCitizenTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir41);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir41));
         cryData.ProcessCryengineFiles();
 
         ColladaModelRenderer colladaData = new(testUtils.argsHandler.Args, cryData);
@@ -549,7 +549,7 @@ public class StarCitizenTests
         var args = new string[] { $@"{objectDir41}\objects\spaceships\ships\CRUS\spirit\exterior\crus_Spirit.cga" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir41);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir41));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -573,7 +573,7 @@ public class StarCitizenTests
             "-dds", "-dae", "-objectdir", objectDir324 };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir41);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir41));
         cryData.ProcessCryengineFiles();
 
         ColladaModelRenderer colladaData = new(testUtils.argsHandler.Args, cryData);
@@ -595,7 +595,7 @@ public class StarCitizenTests
 
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir41);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir41));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -609,7 +609,7 @@ public class StarCitizenTests
         var args = new string[] { $@"{objectDir41}\Objects\Characters\Human\male_v7\armor\ccc\m_ccc_bear_helmet_01.skin" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir41);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir41));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -676,7 +676,7 @@ public class StarCitizenTests
         var args = new string[] { $@"{objectDir41}\Objects\Spaceships\Ships\AEGS\Idris_Frigate\interior\med_bay\med_bay_wall_bed_extender_a.cgf" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir41);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir41));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -697,7 +697,7 @@ public class StarCitizenTests
 
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir41);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir41));
         cryData.ProcessCryengineFiles();
 
         ColladaModelRenderer colladaData = new(testUtils.argsHandler.Args, cryData);
@@ -715,7 +715,7 @@ public class StarCitizenTests
         var args = new string[] { $@"{objectDir41}\Objects\Characters\Mobiglas\f_mobiglas_civilian_01.skin" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir41);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir41));
         cryData.ProcessCryengineFiles();
 
         ColladaModelRenderer colladaData = new(testUtils.argsHandler.Args, cryData);
@@ -763,7 +763,7 @@ public class StarCitizenTests
             "-objectdir", objectDir41 };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir41);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir41));
         cryData.ProcessCryengineFiles();
 
         GltfModelRenderer gltfRenderer = new(testUtils.argsHandler.Args, cryData);
@@ -777,7 +777,7 @@ public class StarCitizenTests
         var args = new string[] { $@"{objectDir324}\Objects\Characters\Human\male_v7\armor\nvy\pilot_flightsuit\m_nvy_pilot_light_helmet_01.skin" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, materialFiles: "m_nvy_pilot_light_no_name_01_01_01", objectDir: objectDir41);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions("m_nvy_pilot_light_no_name_01_01_01", objectDir41));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -793,7 +793,7 @@ public class StarCitizenTests
         var args = new string[] { $@"{objectDir41}\objects\spaceships\turrets\rsi\polaris\rsi_polaris_seataccess_turret_sideleft.cga" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir41);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir41));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -808,7 +808,7 @@ public class StarCitizenTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir41);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir41));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -823,7 +823,7 @@ public class StarCitizenTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir41);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir41));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -838,7 +838,7 @@ public class StarCitizenTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir41);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir41));
         cryData.ProcessCryengineFiles();
 
         var usdRenderer = new UsdRenderer(testUtils.argsHandler.Args, cryData);
@@ -913,7 +913,7 @@ public class StarCitizenTests
         var args = new string[] { $@"{objectDir324}\objects\characters\human\male_v7\armor\vgl\m_vgl_armor_medium_helmet_01.cgf" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, null, materialFiles: "m_vgl_armor_medium_helmet_01_01_01", objectDir: objectDir324);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions("m_vgl_armor_medium_helmet_01_01_01", objectDir324));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -928,7 +928,7 @@ public class StarCitizenTests
         var args = new string[] { $@"{objectDir41}\objects\characters\human\male_v7\armor\vgl\m_vgl_armor_medium_helmet_01.cgf" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, null, materialFiles: "m_vgl_armor_medium_helmet_01_01_01", objectDir: objectDir41);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions("m_vgl_armor_medium_helmet_01_01_01", objectDir41));
         cryData.ProcessCryengineFiles();
 
         var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
@@ -947,7 +947,7 @@ public class StarCitizenTests
         Assert.AreEqual(0, result);
 
         // Load and process the skeleton
-        CryEngine cryData = new(skeletonPath, testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir41);
+        CryEngine cryData = new(skeletonPath, testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir41));
         cryData.ProcessCryengineFiles();
 
         // Log diagnostic info about CAF animations
@@ -985,7 +985,7 @@ public class StarCitizenTests
         Assert.AreEqual(0, result);
 
         // Load the CAF file
-        CryEngine cryData = new(cafPath, testUtils.argsHandler.Args.PackFileSystem, objectDir: objectDir41);
+        CryEngine cryData = new(cafPath, testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir41));
         cryData.ProcessCryengineFiles();
 
         // Check that models were loaded
