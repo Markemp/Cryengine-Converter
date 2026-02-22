@@ -189,11 +189,14 @@ public class Model
             chunkHeaders.Add(header);
         }
 
-        // Set sizes for versions that don't have sizes
-        for (int i = 0; i < NumChunks; i++)
+        // Set sizes for versions that don't have sizes (x0744 and x0900 chunk headers don't include size)
+        // Chunks are stored in offset order in the chunk table, so we can calculate sizes directly
+        if (FileVersion == FileVersion.x0744 || FileVersion == FileVersion.x0900)
         {
-            if (FileVersion == FileVersion.x0744 &&  i < NumChunks - 2)
-                chunkHeaders[i].Size = chunkHeaders[i + 1].Offset - chunkHeaders[i].Offset;
+            for (int i = 0; i < chunkHeaders.Count - 1; i++)
+            {
+                chunkHeaders[i].Size = (uint)(chunkHeaders[i + 1].Offset - chunkHeaders[i].Offset);
+            }
         }
     }
 

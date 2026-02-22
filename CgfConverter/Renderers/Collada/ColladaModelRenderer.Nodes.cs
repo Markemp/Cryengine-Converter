@@ -107,7 +107,8 @@ public partial class ColladaModelRenderer
 
         foreach (var index in matIndices)
         {
-            var matName = GetMaterialName(node.MaterialFileName, node.Materials.SubMaterials[index].Name);
+            var submatName = GetSafeSubmaterialName(node, index);
+            var matName = GetMaterialName(node.MaterialFileName, submatName);
             ColladaInstanceMaterialGeometry instanceMaterial = new();
             instanceMaterial.Target = $"#{matName}-material";
             instanceMaterial.Symbol = $"{matName}-material";

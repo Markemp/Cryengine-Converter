@@ -123,8 +123,14 @@ public partial class CryEngine
             // Create node chunks from the first model.  If there is a nodemeshcombo chunk, use
             // that for the nodes.  If not (skin and chr files), create a dummy root node.
             // Can be zero or multiple nodes, but all reference the same geometry.
+            if (Models.Count == 0)
+            {
+                Log.W("No models loaded - cannot build node structure");
+                return;
+            }
+
             bool hasValidNodeMeshCombo = false;
-            var comboChunk = (ChunkNodeMeshCombo?)Models[index: 0].ChunkMap.Values.FirstOrDefault(c => c.ChunkType == ChunkType.NodeMeshCombo);
+            var comboChunk = (ChunkNodeMeshCombo?)Models[0].ChunkMap.Values.FirstOrDefault(c => c.ChunkType == ChunkType.NodeMeshCombo);
 
             if (comboChunk is not null && comboChunk.NumberOfNodes != 0)
                 hasValidNodeMeshCombo = true;
@@ -132,43 +138,82 @@ public partial class CryEngine
             if (hasValidNodeMeshCombo)
             {
                 // SkinMesh has the mesh and meshsubset info, as well as all the datastreams
-                var skinMesh = Models.Count > 1
-                    ? Models[1].ChunkMap.Values.FirstOrDefault(x => x.ChunkType == ChunkType.IvoSkin || x.ChunkType == ChunkType.IvoSkin2) as ChunkIvoSkinMesh
-                    : null;
+                // First try to find IvoSkin in the second model (companion .cgam file)
+                // If not found, also check the first model in case of combined files
+                ChunkIvoSkinMesh? skinMesh = null;
+                if (Models.Count > 1)
+                {
+                    skinMesh = Models[1].ChunkMap.Values.FirstOrDefault(x => x.ChunkType == ChunkType.IvoSkin || x.ChunkType == ChunkType.IvoSkin2) as ChunkIvoSkinMesh;
+                }
+                if (skinMesh is null)
+                {
+                    skinMesh = Models[0].ChunkMap.Values.FirstOrDefault(x => x.ChunkType == ChunkType.IvoSkin || x.ChunkType == ChunkType.IvoSkin2) as ChunkIvoSkinMesh;
+                }
 
                 var geometryMeshDetails = skinMesh?.MeshDetails;
 
                 var stringTable = comboChunk?.NodeNames ?? [];
                 var materialTable = comboChunk?.MaterialIndices ?? [];
-                var materialFileName = Materials.Keys.First();
+                var materialFileName = Materials.Keys.FirstOrDefault() ?? "default";
+
+                // Check if stringTable has correct number of entries
+                if (stringTable.Count < comboChunk.NumberOfNodes)
+                {
+                    Log.W($"NodeMeshCombo has {comboChunk.NumberOfNodes} nodes but only {stringTable.Count} names in string table");
+                }
 
                 // create node chunks
-                foreach (var node in comboChunk.NodeMeshCombos)
+                if (comboChunk.NodeMeshCombos is null || comboChunk.NodeMeshCombos.Count == 0)
                 {
-                    var index = comboChunk.NodeMeshCombos.IndexOf(node);
+                    Log.W("NodeMeshCombo has no node data");
+                    return;
+                }
 
-                    // Create meshsubsets for this node.  This is all meshSubsets where the meshParent equals the node index
-                    var subsets = skinMesh?.MeshSubsets.Where(x => x.NodeParentIndex == index).ToList() ?? [];
+                // Pre-group mesh subsets by NodeParentIndex to avoid O(n*m) lookups in the loop
+                var subsetsByNodeIndex = new Dictionary<int, List<MeshSubset>>();
+                if (skinMesh?.MeshSubsets != null)
+                {
+                    foreach (var subset in skinMesh.MeshSubsets)
+                    {
+                        int nodeIndex = (int)(subset.NodeParentIndex ?? 0);
+                        if (!subsetsByNodeIndex.TryGetValue(nodeIndex, out var list))
+                        {
+                            list = new List<MeshSubset>();
+                            subsetsByNodeIndex[nodeIndex] = list;
+                        }
+                        list.Add(subset);
+                    }
+                }
+
+                for (int index = 0; index < comboChunk.NodeMeshCombos.Count; index++)
+                {
+                    var node = comboChunk.NodeMeshCombos[index];
+
+                    // Get meshsubsets for this node from pre-grouped dictionary (O(1) lookup)
+                    var subsets = subsetsByNodeIndex.TryGetValue(index, out var nodeSubsets) ? nodeSubsets : [];
 
                     ChunkMesh chunkMesh = new ChunkMesh_802();
 
-                    var hasGeometry = subsets.Count != 0;
+                    var hasGeometry = subsets.Count != 0 && geometryMeshDetails is not null && skinMesh is not null;
 
                     // Create a meshchunk for nodes with geometry
                     if (hasGeometry)
                     {
-                        chunkMesh.ScalingVectors = geometryMeshDetails.ScalingBoundingBox;
+                        chunkMesh.ScalingVectors = geometryMeshDetails!.ScalingBoundingBox;
                         chunkMesh.MaxBound = node.BoundingBoxMax;
                         chunkMesh.MinBound = node.BoundingBoxMin;
-                        chunkMesh.NumVertices = (int)skinMesh.MeshDetails.NumberOfVertices;
+                        chunkMesh.NumVertices = (int)skinMesh!.MeshDetails.NumberOfVertices;
                         chunkMesh.NumIndices = (int)skinMesh.MeshDetails.NumberOfIndices;
                         chunkMesh.NumVertSubsets = skinMesh.MeshDetails.NumberOfSubmeshes;
                         chunkMesh.GeometryInfo = BuildNodeGeometryInfo(skinMesh, subsets);
                     }
 
+                    // Use node name from string table if available, otherwise generate a name
+                    var nodeName = index < stringTable.Count ? stringTable[index] : $"node_{index}";
+
                     var newNode = new ChunkNode_823
                     {
-                        Name = stringTable[index],
+                        Name = nodeName,
                         ObjectNodeID = -1,
                         ParentNodeIndex = node.ParentIndex,
                         ParentNodeID = node.ParentIndex == 0xffff ? -1 : node.ParentIndex,
@@ -182,26 +227,29 @@ public partial class CryEngine
                         MaterialFileName = materialFileName
                     };
 
-                    if (hasGeometry)
+                    if (hasGeometry && Materials.Count > 0)
                         newNode.Materials = Materials.Values.First();
 
                     Nodes.Add(newNode);
                 }
 
                 // build node hierarchy
-                foreach (var node in Nodes)
+                for (int index = 0; index < Nodes.Count; index++)
                 {
-                    var index = Nodes.IndexOf(node);
-                    if (node.ParentNodeIndex != 0xFFFF)
+                    var node = Nodes[index];
+                    if (node.ParentNodeIndex != 0xFFFF && node.ParentNodeIndex >= 0 && node.ParentNodeIndex < Nodes.Count)
                         node.ParentNode = Nodes[node.ParentNodeIndex];
-                    else
+                    else if (node.ParentNodeIndex == 0xFFFF || node.ParentNodeIndex == -1)
                         RootNode = node; // hopefully there is just one
+                    else
+                        Log.W($"Node {node.Name} has invalid parent index {node.ParentNodeIndex}");
 
                     // Add all child nodes to Children.  A child is where the parent index is current index
-                    var childNodes = Nodes.Where(x => x.ParentNodeIndex == index);
-                    foreach (var child in childNodes)
+                    // Optimize: iterate once instead of using LINQ Where which creates intermediate collections
+                    foreach (var childNode in Nodes)
                     {
-                        node.Children.Add(child);
+                        if (childNode.ParentNodeIndex == index)
+                            node.Children.Add(childNode);
                     }
                 }
             }
@@ -228,13 +276,29 @@ public partial class CryEngine
         }
         else // Traditional Crydata.  Build geometry info from the models.
         {
+            // Pre-group children by parent ID to avoid O(n²) lookups
+            var childrenByParentId = new Dictionary<int, List<ChunkNode>>();
+            foreach (var childNode in Models[0].NodeMap.Values)
+            {
+                if (childNode.ParentNodeID != -1 && childNode.ParentNodeID != ~0)
+                {
+                    if (!childrenByParentId.TryGetValue(childNode.ParentNodeID, out var children))
+                    {
+                        children = new List<ChunkNode>();
+                        childrenByParentId[childNode.ParentNodeID] = children;
+                    }
+                    children.Add(childNode);
+                }
+            }
+
             // Separate datastream for each node.
             // For each ChunkNode in model[0], add it to the Nodes list.
             foreach (var node in Models[0].NodeMap.Values)
             {
                 // Add helper or mesh data to the node
                 var objectChunk = Models[0].ChunkMap[node.ObjectNodeID];
-                node.Children = Models[0].NodeMap.Values.Where(x => x.ParentNodeID == node.ID).ToList();
+                // Get children from pre-grouped dictionary (O(1) lookup)
+                node.Children = childrenByParentId.TryGetValue(node.ID, out var nodeChildren) ? nodeChildren : new List<ChunkNode>();
 
                 if (objectChunk is ChunkHelper helper)
                 {
@@ -1287,7 +1351,7 @@ public partial class CryEngine
         return result;
     }
 
-    public bool IsIvoFile => Models.First().FileSignature?.Equals("#ivo") ?? false;
+    public bool IsIvoFile => Models.Count > 0 && (Models[0].FileSignature?.Equals("#ivo") ?? false);
 
     public static bool SupportsFile(string name) => validExtensions.Contains(Path.GetExtension(name).ToLowerInvariant());
 

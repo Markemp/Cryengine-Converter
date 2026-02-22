@@ -1,4 +1,5 @@
 using CgfConverter.Collada;
+using CgfConverter.CryEngineCore;
 using CgfConverter.Models.Materials;
 using CgfConverter.Renderers.Collada.Collada.Collada_B_Rep.Surfaces;
 using CgfConverter.Renderers.Collada.Collada.Collada_Core.Extensibility;
@@ -320,5 +321,32 @@ public partial class ColladaModelRenderer
         var matfileName = Path.GetFileNameWithoutExtension(matKey);
 
         return $"{matfileName}_mtl_{submatName}".Replace(' ', '_');
+    }
+
+    /// <summary>
+    /// Safely gets the submaterial name from a node's materials, with fallback for null or missing materials.
+    /// </summary>
+    private string GetSafeSubmaterialName(ChunkNode node, int matId)
+    {
+        if (node.Materials?.SubMaterials is null)
+        {
+            Log.W($"Node '{node.Name}' has no materials assigned, using default material name for MatID {matId}");
+            return $"default_mat_{matId}";
+        }
+
+        if (matId < 0 || matId >= node.Materials.SubMaterials.Length)
+        {
+            Log.W($"Node '{node.Name}' has MatID {matId} out of bounds (SubMaterials count: {node.Materials.SubMaterials.Length}), using default material name");
+            return $"default_mat_{matId}";
+        }
+
+        var submat = node.Materials.SubMaterials[matId];
+        if (submat is null)
+        {
+            Log.W($"Node '{node.Name}' has null submaterial at MatID {matId}, using default material name");
+            return $"default_mat_{matId}";
+        }
+
+        return submat.Name ?? $"unnamed_mat_{matId}";
     }
 }

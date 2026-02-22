@@ -27,7 +27,9 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
         }
         bool hasReadIndex = false;
 
-        while (b.BaseStream.Position != b.BaseStream.Length)  // Read to end.
+        // Calculate chunk end position. Use Size if available, otherwise read to end of file.
+        long chunkEndPosition = Size > 0 ? Offset + Size : b.BaseStream.Length;
+        while (b.BaseStream.Position < chunkEndPosition)  // Read to end of chunk.
         {
             var datastreamType = b.ReadUInt32();
             var ivoDataStreamType = (DatastreamType)datastreamType;
@@ -347,8 +349,12 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                     b.AlignTo(8);
                     break;
                 default:
-                    HelperMethods.Log(LogLevelEnum.Warning, $"***** Unknown DataStream Type 0x{(int)ivoDataStreamType:X8} *****");
-                    b.BaseStream.Position = b.BaseStream.Position + 4;
+                    // Unknown datastream type - skip the 4 bytes we just read (the type) and continue
+                    // The chunk size-based loop will handle reaching the end of the chunk
+                    HelperMethods.Log(LogLevelEnum.Warning, $"***** Unknown DataStream Type 0x{datastreamType:X8} at position 0x{b.BaseStream.Position - 4:X} - skipping and continuing *****");
+                    // Position is already advanced by ReadUInt32(), so we just continue
+                    // Align to 8 bytes in case the next datastream expects alignment
+                    b.AlignTo(8);
                     break;
             }
         }
