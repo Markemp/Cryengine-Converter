@@ -27,7 +27,7 @@ namespace CgfConverter.Renderers.Collada;
 /// </summary>
 public partial class ColladaModelRenderer : IRenderer
 {
-    protected readonly ArgsHandler _args;
+    protected readonly Args _args;
     protected readonly CryEngine _cryData;
     public readonly ColladaDoc DaeObject = new();
 
@@ -45,7 +45,7 @@ public partial class ColladaModelRenderer : IRenderer
 
     private readonly TaggedLogger Log;
 
-    public ColladaModelRenderer(ArgsHandler argsHandler, CryEngine cryEngine)
+    public ColladaModelRenderer(Args argsHandler, CryEngine cryEngine)
     {
         _args = argsHandler;
         _cryData = cryEngine;

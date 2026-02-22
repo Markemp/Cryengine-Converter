@@ -12,7 +12,7 @@ internal static class RendererUtilities
     private static int _counter;
 
     internal static FileInfo FormatOutputFileName(
-        this ArgsHandler args,
+        this Args args,
         string extension,
         string referenceName,
         string? layerName = null)
@@ -49,16 +49,16 @@ internal static class RendererUtilities
         return new FileInfo(Path.Combine(outputDir, outputFile));
     }
 
-    internal static bool IsNodeNameExcluded(this ArgsHandler args, string nodeName) =>
+    internal static bool IsNodeNameExcluded(this Args args, string nodeName) =>
         args.ExcludeNodeNameRegexes.Any(x => x.IsMatch(nodeName));
 
-    internal static bool IsMaterialExcluded(this ArgsHandler argsHandler, Material material) =>
-        (material.Name is not null && argsHandler.IsMeshMaterialExcluded(material.Name))
-        || (material.Shader is not null && argsHandler.IsMeshMaterialShaderExcluded(material.Shader));
+    internal static bool IsMaterialExcluded(this Args args, Material material) =>
+        (material.Name is not null && args.IsMeshMaterialExcluded(material.Name))
+        || (material.Shader is not null && args.IsMeshMaterialShaderExcluded(material.Shader));
 
-    internal static bool IsMeshMaterialExcluded(this ArgsHandler args, string materialName) =>
+    internal static bool IsMeshMaterialExcluded(this Args args, string materialName) =>
         args.ExcludeMaterialNameRegexes.Any(x => x.IsMatch(materialName));
 
-    internal static bool IsMeshMaterialShaderExcluded(this ArgsHandler args, string shaderName) =>
+    internal static bool IsMeshMaterialShaderExcluded(this Args args, string shaderName) =>
         args.ExcludeShaderNameRegexes.Any(x => x.IsMatch(shaderName));
 }

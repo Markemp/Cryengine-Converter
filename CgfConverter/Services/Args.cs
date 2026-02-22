@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using CgfConverter.PackFileSystem;
@@ -12,10 +11,10 @@ public sealed class Args
     public readonly List<Regex> ExcludeNodeNameRegexes = [];
     public readonly List<Regex> ExcludeMaterialNameRegexes = [];
     public readonly List<Regex> ExcludeShaderNameRegexes = [];
-    
+
     public bool Verbose { get; set; }
     /// <summary>Files to process</summary>
-    public List<string> InputFiles { get; internal set; }
+    public List<string> InputFiles { get; internal set; } = [];
     /// <summary>Location of the Game files</summary>
     public string DataDir { get; internal set; }
     /// <summary>File to render to</summary>
@@ -44,6 +43,8 @@ public sealed class Args
     public bool OutputGLTF { get; internal set; }
     /// <summary>Render glTF binary (default behavior)</summary>
     public bool OutputGLB { get; internal set; }
+    /// <summary>Render USD format files</summary>
+    public bool OutputUSD { get; internal set; }
     /// <summary>Smooth Faces</summary>
     public bool Smooth { get; internal set; }
     /// <summary>Flag used to indicate we should convert texture paths to use TIFF instead of DDS</summary>
@@ -56,24 +57,20 @@ public sealed class Args
     public bool NoTextures { get; internal set; }
     /// <summary>For glTF exports, embed textures into the glTF file instead of external references.</summary>
     public bool EmbedTextures { get; internal set; }
+    /// <summary> Use DDS Unsplitter to combine split texture files into a single file. </summary>
+    public bool UnsplitTextures { get; internal set; }
     /// <summary>Split each layer into different files, if a file does contain multiple layers.</summary>
     public bool SplitLayers { get; internal set; }
     /// <summary>List of node names to skip when rendering</summary>
-    public List<string> ExcludeNodeNames { get; internal set; }
+    public List<string> ExcludeNodeNames { get; internal set; } = [];
     /// <summary>List of material names to skipping the rendering of a mesh that uses the specified material</summary>
-    public List<string> ExcludeMaterialNames { get; internal set; }
+    public List<string> ExcludeMaterialNames { get; internal set; } = [];
     /// <summary>List of shader names to skip when rendering</summary>
-    public List<string> ExcludeShaderNames { get; internal set; }
+    public List<string> ExcludeShaderNames { get; internal set; } = [];
     public bool Throw { get; internal set; }
     public bool DumpChunkInfo { get; internal set; }
-
-    public Args()
-    {
-        InputFiles = [];
-        ExcludeNodeNames = [];
-        ExcludeMaterialNames = [];
-        ExcludeShaderNames = [];
-    }
+    /// <summary>Include animations in the conversion output</summary>
+    public bool IncludeAnimations { get; internal set; }
 
     public override string ToString() => $@"Input file: {InputFiles}, Object Dir: {string.Join(',', DataDir)}, Output file: {OutputFile}";
 }

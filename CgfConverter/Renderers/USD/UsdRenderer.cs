@@ -17,7 +17,7 @@ namespace CgfConverter.Renderers.USD;
 /// </summary>
 public partial class UsdRenderer : IRenderer
 {
-    protected readonly ArgsHandler _args;
+    protected readonly Args _args;
     protected readonly CryEngine _cryData;
 
     private readonly FileInfo usdOutputFile;
@@ -28,7 +28,7 @@ public partial class UsdRenderer : IRenderer
     protected readonly Dictionary<string, ShaderDefinition> _shaderDefinitions;
     protected readonly ShaderRulesEngine _shaderRules;
 
-    public UsdRenderer(ArgsHandler argsHandler, CryEngine cryEngine)
+    public UsdRenderer(Args argsHandler, CryEngine cryEngine)
     {
         _args = argsHandler;
         _cryData = cryEngine;
@@ -98,7 +98,7 @@ public partial class UsdRenderer : IRenderer
             }
         }
 
-        return 0;
+        return 1;
     }
 
     public void WriteUsdToFile(UsdDoc usdDoc)

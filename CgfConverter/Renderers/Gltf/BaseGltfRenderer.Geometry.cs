@@ -460,7 +460,7 @@ public partial class BaseGltfRenderer
         bool omitSkins,
         Dictionary<uint, int> controllerIdToNodeIndex)
     {
-        if (Args.IsNodeNameExcluded(cryNode.Name))
+        if (_args.IsNodeNameExcluded(cryNode.Name))
         {
             node = null;
             Log.D("NodeChunk[{0}]: Excluded.", cryNode.Name);

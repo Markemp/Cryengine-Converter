@@ -39,10 +39,10 @@ public class ArcheAgeTests
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: args[5], objectDir: args[3]);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(args[5], args[3]));
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
         int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
@@ -87,10 +87,10 @@ public class ArcheAgeTests
         };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir));
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
         int actualMaterialsCount = colladaData.DaeObject.Library_Materials.Material.Length;
@@ -108,10 +108,10 @@ public class ArcheAgeTests
 
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir));
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
     }
@@ -125,10 +125,10 @@ public class ArcheAgeTests
 
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, materialFiles: "basket_mix.mtl,tool_farm_d.mtl", objectDir: @"d:\depot\archeage");
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions("basket_mix.mtl,tool_farm_d.mtl", @"d:\depot\archeage"));
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
         var imageLibrary = daeObject.Library_Images;
@@ -168,10 +168,10 @@ public class ArcheAgeTests
 
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir));
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
         var imageLibrary = daeObject.Library_Images;

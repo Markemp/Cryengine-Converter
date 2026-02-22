@@ -494,7 +494,7 @@ public partial class BaseGltfRenderer
     {
         // If we're not embedding textures and we have a MaterialTexture with a FileMaterialTextureKey,
         // use the original file path instead of converting to PNG
-        if (!Args.EmbedTextures && materialTexture.Key is FileMaterialTextureKey fileKey)
+        if (!_args.EmbedTextures && materialTexture.Key is FileMaterialTextureKey fileKey)
         {
             string originalPath = fileKey.Path;
 
@@ -504,7 +504,7 @@ public partial class BaseGltfRenderer
                 originalPath = originalPath[..^2]; // Remove ".1"
 
             // Unsplit textures if requested (combines .dds.1, .dds.2, etc. into single .dds)
-            if (Args.UnsplitTextures)
+            if (_args.UnsplitTextures)
             {
                 try
                 {
@@ -520,9 +520,9 @@ public partial class BaseGltfRenderer
             string extension = ".dds"; // Default
 
             // Determine the extension based on ArgsHandler settings
-            if (Args.PngTextures) extension = ".png";
-            else if (Args.TiffTextures) extension = ".tif";
-            else if (Args.TgaTextures) extension = ".tga";
+            if (_args.PngTextures) extension = ".png";
+            else if (_args.TiffTextures) extension = ".tif";
+            else if (_args.TgaTextures) extension = ".tga";
 
             // Use the original path with the appropriate extension
             string uri = Path.ChangeExtension(originalPath, extension);
@@ -627,7 +627,7 @@ public partial class BaseGltfRenderer
     {
         int? bufferViewIndex = null;
         
-        if (textureBytes is not null && Args.EmbedTextures)
+        if (textureBytes is not null && _args.EmbedTextures)
         {
             bufferViewIndex = AddBufferView(baseName, textureBytes, null);
             uri = null;

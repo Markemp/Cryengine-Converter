@@ -7,8 +7,8 @@ public class GltfModelRenderer : BaseGltfRenderer, IRenderer
 {
     private readonly CryEngine _cryData;
 
-    public GltfModelRenderer(ArgsHandler argsHandler, CryEngine cryEngine, bool writeText, bool writeBinary)
-        : base(argsHandler, Path.GetFileName(cryEngine.InputFile), writeText, writeBinary)
+    public GltfModelRenderer(Args argsHandler, CryEngine cryEngine)
+        : base(argsHandler, Path.GetFileName(cryEngine.InputFile))
     {
         _cryData = cryEngine;
     }

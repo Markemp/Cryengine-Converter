@@ -9,7 +9,7 @@ namespace CgfConverter.Renderers.Gltf;
 public partial class BaseGltfRenderer
 {
     protected readonly TaggedLogger Log;
-    protected readonly ArgsHandler Args;
+    protected readonly Args _args;
     private readonly bool _writeText;
     private readonly bool _writeBinary;
     private readonly Dictionary<(string MaterialFile, string SubMaterialName), WrittenMaterial> _materialMap = new();
@@ -22,13 +22,13 @@ public partial class BaseGltfRenderer
 
     private int _currentOffset;
 
-    public BaseGltfRenderer(ArgsHandler argsHandler, string logTag, bool writeText, bool writeBinary)
+    public BaseGltfRenderer(Args argsHandler, string logTag)
     {
         Log = new TaggedLogger(logTag);
-        Args = argsHandler;
+        _args = argsHandler;
         _materialTextureManager = new MaterialTextureManager(argsHandler);
-        _writeText = writeText;
-        _writeBinary = writeBinary;
+        _writeText = argsHandler.OutputGLTF;
+        _writeBinary = argsHandler.OutputGLB;
     }
 
     protected void Reset(string sceneName)
@@ -50,13 +50,13 @@ public partial class BaseGltfRenderer
 
     protected void Save(string referenceName, string? layerName = null)
     {
-        string baseDir = Args.FormatOutputFileName(".glb", referenceName, layerName).DirectoryName!;
+        string baseDir = _args.FormatOutputFileName(".glb", referenceName, layerName).DirectoryName!;
         foreach ((string k, byte[] v) in _filesList)
             File.WriteAllBytes(Path.Join(baseDir, k), v);
 
         if (_writeBinary)
         {
-            var glbf = Args.FormatOutputFileName(".glb", referenceName, layerName);
+            var glbf = _args.FormatOutputFileName(".glb", referenceName, layerName);
 
             using var glb = glbf.Open(FileMode.Create, FileAccess.Write);
             CompileToBinary(glb);
@@ -66,8 +66,8 @@ public partial class BaseGltfRenderer
 
         if (_writeText)
         {
-            var gltfFile = Args.FormatOutputFileName(".gltf", referenceName, layerName);
-            var glbFile = Args.FormatOutputFileName(".bin", referenceName, layerName);
+            var gltfFile = _args.FormatOutputFileName(".gltf", referenceName, layerName);
+            var glbFile = _args.FormatOutputFileName(".bin", referenceName, layerName);
 
             using var gltf = gltfFile.Open(FileMode.Create, FileAccess.Write);
             using var bin = glbFile.Open(FileMode.Create, FileAccess.Write);

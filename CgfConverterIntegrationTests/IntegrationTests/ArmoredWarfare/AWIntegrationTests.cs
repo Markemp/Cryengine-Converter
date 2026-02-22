@@ -36,10 +36,10 @@ public class ArmoredWarfareIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
 
@@ -83,10 +83,10 @@ public class ArmoredWarfareIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        GltfModelRenderer gltfData = new(testUtils.argsHandler, cryData, false, false);
+        GltfModelRenderer gltfData = new(testUtils.argsHandler.Args, cryData);
         gltfData.GenerateGltfObject();
     }
 
@@ -99,10 +99,10 @@ public class ArmoredWarfareIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler, cryData, true, false);
+        GltfModelRenderer gltfRenderer = new(testUtils.argsHandler.Args, cryData);
         var gltfData = gltfRenderer.GenerateGltfObject();
     }
 
@@ -114,10 +114,10 @@ public class ArmoredWarfareIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir));
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
 
         var daeData = colladaData.DaeObject;
@@ -253,10 +253,10 @@ public class ArmoredWarfareIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir));
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
     }
 
@@ -269,10 +269,10 @@ public class ArmoredWarfareIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir));
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
     }
 
@@ -284,11 +284,11 @@ public class ArmoredWarfareIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir));
         cryData.ProcessCryengineFiles();
 
         // Generate USD
-        UsdRenderer usdRenderer = new(testUtils.argsHandler, cryData);
+        UsdRenderer usdRenderer = new(testUtils.argsHandler.Args, cryData);
         var usdDoc = usdRenderer.GenerateUsdObject();
 
         // Serialize to string for inspection
@@ -339,7 +339,7 @@ public class ArmoredWarfareIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(modelFile, testUtils.argsHandler.PackFileSystem, objectDir: objectDir);
+        var cryData = new CryEngine(modelFile, testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir));
         cryData.ProcessCryengineFiles();
 
         // Animations are loaded automatically via chrparams
@@ -354,7 +354,7 @@ public class ArmoredWarfareIntegrationTests
         Assert.AreEqual(14, walkAnimation.BoneTracks.Count, "Walk loop should have 14 bone tracks");
 
         // Generate and write USD (animations go to separate files)
-        UsdRenderer usdRenderer = new(testUtils.argsHandler, cryData);
+        UsdRenderer usdRenderer = new(testUtils.argsHandler.Args, cryData);
         usdRenderer.Render();
 
         // Verify animation file was created

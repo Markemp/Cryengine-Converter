@@ -12,8 +12,8 @@ public class GltfTerrainRenderer : BaseGltfRenderer, IRenderer
     private readonly CryTerrain _cryTerrain;
     private readonly List<float> _baseTranslation;
 
-    public GltfTerrainRenderer(ArgsHandler argsHandler, CryTerrain cryTerrain, bool writeText, bool writeBinary)
-        : base(argsHandler, cryTerrain.BaseName, writeText, writeBinary)
+    public GltfTerrainRenderer(Args argsHandler, CryTerrain cryTerrain)
+        : base(argsHandler, cryTerrain.BaseName)
     {
         _cryTerrain = cryTerrain;
 
@@ -63,7 +63,7 @@ public class GltfTerrainRenderer : BaseGltfRenderer, IRenderer
 
         foreach (var name in entity.Underlying.AllAttachedModelPaths)
         {
-            if (Args.IsNodeNameExcluded(name))
+            if (_args.IsNodeNameExcluded(name))
                 continue;
 
             if (!terrain.Objects.TryGetValue(name, out var cryObject))
@@ -127,7 +127,7 @@ public class GltfTerrainRenderer : BaseGltfRenderer, IRenderer
                 .Replace("%level%", terrain.BasePath)
                 .ToLowerInvariant()
                 .Replace('\\', '/');
-            if (Args.IsNodeNameExcluded(name))
+            if (_args.IsNodeNameExcluded(name))
                 continue;
 
             if (!terrain.Objects.TryGetValue(name, out var cryObject))
@@ -222,7 +222,7 @@ public class GltfTerrainRenderer : BaseGltfRenderer, IRenderer
 
     public int Render()
     {
-        if (_cryTerrain.RootLayer.Sublayers.Count == 1 || !Args.SplitLayers)
+        if (_cryTerrain.RootLayer.Sublayers.Count == 1 || !_args.SplitLayers)
             return RenderAsSingleFile() ? 1 : 0;
 
         return _cryTerrain.RootLayer.Sublayers.Where(RenderLayer).Count();

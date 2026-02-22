@@ -4,7 +4,7 @@ using CgfConverter.CryEngineCore;
 string startingFilePath = $@"d:\depot\sc3.24\data\objects\";
 string datadir = $@"d:\depot\sc3.24\data\";
 
-ArgsHandler argsHandler = new();
+Args argsHandler = new();
 
 //// go through all the files in the directory recursively.  If it ends in .skin, .cgf, .cga or .chr, process it.
 //foreach (string file in Directory.EnumerateFiles(startingFilePath, "*.*", SearchOption.AllDirectories))
