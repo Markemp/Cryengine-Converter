@@ -19,7 +19,12 @@ public partial class BaseGltfRenderer
     protected void CreateGltfNodeInto(List<int> nodes, CryEngine cryData, bool omitSkins = false)
     {
         if (cryData.MaterialFiles is not null)
-            WriteMaterial(cryData.MaterialFiles.FirstOrDefault(), cryData.Materials.Values.FirstOrDefault());
+        {
+            var materialFile = cryData.MaterialFiles.FirstOrDefault();
+            var material = cryData.Materials.Values.FirstOrDefault();
+            if (materialFile is not null && material is not null)
+                WriteMaterial(materialFile, material);
+        }
 
         // For Ivo format with skinning, create skeleton first and attach meshes to skeleton nodes
         // This ensures geometry moves with the skeleton
@@ -1081,11 +1086,6 @@ public partial class BaseGltfRenderer
         WrittenMaterial? FindMaterial(int matId)
         {
             // TODO: This only works for models with a single material file. Should be almost all models, but some may fail here.
-            var allSubMaterials = cryData.Materials.Values
-                .Where(material => material?.SubMaterials != null)
-                .SelectMany(material => material.SubMaterials);
-
-
             if (cryData.Materials?.First().Value.SubMaterials is not {} submats)
                 return null;
             if (matId >= submats.Length || matId < 0)

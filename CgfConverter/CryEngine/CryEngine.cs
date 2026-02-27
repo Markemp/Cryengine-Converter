@@ -460,16 +460,34 @@ public partial class CryEngine
 
     private void CreateMaterials()
     {
-        var materialStrategies = new List<Func<bool>>
-        {
-            TryLoadExplicitMaterialFiles,
-            TryLoadMaterialLibraryFiles,
-            CreateDefaultMaterials
-        };
+        if (TryLoadExplicitMaterialFiles())
+            return;
 
-        foreach (var strategy in materialStrategies)
+        var libraryFiles = GetMaterialLibraryFileNames().ToList();
+
+        if (libraryFiles.Any())
         {
-            if (strategy()) return;
+            foreach (var libraryFile in libraryFiles)
+            {
+                var key = Path.GetFileNameWithoutExtension(libraryFile) ?? "unknown";
+
+                if (TryLoadSingleMaterialFile(libraryFile))
+                {
+                    if (!MaterialFiles.Contains(libraryFile))
+                        MaterialFiles.Add(libraryFile);
+                    continue;
+                }
+
+                if (TryLoadModelNameMaterialFile(key))
+                    continue;
+
+                CreateDefaultMaterialsForLibrary(key);
+            }
+        }
+        else
+        {
+            if (!TryLoadModelNameMaterialFile(null))
+                CreateDefaultMaterials();
         }
     }
 
@@ -491,62 +509,61 @@ public partial class CryEngine
         return loadedAny;
     }
 
-    private bool TryLoadMaterialLibraryFiles()
+    private bool TryLoadModelNameMaterialFile(string? libraryKey)
     {
-        var libraryFiles = GetMaterialLibraryFileNames();
-        if (!libraryFiles.Any())
+        var modelName = Name;
+        var key = libraryKey ?? modelName;
+
+        if (Materials.ContainsKey(key))
+            return true;
+
+        var fullyQualifiedPath = GetFullMaterialFilePath(modelName);
+        if (fullyQualifiedPath is null)
+            return false;
+
+        try
         {
-            Log.I("No material library files found in model chunks");
+            var material = MaterialUtilities.FromStream(
+                PackFileSystem.GetStream(fullyQualifiedPath),
+                modelName,
+                ObjectDir,
+                closeAfter: true);
+
+            Materials.Add(key, material);
+            if (!MaterialFiles.Contains(key))
+                MaterialFiles.Add(key);
+
+            Log.I("Loaded model-name material file: {0} (stored as '{1}')", modelName, key);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.W("Failed to load model-name material file {0}: {1}", modelName, ex.Message);
             return false;
         }
-
-        Log.I("Loading materials from library chunks: {0}", string.Join(", ", libraryFiles));
-
-        var loadedAny = false;
-        foreach (var libraryFile in libraryFiles)
-        {
-            if (TryLoadSingleMaterialFile(libraryFile))
-            {
-                loadedAny = true;
-                // Add to MaterialFiles list for consistency
-                if (!MaterialFiles.Contains(libraryFile))
-                    MaterialFiles.Add(libraryFile);
-            }
-        }
-
-        return loadedAny;
     }
 
-    private bool CreateDefaultMaterials()
+    private void CreateDefaultMaterialsForLibrary(string key)
+    {
+        if (Materials.ContainsKey(key))
+            return;
+
+        Log.W("Creating dummy materials for library: {0}", key);
+        var maxMaterials = CalculateMaxMaterialCount();
+        Materials.Add(key, CreateDefaultMaterialSet(maxMaterials));
+        if (!MaterialFiles.Contains(key))
+            MaterialFiles.Add(key);
+    }
+
+    private void CreateDefaultMaterials()
     {
         Log.W("Unable to find any material files for this model. Creating dummy materials.");
 
-        var libraryFiles = GetMaterialLibraryFileNames();
-        if (!libraryFiles.Any())
-        {
-            // Create a single default material with unknown key
-            var defaultKey = "default";
-            var maxMats = CalculateMaxMaterialCount();
-            var defaultMaterial = CreateDefaultMaterialSet(maxMats);
-            Materials.Add(defaultKey, defaultMaterial);
-            MaterialFiles.Add(defaultKey);
-            return true;
-        }
-
-        // Create default materials for each library file found
-        var maxMaterials = CalculateMaxMaterialCount();
-        foreach (var libraryFile in libraryFiles)
-        {
-            var key = Path.GetFileNameWithoutExtension(libraryFile) ?? "unknown";
-            if (!Materials.ContainsKey(key))
-            {
-                var defaultMaterial = CreateDefaultMaterialSet(maxMaterials);
-                Materials.Add(key, defaultMaterial);
-                MaterialFiles.Add(libraryFile);
-            }
-        }
-
-        return Materials.Count > 0;
+        var defaultKey = "default";
+        var maxMats = CalculateMaxMaterialCount();
+        var defaultMaterial = CreateDefaultMaterialSet(maxMats);
+        Materials.Add(defaultKey, defaultMaterial);
+        MaterialFiles.Add(defaultKey);
     }
 
     private bool TryLoadSingleMaterialFile(string materialFile)

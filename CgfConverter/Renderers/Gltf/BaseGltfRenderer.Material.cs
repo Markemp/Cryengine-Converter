@@ -118,7 +118,10 @@ public partial class BaseGltfRenderer
 
     protected void WriteMaterial(string materialFile, Material material)
     {
-        foreach (Material submat in material.SubMaterials!)
+        if (material.SubMaterials is null)
+            return;
+
+        foreach (Material submat in material.SubMaterials)
         {
             (string MaterialFile, string SubMaterialName) key = (materialFile, submat.Name!);
             if (_materialMap.ContainsKey(key))

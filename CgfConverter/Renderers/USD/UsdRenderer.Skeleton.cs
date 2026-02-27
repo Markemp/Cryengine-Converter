@@ -53,7 +53,8 @@ public partial class UsdRenderer
         // Build joint paths (hierarchical bone names)
         jointPaths = new List<string>();
         bonePathMap = new Dictionary<CompiledBone, string>();
-        BuildJointPaths(_cryData.SkinningInfo.RootBone, "", jointPaths, bonePathMap);
+        var usedPaths = new HashSet<string>();
+        BuildJointPaths(_cryData.SkinningInfo.RootBone, "", jointPaths, bonePathMap, usedPaths);
 
         // Build controller ID to joint path mapping for animation binding
         // Add both stored controller IDs and computed CRC32 hashes of bone names
@@ -129,7 +130,7 @@ public partial class UsdRenderer
     }
 
     /// <summary>Recursively builds joint path strings in USD format (e.g., "Bip01/bip_01_Pelvis/bip_01_Spine").</summary>
-    private void BuildJointPaths(CompiledBone? bone, string parentPath, List<string> jointPaths, Dictionary<CompiledBone, string> bonePathMap)
+    private void BuildJointPaths(CompiledBone? bone, string parentPath, List<string> jointPaths, Dictionary<CompiledBone, string> bonePathMap, HashSet<string> usedPaths)
     {
         if (bone == null) return;
 
@@ -144,6 +145,16 @@ public partial class UsdRenderer
             ? cleanName
             : $"{parentPath}/{cleanName}";
 
+        // Deduplicate: if path already exists, append numeric suffix
+        if (!usedPaths.Add(bonePath))
+        {
+            int suffix = 1;
+            while (!usedPaths.Add($"{bonePath}_{suffix}"))
+                suffix++;
+            bonePath = $"{bonePath}_{suffix}";
+            Log.W($"Duplicate bone path detected for '{bone.BoneName}', renamed to '{bonePath}'");
+        }
+
         jointPaths.Add(bonePath);
         bonePathMap[bone] = bonePath;
 
@@ -151,7 +162,7 @@ public partial class UsdRenderer
         var childBones = _cryData.SkinningInfo.GetChildBones(bone);
         foreach (var childBone in childBones)
         {
-            BuildJointPaths(childBone, bonePath, jointPaths, bonePathMap);
+            BuildJointPaths(childBone, bonePath, jointPaths, bonePathMap, usedPaths);
         }
     }
 
