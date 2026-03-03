@@ -307,13 +307,25 @@ public class MWOIntegrationTests
         // Root children count
         Assert.AreEqual(2, gltf.Nodes[2].Children.Count);
 
-        // Rotation/translation spot-checks on UpperBody
+        // Transform matrices (column-major, per glTF spec)
         AssertExtensions.AreEqual(
-            [-0.10248467f, 0.00384537f, -0.04688235744833946f, 0.9936217f],
-            gltf.Nodes[0].Rotation, TestUtils.delta);
+            [0.9955745f, -0.093954846f, 0.0019677456f, 0.0f,
+             0.092378475f, 0.9745979f, -0.20402257f, 0.0f,
+             0.017251149f, 0.20330146f, 0.9789642f, 0.0f,
+             0.000101296144f, 0.06407773f, 0.0f, 0.0f],
+            gltf.Nodes[0].Matrix, TestUtils.delta);
         AssertExtensions.AreEqual(
-            [-0.000101296f, 0.0640777f, 0f],
-            gltf.Nodes[0].Translation, TestUtils.delta);
+            [1.0f, 0.0f, 0.0f, 0.0f,
+             0.0f, 1.0f, 0.0f, 0.0f,
+             0.0f, 0.0f, 1.0f, 0.0f,
+             0.0f, 0.0f, 0.0f, 0.0f],
+            gltf.Nodes[1].Matrix, TestUtils.delta);
+        AssertExtensions.AreEqual(
+            [1.0f, 0.0f, 0.0f, 0.0f,
+             0.0f, 1.0f, 0.0f, 0.0f,
+             0.0f, 0.0f, 1.0f, 0.0f,
+             0.0f, 0.0f, 0.0f, 0.0f],
+            gltf.Nodes[2].Matrix, TestUtils.delta);
     }
 
     [TestMethod]
@@ -452,7 +464,7 @@ public class MWOIntegrationTests
         // Root bone
         Assert.AreEqual("Bip01", gltf.Nodes[0].Name);
         AssertExtensions.AreEqual(
-            [-0.4963841f, -0.5035906f, 0.491474152f, 0.5083822f],
+            [0.4963841f, -0.5035906f, -0.491474152f, 0.5083822f],
             gltf.Nodes[0].Rotation, TestUtils.delta);
 
         // Skin
