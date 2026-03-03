@@ -123,6 +123,24 @@ public class ManualRenderTests
     }
 
     [TestMethod]
+    public void _50Cal_Necklace_Gltf()
+    {
+        RenderToGltf($@"{mwoObjectDir}\Objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.chr", mwoObjectDir);
+    }
+
+    [TestMethod]
+    public void HulaGirl_USD()
+    {
+        RenderToUsd($@"{mwoObjectDir}\Objects\purchasable\cockpit_standing\hulagirl\hulagirl_a.cga", mwoObjectDir);
+    }
+
+    [TestMethod]
+    public void HulaGirl_Gltf()
+    {
+        RenderToGltf($@"{mwoObjectDir}\Objects\purchasable\cockpit_standing\hulagirl\hulagirl_a.cga", mwoObjectDir);
+    }
+
+    [TestMethod]
     public void MWO_Box_USD()
     {
         RenderToUsd($@"{mwoObjectDir}\Objects\default\box.cgf", mwoObjectDir);
