@@ -365,7 +365,7 @@ public class ManualRenderTests
         var cliArgs = new string[] { inputFile, "-usd", "-objectdir", objectDir };
         argsHandler.ProcessArgs(cliArgs);
 
-        var cryData = new CryEngine(inputFile, args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir));
+        var cryData = new CryEngine(inputFile, args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir, IncludeAnimations: true));
         cryData.ProcessCryengineFiles();
 
         var renderer = new UsdRenderer(args, cryData);
@@ -395,7 +395,7 @@ public class ManualRenderTests
         var cliArgs = new string[] { inputFile, "-gltf", "-objectdir", objectDir };
         argsHandler.ProcessArgs(cliArgs);
 
-        var cryData = new CryEngine(inputFile, args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir));
+        var cryData = new CryEngine(inputFile, args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir, IncludeAnimations: true));
         cryData.ProcessCryengineFiles();
 
         var renderer = new GltfModelRenderer(args, cryData);
