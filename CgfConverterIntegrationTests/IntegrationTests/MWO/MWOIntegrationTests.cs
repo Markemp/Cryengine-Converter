@@ -35,12 +35,12 @@ public class MWOIntegrationTests
 
     #region Shared Helpers
 
-    private CryEngine ProcessCryEngineFile(string file, string? matFile = null)
+    private CryEngine ProcessCryEngineFile(string file, string? matFile = null, bool includeAnimations = false)
     {
         var args = new string[] { file, "-objectdir", objectDir };
         testUtils.argsHandler.ProcessArgs(args);
 
-        var options = new CryEngineOptions(matFile, objectDir);
+        var options = new CryEngineOptions(matFile, objectDir, includeAnimations);
         var cryData = new CryEngine(file, testUtils.argsHandler.Args.PackFileSystem, options);
         cryData.ProcessCryengineFiles();
         return cryData;
@@ -337,7 +337,7 @@ public class MWOIntegrationTests
     [TestMethod]
     public void Adder_Collada_SkeletonAndAnimations()
     {
-        var cryData = ProcessCryEngineFile($@"{objectDir}\objects\mechs\adder\body\adder.chr");
+        var cryData = ProcessCryEngineFile($@"{objectDir}\objects\mechs\adder\body\adder.chr", includeAnimations: true);
         var dae = GenerateCollada(cryData);
 
         // Materials (default, no textures)
@@ -379,15 +379,14 @@ public class MWOIntegrationTests
         Assert.AreEqual(1, geometryNode.Instance_Controller.Length);
         Assert.AreEqual("#Controller", geometryNode.Instance_Controller[0].URL);
 
-        // Animations present
-        Assert.IsNotNull(dae.Library_Animations);
-        Assert.IsTrue(dae.Library_Animations.Animation.Length > 0, "Should have animations from DBA files");
+        // Animations loaded at data level (exported to separate files for Blender compatibility)
+        Assert.IsTrue(cryData.Animations.Count > 0, "Should have animations from DBA files");
     }
 
     [TestMethod]
     public void Adder_Gltf_SkeletonAndAnimations()
     {
-        var cryData = ProcessCryEngineFile($@"{objectDir}\objects\mechs\adder\body\adder.chr");
+        var cryData = ProcessCryEngineFile($@"{objectDir}\objects\mechs\adder\body\adder.chr", includeAnimations: true);
         var gltf = GenerateGltf(cryData);
 
         Assert.AreEqual(11, gltf.Materials.Count);
