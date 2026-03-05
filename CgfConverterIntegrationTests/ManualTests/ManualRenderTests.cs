@@ -68,6 +68,36 @@ public class ManualRenderTests
         RenderToGltf($@"{archeageObjectDir}\game\objects\characters\animals\chicken\chicken.chr", archeageObjectDir);
     }
 
+    [TestMethod]
+    public void ArcheAge_Bird_Collada()
+    {
+        RenderToCollada($@"{archeageObjectDir}\game\objects\characters\animals\bird\bird_a.chr", archeageObjectDir);
+    }
+
+    [TestMethod]
+    public void ArcheAge_Bird_Gltf()
+    {
+        RenderToGltf($@"{archeageObjectDir}\game\objects\characters\animals\bird\bird_a.chr", archeageObjectDir);
+    }
+
+    [TestMethod]
+    public void ArcheAge_Bird_USD()
+    {
+        RenderToUsd($@"{archeageObjectDir}\game\objects\characters\animals\bird\bird_a.chr", archeageObjectDir);
+    }
+
+    [TestMethod]
+    public void ArcheAge_Fishboat_Gltf() // 0x828 controller edge case
+    {
+        RenderToGltf($@"{archeageObjectDir}\game\objects\env\06_unit\01_ship\fishboat\fishboat.chr", archeageObjectDir);
+    }
+
+    [TestMethod]
+    public void ArcheAge_Fishboat_USD() // 0x828 controller edge case
+    {
+        RenderToUsd($@"{archeageObjectDir}\game\objects\env\06_unit\01_ship\fishboat\fishboat.chr", archeageObjectDir);
+    }
+
     #endregion
 
     #region Armored Warfare Test Files

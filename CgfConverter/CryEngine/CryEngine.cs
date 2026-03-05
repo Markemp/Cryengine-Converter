@@ -1169,12 +1169,27 @@ public partial class CryEngine
             }
         }
 
-        // Process controller chunks (829/831 = compressed, 830 = uncompressed CryKeyPQLog)
+        // Process controller chunks (829/831 = compressed, 827/830 = uncompressed CryKeyPQLog)
+        var controllers827 = cafModel.ChunkMap.Values.OfType<ChunkController_827>().ToList();
         var controllers829 = cafModel.ChunkMap.Values.OfType<CryEngineCore.Chunks.ChunkController_829>().ToList();
         var controllers830 = cafModel.ChunkMap.Values.OfType<ChunkController_830>().ToList();
         var controllers831 = cafModel.ChunkMap.Values.OfType<ChunkController_831>().ToList();
 
-        // 830 uses unified key times for both rotation and position
+        // 827 and 830 use unified key times for both rotation and position
+        foreach (var ctrl in controllers827)
+        {
+            var keyTimes = ctrl.KeyTimes.Select(t => (float)t).ToList();
+            var track = new BoneTrack
+            {
+                ControllerId = ctrl.ControllerId,
+                RotationKeyTimes = keyTimes,
+                PositionKeyTimes = keyTimes,
+                Positions = ctrl.KeyPositions.ToList(),
+                Rotations = ctrl.KeyRotations.ToList()
+            };
+            animation.BoneTracks[ctrl.ControllerId] = track;
+        }
+
         foreach (var ctrl in controllers830)
         {
             var keyTimes = ctrl.KeyTimes.Select(t => (float)t).ToList();

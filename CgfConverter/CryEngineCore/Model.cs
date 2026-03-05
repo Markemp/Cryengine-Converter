@@ -181,6 +181,15 @@ public class Model
     {
         b.BaseStream.Seek(ChunkTableOffset, SeekOrigin.Begin);
 
+        // For 0x744 format the NumChunks header field is unreliable in CAF animation files
+        // (it contains unrelated data rather than chunk count). Compute the actual count
+        // from the bytes remaining in the file, since ChunkHeader_744 is exactly 16 bytes.
+        if (FileVersion == FileVersion.x0744)
+        {
+            var availableBytes = b.BaseStream.Length - b.BaseStream.Position;
+            NumChunks = (uint)(availableBytes / 16);
+        }
+
         for (int i = 0; i < NumChunks; i++)
         {
             ChunkHeader header = Chunk.New<ChunkHeader>((uint)FileVersion);
