@@ -1,6 +1,4 @@
 using System.IO;
-using CgfConverter.Services;
-using Extensions;
 
 namespace CgfConverter.CryEngineCore;
 

@@ -467,6 +467,7 @@ public partial class CryEngine
 
         if (libraryFiles.Any())
         {
+            var loadedAny = false;
             foreach (var libraryFile in libraryFiles)
             {
                 var key = Path.GetFileNameWithoutExtension(libraryFile) ?? "unknown";
@@ -475,13 +476,27 @@ public partial class CryEngine
                 {
                     if (!MaterialFiles.Contains(libraryFile))
                         MaterialFiles.Add(libraryFile);
+                    loadedAny = true;
                     continue;
                 }
 
                 if (TryLoadModelNameMaterialFile(key))
+                {
+                    loadedAny = true;
                     continue;
+                }
 
-                CreateDefaultMaterialsForLibrary(key);
+                Log.W("Could not find material file for library: {0}, skipping", key);
+            }
+
+            // Only create dummy materials if nothing at all could be loaded
+            if (!loadedAny)
+            {
+                foreach (var libraryFile in libraryFiles)
+                {
+                    var key = Path.GetFileNameWithoutExtension(libraryFile) ?? "unknown";
+                    CreateDefaultMaterialsForLibrary(key);
+                }
             }
         }
         else

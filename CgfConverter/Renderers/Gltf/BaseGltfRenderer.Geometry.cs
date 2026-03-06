@@ -1,4 +1,5 @@
-﻿using CgfConverter.CryEngineCore;
+﻿using System.IO;
+using CgfConverter.CryEngineCore;
 using CgfConverter.Renderers.Gltf.Models;
 using Extensions;
 using System;
@@ -20,10 +21,12 @@ public partial class BaseGltfRenderer
     {
         if (cryData.MaterialFiles is not null)
         {
-            var materialFile = cryData.MaterialFiles.FirstOrDefault();
-            var material = cryData.Materials.Values.FirstOrDefault();
-            if (materialFile is not null && material is not null)
-                WriteMaterial(materialFile, material);
+            foreach (var materialFile in cryData.MaterialFiles)
+            {
+                var key = Path.GetFileNameWithoutExtension(materialFile) ?? materialFile;
+                if (cryData.Materials.TryGetValue(key, out var material))
+                    WriteMaterial(materialFile, material);
+            }
         }
 
         // For Ivo format with skinning, create skeleton first and attach meshes to skeleton nodes

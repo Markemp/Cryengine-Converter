@@ -9,6 +9,7 @@ using CgfConverterTests.TestUtilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Threading;
 
 namespace CgfConverterTests.IntegrationTests;
@@ -267,8 +268,9 @@ public class ArcheAgeTests
         var gltf = GenerateGltf(cryData);
 
         Assert.AreEqual(5, gltf.Materials.Count);
-        Assert.AreEqual(1, gltf.Meshes.Count);
-        Assert.AreEqual("basket_mix_ani", gltf.Nodes[0].Name);
+        Assert.AreEqual(2, gltf.Meshes.Count);
+        Assert.IsTrue(gltf.Nodes.Any(n => n.Name == "basket_mix_ani"), "Should contain basket_mix_ani node");
+        Assert.IsTrue(gltf.Nodes.Any(n => n.Name == "tool_farm_d"), "Should contain tool_farm_d node");
     }
 
     [TestMethod]
