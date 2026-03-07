@@ -87,9 +87,9 @@ public partial class ColladaModelRenderer
             normSource.ID = nodeChunk.Name + "-mesh-norm";
             normSource.Name = nodeChunk.Name + "-norm";
             uvSource.ID = nodeChunk.Name + "-mesh-UV";
-            uvSource.Name = nodeChunk.Name + "-UV";
+            uvSource.Name = "UV";
             colorSource.ID = nodeChunk.Name + "-mesh-color";
-            colorSource.Name = nodeChunk.Name + "-color";
+            colorSource.Name = "Col";
 
             ColladaVertices vertices = new() { ID = nodeChunk.Name + "-vertices" };
             geometry.Mesh.Vertices = vertices;

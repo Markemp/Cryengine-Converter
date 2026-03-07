@@ -887,8 +887,8 @@ public class StarCitizenTests
         Assert.IsTrue(meshAttributes.Any(a => a.Name == "normals"), "Mesh should have normals");
 
         // 9. Verify Ivo-specific attributes (UVs and colors from VertUV)
-        Assert.IsTrue(meshAttributes.Any(a => a.Name.Contains("_UV")), "Mesh should have UV coordinates from VertUV");
-        Assert.IsTrue(meshAttributes.Any(a => a.Name.Contains("_color")), "Mesh should have vertex colors from VertUV");
+        Assert.IsTrue(meshAttributes.Any(a => a.Name == "st"), "Mesh should have UV coordinates from VertUV");
+        Assert.IsTrue(meshAttributes.Any(a => a.Name == "displayColor"), "Mesh should have vertex colors from VertUV");
 
         // 10. Verify GeomSubset exists for material assignment
         var geomSubsets = teapotMesh.Children.Where(x => x is UsdGeomSubset).ToList();
