@@ -339,7 +339,7 @@ public class ArmoredWarfareIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(modelFile, testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir));
+        var cryData = new CryEngine(modelFile, testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir, IncludeAnimations: true));
         cryData.ProcessCryengineFiles();
 
         // Animations are loaded automatically via chrparams

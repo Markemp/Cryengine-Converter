@@ -25,7 +25,7 @@ public static class FileHandlingExtensions
             // 1. Check in objectDir (most common case for Cryengine)
             if (dataDirs is not null && dataDirs.Count > 0)
             {
-                foreach (var dataDir in dataDirs)
+                foreach (var dataDir in dataDirs.Where(d => d is not null))
                 {
                     var texturePath = Path.Combine(dataDir, img);
                     if (fs.Exists(texturePath))

@@ -68,6 +68,36 @@ public class ManualRenderTests
         RenderToGltf($@"{archeageObjectDir}\game\objects\characters\animals\chicken\chicken.chr", archeageObjectDir);
     }
 
+    [TestMethod]
+    public void ArcheAge_Bird_Collada()
+    {
+        RenderToCollada($@"{archeageObjectDir}\game\objects\characters\animals\bird\bird_a.chr", archeageObjectDir);
+    }
+
+    [TestMethod]
+    public void ArcheAge_Bird_Gltf()
+    {
+        RenderToGltf($@"{archeageObjectDir}\game\objects\characters\animals\bird\bird_a.chr", archeageObjectDir);
+    }
+
+    [TestMethod]
+    public void ArcheAge_Bird_USD()
+    {
+        RenderToUsd($@"{archeageObjectDir}\game\objects\characters\animals\bird\bird_a.chr", archeageObjectDir);
+    }
+
+    [TestMethod]
+    public void ArcheAge_Fishboat_Gltf() // 0x828 controller edge case
+    {
+        RenderToGltf($@"{archeageObjectDir}\game\objects\env\06_unit\01_ship\fishboat\fishboat.chr", archeageObjectDir);
+    }
+
+    [TestMethod]
+    public void ArcheAge_Fishboat_USD() // 0x828 controller edge case
+    {
+        RenderToUsd($@"{archeageObjectDir}\game\objects\env\06_unit\01_ship\fishboat\fishboat.chr", archeageObjectDir);
+    }
+
     #endregion
 
     #region Armored Warfare Test Files
@@ -120,6 +150,24 @@ public class ManualRenderTests
     public void _50Cal_Necklace_USD()
     {
         RenderToUsd($@"{mwoObjectDir}\Objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.chr", mwoObjectDir);
+    }
+
+    [TestMethod]
+    public void _50Cal_Necklace_Gltf()
+    {
+        RenderToGltf($@"{mwoObjectDir}\Objects\purchasable\cockpit_hanging\50calnecklace\50calnecklace_a.chr", mwoObjectDir);
+    }
+
+    [TestMethod]
+    public void HulaGirl_USD()
+    {
+        RenderToUsd($@"{mwoObjectDir}\Objects\purchasable\cockpit_standing\hulagirl\hulagirl_a.cga", mwoObjectDir);
+    }
+
+    [TestMethod]
+    public void HulaGirl_Gltf()
+    {
+        RenderToGltf($@"{mwoObjectDir}\Objects\purchasable\cockpit_standing\hulagirl\hulagirl_a.cga", mwoObjectDir);
     }
 
     [TestMethod]
@@ -365,7 +413,7 @@ public class ManualRenderTests
         var cliArgs = new string[] { inputFile, "-usd", "-objectdir", objectDir };
         argsHandler.ProcessArgs(cliArgs);
 
-        var cryData = new CryEngine(inputFile, args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir));
+        var cryData = new CryEngine(inputFile, args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir, IncludeAnimations: true));
         cryData.ProcessCryengineFiles();
 
         var renderer = new UsdRenderer(args, cryData);
@@ -395,7 +443,7 @@ public class ManualRenderTests
         var cliArgs = new string[] { inputFile, "-gltf", "-objectdir", objectDir };
         argsHandler.ProcessArgs(cliArgs);
 
-        var cryData = new CryEngine(inputFile, args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir));
+        var cryData = new CryEngine(inputFile, args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir, IncludeAnimations: true));
         cryData.ProcessCryengineFiles();
 
         var renderer = new GltfModelRenderer(args, cryData);
