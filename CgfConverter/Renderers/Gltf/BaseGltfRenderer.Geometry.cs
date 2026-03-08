@@ -846,6 +846,7 @@ public partial class BaseGltfRenderer
         var subsets = meshChunk.GeometryInfo.GeometrySubsets;
         Datastream<uint>? indices = meshChunk.GeometryInfo.Indices;
         Datastream<UV>? uvs = meshChunk.GeometryInfo.UVs;
+        Datastream<UV>? uvs2 = meshChunk.GeometryInfo.UVs2;
         Datastream<Vector3>? verts = meshChunk.GeometryInfo.Vertices;
         Datastream<VertUV>? vertsUvs = meshChunk.GeometryInfo.VertUVs;
         Datastream<Vector3>? normals = meshChunk.GeometryInfo.Normals;
@@ -892,6 +893,14 @@ public partial class BaseGltfRenderer
                             ? null
                             : GetAccessorOrDefault(baseName, 0, uvs.Data.Length)
                             ?? AddAccessor($"{nodeChunk.Name}/uv", -1, GltfBufferViewTarget.ArrayBuffer, uvs.Data);
+
+                    if (uvs2 is not null)
+                    {
+                        baseName = $"${gltfNode.Name}/uv2";
+                        accessors.TexCoord1 =
+                            GetAccessorOrDefault(baseName, 0, uvs2.Data.Length)
+                            ?? AddAccessor($"{nodeChunk.Name}/uv2", -1, GltfBufferViewTarget.ArrayBuffer, uvs2.Data);
+                    }
                 }
             }
             else  // VertsUVs (Ivo format) - requires per-subset extraction
@@ -1071,6 +1080,7 @@ public partial class BaseGltfRenderer
                             Position = accessors.Position,
                             Normal = accessors.Normal,
                             TexCoord0 = mat?.GltfMaterial?.HasAnyTexture() is true ? accessors.TexCoord0 : null,
+                            TexCoord1 = mat?.GltfMaterial?.HasAnyTexture() is true ? accessors.TexCoord1 : null,
                             Color0 = new ParsedGenMask(mat?.CryMaterial.GenMask).UseVertexColors ? accessors.Color0 : null,
                         },
                         Indices = GetAccessorOrDefault(baseName, v.FirstIndex, v.FirstIndex + v.NumIndices)

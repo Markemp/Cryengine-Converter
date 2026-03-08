@@ -330,11 +330,16 @@ public partial class CryEngine
                     if (!mesh.Flags1.HasFlag(MeshChunkFlag.MESH_IS_EMPTY))
                     {
                         var submeshData = (Models[^1].ChunkMap[mesh.MeshSubsetsData] as ChunkMeshSubsets)!.MeshSubsets;
+                        var uvs2 = GetRequiredDatastream<UV>(mesh.UVs2Data);
+                        if (uvs2 is not null)
+                            Log.I("Node [{0}]: Second UV channel (UV2) found.", node.Name);
+
                         mesh.GeometryInfo = new()
                         {
                             GeometrySubsets = submeshData,
                             Indices = GetRequiredDatastream<uint>(mesh.IndicesData),
                             UVs = GetRequiredDatastream<UV>(mesh.UVsData),
+                            UVs2 = uvs2,
                             Vertices = GetRequiredDatastream<Vector3>(mesh.VerticesData),
                             Colors = GetRequiredDatastream<IRGBA>(mesh.ColorsData),
                             VertUVs = GetRequiredDatastream<VertUV>(mesh.VertsUVsData),
