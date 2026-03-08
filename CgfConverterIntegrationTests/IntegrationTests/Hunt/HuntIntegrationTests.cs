@@ -186,9 +186,9 @@ public class HuntIntegrationTests
         Assert.AreEqual("assassin_body-mesh-norm", normals.ID);
         Assert.AreEqual("assassin_body-norm", normals.Name);
         Assert.AreEqual("assassin_body-mesh-UV", uvs.ID);
-        Assert.AreEqual("assassin_body-UV", uvs.Name);
+        Assert.AreEqual("UV", uvs.Name);
         Assert.AreEqual("assassin_body-mesh-color", colors.ID);
-        Assert.AreEqual("assassin_body-color", colors.Name);
+        Assert.AreEqual("Col", colors.Name);
         Assert.AreEqual(18087, vertices.Float_Array.Count);
         Assert.AreEqual("assassin_body-mesh-pos-array", vertices.Float_Array.ID);
         Assert.IsTrue(vertices.Float_Array.Value_As_String.StartsWith("0.050568 0.100037 2.091797 0.048096 0.124878 2.099609 0.059082 0.102295 2.117188 0.049042 0.124695 2.113281 0.016800 0.109009"));

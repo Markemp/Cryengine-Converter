@@ -176,11 +176,11 @@ public partial class UsdRenderer
             meshPrim.Attributes.Add(new UsdPointsList("points", [.. verts.Data]));
 
             if (hasColors)
-                meshPrim.Attributes.Add(new UsdColorsList($"{CleanPathString(nodeChunk.Name)}_color", [.. colors.Data]));
+                meshPrim.Attributes.Add(new UsdColorsList("displayColor", [.. colors.Data]));
             if (hasUVs)
-                meshPrim.Attributes.Add(new UsdTexCoordsList($"{CleanPathString(nodeChunk.Name)}_UV", [.. uvs.Data]));
+                meshPrim.Attributes.Add(new UsdTexCoordsList("st", [.. uvs.Data]));
             if (hasUVs2)
-                meshPrim.Attributes.Add(new UsdTexCoordsList($"{CleanPathString(nodeChunk.Name)}_UV2", [.. uvs2.Data]));
+                meshPrim.Attributes.Add(new UsdTexCoordsList("st2", [.. uvs2.Data]));
             if (hasNormals)
             {
                 // For faceVarying normals, expand the normals array to match faceVertexIndices
@@ -343,10 +343,10 @@ public partial class UsdRenderer
             meshPrim.Attributes.Add(new UsdPointsList("points", vertices));
 
             // Add vertex colors from VertUV
-            meshPrim.Attributes.Add(new UsdColorsList($"{CleanPathString(nodeChunk.Name)}_color", colorList));
+            meshPrim.Attributes.Add(new UsdColorsList("displayColor", colorList));
 
             // Add UVs from VertUV
-            meshPrim.Attributes.Add(new UsdTexCoordsList($"{CleanPathString(nodeChunk.Name)}_UV", uvList));
+            meshPrim.Attributes.Add(new UsdTexCoordsList("st", uvList));
 
             if (hasNormals)
             {
