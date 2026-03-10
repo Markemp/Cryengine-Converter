@@ -29,6 +29,7 @@ public class ManualRenderTests
     private readonly string mwoObjectDir = @"d:\depot\mwo";
     private readonly string sc41ObjectDir = @"d:\depot\sc4.1\data";
     private readonly string sc44ObjectDir = @"d:\depot\sc4.4\data";
+    private readonly string sc46ObjectDir = @"d:\depot\sc4.6\data";
     private readonly string archeageObjectDir = @"d:\depot\archeage";
 
     [TestInitialize]
@@ -404,6 +405,18 @@ public class ManualRenderTests
     {
         RenderToGltf($@"{sc41ObjectDir}\Objects\Spaceships\Ships\AEGS\LandingGear\Avenger\AEGS_Avenger_LandingGear_Back_CHR.chr", sc41ObjectDir);
     }
+
+    [TestMethod]
+    public void SC46_Avenger_USD()
+    {
+        RenderToUsd($@"{sc46ObjectDir}\Objects\Spaceships\Ships\AEGS\Avenger\AEGS_Avenger.cga", sc46ObjectDir);
+    }
+
+    [TestMethod]
+    public void SC46_Avenger_Gltf()
+    {
+        RenderToGltf($@"{sc46ObjectDir}\Objects\Spaceships\Ships\AEGS\Avenger\AEGS_Avenger.cga", sc46ObjectDir);
+    }
     #endregion
 
     #region Helper Methods
@@ -413,7 +426,7 @@ public class ManualRenderTests
         var cliArgs = new string[] { inputFile, "-usd", "-objectdir", objectDir };
         argsHandler.ProcessArgs(cliArgs);
 
-        var cryData = new CryEngine(inputFile, args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir, IncludeAnimations: true));
+        var cryData = new CryEngine(inputFile, args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir, IncludeAnimations: false));
         cryData.ProcessCryengineFiles();
 
         var renderer = new UsdRenderer(args, cryData);

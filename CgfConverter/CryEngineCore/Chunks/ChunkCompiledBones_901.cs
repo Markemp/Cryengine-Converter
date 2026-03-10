@@ -23,6 +23,10 @@ internal class ChunkCompiledBones_901 : ChunkCompiledBones
         Flags1 = b.ReadInt32();
         Flags2 = b.ReadInt32();
 
+        // SC 4.5+ Ivo format has 32 bytes of padding after the header fields
+        if (ChunkType == ChunkType.CompiledBones_Ivo || ChunkType == ChunkType.CompiledBones_Ivo2)
+            SkipBytes(b, 32);
+
         for (int i = 0; i < NumBones; i++)
         {
             CompiledBone tempBone = new();
