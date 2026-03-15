@@ -45,11 +45,18 @@ internal class ChunkCompiledBones_901 : ChunkCompiledBones
             var worldQuat = b.ReadQuaternion();
             var worldTranslation = b.ReadVector3();
 
-            var m = Matrix4x4.CreateFromQuaternion(worldQuat);
-            m.M14 = worldTranslation.X;
-            m.M24 = worldTranslation.Y;
-            m.M34 = worldTranslation.Z;
-            Matrix4x4.Invert(m, out Matrix4x4 bpm);
+            // Build boneToWorld matrix in CryEngine convention (column-vector rotation + translation in col 4).
+            // IMPORTANT: Must use ConvertToRotationMatrix() which produces CryEngine convention rotation,
+            // NOT Matrix4x4.CreateFromQuaternion() which produces .NET row-vector convention (transposed).
+            // Using the wrong convention causes parent.BPM * inv(child.BPM) to produce incorrect local
+            // transforms, making skeleton bone positions diverge from their bind transforms.
+            var rot = worldQuat.ConvertToRotationMatrix();
+            var boneToWorld = new Matrix4x4(
+                rot.M11, rot.M12, rot.M13, worldTranslation.X,
+                rot.M21, rot.M22, rot.M23, worldTranslation.Y,
+                rot.M31, rot.M32, rot.M33, worldTranslation.Z,
+                0, 0, 0, 1);
+            Matrix4x4.Invert(boneToWorld, out Matrix4x4 bpm);
             BoneList[i].BindPoseMatrix = bpm;
 
             BoneList[i].BoneName = boneNames[i];

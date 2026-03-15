@@ -26,11 +26,12 @@ public partial class UsdRenderer
     {
         List<ChunkNode> rootNodes = _cryData.Nodes.Where(a => a.ParentNodeID == ~0).ToList();
         List<UsdPrim> nodes = [];
+        var usedRootNames = new HashSet<string>();
 
         foreach (ChunkNode root in rootNodes)
         {
             Log.D("Root node: {0}", root.Name);
-            nodes.Add(CreateNode(root, $"/root/{root.Name}"));
+            nodes.Add(CreateNode(root, "/root", usedRootNames));
         }
 
         return nodes;
@@ -68,38 +69,39 @@ public partial class UsdRenderer
     }
 
     /// <summary>
-    /// Creates a USD prim for a CryEngine node.
-    /// If the node has geometry, returns a Mesh prim with transforms.
-    /// If no geometry, returns an Xform prim.
-    /// This avoids unnecessary Xform > Mesh nesting.
+    /// Creates a USD prim for a CryEngine node, deduplicating names among siblings.
     /// </summary>
-    private UsdPrim CreateNode(ChunkNode node, string parentPath)
+    private UsdPrim CreateNode(ChunkNode node, string parentPath, HashSet<string> usedSiblingNames)
     {
         string cleanNodeName = CleanPathString(node.Name);
 
-        // Always wrap nodes in an Xform — even if the node has geometry.
-        // The Xform holds the transform and children; the Mesh is a child of the Xform.
-        // This matches the working SC 4.1 output structure and ensures correct hierarchy positioning.
+        // Deduplicate: if a sibling already has this name, append numeric suffix
+        if (!usedSiblingNames.Add(cleanNodeName))
+        {
+            int suffix = 1;
+            while (!usedSiblingNames.Add($"{cleanNodeName}_{suffix}"))
+                suffix++;
+            cleanNodeName = $"{cleanNodeName}_{suffix}";
+        }
+
         var nodePrim = new UsdXform(cleanNodeName, parentPath);
         nodePrim.Attributes.Insert(0, new UsdToken<List<string>>("xformOpOrder", ["xformOp:transform"], true));
         nodePrim.Attributes.Insert(0, new UsdMatrix4d("xformOp:transform", node.Transform));
 
-        // If the node has geometry, add the mesh as a child of the Xform
         var meshPrim = CreateMeshPrim(node);
         if (meshPrim is not null)
         {
             nodePrim.Children.Add(meshPrim);
         }
 
-        // Get all the children of the node
         var children = node.Children;
         if (children is not null)
         {
-            // Build path for children based on parent path and this node's name
             string nodePath = string.IsNullOrEmpty(parentPath) ? $"/{cleanNodeName}" : $"{parentPath}/{cleanNodeName}";
+            var usedChildNames = new HashSet<string>();
             foreach (var childNode in children)
             {
-                nodePrim.Children.Add(CreateNode(childNode, nodePath));
+                nodePrim.Children.Add(CreateNode(childNode, nodePath, usedChildNames));
             }
         }
 
