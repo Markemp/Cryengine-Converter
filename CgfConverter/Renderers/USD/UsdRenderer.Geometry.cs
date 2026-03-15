@@ -15,23 +15,23 @@ namespace CgfConverter.Renderers.USD;
 /// </summary>
 public partial class UsdRenderer
 {
+    /// <summary>
+    /// Creates the USD node hierarchy from CryEngine nodes.
+    /// IMPORTANT: Ivo format meshes are positioned by their Xform hierarchy transforms,
+    /// NOT by skeleton binding. Do NOT add SkelBindingAPI/skinning attributes to Ivo meshes
+    /// here — that causes double transforms (hierarchy positioning + skeleton skinning).
+    /// Skeleton binding is only for deformable meshes in the traditional format (IntVertices path).
+    /// </summary>
     private List<UsdPrim> CreateNodeHierarchy()
     {
-        // For Ivo format with skinning, use skeleton-based hierarchy to avoid double transforms
-        // Each mesh should be a direct child of its corresponding bone Xform, not nested under other meshes
-        if (_cryData.SkinningInfo?.HasSkinningInfo == true && _bonePathMap is not null)
-        {
-            return CreateIvoSkeletonNodes();
-        }
-
-        // Traditional format: build node hierarchy directly
         List<ChunkNode> rootNodes = _cryData.Nodes.Where(a => a.ParentNodeID == ~0).ToList();
         List<UsdPrim> nodes = [];
+        var usedRootNames = new HashSet<string>();
 
         foreach (ChunkNode root in rootNodes)
         {
             Log.D("Root node: {0}", root.Name);
-            nodes.Add(CreateNode(root, $"/root/{root.Name}"));
+            nodes.Add(CreateNode(root, "/root", usedRootNames));
         }
 
         return nodes;
@@ -69,46 +69,39 @@ public partial class UsdRenderer
     }
 
     /// <summary>
-    /// Creates a USD prim for a CryEngine node.
-    /// If the node has geometry, returns a Mesh prim with transforms.
-    /// If no geometry, returns an Xform prim.
-    /// This avoids unnecessary Xform > Mesh nesting.
+    /// Creates a USD prim for a CryEngine node, deduplicating names among siblings.
     /// </summary>
-    private UsdPrim CreateNode(ChunkNode node, string parentPath)
+    private UsdPrim CreateNode(ChunkNode node, string parentPath, HashSet<string> usedSiblingNames)
     {
         string cleanNodeName = CleanPathString(node.Name);
 
-        // Try to create mesh geometry first
-        var meshPrim = CreateMeshPrim(node);
-
-        // Use Mesh as the node if geometry exists, otherwise use Xform
-        UsdPrim nodePrim;
-        if (meshPrim is not null)
+        // Deduplicate: if a sibling already has this name, append numeric suffix
+        if (!usedSiblingNames.Add(cleanNodeName))
         {
-            // Mesh with transforms - no need for Xform wrapper
-            nodePrim = meshPrim;
-            // Mesh name was set in CreateMeshPrim, but we need to use node name for hierarchy
-            nodePrim.Name = cleanNodeName;
-        }
-        else
-        {
-            // No geometry - use Xform for transform-only nodes
-            nodePrim = new UsdXform(cleanNodeName, parentPath);
+            int suffix = 1;
+            while (!usedSiblingNames.Add($"{cleanNodeName}_{suffix}"))
+                suffix++;
+            cleanNodeName = $"{cleanNodeName}_{suffix}";
         }
 
-        // Add transform attributes
+        var nodePrim = new UsdXform(cleanNodeName, parentPath);
         nodePrim.Attributes.Insert(0, new UsdToken<List<string>>("xformOpOrder", ["xformOp:transform"], true));
         nodePrim.Attributes.Insert(0, new UsdMatrix4d("xformOp:transform", node.Transform));
 
-        // Get all the children of the node
+        var meshPrim = CreateMeshPrim(node);
+        if (meshPrim is not null)
+        {
+            nodePrim.Children.Add(meshPrim);
+        }
+
         var children = node.Children;
         if (children is not null)
         {
-            // Build path for children based on parent path and this node's name
             string nodePath = string.IsNullOrEmpty(parentPath) ? $"/{cleanNodeName}" : $"{parentPath}/{cleanNodeName}";
+            var usedChildNames = new HashSet<string>();
             foreach (var childNode in children)
             {
-                nodePrim.Children.Add(CreateNode(childNode, nodePath));
+                nodePrim.Children.Add(CreateNode(childNode, nodePath, usedChildNames));
             }
         }
 
@@ -420,11 +413,9 @@ public partial class UsdRenderer
                         $"/root/_materials/{cleanMatName}"));
             }
 
-            // Add skinning data if present (Ivo format - use per-subset extraction)
-            if (_cryData.SkinningInfo?.HasSkinningInfo ?? false)
-            {
-                AddSkinningAttributes(meshPrim, nodeChunk, subsets);
-            }
+            // DO NOT add skinning/SkelBindingAPI to Ivo format meshes.
+            // Ivo meshes are positioned by the Xform node hierarchy.
+            // Adding skeleton binding causes double transforms (hierarchy + skinning).
         }
 
         return meshPrim;

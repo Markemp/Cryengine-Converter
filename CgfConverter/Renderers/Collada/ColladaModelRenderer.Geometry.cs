@@ -56,6 +56,7 @@ public partial class ColladaModelRenderer
             var subsets = meshChunk.GeometryInfo.GeometrySubsets;
             Datastream<uint>? indices = meshChunk.GeometryInfo.Indices;
             Datastream<UV>? uvs = meshChunk.GeometryInfo.UVs;
+            Datastream<UV>? uvs2 = meshChunk.GeometryInfo.UVs2;
             Datastream<Vector3>? verts = meshChunk.GeometryInfo.Vertices;
             Datastream<VertUV>? vertsUvs = meshChunk.GeometryInfo.VertUVs;
             Datastream<Vector3>? normals = meshChunk.GeometryInfo.Normals;
@@ -73,15 +74,19 @@ public partial class ColladaModelRenderer
             ColladaMesh colladaMesh = new();
             geometry.Mesh = colladaMesh;
 
-            ColladaSource[] source = new ColladaSource[4];   // 4 possible source types.
+            bool hasUV2 = uvs2 is not null && verts is not null;  // UV2 only supported in traditional format
+            ColladaSource[] source = new ColladaSource[hasUV2 ? 5 : 4];
             ColladaSource posSource = new();
             ColladaSource normSource = new();
             ColladaSource uvSource = new();
             ColladaSource colorSource = new();
+            ColladaSource uv2Source = new();
             source[0] = posSource;
             source[1] = normSource;
             source[2] = uvSource;
             source[3] = colorSource;
+            if (hasUV2)
+                source[4] = uv2Source;
             posSource.ID = nodeChunk.Name + "-mesh-pos";
             posSource.Name = nodeChunk.Name + "-pos";
             normSource.ID = nodeChunk.Name + "-mesh-norm";
@@ -90,6 +95,8 @@ public partial class ColladaModelRenderer
             uvSource.Name = "UV";
             colorSource.ID = nodeChunk.Name + "-mesh-color";
             colorSource.Name = "Col";
+            uv2Source.ID = nodeChunk.Name + "-mesh-UV2";
+            uv2Source.Name = "UV2";
 
             ColladaVertices vertices = new() { ID = nodeChunk.Name + "-vertices" };
             geometry.Mesh.Vertices = vertices;
@@ -111,11 +118,13 @@ public partial class ColladaModelRenderer
             ColladaFloatArray floatArrayNormals = new();
             ColladaFloatArray floatArrayUVs = new();
             ColladaFloatArray floatArrayColors = new();
+            ColladaFloatArray floatArrayUVs2 = new();
 
             StringBuilder vertString = new();
             StringBuilder normString = new();
             StringBuilder uvString = new();
             StringBuilder colorString = new();
+            StringBuilder uv2String = new();
 
             var numberOfElements = nodeChunk.MeshData.GeometryInfo.GeometrySubsets.Sum(x => x.NumVertices);
 
@@ -139,6 +148,10 @@ public partial class ColladaModelRenderer
                 floatArrayColors.Digits = 6;
                 floatArrayColors.Magnitude = 38;
                 floatArrayColors.Count = numVerts * 4;
+                floatArrayUVs2.ID = uv2Source.ID + "-array";
+                floatArrayUVs2.Digits = 6;
+                floatArrayUVs2.Magnitude = 38;
+                floatArrayUVs2.Count = numVerts * 2;
 
                 var hasNormals = normals is not null;
                 var hasUVs = uvs is not null;
@@ -148,10 +161,13 @@ public partial class ColladaModelRenderer
                     var normal = hasNormals ? normals.Data[j] : DefaultNormal;
                     var uv = hasUVs ? uvs.Data[j] : DefaultUV;
                     var color = hasColors ? colors.Data[j] : DefaultColor;
+                    var uv2 = hasUV2 ? uvs2!.Data[j] : DefaultUV;
                     vertString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", verts.Data[j].X, verts.Data[j].Y, verts.Data[j].Z);
                     normString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} ", Safe(normal.X), Safe(normal.Y), Safe(normal.Z));
                     colorString.AppendFormat(culture, "{0:F6} {1:F6} {2:F6} {3:F6} ", color.R, color.G, color.B, color.A);
                     uvString.AppendFormat(culture, "{0:F6} {1:F6} ", Safe(uv.U), 1 - Safe(uv.V));
+                    if (hasUV2)
+                        uv2String.AppendFormat(culture, "{0:F6} {1:F6} ", Safe(uv2.U), 1 - Safe(uv2.V));
                 }
             }
             else    // VertsUV structure.  Pull out verts, colors and UVs from vertsUvs.
@@ -244,10 +260,9 @@ public partial class ColladaModelRenderer
                     Material = GetMaterialName(nodeChunk.MaterialFileName, submatName) + "-material"
                 };
 
-                // Create the inputs.  vertex, normal, texcoord, color
-                int inputCount = 3;
-                if (colors is not null || vertsUvs is not null)
-                    inputCount++;
+                // Create the inputs.  vertex, normal, texcoord, [color], [texcoord2]
+                bool triHasColors = colors is not null || vertsUvs is not null;
+                int inputCount = 3 + (triHasColors ? 1 : 0) + (hasUV2 ? 1 : 0);
 
                 triangles[j].Input = new ColladaInputShared[inputCount];
 
@@ -267,11 +282,12 @@ public partial class ColladaModelRenderer
                 {
                     Semantic = ColladaInputSemantic.TEXCOORD,
                     Offset = 2,
+                    Set = 0,
                     source = "#" + uvSource.ID
                 };
 
                 int nextInputID = 3;
-                if (colors is not null || vertsUvs is not null)
+                if (triHasColors)
                 {
                     triangles[j].Input[nextInputID] = new ColladaInputShared
                     {
@@ -281,14 +297,25 @@ public partial class ColladaModelRenderer
                     };
                     nextInputID++;
                 }
+                if (hasUV2)
+                {
+                    triangles[j].Input[nextInputID] = new ColladaInputShared
+                    {
+                        Semantic = ColladaInputSemantic.TEXCOORD,
+                        Offset = nextInputID,
+                        Set = 1,
+                        source = "#" + uv2Source.ID
+                    };
+                    nextInputID++;
+                }
 
                 // Create the P node for the Triangles.
+                // Each triangle vertex emits its index once per active input (all inputs share the same index).
                 StringBuilder p = new();
-                string formatString;
-                if (colors is not null || vertsUvs is not null)
-                    formatString = "{0} {0} {0} {0} {1} {1} {1} {1} {2} {2} {2} {2} ";
-                else
-                    formatString = "{0} {0} {0} {1} {1} {1} {2} {2} {2} ";
+                string formatString =
+                    string.Join(" ", Enumerable.Repeat("{0}", inputCount)) + " " +
+                    string.Join(" ", Enumerable.Repeat("{1}", inputCount)) + " " +
+                    string.Join(" ", Enumerable.Repeat("{2}", inputCount)) + " ";
 
                 var offsetStart = 0;
                 for (int q = 0; q < meshChunk.GeometryInfo.GeometrySubsets.IndexOf(subsets[j]); q++)
@@ -319,11 +346,14 @@ public partial class ColladaModelRenderer
             floatArrayNormals.Value_As_String = normString.ToString().TrimEnd();
             floatArrayUVs.Value_As_String = uvString.ToString().TrimEnd();
             floatArrayColors.Value_As_String = colorString.ToString();
+            floatArrayUVs2.Value_As_String = uv2String.ToString().TrimEnd();
 
             source[0].Float_Array = floatArrayVerts;
             source[1].Float_Array = floatArrayNormals;
             source[2].Float_Array = floatArrayUVs;
             source[3].Float_Array = floatArrayColors;
+            if (hasUV2)
+                source[4].Float_Array = floatArrayUVs2;
             geometry.Mesh.Source = source;
 
             // create the technique_common for each of these
@@ -410,6 +440,24 @@ public partial class ColladaModelRenderer
                 paramColor[3].Name = "A";
                 paramColor[3].Type = "float";
                 colorSource.Technique_Common.Accessor.Param = paramColor;
+            }
+
+            if (hasUV2)
+            {
+                uv2Source.Technique_Common = new ColladaTechniqueCommonSource
+                {
+                    Accessor = new ColladaAccessor
+                    {
+                        Source = "#" + floatArrayUVs2.ID,
+                        Stride = 2,
+                        Count = (uint)numberOfElements
+                    }
+                };
+                uv2Source.Technique_Common.Accessor.Param =
+                [
+                    new ColladaParam { Name = "S", Type = "float" },
+                    new ColladaParam { Name = "T", Type = "float" }
+                ];
             }
 
             geometryList.Add(geometry);

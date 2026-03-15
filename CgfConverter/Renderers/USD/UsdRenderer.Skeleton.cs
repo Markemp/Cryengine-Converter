@@ -15,24 +15,6 @@ namespace CgfConverter.Renderers.USD;
 /// </summary>
 public partial class UsdRenderer
 {
-    #region Matrix Conversion
-
-    /// <summary>
-    /// Converts a CryEngine matrix to USD format by moving translation from column 4 to row 4.
-    /// CryEngine stores translation in (M14, M24, M34), USD expects it in (M41, M42, M43).
-    /// Unlike Transpose(), this preserves the rotation orientation.
-    /// </summary>
-    private static Matrix4x4 CryEngineToUsdMatrix(Matrix4x4 cryMatrix)
-    {
-        return new Matrix4x4(
-            cryMatrix.M11, cryMatrix.M12, cryMatrix.M13, 0,
-            cryMatrix.M21, cryMatrix.M22, cryMatrix.M23, 0,
-            cryMatrix.M31, cryMatrix.M32, cryMatrix.M33, 0,
-            cryMatrix.M14, cryMatrix.M24, cryMatrix.M34, 1);
-    }
-
-    #endregion
-
     #region Skeleton Methods
 
     /// <summary>Creates a USD skeleton hierarchy for skinned meshes.</summary>
@@ -198,6 +180,12 @@ public partial class UsdRenderer
     }
 
     /// <summary>Gets rest transforms (local-space bone transforms) in joint order.</summary>
+    /// <remarks>
+    /// USD accumulates transforms as: worldTransform[i] = restTransform[i] * worldTransform[parent(i)]
+    /// (child on LEFT, parent on RIGHT). Because Transpose(A*B) = Transpose(B)*Transpose(A),
+    /// computing in CryEngine convention and transposing the product naturally reverses the
+    /// multiplication order to match USD's accumulation convention.
+    /// </remarks>
     private List<Matrix4x4> GetRestTransforms(List<string> jointPaths, Dictionary<CompiledBone, string> bonePathMap)
     {
         var restTransforms = new List<Matrix4x4>();
@@ -240,24 +228,10 @@ public partial class UsdRenderer
                     }
                 }
 
-                // Debug: log turret_arm rest transform (CtrlID = 0x9384FC75)
-                if (bone.ControllerID == 0x9384FC75)
-                {
-                    Log.I($"USD skeleton turret_arm restMatrix (CryEngine format):");
-                    Log.I($"  [{restMatrix.M11:F6}, {restMatrix.M12:F6}, {restMatrix.M13:F6}, {restMatrix.M14:F6}]");
-                    Log.I($"  [{restMatrix.M21:F6}, {restMatrix.M22:F6}, {restMatrix.M23:F6}, {restMatrix.M24:F6}]");
-                    Log.I($"  [{restMatrix.M31:F6}, {restMatrix.M32:F6}, {restMatrix.M33:F6}, {restMatrix.M34:F6}]");
-                    Log.I($"  [{restMatrix.M41:F6}, {restMatrix.M42:F6}, {restMatrix.M43:F6}, {restMatrix.M44:F6}]");
-                    if (Matrix4x4.Decompose(restMatrix, out var s, out var r, out var t))
-                    {
-                        Log.I($"USD skeleton turret_arm rest rotation (from restMatrix): ({r.X:F6}, {r.Y:F6}, {r.Z:F6}, {r.W:F6})");
-                        var angle = 2 * Math.Acos(Math.Clamp(r.W, -1, 1)) * 180 / Math.PI;
-                        Log.I($"USD skeleton turret_arm rest rotation angle: {angle:F2}°");
-                    }
-                }
-
                 // Transpose converts from CryEngine convention (translation in column 4)
-                // to USD convention (translation in row 4)
+                // to USD convention (translation in row 4).
+                // Note: Transpose(A*B) = Transpose(B)*Transpose(A), which naturally reverses
+                // the multiplication order to match USD's accumulation: world = rest * parentWorld.
                 restTransforms.Add(Matrix4x4.Transpose(restMatrix));
             }
             else

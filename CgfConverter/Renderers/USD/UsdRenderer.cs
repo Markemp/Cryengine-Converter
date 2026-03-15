@@ -126,52 +126,14 @@ public partial class UsdRenderer : IRenderer
 
         if (hasSkeleton)
         {
-            // Create skeleton hierarchy and cache data for multi-file animation export
             Log.D("Model has skeleton with {0} bones", _cryData.SkinningInfo.CompiledBones.Count);
+
             var skelRoot = CreateSkeleton(out _controllerIdToJointPath, out _jointPaths, out _bonePathMap, out _compiledBoneIndexToJointIndex);
             rootPrim.Children.Add(skelRoot);
-
-            // Add skinned meshes as children of SkelRoot (siblings of Skeleton)
-            // All mesh positioning comes from skeletal skinning, not scene graph inheritance
-            // This avoids double-transform issues where meshes would inherit bone Xform transforms
-            skelRoot.Children.AddRange(CreateNodeHierarchy());
-
-            // Create animations if available (DBA or CAF)
-            // Only include animation in main file if there's exactly one.
-            // Multiple animations go to separate files for Blender NLA workflow.
-            bool hasDbaAnimations = _cryData.Animations is not null && _cryData.Animations.Count > 0;
-            bool hasCafAnimations = _cryData.CafAnimations is not null && _cryData.CafAnimations.Count > 0;
-
-            if (hasDbaAnimations || hasCafAnimations)
-            {
-                var animations = CreateAnimations(_controllerIdToJointPath, usdDoc.Header);
-                if (animations.Count == 1)
-                {
-                    // Single animation - include it in the main file
-                    skelRoot.Children.AddRange(animations);
-
-                    var firstAnimName = CleanPathString(animations[0].Name);
-                    var skeleton = skelRoot.Children.OfType<UsdSkeleton>().FirstOrDefault();
-                    if (skeleton is not null)
-                    {
-                        skeleton.Attributes.Add(
-                            new UsdRelationship("skel:animationSource", $"</root/Armature/{firstAnimName}>"));
-                    }
-                }
-                else if (animations.Count > 1)
-                {
-                    // Multiple animations - they'll be exported to separate files
-                    // Main file gets skeleton + mesh only (no animation bound)
-                    Log.D($"Multiple animations ({animations.Count}) found - excluding from main file, will export separately");
-                }
-            }
-        }
-        else
-        {
-            // Create the node hierarchy as Xforms
-            rootPrim.Children = CreateNodeHierarchy();
         }
 
+        // Create the node hierarchy as Xforms
+        rootPrim.Children.AddRange(CreateNodeHierarchy());
         rootPrim.Children.Add(CreateMaterials());
 
         return usdDoc;
