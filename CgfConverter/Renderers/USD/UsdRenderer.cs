@@ -129,14 +129,43 @@ public partial class UsdRenderer : IRenderer
             Log.D("Model has skeleton with {0} bones", _cryData.SkinningInfo.CompiledBones.Count);
 
             var skelRoot = CreateSkeleton(out _controllerIdToJointPath, out _jointPaths, out _bonePathMap, out _compiledBoneIndexToJointIndex);
+
+            if (HasIvoSkeletonBinding())
+            {
+                // Ivo format with node-to-bone mapping (.cga): meshes go inside SkelRoot
+                // Skeleton drives all mesh positioning via per-vertex bone binding
+                skelRoot.Children.AddRange(CreateIvoSkinnedMeshes());
+            }
+            else
+            {
+                // Skeleton without node mapping (.skin/.chr): meshes go inside SkelRoot
+                // with skinning from IntVertices/Ext2IntMap or BoneMappings
+                skelRoot.Children.AddRange(CreateSkinnedMeshes());
+            }
+
             rootPrim.Children.Add(skelRoot);
         }
+        else
+        {
+            // No skeleton: just Xform hierarchy
+            rootPrim.Children.AddRange(CreateNodeHierarchy());
+        }
 
-        // Create the node hierarchy as Xforms
-        rootPrim.Children.AddRange(CreateNodeHierarchy());
         rootPrim.Children.Add(CreateMaterials());
 
         return usdDoc;
+    }
+
+    /// <summary>
+    /// Check if the model has Ivo format skeleton binding (bones with ObjectNodeIndex mappings).
+    /// </summary>
+    private bool HasIvoSkeletonBinding()
+    {
+        var bones = _cryData.SkinningInfo?.CompiledBones;
+        if (bones is null || bones.Count == 0)
+            return false;
+
+        return bones.Any(b => b.ObjectNodeIndex >= 0);
     }
 
     /// <summary>

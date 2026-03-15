@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Cryengine Converter is a C# tool that converts Cryengine game assets (.cgf, .cga, .chr, .skin) into portable 3D formats (Collada .dae, glTF .gltf/.glb). It supports multiple Cryengine variants including traditional Cryengine games (MWO, Crysis) and Star Citizen's proprietary #ivo format.
 
+## Shell Usage
+
+When the working directory is already the repo root, run commands directly without `cd`. Only use `cd` if you need to change to a different directory.
+
 ## Common Commands
 
 ### Build
