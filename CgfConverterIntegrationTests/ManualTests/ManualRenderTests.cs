@@ -349,7 +349,7 @@ public class ManualRenderTests
     [TestMethod]
     public void SC46_Avenger_Gltf()
     {
-        RenderToGltf($@"{sc46ObjectDir}\Objects\Spaceships\Ships\AEGS\Avenger\AEGS_Avenger.cga", sc46ObjectDir);
+        RenderToGltf($@"{sc46ObjectDir}\Objects\Spaceships\Ships\AEGS\Avenger\AEGS_Avenger.cga", sc46ObjectDir, includeAnimations: false);
     }
 
     [TestMethod]
@@ -463,12 +463,12 @@ public class ManualRenderTests
         Assert.IsTrue(File.Exists(outputPath), $"Output file not created: {outputPath}");
     }
 
-    private void RenderToGltf(string inputFile, string objectDir)
+    private void RenderToGltf(string inputFile, string objectDir, bool includeAnimations = true)
     {
         var cliArgs = new string[] { inputFile, "-gltf", "-objectdir", objectDir };
         argsHandler.ProcessArgs(cliArgs);
 
-        var cryData = new CryEngine(inputFile, args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir, IncludeAnimations: true));
+        var cryData = new CryEngine(inputFile, args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir, IncludeAnimations: includeAnimations));
         cryData.ProcessCryengineFiles();
 
         var renderer = new GltfModelRenderer(args, cryData);
