@@ -343,7 +343,7 @@ public class ManualRenderTests
     [TestMethod]
     public void SC46_Avenger_USD()
     {
-        RenderToUsd($@"{sc46ObjectDir}\Objects\Spaceships\Ships\AEGS\Avenger\AEGS_Avenger.cga", sc46ObjectDir);
+        RenderToUsd($@"{sc46ObjectDir}\Objects\Spaceships\Ships\AEGS\Avenger\AEGS_Avenger.cga", sc46ObjectDir, includeAnimations: false);
     }
 
     [TestMethod]

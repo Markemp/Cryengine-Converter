@@ -36,39 +36,49 @@ internal class ChunkCompiledBones_901 : ChunkCompiledBones
 
         var boneNames = GetNullSeparatedStrings(NumBones, stringTableSize, b);
 
-        // Post bone read setup.  Parents, children, etc.
-        // Add the ChildID to the parent bone.  This will help with navigation.
+        // Transforms are stored as two contiguous blocks rather than interleaved per bone:
+        // first all relative (local) transforms, then all world transforms.
+        var relativeQuats = new Quaternion[NumBones];
+        var relativeTranslations = new Vector3[NumBones];
         for (int i = 0; i < NumBones; i++)
         {
-            var relativeQuat = b.ReadQuaternion();
-            var relativeTranslation = b.ReadVector3();
-            var worldQuat = b.ReadQuaternion();
-            var worldTranslation = b.ReadVector3();
+            relativeQuats[i] = b.ReadQuaternion();
+            relativeTranslations[i] = b.ReadVector3();
+        }
 
+        var worldQuats = new Quaternion[NumBones];
+        var worldTranslations = new Vector3[NumBones];
+        for (int i = 0; i < NumBones; i++)
+        {
+            worldQuats[i] = b.ReadQuaternion();
+            worldTranslations[i] = b.ReadVector3();
+        }
+
+        // Post bone read setup.  Parents, children, names, and transforms.
+        for (int i = 0; i < NumBones; i++)
+        {
             // Build boneToWorld matrix in CryEngine convention (column-vector rotation + translation in col 4).
             // IMPORTANT: Must use ConvertToRotationMatrix() which produces CryEngine convention rotation,
             // NOT Matrix4x4.CreateFromQuaternion() which produces .NET row-vector convention (transposed).
             // Using the wrong convention causes parent.BPM * inv(child.BPM) to produce incorrect local
             // transforms, making skeleton bone positions diverge from their bind transforms.
-            var rot = worldQuat.ConvertToRotationMatrix();
+            var rot = worldQuats[i].ConvertToRotationMatrix();
             var boneToWorld = new Matrix4x4(
-                rot.M11, rot.M12, rot.M13, worldTranslation.X,
-                rot.M21, rot.M22, rot.M23, worldTranslation.Y,
-                rot.M31, rot.M32, rot.M33, worldTranslation.Z,
+                rot.M11, rot.M12, rot.M13, worldTranslations[i].X,
+                rot.M21, rot.M22, rot.M23, worldTranslations[i].Y,
+                rot.M31, rot.M32, rot.M33, worldTranslations[i].Z,
                 0, 0, 0, 1);
             Matrix4x4.Invert(boneToWorld, out Matrix4x4 bpm);
             BoneList[i].BindPoseMatrix = bpm;
 
             BoneList[i].BoneName = boneNames[i];
-            // ParentControllerIndex is read in ReadCompiledBone_901 as the parent bone index
-            // A value of -1 (or 0xFFFF as signed short) means no parent (root bone)
             if (BoneList[i].ParentControllerIndex >= 0 && BoneList[i].ParentControllerIndex < BoneList.Count)
             {
                 BoneList[i].ParentBone = BoneList[BoneList[i].ParentControllerIndex];
                 BoneList[i].ParentBone.ChildIDs.Add(i);
             }
-            BoneList[i].LocalTransformMatrix = Matrix3x4.CreateFromParts(relativeQuat, relativeTranslation);
-            BoneList[i].WorldTransformMatrix = Matrix3x4.CreateFromParts(worldQuat, worldTranslation);
+            BoneList[i].LocalTransformMatrix = Matrix3x4.CreateFromParts(relativeQuats[i], relativeTranslations[i]);
+            BoneList[i].WorldTransformMatrix = Matrix3x4.CreateFromParts(worldQuats[i], worldTranslations[i]);
         }
     }
 }

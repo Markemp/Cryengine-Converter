@@ -248,7 +248,8 @@ public partial class UsdRenderer
     /// <param name="meshPrim">The mesh prim to add skinning to.</param>
     /// <param name="nodeChunk">The node chunk containing mesh data.</param>
     /// <param name="subsets">Geometry subsets for per-subset vertex extraction (Ivo format).</param>
-    private void AddSkinningAttributes(UsdMesh meshPrim, ChunkNode nodeChunk, IEnumerable<MeshSubset>? subsets = null)
+    /// <param name="geomBindTransform">World-space transform of the mesh at bind time. If null, identity is used.</param>
+    private void AddSkinningAttributes(UsdMesh meshPrim, ChunkNode nodeChunk, IEnumerable<MeshSubset>? subsets = null, Matrix4x4? geomBindTransform = null)
     {
         // Get skinning data
         var skinningInfo = _cryData.SkinningInfo;
@@ -259,6 +260,9 @@ public partial class UsdRenderer
             Log.W("Skinning attributes requested but bone index mapping not initialized");
             return;
         }
+
+        Log.D($"AddSkinningAttributes for '{nodeChunk.Name}': HasIntToExt={skinningInfo.HasIntToExtMapping}, IntVerts={skinningInfo.IntVertices?.Count}, BoneMappings={skinningInfo.BoneMappings?.Count}, subsets={subsets?.Count()}");
+
 
         // Build joint indices and weights arrays FIRST to check if we have actual skinning data
         // Use Ext2IntMap if available to map external (mesh) vertices to internal (skinning) vertices
@@ -357,8 +361,9 @@ public partial class UsdRenderer
         else
             meshPrim.Properties = [new UsdProperty(skelBindingApi, true)];
 
-        // Add geomBindTransform (usually identity matrix)
-        meshPrim.Attributes.Add(new UsdMatrix4d("primvars:skel:geomBindTransform", Matrix4x4.Identity));
+        // Add geomBindTransform — the mesh's world-space transform at bind time
+        // For Ivo meshes, this is the node's accumulated world transform
+        meshPrim.Attributes.Add(new UsdMatrix4d("primvars:skel:geomBindTransform", geomBindTransform ?? Matrix4x4.Identity));
 
         // Add skinning arrays with elementSize (influences per vertex)
         int elementSize = 4; // CryEngine uses up to 4 bone influences per vertex

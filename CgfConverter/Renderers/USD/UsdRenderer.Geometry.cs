@@ -17,10 +17,7 @@ public partial class UsdRenderer
 {
     /// <summary>
     /// Creates the USD node hierarchy from CryEngine nodes.
-    /// IMPORTANT: Ivo format meshes are positioned by their Xform hierarchy transforms,
-    /// NOT by skeleton binding. Do NOT add SkelBindingAPI/skinning attributes to Ivo meshes
-    /// here — that causes double transforms (hierarchy positioning + skeleton skinning).
-    /// Skeleton binding is only for deformable meshes in the traditional format (IntVertices path).
+    /// Used for non-skeleton models or traditional format with separate Xform hierarchy.
     /// </summary>
     private List<UsdPrim> CreateNodeHierarchy()
     {
@@ -38,34 +35,101 @@ public partial class UsdRenderer
     }
 
     /// <summary>
-    /// Creates flat mesh list for Ivo format with skeletal skinning.
-    /// Meshes are placed at SkelRoot level with identity transforms.
-    /// All positioning comes purely from skeletal skinning (skel:jointIndices/Weights).
-    /// This avoids double transforms from scene graph inheritance + skinning.
+    /// Creates skinned meshes for Ivo format, placed as siblings of Skeleton under SkelRoot.
+    /// Each mesh gets SkelBindingAPI with jointIndices/jointWeights.
+    /// geomBindTransform is set to the node's accumulated world transform so vertices
+    /// (which are in node-local space after bounding-box decompression) are correctly positioned.
     /// </summary>
-    private List<UsdPrim> CreateIvoSkeletonNodes()
+    private List<UsdPrim> CreateIvoSkinnedMeshes()
     {
-        var nodes = new List<UsdPrim>();
+        var meshPrims = new List<UsdPrim>();
+        var usedNames = new HashSet<string>();
 
-        // Simply create mesh prims for all nodes with geometry
-        // They will be placed as siblings of Skeleton under SkelRoot
         foreach (var cryNode in _cryData.Nodes)
         {
-            var meshPrim = CreateMeshPrim(cryNode);
-            if (meshPrim is null)
+            if (CreateMeshPrim(cryNode) is not UsdMesh meshPrim)
                 continue;
 
-            // Use identity transform - all positioning comes from skeletal skinning
-            meshPrim.Attributes.RemoveAll(a => a is UsdMatrix4d m && m.Name == "xformOp:transform");
-            meshPrim.Attributes.RemoveAll(a => a is UsdToken<List<string>> t && t.Name == "xformOpOrder");
-            meshPrim.Attributes.Insert(0, new UsdToken<List<string>>("xformOpOrder", ["xformOp:transform"], true));
-            meshPrim.Attributes.Insert(0, new UsdMatrix4d("xformOp:transform", Matrix4x4.Identity));
+            // Deduplicate mesh names (they're all siblings under SkelRoot)
+            var meshName = CleanPathString(cryNode.Name);
+            if (!usedNames.Add(meshName))
+            {
+                int suffix = 1;
+                while (!usedNames.Add($"{meshName}_{suffix}"))
+                    suffix++;
+                meshName = $"{meshName}_{suffix}";
+            }
+            meshPrim.Name = meshName;
 
-            nodes.Add(meshPrim);
-            Log.D($"Created skinned mesh '{cryNode.Name}' with identity transform");
+            // Compute the node's world transform by walking up the hierarchy
+            // This becomes the geomBindTransform so vertices in node-local space
+            // are correctly placed in skeleton world space
+            var geomBindTransform = ComputeNodeWorldTransform(cryNode);
+
+            // Get geometry subsets for per-subset bone mapping extraction
+            var subsets = (cryNode.MeshData as ChunkMesh)?.GeometryInfo?.GeometrySubsets;
+
+            // Add skinning attributes (jointIndices, jointWeights, geomBindTransform, skeleton ref)
+            AddSkinningAttributes(meshPrim, cryNode, subsets, geomBindTransform);
+
+            meshPrims.Add(meshPrim);
+            Log.D($"Created skinned mesh '{cryNode.Name}' bound to skeleton");
         }
 
-        return nodes;
+        return meshPrims;
+    }
+
+    /// <summary>
+    /// Creates skinned meshes for models without node-to-bone mapping (.skin/.chr).
+    /// Meshes get SkelBindingAPI with per-vertex weights from IntVertices/Ext2IntMap or BoneMappings.
+    /// </summary>
+    private List<UsdPrim> CreateSkinnedMeshes()
+    {
+        var meshPrims = new List<UsdPrim>();
+        var usedNames = new HashSet<string>();
+
+        foreach (var cryNode in _cryData.Nodes)
+        {
+            if (CreateMeshPrim(cryNode) is not UsdMesh meshPrim)
+                continue;
+
+            var meshName = CleanPathString(cryNode.Name);
+            if (!usedNames.Add(meshName))
+            {
+                int suffix = 1;
+                while (!usedNames.Add($"{meshName}_{suffix}"))
+                    suffix++;
+                meshName = $"{meshName}_{suffix}";
+            }
+            meshPrim.Name = meshName;
+
+            // .skin/.chr meshes are already in world space, use identity geomBindTransform
+            AddSkinningAttributes(meshPrim, cryNode);
+
+            meshPrims.Add(meshPrim);
+            Log.D($"Created skinned mesh '{cryNode.Name}' bound to skeleton");
+        }
+
+        return meshPrims;
+    }
+
+    /// <summary>
+    /// Computes the accumulated world-space transform for a node by walking up the parent chain.
+    /// For Ivo nodes, Transform is in .NET row-vector convention (via ConvertToLocalTransformMatrix),
+    /// so accumulation must be child * parent to correctly apply parent rotation to child translation.
+    /// </summary>
+    private static Matrix4x4 ComputeNodeWorldTransform(ChunkNode node)
+    {
+        var current = node;
+        var worldTransform = current.Transform;
+
+        while (current.ParentNode is not null)
+        {
+            current = current.ParentNode;
+            worldTransform = worldTransform * current.Transform;
+        }
+
+        return worldTransform;
     }
 
     /// <summary>
@@ -241,11 +305,8 @@ public partial class UsdRenderer
                         $"/root/_materials/{cleanMatName}"));
             }
 
-            // Add skinning data if present (traditional format - no per-subset extraction)
-            if (_cryData.SkinningInfo?.HasSkinningInfo ?? false)
-            {
-                AddSkinningAttributes(meshPrim, nodeChunk, subsets: null);
-            }
+            // Skinning attributes are added by CreateSkinnedMeshes()/CreateIvoSkinnedMeshes(),
+            // not here — CreateMeshPrim handles geometry only.
         }
         else if (vertsUvs is not null)
         {
@@ -413,9 +474,8 @@ public partial class UsdRenderer
                         $"/root/_materials/{cleanMatName}"));
             }
 
-            // DO NOT add skinning/SkelBindingAPI to Ivo format meshes.
-            // Ivo meshes are positioned by the Xform node hierarchy.
-            // Adding skeleton binding causes double transforms (hierarchy + skinning).
+            // Skinning attributes are added by CreateIvoSkinnedMeshes() after mesh creation,
+            // not here — CreateMeshPrim handles geometry only.
         }
 
         return meshPrim;
