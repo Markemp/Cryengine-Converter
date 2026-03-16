@@ -115,18 +115,18 @@ public partial class UsdRenderer
 
     /// <summary>
     /// Computes the accumulated world-space transform for a node by walking up the parent chain.
+    /// For Ivo nodes, Transform is in .NET row-vector convention (via ConvertToLocalTransformMatrix),
+    /// so accumulation must be child * parent to correctly apply parent rotation to child translation.
     /// </summary>
     private static Matrix4x4 ComputeNodeWorldTransform(ChunkNode node)
     {
-        // Accumulate transforms from node up to root
-        // node.Transform is already a Matrix4x4 in CryEngine convention
         var current = node;
         var worldTransform = current.Transform;
 
         while (current.ParentNode is not null)
         {
             current = current.ParentNode;
-            worldTransform = current.Transform * worldTransform;
+            worldTransform = worldTransform * current.Transform;
         }
 
         return worldTransform;
