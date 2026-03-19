@@ -329,18 +329,6 @@ public class ManualRenderTests
     #region SC test files
 
     [TestMethod]
-    public void SC41_Avenger_USD()
-    {
-        RenderToUsd($@"{sc41ObjectDir}\Objects\Spaceships\Ships\AEGS\Avenger\AEGS_Avenger.cga", sc41ObjectDir);
-    }
-
-    [TestMethod]
-    public void SC41_Avenger_Gltf()
-    {
-        RenderToGltf($@"{sc41ObjectDir}\Objects\Spaceships\Ships\AEGS\Avenger\AEGS_Avenger.cga", sc41ObjectDir);
-    }
-
-    [TestMethod]
     public void SC46_Avenger_USD()
     {
         RenderToUsd($@"{sc46ObjectDir}\Objects\Spaceships\Ships\AEGS\Avenger\AEGS_Avenger.cga", sc46ObjectDir, includeAnimations: false);
@@ -355,19 +343,19 @@ public class ManualRenderTests
     [TestMethod]
     public void Aloprat_USD()
     {
-        RenderToUsd($@"{sc46ObjectDir}\Objects\Characters\Creatures\aloprat\aloprat_skel.chr", sc46ObjectDir);
+        RenderToUsd($@"{sc46ObjectDir}\Objects\Characters\Creatures\aloprat\aloprat_skel.chr", sc46ObjectDir, includeAnimations: true);
     }
 
     [TestMethod]
     public void Aloprat_Skin_USD()
     {
-        RenderToUsd($@"{sc46ObjectDir}\Objects\Characters\Creatures\aloprat\aloprat.skin", sc46ObjectDir);
+        RenderToUsd($@"{sc46ObjectDir}\Objects\Characters\Creatures\aloprat\aloprat.skin", sc46ObjectDir, includeAnimations: true);
     }
 
     [TestMethod]
     public void BEHR_LaserCannon_S2_Usd()
     {
-        RenderToUsd($@"{sc46ObjectDir}\objects\spaceships\Weapons\BEHR\BEHR_LaserCannon_S2\BEHR_LaserCannon_S2.cga", sc46ObjectDir);
+        RenderToUsd($@"{sc46ObjectDir}\objects\spaceships\Weapons\BEHR\BEHR_LaserCannon_S2\BEHR_LaserCannon_S2.cga", sc46ObjectDir, includeAnimations: true);
     }
 
     [TestMethod]

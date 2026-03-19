@@ -143,6 +143,22 @@ public partial class UsdRenderer : IRenderer
                 skelRoot.Children.AddRange(CreateSkinnedMeshes());
             }
 
+            // Add animation to the main file only when there's exactly one.
+            // Multiple animations get exported as separate files (each with their own skeleton)
+            // due to USD's single animation binding per skeleton limitation.
+            var animPrims = CreateAnimations(_controllerIdToJointPath, usdDoc.Header);
+            if (animPrims.Count == 1)
+            {
+                skelRoot.Children.Add(animPrims[0]);
+
+                var skeleton = skelRoot.Children.OfType<UsdSkeleton>().FirstOrDefault();
+                if (skeleton is not null)
+                {
+                    var animPath = $"</root/Armature/{animPrims[0].Name}>";
+                    skeleton.Attributes.Add(new UsdRelationship("skel:animationSource", animPath));
+                }
+            }
+
             rootPrim.Children.Add(skelRoot);
         }
         else

@@ -324,6 +324,9 @@ public struct IvoAnimControllerEntry
 /// </remarks>
 public struct IvoDBAMetaEntry
 {
+    /// <summary>Unknown value added in v902 (seen as 0x00000000). Precedes Flags.</summary>
+    public uint Unknown0 { get; set; }
+
     /// <summary>Animation flags (usually 2).</summary>
     public uint Flags { get; set; }
 
@@ -332,6 +335,9 @@ public struct IvoDBAMetaEntry
 
     /// <summary>Number of bone controllers.</summary>
     public ushort NumControllers { get; set; }
+
+    /// <summary>Unknown value added in v902 (seen as 0x00900000). Follows NumControllers.</summary>
+    public uint Unknown3 { get; set; }
 
     /// <summary>Unknown value (often 0).</summary>
     public uint Unknown1 { get; set; }
