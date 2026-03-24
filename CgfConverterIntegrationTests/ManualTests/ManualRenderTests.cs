@@ -391,19 +391,25 @@ public class ManualRenderTests
     [TestMethod]
     public void Teapot_USD()
     {
-        RenderToUsd($@"{sc41ObjectDir}\objects\default\teapot.cgf", sc41ObjectDir);
+        RenderToUsd($@"{sc46ObjectDir}\objects\default\teapot.cgf", sc46ObjectDir);
+    }
+
+    [TestMethod]
+    public void AEGS_Avenger_LandingGear_Back_Skin_USD()
+    {
+        RenderToUsd($@"{sc46ObjectDir}\Objects\Spaceships\Ships\AEGS\LandingGear\Avenger\AEGS_Avenger_LandingGear_Back.skin", sc46ObjectDir, includeAnimations: true);
     }
 
     [TestMethod]
     public void AEGS_Avenger_LandingGear_Back_USD()
     {
-        RenderToUsd($@"{sc46ObjectDir}\Objects\Spaceships\Ships\AEGS\LandingGear\Avenger\AEGS_Avenger_LandingGear_Back_CHR.chr", sc41ObjectDir);
+        RenderToUsd($@"{sc46ObjectDir}\Objects\Spaceships\Ships\AEGS\LandingGear\Avenger\AEGS_Avenger_LandingGear_Back_CHR.chr", sc46ObjectDir, includeAnimations: true);
     }
 
     [TestMethod]
     public void AEGS_Avenger_LandingGear_Back_Gltf()
     {
-        RenderToGltf($@"{sc46ObjectDir}\Objects\Spaceships\Ships\AEGS\LandingGear\Avenger\AEGS_Avenger_LandingGear_Back_CHR.chr", sc41ObjectDir);
+        RenderToGltf($@"{sc46ObjectDir}\Objects\Spaceships\Ships\AEGS\LandingGear\Avenger\AEGS_Avenger_LandingGear_Back_CHR.chr", sc46ObjectDir);
     }
 
     [TestMethod]

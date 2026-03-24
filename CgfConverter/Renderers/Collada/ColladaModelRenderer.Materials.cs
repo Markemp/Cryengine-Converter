@@ -288,7 +288,7 @@ public partial class ColladaModelRenderer
             {
                 if (_args.UnsplitTextures)
                 {
-                    Log.I($"Combining texture file {textureFile}");
+                    Log.D($"Combining texture file {textureFile}");
                     Combine(textureFile);
                 }
             }

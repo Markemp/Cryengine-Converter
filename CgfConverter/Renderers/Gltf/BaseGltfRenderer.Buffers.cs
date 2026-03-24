@@ -508,7 +508,7 @@ public partial class BaseGltfRenderer
             {
                 try
                 {
-                    Log.I($"Combining texture file {originalPath}");
+                    Log.D($"Combining texture file {originalPath}");
                     Combine(originalPath);
                 }
                 catch (Exception ex)

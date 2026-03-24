@@ -7,7 +7,7 @@ using System.Text;
 namespace CgfConverter.CryEngineCore.Chunks;
 
 /// <summary>
-/// DBA metadata chunk version 0x901.
+/// DBA metadata chunk version 0x901.  SC 4.1 (Avenger back landing gear)
 /// Contains animation metadata entries (44 bytes each) and path string table.
 /// </summary>
 internal sealed class ChunkIvoDBAMetadata_901 : ChunkIvoDBAMetadata

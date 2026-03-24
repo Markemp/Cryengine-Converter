@@ -23,17 +23,16 @@ internal sealed class ChunkIvoDBAMetadata_902 : ChunkIvoDBAMetadata
         HelperMethods.Log(LogLevelEnum.Debug, $"ChunkIvoDBAMetadata_902: Reading at offset 0x{startOffset:X}");
 
         AnimCount = b.ReadUInt32();
-
+        SkipBytes(b, 4); // Padding
         HelperMethods.Log(LogLevelEnum.Debug, $"ChunkIvoDBAMetadata_902: AnimCount={AnimCount}");
 
-        // Read metadata entries (52 bytes each)
-        // Layout: Unknown0(4), Flags(4), FPS(2), NumControllers(2), Unknown3(4), Unknown1(4), Unknown2(4), StartRotation(16), StartPosition(12)
+        // Read metadata entries (48 bytes each)
+        // Layout:Flags(4), FPS(2), NumControllers(2), Unknown3(4), Unknown1(4), Unknown2(4), StartRotation(16), StartPosition(12)
         for (int i = 0; i < AnimCount; i++)
         {
             long entryOffset = b.BaseStream.Position;
             var entry = new IvoDBAMetaEntry
             {
-                Unknown0 = b.ReadUInt32(),
                 Flags = b.ReadUInt32(),
                 FramesPerSecond = b.ReadUInt16(),
                 NumControllers = b.ReadUInt16(),

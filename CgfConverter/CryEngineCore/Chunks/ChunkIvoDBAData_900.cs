@@ -2,7 +2,6 @@ using CgfConverter.Models.Structs;
 using CgfConverter.Utilities;
 using System.Collections.Generic;
 using System.IO;
-using System.Numerics;
 using System.Text;
 
 namespace CgfConverter.CryEngineCore.Chunks;
@@ -19,7 +18,7 @@ internal sealed class ChunkIvoDBAData_900 : ChunkIvoDBAData
 
         TotalDataSize = b.ReadUInt32();
 
-        long dataEnd = b.BaseStream.Position + TotalDataSize;
+        long dataEnd = b.BaseStream.Position + TotalDataSize - 4;
 
         // Parse #dba blocks until we reach the end
         int blockIndex = 0;
@@ -45,9 +44,7 @@ internal sealed class ChunkIvoDBAData_900 : ChunkIvoDBAData
             };
 
             if (header.Magic != 0xAA55)
-            {
                 HelperMethods.Log(LogLevelEnum.Warning, $"ChunkIvoDBAData_900: Expected magic 0xAA55, got 0x{header.Magic:X4}");
-            }
 
             int numBones = header.BoneCount;
 
@@ -85,7 +82,8 @@ internal sealed class ChunkIvoDBAData_900 : ChunkIvoDBAData
             }
 
             // Block end is blockStart + DataSize (keyframe data is within the block)
-            long blockEnd = blockStart + header.DataSize;
+            //long blockEnd = blockStart + 12 + header.DataSize;
+            long blockEnd = b.BaseStream.Position;
 
             // Create animation block with parsed data
             var animBlock = new IvoAnimationBlock
