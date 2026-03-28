@@ -126,39 +126,39 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                 case DatastreamType.IVONORMALS:
                 case DatastreamType.IVONORMALS2:
                     bytesPerElement = b.ReadUInt32();
-                    Datastream<Vector3> normals = new(
-                        DatastreamType.IVONORMALS2,
-                        meshDetails.NumberOfVertices,
-                        bytesPerElement,
-                        new Vector3[meshDetails.NumberOfVertices]);
-                    if (normals.BytesPerElement == 4)
+                    if (bytesPerElement == 4)
                     {
+                        // 4-byte format: single u32 packed unit vector (15-15-1-1 bit layout).
+                        // Same encoding as IVOQTANGENTS individual vectors.
+                        Datastream<Vector3> ivoNormals = new(
+                            DatastreamType.IVONORMALS2,
+                            meshDetails.NumberOfVertices,
+                            bytesPerElement,
+                            new Vector3[meshDetails.NumberOfVertices]);
                         for (int i = 0; i < meshDetails.NumberOfVertices; i++)
                         {
-                            var x = (float)b.ReadCryHalf();
-                            var y = (float)b.ReadCryHalf();
-
-                            //if (Math.Abs(x) > 1.05f || Math.Abs(y) > 1.05f)
-                            //    throw new InvalidDataException($"Invalid normal components at vertex {i}: ({x}, {y})");
-
-                            //// Check if x²+y² <= 1 (required for valid unit vector)
-                            //float sumSquares = x * x + y * y;
-                            //if (sumSquares > 1.05f)
-                            //    throw new InvalidDataException($"Invalid normal magnitude at vertex {i}: x²+y²={sumSquares}");
-
-                            //float z = (float)Math.Sqrt(1.0f - sumSquares);
-                            //normals.Data[i] = new Vector3(x, y, z);
-                            normals.Data[i] = new Vector3(x, y, 0.0f);
+                            uint val = b.ReadUInt16() | ((uint)b.ReadUInt16() << 16);
+                            ivoNormals.Data[i] = DecodePackedUnitVector(val);
                         }
+                        Normals = ivoNormals;
                     }
-                    else if (normals.BytesPerElement == 12)
+                    else if (bytesPerElement == 12)
                     {
+                        Datastream<Vector3> ivoNormals = new(
+                            DatastreamType.IVONORMALS2,
+                            meshDetails.NumberOfVertices,
+                            bytesPerElement,
+                            new Vector3[meshDetails.NumberOfVertices]);
                         for (int i = 0; i < meshDetails.NumberOfVertices; i++)
                         {
-                            normals.Data[i] = b.ReadVector3();
+                            ivoNormals.Data[i] = b.ReadVector3();
                         }
+                        Normals = ivoNormals;
                     }
-                    Normals = normals;
+                    else
+                    {
+                        SkipBytes(b, bytesPerElement * meshDetails.NumberOfVertices);
+                    }
                     b.AlignTo(8);
                     break;
                 case DatastreamType.IVOTANGENTS:
@@ -198,7 +198,8 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                                 ? new Vector3(nx / len, ny / len, nz / len)
                                 : new Vector3(0, 0, 1);
                         }
-                        Normals = tangentNormals;
+                        // Prefer direct IVONORMALS when available; fall back to tangent-derived
+                        Normals ??= tangentNormals;
                     }
                     else if (bytesPerElement == 16)
                     {
@@ -272,7 +273,8 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                         }
                     }
                     QTangents = qtangents;
-                    Normals = normals2;
+                    // Prefer direct IVONORMALS when available; fall back to tangent-derived
+                    Normals ??= normals2;
                     b.AlignTo(8);
                     break;
                 case DatastreamType.IVOBONEMAP32:
