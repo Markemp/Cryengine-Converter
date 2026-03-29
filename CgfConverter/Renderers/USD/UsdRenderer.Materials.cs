@@ -60,19 +60,40 @@ public partial class UsdRenderer
     {
         List<UsdShader> shaders = [];
 
+        // When a material uses MatLayers, flatten to the Primary (first) layer.
+        // The parent material's properties (Specular=1,1,1 etc.) are layer blending multipliers,
+        // not real PBR values. The Primary layer has the actual surface properties and textures.
+        Material effectiveMat = submat;
+        Texture[]? textures = submat.Textures;
+
+        if ((textures is null || textures.Length == 0)
+            && submat.SubMaterials is { Length: > 0 }
+            && submat.MatLayers is not null)
+        {
+            var primaryLayer = submat.SubMaterials[0];
+            if (primaryLayer is not null)
+            {
+                effectiveMat = primaryLayer;
+                textures = primaryLayer.Textures;
+                Log.D($"Flattening to Primary layer for {submat.Name} (from {submat.MatLayers.Layers?[0]?.Path})");
+            }
+        }
+
+        textures ??= effectiveMat.Textures;
+
         // Look up shader definition and generate rules
         ShaderDefinition? shaderDef = null;
         List<MaterialRule> materialRules = [];
 
-        if (!string.IsNullOrEmpty(submat.Shader))
+        if (!string.IsNullOrEmpty(effectiveMat.Shader))
         {
-            _shaderDefinitions.TryGetValue(submat.Shader, out shaderDef);
-            materialRules = _shaderRules.GenerateRules(submat, shaderDef);
+            _shaderDefinitions.TryGetValue(effectiveMat.Shader, out shaderDef);
+            materialRules = _shaderRules.GenerateRules(effectiveMat, shaderDef);
         }
 
         // Check for Nodraw shader - these materials should be invisible
-        bool isNodraw = !string.IsNullOrEmpty(submat.Shader) &&
-                        submat.Shader.Equals("Nodraw", StringComparison.OrdinalIgnoreCase);
+        bool isNodraw = !string.IsNullOrEmpty(effectiveMat.Shader) &&
+                        effectiveMat.Shader.Equals("Nodraw", StringComparison.OrdinalIgnoreCase);
 
         // Add the PrincipleBSDF shader
         var principleBSDF = new UsdShader($"Principled_BSDF");
@@ -82,36 +103,43 @@ public partial class UsdRenderer
         bool hasAlphaGlow = materialRules.Any(r => r.PropertyName == "%ALPHAGLOW");
 
         // Material color properties
-        if (submat.DiffuseValue is not null)
+        if (effectiveMat.DiffuseValue is not null)
         {
-            var diffuse = $"{submat.DiffuseValue.Red}, {submat.DiffuseValue.Green}, {submat.DiffuseValue.Blue}";
+            var diffuse = $"{effectiveMat.DiffuseValue.Red}, {effectiveMat.DiffuseValue.Green}, {effectiveMat.DiffuseValue.Blue}";
             principleBSDF.Attributes.Add(new UsdColor3f("inputs:diffuseColor", diffuse));
         }
 
-        if (submat.SpecularValue is not null)
+        if (effectiveMat.SpecularValue is not null)
         {
-            var specular = $"{submat.SpecularValue.Red}, {submat.SpecularValue.Green}, {submat.SpecularValue.Blue}";
+            var specular = $"{effectiveMat.SpecularValue.Red}, {effectiveMat.SpecularValue.Green}, {effectiveMat.SpecularValue.Blue}";
             principleBSDF.Attributes.Add(new UsdColor3f("inputs:specularColor", specular));
         }
 
         // Set emissive color from material (even with %ALPHAGLOW)
         // Note: %ALPHAGLOW tries to route diffuse alpha to emissive, but USD doesn't support this
         // (UsdPreviewSurface emissiveColor is color3f, can't connect float alpha to it)
-        if (submat.EmissiveValue is not null)
+        if (effectiveMat.EmissiveValue is not null)
         {
-            var emissive = $"{submat.EmissiveValue.Red}, {submat.EmissiveValue.Green}, {submat.EmissiveValue.Blue}";
+            var emissive = $"{effectiveMat.EmissiveValue.Red}, {effectiveMat.EmissiveValue.Green}, {effectiveMat.EmissiveValue.Blue}";
             principleBSDF.Attributes.Add(new UsdColor3f("inputs:emissiveColor", emissive));
         }
 
         // Opacity.  Nodraw materials should be fully transparent/invisible
         if (isNodraw)
             principleBSDF.Attributes.Add(new UsdAttribute<float>("inputs:opacity", 0.0f));
-        else if (submat.OpacityValue.HasValue)
-            principleBSDF.Attributes.Add(new UsdAttribute<float>("inputs:opacity", submat.OpacityValue.Value));
+        else if (effectiveMat.OpacityValue.HasValue)
+            principleBSDF.Attributes.Add(new UsdAttribute<float>("inputs:opacity", effectiveMat.OpacityValue.Value));
 
-        // Roughness - convert from Shininess
-        // Shininess ranges from 0-255, where higher = more shiny (less rough) roughness = (255 - shininess) / 255
-        float roughness = Math.Clamp((255.0f - (float)submat.Shininess) / 255.0f, 0.0f, 1.0f);
+        // Roughness - convert from Shininess weighted by specular intensity.
+        // CryEngine Shininess is a Phong exponent (0-255) and Specular color controls reflection intensity.
+        // In PBR, low-specular surfaces should appear matte regardless of shininess.
+        // Formula: roughness = 1 - glossiness * sqrt(specularIntensity)
+        // sqrt() expands CryEngine's low dielectric specular range (0.02-0.05) into a useful range.
+        float glossiness = (float)effectiveMat.Shininess / 255.0f;
+        float specIntensity = effectiveMat.SpecularValue is not null
+            ? Math.Max(effectiveMat.SpecularValue.Red, Math.Max(effectiveMat.SpecularValue.Green, effectiveMat.SpecularValue.Blue))
+            : 0.0f;
+        float roughness = Math.Clamp(1.0f - glossiness * MathF.Sqrt(specIntensity), 0.0f, 1.0f);
         principleBSDF.Attributes.Add(new UsdAttribute<float>("inputs:roughness", roughness));
 
         // Metallic - default to 0 (non-metallic)
@@ -122,13 +150,13 @@ public partial class UsdRenderer
         principleBSDF.Attributes.Add(new UsdToken<string?>("outputs:surface", null, false));
         shaders.Add(principleBSDF);
 
-        if (submat.Textures is null)
+        if (textures is null || textures.Length == 0)
             return shaders;
 
         // Track which textures we've already created to avoid duplicates
         var createdTextures = new HashSet<string>();
 
-        foreach (var texture in submat.Textures)
+        foreach (var texture in textures)
         {
             // Skip environment maps (cubemaps cause crashes in Blender)
             if (texture.Map == Texture.MapTypeEnum.Env) continue;
@@ -148,7 +176,7 @@ public partial class UsdRenderer
                 shaders.Add(imageTexture);
 
                 // Apply connections based on texture type and shader rules
-                ApplyTextureConnections(imageTexture, texture, principleBSDF, matName, materialRules, submat);
+                ApplyTextureConnections(imageTexture, texture, principleBSDF, matName, materialRules, effectiveMat);
             }
         }
 
@@ -169,6 +197,8 @@ public partial class UsdRenderer
         switch (texture.Map)
         {
             case Texture.MapTypeEnum.Diffuse:
+            case Texture.MapTypeEnum.TexSlot1:
+            case Texture.MapTypeEnum.TexSlot9:
                 imageTexture.Attributes.Add(new UsdFloat3f("outputs:rgb"));
                 imageTexture.Attributes.Add(new UsdFloat("outputs:a"));
 
@@ -184,20 +214,26 @@ public partial class UsdRenderer
                 {
                     // %ALPHAGLOW: Cannot directly connect float alpha to color3f emissiveColor in USD
                     // UsdPreviewSurface doesn't have a separate emissive intensity parameter
-                    // The emissive color is already set to white above, user will see glow in diffuse alpha visually
                     Log.D($"  %ALPHAGLOW: Diffuse alpha controls glow (not directly supported in USD PreviewSurface)");
-                    // Don't create a connection - it would be invalid USD
                 }
                 else if (!_shaderRules.ShouldOverrideDefaultAlphaConnection(rules))
                 {
-                    // Default behavior: connect alpha to opacity (unless overridden by rules)
-                    principleBSDF.Attributes.Add(new UsdFloat(
-                        $"inputs:opacity.connect",
-                        $"</root/_materials/{matName}/{imageTexture.Name}.outputs:a>"));
+                    // Only connect diffuse alpha to opacity when the material actually needs transparency:
+                    // - AlphaTest is set (cutout transparency)
+                    // - Opacity < 1 (blended transparency)
+                    // Otherwise the alpha channel is unused and connecting it causes false transparency.
+                    bool needsAlpha = submat.AlphaTest > 0 || (submat.OpacityValue.HasValue && submat.OpacityValue.Value < 1.0f);
+                    if (needsAlpha)
+                    {
+                        principleBSDF.Attributes.Add(new UsdFloat(
+                            $"inputs:opacity.connect",
+                            $"</root/_materials/{matName}/{imageTexture.Name}.outputs:a>"));
+                    }
                 }
                 break;
 
             case Texture.MapTypeEnum.Normals:
+            case Texture.MapTypeEnum.TexSlot2:
                 imageTexture.Attributes.Add(new UsdFloat3f("outputs:rgb"));
                 principleBSDF.Attributes.Add(new UsdFloat3f(
                     $"inputs:normal.connect",
@@ -205,6 +241,9 @@ public partial class UsdRenderer
                 break;
 
             case Texture.MapTypeEnum.Specular:
+            case Texture.MapTypeEnum.TexSlot4:
+            case Texture.MapTypeEnum.TexSlot6:
+            case Texture.MapTypeEnum.TexSlot10:
                 imageTexture.Attributes.Add(new UsdFloat3f("outputs:rgb"));
                 imageTexture.Attributes.Add(new UsdFloat("outputs:a"));
 
@@ -213,15 +252,12 @@ public partial class UsdRenderer
                     $"inputs:specularColor.connect",
                     $"</root/_materials/{matName}/{imageTexture.Name}.outputs:rgb>"));
 
-                // Check for %SPECULARPOW_GLOSSALPHA rule (specular alpha → roughness)
-                var specAlphaTarget = _shaderRules.GetChannelTarget(rules, "Specular", "alpha");
-                if (specAlphaTarget == "roughness")
-                {
-                    Log.D($"  Applying %SPECULARPOW_GLOSSALPHA: specular alpha → roughness");
-                    principleBSDF.Attributes.Add(new UsdFloat(
-                        $"inputs:roughness.connect",
-                        $"</root/_materials/{matName}/{imageTexture.Name}.outputs:a>"));
-                }
+                // Specular alpha carries glossiness/smoothness data in CryEngine.
+                // Older shaders use %SPECULARPOW_GLOSSALPHA flag; newer shaders (Layer, HardSurface)
+                // treat this as default behavior. Always connect spec alpha → roughness.
+                principleBSDF.Attributes.Add(new UsdFloat(
+                    $"inputs:roughness.connect",
+                    $"</root/_materials/{matName}/{imageTexture.Name}.outputs:a>"));
                 break;
 
             case Texture.MapTypeEnum.Opacity:
@@ -272,8 +308,15 @@ public partial class UsdRenderer
         {
             try
             {
-                Log.D($"Combining texture file {textureFile}");
-                Combine(textureFile);
+                var fileInfo = new FileInfo(textureFile);
+                long sizeBefore = fileInfo.Exists ? fileInfo.Length : -1;
+                Log.D($"Combining texture file {textureFile} (exists={fileInfo.Exists}, size={sizeBefore})");
+
+                string result = Combine(textureFile);
+
+                fileInfo.Refresh();
+                long sizeAfter = fileInfo.Exists ? fileInfo.Length : -1;
+                Log.D($"Combine returned: {result} (size before={sizeBefore}, after={sizeAfter}, changed={sizeBefore != sizeAfter})");
             }
             catch (Exception ex)
             {
