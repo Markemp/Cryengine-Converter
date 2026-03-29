@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using static DDSUnsplitter.Library.DDSUnsplitter;
 using static Extensions.FileHandlingExtensions;
 
 namespace CgfConverter.Renderers.USD;
@@ -266,6 +267,20 @@ public partial class UsdRenderer
             dataDirs.Add(_args.DataDir);
 
         var textureFile = ResolveTextureFile(texture.File, _args.PackFileSystem, dataDirs);
+
+        if (_args.UnsplitTextures)
+        {
+            try
+            {
+                Log.D($"Combining texture file {textureFile}");
+                Combine(textureFile);
+            }
+            catch (Exception ex)
+            {
+                Log.W($"Error combining texture {textureFile}: {ex.Message}");
+            }
+        }
+
         if (File.Exists(textureFile) == false)
         {
             Log.D("Texture file not found: {0}", texture.File);
