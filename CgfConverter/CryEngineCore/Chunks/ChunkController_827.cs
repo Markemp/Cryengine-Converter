@@ -63,7 +63,7 @@ internal sealed class ChunkController_827 : ChunkController
             Vector3 rotLog = b.ReadVector3();
 
             KeyTimes.Add(time);
-            KeyPositions.Add(position);
+            KeyPositions.Add(position / 100.0f); // positions stored at 100× scale
             KeyRotations.Add(LogToQuaternion(rotLog));
         }
     }
@@ -71,6 +71,11 @@ internal sealed class ChunkController_827 : ChunkController
     /// <summary>
     /// Converts a CryKeyPQLog rotation logarithm to a quaternion.
     /// vRotLog = axis × half-angle; mirrors CryEngine's Quat::exp(Vec3).
+    ///
+    /// REVIEW: ChunkController_830 uses a different formula for the same CryKeyPQLog struct —
+    /// it treats |rotLog| as the full rotation angle and halves it, while this implementation
+    /// treats |rotLog| as the half-angle directly. One of them is wrong. Validate against a
+    /// known-good file that exercises both 827 and 830 to determine which is correct.
     /// </summary>
     private static Quaternion LogToQuaternion(Vector3 rotLog)
     {

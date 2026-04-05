@@ -61,7 +61,13 @@ internal sealed class ChunkController_830 : ChunkController
 
     /// <summary>
     /// Converts a logarithmic quaternion representation to a standard quaternion.
-    /// The vRotLog is the axis of rotation scaled by the rotation angle.
+    /// This implementation treats |rotLog| as the full rotation angle and applies
+    /// the half-angle internally: q = (axis × sin(θ/2), cos(θ/2)).
+    ///
+    /// REVIEW: ChunkController_827 uses a different formula for the same CryKeyPQLog struct —
+    /// it treats |rotLog| as the half-angle directly (per CryEngine's Quat::exp spec).
+    /// One of them is wrong. Validate against a known-good file that exercises both
+    /// 827 and 830 to determine which formula matches the actual stored data.
     /// </summary>
     private static Quaternion LogToQuaternion(Vector3 rotLog)
     {

@@ -1189,11 +1189,12 @@ public partial class CryEngine
             }
         }
 
-        // Process controller chunks (829/831 = compressed, 827/830 = uncompressed CryKeyPQLog, 833 = uncompressed PQS)
+        // Process controller chunks (829/831/832 = compressed, 827/830 = uncompressed CryKeyPQLog, 833 = uncompressed PQS)
         var controllers827 = cafModel.ChunkMap.Values.OfType<ChunkController_827>().ToList();
         var controllers829 = cafModel.ChunkMap.Values.OfType<CryEngineCore.Chunks.ChunkController_829>().ToList();
         var controllers830 = cafModel.ChunkMap.Values.OfType<ChunkController_830>().ToList();
         var controllers831 = cafModel.ChunkMap.Values.OfType<ChunkController_831>().ToList();
+        var controllers832 = cafModel.ChunkMap.Values.OfType<CryEngineCore.Chunks.ChunkController_832>().ToList();
         var controllers833 = cafModel.ChunkMap.Values.OfType<CryEngineCore.Chunks.ChunkController_833>().ToList();
 
         // 827 and 830 use unified key times for both rotation and position
@@ -1249,6 +1250,22 @@ public partial class CryEngine
                 PositionKeyTimes = ctrl.PositionKeyTimes.ToList(),
                 Positions = ctrl.KeyPositions.ToList(),
                 Rotations = ctrl.KeyRotations.ToList()
+            };
+            animation.BoneTracks[ctrl.ControllerId] = track;
+        }
+
+        // 832 extends 829 with a scale track; same compressed rot/pos, adds scale
+        foreach (var ctrl in controllers832)
+        {
+            var track = new BoneTrack
+            {
+                ControllerId = ctrl.ControllerId,
+                RotationKeyTimes = ctrl.RotationKeyTimes.ToList(),
+                PositionKeyTimes = ctrl.PositionKeyTimes.ToList(),
+                ScaleKeyTimes = ctrl.ScaleKeyTimes.ToList(),
+                Positions = ctrl.KeyPositions.ToList(),
+                Rotations = ctrl.KeyRotations.ToList(),
+                Scales = ctrl.KeyScales.ToList()
             };
             animation.BoneTracks[ctrl.ControllerId] = track;
         }
