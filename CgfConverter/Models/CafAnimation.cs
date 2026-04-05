@@ -74,6 +74,12 @@ public class BoneTrack
     /// <summary>Rotation keyframes.</summary>
     public List<Quaternion> Rotations { get; init; } = [];
 
+    /// <summary>Scale keyframe times (in ticks or frames depending on source).</summary>
+    public List<float> ScaleKeyTimes { get; init; } = [];
+
+    /// <summary>Scale keyframes (diagonal scale as Vector3 x, y, z).</summary>
+    public List<Vector3> Scales { get; init; } = [];
+
     /// <summary>
     /// Legacy property for backward compatibility. Returns rotation key times.
     /// </summary>
