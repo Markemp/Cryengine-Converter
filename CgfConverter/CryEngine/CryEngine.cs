@@ -701,78 +701,199 @@ public partial class CryEngine
     /// </summary>
     private bool TryLoadChrParamsAnimations(string? modelDir)
     {
+        var chrparamsFileName = Path.ChangeExtension(Path.GetFileName(InputFile), ".chrparams");
+        var chrparamsPath = string.IsNullOrEmpty(modelDir)
+            ? chrparamsFileName
+            : Path.Combine(modelDir, chrparamsFileName);
+
+        Log.D("Looking for chrparams at: {0}", chrparamsPath);
+
         try
         {
-            var chrparamsFileName = Path.ChangeExtension(Path.GetFileName(InputFile), ".chrparams");
-            var chrparamsPath = string.IsNullOrEmpty(modelDir)
-                ? chrparamsFileName
-                : Path.Combine(modelDir, chrparamsFileName);
-
-            Log.D("Looking for chrparams at: {0}", chrparamsPath);
-
-            var chrparams = CryXmlSerializer.Deserialize<ChrParams.ChrParams>(
-                PackFileSystem.GetStream(chrparamsPath));
-
-            Log.D("Successfully loaded chrparams, animations count: {0}", chrparams.Animations?.Length ?? 0);
-
-            // Try to load DBA database first (preferred for batch animations)
-            var trackFilePath = chrparams.Animations?.FirstOrDefault(x => x.Name == "$TracksDatabase")?.Path;
-            if (trackFilePath is not null)
-            {
-                if (Path.GetExtension(trackFilePath) != ".dba")
-                    trackFilePath = Path.ChangeExtension(trackFilePath, ".dba");
-
-                Log.D("Attempting to load animation database from: {0}", trackFilePath);
-
-                // Check if this is a wildcard pattern
-                if (trackFilePath.Contains('*') || trackFilePath.Contains('?'))
-                {
-                    var dbaFiles = ExpandDbaWildcard(trackFilePath);
-                    Log.D("Wildcard pattern '{0}' matched {1} DBA files", trackFilePath, dbaFiles.Count);
-
-                    foreach (var dbaPath in dbaFiles)
-                    {
-                        try
-                        {
-                            Animations.Add(Model.FromStream(dbaPath, PackFileSystem.GetStream(dbaPath), true));
-                            Log.D("Successfully loaded animation database: {0}", dbaPath);
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.D("Error loading DBA file {0}: {1}", dbaPath, ex.Message);
-                        }
-                    }
-                }
-                else
-                {
-                    // Resolve relative paths against ObjectDir
-                    var fullDbaPath = trackFilePath;
-                    if (!Path.IsPathRooted(fullDbaPath) && !string.IsNullOrEmpty(ObjectDir))
-                    {
-                        fullDbaPath = Path.Combine(ObjectDir, fullDbaPath);
-                    }
-
-                    try
-                    {
-                        Animations.Add(Model.FromStream(fullDbaPath, PackFileSystem.GetStream(fullDbaPath), true));
-                        Log.D("Successfully loaded animation database: {0}", fullDbaPath);
-                    }
-                    catch (FileNotFoundException)
-                    {
-                        Log.D("DBA file not found: {0}", fullDbaPath);
-                    }
-                }
-            }
-
-            // Also load individual CAF files from animation entries
-            LoadCafAnimations(chrparams);
-            return true;
+            PackFileSystem.GetStream(chrparamsPath).Dispose(); // probe before starting recursion
         }
         catch (FileNotFoundException)
         {
             Log.D("No chrparams file found");
             return false;
         }
+
+        LoadChrParamsFile(chrparamsPath, new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+        return true;
+    }
+
+    /// <summary>
+    /// Recursively loads a .chrparams file, handling $Include, $TracksDatabase, and CAF entries.
+    /// The visited set prevents infinite loops from circular $Include chains.
+    /// </summary>
+    private void LoadChrParamsFile(string chrparamsPath, HashSet<string> visited)
+    {
+        var normalizedPath = chrparamsPath.Replace('\\', '/');
+        if (!visited.Add(normalizedPath))
+        {
+            Log.D("Skipping already-visited chrparams: {0}", chrparamsPath);
+            return;
+        }
+
+        ChrParams.ChrParams chrparams;
+        try
+        {
+            chrparams = CryXmlSerializer.Deserialize<ChrParams.ChrParams>(
+                PackFileSystem.GetStream(chrparamsPath));
+        }
+        catch (FileNotFoundException)
+        {
+            Log.D("chrparams not found: {0}", chrparamsPath);
+            return;
+        }
+
+        Log.D("Loaded chrparams: {0} ({1} entries)", chrparamsPath, chrparams.Animations?.Length ?? 0);
+
+        if (chrparams.Animations is null)
+            return;
+
+        var basePath = chrparams.Animations.FirstOrDefault(x => x.Name == "#filepath")?.Path ?? "";
+
+        foreach (var entry in chrparams.Animations)
+        {
+            if (string.IsNullOrEmpty(entry.Name) || string.IsNullOrEmpty(entry.Path))
+                continue;
+
+            switch (entry.Name)
+            {
+                case "$TracksDatabase":
+                    LoadDbaFromEntry(entry.Path);
+                    break;
+
+                case "$Include":
+                    var includePath = ResolveIncludePath(entry.Path, chrparamsPath);
+                    if (includePath is not null)
+                        LoadChrParamsFile(includePath, visited);
+                    else
+                        Log.D("Could not resolve $Include path: {0}", entry.Path);
+                    break;
+
+                case string s when s.StartsWith('$') || s.StartsWith('#'):
+                    // Other directives ($AnimEventDatabase, $facelib, #filepath, etc.) — skip
+                    break;
+
+                default:
+                    LoadCafEntry(entry, basePath);
+                    break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Loads a $TracksDatabase DBA file (or wildcard pattern) from a chrparams entry.
+    /// </summary>
+    private void LoadDbaFromEntry(string trackFilePath)
+    {
+        if (Path.GetExtension(trackFilePath) != ".dba")
+            trackFilePath = Path.ChangeExtension(trackFilePath, ".dba");
+
+        Log.D("Attempting to load animation database from: {0}", trackFilePath);
+
+        if (trackFilePath.Contains('*') || trackFilePath.Contains('?'))
+        {
+            var dbaFiles = ExpandDbaWildcard(trackFilePath);
+            Log.D("Wildcard pattern '{0}' matched {1} DBA files", trackFilePath, dbaFiles.Count);
+
+            foreach (var dbaPath in dbaFiles)
+            {
+                try
+                {
+                    Animations.Add(Model.FromStream(dbaPath, PackFileSystem.GetStream(dbaPath), true));
+                    Log.D("Successfully loaded animation database: {0}", dbaPath);
+                }
+                catch (Exception ex)
+                {
+                    Log.D("Error loading DBA file {0}: {1}", dbaPath, ex.Message);
+                }
+            }
+        }
+        else
+        {
+            var fullDbaPath = trackFilePath;
+            if (!Path.IsPathRooted(fullDbaPath) && !string.IsNullOrEmpty(ObjectDir))
+                fullDbaPath = Path.Combine(ObjectDir, fullDbaPath);
+
+            try
+            {
+                Animations.Add(Model.FromStream(fullDbaPath, PackFileSystem.GetStream(fullDbaPath), true));
+                Log.D("Successfully loaded animation database: {0}", fullDbaPath);
+            }
+            catch (FileNotFoundException)
+            {
+                Log.D("DBA file not found: {0}", fullDbaPath);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Loads a single CAF animation entry from a chrparams Animation element.
+    /// </summary>
+    private void LoadCafEntry(ChrParams.Animation entry, string basePath)
+    {
+        try
+        {
+            var cafPattern = entry.Path!;
+            if (!Path.IsPathRooted(cafPattern) && !string.IsNullOrEmpty(basePath))
+                cafPattern = Path.Combine(basePath, cafPattern);
+
+            if (cafPattern.Contains('*') || cafPattern.Contains('?'))
+            {
+                var cafFiles = ExpandCafWildcard(cafPattern);
+                Log.D("Wildcard pattern '{0}' matched {1} files", cafPattern, cafFiles.Count);
+                foreach (var cafPath in cafFiles)
+                    LoadSingleCafFile(cafPath);
+            }
+            else
+            {
+                if (!cafPattern.EndsWith(".caf", StringComparison.OrdinalIgnoreCase))
+                    cafPattern = Path.ChangeExtension(cafPattern, ".caf");
+                LoadSingleCafFile(cafPattern, entry.Name!);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.D("Error processing CAF entry {0}: {1}", entry.Path, ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Resolves a $Include path to an absolute path, trying ObjectDir-relative first,
+    /// then relative to the including file's own directory.
+    /// Returns null if the file cannot be found under any candidate path.
+    /// </summary>
+    private string? ResolveIncludePath(string includePath, string currentChrparamsPath)
+    {
+        IEnumerable<string> Candidates()
+        {
+            if (!Path.IsPathRooted(includePath))
+            {
+                if (!string.IsNullOrEmpty(ObjectDir))
+                    yield return Path.Combine(ObjectDir, includePath);
+
+                var dir = Path.GetDirectoryName(currentChrparamsPath);
+                if (!string.IsNullOrEmpty(dir))
+                    yield return Path.Combine(dir, includePath);
+            }
+
+            yield return includePath; // absolute or last-resort as-is
+        }
+
+        foreach (var candidate in Candidates())
+        {
+            try
+            {
+                PackFileSystem.GetStream(candidate).Dispose();
+                return candidate;
+            }
+            catch (FileNotFoundException) { }
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -904,69 +1025,6 @@ public partial class CryEngine
         }
     }
 
-    /// <summary>
-    /// Loads individual CAF animation files listed in chrparams.
-    /// </summary>
-    private void LoadCafAnimations(ChrParams.ChrParams chrparams)
-    {
-        if (chrparams.Animations is null)
-            return;
-
-        // Get base path for CAF files (from #filepath entry)
-        var basePath = chrparams.Animations.FirstOrDefault(x => x.Name == "#filepath")?.Path ?? "";
-        Log.D("CAF base path: {0}", basePath);
-
-        // Find all animation entries that aren't special directives
-        var cafEntries = chrparams.Animations
-            .Where(a => !string.IsNullOrEmpty(a.Name)
-                     && !a.Name.StartsWith("$")
-                     && !a.Name.StartsWith("#")
-                     && !string.IsNullOrEmpty(a.Path))
-            .ToList();
-
-        Log.D("Found {0} potential CAF animation entries", cafEntries.Count);
-
-        foreach (var entry in cafEntries)
-        {
-            try
-            {
-                // Build full path pattern
-                var cafPattern = entry.Path!;
-                if (!Path.IsPathRooted(cafPattern) && !string.IsNullOrEmpty(basePath))
-                {
-                    cafPattern = Path.Combine(basePath, cafPattern);
-                }
-
-                // Check if this is a wildcard pattern
-                if (cafPattern.Contains('*') || cafPattern.Contains('?'))
-                {
-                    // Expand wildcard pattern to find matching files
-                    var cafFiles = ExpandCafWildcard(cafPattern);
-                    Log.D("Wildcard pattern '{0}' matched {1} files", cafPattern, cafFiles.Count);
-
-                    foreach (var cafPath in cafFiles)
-                    {
-                        LoadSingleCafFile(cafPath);
-                    }
-                }
-                else
-                {
-                    // Single file path
-                    if (Path.GetExtension(cafPattern).ToLowerInvariant() != ".caf")
-                        cafPattern = Path.ChangeExtension(cafPattern, ".caf");
-
-                    LoadSingleCafFile(cafPattern, entry.Name!);
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.D("Error processing CAF entry {0}: {1}", entry.Path, ex.Message);
-            }
-        }
-
-        if (CafAnimations.Count > 0)
-            Log.I("Loaded {0} CAF animation(s)", CafAnimations.Count);
-    }
 
     /// <summary>
     /// Expands a wildcard pattern to find matching CAF files.
@@ -1189,11 +1247,13 @@ public partial class CryEngine
             }
         }
 
-        // Process controller chunks (829/831 = compressed, 827/830 = uncompressed CryKeyPQLog)
+        // Process controller chunks (829/831/832 = compressed, 827/830 = uncompressed CryKeyPQLog, 833 = uncompressed PQS)
         var controllers827 = cafModel.ChunkMap.Values.OfType<ChunkController_827>().ToList();
         var controllers829 = cafModel.ChunkMap.Values.OfType<CryEngineCore.Chunks.ChunkController_829>().ToList();
         var controllers830 = cafModel.ChunkMap.Values.OfType<ChunkController_830>().ToList();
         var controllers831 = cafModel.ChunkMap.Values.OfType<ChunkController_831>().ToList();
+        var controllers832 = cafModel.ChunkMap.Values.OfType<CryEngineCore.Chunks.ChunkController_832>().ToList();
+        var controllers833 = cafModel.ChunkMap.Values.OfType<CryEngineCore.Chunks.ChunkController_833>().ToList();
 
         // 827 and 830 use unified key times for both rotation and position
         foreach (var ctrl in controllers827)
@@ -1248,6 +1308,39 @@ public partial class CryEngine
                 PositionKeyTimes = ctrl.PositionKeyTimes.ToList(),
                 Positions = ctrl.KeyPositions.ToList(),
                 Rotations = ctrl.KeyRotations.ToList()
+            };
+            animation.BoneTracks[ctrl.ControllerId] = track;
+        }
+
+        // 832 extends 829 with a scale track; same compressed rot/pos, adds scale
+        foreach (var ctrl in controllers832)
+        {
+            var track = new BoneTrack
+            {
+                ControllerId = ctrl.ControllerId,
+                RotationKeyTimes = ctrl.RotationKeyTimes.ToList(),
+                PositionKeyTimes = ctrl.PositionKeyTimes.ToList(),
+                ScaleKeyTimes = ctrl.ScaleKeyTimes.ToList(),
+                Positions = ctrl.KeyPositions.ToList(),
+                Rotations = ctrl.KeyRotations.ToList(),
+                Scales = ctrl.KeyScales.ToList()
+            };
+            animation.BoneTracks[ctrl.ControllerId] = track;
+        }
+
+        // 833 uses unified PQS per frame; time is implicit (time[i] = i)
+        foreach (var ctrl in controllers833)
+        {
+            var keyTimes = Enumerable.Range(0, (int)ctrl.NumKeys).Select(i => (float)i).ToList();
+            var track = new BoneTrack
+            {
+                ControllerId = ctrl.ControllerId,
+                RotationKeyTimes = keyTimes,
+                PositionKeyTimes = keyTimes,
+                ScaleKeyTimes = keyTimes,
+                Positions = ctrl.KeyPositions.ToList(),
+                Rotations = ctrl.KeyRotations.ToList(),
+                Scales = ctrl.KeyScales.ToList()
             };
             animation.BoneTracks[ctrl.ControllerId] = track;
         }

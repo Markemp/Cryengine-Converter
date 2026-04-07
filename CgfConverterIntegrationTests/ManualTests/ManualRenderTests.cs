@@ -198,7 +198,7 @@ public class ManualRenderTests
     [TestMethod]
     public void MWO_AdderChr_USD()
     {
-        RenderToUsd($@"{mwoObjectDir}\objects\mechs\adder\body\adder.chr", mwoObjectDir);
+        RenderToUsd($@"{mwoObjectDir}\objects\mechs\adder\body\adder.chr", mwoObjectDir, includeAnimations: true);
     }
 
     [TestMethod]
