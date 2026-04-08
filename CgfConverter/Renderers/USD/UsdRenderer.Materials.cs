@@ -47,7 +47,7 @@ public partial class UsdRenderer
                 var usdMat = new UsdMaterial(cleanMatName);
                 usdMat.Attributes.Add(new UsdToken<string>(
                     "outputs:surface.connect",
-                    $"</root/_materials/{cleanMatName}/Principled_BSDF.outputs:surface>"));
+                    $"</{_rootPrimName}/_materials/{cleanMatName}/Principled_BSDF.outputs:surface>"));
                 usdMat.Children.AddRange(CreateShaders(submat, matKey, cleanMatName));
                 matList.Add(usdMat);
             }
@@ -205,7 +205,7 @@ public partial class UsdRenderer
                 // Connect RGB to diffuse color
                 principleBSDF.Attributes.Add(new UsdColor3f(
                     $"inputs:diffuseColor.connect",
-                    $"</root/_materials/{matName}/{imageTexture.Name}.outputs:rgb>"));
+                    $"</{_rootPrimName}/_materials/{matName}/{imageTexture.Name}.outputs:rgb>"));
 
                 // Check shader rules for alpha channel routing
                 var alphaTarget = _shaderRules.GetChannelTarget(rules, "Diffuse", "alpha");
@@ -227,7 +227,7 @@ public partial class UsdRenderer
                     {
                         principleBSDF.Attributes.Add(new UsdFloat(
                             $"inputs:opacity.connect",
-                            $"</root/_materials/{matName}/{imageTexture.Name}.outputs:a>"));
+                            $"</{_rootPrimName}/_materials/{matName}/{imageTexture.Name}.outputs:a>"));
                     }
                 }
                 break;
@@ -237,7 +237,7 @@ public partial class UsdRenderer
                 imageTexture.Attributes.Add(new UsdFloat3f("outputs:rgb"));
                 principleBSDF.Attributes.Add(new UsdFloat3f(
                     $"inputs:normal.connect",
-                    $"</root/_materials/{matName}/{imageTexture.Name}.outputs:rgb>"));
+                    $"</{_rootPrimName}/_materials/{matName}/{imageTexture.Name}.outputs:rgb>"));
                 break;
 
             case Texture.MapTypeEnum.Specular:
@@ -250,14 +250,14 @@ public partial class UsdRenderer
                 // Connect RGB to specular color
                 principleBSDF.Attributes.Add(new UsdColor3f(
                     $"inputs:specularColor.connect",
-                    $"</root/_materials/{matName}/{imageTexture.Name}.outputs:rgb>"));
+                    $"</{_rootPrimName}/_materials/{matName}/{imageTexture.Name}.outputs:rgb>"));
 
                 // Specular alpha carries glossiness/smoothness data in CryEngine.
                 // Older shaders use %SPECULARPOW_GLOSSALPHA flag; newer shaders (Layer, HardSurface)
                 // treat this as default behavior. Always connect spec alpha → roughness.
                 principleBSDF.Attributes.Add(new UsdFloat(
                     $"inputs:roughness.connect",
-                    $"</root/_materials/{matName}/{imageTexture.Name}.outputs:a>"));
+                    $"</{_rootPrimName}/_materials/{matName}/{imageTexture.Name}.outputs:a>"));
                 break;
 
             case Texture.MapTypeEnum.Opacity:
@@ -272,7 +272,7 @@ public partial class UsdRenderer
                     imageTexture.Attributes.Add(new UsdFloat("outputs:r"));
                     principleBSDF.Attributes.Add(new UsdFloat(
                         $"inputs:opacity.connect",
-                        $"</root/_materials/{matName}/{imageTexture.Name}.outputs:r>"));
+                        $"</{_rootPrimName}/_materials/{matName}/{imageTexture.Name}.outputs:r>"));
                 }
                 else
                 {

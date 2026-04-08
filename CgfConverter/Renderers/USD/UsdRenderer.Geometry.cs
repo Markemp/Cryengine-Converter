@@ -302,7 +302,7 @@ public partial class UsdRenderer
                 submeshPrim.Attributes.Add(
                     new UsdRelativePath(
                         "material:binding",
-                        $"/root/_materials/{cleanMatName}"));
+                        $"/{_rootPrimName}/_materials/{cleanMatName}"));
             }
 
             // Skinning attributes are added by CreateSkinnedMeshes()/CreateIvoSkinnedMeshes(),
@@ -471,7 +471,7 @@ public partial class UsdRenderer
                 submeshPrim.Attributes.Add(
                     new UsdRelativePath(
                         "material:binding",
-                        $"/root/_materials/{cleanMatName}"));
+                        $"/{_rootPrimName}/_materials/{cleanMatName}"));
             }
 
             // Skinning attributes are added by CreateIvoSkinnedMeshes() after mesh creation,
