@@ -278,6 +278,12 @@ public partial class UsdRenderer
                 Vector3 position = SampleCafPosition(track, frame + startFrame, restTranslation);
                 Quaternion rotation = SampleCafRotation(track, frame + startFrame);
 
+                // If no rotation keys exist, SampleCafRotation returns Identity.
+                // USD SkelAnimation replaces restTransform, so we must use rest rotation
+                // to preserve bone orientation for non-animated bones.
+                if (track.Rotations.Count == 0)
+                    rotation = restRotation;
+
                 if (isAdditive)
                 {
                     // Additive animations: rotation is also a delta from rest
@@ -675,23 +681,12 @@ public partial class UsdRenderer
                 }
             }
 
-            // Extract rotation from the rest matrix
-            if (Matrix4x4.Decompose(restMatrix, out _, out var rotation, out _))
+            // Extract rotation from the rest matrix.
+            // Transpose before decomposing so the quaternion matches the skeleton's
+            // restTransforms convention (which are also transposed from CryEngine to USD).
+            if (Matrix4x4.Decompose(Matrix4x4.Transpose(restMatrix), out _, out var rotation, out _))
             {
                 mapping[jointPath] = rotation;
-
-                // Debug: compare non-transposed vs transposed rest rotation for turret_arm
-                if (bone.ControllerID == 0x9384FC75)
-                {
-                    var transposedMatrix = Matrix4x4.Transpose(restMatrix);
-                    if (Matrix4x4.Decompose(transposedMatrix, out _, out var transposedRot, out _))
-                    {
-                        Log.I($"turret_arm rest rotation comparison:");
-                        Log.I($"  Non-transposed (animation): ({rotation.X:F6}, {rotation.Y:F6}, {rotation.Z:F6}, {rotation.W:F6})");
-                        Log.I($"  Transposed (skeleton):      ({transposedRot.X:F6}, {transposedRot.Y:F6}, {transposedRot.Z:F6}, {transposedRot.W:F6})");
-                        Log.I($"  Conjugate of non-transposed: ({-rotation.X:F6}, {-rotation.Y:F6}, {-rotation.Z:F6}, {rotation.W:F6})");
-                    }
-                }
             }
             else
             {
@@ -821,10 +816,10 @@ public partial class UsdRenderer
             Log.D($"DBA[{animName}]: Converting additive animation to absolute");
 
         // Build rest pose mappings - needed for:
-        // 1. Additive animation conversion
-        // 2. Bones without position animation (must use rest translation to maintain skeleton structure)
+        // 1. Bones without animation tracks (must use rest values to maintain skeleton structure)
+        // 2. Additive animation conversion (rest * delta)
         var jointPathToRestTranslation = BuildRestTranslationMapping();
-        var jointPathToRestRotation = isAdditive ? BuildRestRotationMapping() : null;
+        var jointPathToRestRotation = BuildRestRotationMapping();
 
         // Collect all joint paths that have animation in this clip
         var animatedJoints = new List<string>();
@@ -910,8 +905,16 @@ public partial class UsdRenderer
                         frame);
                 }
 
+                // Get rest rotation for this joint (used when no rotation animation)
+                var restRotation = jointPathToRestRotation is not null
+                    && jointPathToRestRotation.TryGetValue(jointPath, out var restR)
+                    ? restR
+                    : Quaternion.Identity;
+
                 // Get rotation for this joint at this frame
-                Quaternion rotation = Quaternion.Identity;
+                // If no rotation track exists, use rest rotation to preserve bone orientation
+                // (USD SkelAnimation replaces restTransform, so omitting rest = zeroing the rotation)
+                Quaternion rotation = restRotation;
                 if (controller.HasRotTrack && animChunk.KeyTimes is not null && animChunk.KeyRotations is not null)
                 {
                     rotation = SampleRotationAtFrame(
@@ -925,10 +928,6 @@ public partial class UsdRenderer
                     // Convert additive deltas to absolute transforms:
                     // Additive rotation: absolute = rest * delta
                     // Additive translation: absolute = rest + delta (translation already has rest if no pos track)
-                    var restRotation = jointPathToRestRotation!.TryGetValue(jointPath, out var restR)
-                        ? restR
-                        : Quaternion.Identity;
-
                     rotation = restRotation * rotation;
                     // For additive with position track, add animation delta to rest
                     if (controller.HasPosTrack)
