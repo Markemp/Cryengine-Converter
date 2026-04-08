@@ -371,7 +371,7 @@ public partial class UsdRenderer
         meshPrim.Attributes.Add(new UsdFloatArray("primvars:skel:jointWeights", jointWeights, elementSize, "vertex"));
 
         // Add relationship to skeleton
-        meshPrim.Attributes.Add(new UsdRelationship("skel:skeleton", "</root/Armature/Skeleton>"));
+        meshPrim.Attributes.Add(new UsdRelationship("skel:skeleton", $"</{_rootPrimName}/Armature/Skeleton>"));
     }
 
     #endregion

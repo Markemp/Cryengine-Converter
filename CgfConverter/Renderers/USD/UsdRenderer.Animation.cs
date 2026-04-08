@@ -1212,6 +1212,7 @@ public partial class UsdRenderer
         {
             Header = new UsdHeader
             {
+                DefaultPrim = _rootPrimName,
                 TimeCodesPerSecond = 30,
                 StartTimeCode = 0,
                 EndTimeCode = endFrame
@@ -1219,7 +1220,7 @@ public partial class UsdRenderer
         };
 
         // Create root
-        usdDoc.Prims.Add(new UsdXform("root", "/"));
+        usdDoc.Prims.Add(new UsdXform(_rootPrimName, "/"));
         var rootPrim = usdDoc.Prims[0];
 
         // Create skeleton structure (same as main export but without mesh)
@@ -1238,7 +1239,7 @@ public partial class UsdRenderer
         skeleton.Attributes.Add(new UsdMatrix4dArray("restTransforms", restTransforms, isUniform: true));
 
         // Bind this animation to the skeleton
-        var animPath = $"</root/Armature/{skelAnim.Name}>";
+        var animPath = $"</{_rootPrimName}/Armature/{skelAnim.Name}>";
         skeleton.Attributes.Add(new UsdRelationship("skel:animationSource", animPath));
 
         skelRoot.Children.Add(skeleton);

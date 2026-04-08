@@ -23,6 +23,7 @@ public partial class UsdRenderer : IRenderer
     private readonly FileInfo usdOutputFile;
     private UsdSerializer usdSerializer;
     protected readonly TaggedLogger Log;
+    protected readonly string _rootPrimName;
 
     // Shader system
     protected readonly Dictionary<string, ShaderDefinition> _shaderDefinitions;
@@ -35,6 +36,7 @@ public partial class UsdRenderer : IRenderer
         usdOutputFile = _args.FormatOutputFileName(".usda", _cryData.InputFile);
         usdSerializer = new UsdSerializer();
         Log = _cryData.Log;
+        _rootPrimName = CleanPathString(Path.GetFileNameWithoutExtension(_cryData.InputFile));
 
         // Initialize shader system
         _shaderRules = new ShaderRulesEngine(Log);
@@ -117,8 +119,8 @@ public partial class UsdRenderer : IRenderer
         }
 
         // Create the usd doc
-        var usdDoc = new UsdDoc { Header = new UsdHeader() };
-        usdDoc.Prims.Add(new UsdXform("root", "/"));
+        var usdDoc = new UsdDoc { Header = new UsdHeader { DefaultPrim = _rootPrimName } };
+        usdDoc.Prims.Add(new UsdXform(_rootPrimName, "/"));
         var rootPrim = usdDoc.Prims[0];
 
         // Check if this model has skeletal animation
