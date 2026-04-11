@@ -339,6 +339,9 @@ public struct IvoDBAMetaEntry
     /// <summary>Unknown value (varies: 17, 25, etc.).</summary>
     public uint Unknown2 { get; set; }
 
+    /// <summary>Unknown value (v902+).</summary>
+    public uint Unknown3 { get; set; }
+
     /// <summary>Reference pose rotation.</summary>
     public Quaternion StartRotation { get; set; }
 

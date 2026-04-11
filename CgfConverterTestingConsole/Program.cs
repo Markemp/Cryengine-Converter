@@ -47,8 +47,8 @@ if (!File.Exists(filePath))
 // Parse and process the file
 Args argsHandler = new();
 var options = objectDir is not null
-    ? new CryEngineOptions(ObjectDir: objectDir)
-    : null;
+    ? new CryEngineOptions(ObjectDir: objectDir, IncludeAnimations: true)
+    : new CryEngineOptions(IncludeAnimations: true);
 
 CryEngine cryData = new(filePath, argsHandler.PackFileSystem, options);
 cryData.ProcessCryengineFiles();
@@ -372,10 +372,6 @@ static void DumpSkinning(CryEngine cryData, int vertCount)
 
 static void RunCustom(CryEngine cryData)
 {
-    // ─── Custom inspection code goes here ───
-    // Modify this method to inspect specific data during debugging.
-    // This is the escape hatch for one-off deep dives.
-
     Console.WriteLine("Custom inspection mode. Edit RunCustom() in Program.cs for your needs.");
     Console.WriteLine($"File: {cryData.InputFile}");
     Console.WriteLine($"Models: {cryData.Models.Count}");
