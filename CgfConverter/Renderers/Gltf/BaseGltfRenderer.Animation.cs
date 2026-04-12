@@ -500,8 +500,8 @@ public partial class BaseGltfRenderer
                         $"ivo_dba/{animName}/pos_time/{boneHash:X08}", -1, null,
                         keyTimes.Select(t => (t - startTime) / 30f).ToArray());
 
-                    // Ivo DBA stores ABSOLUTE local positions, not deltas
-                    // Just swap axes for glTF coordinate system
+                    // Ivo DBA stores DELTA positions (added to rest translation)
+                    // TODO: need to add rest translation before SwapAxes when Ivo glTF export is implemented
                     var absolutePositions = positions
                         .Select(SwapAxesForPosition)
                         .ToArray();

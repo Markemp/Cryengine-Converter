@@ -341,12 +341,17 @@ public partial class UsdRenderer
         // Map bone hashes to joint paths
         var animatedJoints = new List<string>();
         var tracksByJointPath = new Dictionary<string, (List<Quaternion>? rotations, List<float>? rotTimes,
-            List<Vector3>? positions, List<float>? posTimes)>();
+            List<Vector3>? positions, List<float>? posTimes, ushort posFormat)>();
 
         int matchedBones = 0;
         int unmatchedBones = 0;
         int bonesWithData = 0;
         var unmatchedHashes = new List<uint>();
+
+        // Build hash-to-controller-index lookup for format flags
+        var hashToControllerIndex = new Dictionary<uint, int>();
+        for (int i = 0; i < block.BoneHashes.Length; i++)
+            hashToControllerIndex[block.BoneHashes[i]] = i;
 
         Log.D($"IvoDBA[{animName}]: Processing {block.BoneHashes.Length} bone hashes, skeleton has {controllerIdToJointPath.Count} controller IDs");
 
@@ -367,13 +372,18 @@ public partial class UsdRenderer
             block.Positions.TryGetValue(boneHash, out var positions);
             block.PositionTimes.TryGetValue(boneHash, out var posTimes);
 
+            // Get position format flags from controller entry
+            ushort posFormat = 0;
+            if (hashToControllerIndex.TryGetValue(boneHash, out var ctrlIdx) && ctrlIdx < block.Controllers.Length)
+                posFormat = block.Controllers[ctrlIdx].PosFormatFlags;
+
             // Only add if there's actual animation data
             if ((rotations is not null && rotations.Count > 0) ||
                 (positions is not null && positions.Count > 0))
             {
                 bonesWithData++;
                 animatedJoints.Add(jointPath);
-                tracksByJointPath[jointPath] = (rotations, rotTimes, positions, posTimes);
+                tracksByJointPath[jointPath] = (rotations, rotTimes, positions, posTimes, posFormat);
             }
         }
 
@@ -401,7 +411,7 @@ public partial class UsdRenderer
 
         // Calculate frame range from all tracks
         var allFrames = new SortedSet<int>();
-        foreach (var (_, (_, rotTimes, _, posTimes)) in tracksByJointPath)
+        foreach (var (_, (_, rotTimes, _, posTimes, _)) in tracksByJointPath)
         {
             if (rotTimes is not null)
             {
@@ -437,7 +447,7 @@ public partial class UsdRenderer
 
             foreach (var jointPath in animatedJoints)
             {
-                var (trackRots, rotTimes, trackPos, posTimes) = tracksByJointPath[jointPath];
+                var (trackRots, rotTimes, trackPos, posTimes, posFormat) = tracksByJointPath[jointPath];
 
                 // Get rest pose for this joint
                 var restTranslation = jointPathToRestTranslation.TryGetValue(jointPath, out var restT)
@@ -447,14 +457,27 @@ public partial class UsdRenderer
                     ? restR
                     : Quaternion.Identity;
 
-                // Sample position - Ivo DBA stores position DELTAS (not absolute)
-                // Evidence: laser cannon barrel animation shows small delta values (~0.045)
-                // compared to rest position (~0.87). Bolt in p4ar also confirms this.
+                // Position interpretation depends on the storage format:
+                // - C0 (0xC0xx, raw float): ABSOLUTE local positions (replace rest translation)
+                // - C1/C2 (0xC1xx/0xC2xx, SNORM): DELTAS from rest (SNORM encodes offsets around zero)
+                // Evidence: C0 bones (UpPiston) have values near rest. C2 bones (MainWheel) in Block 1
+                // have (0,0,0) meaning "no change from rest" (zero delta), not "position at origin."
                 Vector3 position;
                 if (trackPos is not null && trackPos.Count > 0)
                 {
-                    var animDelta = SampleIvoPositionDelta(trackPos, posTimes, frame);
-                    position = restTranslation + animDelta;
+                    var rawValue = SampleIvoPositionDelta(trackPos, posTimes, frame);
+                    var posType = IvoAnimationHelpers.GetPositionFormat(posFormat);
+
+                    if (posType == IvoPositionFormat.FloatVector3)
+                    {
+                        // C0: raw float = absolute local position
+                        position = rawValue;
+                    }
+                    else
+                    {
+                        // C1/C2: SNORM compressed = delta from rest
+                        position = restTranslation + rawValue;
+                    }
                 }
                 else
                 {

@@ -372,12 +372,147 @@ static void DumpSkinning(CryEngine cryData, int vertCount)
 
 static void RunCustom(CryEngine cryData)
 {
-    Console.WriteLine("Custom inspection mode. Edit RunCustom() in Program.cs for your needs.");
-    Console.WriteLine($"File: {cryData.InputFile}");
-    Console.WriteLine($"Models: {cryData.Models.Count}");
-    Console.WriteLine($"Nodes: {cryData.Nodes?.Count ?? 0}");
-    Console.WriteLine($"Has Bones: {cryData.Bones is not null}");
-    Console.WriteLine($"Has Skinning: {cryData.SkinningInfo?.HasSkinningInfo ?? false}");
+    var bones = cryData.SkinningInfo?.CompiledBones;
+    if (bones is null) { Console.WriteLine("No bones"); return; }
+
+    Console.WriteLine("=== Bone Hierarchy with Rest Local Transforms ===");
+    Console.WriteLine($"{"Bone",-45} {"Parent",-45} {"Rest Local Translation (X, Y, Z)"}");
+    Console.WriteLine(new string('-', 130));
+
+    foreach (var bone in bones)
+    {
+        var parentName = bone.ParentBone?.BoneName ?? "(ROOT)";
+        Matrix4x4 restLocal;
+        if (bone.ParentBone is null)
+        {
+            Matrix4x4.Invert(bone.BindPoseMatrix, out restLocal);
+        }
+        else
+        {
+            Matrix4x4.Invert(bone.BindPoseMatrix, out var childWorld);
+            restLocal = bone.ParentBone.BindPoseMatrix * childWorld;
+        }
+        // CryEngine: translation in column 4 (M14, M24, M34)
+        // Also decompose rotation
+        var transposed = Matrix4x4.Transpose(restLocal);
+        Matrix4x4.Decompose(transposed, out _, out var restRot, out _);
+        Console.WriteLine($"  {bone.BoneName,-45} {parentName,-45} pos=({restLocal.M14,10:F6}, {restLocal.M24,10:F6}, {restLocal.M34,10:F6})  rot=({restRot.X:F6}, {restRot.Y:F6}, {restRot.Z:F6}, {restRot.W:F6})");
+    }
+
+    // Show DBA animation data from chunks
+    Console.WriteLine("\n=== DBA Animations ===");
+    if (cryData.Animations is null || cryData.Animations.Count == 0)
+    {
+        Console.WriteLine("  No DBA animations loaded.");
+    }
+    else
+    {
+        Console.WriteLine($"  {cryData.Animations.Count} DBA model(s) loaded.");
+        foreach (var dbaModel in cryData.Animations)
+        {
+            Console.WriteLine($"\n  DBA: {dbaModel.FileName}");
+
+            // Find ChunkIvoDBAData in the model chunks
+            foreach (var chunk in dbaModel.ChunkMap.Values)
+            {
+                if (chunk is CgfConverter.CryEngineCore.ChunkIvoDBAData dbaData)
+                {
+                    Console.WriteLine($"    Animation blocks: {dbaData.AnimationBlocks.Count}");
+                    for (int a = 0; a < dbaData.AnimationBlocks.Count; a++)
+                    {
+                        var block = dbaData.AnimationBlocks[a];
+                        Console.WriteLine($"\n    Block[{a}]: BoneCount={block.Header.BoneCount}, Controllers={block.Controllers.Length}");
+
+                        // Show key controllers - read SNORM headers from DBA binary
+                        var focusBones = new HashSet<string> {
+                            "LG_Back_SubWheelCompress_Skin_bn", "LG_Back_MainWheel_Skin_bn",
+                            "LG_Back_MainWheelCompress_Skin_bn", "LG_Back_LowLeg_Skin_bn",
+                            "LG_Back_UpPiston_01_Skin_bn", "LG_Back_SubLowLeg_Skin_bn"
+                        };
+
+                        for (int c = 0; c < block.Controllers.Length; c++)
+                        {
+                            var ctrl = block.Controllers[c];
+                            uint hash = block.BoneHashes[c];
+                            var bone = bones.FirstOrDefault(b => b.ControllerID == hash);
+                            var boneName = bone?.BoneName ?? $"unknown_{hash:X8}";
+                            bool isFocus = focusBones.Contains(boneName);
+
+                            if (!isFocus) continue;
+
+                            var posFormat = IvoAnimationHelpers.GetPositionFormat(ctrl.PosFormatFlags);
+                            Console.Write($"      {boneName,-40} fmt={posFormat,-15} posKeys={ctrl.NumPosKeys}");
+
+                            if (block.Positions.TryGetValue(hash, out var positions) && positions.Count > 0)
+                                Console.Write($"  parsed[0]=({positions[0].X:F6}, {positions[0].Y:F6}, {positions[0].Z:F6})");
+
+                            Console.WriteLine();
+
+                            // Show rest position
+                            if (bone is not null)
+                            {
+                                Matrix4x4 restLocal;
+                                if (bone.ParentBone is null)
+                                    Matrix4x4.Invert(bone.BindPoseMatrix, out restLocal);
+                                else
+                                {
+                                    Matrix4x4.Invert(bone.BindPoseMatrix, out var cw2);
+                                    restLocal = bone.ParentBone.BindPoseMatrix * cw2;
+                                }
+                                Console.WriteLine($"             rest=({restLocal.M14:F6}, {restLocal.M24:F6}, {restLocal.M34:F6})");
+                            }
+
+                            // Read SNORM header from DBA binary for C1/C2 formats
+                            if ((posFormat == IvoPositionFormat.SNormFull || posFormat == IvoPositionFormat.SNormPacked)
+                                && ctrl.PosDataOffset > 0 && block.ControllerOffsets.Length > c)
+                            {
+                                long controllerStart = block.ControllerOffsets[c];
+                                long headerPos = controllerStart + ctrl.PosDataOffset;
+
+                                // Read the DBA file to get the raw header
+                                var dbaPath = dbaModel.FileName;
+                                if (dbaPath is not null && File.Exists(dbaPath))
+                                {
+                                    using var fs = File.OpenRead(dbaPath);
+                                    using var br = new BinaryReader(fs);
+                                    br.BaseStream.Seek(headerPos, SeekOrigin.Begin);
+                                    float cx = br.ReadSingle(), cy = br.ReadSingle(), cz = br.ReadSingle();
+                                    float sx = br.ReadSingle(), sy = br.ReadSingle(), sz = br.ReadSingle();
+                                    Console.WriteLine($"             SNORM header: center=({cx:F6}, {cy:F6}, {cz:F6})  scale=({sx:F6}, {sy:F6}, {sz:F6})");
+
+                                    // Read first SNORM value
+                                    if (posFormat == IvoPositionFormat.SNormFull)
+                                    {
+                                        short v0x = br.ReadInt16(), v0y = br.ReadInt16(), v0z = br.ReadInt16();
+                                        Console.WriteLine($"             raw SNORM[0]: ({v0x}, {v0y}, {v0z})");
+                                        Console.WriteLine($"             center+snorm*scale: ({cx + v0x / 32767f * sx:F6}, {cy + v0y / 32767f * sy:F6}, {cz + v0z / 32767f * sz:F6})");
+                                    }
+                                    else // SNormPacked
+                                    {
+                                        bool xActive = cx < 3.4e38f;
+                                        bool yActive = cy < 3.4e38f;
+                                        bool zActive = cz < 3.4e38f;
+                                        Console.Write($"             active: X={xActive} Y={yActive} Z={zActive}");
+                                        float vx = 0, vy = 0, vz = 0;
+                                        short rawX = 0, rawY = 0, rawZ = 0;
+                                        if (xActive) { rawX = br.ReadInt16(); vx = rawX / 32767f * sx; }
+                                        if (yActive) { rawY = br.ReadInt16(); vy = rawY / 32767f * sy; }
+                                        if (zActive) { rawZ = br.ReadInt16(); vz = rawZ / 32767f * sz; }
+                                        Console.WriteLine($"  raw=({rawX}, {rawY}, {rawZ})");
+                                        Console.WriteLine($"             snorm*scale: ({vx:F6}, {vy:F6}, {vz:F6})");
+                                        float absX = xActive ? cx + vx : 0;
+                                        float absY = yActive ? cy + vy : 0;
+                                        float absZ = zActive ? cz + vz : 0;
+                                        Console.WriteLine($"             center+snorm*scale: ({absX:F6}, {absY:F6}, {absZ:F6})");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 static void PrintUsage()

@@ -315,7 +315,7 @@ public class ManualRenderTests
     [TestMethod]
     public void MWO_Turret_USD()
     {
-        RenderToUsd($@"{mwoObjectDir}\objects\gamemodes\turret\turret_a.chr", mwoObjectDir);
+        RenderToUsd($@"{mwoObjectDir}\objects\gamemodes\turret\turret_a.chr", mwoObjectDir, includeAnimations: true);
     }
 
     [TestMethod]
