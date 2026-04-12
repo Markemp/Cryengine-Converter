@@ -53,7 +53,7 @@ dotnet run -- ship.cgf -gltf -objectdir "C:\GameAssets\Objects"
 - **CgfConverter** - Core library containing all conversion logic
 - **cgf-converter** - CLI executable entry point
 - **CgfConverterIntegrationTests** - Test suite (MSTest) with unit and integration tests
-- **CgfConverterTestingConsole** - Testing/debugging console
+- **CgfConverterTestingConsole** - Claude's data inspection console (see `cryengine-inspect` skill). Claude owns this project and can freely modify `Program.cs` to inspect CryEngine data. No tests required — it's a debugging tool, not production code.
 
 ### Key Dependencies
 - .NET 9.0 target framework
@@ -61,6 +61,9 @@ dotnet run -- ship.cgf -gltf -objectdir "C:\GameAssets\Objects"
 - BCnEncoder.Net (DDS texture compression)
 - Newtonsoft.Json (glTF serialization)
 - XmlSerializer.Generator (Collada performance optimization)
+
+### External Tools
+- **OpenUSD CLI tools** at `D:\USD\install\bin` (on PATH): `usdcat`, `usdtree`, `sdffilter`, `sdfdump`. See `usd-inspect` skill for usage reference.
 
 ## High-Level Architecture
 

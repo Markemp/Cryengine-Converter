@@ -278,6 +278,12 @@ public partial class UsdRenderer
                 Vector3 position = SampleCafPosition(track, frame + startFrame, restTranslation);
                 Quaternion rotation = SampleCafRotation(track, frame + startFrame);
 
+                // If no rotation keys exist, SampleCafRotation returns Identity.
+                // USD SkelAnimation replaces restTransform, so we must use rest rotation
+                // to preserve bone orientation for non-animated bones.
+                if (track.Rotations.Count == 0)
+                    rotation = restRotation;
+
                 if (isAdditive)
                 {
                     // Additive animations: rotation is also a delta from rest
@@ -335,12 +341,17 @@ public partial class UsdRenderer
         // Map bone hashes to joint paths
         var animatedJoints = new List<string>();
         var tracksByJointPath = new Dictionary<string, (List<Quaternion>? rotations, List<float>? rotTimes,
-            List<Vector3>? positions, List<float>? posTimes)>();
+            List<Vector3>? positions, List<float>? posTimes, ushort posFormat)>();
 
         int matchedBones = 0;
         int unmatchedBones = 0;
         int bonesWithData = 0;
         var unmatchedHashes = new List<uint>();
+
+        // Build hash-to-controller-index lookup for format flags
+        var hashToControllerIndex = new Dictionary<uint, int>();
+        for (int i = 0; i < block.BoneHashes.Length; i++)
+            hashToControllerIndex[block.BoneHashes[i]] = i;
 
         Log.D($"IvoDBA[{animName}]: Processing {block.BoneHashes.Length} bone hashes, skeleton has {controllerIdToJointPath.Count} controller IDs");
 
@@ -361,13 +372,18 @@ public partial class UsdRenderer
             block.Positions.TryGetValue(boneHash, out var positions);
             block.PositionTimes.TryGetValue(boneHash, out var posTimes);
 
+            // Get position format flags from controller entry
+            ushort posFormat = 0;
+            if (hashToControllerIndex.TryGetValue(boneHash, out var ctrlIdx) && ctrlIdx < block.Controllers.Length)
+                posFormat = block.Controllers[ctrlIdx].PosFormatFlags;
+
             // Only add if there's actual animation data
             if ((rotations is not null && rotations.Count > 0) ||
                 (positions is not null && positions.Count > 0))
             {
                 bonesWithData++;
                 animatedJoints.Add(jointPath);
-                tracksByJointPath[jointPath] = (rotations, rotTimes, positions, posTimes);
+                tracksByJointPath[jointPath] = (rotations, rotTimes, positions, posTimes, posFormat);
             }
         }
 
@@ -395,7 +411,7 @@ public partial class UsdRenderer
 
         // Calculate frame range from all tracks
         var allFrames = new SortedSet<int>();
-        foreach (var (_, (_, rotTimes, _, posTimes)) in tracksByJointPath)
+        foreach (var (_, (_, rotTimes, _, posTimes, _)) in tracksByJointPath)
         {
             if (rotTimes is not null)
             {
@@ -431,7 +447,7 @@ public partial class UsdRenderer
 
             foreach (var jointPath in animatedJoints)
             {
-                var (trackRots, rotTimes, trackPos, posTimes) = tracksByJointPath[jointPath];
+                var (trackRots, rotTimes, trackPos, posTimes, posFormat) = tracksByJointPath[jointPath];
 
                 // Get rest pose for this joint
                 var restTranslation = jointPathToRestTranslation.TryGetValue(jointPath, out var restT)
@@ -441,14 +457,27 @@ public partial class UsdRenderer
                     ? restR
                     : Quaternion.Identity;
 
-                // Sample position - Ivo DBA stores position DELTAS (not absolute)
-                // Evidence: laser cannon barrel animation shows small delta values (~0.045)
-                // compared to rest position (~0.87). Bolt in p4ar also confirms this.
+                // Position interpretation depends on the storage format:
+                // - C0 (0xC0xx, raw float): ABSOLUTE local positions (replace rest translation)
+                // - C1/C2 (0xC1xx/0xC2xx, SNORM): DELTAS from rest (SNORM encodes offsets around zero)
+                // Evidence: C0 bones (UpPiston) have values near rest. C2 bones (MainWheel) in Block 1
+                // have (0,0,0) meaning "no change from rest" (zero delta), not "position at origin."
                 Vector3 position;
                 if (trackPos is not null && trackPos.Count > 0)
                 {
-                    var animDelta = SampleIvoPositionDelta(trackPos, posTimes, frame);
-                    position = restTranslation + animDelta;
+                    var rawValue = SampleIvoPositionDelta(trackPos, posTimes, frame);
+                    var posType = IvoAnimationHelpers.GetPositionFormat(posFormat);
+
+                    if (posType == IvoPositionFormat.FloatVector3)
+                    {
+                        // C0: raw float = absolute local position
+                        position = rawValue;
+                    }
+                    else
+                    {
+                        // C1/C2: SNORM compressed = delta from rest
+                        position = restTranslation + rawValue;
+                    }
                 }
                 else
                 {
@@ -675,23 +704,12 @@ public partial class UsdRenderer
                 }
             }
 
-            // Extract rotation from the rest matrix
-            if (Matrix4x4.Decompose(restMatrix, out _, out var rotation, out _))
+            // Extract rotation from the rest matrix.
+            // Transpose before decomposing so the quaternion matches the skeleton's
+            // restTransforms convention (which are also transposed from CryEngine to USD).
+            if (Matrix4x4.Decompose(Matrix4x4.Transpose(restMatrix), out _, out var rotation, out _))
             {
                 mapping[jointPath] = rotation;
-
-                // Debug: compare non-transposed vs transposed rest rotation for turret_arm
-                if (bone.ControllerID == 0x9384FC75)
-                {
-                    var transposedMatrix = Matrix4x4.Transpose(restMatrix);
-                    if (Matrix4x4.Decompose(transposedMatrix, out _, out var transposedRot, out _))
-                    {
-                        Log.I($"turret_arm rest rotation comparison:");
-                        Log.I($"  Non-transposed (animation): ({rotation.X:F6}, {rotation.Y:F6}, {rotation.Z:F6}, {rotation.W:F6})");
-                        Log.I($"  Transposed (skeleton):      ({transposedRot.X:F6}, {transposedRot.Y:F6}, {transposedRot.Z:F6}, {transposedRot.W:F6})");
-                        Log.I($"  Conjugate of non-transposed: ({-rotation.X:F6}, {-rotation.Y:F6}, {-rotation.Z:F6}, {rotation.W:F6})");
-                    }
-                }
             }
             else
             {
@@ -821,10 +839,10 @@ public partial class UsdRenderer
             Log.D($"DBA[{animName}]: Converting additive animation to absolute");
 
         // Build rest pose mappings - needed for:
-        // 1. Additive animation conversion
-        // 2. Bones without position animation (must use rest translation to maintain skeleton structure)
+        // 1. Bones without animation tracks (must use rest values to maintain skeleton structure)
+        // 2. Additive animation conversion (rest * delta)
         var jointPathToRestTranslation = BuildRestTranslationMapping();
-        var jointPathToRestRotation = isAdditive ? BuildRestRotationMapping() : null;
+        var jointPathToRestRotation = BuildRestRotationMapping();
 
         // Collect all joint paths that have animation in this clip
         var animatedJoints = new List<string>();
@@ -910,8 +928,16 @@ public partial class UsdRenderer
                         frame);
                 }
 
+                // Get rest rotation for this joint (used when no rotation animation)
+                var restRotation = jointPathToRestRotation is not null
+                    && jointPathToRestRotation.TryGetValue(jointPath, out var restR)
+                    ? restR
+                    : Quaternion.Identity;
+
                 // Get rotation for this joint at this frame
-                Quaternion rotation = Quaternion.Identity;
+                // If no rotation track exists, use rest rotation to preserve bone orientation
+                // (USD SkelAnimation replaces restTransform, so omitting rest = zeroing the rotation)
+                Quaternion rotation = restRotation;
                 if (controller.HasRotTrack && animChunk.KeyTimes is not null && animChunk.KeyRotations is not null)
                 {
                     rotation = SampleRotationAtFrame(
@@ -925,10 +951,6 @@ public partial class UsdRenderer
                     // Convert additive deltas to absolute transforms:
                     // Additive rotation: absolute = rest * delta
                     // Additive translation: absolute = rest + delta (translation already has rest if no pos track)
-                    var restRotation = jointPathToRestRotation!.TryGetValue(jointPath, out var restR)
-                        ? restR
-                        : Quaternion.Identity;
-
                     rotation = restRotation * rotation;
                     // For additive with position track, add animation delta to rest
                     if (controller.HasPosTrack)
