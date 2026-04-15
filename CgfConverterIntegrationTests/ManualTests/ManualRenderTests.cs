@@ -143,6 +143,18 @@ public class ManualRenderTests
         RenderToGltf($@"{kcd2ObjectDir}\Objects\characters\animals\boar\skeleton_pig_01.chr", kcd2ObjectDir);
     }
 
+    [TestMethod]
+    public void Kcd2_Basket_Woodblocks_Glb()
+    {
+        RenderToGlb($@"{kcd2ObjectDir}\objects\manmade\task_specific_props\household\firewood\basket_a_woodblocks.cgf", kcd2ObjectDir);
+    }
+
+    [TestMethod]
+    public void Kcd2_Basket_Woodblocks_Gltf()
+    {
+        RenderToGltf($@"{kcd2ObjectDir}\objects\manmade\task_specific_props\household\firewood\basket_a_woodblocks.cgf", kcd2ObjectDir);
+    }
+
     #endregion
 
     #region MWO Test Files
@@ -475,6 +487,21 @@ public class ManualRenderTests
         renderer.Render();
 
         var outputPath = Path.ChangeExtension(inputFile, ".gltf");
+        Assert.IsTrue(File.Exists(outputPath), $"Output file not created: {outputPath}");
+    }
+
+    private void RenderToGlb(string inputFile, string objectDir)
+    {
+        var cliArgs = new string[] { inputFile, "-glb", "-objectdir", objectDir };
+        argsHandler.ProcessArgs(cliArgs);
+
+        var cryData = new CryEngine(inputFile, args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir, IncludeAnimations: true));
+        cryData.ProcessCryengineFiles();
+
+        var renderer = new GltfModelRenderer(args, cryData);
+        renderer.Render();
+
+        var outputPath = Path.ChangeExtension(inputFile, ".glb");
         Assert.IsTrue(File.Exists(outputPath), $"Output file not created: {outputPath}");
     }
 

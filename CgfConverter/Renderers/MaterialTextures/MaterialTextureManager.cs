@@ -25,7 +25,7 @@ public class MaterialTextureManager
         _args = args;
     }
 
-    public MaterialTextureSet CreateSet(Material cryMaterial)
+    public MaterialTextureSet CreateSet(Material cryMaterial, string? materialFilePath = null)
     {
         Dictionary<Texture.MapTypeEnum, Texture> texturesDict = cryMaterial.Textures!
             .Where(
@@ -38,15 +38,18 @@ public class MaterialTextureManager
 
         rawDiffuse = FromCryTexture(
             texturesDict,
+            materialFilePath,
             Texture.MapTypeEnum.TexSlot1,
             Texture.MapTypeEnum.TexSlot9,
             Texture.MapTypeEnum.Diffuse);
         rawNormal = FromCryTexture(
             texturesDict,
+            materialFilePath,
             Texture.MapTypeEnum.TexSlot2,
             Texture.MapTypeEnum.Normals);
         rawSpecular = FromCryTexture(
             texturesDict,
+            materialFilePath,
             Texture.MapTypeEnum.TexSlot4,
             Texture.MapTypeEnum.TexSlot10,
             Texture.MapTypeEnum.Specular);
@@ -150,6 +153,7 @@ public class MaterialTextureManager
 
     public MaterialTexture? FromCryTexture(
         IReadOnlyDictionary<Texture.MapTypeEnum, Texture> cryTextures,
+        string? materialFilePath,
         params Texture.MapTypeEnum[] mapTypes)
     {
         foreach (Texture.MapTypeEnum mapType in mapTypes)
@@ -157,7 +161,19 @@ public class MaterialTextureManager
             if (!cryTextures.TryGetValue(mapType, out Texture? t))
                 continue;
 
-            string texturePath = FileHandlingExtensions.ResolveTextureFile(t.File, _args.PackFileSystem, [_args.DataDir]);
+            // Build data dirs list: objectDir + material file's directory (for ./ relative paths)
+            var dataDirs = new List<string>();
+            if (_args.DataDir is not null)
+                dataDirs.Add(_args.DataDir);
+            if (materialFilePath is not null)
+            {
+                string materialDir = Path.GetDirectoryName(
+                    Path.Combine(_args.DataDir ?? string.Empty, materialFilePath)) ?? string.Empty;
+                if (!string.IsNullOrEmpty(materialDir) && !dataDirs.Contains(materialDir))
+                    dataDirs.Add(materialDir);
+            }
+
+            string texturePath = FileHandlingExtensions.ResolveTextureFile(t.File, _args.PackFileSystem, dataDirs);
             string normalizedPath = FileHandlingExtensions.CombineAndNormalizePath(texturePath);
 
             if (!_args.PackFileSystem.Exists(normalizedPath))
@@ -181,7 +197,14 @@ public class MaterialTextureManager
 
         try
         {
-            if (_args.EmbedTextures)
+            // Decode DDS pixel data when the renderer needs to convert textures to PNG:
+            //  - GLB always embeds as PNG (spec requires image/png or image/jpeg)
+            //  - Embedded textures are always converted to PNG
+            //  - Default glTF (no texture format flag) converts to PNG since DDS is not valid in glTF
+            // Only skip decoding when an explicit format flag (-png/-tif/-tga) is set for glTF text mode,
+            // which references external files by URI instead of converting.
+            bool hasExplicitTextureFormat = _args.PngTextures || _args.TiffTextures || _args.TgaTextures;
+            if (_args.EmbedTextures || _args.OutputGLB || !hasExplicitTextureFormat)
             {
                 DdsFile ddsFile;
                 using Stream ddsfs = _args.PackFileSystem.GetStream(path);
@@ -196,7 +219,7 @@ public class MaterialTextureManager
             }
             else
             {
-                // If not embedding, just return a placeholder texture
+                // If not embedding, just return a placeholder texture with file path reference
                 return _textures[key] = new MaterialTexture(key, null, null, null, null);
             }
         }

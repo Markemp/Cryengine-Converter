@@ -17,7 +17,8 @@ public partial class BaseGltfRenderer
             Material source,
             BaseGltfRenderer renderer,
             MaterialTextureManager mtm,
-            Args argsHandler)
+            Args argsHandler,
+            string? materialFilePath = null)
         {
             CryMaterial = source;
             if (argsHandler.IsMaterialExcluded(CryMaterial))
@@ -47,7 +48,7 @@ public partial class BaseGltfRenderer
                 return;
             }
 
-            MaterialTextureSet textureSet = mtm.CreateSet(CryMaterial);
+            MaterialTextureSet textureSet = mtm.CreateSet(CryMaterial, materialFilePath);
             GltfMaterial = new GltfMaterial
             {
                 Name = CryMaterial.Name,
@@ -91,7 +92,7 @@ public partial class BaseGltfRenderer
                             CryMaterial.SpecularValue?.Green ?? 0f,
                             CryMaterial.SpecularValue?.Blue ?? 0f,
                         },
-                        GlossinessFactor = float.Clamp((float) CryMaterial.Shininess / 255f, 0f, 1f),
+                        GlossinessFactor = 1f - CalculateRoughness(CryMaterial),
                         SpecularGlossinessTexture = renderer.AddTextureInfo(
                             $"{CryMaterial.Name}-specularglossiness",
                             textureSet.SpecularGlossiness),
@@ -144,7 +145,8 @@ public partial class BaseGltfRenderer
                 submat,
                 this,
                 _materialTextureManager,
-                _args);
+                _args,
+                materialFile);
         }
     }
 }

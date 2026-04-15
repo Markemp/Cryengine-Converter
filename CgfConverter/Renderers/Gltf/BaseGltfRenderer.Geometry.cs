@@ -475,19 +475,36 @@ public partial class BaseGltfRenderer
             return false;
         }
 
-        // Create this node and add to GltfRoot.Nodes
-        // Use the transformed matrix directly to preserve correct coordinate transformation
-        // This avoids issues with TRS decomposition when axes are swapped and negated
-        // Note: CryEngine uses row-major with translation in last row (row-vector convention)
-        // glTF uses column-major with translation in last column (column-vector convention)
-        // MatrixToGltfList outputs in column-major format which naturally transposes
+        // Transform node's local matrix into glTF coordinate system and decompose to TRS.
+        // glTF spec requires matrices to be TRS-decomposable; using TRS components directly
+        // avoids validator warnings and ensures correct behavior across all viewers.
         var transformedMatrix = SwapAxes(cryNode.LocalTransform);
 
-        node = new GltfNode
+        if (Matrix4x4.Decompose(transformedMatrix, out var scale, out var rotation, out var translation))
         {
-            Name = cryNode.Name,
-            Matrix = MatrixToGltfList(transformedMatrix)
-        };
+            node = new GltfNode
+            {
+                Name = cryNode.Name,
+                Scale = (scale - Vector3.One).LengthSquared() > 0.000001f
+                    ? new List<float> { scale.X, scale.Y, scale.Z }
+                    : null,
+                Translation = translation != Vector3.Zero
+                    ? new List<float> { translation.X, translation.Y, translation.Z }
+                    : null,
+                Rotation = rotation != Quaternion.Identity
+                    ? new List<float> { rotation.X, rotation.Y, rotation.Z, rotation.W }
+                    : null,
+            };
+        }
+        else
+        {
+            Log.W("NodeChunk[{0}]: Transform matrix is not TRS-decomposable, using raw matrix", cryNode.Name);
+            node = new GltfNode
+            {
+                Name = cryNode.Name,
+                Matrix = MatrixToGltfList(transformedMatrix)
+            };
+        }
 
         // Add mesh if needed
         if (cryNode.ChunkHelper is null && cryNode.MeshData?.GeometryInfo is not null)
