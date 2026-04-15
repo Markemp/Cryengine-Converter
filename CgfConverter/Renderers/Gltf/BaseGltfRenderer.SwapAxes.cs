@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 
 namespace CgfConverter.Renderers.Gltf;
@@ -79,6 +80,32 @@ public partial class BaseGltfRenderer
     ];
 
 
+
+    /// <summary>
+    /// Converts a CryEngine QTangent quaternion to a glTF TANGENT Vec4 (xyz=tangent dir, w=handedness).
+    /// The quaternion encodes a TBN rotation matrix. The tangent is the first column of that matrix.
+    /// Handedness (bitangent sign) is encoded in the sign of the quaternion's W component.
+    /// </summary>
+    protected static Vector4 QTangentToGltfTangent(Quaternion q)
+    {
+        float qx = q.X, qy = q.Y, qz = q.Z, qw = q.W;
+
+        // Tangent = first column of rotation matrix from quaternion
+        Vector3 tangent = new(
+            1.0f - 2.0f * (qy * qy + qz * qz),
+            2.0f * (qx * qy + qw * qz),
+            2.0f * (qx * qz - qw * qy));
+
+        // Normalize for safety (quantized quaternions may not be perfectly unit-length)
+        float len = tangent.Length();
+        if (len > 1e-6f)
+            tangent /= len;
+
+        // Handedness: CryEngine encodes bitangent sign in the sign of qw
+        float handedness = qw >= 0 ? 1.0f : -1.0f;
+
+        return SwapAxesForTangent(new Vector4(tangent, handedness));
+    }
 
     /*
     // Use these if you need to confirm directions

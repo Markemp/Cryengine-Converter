@@ -868,6 +868,7 @@ public partial class BaseGltfRenderer
         Datastream<VertUV>? vertsUvs = meshChunk.GeometryInfo.VertUVs;
         Datastream<Vector3>? normals = meshChunk.GeometryInfo.Normals;
         Datastream<IRGBA>? colors = meshChunk.GeometryInfo.Colors;
+        Datastream<Quaternion>? tangents = meshChunk.GeometryInfo.Tangents;
 
         if (indices is null)
             return Log.D<bool>("Mesh[{0}]: IndicesData is empty.", gltfNode.Name);
@@ -1042,7 +1043,28 @@ public partial class BaseGltfRenderer
                             colors.Data.Select(c => new Vector4(c.R, c.G, c.B, c.A) / 255f).ToArray()));
             }
 
-            baseName = $"${gltfNode.Name}/tangent";
+            if (usesTangent && tangents is not null)
+            {
+                baseName = $"{gltfNode.Name}/tangent";
+                if (usePerSubsetExtraction)
+                {
+                    accessors.Tangent =
+                        GetAccessorOrDefault(baseName, 0, tangents.Data.Length)
+                        ?? AddAccessor(baseName, -1, GltfBufferViewTarget.ArrayBuffer,
+                            (meshChunk.GeometryInfo.GeometrySubsets ?? [])
+                                .SelectMany(subset => Enumerable
+                                    .Range(subset.FirstVertex, subset.NumVertices)
+                                    .Select(i => QTangentToGltfTangent(tangents.Data[i])))
+                                .ToArray());
+                }
+                else
+                {
+                    accessors.Tangent =
+                        GetAccessorOrDefault(baseName, 0, tangents.Data.Length)
+                        ?? AddAccessor(baseName, -1, GltfBufferViewTarget.ArrayBuffer,
+                            tangents.Data.Select(QTangentToGltfTangent).ToArray());
+                }
+            }
         }
 
         baseName = $"${gltfNode.Name}/index";

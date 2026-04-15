@@ -336,6 +336,12 @@ public class ManualRenderTests
         RenderToGltf($@"{mwoObjectDir}\objects\gamemodes\turret\turret_a.chr", mwoObjectDir);
     }
 
+    [TestMethod]
+    public void MWO_Turret_Glb()
+    {
+        RenderToGlb($@"{mwoObjectDir}\objects\gamemodes\turret\turret_a.chr", mwoObjectDir);
+    }
+
     #endregion
 
     #region SC test files
