@@ -344,6 +344,8 @@ public partial class CryEngine
                             Colors = GetRequiredDatastream<IRGBA>(mesh.ColorsData),
                             VertUVs = GetRequiredDatastream<VertUV>(mesh.VertsUVsData),
                             Normals = GetRequiredDatastream<Vector3>(mesh.NormalsData),
+                            Tangents = GetRequiredDatastream<Quaternion>(mesh.QTangentsData)
+                                ?? GetRequiredDatastream<Quaternion>(mesh.TangentsData),
                             BoneMappings = GetRequiredDatastream<MeshBoneMapping>(mesh.BoneMapData),
                             BoundingBox = new BoundingBox(mesh.MinBound, mesh.MaxBound)
                         };
@@ -1419,6 +1421,7 @@ public partial class CryEngine
             Colors = skinMesh.Colors,
             VertUVs = skinMesh.VertsUvs,
             Normals = skinMesh.Normals,
+            Tangents = skinMesh.QTangents ?? skinMesh.Tangents,
             BoneMappings = skinMesh.BoneMappings
         };
     }

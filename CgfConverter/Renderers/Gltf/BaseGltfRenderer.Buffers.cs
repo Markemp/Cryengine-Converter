@@ -492,9 +492,12 @@ public partial class BaseGltfRenderer
     private int AddTexture(string? baseName, int width, int height, MaterialTexture materialTexture, SourceAlphaModes sourceAlphaMode,
         float? newOpacity = null)
     {
-        // If we're not embedding textures and we have a MaterialTexture with a FileMaterialTextureKey,
-        // use the original file path instead of converting to PNG
-        if (!_args.EmbedTextures && materialTexture.Key is FileMaterialTextureKey fileKey)
+        // GLB always embeds as PNG — the glTF spec only allows image/png and image/jpeg inside
+        // binary containers, and external URIs in GLB are invalid per spec.
+        // For glTF with an explicit texture format flag (-png/-tif/-tga), reference the file externally.
+        // For glTF with no flag (default DDS), convert to PNG since DDS is not a valid glTF image type.
+        if (!_writeBinary && !_args.EmbedTextures && materialTexture.Key is FileMaterialTextureKey fileKey
+            && (_args.PngTextures || _args.TiffTextures || _args.TgaTextures))
         {
             string originalPath = fileKey.Path;
 
@@ -517,21 +520,17 @@ public partial class BaseGltfRenderer
                 }
             }
 
-            string extension = ".dds"; // Default
-
-            // Determine the extension based on ArgsHandler settings
-            if (_args.PngTextures) extension = ".png";
-            else if (_args.TiffTextures) extension = ".tif";
+            string extension = ".png";
+            if (_args.TiffTextures) extension = ".tif";
             else if (_args.TgaTextures) extension = ".tga";
 
-            // Use the original path with the appropriate extension
-            string uri = Path.ChangeExtension(originalPath, extension);
+            // Use relative URI (filename only) — glTF requires relative URIs
+            string uri = Path.ChangeExtension(Path.GetFileName(originalPath), extension);
 
-            // Add the texture to the glTF file with the URI
             return AddTexture(baseName, GetMimeTypeForExtension(extension), null, uri);
         }
-        
-        // Fallback to the existing PNG conversion code
+
+        // Convert to PNG: used for GLB (always), embedded textures, and default glTF (no texture format flag)
         ColorRgba32[] raw = materialTexture.Data;
         if (sourceAlphaMode == SourceAlphaModes.Automatic)
         {
@@ -626,8 +625,10 @@ public partial class BaseGltfRenderer
     private int AddTexture(string? baseName, string mimeType, byte[]? textureBytes, string? uri = null)
     {
         int? bufferViewIndex = null;
-        
-        if (textureBytes is not null && _args.EmbedTextures)
+
+        // Embed texture bytes into the binary buffer when explicitly requested or when
+        // writing GLB (GLB must not reference external URIs per the glTF spec)
+        if (textureBytes is not null && (_args.EmbedTextures || _writeBinary))
         {
             bufferViewIndex = AddBufferView(baseName, textureBytes, null);
             uri = null;
