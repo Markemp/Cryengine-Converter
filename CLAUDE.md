@@ -47,6 +47,14 @@ dotnet run -- "C:\GameAssets\ship.cga" -objectdir "C:\GameAssets\Objects"
 dotnet run -- ship.cgf -gltf -objectdir "C:\GameAssets\Objects"
 ```
 
+## Versioning
+
+The application version is managed in `Directory.Build.props` at the repo root. This single file sets the version for all projects in the solution.
+
+When making changes, consider whether a version bump is appropriate:
+- **Release branches** (e.g., `release/v2.0`): Do not increment the version. The target version is already set for the release.
+- **Bugfixes or features on master**: Ask the user if a version bump is needed before changing `Directory.Build.props`.
+
 ## Solution Structure
 
 ### Projects

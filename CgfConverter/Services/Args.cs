@@ -12,13 +12,10 @@ public sealed class Args
     public readonly List<Regex> ExcludeMaterialNameRegexes = [];
     public readonly List<Regex> ExcludeShaderNameRegexes = [];
 
-    public bool Verbose { get; set; }
     /// <summary>Files to process</summary>
     public List<string> InputFiles { get; internal set; } = [];
     /// <summary>Location of the Game files</summary>
     public string DataDir { get; internal set; }
-    /// <summary>File to render to</summary>
-    public string? OutputFile { get; internal set; }
     /// <summary>Directory to render to</summary>
     public string? OutputDir { get; internal set; }
     /// <summary>Material file override</summary>
@@ -29,9 +26,7 @@ public sealed class Args
     public int MaxThreads { get; internal set; }
     /// <summary>Sets the output log level</summary>
     public LogLevelEnum LogLevel { get; set; } = LogLevelEnum.Critical;
-    /// <summary>Allows naming conflicts for mtl file</summary>
-    public bool AllowConflicts { get; internal set; }
-    /// <summary>LODs files.  Adds _out onto the output</summary>
+    /// <summary>Appends _out to output filename to avoid naming conflicts</summary>
     public bool NoConflicts { get; internal set; }
     /// <summary>Name to group all meshes under</summary>
     public bool GroupMeshes { get; internal set; }
@@ -67,10 +62,8 @@ public sealed class Args
     public List<string> ExcludeMaterialNames { get; internal set; } = [];
     /// <summary>List of shader names to skip when rendering</summary>
     public List<string> ExcludeShaderNames { get; internal set; } = [];
-    public bool Throw { get; internal set; }
-    public bool DumpChunkInfo { get; internal set; }
     /// <summary>Include animations in the conversion output</summary>
     public bool IncludeAnimations { get; internal set; }
 
-    public override string ToString() => $@"Input file: {InputFiles}, Object Dir: {string.Join(',', DataDir)}, Output file: {OutputFile}";
+    public override string ToString() => $@"Input file: {InputFiles}, Object Dir: {string.Join(',', DataDir)}";
 }
