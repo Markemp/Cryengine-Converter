@@ -164,9 +164,6 @@ public sealed class ArgsHandler
                 case "-group":
                     Args.GroupMeshes = true;
                     break;
-                case "-throw":
-                    Args.Throw = true;
-                    break;
                 case "-mtl":
                 case "-mat":
                 case "-material":
@@ -186,18 +183,9 @@ public sealed class ArgsHandler
                     }
                     lookupInputs.Add(inputArgs[i]);
                     break;
-                case "-allowconflicts":
-                case "-allowconflict":
-                    Args.AllowConflicts = true;
-                    break;
                 case "-noconflict":
                 case "-noconflicts":
                     Args.NoConflicts = true;
-                    break;
-                case "-dump":
-                case "-dumpchunk":
-                case "-dumpchunkinfo":
-                    Args.DumpChunkInfo = true;
                     break;
                 case "-anim":
                 case "-animations":
@@ -246,18 +234,12 @@ public sealed class ArgsHandler
         if (Args.OutputUSD)
             HelperMethods.Log(LogLevelEnum.Info, "Output format set to USD (.usda)");
 
-        if (Args.AllowConflicts)
-            HelperMethods.Log(LogLevelEnum.Info, "Allow conflicts for mtl files enabled");
         if (Args.NoConflicts)
             HelperMethods.Log(LogLevelEnum.Info, "Prevent conflicts for mtl files enabled");
         if (Args.ExcludeNodeNames.Any())
             HelperMethods.Log(LogLevelEnum.Info, $"Skipping nodes starting with any of these names: {String.Join(", ", Args.ExcludeNodeNames)}");
         if (Args.ExcludeMaterialNames.Any())
             HelperMethods.Log(LogLevelEnum.Info, $"Skipping meshes using materials named: {String.Join(", ", Args.ExcludeMaterialNames)}");
-        if (Args.DumpChunkInfo)
-            HelperMethods.Log(LogLevelEnum.Info, "Output chunk info for missing or invalid chunks.");
-        if (Args.Throw)
-            HelperMethods.Log(LogLevelEnum.Info, "Exceptions thrown to debugger");
         if (Args.IncludeAnimations)
             HelperMethods.Log(LogLevelEnum.Info, "Animation loading enabled");
 
@@ -326,14 +308,13 @@ public sealed class ArgsHandler
     public static void PrintUsage()
     {
         Console.WriteLine();
-        Console.WriteLine("cgf-converter [-usage] | <.cgf file> [-outputfile <output file>] [-dae] [-obj] [-glb] [-gltf] [-notex/-png/-tif/-tga] [-group] [-excludenode <nodename>] [-excludemat <matname>] [-loglevel <LogLevel>] [-throw] [-dump] [-objectdir <ObjectDir>] [-anim]");
+        Console.WriteLine("cgf-converter [-usage] | <.cgf file> [-dae] [-obj] [-glb] [-gltf] [-usd] [-notex/-png/-tif/-tga] [-excludenode <nodename>] [-excludemat <matname>] [-loglevel <LogLevel>] [-objectdir <ObjectDir>] [-anim]");
         Console.WriteLine();
-        Console.WriteLine($"CryEngine Converter v{Assembly.GetExecutingAssembly().GetName().Version}");
+        Console.WriteLine($"CryEngine Converter v{Assembly.GetEntryAssembly()?.GetName().Version}");
         Console.WriteLine();
         Console.WriteLine("-usage:            Prints out the usage statement");
         Console.WriteLine();
         Console.WriteLine("<.cgf file>:       The name of the .cgf, .cga, .chr, .anim, .dba or .skin file to process.");
-        Console.WriteLine("-outputfile:       (Optional) The name of the file to write the output.");
         Console.WriteLine("-objectdir:        (Optional but highly recommended) The name where the base Objects directory is located (i.e. where the .pak files were extracted).");
         Console.WriteLine("                   Defaults to current directory. Some packfile formats may accept additional options in the form of some.pack.file?key=value&key2=value2.");
         Console.WriteLine("-mtl/mat/material:  (Optional) The material file to use.");
@@ -341,46 +322,46 @@ public sealed class ArgsHandler
         Console.WriteLine(" Export formats.   By default -usd is used.");
         Console.WriteLine("-usd/-usda:        Export USD format files (default).");
         Console.WriteLine("-dae:              Export Collada format files.");
-        Console.WriteLine("-glb:              Export glb (glTF binary) files.");
+        Console.WriteLine("-glb:              Export glb (glTF binary) files. Embeds textures by default so expect large files!");
         Console.WriteLine("-gltf:             Export file pairs of glTF and bin files.");
         Console.WriteLine("-obj:              Export Wavefront format files (Not supported).");
         Console.WriteLine();
-        Console.WriteLine("  Texture Options.   By default textures are converted to PNG.");
+        Console.WriteLine("  Texture Options.");
         Console.WriteLine("-notex:            Do not include textures in outputs.");
-        Console.WriteLine("-tif:              Reference .tif files instead of converting to PNG (glTF text mode only).");
-        Console.WriteLine("-png:              Reference .png files instead of converting to PNG (glTF text mode only).");
-        Console.WriteLine("-tga:              Reference .tga files instead of converting to PNG (glTF text mode only).");
-        Console.WriteLine("-embedtextures:    Embed textures into the glTF text output instead of external references.");
-        Console.WriteLine("                   GLB output always embeds textures as PNG regardless of these flags.");
         Console.WriteLine("-ut/-unsplittextures:");
-        Console.WriteLine("                   Use DDS Unsplitter to combine split texture files into a single file.");
+        Console.WriteLine("                   Use DDS Unsplitter to combine split DDS texture files into a single file.");
         Console.WriteLine();
-        Console.WriteLine("-smooth:           Smooth Faces.");
-        Console.WriteLine("-group:            Group meshes into single model.");
         Console.WriteLine("-en/-excludenode   <regular expression for node names>:");
         Console.WriteLine("                   Exclude matching nodes from rendering. Can be listed multiple times.");
         Console.WriteLine("-em/-excludemat    <regular expression for material names>");
         Console.WriteLine("                   Exclude meshes with matching materials from rendering. Can be listed multiple times.");
         Console.WriteLine("-sm/-excludeshader  <material_name>:");
         Console.WriteLine("                   Exclude meshes with the material using matching shader from rendering. Can be listed multiple times.");
-        Console.WriteLine("-noconflict:       Use non-conflicting naming scheme (<cgf File>_out.obj)");
-        Console.WriteLine("-allowconflict:    Allows conflicts in .mtl file name. (obj exports only, as not an issue in dae.)");
+        Console.WriteLine("-noconflict:       Append _out to output filename to avoid naming conflicts.");
         Console.WriteLine();
-        Console.WriteLine("-prefixmatnames:   Prefixes material names with the filename of the source mtl file.");
         Console.WriteLine("-pp/-preservepath:");
         Console.WriteLine("                   Preserve the path hierarchy.");
         Console.WriteLine("-mt/-maxthreads <number>");
         Console.WriteLine("                   Set maximum number of threads to use. Specify 0 to use all cores.");
+        Console.WriteLine();
+        Console.WriteLine("  glTF/GLB Options.");
+        Console.WriteLine("-tif:              Reference .tif files instead of converting to PNG (glTF text mode only).");
+        Console.WriteLine("-png:              Reference .png files instead of converting to PNG (glTF text mode only).");
+        Console.WriteLine("-tga:              Reference .tga files instead of converting to PNG (glTF text mode only).");
+        Console.WriteLine("-embedtextures:    Embed textures into the glTF text output instead of external references.");
+        Console.WriteLine("                   GLB output always embeds textures as PNG regardless of these flags.");
         Console.WriteLine("-sl/-splitlayer(s)");
         Console.WriteLine("                   Split into multiple layers (terrain only).");
+        Console.WriteLine();
+        Console.WriteLine("  Wavefront Options (obj export only, not supported).");
+        Console.WriteLine("-smooth:           Smooth faces.");
+        Console.WriteLine("-group:            Group meshes into single model.");
         Console.WriteLine();
         Console.WriteLine("  Animation Options.");
         Console.WriteLine("-anim/-animations: Include animations in the conversion output.");
         Console.WriteLine("                   Loads .chrparams, .dba, .caf, and .cal animation files.");
         Console.WriteLine();
         Console.WriteLine("-loglevel:         Set the output log level (verbose, debug, info, warn, error, critical, none)");
-        Console.WriteLine("-throw:            Throw Exceptions to installed debugger.");
-        Console.WriteLine("-dump:             Dump missing/bad chunk info for support.");
         Console.WriteLine();
     }
 }

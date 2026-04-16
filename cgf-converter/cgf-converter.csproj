@@ -24,8 +24,6 @@
     <ProductName>Cryengine Converter</ProductName>
     <Title>Cryengine Converter</Title>
     <PublisherName>Heffay Presents</PublisherName>
-    <FileVersion>2.0.0.0</FileVersion>
-    <AssemblyVersion>2.0.0</AssemblyVersion>
     <Description>Converts Cryengine game files to commonly supported 3D formats.</Description>
     <Copyright>©2015-2025</Copyright>
     <SupportUrl>https://github.com/Markemp/Cryengine-Converter/</SupportUrl>
