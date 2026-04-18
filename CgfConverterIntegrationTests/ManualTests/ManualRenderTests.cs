@@ -28,7 +28,6 @@ public class ManualRenderTests
     private readonly string kcd2ObjectDir = @"d:\depot\kcd2";
     private readonly string mwoObjectDir = @"d:\depot\mwo";
     private readonly string sc41ObjectDir = @"d:\depot\sc4.1\data";
-    private readonly string sc44ObjectDir = @"d:\depot\sc4.4\data";
     private readonly string sc46ObjectDir = @"d:\depot\sc4.6\data";
     private readonly string archeageObjectDir = @"d:\depot\archeage";
 
@@ -315,7 +314,7 @@ public class ManualRenderTests
     [TestMethod]
     public void MWO_Pilot_Usd()
     {
-        RenderToUsd($@"{mwoObjectDir}\objects\characters\pilot\pilot.chr", mwoObjectDir);
+        RenderToUsd($@"{mwoObjectDir}\objects\characters\pilot\pilot.chr", mwoObjectDir, includeAnimations: true);
     }
 
     [TestMethod]

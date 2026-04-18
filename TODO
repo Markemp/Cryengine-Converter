@@ -4,3 +4,17 @@ TODO File
 - Animations
 - USD support
 
+Future
+- .pak file system support (issue #193 related)
+  - CryEngine .pak files are renamed ZIP archives
+  - Add PakFileSystem implementing IPackFileSystem, using ZipArchive for on-demand entry access
+  - Parse ZIP central directory at construction (seek to end of file), decompress entries on demand
+  - For multi-pak games (MWO has 20+), add each to CascadedPackFileSystem (last-added wins, matches CryEngine pak priority)
+  - For huge single paks (Star Citizen 140GB+), ZipArchive handles this since it only reads the directory index, not the whole file
+  - Add IPackFileSystem.EnumerateFiles() for UI browsing of pak contents
+  - Split texture problem: pak files may contain split DDS textures (.dds + .dds.1 etc.)
+    - Recombine at the renderer level (in ResolveTextureFile), not in PakFileSystem
+    - PakFileSystem stays a dumb file accessor, renderer knows output format requirements
+  - UI scenario: point to Steam game root, auto-discover .pak files, browse directory tree to select model
+  - WiiuStreamPackFileSystem is a good implementation template
+

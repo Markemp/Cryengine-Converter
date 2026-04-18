@@ -126,7 +126,7 @@ public static class FileHandlingExtensions
             i++;
         }
 
-        var result = string.Join('\\', parts);
+        var result = string.Join(Path.DirectorySeparatorChar, parts);
 
         // Cache the result if it's a single path component
         if (pathComponents.Length == 1 && pathComponents[0] != null)
