@@ -73,30 +73,39 @@ internal sealed class ChunkController_831 : ChunkController
         PositionTimeFormat = b.ReadByte();
         TracksAligned = b.ReadByte();
 
+        // C++ sizeof(CONTROLLER_CHUNK_DESC_0831) = 20 bytes due to struct alignment padding.
+        // The 18 bytes of fields are followed by 2 padding bytes. The Lumberyard reader uses
+        // (pCtrlChunk + 1) to get the data pointer, which advances by sizeof = 20.
+        b.ReadUInt16(); // struct alignment padding
+
         // Data layout (v0831):
         // [Rotation Values] -> [padding] -> [Rotation Times] -> [padding] ->
         // [Position Values] -> [padding] -> [Position Times (if PositionKeysInfo != 0)]
 
-        // Read rotation values first
-        KeyRotations = ReadRotations(b, NumRotationKeys, RotationFormat);
-        AlignTo4Bytes(b);
-
-        // Read rotation time keys
-        RotationKeyTimes = ReadKeyTimes(b, NumRotationKeys, RotationTimeFormat);
-        AlignTo4Bytes(b);
-
-        // Read position values
-        KeyPositions = ReadPositions(b, NumPositionKeys, PositionFormat);
-        AlignTo4Bytes(b);
-
-        // Position time keys only if PositionKeysInfo != 0, otherwise shares rotation times
-        if (PositionKeysInfo != 0)
+        if (NumRotationKeys > 0)
         {
-            PositionKeyTimes = ReadKeyTimes(b, NumPositionKeys, PositionTimeFormat);
+            KeyRotations = ReadRotations(b, NumRotationKeys, RotationFormat);
+            AlignTo4Bytes(b);
+
+            RotationKeyTimes = ReadKeyTimes(b, NumRotationKeys, RotationTimeFormat);
+            AlignTo4Bytes(b);
         }
-        else
+
+        if (NumPositionKeys > 0)
         {
-            PositionKeyTimes = RotationKeyTimes;
+            KeyPositions = ReadPositions(b, NumPositionKeys, PositionFormat);
+            AlignTo4Bytes(b);
+
+            // Position time keys only if PositionKeysInfo != eKeyTimeRotation (0),
+            // otherwise position shares rotation's time track
+            if (PositionKeysInfo != 0)
+            {
+                PositionKeyTimes = ReadKeyTimes(b, NumPositionKeys, PositionTimeFormat);
+            }
+            else
+            {
+                PositionKeyTimes = RotationKeyTimes;
+            }
         }
     }
 
@@ -104,8 +113,7 @@ internal sealed class ChunkController_831 : ChunkController
     {
         if (TracksAligned != 0)
         {
-            var pos = b.BaseStream.Position;
-            var remainder = pos % 4;
+            var remainder = b.BaseStream.Position % 4;
             if (remainder != 0)
                 b.ReadBytes((int)(4 - remainder));
         }
