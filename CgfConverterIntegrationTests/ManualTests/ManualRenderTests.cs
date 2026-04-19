@@ -30,6 +30,7 @@ public class ManualRenderTests
     private readonly string sc41ObjectDir = @"d:\depot\sc4.1\data";
     private readonly string sc46ObjectDir = @"d:\depot\sc4.6\data";
     private readonly string archeageObjectDir = @"d:\depot\archeage";
+    private readonly string newWorldObjectDir = @"d:\depot\newworld";
 
     [TestInitialize]
     public void Initialize()
@@ -446,6 +447,28 @@ public class ManualRenderTests
     {
         RenderToUsd($@"{sc46ObjectDir}\Objects\Spaceships\Ships\DRAK\Buccaneer\Exterior\DRAK_Buccaneer.cga", sc46ObjectDir, includeAnimations: false);
     }
+    #endregion
+
+    #region New World
+
+    [TestMethod]
+    public void NewWorld_PlayerMale_USD()
+    {
+        RenderToUsd($@"{newWorldObjectDir}\objects\characters\player\male\player_male.chr", newWorldObjectDir, includeAnimations: true);
+    }
+
+    [TestMethod]
+    public void NewWorld_PlayerMale_Collada()
+    {
+        RenderToCollada($@"{newWorldObjectDir}\objects\characters\player\male\player_male.chr", newWorldObjectDir);
+    }
+
+    [TestMethod]
+    public void NewWorld_PlayerMale_Gltf()
+    {
+        RenderToGltf($@"{newWorldObjectDir}\objects\characters\player\male\player_male.chr", newWorldObjectDir);
+    }
+
     #endregion
 
     #region Helper Methods

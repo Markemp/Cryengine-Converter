@@ -372,6 +372,26 @@ static void DumpSkinning(CryEngine cryData, int vertCount)
 
 static void RunCustom(CryEngine cryData)
 {
+    // Inspect raw timing chunks and controller data from the direct model
+    Console.WriteLine("=== Raw Timing and Controller Data ===\n");
+    foreach (var model in cryData.Models)
+    {
+        Console.WriteLine($"Model: {model.FileName}");
+        var timingChunks = model.ChunkMap.Values.OfType<ChunkTimingFormat>().ToList();
+        foreach (var tc in timingChunks)
+        {
+            Console.WriteLine($"  Timing: SecsPerTick={tc.SecsPerTick}, TicksPerFrame={tc.TicksPerFrame}");
+            Console.WriteLine($"  GlobalRange: Start={tc.GlobalRange.Start}, End={tc.GlobalRange.End}");
+            if (tc.TicksPerFrame > 0)
+            {
+                int startFrame = tc.GlobalRange.Start / tc.TicksPerFrame;
+                int endFrame = tc.GlobalRange.End / tc.TicksPerFrame;
+                Console.WriteLine($"  Calculated frame range: [{startFrame}..{endFrame}] ({endFrame - startFrame + 1} frames)");
+            }
+        }
+        Console.WriteLine();
+    }
+
     var bones = cryData.SkinningInfo?.CompiledBones;
     if (bones is null) { Console.WriteLine("No bones"); return; }
 

@@ -22,4 +22,8 @@
     <!-- Needed for XmlSerializer Source Generator -->
     <SGenTypes>CgfConverter.Renderers.Collada.Collada.ColladaDoc</SGenTypes>
   </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CgfConverterTests" />
+  </ItemGroup>
 </Project>
