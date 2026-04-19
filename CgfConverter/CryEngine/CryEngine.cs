@@ -754,7 +754,7 @@ public partial class CryEngine
         if (chrparams.Animations is null)
             return;
 
-        var basePath = chrparams.Animations.FirstOrDefault(x => x.Name == "#filepath")?.Path ?? "";
+        var basePath = "";
 
         foreach (var entry in chrparams.Animations)
         {
@@ -763,6 +763,10 @@ public partial class CryEngine
 
             switch (entry.Name)
             {
+                case "#filepath":
+                    basePath = entry.Path;
+                    break;
+
                 case "$TracksDatabase":
                     LoadDbaFromEntry(entry.Path);
                     break;
@@ -776,7 +780,7 @@ public partial class CryEngine
                     break;
 
                 case string s when s.StartsWith('$') || s.StartsWith('#'):
-                    // Other directives ($AnimEventDatabase, $facelib, #filepath, etc.) — skip
+                    // Other directives ($AnimEventDatabase, $facelib, etc.) — skip
                     break;
 
                 default:
