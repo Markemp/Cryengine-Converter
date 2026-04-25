@@ -317,3 +317,6 @@ OpenCover/
 *.dds.*
 *.mtl
 
+# Github configs
+.github/
+

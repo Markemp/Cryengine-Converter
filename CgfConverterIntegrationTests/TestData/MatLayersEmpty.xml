@@ -1,0 +1,17 @@
+<Material MtlFlags="256">
+ <SubMaterials>
+  <Material Name="plain" MtlFlags="524416" Shader="Illum" SurfaceType="" Diffuse="1,1,1" Specular="0.5,0.5,0.5" Emissive="0,0,0" Shininess="255" Opacity="1">
+   <Textures>
+    <Texture Map="Diffuse" File="textures/plain_dif.tif"/>
+   </Textures>
+  </Material>
+  <Material Name="plastic_2_matte_black" MtlFlags="50331776" Shader="HardSurface" SurfaceType="plastic_dense" Diffuse="0.3,0.3,0.3" Specular="0.02,0.02,0.02" Emissive="0,0,0" Opacity="1" Shininess="26">
+   <Textures/>
+   <MatLayers/>
+   <PublicParams WearBlendBase="0" AlphaGlowCutoff="0" MacroTiling="1"/>
+  </Material>
+  <Material Name="trailing" MtlFlags="524416" Shader="Illum" SurfaceType="" Diffuse="0.8,0.8,0.8" Specular="0.2,0.2,0.2" Emissive="0,0,0" Shininess="128" Opacity="1">
+   <Textures/>
+  </Material>
+ </SubMaterials>
+</Material>
