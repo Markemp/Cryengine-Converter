@@ -141,60 +141,64 @@ public partial class ColladaModelRenderer
         phong.Diffuse = new ColladaFXCommonColorOrTextureType();
         phong.Specular = new ColladaFXCommonColorOrTextureType();
 
-        // Add all the emissive, etc features to the phong
-        // Need to check if a texture exists.  If so, refer to the sampler.  Should be a <Texture Map="Diffuse" line if there is a map.
+        // Bind one phong slot per channel using a priority-ordered fallback. Star Citizen #ivo
+        // materials don't use named map types — diffuse comes in as TexSlot1 and specular as
+        // TexSlot10. The parser already remaps TexSlot2→Normals, TexSlot4→Specular, TexSlot9→Diffuse,
+        // so the fallback only needs to cover the slot indices that aren't auto-remapped.
         bool diffuseFound = false;
         bool specularFound = false;
 
         if (subMat.Textures is not null && !_args.NoTextures)
         {
-            foreach (var texture in subMat.Textures)
+            var diffuseTexture = PickTextureByPriority(subMat.Textures,
+                Texture.MapTypeEnum.Diffuse, Texture.MapTypeEnum.TexSlot1);
+            if (diffuseTexture is not null)
             {
-                if (texture.Map == Texture.MapTypeEnum.Diffuse)
+                diffuseFound = true;
+                phong.Diffuse.Texture = new ColladaTexture
                 {
-                    diffuseFound = true;
-                    phong.Diffuse.Texture = new ColladaTexture
-                    {
-                        // Texcoord is the ID of the UV source in geometries.  Not needed.
-                        Texture = effectName + "_" + texture.Map + "-sampler",
-                        TexCoord = ""
-                    };
-                }
+                    // Texcoord is the ID of the UV source in geometries.  Not needed.
+                    Texture = effectName + "_" + diffuseTexture.Map + "-sampler",
+                    TexCoord = ""
+                };
+            }
 
-                if (texture.Map == Texture.MapTypeEnum.Specular)
+            var specularTexture = PickTextureByPriority(subMat.Textures,
+                Texture.MapTypeEnum.Specular, Texture.MapTypeEnum.TexSlot10);
+            if (specularTexture is not null)
+            {
+                specularFound = true;
+                phong.Specular.Texture = new ColladaTexture
                 {
-                    specularFound = true;
-                    phong.Specular.Texture = new ColladaTexture
-                    {
-                        Texture = effectName + "_" + texture.Map + "-sampler",
-                        TexCoord = ""
-                    };
-                }
+                    Texture = effectName + "_" + specularTexture.Map + "-sampler",
+                    TexCoord = ""
+                };
+            }
 
-                if (texture.Map == Texture.MapTypeEnum.Normals)
+            var normalTexture = PickTextureByPriority(subMat.Textures, Texture.MapTypeEnum.Normals);
+            if (normalTexture is not null)
+            {
+                // Bump maps go in an extra node.
+                ColladaExtra[] extras = new ColladaExtra[1];
+                ColladaExtra extra = new();
+                extras[0] = extra;
+
+                technique.Extra = extras;
+
+                // Create the technique for the extra
+                ColladaTechnique[] extraTechniques = new ColladaTechnique[1];
+                ColladaTechnique extraTechnique = new();
+                extra.Technique = extraTechniques;
+
+                extraTechniques[0] = extraTechnique;
+                extraTechnique.profile = "FCOLLADA";
+
+                ColladaBumpMap bumpMap = new() { Textures = new ColladaTexture[1] };
+                bumpMap.Textures[0] = new ColladaTexture
                 {
-                    // Bump maps go in an extra node.
-                    ColladaExtra[] extras = new ColladaExtra[1];
-                    ColladaExtra extra = new();
-                    extras[0] = extra;
-
-                    technique.Extra = extras;
-
-                    // Create the technique for the extra
-                    ColladaTechnique[] extraTechniques = new ColladaTechnique[1];
-                    ColladaTechnique extraTechnique = new();
-                    extra.Technique = extraTechniques;
-
-                    extraTechniques[0] = extraTechnique;
-                    extraTechnique.profile = "FCOLLADA";
-
-                    ColladaBumpMap bumpMap = new() { Textures = new ColladaTexture[1] };
-                    bumpMap.Textures[0] = new ColladaTexture
-                    {
-                        Texture = effectName + "_" + texture.Map + "-sampler"
-                    };
-                    extraTechnique.Data = new XmlElement[1] { bumpMap };
-                }
+                    Texture = effectName + "_" + normalTexture.Map + "-sampler"
+                };
+                extraTechnique.Data = new XmlElement[1] { bumpMap };
             }
         }
 
@@ -313,6 +317,17 @@ public partial class ColladaModelRenderer
             Array.Resize(ref DaeObject.Library_Images.Image, DaeObject.Library_Images.Image.Length + images.Length);
             images.CopyTo(DaeObject.Library_Images.Image, arraySize);
         }
+    }
+
+    private static Texture? PickTextureByPriority(Texture[] textures, params Texture.MapTypeEnum[] priorityList)
+    {
+        foreach (var mapType in priorityList)
+        {
+            var match = textures.FirstOrDefault(t => t.Map == mapType);
+            if (match is not null)
+                return match;
+        }
+        return null;
     }
 
     private string GetMaterialName(string matKey, string submatName)
