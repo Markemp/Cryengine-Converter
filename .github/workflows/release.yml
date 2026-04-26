@@ -1,0 +1,175 @@
+name: Release
+
+# Two trigger modes:
+#
+#   1. Tag push (final releases)
+#      Push a tag matching v*.*.* (no pre-release suffix) and a new full
+#      GitHub Release is created at that tag.
+#
+#         git tag v2.0.0
+#         git push --tags
+#
+#   2. Manual dispatch (pre-releases / re-runs)
+#      Run from the Actions UI; pick the branch (e.g. release/v2.0) and
+#      provide the target tag (e.g. v2.0.0). Builds from HEAD of that
+#      branch and clobbers assets onto the existing GitHub Release. The
+#      pre-release flag on the GitHub Release entry is preserved — this
+#      workflow does NOT toggle it. Manage that in the GitHub UI.
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+  workflow_dispatch:
+    inputs:
+      target_tag:
+        description: 'Existing GitHub Release tag to upload assets to (e.g. v2.0.0). Release must already exist; this clobbers its assets.'
+        required: true
+        type: string
+
+permissions:
+  contents: write   # needed to create releases and upload assets
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read version from Directory.Build.props
+        id: version
+        shell: pwsh
+        run: |
+          [xml]$props = Get-Content Directory.Build.props
+          $version = $props.Project.PropertyGroup.Version
+          if ([string]::IsNullOrWhiteSpace($version)) {
+            Write-Error "Version not found in Directory.Build.props"
+            exit 1
+          }
+          "version=$version" | Out-File -Append $env:GITHUB_OUTPUT
+          Write-Host "Project version: $version"
+
+      - name: Resolve target tag
+        id: target
+        shell: pwsh
+        run: |
+          if ('${{ github.event_name }}' -eq 'push') {
+            # Tag push: tag is in github.ref (refs/tags/vX.Y.Z)
+            $tag = '${{ github.ref_name }}'
+            $isDispatch = 'false'
+          } else {
+            $tag = '${{ inputs.target_tag }}'
+            $isDispatch = 'true'
+          }
+          "tag=$tag" | Out-File -Append $env:GITHUB_OUTPUT
+          "is_dispatch=$isDispatch" | Out-File -Append $env:GITHUB_OUTPUT
+          Write-Host "Target tag: $tag (dispatch=$isDispatch)"
+
+      - name: Verify tag matches Directory.Build.props version (push only)
+        if: github.event_name == 'push'
+        shell: pwsh
+        run: |
+          $tag = '${{ steps.target.outputs.tag }}'
+          $expected = "v${{ steps.version.outputs.version }}"
+          if ($tag -ne $expected) {
+            Write-Error "Tag '$tag' does not match Directory.Build.props version '$expected'. Refusing to release."
+            exit 1
+          }
+          Write-Host "Tag matches: $tag"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Run unit tests
+        run: dotnet test --filter TestCategory=unit --configuration Release
+
+      - name: Publish self-contained Windows binary
+        # SourceRevisionId stamps the commit SHA into AssemblyInformationalVersion,
+        # so `cgf-converter -usage` prints e.g. "v2.0.0+a3f72b1c..."
+        run: >
+          dotnet publish cgf-converter\cgf-converter.csproj
+          --configuration Release
+          --runtime win-x64
+          --self-contained
+          /p:SourceRevisionId=${{ github.sha }}
+
+      - name: Compile installer with Inno Setup
+        # Inno Setup is preinstalled on the windows-latest runner image.
+        shell: pwsh
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            $iscc = (Get-Command iscc.exe -ErrorAction SilentlyContinue).Source
+          }
+          if (-not $iscc) { Write-Error "ISCC.exe not found"; exit 1 }
+          & $iscc installer\cgf-converter.iss
+          if ($LASTEXITCODE -ne 0) { Write-Error "Inno Setup compile failed"; exit $LASTEXITCODE }
+
+      # ─── Code signing (placeholder — wire up once cert is available) ───
+      #
+      # Once you have a code signing cert (SignPath, MS Trusted Signing,
+      # or a purchased OV/EV cert), add a signing step here. Sign BOTH
+      # cgf-converter.exe (before installer compile, so the signed exe
+      # gets bundled) AND the installer .exe (after compile, so users
+      # see "verified publisher" on the SmartScreen prompt).
+      #
+      # Always include a timestamp (/tr) so signatures survive cert expiry.
+      #
+      # Example (signtool, OV/EV cert in cert store):
+      #
+      # - name: Sign cgf-converter.exe
+      #   shell: pwsh
+      #   run: |
+      #     & signtool sign /sha1 ${{ secrets.CERT_THUMBPRINT }} `
+      #       /tr http://timestamp.sectigo.com /td sha256 /fd sha256 `
+      #       cgf-converter\bin\Release\net9.0\win-x64\publish\cgf-converter.exe
+      #
+      # - name: Sign installer
+      #   shell: pwsh
+      #   run: |
+      #     & signtool sign /sha1 ${{ secrets.CERT_THUMBPRINT }} `
+      #       /tr http://timestamp.sectigo.com /td sha256 /fd sha256 `
+      #       installer\output\cgf-converter-setup-${{ steps.version.outputs.version }}.exe
+
+      - name: Stage release assets
+        shell: pwsh
+        run: |
+          $stage = "release-assets"
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+          Copy-Item "cgf-converter\bin\Release\net9.0\win-x64\publish\cgf-converter.exe"     $stage\
+          Copy-Item "cgf-converter\bin\Release\net9.0\win-x64\publish\cgf-converter.pdb"     $stage\
+          Copy-Item "cgf-converter\bin\Release\net9.0\win-x64\publish\CgfConverter.pdb"      $stage\
+          Copy-Item "installer\output\cgf-converter-setup-${{ steps.version.outputs.version }}.exe" $stage\
+          Get-ChildItem $stage | Format-Table Name, Length
+
+      - name: Create GitHub Release (tag push, full release)
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          $tag = '${{ steps.target.outputs.tag }}'
+          gh release create $tag `
+            --title $tag `
+            --generate-notes `
+            release-assets\*
+
+      - name: Upload assets to existing Release (manual dispatch, clobber)
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          $tag = '${{ steps.target.outputs.tag }}'
+          # Verify the release exists before clobbering — fail loud, not silent.
+          gh release view $tag > $null
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Release '$tag' does not exist. Create it manually first (with the desired pre-release flag), then re-run this dispatch."
+            exit 1
+          }
+          gh release upload $tag release-assets\* --clobber
