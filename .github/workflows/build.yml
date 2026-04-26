@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Clone
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Build
         run: dotnet build
@@ -23,7 +23,7 @@ jobs:
         run: dotnet publish
 
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: cgf-converter
-          path: cgf-converter\bin\Release\net8.0\win-x64\publish
+          path: cgf-converter\bin\Release\net9.0\win-x64\publish
