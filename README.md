@@ -2,112 +2,139 @@
 
 # Cryengine Converter
 
-[Cryengine Converter](https://www.heffaypresents.com/GitHub) is a C# program to help convert Cryengine assets into a more portable format. Currently it supports `.obj` (No longer supported) and `.dae` (Collada), although work is in progress to allow exporting Cryengine assets into USD (Universal Scene Description) format.  The default output is Collada, as this supports the most features, including Armature/rigs with vertex weights, as well as improved material handling.
+[Cryengine Converter](https://www.heffaypresents.com/GitHub) is a C# command-line tool that converts Cryengine game assets — `.cgf`, `.cga`, `.chr`, `.skin`, animation files — into portable 3D formats. It supports the major Cryengine variants, including traditional Cryengine games (MechWarrior Online, Crysis, Hunt: Showdown, Kingdom Come Deliverance, ArcheAge) and Star Citizen's proprietary `#ivo` binary format.
 
-How do you use it?  Well, here is the output from the current Usage:
+## What's new in v2
 
-```
-PS D:\scripts> cgf-converter
+- **USD is the new default output format** — Universal Scene Description (`.usda` / `.usdc`). Blender imports it natively with materials, skeletons, and animations intact.
+- **glTF and GLB** are first-class outputs alongside Collada.
+- **Star Citizen `#ivo` format support** — This app only supports the latest versions (currently 4.5+) as the game files change frequently while it's in 'alpha'.
+- **Animations** — full support for `.caf`, `.dba`, and `.cal` animation files. Multi-clip assets export as separate files for Blender's NLA editor.
+- **Texture pipeline** — DDS combine for split SC textures (`-unsplittextures`, or `-ut` for short), optional conversion to PNG/TIFF/TGA for glTF.
+- **Multiple UV layers, vertex colors, full skeletal rigs** all export correctly.
 
-cgf-converter [-usage] | <.cgf file> [-outputfile <output file>] [-objectdir <ObjectDir>] [-obj] [-blend] [-dae] [-smooth] [-throw]
+## Installation
 
--usage:           Prints out the usage statement
+1. Grab the latest release from the [Releases page](https://github.com/Markemp/Cryengine-Converter/releases) — `cgf-converter.exe` is a single self-contained Windows executable (~120 MB). No .NET install required.
+2. Drop it into a folder that's on your `PATH` (e.g. `D:\scripts\`).  Spend the time to set up the path; it's worth it for the convenience of running `cgf-converter` from any directory.
+3. Recommended: use [Windows Terminal](https://aka.ms/terminal) with a PowerShell tab for the best command-line experience.
 
-<.cgf file>:      The name of the .cgf, .cga or .skin file to process
--outputfile:      The name of the file to write the output.  Default is [root].obj
--noconflict:      Use non-conflicting naming scheme (<cgf File>_out.obj)
--allowconflict:   Allows conflicts in .mtl file name
--objectdir:       The name where the base Objects directory is located.  Used to read mtl file
-                  Defaults to current directory.
--dae:             Export Collada format files (Default)
--smooth:          Smooth Faces
--group:           Group meshes into single model
+## Quick start
 
--throw:           Throw Exceptions to installed debugger
-```
+You'll need a Cryengine game with the `.pak` files extracted (use [7-Zip](https://www.7-zip.org/) — right-click → "7-Zip → Extract Here"). After extracting, you'll have a directory tree with `Objects/`, `Textures/`, `Materials/` at the top — we'll call this the **data directory**.
 
-Ok, so how do you actually **USE** it?
-
-I'm going to assume you've already taken a Cryengine based game (Mechwarrior Online, Star Citizen, etc) and extracted the `.pak` files into a directory structure that essentially mimics a Cryengine layout.
-
-```
-PS D:\depot\Star Citizen> dir
-
-    Directory: D:\Depot\Star Citizen
-
-Mode                LastWriteTime         Length Name
-----                -------------         ------ ----
-d-----        5/20/2017   7:59 AM                Animations
-d-----        5/20/2017   7:59 AM                Entities
-d-----        5/20/2017   7:59 AM                Levels
-d-----        5/20/2017   8:00 AM                Libs
-d-----        5/20/2017   7:59 AM                Materials
-d-----        5/20/2017   8:43 AM                Objects
-d-----        5/20/2017   8:00 AM                Prefabs
-d-----        5/20/2017   8:00 AM                Scripts
-d-----        5/20/2017   8:54 AM                Sounds
-d-----        5/20/2017   9:04 AM                Textures
-d-----        5/20/2017   9:05 AM                UI
+```powershell
+PS> cgf-converter <asset-file> -objectdir <path-to-data-directory>
 ```
 
-This is pretty close to what Cryengine/Lumberyard games will look like after you extract all the `.pak` files, using a utility like 7zip.  The important directories here are `Objects` (generally contains the `.cga/.cgam/.cgf/.skin` files) and the `Textures` directory.  You *generally* don't need to worry about the directory structure unless you're using my cryengine-importer.ps1 script, but let's just call this the root directory for Cryengine assets.
+Concrete example, converting an Adder mech body part from MechWarrior Online:
 
-> **Aside:**  When compiled (or you just download the .exe), this program is easiest to use when you put it into a dedicated directory that is in the path.  I won't go into [how to modify the path on your computer](http://lmgtfy.com/?q=changing+path+on+a+windows+computer), but I have my own `d:\scripts` directory with cgf-converter.exe in it, along with a few other commonly used scripts and programs.  I recommend you do the same (or something similar), as from now on the Powershell commands I type out will assume that the programs are in the path.  If they aren't, **the commands I list will not work.**
-
-> **Aside 2.0:**  Be careful exporting stuff to **`.obj`** files, as it is no longer supported.  A Cryengine file (in incredibly simplified terms) consists of a geometry file (ends in `.cga/.cgf/.cgam/.skin`) and the related material file (ends in `.mtl`).  The Cryengine material file is an XML file that contains material info.  This program will take that file and convert it by default to an `.obj` material file with the *same name*, which is not ideal.  Use the `-noconflict` argument to make it write to a similar name that won't conflict.
-
-** Important:**  Use the `-objectdir` argument whenever possible!  The location of the material files is dependent on a number of factors, and the program does its best to find them.  However, if it can't find the proper material file for the object you're trying to convert, it will just create default materials for the model.
-
-### Tutorial Videos:
-I have a playlist of tutorial videos here:  https://www.youtube.com/watch?v=6WoA2ubTZ0k&list=PL106ZeLhxxVn551_IKGKeU_LBODtkh29b
-
-### Conversion Instructions
-#### Collada (-dae)
-Collada format (v1.4.1) may be a better option for most game assets.  On top of having cleaner geometry than .obj, the material file is included into the Collada (`.dae`) file, so you only have one file to worry about (so no need to use `-noconflict`).  In addition, if there is an armature/rig/skeleton, Collada files can also contain all that information as well.
-
-To convert a single `.cga/.cgf/.skin/.chr` file to a `.dae` file, using Powershell:
-
-```
-PS D:\Depot\Star Citizen\Objects\Spaceships.ships\AEGS\gladius\>cgf-converter AEGS_Gladius.cga -objectdir <insert the directory to the Object dir>
-```
-You can replace the `-dae` with `-collada` as well.
-
-#### Waveform (`-obj`.  Avoid using this unless you absolutely have to.  Not supported!)
-To convert a single `.cga/.cgf/.skin/.chr` file to an `.obj` file, using Powershell:
-
-```
-PS D:\Depot\Star Citizen\Objects\Spaceships.ships\AEGS\gladius\>cgf-converter AEGS_Gladius.cga -obj
-```
-This will create a couple of files in that directory:
-* `AEGS_Gladius.obj`
-* `AEGS_Gladius.mtl`
-
-Since the Cryengine `.mtl` file has a good chance of being in that directory, it will overwrite it unless you use the `-noconflict` argument.
-
-```
-PS D:\Depot\Star Citizen\Objects\Spaceships.ships\AEGS\gladius\>cgf-converter -noconflict AEGS_Gladius.cga
-```
-Instead of an `AEGS_Gladius.mtl` file, it will create an `AEGS_Gladius_mtl.mtl` file, and leave the original `.mtl` file as is.
-
-There are occasions where you may want to overwrite the file, but generally you are going to want to use the `-noconflict` argument.
-
-### Bulk Conversion
-
-If you want to convert all the files in a directory, you can provide a wildcard for the file name:
-
-```
-cgf-converter *.cga -objectdir <path to the Objects folder>
+```powershell
+PS D:\depot\mwo\Objects\mechs\adder\body> cgf-converter adder_torso.cga -objectdir D:\depot\mwo
 ```
 
-This will take every file in the directory where the command is being run and convert it to Collada format.
+This produces `adder_torso.usda` next to the source file, ready to import into Blender via **File → Import → Universal Scene Description**.
 
-If you want to convert all the files in a directory as well as all the directories below it, you can use the `-recurse` option to make it traverse:
+> **The single most important argument is `-objectdir`.** Cryengine assets reference materials and textures using paths *relative to the data directory*. Without `-objectdir`, the converter can't find them and falls back to default materials. Pass it on every conversion.
+
+## Output formats
+
+| Format    | Flag      | When to use                                                                 |
+|-----------|-----------|-----------------------------------------------------------------------------|
+| **USD**   | `-usd`    | **Default. Recommended for Blender.** Materials, skeletons, animations.     |
+| glTF      | `-gltf`   | Game engines (Unity, Unreal, Godot), web viewers. Folder of files.          |
+| GLB       | `-glb`    | Same as glTF, single self-contained file with embedded textures.            |
+| Collada   | `-dae`    | Maya / 3DS Max workflows, anything that won't take USD.                     |
+| Wavefront | `-obj`    | **Deprecated.** No skinning, no animation, limited materials. Avoid.        |
+
+**Recommendation:** start with USD. Switch to something else only if you hit a specific problem.
+
+## Common workflows
+
+### Convert all assets in a directory
+
+```powershell
+PS> cgf-converter *.cga -objectdir D:\depot\mwo
+```
+
+### Recursive conversion across a subtree
+
+```powershell
+PS> Get-ChildItem -Recurse -Include *.cga,*.cgf,*.chr,*.skin |
+      ForEach-Object { cgf-converter $_.FullName -objectdir D:\depot\mwo }
+```
+
+> **Heads up:** running this on the entire `Objects` folder of a real Cryengine game will produce tens of gigabytes of output and take an hour or more. Pick the subdirectory you actually need.
+
+### Convert a skeletal asset with animations
+
+```powershell
+PS> cgf-converter boar.chr -anim -objectdir D:\depot\KCD2
+```
+
+The `-anim` flag pulls in `.chrparams`, `.dba`, `.caf`, and `.cal` animation files. Multi-clip assets emit one USD file per animation, which can be loaded as separate actions in Blender's NLA editor.
+
+### Star Citizen — combining split DDS textures
+
+Star Citizen ships its DDS textures split across multiple files (`*.dds.0`, `*.dds.1`, ...). Pass `-unsplittextures` to combine them before materials are written:
+
+```powershell
+PS> cgf-converter AEGS_Avenger.cga -unsplittextures -objectdir D:\depot\SC4.6\Data
+```
+
+## Full CLI reference
 
 ```
-foreach ($file in (get-childitem -recurse *.cga,*.cgf,*.chr,*.skin)) { cgf-converter $file -objectdir <path to the Objects folder> }
+cgf-converter [-usage] | <.cgf file> [options]
+
+Required-ish:
+  <input-file>          .cgf, .cga, .chr, .skin, .anim, .dba (wildcards supported)
+  -objectdir <path>     Path to the extracted game's data directory (highly recommended)
+  -mtl/-mat <file>      Override material file resolution
+
+Output formats:
+  -usd / -usda          USD (default)
+  -dae                  Collada
+  -gltf                 glTF (text + .bin)
+  -glb                  glTF binary, single file with embedded textures
+  -obj                  Wavefront (deprecated, not supported)
+
+Texture options:
+  -notex                Don't include textures in output
+  -ut / -unsplittextures Combine split SC DDS files
+  -png / -tif / -tga    Reference converted texture format (glTF text only)
+  -embedtextures        Embed textures into glTF text output
+
+Filtering:
+  -en / -excludenode <regex>     Exclude matching nodes
+  -em / -excludemat <regex>      Exclude meshes with matching materials
+  -sm / -excludeshader <regex>   Exclude meshes by shader name
+
+Animation:
+  -anim / -animations   Include .caf/.dba/.cal animation data
+
+Other:
+  -noconflict           Append _out to output filenames
+  -pp / -preservepath   Preserve directory hierarchy in output
+  -mt / -maxthreads <n> Limit thread count (0 = all cores)
+  -loglevel <level>     verbose | debug | info | warn | error | critical | none
 ```
-> **NOTE:** If you run this on the `Objects` directory, it will convert EVERY file in the game.  This can take a very long time, and takes a lot of disk space.  Be careful using the command like this.
 
-Finally, the converter does support being run through the Windows Explorer, so you can just drag a `.cga` file or files onto `cgf-converter.exe` and it'll do a default conversion (to `.dae`).  This isn't ideal, but it is the quick and dirty way if you are morally opposed to using a prompt. :+1:
+Run `cgf-converter -usage` for the always-current list.
 
-Questions?  Feel free to contact me and I'll be happy to provide some additional help.
+## Tutorial videos
+
+A new v2 tutorial series is in production. The earlier 2017 series uses an older version of the tool (Collada-only, no animation, no `#ivo` support) and shouldn't be used as a guide for v2 workflows — but the asset extraction and Blender setup parts are still relevant:
+
+- [Original Part 1: Converting CryEngine Files](https://www.youtube.com/watch?v=6WoA2ubTZ0k) (2017)
+- [Original Part 2: Bulk Convert and Import Mechs / Prefabs](https://www.youtube.com/watch?v=oBJzNdzFIxM) (2017)
+
+## Reporting bugs and contributing
+
+- File issues at [github.com/Markemp/Cryengine-Converter/issues](https://github.com/Markemp/Cryengine-Converter/issues).
+- Pull requests welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) and [DEVNOTES.md](DEVNOTES.md).
+- Project structure and architecture are documented in [CLAUDE.md](CLAUDE.md).
+
+## License
+
+See repository for license details.
