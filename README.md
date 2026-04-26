@@ -15,9 +15,60 @@
 
 ## Installation
 
-1. Grab the latest release from the [Releases page](https://github.com/Markemp/Cryengine-Converter/releases) — `cgf-converter.exe` is a single self-contained Windows executable (~120 MB). No .NET install required.
-2. Drop it into a folder that's on your `PATH` (e.g. `D:\scripts\`).  Spend the time to set up the path; it's worth it for the convenience of running `cgf-converter` from any directory.
-3. Recommended: use [Windows Terminal](https://aka.ms/terminal) with a PowerShell tab for the best command-line experience.
+Two options on the [Releases page](https://github.com/Markemp/Cryengine-Converter/releases). Pick whichever fits.
+
+### Option A — Installer (recommended)
+
+Download `cgf-converter-setup-<version>.exe` and run it. The wizard installs to `%LocalAppData%\Programs\Cryengine Converter` (per-user, no UAC) by default and adds the install directory to your `PATH`. Uninstall via Settings → Apps cleans up everything including the PATH entry.
+
+### Option B — Loose executable
+
+Download `cgf-converter.exe` directly and drop it into a folder that's already on your `PATH` (e.g. `D:\scripts\`). It's a single self-contained Windows executable (~120 MB) — no .NET install required.
+
+### After install
+
+Open a **new** terminal window — existing ones won't see the PATH change. We recommend [Windows Terminal](https://aka.ms/terminal) with a PowerShell tab for the best command-line experience. Verify with:
+
+```powershell
+cgf-converter -usage
+```
+
+### Silent install (CI / Docker / pipelines)
+
+The installer is built with [Inno Setup](https://jrsoftware.org/isinfo.php) and supports the standard Inno silent-install switches:
+
+```powershell
+# Silent, per-user, adds to PATH (recommended for CI runners)
+cgf-converter-setup-2.0.0.exe /VERYSILENT /CURRENTUSER
+
+# Silent, all users (requires elevation)
+cgf-converter-setup-2.0.0.exe /VERYSILENT /ALLUSERS
+
+# Silent, no PATH edit (when CI manages its own PATH)
+cgf-converter-setup-2.0.0.exe /VERYSILENT /CURRENTUSER /TASKS=""
+
+# Silent uninstall
+& "$env:LOCALAPPDATA\Programs\Cryengine Converter\unins000.exe" /VERYSILENT
+```
+
+Useful additional switches:
+
+| Switch | Effect |
+|---|---|
+| `/SILENT` | Progress bar only, no wizard dialogs |
+| `/VERYSILENT` | No UI at all |
+| `/SUPPRESSMSGBOXES` | Auto-accept any popup prompts (combine with `/SILENT`) |
+| `/DIR="path"` | Override install directory |
+| `/LOG="path"` | Write install log to file (useful for pipeline debugging) |
+| `/?` | Show all available switches |
+
+Inno Setup broadcasts the PATH change immediately, but the **current process** still has the old environment. In CI, this rarely matters because each step typically starts a fresh shell. If a single step needs to install and then run `cgf-converter` immediately, append the install dir to `$env:Path` manually:
+
+```powershell
+.\cgf-converter-setup-2.0.0.exe /VERYSILENT /CURRENTUSER
+$env:Path += ";$env:LOCALAPPDATA\Programs\Cryengine Converter"
+cgf-converter -usage
+```
 
 ## Quick start
 
