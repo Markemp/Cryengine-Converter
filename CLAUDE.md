@@ -47,6 +47,64 @@ dotnet run -- "C:\GameAssets\ship.cga" -objectdir "C:\GameAssets\Objects"
 dotnet run -- ship.cgf -gltf -objectdir "C:\GameAssets\Objects"
 ```
 
+### Build the Windows Installer
+
+End-user installer is built with **Inno Setup 6** (per-user install by default, with PATH editing).
+
+**Prerequisite (one-time):** install Inno Setup from https://jrsoftware.org/isinfo.php. On this machine, `ISCC.exe` lives at `C:\Users\Geoff\AppData\Local\Programs\Inno Setup 6\ISCC.exe` (per-user install — not on PATH unless explicitly added).
+
+```powershell
+# Step 1: publish the self-contained Windows binary (must come first — installer pulls from this path)
+dotnet publish cgf-converter\cgf-converter.csproj -c Release
+
+# Step 2: compile the installer
+& "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe" installer\cgf-converter.iss
+
+# Output: installer\output\cgf-converter-setup-<version>.exe
+```
+
+**Files involved:**
+- `installer/cgf-converter.iss` — the Inno Setup script (commented thoroughly)
+- `installer/README.txt` — short readme that ships with the install
+- `installer/output/` — gitignored, holds the compiled installer
+
+**Critical invariants:**
+- The `AppId` GUID in `cgf-converter.iss` (`267AC84D-FD30-4860-A971-393139539822`) **must stay stable across versions**. Changing it will create duplicate Add/Remove Programs entries and break upgrades.
+- The version in `cgf-converter.iss` (`MyAppVersion`) is currently hardcoded — **keep it in sync with `Directory.Build.props`** when bumping versions, or template it via `iscc /D` later.
+- The publish-output path in the script (`PublishDir`) targets `cgf-converter\bin\Release\net9.0\win-x64\publish` — if the TargetFramework changes, update this path too.
+
+**Testing the installer:**
+The safe way is **Windows Sandbox** (Settings → Apps → Optional Features → enable "Windows Sandbox", reboot once). Drag the `.exe` into a sandbox session, install, open a new PowerShell, run `cgf-converter -usage`, then uninstall and verify PATH is clean. Sandbox state is disposable, so installer bugs can't pollute the dev machine. Avoid testing PATH edits on the actual dev machine — uninstall regressions there are tedious to clean up.
+
+**Inno Setup deprecation note:** the script uses `WizardIsTaskSelected` (modern). Older `IsTaskSelected` still works but emits a [Hint] warning at compile time. If a future update emits new deprecation hints, fix them rather than ignoring — Inno's deprecations get removed eventually.
+
+### Release workflow
+
+Releases are produced by `.github/workflows/release.yml`, which has two trigger modes:
+
+**Tag push (final releases):**
+```bash
+git tag v2.0.0
+git push --tags
+```
+Creates a new GitHub Release at the tag, uploads installer + raw exe + PDBs. The workflow asserts the tag matches the version in `Directory.Build.props` and refuses to release on mismatch — keeps `Directory.Build.props` as the single source of truth.
+
+**Manual dispatch (pre-releases / re-runs):**
+- Go to Actions → "Release" → "Run workflow"
+- Pick the branch (e.g. `release/v2.0`)
+- Provide the existing GitHub Release tag (e.g. `v2.0.0`)
+- Workflow builds from HEAD of that branch and **clobbers** assets onto the existing Release entry
+
+The pre-release flag on the GitHub Release entry is preserved across dispatch runs — the workflow never toggles it. To make a Release entry "pre-release," edit it in the GitHub UI once; subsequent clobbers don't change the flag. To promote pre-release → final, uncheck "Set as a pre-release" in the GitHub UI when ready.
+
+**Critical:** dispatch refuses to clobber a non-existent release. If the target tag doesn't have a Release yet, create it manually in the UI first (so you can set the pre-release flag intentionally), then dispatch.
+
+**Pattern in use:** ONE rolling pre-release entry per major version (avoids RC clutter on the Releases page). RC tags can exist locally in git for traceability but the workflow ignores them.
+
+**Commit SHA in builds:** the workflow passes `/p:SourceRevisionId=$GITHUB_SHA` to `dotnet publish`, which stamps the SHA into the assembly's `InformationalVersion`. `cgf-converter -usage` reads this attribute, so CI builds print `v2.0.0+a3f72b1c...` — every reported bug pins to an exact commit. Local builds without a SHA print just `v2.0.0`.
+
+**Code signing:** placeholder commented in the workflow. When a code signing cert is available (SignPath OSS, MS Trusted Signing, or purchased OV/EV), uncomment the `signtool sign` steps and add the cert thumbprint to GitHub repository secrets as `CERT_THUMBPRINT`. Always include `/tr <timestamp-url>` so signatures survive cert expiry.
+
 ## Versioning
 
 The application version is managed in `Directory.Build.props` at the repo root. This single file sets the version for all projects in the solution.

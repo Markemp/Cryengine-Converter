@@ -317,6 +317,6 @@ OpenCover/
 *.dds.*
 *.mtl
 
-# Github configs
-.github/
+# Inno Setup installer build output
+installer/output/
 

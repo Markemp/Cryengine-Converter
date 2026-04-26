@@ -310,7 +310,7 @@ public sealed class ArgsHandler
         Console.WriteLine();
         Console.WriteLine("cgf-converter [-usage] | <.cgf file> [-dae] [-obj] [-glb] [-gltf] [-usd] [-notex/-png/-tif/-tga] [-excludenode <nodename>] [-excludemat <matname>] [-loglevel <LogLevel>] [-objectdir <ObjectDir>] [-anim]");
         Console.WriteLine();
-        Console.WriteLine($"CryEngine Converter v{Assembly.GetEntryAssembly()?.GetName().Version}");
+        Console.WriteLine($"CryEngine Converter v{GetInformationalVersion()}");
         Console.WriteLine();
         Console.WriteLine("-usage:            Prints out the usage statement");
         Console.WriteLine();
@@ -363,5 +363,12 @@ public sealed class ArgsHandler
         Console.WriteLine();
         Console.WriteLine("-loglevel:         Set the output log level (verbose, debug, info, warn, error, critical, none)");
         Console.WriteLine();
+    }
+
+    private static string GetInformationalVersion()
+    {
+        var entry = Assembly.GetEntryAssembly();
+        var info = entry?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        return info ?? entry?.GetName().Version?.ToString() ?? "unknown";
     }
 }
