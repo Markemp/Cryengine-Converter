@@ -5,6 +5,13 @@ using System.Numerics;
 using static CgfConverter.Utilities.HelperMethods;
 
 namespace CgfConverter.CryEngineCore.Chunks;
+
+/// <summary>
+/// WARNING: This chunk version has NOT been validated for animation export.
+/// Only ChunkCompiledBones_800 has been vetted for animations (with MWO DBA files).
+/// The BindPoseMatrix calculation here may not be correct - do not trust animation
+/// data from this chunk until it has been properly validated.
+/// </summary>
 internal class ChunkCompiledBones_901 : ChunkCompiledBones
 {
     public override void Read(BinaryReader b)
@@ -12,9 +19,13 @@ internal class ChunkCompiledBones_901 : ChunkCompiledBones
         base.Read(b);
 
         NumBones = b.ReadInt32();
-        var _ = b.ReadInt32(); // String table size.  Won't use.
+        var stringTableSize = b.ReadInt32();
         Flags1 = b.ReadInt32();
         Flags2 = b.ReadInt32();
+
+        // SC 4.5+ Ivo format has 32 bytes of padding after the header fields
+        if (ChunkType == ChunkType.CompiledBones_Ivo || ChunkType == ChunkType.CompiledBones_Ivo2)
+            SkipBytes(b, 32);
 
         for (int i = 0; i < NumBones; i++)
         {
@@ -23,34 +34,51 @@ internal class ChunkCompiledBones_901 : ChunkCompiledBones
             BoneList.Add(tempBone);
         }
 
-        var boneNames = GetNullSeparatedStrings(NumBones, b);
+        var boneNames = GetNullSeparatedStrings(NumBones, stringTableSize, b);
 
-        // Post bone read setup.  Parents, children, etc.
-        // Add the ChildID to the parent bone.  This will help with navigation.
+        // Transforms are stored as two contiguous blocks rather than interleaved per bone:
+        // first all relative (local) transforms, then all world transforms.
+        var relativeQuats = new Quaternion[NumBones];
+        var relativeTranslations = new Vector3[NumBones];
         for (int i = 0; i < NumBones; i++)
         {
-            var relativeQuat = b.ReadQuaternion();
-            var relativeTranslation = b.ReadVector3();
-            var worldQuat = b.ReadQuaternion();
-            var worldTranslation = b.ReadVector3();
+            relativeQuats[i] = b.ReadQuaternion();
+            relativeTranslations[i] = b.ReadVector3();
+        }
 
-            var m = Matrix4x4.CreateFromQuaternion(worldQuat);
-            m.M14 = worldTranslation.X;
-            m.M24 = worldTranslation.Y;
-            m.M34 = worldTranslation.Z;
-            Matrix4x4.Invert(m, out Matrix4x4 bpm);
+        var worldQuats = new Quaternion[NumBones];
+        var worldTranslations = new Vector3[NumBones];
+        for (int i = 0; i < NumBones; i++)
+        {
+            worldQuats[i] = b.ReadQuaternion();
+            worldTranslations[i] = b.ReadVector3();
+        }
+
+        // Post bone read setup.  Parents, children, names, and transforms.
+        for (int i = 0; i < NumBones; i++)
+        {
+            // Build boneToWorld matrix in CryEngine convention (column-vector rotation + translation in col 4).
+            // IMPORTANT: Must use ConvertToRotationMatrix() which produces CryEngine convention rotation,
+            // NOT Matrix4x4.CreateFromQuaternion() which produces .NET row-vector convention (transposed).
+            // Using the wrong convention causes parent.BPM * inv(child.BPM) to produce incorrect local
+            // transforms, making skeleton bone positions diverge from their bind transforms.
+            var rot = worldQuats[i].ConvertToRotationMatrix();
+            var boneToWorld = new Matrix4x4(
+                rot.M11, rot.M12, rot.M13, worldTranslations[i].X,
+                rot.M21, rot.M22, rot.M23, worldTranslations[i].Y,
+                rot.M31, rot.M32, rot.M33, worldTranslations[i].Z,
+                0, 0, 0, 1);
+            Matrix4x4.Invert(boneToWorld, out Matrix4x4 bpm);
             BoneList[i].BindPoseMatrix = bpm;
 
             BoneList[i].BoneName = boneNames[i];
-            if (BoneList[i].OffsetParent != -1)
+            if (BoneList[i].ParentControllerIndex >= 0 && BoneList[i].ParentControllerIndex < BoneList.Count)
             {
-                BoneList[i].ParentBone = BoneList[BoneList[i].OffsetParent];
-                BoneList[i].ParentControllerIndex = BoneList[i].OffsetParent;
+                BoneList[i].ParentBone = BoneList[BoneList[i].ParentControllerIndex];
                 BoneList[i].ParentBone.ChildIDs.Add(i);
-                BoneList[i].ParentBone.NumberOfChildren++;
             }
-            BoneList[i].LocalTransformMatrix = Matrix3x4.CreateFromParts(relativeQuat, relativeTranslation);
-            BoneList[i].WorldTransformMatrix = Matrix3x4.CreateFromParts(worldQuat, worldTranslation);
+            BoneList[i].LocalTransformMatrix = Matrix3x4.CreateFromParts(relativeQuats[i], relativeTranslations[i]);
+            BoneList[i].WorldTransformMatrix = Matrix3x4.CreateFromParts(worldQuats[i], worldTranslations[i]);
         }
     }
 }

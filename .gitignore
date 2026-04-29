@@ -29,6 +29,10 @@ bld/
 # Uncomment if you have tasks that create the project's static files in wwwroot
 #wwwroot/
 
+# Claude Code - ignore local settings, commit skills
+.claude/*
+!.claude/skills/
+
 # MSTest test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
@@ -312,4 +316,7 @@ OpenCover/
 *.dds
 *.dds.*
 *.mtl
+
+# Inno Setup installer build output
+installer/output/
 

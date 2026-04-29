@@ -23,6 +23,18 @@ public class GltfMeshPrimitiveAttributes
     public int? TexCoord0;
 
     /// <summary>
+    /// Second UV channel texture coordinates.
+    /// </summary>
+    [JsonProperty("TEXCOORD_1", NullValueHandling = NullValueHandling.Ignore)]
+    public int? TexCoord1;
+
+    /// <summary>
+    /// XYZW tangent vectors where XYZ is the tangent direction and W is the handedness (±1).
+    /// </summary>
+    [JsonProperty("TANGENT", NullValueHandling = NullValueHandling.Ignore)]
+    public int? Tangent;
+
+    /// <summary>
     /// RGB or RGBA vertex color linear multiplier.
     /// </summary>
     [JsonProperty("COLOR_0", NullValueHandling = NullValueHandling.Ignore)]

@@ -1,4 +1,5 @@
-﻿using CgfConverter.CryEngineCore;
+﻿using CgfConverter.Cal;
+using CgfConverter.CryEngineCore;
 using CgfConverter.CryXmlB;
 using CgfConverter.Models;
 using CgfConverter.Models.Structs;
@@ -33,7 +34,8 @@ public partial class CryEngine
 
     public string Name => Path.GetFileNameWithoutExtension(InputFile).ToLower();
     public List<Model> Models { get; internal set; } = []; // All the model files associated with this game object
-    public List<Model> Animations { get; internal set; } = [];  // Animation files for this object
+    public List<Model> Animations { get; internal set; } = [];  // Animation files for this object (DBA format)
+    public List<CafAnimation> CafAnimations { get; internal set; } = [];  // CAF animation files
     public List<ChunkNode> Nodes { get; internal set; } = []; // node hierarchy.
     public ChunkNode RootNode { get; internal set; } // can get node hierarchy from here
     public ChunkCompiledBones Bones { get; internal set; }  // move to skinning info
@@ -55,13 +57,17 @@ public partial class CryEngine
         }
     }
 
-    public CryEngine(string filename, IPackFileSystem packFileSystem, TaggedLogger? parentLogger = null, string? materialFiles = null, string? objectDir = null)
+    private readonly bool _includeAnimations;
+
+    public CryEngine(string filename, IPackFileSystem packFileSystem,
+        CryEngineOptions? options = null, TaggedLogger? parentLogger = null)
     {
         Log = new TaggedLogger(Path.GetFileName(filename), parentLogger);
         InputFile = filename;
         PackFileSystem = packFileSystem;
-        MaterialFiles = string.IsNullOrEmpty(materialFiles) ? [] : materialFiles.Split(',').ToList();
-        ObjectDir = objectDir;
+        MaterialFiles = string.IsNullOrEmpty(options?.MaterialFiles) ? [] : options.MaterialFiles.Split(',').ToList();
+        ObjectDir = options?.ObjectDir;
+        _includeAnimations = options?.IncludeAnimations ?? false;
     }
 
     public void ProcessCryengineFiles()
@@ -94,7 +100,8 @@ public partial class CryEngine
         CreateMaterials();
         BuildNodeStructure();
 
-        CreateAnimations();
+        if (_includeAnimations)
+            CreateAnimations();
 
         AssignMaterialsToNodes(false);
     }
@@ -116,8 +123,14 @@ public partial class CryEngine
             // Create node chunks from the first model.  If there is a nodemeshcombo chunk, use
             // that for the nodes.  If not (skin and chr files), create a dummy root node.
             // Can be zero or multiple nodes, but all reference the same geometry.
+            if (Models.Count == 0)
+            {
+                Log.W("No models loaded - cannot build node structure");
+                return;
+            }
+
             bool hasValidNodeMeshCombo = false;
-            var comboChunk = (ChunkNodeMeshCombo?)Models[index: 0].ChunkMap.Values.FirstOrDefault(c => c.ChunkType == ChunkType.NodeMeshCombo);
+            var comboChunk = (ChunkNodeMeshCombo?)Models[0].ChunkMap.Values.FirstOrDefault(c => c.ChunkType == ChunkType.NodeMeshCombo);
 
             if (comboChunk is not null && comboChunk.NumberOfNodes != 0)
                 hasValidNodeMeshCombo = true;
@@ -125,48 +138,88 @@ public partial class CryEngine
             if (hasValidNodeMeshCombo)
             {
                 // SkinMesh has the mesh and meshsubset info, as well as all the datastreams
-                var skinMesh = Models.Count > 1
-                    ? Models[1].ChunkMap.Values.FirstOrDefault(x => x.ChunkType == ChunkType.IvoSkin || x.ChunkType == ChunkType.IvoSkin2) as ChunkIvoSkinMesh
-                    : null;
+                // First try to find IvoSkin in the second model (companion .cgam file)
+                // If not found, also check the first model in case of combined files
+                ChunkIvoSkinMesh? skinMesh = null;
+                if (Models.Count > 1)
+                {
+                    skinMesh = Models[1].ChunkMap.Values.FirstOrDefault(x => x.ChunkType == ChunkType.IvoSkin || x.ChunkType == ChunkType.IvoSkin2) as ChunkIvoSkinMesh;
+                }
+                if (skinMesh is null)
+                {
+                    skinMesh = Models[0].ChunkMap.Values.FirstOrDefault(x => x.ChunkType == ChunkType.IvoSkin || x.ChunkType == ChunkType.IvoSkin2) as ChunkIvoSkinMesh;
+                }
 
                 var geometryMeshDetails = skinMesh?.MeshDetails;
 
                 var stringTable = comboChunk?.NodeNames ?? [];
                 var materialTable = comboChunk?.MaterialIndices ?? [];
-                var materialFileName = Materials.Keys.First();
+                var materialFileName = Materials.Keys.FirstOrDefault() ?? "default";
+
+                // Check if stringTable has correct number of entries
+                if (stringTable.Count < comboChunk.NumberOfNodes)
+                {
+                    Log.W($"NodeMeshCombo has {comboChunk.NumberOfNodes} nodes but only {stringTable.Count} names in string table");
+                }
 
                 // create node chunks
-                foreach (var node in comboChunk.NodeMeshCombos)
+                if (comboChunk.NodeMeshCombos is null || comboChunk.NodeMeshCombos.Count == 0)
                 {
-                    var index = comboChunk.NodeMeshCombos.IndexOf(node);
+                    Log.W("NodeMeshCombo has no node data");
+                    return;
+                }
 
-                    // Create meshsubsets for this node.  This is all meshSubsets where the meshParent equals the node index
-                    var subsets = skinMesh?.MeshSubsets.Where(x => x.NodeParentIndex == index).ToList() ?? [];
+                // Pre-group mesh subsets by NodeParentIndex to avoid O(n*m) lookups in the loop
+                var subsetsByNodeIndex = new Dictionary<int, List<MeshSubset>>();
+                if (skinMesh?.MeshSubsets != null)
+                {
+                    foreach (var subset in skinMesh.MeshSubsets)
+                    {
+                        int nodeIndex = (int)(subset.NodeParentIndex ?? 0);
+                        if (!subsetsByNodeIndex.TryGetValue(nodeIndex, out var list))
+                        {
+                            list = new List<MeshSubset>();
+                            subsetsByNodeIndex[nodeIndex] = list;
+                        }
+                        list.Add(subset);
+                    }
+                }
+
+                for (int index = 0; index < comboChunk.NodeMeshCombos.Count; index++)
+                {
+                    var node = comboChunk.NodeMeshCombos[index];
+
+                    // Get meshsubsets for this node from pre-grouped dictionary (O(1) lookup)
+                    var subsets = subsetsByNodeIndex.TryGetValue(index, out var nodeSubsets) ? nodeSubsets : [];
 
                     ChunkMesh chunkMesh = new ChunkMesh_802();
 
-                    var hasGeometry = subsets.Count != 0;
+                    var hasGeometry = subsets.Count != 0 && geometryMeshDetails is not null && skinMesh is not null;
 
                     // Create a meshchunk for nodes with geometry
                     if (hasGeometry)
                     {
-                        chunkMesh.ScalingVectors = geometryMeshDetails.ScalingBoundingBox;
-                        chunkMesh.MaxBound = geometryMeshDetails.BoundingBox.Max;
-                        chunkMesh.MinBound = geometryMeshDetails.BoundingBox.Min;
-                        chunkMesh.NumVertices = (int)skinMesh.MeshDetails.NumberOfVertices;
+                        chunkMesh.ScalingVectors = geometryMeshDetails!.ScalingBoundingBox;
+                        chunkMesh.MaxBound = node.BoundingBoxMax;
+                        chunkMesh.MinBound = node.BoundingBoxMin;
+                        chunkMesh.NumVertices = (int)skinMesh!.MeshDetails.NumberOfVertices;
                         chunkMesh.NumIndices = (int)skinMesh.MeshDetails.NumberOfIndices;
                         chunkMesh.NumVertSubsets = skinMesh.MeshDetails.NumberOfSubmeshes;
                         chunkMesh.GeometryInfo = BuildNodeGeometryInfo(skinMesh, subsets);
                     }
 
+                    // Use node name from string table if available, otherwise generate a name
+                    var nodeName = index < stringTable.Count ? stringTable[index] : $"node_{index}";
+
                     var newNode = new ChunkNode_823
                     {
-                        Name = stringTable[index],
+                        Name = nodeName,
                         ObjectNodeID = -1,
                         ParentNodeIndex = node.ParentIndex,
                         ParentNodeID = node.ParentIndex == 0xffff ? -1 : node.ParentIndex,
                         NumChildren = node.NumberOfChildren,
-                        MaterialID = node.GeometryType == IvoGeometryType.Geometry ? materialTable[index] : 0,
+                        // Get material ID from mesh subsets (not materialTable which uses mesh subset indices, not node indices)
+                        MaterialID = hasGeometry ? subsets[0].MatID : 0,
                         Transform = node.BoneToWorld.ConvertToLocalTransformMatrix(),
                         ChunkType = ChunkType.Node,
                         ID = (int)node.Id,
@@ -174,26 +227,29 @@ public partial class CryEngine
                         MaterialFileName = materialFileName
                     };
 
-                    if (hasGeometry)
+                    if (hasGeometry && Materials.Count > 0)
                         newNode.Materials = Materials.Values.First();
 
                     Nodes.Add(newNode);
                 }
 
                 // build node hierarchy
-                foreach (var node in Nodes)
+                for (int index = 0; index < Nodes.Count; index++)
                 {
-                    var index = Nodes.IndexOf(node);
-                    if (node.ParentNodeIndex != 0xFFFF)
+                    var node = Nodes[index];
+                    if (node.ParentNodeIndex != 0xFFFF && node.ParentNodeIndex >= 0 && node.ParentNodeIndex < Nodes.Count)
                         node.ParentNode = Nodes[node.ParentNodeIndex];
-                    else
+                    else if (node.ParentNodeIndex == 0xFFFF || node.ParentNodeIndex == -1)
                         RootNode = node; // hopefully there is just one
+                    else
+                        Log.W($"Node {node.Name} has invalid parent index {node.ParentNodeIndex}");
 
                     // Add all child nodes to Children.  A child is where the parent index is current index
-                    var childNodes = Nodes.Where(x => x.ParentNodeIndex == index);
-                    foreach (var child in childNodes)
+                    // Optimize: iterate once instead of using LINQ Where which creates intermediate collections
+                    foreach (var childNode in Nodes)
                     {
-                        node.Children.Add(child);
+                        if (childNode.ParentNodeIndex == index)
+                            node.Children.Add(childNode);
                     }
                 }
             }
@@ -220,13 +276,29 @@ public partial class CryEngine
         }
         else // Traditional Crydata.  Build geometry info from the models.
         {
+            // Pre-group children by parent ID to avoid O(n²) lookups
+            var childrenByParentId = new Dictionary<int, List<ChunkNode>>();
+            foreach (var childNode in Models[0].NodeMap.Values)
+            {
+                if (childNode.ParentNodeID != -1 && childNode.ParentNodeID != ~0)
+                {
+                    if (!childrenByParentId.TryGetValue(childNode.ParentNodeID, out var children))
+                    {
+                        children = new List<ChunkNode>();
+                        childrenByParentId[childNode.ParentNodeID] = children;
+                    }
+                    children.Add(childNode);
+                }
+            }
+
             // Separate datastream for each node.
             // For each ChunkNode in model[0], add it to the Nodes list.
             foreach (var node in Models[0].NodeMap.Values)
             {
                 // Add helper or mesh data to the node
                 var objectChunk = Models[0].ChunkMap[node.ObjectNodeID];
-                node.Children = Models[0].NodeMap.Values.Where(x => x.ParentNodeID == node.ID).ToList();
+                // Get children from pre-grouped dictionary (O(1) lookup)
+                node.Children = childrenByParentId.TryGetValue(node.ID, out var nodeChildren) ? nodeChildren : new List<ChunkNode>();
 
                 if (objectChunk is ChunkHelper helper)
                 {
@@ -258,15 +330,22 @@ public partial class CryEngine
                     if (!mesh.Flags1.HasFlag(MeshChunkFlag.MESH_IS_EMPTY))
                     {
                         var submeshData = (Models[^1].ChunkMap[mesh.MeshSubsetsData] as ChunkMeshSubsets)!.MeshSubsets;
+                        var uvs2 = GetRequiredDatastream<UV>(mesh.UVs2Data);
+                        if (uvs2 is not null)
+                            Log.I("Node [{0}]: Second UV channel (UV2) found.", node.Name);
+
                         mesh.GeometryInfo = new()
                         {
                             GeometrySubsets = submeshData,
                             Indices = GetRequiredDatastream<uint>(mesh.IndicesData),
                             UVs = GetRequiredDatastream<UV>(mesh.UVsData),
+                            UVs2 = uvs2,
                             Vertices = GetRequiredDatastream<Vector3>(mesh.VerticesData),
                             Colors = GetRequiredDatastream<IRGBA>(mesh.ColorsData),
                             VertUVs = GetRequiredDatastream<VertUV>(mesh.VertsUVsData),
                             Normals = GetRequiredDatastream<Vector3>(mesh.NormalsData),
+                            Tangents = GetRequiredDatastream<Quaternion>(mesh.QTangentsData)
+                                ?? GetRequiredDatastream<Quaternion>(mesh.TangentsData),
                             BoneMappings = GetRequiredDatastream<MeshBoneMapping>(mesh.BoneMapData),
                             BoundingBox = new BoundingBox(mesh.MinBound, mesh.MaxBound)
                         };
@@ -335,22 +414,102 @@ public partial class CryEngine
             }
         }
 
+        // For Ivo format files, the bone indices in BoneMappings refer to NodeMeshCombo indices,
+        // not CompiledBone indices. We need to remap using ObjectNodeIndex.
+        // Build a map: ObjectNodeIndex (NodeMeshCombo index) → bone index (position in CompiledBones)
+        if (skin.BoneMappings is not null && skin.CompiledBones is not null)
+        {
+            var nodeMeshComboToBoneIndex = new Dictionary<int, int>();
+            for (int boneIndex = 0; boneIndex < skin.CompiledBones.Count; boneIndex++)
+            {
+                var bone = skin.CompiledBones[boneIndex];
+                // ObjectNodeIndex maps bone to its corresponding NodeMeshCombo
+                // Only add if ObjectNodeIndex is valid (some bones may not have mesh associations)
+                if (bone.ObjectNodeIndex >= 0)
+                {
+                    nodeMeshComboToBoneIndex[bone.ObjectNodeIndex] = boneIndex;
+                }
+            }
+
+            // Only remap if we found any ObjectNodeIndex mappings (indicates Ivo format)
+            if (nodeMeshComboToBoneIndex.Count > 0)
+            {
+                for (int i = 0; i < skin.BoneMappings.Count; i++)
+                {
+                    var mapping = skin.BoneMappings[i];
+                    var remappedBoneIndex = new ushort[4];
+                    for (int j = 0; j < 4; j++)
+                    {
+                        int nodeMeshComboIndex = mapping.BoneIndex[j];
+                        if (nodeMeshComboToBoneIndex.TryGetValue(nodeMeshComboIndex, out int actualBoneIndex))
+                        {
+                            remappedBoneIndex[j] = (ushort)actualBoneIndex;
+                        }
+                        else
+                        {
+                            // Keep original index if no mapping found (fallback)
+                            remappedBoneIndex[j] = (ushort)nodeMeshComboIndex;
+                        }
+                    }
+                    skin.BoneMappings[i] = new MeshBoneMapping
+                    {
+                        BoneInfluenceCount = mapping.BoneInfluenceCount,
+                        BoneIndex = remappedBoneIndex,
+                        Weight = mapping.Weight
+                    };
+                }
+            }
+        }
+
         return skin;
     }
 
 
     private void CreateMaterials()
     {
-        var materialStrategies = new List<Func<bool>>
-        {
-            TryLoadExplicitMaterialFiles,
-            TryLoadMaterialLibraryFiles,
-            CreateDefaultMaterials
-        };
+        if (TryLoadExplicitMaterialFiles())
+            return;
 
-        foreach (var strategy in materialStrategies)
+        var libraryFiles = GetMaterialLibraryFileNames().ToList();
+
+        if (libraryFiles.Any())
         {
-            if (strategy()) return;
+            var loadedAny = false;
+            foreach (var libraryFile in libraryFiles)
+            {
+                var key = Path.GetFileNameWithoutExtension(libraryFile) ?? "unknown";
+
+                if (TryLoadSingleMaterialFile(libraryFile))
+                {
+                    if (!MaterialFiles.Contains(libraryFile))
+                        MaterialFiles.Add(libraryFile);
+                    loadedAny = true;
+                    continue;
+                }
+
+                if (TryLoadModelNameMaterialFile(key))
+                {
+                    loadedAny = true;
+                    continue;
+                }
+
+                Log.W("Could not find material file for library: {0}, skipping", key);
+            }
+
+            // Only create dummy materials if nothing at all could be loaded
+            if (!loadedAny)
+            {
+                foreach (var libraryFile in libraryFiles)
+                {
+                    var key = Path.GetFileNameWithoutExtension(libraryFile) ?? "unknown";
+                    CreateDefaultMaterialsForLibrary(key);
+                }
+            }
+        }
+        else
+        {
+            if (!TryLoadModelNameMaterialFile(null))
+                CreateDefaultMaterials();
         }
     }
 
@@ -372,62 +531,61 @@ public partial class CryEngine
         return loadedAny;
     }
 
-    private bool TryLoadMaterialLibraryFiles()
+    private bool TryLoadModelNameMaterialFile(string? libraryKey)
     {
-        var libraryFiles = GetMaterialLibraryFileNames();
-        if (!libraryFiles.Any())
+        var modelName = Name;
+        var key = libraryKey ?? modelName;
+
+        if (Materials.ContainsKey(key))
+            return true;
+
+        var fullyQualifiedPath = GetFullMaterialFilePath(modelName);
+        if (fullyQualifiedPath is null)
+            return false;
+
+        try
         {
-            Log.I("No material library files found in model chunks");
+            var material = MaterialUtilities.FromStream(
+                PackFileSystem.GetStream(fullyQualifiedPath),
+                modelName,
+                ObjectDir,
+                closeAfter: true);
+
+            Materials.Add(key, material);
+            if (!MaterialFiles.Contains(key))
+                MaterialFiles.Add(key);
+
+            Log.I("Loaded model-name material file: {0} (stored as '{1}')", modelName, key);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.W("Failed to load model-name material file {0}: {1}", modelName, ex.Message);
             return false;
         }
-
-        Log.I("Loading materials from library chunks: {0}", string.Join(", ", libraryFiles));
-
-        var loadedAny = false;
-        foreach (var libraryFile in libraryFiles)
-        {
-            if (TryLoadSingleMaterialFile(libraryFile))
-            {
-                loadedAny = true;
-                // Add to MaterialFiles list for consistency
-                if (!MaterialFiles.Contains(libraryFile))
-                    MaterialFiles.Add(libraryFile);
-            }
-        }
-
-        return loadedAny;
     }
 
-    private bool CreateDefaultMaterials()
+    private void CreateDefaultMaterialsForLibrary(string key)
+    {
+        if (Materials.ContainsKey(key))
+            return;
+
+        Log.W("Creating dummy materials for library: {0}", key);
+        var maxMaterials = CalculateMaxMaterialCount();
+        Materials.Add(key, CreateDefaultMaterialSet(maxMaterials));
+        if (!MaterialFiles.Contains(key))
+            MaterialFiles.Add(key);
+    }
+
+    private void CreateDefaultMaterials()
     {
         Log.W("Unable to find any material files for this model. Creating dummy materials.");
 
-        var libraryFiles = GetMaterialLibraryFileNames();
-        if (!libraryFiles.Any())
-        {
-            // Create a single default material with unknown key
-            var defaultKey = "default";
-            var maxMats = CalculateMaxMaterialCount();
-            var defaultMaterial = CreateDefaultMaterialSet(maxMats);
-            Materials.Add(defaultKey, defaultMaterial);
-            MaterialFiles.Add(defaultKey);
-            return true;
-        }
-
-        // Create default materials for each library file found
-        var maxMaterials = CalculateMaxMaterialCount();
-        foreach (var libraryFile in libraryFiles)
-        {
-            var key = Path.GetFileNameWithoutExtension(libraryFile) ?? "unknown";
-            if (!Materials.ContainsKey(key))
-            {
-                var defaultMaterial = CreateDefaultMaterialSet(maxMaterials);
-                Materials.Add(key, defaultMaterial);
-                MaterialFiles.Add(libraryFile);
-            }
-        }
-
-        return Materials.Count > 0;
+        var defaultKey = "default";
+        var maxMats = CalculateMaxMaterialCount();
+        var defaultMaterial = CreateDefaultMaterialSet(maxMats);
+        Materials.Add(defaultKey, defaultMaterial);
+        MaterialFiles.Add(defaultKey);
     }
 
     private bool TryLoadSingleMaterialFile(string materialFile)
@@ -527,22 +685,732 @@ public partial class CryEngine
 
     private void CreateAnimations()
     {
+        var modelDir = Path.GetDirectoryName(InputFile);
+
+        // Try chrparams first (XML format used by MWO, Star Citizen, etc.)
+        if (TryLoadChrParamsAnimations(modelDir))
+            return;
+
+        // Fall back to .cal files (ArcheAge format)
+        if (TryLoadCalAnimations(modelDir))
+            return;
+
+        Log.D("No animation configuration files found (.chrparams or .cal)");
+    }
+
+    /// <summary>
+    /// Attempts to load animations from a .chrparams file.
+    /// </summary>
+    private bool TryLoadChrParamsAnimations(string? modelDir)
+    {
+        var chrparamsFileName = Path.ChangeExtension(Path.GetFileName(InputFile), ".chrparams");
+        var chrparamsPath = string.IsNullOrEmpty(modelDir)
+            ? chrparamsFileName
+            : Path.Combine(modelDir, chrparamsFileName);
+
+        Log.D("Looking for chrparams at: {0}", chrparamsPath);
+
         try
         {
-            var chrparams = CryXmlSerializer.Deserialize<ChrParams.ChrParams>(
-                PackFileSystem.GetStream(Path.ChangeExtension(InputFile, ".chrparams")));
-            var trackFilePath = chrparams.Animations?.FirstOrDefault(x => x.Name == "$TracksDatabase" || x.Name == "#filepath")?.Path;
-            if (trackFilePath is null)
-                throw new FileNotFoundException();
-            if (Path.GetExtension(trackFilePath) != "dba")
-                trackFilePath = Path.ChangeExtension(trackFilePath, "dba");
-            Log.D("Associated animation track database file found at {0}", trackFilePath);
-            Animations.Add(Model.FromStream(trackFilePath, PackFileSystem.GetStream(trackFilePath), true));
+            PackFileSystem.GetStream(chrparamsPath).Dispose(); // probe before starting recursion
         }
         catch (FileNotFoundException)
         {
-            Log.I("Unable to find associated animation track database file.");
+            Log.D("No chrparams file found");
+            return false;
         }
+
+        LoadChrParamsFile(chrparamsPath, new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+        return true;
+    }
+
+    /// <summary>
+    /// Recursively loads a .chrparams file, handling $Include, $TracksDatabase, and CAF entries.
+    /// The visited set prevents infinite loops from circular $Include chains.
+    /// </summary>
+    private void LoadChrParamsFile(string chrparamsPath, HashSet<string> visited)
+    {
+        var normalizedPath = chrparamsPath.Replace('\\', '/');
+        if (!visited.Add(normalizedPath))
+        {
+            Log.D("Skipping already-visited chrparams: {0}", chrparamsPath);
+            return;
+        }
+
+        ChrParams.ChrParams chrparams;
+        try
+        {
+            chrparams = CryXmlSerializer.Deserialize<ChrParams.ChrParams>(
+                PackFileSystem.GetStream(chrparamsPath));
+        }
+        catch (FileNotFoundException)
+        {
+            Log.D("chrparams not found: {0}", chrparamsPath);
+            return;
+        }
+
+        Log.D("Loaded chrparams: {0} ({1} entries)", chrparamsPath, chrparams.Animations?.Length ?? 0);
+
+        if (chrparams.Animations is null)
+            return;
+
+        var basePath = "";
+
+        foreach (var entry in chrparams.Animations)
+        {
+            if (string.IsNullOrEmpty(entry.Name) || string.IsNullOrEmpty(entry.Path))
+                continue;
+
+            switch (entry.Name)
+            {
+                case "#filepath":
+                    basePath = entry.Path;
+                    break;
+
+                case "$TracksDatabase":
+                    LoadDbaFromEntry(entry.Path);
+                    break;
+
+                case "$Include":
+                    var includePath = ResolveIncludePath(entry.Path, chrparamsPath);
+                    if (includePath is not null)
+                        LoadChrParamsFile(includePath, visited);
+                    else
+                        Log.D("Could not resolve $Include path: {0}", entry.Path);
+                    break;
+
+                case string s when s.StartsWith('$') || s.StartsWith('#'):
+                    // Other directives ($AnimEventDatabase, $facelib, etc.) — skip
+                    break;
+
+                default:
+                    LoadCafEntry(entry, basePath);
+                    break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Loads a $TracksDatabase DBA file (or wildcard pattern) from a chrparams entry.
+    /// </summary>
+    private void LoadDbaFromEntry(string trackFilePath)
+    {
+        if (Path.GetExtension(trackFilePath) != ".dba")
+            trackFilePath = Path.ChangeExtension(trackFilePath, ".dba");
+
+        Log.D("Attempting to load animation database from: {0}", trackFilePath);
+
+        if (trackFilePath.Contains('*') || trackFilePath.Contains('?'))
+        {
+            var dbaFiles = ExpandDbaWildcard(trackFilePath);
+            Log.D("Wildcard pattern '{0}' matched {1} DBA files", trackFilePath, dbaFiles.Count);
+
+            foreach (var dbaPath in dbaFiles)
+            {
+                try
+                {
+                    Animations.Add(Model.FromStream(dbaPath, PackFileSystem.GetStream(dbaPath), true));
+                    Log.D("Successfully loaded animation database: {0}", dbaPath);
+                }
+                catch (Exception ex)
+                {
+                    Log.D("Error loading DBA file {0}: {1}", dbaPath, ex.Message);
+                }
+            }
+        }
+        else
+        {
+            var fullDbaPath = trackFilePath;
+            if (!Path.IsPathRooted(fullDbaPath) && !string.IsNullOrEmpty(ObjectDir))
+                fullDbaPath = Path.Combine(ObjectDir, fullDbaPath);
+
+            try
+            {
+                Animations.Add(Model.FromStream(fullDbaPath, PackFileSystem.GetStream(fullDbaPath), true));
+                Log.D("Successfully loaded animation database: {0}", fullDbaPath);
+            }
+            catch (FileNotFoundException)
+            {
+                Log.D("DBA file not found: {0}", fullDbaPath);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Loads a single CAF animation entry from a chrparams Animation element.
+    /// </summary>
+    private void LoadCafEntry(ChrParams.Animation entry, string basePath)
+    {
+        try
+        {
+            var cafPattern = entry.Path!;
+            if (!Path.IsPathRooted(cafPattern) && !string.IsNullOrEmpty(basePath))
+                cafPattern = Path.Combine(basePath, cafPattern);
+
+            if (cafPattern.Contains('*') || cafPattern.Contains('?'))
+            {
+                var cafFiles = ExpandCafWildcard(cafPattern);
+                Log.D("Wildcard pattern '{0}' matched {1} files", cafPattern, cafFiles.Count);
+                foreach (var cafPath in cafFiles)
+                    LoadSingleCafFile(cafPath);
+            }
+            else
+            {
+                if (!cafPattern.EndsWith(".caf", StringComparison.OrdinalIgnoreCase))
+                    cafPattern = Path.ChangeExtension(cafPattern, ".caf");
+                LoadSingleCafFile(cafPattern, entry.Name!);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.D("Error processing CAF entry {0}: {1}", entry.Path, ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Resolves a $Include path to an absolute path, trying ObjectDir-relative first,
+    /// then relative to the including file's own directory.
+    /// Returns null if the file cannot be found under any candidate path.
+    /// </summary>
+    private string? ResolveIncludePath(string includePath, string currentChrparamsPath)
+    {
+        IEnumerable<string> Candidates()
+        {
+            if (!Path.IsPathRooted(includePath))
+            {
+                if (!string.IsNullOrEmpty(ObjectDir))
+                    yield return Path.Combine(ObjectDir, includePath);
+
+                var dir = Path.GetDirectoryName(currentChrparamsPath);
+                if (!string.IsNullOrEmpty(dir))
+                    yield return Path.Combine(dir, includePath);
+            }
+
+            yield return includePath; // absolute or last-resort as-is
+        }
+
+        foreach (var candidate in Candidates())
+        {
+            try
+            {
+                PackFileSystem.GetStream(candidate).Dispose();
+                return candidate;
+            }
+            catch (FileNotFoundException) { }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Attempts to load animations from a .cal file (ArcheAge format).
+    /// </summary>
+    private bool TryLoadCalAnimations(string? modelDir)
+    {
+        try
+        {
+            var calFileName = Path.ChangeExtension(Path.GetFileName(InputFile), ".cal");
+            var calPath = string.IsNullOrEmpty(modelDir)
+                ? calFileName
+                : Path.Combine(modelDir, calFileName);
+
+            Log.D("Looking for cal file at: {0}", calPath);
+
+            var calFile = CalFile.ParseWithIncludes(calPath, PackFileSystem);
+
+            Log.D("Successfully loaded cal file, filepath: {0}, animations count: {1}",
+                calFile.FilePath ?? "(none)", calFile.Animations.Count);
+
+            if (calFile.Animations.Count == 0)
+            {
+                Log.D("No animations found in cal file");
+                return false;
+            }
+
+            // Load CAF files from cal entries
+            LoadCafAnimationsFromCal(calFile);
+            return true;
+        }
+        catch (FileNotFoundException)
+        {
+            Log.D("No cal file found");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Loads CAF animation files from a parsed .cal file.
+    /// </summary>
+    private void LoadCafAnimationsFromCal(CalFile calFile)
+    {
+        var basePath = calFile.FilePath ?? "";
+        Log.D("CAF base path from cal: {0}", basePath);
+
+        foreach (var (name, relativePath) in calFile.Animations)
+        {
+            try
+            {
+                // Build full path
+                var cafPath = relativePath;
+                if (!Path.IsPathRooted(cafPath) && !string.IsNullOrEmpty(basePath))
+                {
+                    cafPath = Path.Combine(basePath, cafPath);
+                }
+
+                // Ensure .caf extension
+                if (!cafPath.EndsWith(".caf", StringComparison.OrdinalIgnoreCase))
+                    cafPath = Path.ChangeExtension(cafPath, ".caf");
+
+                // Try loading with multiple path resolutions
+                if (!TryLoadCafWithPathVariants(cafPath, name))
+                {
+                    Log.D("CAF file not found: {0}", cafPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.D("Error loading CAF {0}: {1}", name, ex.Message);
+            }
+        }
+
+        if (CafAnimations.Count > 0)
+            Log.I("Loaded {0} CAF animation(s) from cal file", CafAnimations.Count);
+    }
+
+    /// <summary>
+    /// Tries to load a CAF file with multiple path variants (for ArcheAge's "game" subdirectory).
+    /// </summary>
+    private bool TryLoadCafWithPathVariants(string cafPath, string animationName)
+    {
+        // Try path as-is first
+        if (TryLoadSingleCafFile(cafPath, animationName))
+            return true;
+
+        // Try with "game\" prefix (ArcheAge stores files under game/ subdirectory)
+        var gamePathPrefixed = Path.Combine("game", cafPath);
+        if (TryLoadSingleCafFile(gamePathPrefixed, animationName))
+            return true;
+
+        return false;
+    }
+
+    /// <summary>
+    /// Attempts to load a single CAF file. Returns true on success, false if file not found.
+    /// </summary>
+    private bool TryLoadSingleCafFile(string cafPath, string animationName)
+    {
+        // Resolve relative paths against ObjectDir
+        var fullPath = cafPath;
+        if (!Path.IsPathRooted(fullPath) && !string.IsNullOrEmpty(ObjectDir))
+        {
+            fullPath = Path.Combine(ObjectDir, fullPath);
+        }
+
+        // Check if file exists via PackFileSystem
+        try
+        {
+            var cafModel = Model.FromStream(fullPath, PackFileSystem.GetStream(fullPath), true);
+            var cafAnimation = ParseCafModel(cafModel, animationName, fullPath);
+
+            if (cafAnimation is not null)
+            {
+                CafAnimations.Add(cafAnimation);
+                Log.D("Successfully loaded CAF animation: {0} from {1}", animationName, fullPath);
+                return true;
+            }
+            return false;
+        }
+        catch (FileNotFoundException)
+        {
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Log.D("Error loading CAF {0}: {1}", fullPath, ex.Message);
+            return false;
+        }
+    }
+
+
+    /// <summary>
+    /// Expands a wildcard pattern to find matching CAF files.
+    /// Handles wildcards in both directory path (e.g., "path/*/*.caf") and filename (e.g., "path/*.caf").
+    /// </summary>
+    private List<string> ExpandCafWildcard(string pattern)
+    {
+        var results = new List<string>();
+
+        try
+        {
+            // Normalize path separators
+            pattern = pattern.Replace('\\', '/');
+
+            // Check if the directory portion contains wildcards
+            var lastSlash = pattern.LastIndexOf('/');
+            var filePattern = lastSlash >= 0 ? pattern[(lastSlash + 1)..] : pattern;
+            var directoryPattern = lastSlash >= 0 ? pattern[..lastSlash] : "";
+
+            // Find the first wildcard in the directory path
+            var firstWildcardIndex = directoryPattern.IndexOfAny(['*', '?']);
+
+            string baseDirectory;
+            bool searchRecursively = false;
+
+            if (firstWildcardIndex >= 0)
+            {
+                // There's a wildcard in the directory path - need to search recursively
+                // Find the last slash before the wildcard to get the base directory
+                var lastSlashBeforeWildcard = directoryPattern.LastIndexOf('/', firstWildcardIndex);
+                baseDirectory = lastSlashBeforeWildcard >= 0
+                    ? directoryPattern[..lastSlashBeforeWildcard]
+                    : "";
+                searchRecursively = true;
+            }
+            else
+            {
+                baseDirectory = directoryPattern;
+            }
+
+            // Resolve relative paths against ObjectDir
+            if (!Path.IsPathRooted(baseDirectory) && !string.IsNullOrEmpty(ObjectDir))
+            {
+                baseDirectory = Path.Combine(ObjectDir, baseDirectory);
+            }
+
+            // Normalize again after Path.Combine
+            baseDirectory = baseDirectory.Replace('\\', '/');
+
+            if (Directory.Exists(baseDirectory))
+            {
+                var searchOption = searchRecursively ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+                var matchingFiles = Directory.GetFiles(baseDirectory, filePattern, searchOption);
+                results.AddRange(matchingFiles.Where(f =>
+                    f.EndsWith(".caf", StringComparison.OrdinalIgnoreCase)));
+
+                Log.D("Searched '{0}' with pattern '{1}', recursive={2}, found {3} files",
+                    baseDirectory, filePattern, searchRecursively, results.Count);
+            }
+            else
+            {
+                Log.D("Directory not found for wildcard expansion: {0}", baseDirectory);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.D("Error expanding wildcard pattern {0}: {1}", pattern, ex.Message);
+        }
+
+        return results;
+    }
+
+    /// <summary>
+    /// Expands a wildcard pattern to find matching DBA files.
+    /// </summary>
+    private List<string> ExpandDbaWildcard(string pattern)
+    {
+        var results = new List<string>();
+
+        try
+        {
+            // Normalize path separators
+            pattern = pattern.Replace('\\', '/');
+
+            // Check if the directory portion contains wildcards
+            var lastSlash = pattern.LastIndexOf('/');
+            var filePattern = lastSlash >= 0 ? pattern[(lastSlash + 1)..] : pattern;
+            var directoryPattern = lastSlash >= 0 ? pattern[..lastSlash] : "";
+
+            // Find the first wildcard in the directory path
+            var firstWildcardIndex = directoryPattern.IndexOfAny(['*', '?']);
+
+            string baseDirectory;
+            bool searchRecursively = false;
+
+            if (firstWildcardIndex >= 0)
+            {
+                // There's a wildcard in the directory path - need to search recursively
+                var lastSlashBeforeWildcard = directoryPattern.LastIndexOf('/', firstWildcardIndex);
+                baseDirectory = lastSlashBeforeWildcard >= 0
+                    ? directoryPattern[..lastSlashBeforeWildcard]
+                    : "";
+                searchRecursively = true;
+            }
+            else
+            {
+                baseDirectory = directoryPattern;
+            }
+
+            // Resolve relative paths against ObjectDir
+            if (!Path.IsPathRooted(baseDirectory) && !string.IsNullOrEmpty(ObjectDir))
+            {
+                baseDirectory = Path.Combine(ObjectDir, baseDirectory);
+            }
+
+            // Normalize again after Path.Combine
+            baseDirectory = baseDirectory.Replace('\\', '/');
+
+            if (Directory.Exists(baseDirectory))
+            {
+                var searchOption = searchRecursively ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+                var matchingFiles = Directory.GetFiles(baseDirectory, filePattern, searchOption);
+                results.AddRange(matchingFiles.Where(f =>
+                    f.EndsWith(".dba", StringComparison.OrdinalIgnoreCase)));
+
+                Log.D("Searched '{0}' with pattern '{1}', recursive={2}, found {3} DBA files",
+                    baseDirectory, filePattern, searchRecursively, results.Count);
+            }
+            else
+            {
+                Log.D("Directory not found for DBA wildcard expansion: {0}", baseDirectory);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.D("Error expanding DBA wildcard pattern {0}: {1}", pattern, ex.Message);
+        }
+
+        return results;
+    }
+
+    /// <summary>
+    /// Loads a single CAF file.
+    /// </summary>
+    private void LoadSingleCafFile(string cafPath, string? animationName = null)
+    {
+        try
+        {
+            // Resolve relative paths against ObjectDir
+            var fullPath = cafPath;
+            if (!Path.IsPathRooted(fullPath) && !string.IsNullOrEmpty(ObjectDir))
+            {
+                fullPath = Path.Combine(ObjectDir, fullPath);
+            }
+
+            // Use filename without extension as animation name if not specified
+            animationName ??= Path.GetFileNameWithoutExtension(fullPath);
+
+            Log.D("Loading CAF: {0} (name: {1})", fullPath, animationName);
+
+            var cafModel = Model.FromStream(fullPath, PackFileSystem.GetStream(fullPath), true);
+            var cafAnimation = ParseCafModel(cafModel, animationName, fullPath);
+
+            if (cafAnimation is not null)
+            {
+                CafAnimations.Add(cafAnimation);
+                Log.D("Successfully loaded CAF animation: {0}", animationName);
+            }
+        }
+        catch (FileNotFoundException)
+        {
+            Log.D("CAF file not found: {0}", cafPath);
+        }
+        catch (Exception ex)
+        {
+            Log.D("Error loading CAF {0}: {1}", cafPath, ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Parses a CAF Model into a CafAnimation structure.
+    /// </summary>
+    private CafAnimation? ParseCafModel(Model cafModel, string animationName, string filePath)
+    {
+        var animation = new CafAnimation
+        {
+            Name = animationName,
+            FilePath = filePath
+        };
+
+        // Get timing info from timing chunk
+        var timingChunk = cafModel.ChunkMap.Values.OfType<ChunkTimingFormat>().FirstOrDefault();
+        if (timingChunk is not null)
+        {
+            animation.SecsPerTick = timingChunk.SecsPerTick;
+            animation.TicksPerFrame = timingChunk.TicksPerFrame;
+            animation.StartFrame = timingChunk.GlobalRange.Start;
+            animation.EndFrame = timingChunk.GlobalRange.End;
+        }
+
+        // Check for additive animation flag from GlobalAnimationHeaderCAF chunk
+        var animHeaderChunk = cafModel.ChunkMap.Values.OfType<ChunkGlobalAnimationHeaderCAF>().FirstOrDefault();
+        if (animHeaderChunk is not null)
+        {
+            // AssetFlags.Additive = 0x001
+            animation.IsAdditive = (animHeaderChunk.Flags & 0x001) != 0;
+            if (animation.IsAdditive)
+                Log.D($"CAF animation '{animationName}' is additive (flags=0x{animHeaderChunk.Flags:X})");
+        }
+
+        // Get bone name mapping from BoneNameList chunk (if present)
+        var boneNameList = cafModel.ChunkMap.Values.OfType<ChunkBoneNameList>().FirstOrDefault();
+        if (boneNameList is not null)
+        {
+            // Build CRC32 -> bone name mapping
+            foreach (var boneName in boneNameList.BoneNames)
+            {
+                var crc = ComputeBoneNameCrc32(boneName);
+                animation.ControllerIdToBoneName[crc] = boneName;
+            }
+        }
+
+        // Process controller chunks (829/831/832 = compressed, 827/830 = uncompressed CryKeyPQLog, 833 = uncompressed PQS)
+        var controllers827 = cafModel.ChunkMap.Values.OfType<ChunkController_827>().ToList();
+        var controllers829 = cafModel.ChunkMap.Values.OfType<CryEngineCore.Chunks.ChunkController_829>().ToList();
+        var controllers830 = cafModel.ChunkMap.Values.OfType<ChunkController_830>().ToList();
+        var controllers831 = cafModel.ChunkMap.Values.OfType<ChunkController_831>().ToList();
+        var controllers832 = cafModel.ChunkMap.Values.OfType<CryEngineCore.Chunks.ChunkController_832>().ToList();
+        var controllers833 = cafModel.ChunkMap.Values.OfType<CryEngineCore.Chunks.ChunkController_833>().ToList();
+
+        // 827 and 830 use unified key times for both rotation and position
+        foreach (var ctrl in controllers827)
+        {
+            var keyTimes = ctrl.KeyTimes.Select(t => (float)t).ToList();
+            var track = new BoneTrack
+            {
+                ControllerId = ctrl.ControllerId,
+                RotationKeyTimes = keyTimes,
+                PositionKeyTimes = keyTimes,
+                Positions = ctrl.KeyPositions.ToList(),
+                Rotations = ctrl.KeyRotations.ToList()
+            };
+            animation.BoneTracks[ctrl.ControllerId] = track;
+        }
+
+        foreach (var ctrl in controllers830)
+        {
+            var keyTimes = ctrl.KeyTimes.Select(t => (float)t).ToList();
+            var track = new BoneTrack
+            {
+                ControllerId = ctrl.ControllerId,
+                RotationKeyTimes = keyTimes,
+                PositionKeyTimes = keyTimes,
+                Positions = ctrl.KeyPositions.ToList(),
+                Rotations = ctrl.KeyRotations.ToList()
+            };
+            animation.BoneTracks[ctrl.ControllerId] = track;
+        }
+
+        // 829 and 831 have separate rotation/position key times
+        // Key times are stored as actual frame numbers (byte/uint16/float format just determines storage size)
+        foreach (var ctrl in controllers829)
+        {
+            var track = new BoneTrack
+            {
+                ControllerId = ctrl.ControllerId,
+                RotationKeyTimes = ctrl.RotationKeyTimes.ToList(),
+                PositionKeyTimes = ctrl.PositionKeyTimes.ToList(),
+                Positions = ctrl.KeyPositions.ToList(),
+                Rotations = ctrl.KeyRotations.ToList()
+            };
+            animation.BoneTracks[ctrl.ControllerId] = track;
+        }
+
+        foreach (var ctrl in controllers831)
+        {
+            var track = new BoneTrack
+            {
+                ControllerId = ctrl.ControllerId,
+                RotationKeyTimes = ctrl.RotationKeyTimes.ToList(),
+                PositionKeyTimes = ctrl.PositionKeyTimes.ToList(),
+                Positions = ctrl.KeyPositions.ToList(),
+                Rotations = ctrl.KeyRotations.ToList()
+            };
+            animation.BoneTracks[ctrl.ControllerId] = track;
+        }
+
+        // 832 extends 829 with a scale track; same compressed rot/pos, adds scale
+        foreach (var ctrl in controllers832)
+        {
+            var track = new BoneTrack
+            {
+                ControllerId = ctrl.ControllerId,
+                RotationKeyTimes = ctrl.RotationKeyTimes.ToList(),
+                PositionKeyTimes = ctrl.PositionKeyTimes.ToList(),
+                ScaleKeyTimes = ctrl.ScaleKeyTimes.ToList(),
+                Positions = ctrl.KeyPositions.ToList(),
+                Rotations = ctrl.KeyRotations.ToList(),
+                Scales = ctrl.KeyScales.ToList()
+            };
+            animation.BoneTracks[ctrl.ControllerId] = track;
+        }
+
+        // 833 uses unified PQS per frame; time is implicit (time[i] = i)
+        foreach (var ctrl in controllers833)
+        {
+            var keyTimes = Enumerable.Range(0, (int)ctrl.NumKeys).Select(i => (float)i).ToList();
+            var track = new BoneTrack
+            {
+                ControllerId = ctrl.ControllerId,
+                RotationKeyTimes = keyTimes,
+                PositionKeyTimes = keyTimes,
+                ScaleKeyTimes = keyTimes,
+                Positions = ctrl.KeyPositions.ToList(),
+                Rotations = ctrl.KeyRotations.ToList(),
+                Scales = ctrl.KeyScales.ToList()
+            };
+            animation.BoneTracks[ctrl.ControllerId] = track;
+        }
+
+        // Process Star Citizen #ivo CAF chunks
+        var ivoCAFs = cafModel.ChunkMap.Values.OfType<ChunkIvoCAF>().ToList();
+        foreach (var ivoCaf in ivoCAFs)
+        {
+            // Each bone hash maps to rotation/position data
+            foreach (var boneHash in ivoCaf.BoneHashes)
+            {
+                // Get rotation data
+                ivoCaf.Rotations.TryGetValue(boneHash, out var rotations);
+                ivoCaf.RotationTimes.TryGetValue(boneHash, out var rotTimes);
+                ivoCaf.Positions.TryGetValue(boneHash, out var positions);
+                ivoCaf.PositionTimes.TryGetValue(boneHash, out var posTimes);
+
+                var track = new BoneTrack
+                {
+                    ControllerId = boneHash,
+                    Rotations = rotations ?? [],
+                    Positions = positions ?? [],
+                    RotationKeyTimes = rotTimes ?? [],
+                    PositionKeyTimes = posTimes ?? []
+                };
+
+                if (track.Rotations.Count > 0 || track.Positions.Count > 0)
+                {
+                    animation.BoneTracks[boneHash] = track;
+                }
+            }
+        }
+
+        if (animation.BoneTracks.Count == 0)
+        {
+            Log.D("No controller chunks found in CAF file: {0}", filePath);
+            return null;
+        }
+
+        Log.D("Parsed CAF with {0} bone tracks, frames {1}-{2}",
+            animation.BoneTracks.Count, animation.StartFrame, animation.EndFrame);
+
+        return animation;
+    }
+
+    /// <summary>
+    /// Computes CRC32 of a bone name (lowercase) for controller ID matching.
+    /// </summary>
+    private static uint ComputeBoneNameCrc32(string boneName)
+    {
+        // CryEngine uses lowercase CRC32 for bone names
+        var bytes = System.Text.Encoding.ASCII.GetBytes(boneName.ToLowerInvariant());
+        uint crc = 0xFFFFFFFF;
+
+        foreach (byte b in bytes)
+        {
+            crc ^= b;
+            for (int i = 0; i < 8; i++)
+            {
+                crc = (crc >> 1) ^ (0xEDB88320 & ~((crc & 1) - 1));
+            }
+        }
+
+        return ~crc;
     }
 
     private GeometryInfo BuildNodeGeometryInfo(ChunkIvoSkinMesh skinMesh, IEnumerable<MeshSubset> subsets)
@@ -557,6 +1425,7 @@ public partial class CryEngine
             Colors = skinMesh.Colors,
             VertUVs = skinMesh.VertsUvs,
             Normals = skinMesh.Normals,
+            Tangents = skinMesh.QTangents ?? skinMesh.Tangents,
             BoneMappings = skinMesh.BoneMappings
         };
     }
@@ -634,7 +1503,7 @@ public partial class CryEngine
         return result;
     }
 
-    public bool IsIvoFile => Models.First().FileSignature?.Equals("#ivo") ?? false;
+    public bool IsIvoFile => Models.Count > 0 && (Models[0].FileSignature?.Equals("#ivo") ?? false);
 
     public static bool SupportsFile(string name) => validExtensions.Contains(Path.GetExtension(name).ToLowerInvariant());
 

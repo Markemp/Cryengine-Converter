@@ -33,10 +33,10 @@ public class HuntIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Hunt\assassin_good\assassin_christmas_body.skin", "-dds", "-dae" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler.Args, cryData);
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
 
@@ -94,12 +94,12 @@ public class HuntIntegrationTests
         var args = new string[] { $@"{userHome}\OneDrive\ResourceFiles\Hunt\assassin_bad\assassin_body.skin", "-dds", "-dae" };
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
-        CryEngine cryData = new(args[0], testUtils.argsHandler.PackFileSystem);
+        CryEngine cryData = new(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
         Assert.AreEqual(1.00000f, cryData.Models[1].RootNode.LocalTransform.M11, TestUtils.delta);
 
-        ColladaModelRenderer colladaData = new(testUtils.argsHandler, cryData);
+        ColladaModelRenderer colladaData = new(testUtils.argsHandler.Args, cryData);
         var daeObject = colladaData.DaeObject;
         colladaData.GenerateDaeObject();
 
@@ -186,9 +186,9 @@ public class HuntIntegrationTests
         Assert.AreEqual("assassin_body-mesh-norm", normals.ID);
         Assert.AreEqual("assassin_body-norm", normals.Name);
         Assert.AreEqual("assassin_body-mesh-UV", uvs.ID);
-        Assert.AreEqual("assassin_body-UV", uvs.Name);
+        Assert.AreEqual("UV", uvs.Name);
         Assert.AreEqual("assassin_body-mesh-color", colors.ID);
-        Assert.AreEqual("assassin_body-color", colors.Name);
+        Assert.AreEqual("Col", colors.Name);
         Assert.AreEqual(18087, vertices.Float_Array.Count);
         Assert.AreEqual("assassin_body-mesh-pos-array", vertices.Float_Array.ID);
         Assert.IsTrue(vertices.Float_Array.Value_As_String.StartsWith("0.050568 0.100037 2.091797 0.048096 0.124878 2.099609 0.059082 0.102295 2.117188 0.049042 0.124695 2.113281 0.016800 0.109009"));
