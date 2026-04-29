@@ -121,4 +121,4 @@ Free code signing provided by [SignPath.io](https://signpath.io), certificate by
 | Approvers | [Owners](https://github.com/orgs/Markemp/people?query=role%3Aowner) |
 | Committers | [Contributors](https://github.com/Markemp/Cryengine-Converter/graphs/contributors) |
 
-**Privacy policy:** This program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it.
+**Privacy policy:** [Heffay Presents Privacy Policy](https://www.heffaypresents.com/Privacy)
