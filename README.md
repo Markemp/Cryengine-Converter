@@ -186,6 +186,17 @@ A new v2 tutorial series is in production. The earlier 2017 series uses an older
 - Pull requests welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) and [DEVNOTES.md](DEVNOTES.md).
 - Project structure and architecture are documented in [CLAUDE.md](CLAUDE.md).
 
+## Code Signing Policy
+
+Free code signing provided by [SignPath.io](https://signpath.io), certificate by [SignPath Foundation](https://signpath.org).
+
+| Role | Members |
+|------|---------|
+| Approvers | [Owners](https://github.com/orgs/Markemp/people?query=role%3Aowner) |
+| Committers | [Contributors](https://github.com/Markemp/Cryengine-Converter/graphs/contributors) |
+
+**Privacy policy:** This program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it.
+
 ## License
 
 See repository for license details.
