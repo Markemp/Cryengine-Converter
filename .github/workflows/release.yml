@@ -30,6 +30,7 @@ on:
 
 permissions:
   contents: write   # needed to create releases and upload assets
+  actions: read     # needed for SignPath action to read artifact metadata
 
 jobs:
   release:
@@ -98,8 +99,45 @@ jobs:
           --self-contained
           /p:SourceRevisionId=${{ github.sha }}
 
+      # ─── Code signing via SignPath ───────────────────────────────────────
+      # Signs cgf-converter.exe BEFORE the installer is compiled so the
+      # signed binary gets bundled inside the installer. Then signs the
+      # installer itself so users see "Heffay Presents" in SmartScreen.
+      #
+      # The SignPath action requires an artifact uploaded via upload-artifact
+      # to get an artifact ID. After signing, the signed file is downloaded
+      # back and copied over the unsigned original.
+      #
+      # Swap signing-policy-slug to the production policy once the OSS
+      # cert is approved by SignPath Foundation.
+
+      - name: Upload cgf-converter.exe for signing
+        id: upload-exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: cgf-converter-unsigned
+          path: cgf-converter\bin\Release\net9.0\win-x64\publish\cgf-converter.exe
+
+      - name: Sign cgf-converter.exe
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: b57aa812-9618-42c4-842f-96ef43865425
+          project-slug: Cryengine_Converter
+          signing-policy-slug: test-signing
+          github-artifact-id: ${{ steps.upload-exe.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: cgf-converter\bin\Release\net9.0\win-x64\publish\signed
+
+      - name: Replace unsigned exe with signed
+        shell: pwsh
+        run: |
+          Copy-Item "cgf-converter\bin\Release\net9.0\win-x64\publish\signed\cgf-converter.exe" `
+                    "cgf-converter\bin\Release\net9.0\win-x64\publish\cgf-converter.exe" -Force
+
       - name: Compile installer with Inno Setup
         # Inno Setup is preinstalled on the windows-latest runner image.
+        # Runs after signing cgf-converter.exe so the signed binary is bundled.
         shell: pwsh
         run: |
           $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
@@ -110,31 +148,29 @@ jobs:
           & $iscc installer\cgf-converter.iss
           if ($LASTEXITCODE -ne 0) { Write-Error "Inno Setup compile failed"; exit $LASTEXITCODE }
 
-      # ─── Code signing (placeholder — wire up once cert is available) ───
-      #
-      # Once you have a code signing cert (SignPath, MS Trusted Signing,
-      # or a purchased OV/EV cert), add a signing step here. Sign BOTH
-      # cgf-converter.exe (before installer compile, so the signed exe
-      # gets bundled) AND the installer .exe (after compile, so users
-      # see "verified publisher" on the SmartScreen prompt).
-      #
-      # Always include a timestamp (/tr) so signatures survive cert expiry.
-      #
-      # Example (signtool, OV/EV cert in cert store):
-      #
-      # - name: Sign cgf-converter.exe
-      #   shell: pwsh
-      #   run: |
-      #     & signtool sign /sha1 ${{ secrets.CERT_THUMBPRINT }} `
-      #       /tr http://timestamp.sectigo.com /td sha256 /fd sha256 `
-      #       cgf-converter\bin\Release\net9.0\win-x64\publish\cgf-converter.exe
-      #
-      # - name: Sign installer
-      #   shell: pwsh
-      #   run: |
-      #     & signtool sign /sha1 ${{ secrets.CERT_THUMBPRINT }} `
-      #       /tr http://timestamp.sectigo.com /td sha256 /fd sha256 `
-      #       installer\output\cgf-converter-setup-${{ steps.version.outputs.version }}.exe
+      - name: Upload installer for signing
+        id: upload-installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: cgf-converter-installer-unsigned
+          path: installer\output\cgf-converter-setup-${{ steps.version.outputs.version }}.exe
+
+      - name: Sign installer
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: b57aa812-9618-42c4-842f-96ef43865425
+          project-slug: Cryengine_Converter
+          signing-policy-slug: test-signing
+          github-artifact-id: ${{ steps.upload-installer.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: installer\output\signed
+
+      - name: Replace unsigned installer with signed
+        shell: pwsh
+        run: |
+          Copy-Item "installer\output\signed\cgf-converter-setup-${{ steps.version.outputs.version }}.exe" `
+                    "installer\output\cgf-converter-setup-${{ steps.version.outputs.version }}.exe" -Force
 
       - name: Stage release assets
         shell: pwsh
