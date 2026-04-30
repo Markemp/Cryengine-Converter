@@ -57,17 +57,19 @@ public static class IvoAnimationHelpers
     public static byte GetTimeFormat(ushort formatFlags) => (byte)(formatFlags & 0x0F);
 
     /// <summary>
-    /// Decompresses a SNORM int16 value to float using scale factor.
-    /// Formula: (snormValue / 32767.0f) * scale
+    /// Decompresses a SNORM int16 value to float using per-bone local bounds.
+    /// The 24-byte header stores rangeMin and rangeMax for each axis.
+    /// Formula: rangeMin + ((snormValue + 32767) / 65534.0f) * (rangeMax - rangeMin)
     /// </summary>
-    public static float DecompressSNorm(short snormValue, float scale)
-        => (snormValue / 32767.0f) * scale;
+    public static float DecompressSNorm(short snormValue, float rangeMin, float rangeMax)
+        => rangeMin + ((snormValue + 32767) / 65534.0f) * (rangeMax - rangeMin);
 
     /// <summary>
-    /// Checks if a channel is active (not masked with FLT_MAX sentinel).
+    /// Checks if a channel is active. Inactive channels use FLT_MAX as a sentinel
+    /// in the rangeMin field of the 24-byte SNORM header.
     /// </summary>
-    public static bool IsChannelActive(float channelMaskValue)
-        => channelMaskValue < FltMaxSentinel;
+    public static bool IsChannelActive(float rangeMinValue)
+        => rangeMinValue < FltMaxSentinel;
 
     /// <summary>
     /// Reads time keys from a binary reader based on format flags.
@@ -164,9 +166,10 @@ public static class IvoAnimationHelpers
             case IvoPositionFormat.SNormFull:
                 // 0xC1xx: SNORM with 24-byte header, all channels (6 bytes per key)
                 {
-                    // Read 24-byte header: channelMask (12 bytes) + scale (12 bytes)
-                    Vector3 channelMask = ReadVector3(b);
-                    Vector3 scale = ReadVector3(b);
+                    // Read 24-byte header: rangeMin (12 bytes) + rangeMax (12 bytes)
+                    // Each i16 maps the full [-32767, +32767] range to [rangeMin, rangeMax]
+                    Vector3 rangeMin = ReadVector3(b);
+                    Vector3 rangeMax = ReadVector3(b);
 
                     for (int i = 0; i < count; i++)
                     {
@@ -174,9 +177,9 @@ public static class IvoAnimationHelpers
                         short sy = b.ReadInt16();
                         short sz = b.ReadInt16();
 
-                        float x = DecompressSNorm(sx, scale.X);
-                        float y = DecompressSNorm(sy, scale.Y);
-                        float z = DecompressSNorm(sz, scale.Z);
+                        float x = DecompressSNorm(sx, rangeMin.X, rangeMax.X);
+                        float y = DecompressSNorm(sy, rangeMin.Y, rangeMax.Y);
+                        float z = DecompressSNorm(sz, rangeMin.Z, rangeMax.Z);
 
                         positions.Add(new Vector3(x, y, z));
                     }
@@ -186,13 +189,14 @@ public static class IvoAnimationHelpers
             case IvoPositionFormat.SNormPacked:
                 // 0xC2xx: SNORM with 24-byte header, packed active channels only
                 {
-                    // Read 24-byte header: channelMask (12 bytes) + scale (12 bytes)
-                    Vector3 channelMask = ReadVector3(b);
-                    Vector3 scale = ReadVector3(b);
+                    // Read 24-byte header: rangeMin (12 bytes) + rangeMax (12 bytes)
+                    // Inactive channels use FLT_MAX as sentinel in rangeMin
+                    Vector3 rangeMin = ReadVector3(b);
+                    Vector3 rangeMax = ReadVector3(b);
 
-                    bool xActive = IsChannelActive(channelMask.X);
-                    bool yActive = IsChannelActive(channelMask.Y);
-                    bool zActive = IsChannelActive(channelMask.Z);
+                    bool xActive = IsChannelActive(rangeMin.X);
+                    bool yActive = IsChannelActive(rangeMin.Y);
+                    bool zActive = IsChannelActive(rangeMin.Z);
 
                     for (int i = 0; i < count; i++)
                     {
@@ -201,17 +205,17 @@ public static class IvoAnimationHelpers
                         if (xActive)
                         {
                             short sx = b.ReadInt16();
-                            x = DecompressSNorm(sx, scale.X);
+                            x = DecompressSNorm(sx, rangeMin.X, rangeMax.X);
                         }
                         if (yActive)
                         {
                             short sy = b.ReadInt16();
-                            y = DecompressSNorm(sy, scale.Y);
+                            y = DecompressSNorm(sy, rangeMin.Y, rangeMax.Y);
                         }
                         if (zActive)
                         {
                             short sz = b.ReadInt16();
-                            z = DecompressSNorm(sz, scale.Z);
+                            z = DecompressSNorm(sz, rangeMin.Z, rangeMax.Z);
                         }
 
                         positions.Add(new Vector3(x, y, z));

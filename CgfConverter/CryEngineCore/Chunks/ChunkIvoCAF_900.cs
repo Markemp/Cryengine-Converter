@@ -242,9 +242,9 @@ internal sealed class ChunkIvoCAF_900 : ChunkIvoCAF
             case IvoPositionFormat.SNormFull:
                 // 0xC1xx: SNORM with 24-byte header, all channels (6 bytes per key)
                 {
-                    // Read 24-byte header: channelMask (12 bytes) + scale (12 bytes)
-                    Vector3 channelMask = b.ReadVector3();
-                    Vector3 scale = b.ReadVector3();
+                    // Read 24-byte header: rangeMin (12 bytes) + rangeMax (12 bytes)
+                    Vector3 rangeMin = b.ReadVector3();
+                    Vector3 rangeMax = b.ReadVector3();
 
                     for (int i = 0; i < count; i++)
                     {
@@ -252,27 +252,28 @@ internal sealed class ChunkIvoCAF_900 : ChunkIvoCAF
                         short sy = b.ReadInt16();
                         short sz = b.ReadInt16();
 
-                        float x = IvoAnimationHelpers.DecompressSNorm(sx, scale.X);
-                        float y = IvoAnimationHelpers.DecompressSNorm(sy, scale.Y);
-                        float z = IvoAnimationHelpers.DecompressSNorm(sz, scale.Z);
+                        float x = IvoAnimationHelpers.DecompressSNorm(sx, rangeMin.X, rangeMax.X);
+                        float y = IvoAnimationHelpers.DecompressSNorm(sy, rangeMin.Y, rangeMax.Y);
+                        float z = IvoAnimationHelpers.DecompressSNorm(sz, rangeMin.Z, rangeMax.Z);
 
                         positions.Add(new Vector3(x, y, z));
                     }
                     HelperMethods.Log(LogLevelEnum.Debug,
-                        $"    Position (0xC1 SNORM full): {count} keys, scale=({scale.X:F4}, {scale.Y:F4}, {scale.Z:F4})");
+                        $"    Position (0xC1 SNORM full): {count} keys, rangeMin=({rangeMin.X:F4}, {rangeMin.Y:F4}, {rangeMin.Z:F4}), rangeMax=({rangeMax.X:F4}, {rangeMax.Y:F4}, {rangeMax.Z:F4})");
                 }
                 break;
 
             case IvoPositionFormat.SNormPacked:
                 // 0xC2xx: SNORM with 24-byte header, packed active channels only
                 {
-                    // Read 24-byte header: channelMask (12 bytes) + scale (12 bytes)
-                    Vector3 channelMask = b.ReadVector3();
-                    Vector3 scale = b.ReadVector3();
+                    // Read 24-byte header: rangeMin (12 bytes) + rangeMax (12 bytes)
+                    // Inactive channels use FLT_MAX as sentinel in rangeMin
+                    Vector3 rangeMin = b.ReadVector3();
+                    Vector3 rangeMax = b.ReadVector3();
 
-                    bool xActive = IvoAnimationHelpers.IsChannelActive(channelMask.X);
-                    bool yActive = IvoAnimationHelpers.IsChannelActive(channelMask.Y);
-                    bool zActive = IvoAnimationHelpers.IsChannelActive(channelMask.Z);
+                    bool xActive = IvoAnimationHelpers.IsChannelActive(rangeMin.X);
+                    bool yActive = IvoAnimationHelpers.IsChannelActive(rangeMin.Y);
+                    bool zActive = IvoAnimationHelpers.IsChannelActive(rangeMin.Z);
 
                     for (int i = 0; i < count; i++)
                     {
@@ -281,17 +282,17 @@ internal sealed class ChunkIvoCAF_900 : ChunkIvoCAF
                         if (xActive)
                         {
                             short sx = b.ReadInt16();
-                            x = IvoAnimationHelpers.DecompressSNorm(sx, scale.X);
+                            x = IvoAnimationHelpers.DecompressSNorm(sx, rangeMin.X, rangeMax.X);
                         }
                         if (yActive)
                         {
                             short sy = b.ReadInt16();
-                            y = IvoAnimationHelpers.DecompressSNorm(sy, scale.Y);
+                            y = IvoAnimationHelpers.DecompressSNorm(sy, rangeMin.Y, rangeMax.Y);
                         }
                         if (zActive)
                         {
                             short sz = b.ReadInt16();
-                            z = IvoAnimationHelpers.DecompressSNorm(sz, scale.Z);
+                            z = IvoAnimationHelpers.DecompressSNorm(sz, rangeMin.Z, rangeMax.Z);
                         }
 
                         positions.Add(new Vector3(x, y, z));
@@ -299,7 +300,7 @@ internal sealed class ChunkIvoCAF_900 : ChunkIvoCAF
 
                     string activeChannels = $"{(xActive ? "X" : "")}{(yActive ? "Y" : "")}{(zActive ? "Z" : "")}";
                     HelperMethods.Log(LogLevelEnum.Debug,
-                        $"    Position (0xC2 SNORM packed): {count} keys, active=[{activeChannels}], scale=({scale.X:F4}, {scale.Y:F4}, {scale.Z:F4})");
+                        $"    Position (0xC2 SNORM packed): {count} keys, active=[{activeChannels}], rangeMin=({rangeMin.X:F4}, {rangeMin.Y:F4}, {rangeMin.Z:F4}), rangeMax=({rangeMax.X:F4}, {rangeMax.Y:F4}, {rangeMax.Z:F4})");
                 }
                 break;
 
