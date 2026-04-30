@@ -84,12 +84,6 @@ internal sealed class ChunkIvoDBAData_900 : ChunkIvoDBAData
                 };
             }
 
-            // Save position after controller headers - this is where the next block starts!
-            // DBA format: headers are sequential, keyframe data is at the end accessed via offsets.
-            // The next #dba block starts right after the current block's controller headers,
-            // NOT at blockEnd (which is where this block's keyframe data extends to).
-            long positionAfterHeaders = b.BaseStream.Position;
-
             // Create animation block with parsed data
             var animBlock = new IvoAnimationBlock
             {
@@ -104,8 +98,24 @@ internal sealed class ChunkIvoDBAData_900 : ChunkIvoDBAData
 
             AnimationBlocks.Add(animBlock);
 
-            // Restore position to after headers - next block starts here, not at blockEnd
-            b.BaseStream.Seek(positionAfterHeaders, SeekOrigin.Begin);
+            // Advance to next block. DataSize covers the entire block from its start
+            // (including sig + BoneCount + Magic + DataSize fields), consistent with CAF.
+            long nextBlockStart = blockStart + header.DataSize;
+            b.BaseStream.Seek(nextBlockStart, SeekOrigin.Begin);
+
+            // Diagnostic: warn if the next position looks wrong (not at a #dba sig or dataEnd)
+            if (nextBlockStart < dataEnd)
+            {
+                long savedPos = b.BaseStream.Position;
+                string nextSig = Encoding.ASCII.GetString(b.ReadBytes(4));
+                if (nextSig != "#dba")
+                {
+                    HelperMethods.Log(LogLevelEnum.Warning,
+                        $"ChunkIvoDBAData_900: Expected #dba at block {blockIndex + 1} start (0x{nextBlockStart:X}), got '{nextSig}'. DataSize={header.DataSize}");
+                }
+                b.BaseStream.Seek(savedPos, SeekOrigin.Begin);
+            }
+
             blockIndex++;
         }
 
