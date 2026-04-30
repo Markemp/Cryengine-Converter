@@ -1221,7 +1221,7 @@ public partial class CryEngine
             FilePath = filePath
         };
 
-        // Get timing info from timing chunk
+        // Get timing info — traditional CAF uses ChunkTimingFormat; IVO CAF uses ChunkIvoAnimInfo
         var timingChunk = cafModel.ChunkMap.Values.OfType<ChunkTimingFormat>().FirstOrDefault();
         if (timingChunk is not null)
         {
@@ -1229,6 +1229,19 @@ public partial class CryEngine
             animation.TicksPerFrame = timingChunk.TicksPerFrame;
             animation.StartFrame = timingChunk.GlobalRange.Start;
             animation.EndFrame = timingChunk.GlobalRange.End;
+        }
+        else
+        {
+            // IVO CAF: key times are frame numbers; derive timing from ChunkIvoAnimInfo
+            var ivoAnimInfo = cafModel.ChunkMap.Values.OfType<ChunkIvoAnimInfo>().FirstOrDefault();
+            if (ivoAnimInfo is not null)
+            {
+                float fps = ivoAnimInfo.FramesPerSecond > 0 ? ivoAnimInfo.FramesPerSecond : 30f;
+                animation.SecsPerTick = 1f / fps;
+                animation.TicksPerFrame = 1;
+                animation.StartFrame = 0;
+                animation.EndFrame = (int)ivoAnimInfo.EndFrame;
+            }
         }
 
         // Check for additive animation flag from GlobalAnimationHeaderCAF chunk
