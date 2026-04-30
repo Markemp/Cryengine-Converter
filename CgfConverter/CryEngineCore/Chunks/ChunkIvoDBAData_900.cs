@@ -145,7 +145,7 @@ internal sealed class ChunkIvoDBAData_900 : ChunkIvoDBAData
 
                 // Parse rotation data
                 b.BaseStream.Seek(controllerStart + ctrl.RotDataOffset, SeekOrigin.Begin);
-                var rotations = IvoAnimationHelpers.ReadRotationKeys(b, ctrl.NumRotKeys);
+                var rotations = IvoAnimationHelpers.ReadRotationKeys(b, ctrl.NumRotKeys, ctrl.RotFormatFlags);
                 block.Rotations[boneHash] = rotations;
                 rotationCount++;
             }

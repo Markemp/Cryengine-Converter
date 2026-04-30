@@ -1,3 +1,4 @@
+using Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -116,23 +117,31 @@ public static class IvoAnimationHelpers
     }
 
     /// <summary>
-    /// Reads rotation keyframes (uncompressed quaternions).
+    /// Gets the rotation compression type from the high byte of format flags.
+    /// 0x80 = uncompressed (16 bytes), 0x82 = SmallTree48BitQuat (6 bytes).
+    /// </summary>
+    public static byte GetRotationCompression(ushort formatFlags) => (byte)((formatFlags >> 8) & 0xFF);
+
+    /// <summary>
+    /// Reads rotation keyframes, dispatching on the compression type in the high byte of formatFlags.
     /// </summary>
     /// <param name="b">Binary reader positioned at rotation data.</param>
     /// <param name="count">Number of rotation keys.</param>
+    /// <param name="formatFlags">Rotation format flags. High byte: 0x80 = uncompressed, 0x82 = SmallTree48BitQuat.</param>
     /// <returns>List of quaternion rotations.</returns>
-    public static List<Quaternion> ReadRotationKeys(BinaryReader b, int count)
+    public static List<Quaternion> ReadRotationKeys(BinaryReader b, int count, ushort formatFlags)
     {
         var rotations = new List<Quaternion>(count);
+        byte compression = GetRotationCompression(formatFlags);
 
-        // Ivo CAF/DBA uses uncompressed quaternions (16 bytes each: x, y, z, w)
         for (int i = 0; i < count; i++)
         {
-            float x = b.ReadSingle();
-            float y = b.ReadSingle();
-            float z = b.ReadSingle();
-            float w = b.ReadSingle();
-            rotations.Add(new Quaternion(x, y, z, w));
+            Quaternion rot = compression switch
+            {
+                0x82 => b.ReadSmallTree48BitQuat(),   // SmallTree48BitQuat: 6 bytes, "smallest three" encoding
+                _    => b.ReadQuaternion(),            // 0x80 uncompressed: 16 bytes (x, y, z, w floats)
+            };
+            rotations.Add(rot);
         }
 
         return rotations;

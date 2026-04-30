@@ -89,11 +89,16 @@ internal sealed class ChunkIvoCAF_900 : ChunkIvoCAF
             var ctrl = Controllers[i];
 
             // Warn about unknown rotation format flags
-            // Known formats: 0x8040 = ubyte time array, 0x8042 = uint16 time with 8-byte header
-            if (ctrl.HasRotation && ctrl.RotFormatFlags != 0x8040 && ctrl.RotFormatFlags != 0x8042)
+            // High byte: 0x80 = uncompressed, 0x82 = SmallTree48BitQuat
+            // Low nibble: 0x0 = ubyte time array, 0x2 = uint16 time header
+            if (ctrl.HasRotation)
             {
-                HelperMethods.Log(LogLevelEnum.Warning,
-                    $"ChunkIvoCAF_900: Bone {i} (0x{BoneHashes[i]:X08}) has unknown rotation format flag 0x{ctrl.RotFormatFlags:X4} (expected 0x8040 or 0x8042)");
+                byte rotCompression = IvoAnimationHelpers.GetRotationCompression(ctrl.RotFormatFlags);
+                if (rotCompression != 0x80 && rotCompression != 0x82)
+                {
+                    HelperMethods.Log(LogLevelEnum.Warning,
+                        $"ChunkIvoCAF_900: Bone {i} (0x{BoneHashes[i]:X08}) has unknown rotation compression 0x{rotCompression:X2} in flags 0x{ctrl.RotFormatFlags:X4}");
+                }
             }
 
             // Warn about unknown position format flags
@@ -154,7 +159,7 @@ internal sealed class ChunkIvoCAF_900 : ChunkIvoCAF
 
                 // Rotation data is at controllerStart + rotDataOffset
                 b.BaseStream.Seek(controllerStart + ctrl.RotDataOffset, SeekOrigin.Begin);
-                var rotations = ReadRotationKeys(b, ctrl.NumRotKeys, ctrl.RotFormatFlags);
+                var rotations = IvoAnimationHelpers.ReadRotationKeys(b, ctrl.NumRotKeys, ctrl.RotFormatFlags);
                 Rotations[boneHash] = rotations;
             }
 
@@ -190,29 +195,6 @@ internal sealed class ChunkIvoCAF_900 : ChunkIvoCAF
 
         HelperMethods.Log(LogLevelEnum.Debug,
             $"ChunkIvoCAF_900: Parsed {Rotations.Count} rotation tracks, {Positions.Count} position tracks");
-    }
-
-    private List<Quaternion> ReadRotationKeys(BinaryReader b, int count, ushort formatFlags)
-    {
-        var rotations = new List<Quaternion>(count);
-
-        // Per 010 template: #ivo CAF uses uncompressed quaternions (16 bytes each)
-        // Format flag 0x8042 indicates standard rotation track with uncompressed quats
-        byte compression = (byte)(formatFlags & 0xFF);
-
-        for (int i = 0; i < count; i++)
-        {
-            Quaternion rot = compression switch
-            {
-                0x42 => b.ReadQuaternion(),                    // Standard uncompressed (16 bytes)
-                0x40 => b.ReadQuaternion(),                    // Uncompressed variant (16 bytes)
-                0x00 => b.ReadQuaternion(),                    // NoCompressQuat (16 bytes)
-                _ => b.ReadQuaternion()                        // Default to uncompressed
-            };
-            rotations.Add(rot);
-        }
-
-        return rotations;
     }
 
     /// <summary>
