@@ -1,0 +1,871 @@
+0:00
+hi everyone this is Jeff and this is the
+0:03
+first of an all-new multi-part training
+0:04
+series on how to use modern cryogen game
+0:06
+art assets and 3d programs such as
+0:08
+blender this series is focused on
+0:10
+blender but a lot of the information can
+0:12
+apply to other programs such as Maya in
+0:14
+3dsmax in addition a lot of the
+0:16
+procedures use in manipulating MW assets
+0:19
+awesome or other CryEngine games such as
+0:20
+star citizen and armored warfare so once
+0:23
+you master these basic skills you'll be
+0:24
+able apply them to other games I'll be
+0:26
+demonstrating to get some of these
+0:27
+assets as well just seeking an idea how
+0:29
+to do it please be aware of all
+0:31
+applicable copyright rules and don't
+0:33
+steal thank you alright let's get
+0:36
+started you're going to need some
+0:37
+software to be able to convert these
+0:40
+assets I've written a program called the
+0:42
+CryEngine converter I'll show you where
+0:44
+to get it here in a minute you're also
+0:46
+going to need a unzip utility I like
+0:48
+using 7-zip because it gives you the
+0:50
+ability to just right-click on a pack
+0:52
+file and extract the contents you can be
+0:55
+needing to run it on a machine that has
+0:57
+PowerShell version 3 or newer if you
+0:59
+were running Windows 10 you should be
+1:01
+fine if you're on Windows 7
+1:02
+you should probably upgrade to Windows
+1:05
+10 I'm not going to show you how to
+1:06
+upgrade PowerShell if you want to stay
+1:09
+on Windows 7 but you can find that using
+1:11
+a simple Google search optional programs
+1:14
+include blender version 2.7 9 or newer
+1:17
+2.79 is required for using the Meccan
+1:21
+Porter or asset importer powershell
+1:23
+scripts they do use the new one of the
+1:26
+new notes and in that version if you're
+1:29
+going to be converting mix for mwo you
+1:32
+need MEC importer powershell script
+1:35
+we're going to be just converting
+1:36
+general assets into blender friendly
+1:39
+files you're going to need the asset
+1:41
+importer also if you're going to be
+1:42
+converting star citizen files over
+1:45
+you're going to need either a DDS two
+1:46
+TIFF converter or a DDS unsplit utility
+1:49
+I'll provide things for those as well
+1:52
+star citizen materials use a unique
+1:55
+proprietary DDS format so it's easiest
+1:59
+to convert them to TIFF and if you want
+2:01
+to overwrite the files that they have
+2:03
+you can just use this unsplit utility to
+2:05
+clean them up alright so where do you
+2:08
+get these tools github is where i'm
+2:11
+hosting the CGF converter
+2:13
+our crane G converter so if you if you
+2:16
+actually go to my website jefe presents
+2:17
+calm if you go to github you'll see all
+2:20
+three of those tools I talked about
+2:22
+you're gonna cry and convertor here you
+2:24
+got download button you can look at the
+2:26
+latest release details as well and all
+2:28
+the readme notes on how to use it
+2:31
+alright so click on the download button
+2:33
+here or if you go to the github you can
+2:37
+click on the download button here as
+2:38
+well in the center there's also under
+2:40
+releases you can see the previous
+2:41
+releases here 1.0.1 is the current
+2:43
+release although I should be coming out
+2:45
+with a new a few few fixes this weekend
+2:49
+but we'll see
+2:50
+click on download you will have it in
+2:52
+your downloads folder what I like to do
+2:54
+is create a scripts directory where you
+2:58
+can put it put the program it's and then
+3:00
+you put that scripts directory into the
+3:03
+path that way you can run it without
+3:04
+having to source the entire directory
+3:06
+every single time so as you can see I
+3:08
+can put it in the D : scripts directory
+3:11
+I'm not going to go over how you put a
+3:13
+particular directory into the path you
+3:15
+can do a google search on that as well
+3:16
+it's not required you can always type
+3:19
+the full source directory to the
+3:22
+converter when you when you try to
+3:24
+extract stuff but it's kind of a pain
+3:26
+it's just so much simpler to be able to
+3:27
+put it in the path same with putting in
+3:30
+the additional utilities out there as
+3:32
+well so I highly recommend it do a
+3:35
+Google search ad add scripts directory
+3:37
+now you're gonna want to start
+3:38
+PowerShell which is simple matter of
+3:41
+just typing PowerShell and you get your
+3:45
+prompt up here let's open this up a
+3:49
+little bit and now you're gonna want to
+3:52
+make a backup copy of the game files you
+3:55
+don't want to actually extract them in
+3:57
+the directory where the game is being
+4:00
+wrung because you'll probably break the
+4:01
+games that you're playing so what I'm
+4:03
+going to do is create the directory
+4:04
+major Depot so we're gonna keep all my
+4:09
+files CD depot to go into the directory
+4:13
+and then if you I'm actually going to
+4:15
+create a couple subdirectories in here
+4:17
+because I want to keep my programs
+4:19
+organized as logically as possible so
+4:22
+make dirt mwo for my query line and I'm
+4:25
+also going to make sure
+4:26
+s-see for star citizen i am going to
+4:30
+copy the pack files from the mwl game
+4:33
+directory into the mwo directory so
+4:37
+let's go find my games Omicron is where
+4:41
+it's gonna be from the core online game
+4:44
+and then you have all your pack files
+4:46
+here
+4:46
+MECs is going to be where the all the
+4:50
+geometry data for the mix is going to be
+4:52
+so you definitely don't want that you
+4:54
+don't want to also copy over all the
+4:56
+other ones here for the most part a lot
+4:59
+of these are map assets like buildings
+5:02
+you have a lot of textures and camel
+5:04
+patterns in here as well objects is
+5:06
+where most of the stuff is outside of
+5:08
+the mix a lot of stuff is so copy these
+5:11
+and we want to send them to deep hole so
+5:14
+deep pose mwo paste them in here and
+5:18
+this is going to take a couple minutes
+5:20
+because you are copying 17 gigs worth of
+5:22
+data so I'm gonna let this run and and
+5:28
+and we're done here's all the pack files
+5:31
+the Mac directory came apart separately
+5:33
+you can see all the mix in here it's
+5:37
+pretty awesome
+5:37
+what you're gonna want to do is
+5:39
+right-click on it with 7-zip let's not
+5:41
+look at the animations go to caustic
+5:43
+value is probably Kasich Valley assets
+5:45
+in there all right click 7-zip extract
+5:47
+here it's important to use the extract
+5:49
+here feature because what it's doing is
+5:51
+it's creating an object's directory that
+5:54
+actually has all the files in there you
+5:57
+can see all the different directories
+6:00
+with the CTF files in here and LEDs
+6:04
+because when you're looking at things
+6:06
+from far away you don't need all the
+6:07
+geometry so this is all inner
+6:11
+environments and our objects mwo for the
+6:13
+mix you're gonna want to do you're
+6:16
+actually going to want to move these up
+6:17
+a level the reason they have them in the
+6:19
+subdirectory is to make it easier for
+6:22
+them to organize but if we we're gonna
+6:24
+just delete them out of here paste them
+6:27
+in here I know he has a permit MEK yeah
+6:31
+let's replace it who knows what it is
+6:33
+thought now you have a ton of pack files
+6:36
+in here and next should be empty so
+6:39
+let's just get rid of that
+6:40
+and let's take a look at the adder 7-zip
+6:43
+same rules extract here and it should
+6:46
+create the objects directory now should
+6:47
+see Mex adder and you have the this is
+6:52
+the base of the address directory the
+6:55
+important things in here are going to be
+6:57
+the CDF file which is a XML file which
+7:00
+contains information about where all the
+7:04
+components go I'll explain a little bit
+7:06
+more in detail cockpit standard which
+7:09
+shows the has a cockpit geometry in here
+7:13
+in the textures for it as well
+7:15
+it's if you're going to do an internal
+7:18
+shot if you want to create art from an
+7:20
+internal point of view of a mech this is
+7:22
+what you're going to want and then under
+7:25
+body it will have a ton of stuff in here
+7:29
+the material file which tells there's
+7:31
+several of them all the different
+7:32
+materials that it uses more texture
+7:36
+files and a ton of CGA files that just
+7:39
+that have all the geometry information
+7:42
+and usually there's a ton of them so
+7:46
+that's adder next objects alright so
+7:49
+those are the mix and I showed you the
+7:51
+environments you're also going to want
+7:53
+let's see if there's other objects is
+7:56
+usually where's objects right here this
+7:59
+is a good one to extract as well this
+8:01
+contains all the purchase will purchase
+8:02
+the bowls spend some good hanging
+8:04
+medallions and things like that you want
+8:07
+to extract it here and that is also
+8:10
+going to start extracting it's kind of a
+8:12
+big file so I'll take a little bit
+8:13
+longer and let's extract them Rother is
+8:23
+that is aside from the urban the best
+8:25
+mech out there in urban Mecca which
+8:31
+as mentioned earlier a deep ethnic where
+8:35
+are you open Mecca sevens extract here
+8:42
+and let's do the city ones as well
+8:47
+because they have a lot of really nice
+8:49
+buildings and where do they keep those
+8:54
+maybe industrial it doesn't really
+9:00
+matter you're gonna want all these files
+9:01
+anyway eventually if you want to have
+9:03
+all all the assets available like
+9:06
+factories got a lot of nice assets and
+9:07
+there's well here music is nice if you
+9:12
+like the mecca or your music that they
+9:14
+have it's actually a nice and I should
+9:16
+have created a new directory called
+9:18
+musics cult just music we're so textures
+9:24
+you're gonna want all the textures as
+9:25
+well this is actually kind of important
+9:29
+since there are a ton of textures that
+9:32
+are shared among assets and this is why
+9:34
+they keep them you see all the cockpit
+9:37
+ones in their eyes are coming out well
+9:41
+they keep running and I want to see if
+9:43
+there's any more city ones yeah that
+9:46
+should be good enough alright let's get
+9:51
+this out of the way we have it actually
+9:53
+let me go back and show that again we
+9:56
+should have a number of directories here
+9:58
+objects textures when the important
+10:02
+things to keep in mind is this directory
+10:04
+here D :
+10:05
+backslash Depot axiom wo for the
+10:08
+purposes of the CryEngine converter
+10:09
+program this is called the object
+10:11
+directory it's simply where the objects
+10:14
+directory is because it tells you it
+10:17
+helps it figure out where the materials
+10:20
+are for any given an asset if you don't
+10:22
+specify the objects directory you can
+10:24
+occasionally have problems with a
+10:26
+converter so you generally want to do
+10:28
+that so keep in mind what this is you're
+10:30
+going to be typing in a lot so let's get
+10:33
+to converting
+10:35
+I've already mentioned that I have a
+10:37
+scripts directory this is where you're
+10:38
+gonna really want a powershell because
+10:43
+the program is meant to be hunter
+10:45
+powershell and let's see where CGF
+10:49
+converters right here
+10:50
+very good depo Sasha mwo now let us
+10:56
+start with a very simple file then go to
+11:01
+objects where again all the objects are
+11:05
+you should see this should look familiar
+11:07
+from we took out if we go to let's do
+11:11
+one of the hanging medallions let's go
+11:13
+to purchase and then we go to a new FC
+11:23
+cockpit hanging you can see all the
+11:26
+different cell different ones out here
+11:28
+and let's go to see I'm gonna use tab
+11:32
+complete we're gonna get the wrestle
+11:34
+medallion acyl hog I think they might be
+11:37
+missing a letter there and if you look
+11:41
+in here you can see all the different
+11:43
+files in here CDF are gonna is gonna be
+11:46
+I'm sorry CHR is gonna be is gonna have
+11:49
+a cheatin geometry and armatures in it
+11:50
+these are really kind of fun files to
+11:52
+work with you can see you have an a a b
+11:57
+version you can see the d DN which is a
+11:59
+normal map diffuse map i'm not sure what
+12:02
+GSP is but well it might be when i'm not
+12:06
+sure it is well take a look anyway the
+12:08
+way you run it is very simply and this
+12:12
+is assuming that you have it in the path
+12:13
+if you don't have in a path every time I
+12:16
+type CTF - converter Exe you're gonna
+12:18
+have to type in the path to it /c GAF
+12:22
+converter all right so with since we
+12:26
+want to just convert the medallion we do
+12:28
+the CDG g/f
+12:29
+kind of virtru don't you hick see
+12:34
+gallium and what's CH our file because
+12:37
+that's the one has its geometry and then
+12:39
+there are some options we wanted to do
+12:42
+by default it will extract to COLLADA
+12:45
+if you want wave for them I don't
+12:47
+recommend it it's a much
+12:48
+more primitive format and the materials
+12:51
+will come off as well you can specify
+12:53
+that but generally we want da but that's
+12:56
+by default so we don't need it
+12:57
+the other thing you can do is specify
+12:59
+the graphic the texture format by
+13:03
+default it just does DDS if you want to
+13:06
+tell the material file so you sniff
+13:07
+instead you actually have to convert all
+13:09
+the DDS files to Tiff's if you're going
+13:10
+to do that but since we're using blender
+13:13
+and this is mwo and not star citizen we
+13:15
+can just use the default a TDS and then
+13:18
+you always want to do the object
+13:20
+directory okay der D : touch Depot /mw
+13:26
+fo and then hit enter and it will
+13:30
+convert it now what you're gonna see
+13:32
+here is a Dae file alright and that is
+13:35
+going to be the Galata version of this
+13:38
+right here and well yeah let's open up
+13:42
+blender and take a look at this thing
+13:43
+over here this is not the default view
+13:47
+for blended oh let's see if we can go
+13:49
+back to what it looks like by default I
+13:51
+think we just do default here we go when
+13:54
+you open up blender by default this is
+13:56
+two seven nine as you can see which I
+13:57
+said is required if you're using blender
+13:59
+this is the timeline down here you can
+14:01
+minimize and maximize it for this one
+14:05
+you don't need to worry about this but
+14:06
+when we get into the Mex you're gonna
+14:07
+have to really start working on that so
+14:09
+you're going to want to do file import
+14:12
+COLLADA and then you're going to want to
+14:15
+go to deep deep o mwo objects
+14:22
+purchasable hanging and we did wrestle
+14:27
+hag right and then you select a DAT file
+14:30
+if you're doing a CHR or an armature or
+14:33
+skin or anything like that you're going
+14:35
+to want to select find bone chains and
+14:36
+auto-connect I'll make it look look a
+14:39
+lot easier you should probably just file
+14:42
+is always selected by default any way
+14:43
+any click important and if we get in
+14:47
+close you should see a medallion right
+14:53
+Zed a medallion sure does
+14:55
+and this part right here is the armature
+14:57
+control tab to get into pose mode
+15:00
+you can kind of rotate them around it's
+15:02
+kind of fun but we're not going to worry
+15:03
+about that right now
+15:04
+as you can see this looks kind of like
+15:06
+where's all the graphics you need to
+15:08
+turn it on to material mode and well now
+15:13
+it turned all black let's go and set
+15:16
+some lighting in our scene
+15:17
+go to the scene tab here you go to up
+15:22
+this is in blender in this problem or a
+15:24
+blender render we want to go to cycles
+15:26
+well I take it back let's stick with
+15:28
+blender for now go to the world turn on
+15:32
+ambient occlusion environment lighting
+15:33
+and that looks a lot better already we
+15:37
+take a look from the camera hit number
+15:39
+of had zero and then you can I'm not
+15:42
+going to go too much into how did how to
+15:44
+do blender because it's it's complicated
+15:49
+and way beyond the scope with this
+15:50
+tutorial you can kind of see it right
+15:52
+here and we change us to render known it
+15:55
+kind of shows you and that's that's not
+15:57
+bad it's kind of what it's supposed to
+15:58
+be like but it probably doesn't have the
+16:00
+normal maps because Nora
+16:03
+blender can't import the kohada normals
+16:05
+very well so let's close that and go
+16:08
+back to material mode then we select the
+16:13
+object let's take a look at the
+16:15
+materials and this is a simple object
+16:19
+that only has one material and if you
+16:22
+click on this it's going to talk about
+16:24
+the textures you can see this is the
+16:27
+diffuse it doesn't give the name for
+16:30
+them but that's what it is here this is
+16:32
+the GSP and what it didn't import is
+16:35
+this is probably specular or a
+16:36
+combination of specular and some other
+16:38
+stuff so what you want to do since is
+16:40
+specular yeah it identified a specular
+16:42
+if you look at the other one I should be
+16:47
+listed as diffuse the color basically
+16:49
+but it didn't add a third one which is
+16:52
+going to be the normal map which is
+16:53
+really important actually let's do one
+16:56
+more thing a lot of times this image
+16:59
+doesn't come off very clear or you don't
+17:00
+see it all you want to uncheck this use
+17:03
+alpha the Alpha channel is frequently
+17:05
+used in cranking games for other parts
+17:09
+of textures like sometimes illumination
+17:10
+or other stuff but anyway so we want to
+17:12
+uncheck that
+17:13
+it's not really visible here it's but
+17:16
+this one we're going to want to add the
+17:18
+DD n right which is the normal map and
+17:22
+as you can see that's not quite what
+17:24
+we're looking for but that is because by
+17:26
+default it adds it as diffuse so you
+17:28
+uncheck that check out a check up normal
+17:31
+and now it should be significantly
+17:32
+better it's not easy to see here but
+17:35
+maybe if we put a zero and we render
+17:36
+this again I might have 12 to render
+17:39
+that's not bad that is basically your
+17:42
+asset since it is a CHR you do have
+17:45
+armatures so you can make it wave in the
+17:50
+air like you just don't care alright
+17:53
+look at that pretty pretty fun stuff so
+17:57
+if you want to start doing animations
+17:59
+you can do that as well
+18:00
+gr undo all that okay so there you have
+18:03
+something very simple alright that
+18:06
+should wrap it up for this first
+18:07
+tutorial the next one is going to be how
+18:10
+to use asset importer to import a bunch
+18:13
+of assets all at once an entire
+18:15
+directory or even more if you want to
+18:16
+get into some fancy PowerShell scripting
+18:18
+the advantages of using it that way is
+18:20
+lets you use these cycles renderer as
+18:23
+opposed to the blender internal render
+18:24
+so you can get much more realistic
+18:25
+looking materials after that one is done
+18:29
+I'll work on another one on how to
+18:30
+actually do with MEK so you can see
+18:31
+these fancy mix like this syndicate that
+18:34
+those rigged up and ready for animation
+18:36
+as well after that we'll see what else
+18:38
+we can do with this probably do
+18:40
+something basic animations with the with
+18:42
+these assets alright thanks for watching
+

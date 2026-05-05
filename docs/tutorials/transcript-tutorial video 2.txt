@@ -1,0 +1,571 @@
+0:00
+hi everyone this is Jeff and this is the second a three part training series on how to use modern CryEngine game art
+0:06
+assets in 3d programs such as blender this series is focused on planar but a lot of the information can apply to
+0:11
+other programs such as Mayan 3dsmax in addition a lot of procedures used in manipulating MW SSS work for other
+0:17
+grindage games such as star citizen am armored warfare so when she messed these basic skills you should be able to apply them to other games in this video we
+0:24
+will go over how to bulk convert CryEngine assets using a simple PowerShell command now to use the new CryEngine importer blender add on to
+0:31
+create an asset library please be aware of all applicable copyright rules ain't on steal thank you
+0:38
+alright let's get started in the last video we went over how to use a converter here to convert a single file
+0:43
+but that is it's pretty labor-intensive so what we're going to do now is go over
+0:49
+how to use a PowerShell command to convert a bunch of them at once here we are in the mwo object rectory which
+0:56
+should be familiar by now and most of the things we want to convert are going to be actually under objects which you
+1:02
+can see and let us go we're going to do a environment we're going to convert
+1:08
+some assets from the MEK lab so let's go to environments and then front end is
+1:16
+where they are MEK lab and then let's do the catwalks and railings and actually
+1:21
+what we're gonna do is we're gonna convert all the assets under here in fact if you want to convert all the assets for the entire game you probably
+1:27
+want to run this at the objects level here or maybe even at the object directory level but we're just going to
+1:33
+do the MEK lab right now to save time because it does take a little bit of time to convert all these things but it is a pretty simple PowerShell command to
+1:40
+do a loop and the way we're going to do it is for each stringing file in and
+1:47
+then get child item get child item recurse which is important because that
+1:54
+will go through each of the subdirectories that have fines and then we need to specify the filters CGA a
+2:02
+start at cg f start out CHR start out skin although I
+2:10
+don't think there's any skin and files in here and then in the code block part
+2:16
+we typed the commands see GAF converter file and then of course you got to use
+2:23
+object directory object turn the Depot
+2:29
+/mw o close the code block and that should
+2:34
+do it it's going to go through all the CGA files it finds in here and convert it into galata da
+2:42
+alright that was too bad it was probably couple minutes you can see there are a ton of assets even in this one small
+2:48
+scene there are a lot of them doors and walls and pipes and all kinds of stuff and now we have a bunch of da e files we
+2:55
+can import into blender so if we go to catwalks and railings and take a look in
+3:00
+here you'll see you know look at them all they're everywhere this is great because now we can simply
+3:07
+bring them in a blender but this is not really useful because you have to import if you're gonna do a scene you have to
+3:12
+find every single one of these assets imported in can fix the materials up and
+3:18
+so on and so on create node groups so I made a tool called originally made a
+3:23
+tool called asset importer which automated it was a PowerShell script that made a text file called import that
+3:29
+text that you had to paste into the blender Python console but honestly that
+3:35
+was a bit dumb it's a dumb way of doing it and there was also a mech and port or version of it as well but I archive with
+3:42
+these and I made a new blender add-on called CryEngine importer which does both these features combined it's much
+3:49
+more easy for me to update it also has a prefab importer part of it that's going to be new and I'll talk about that later
+3:55
+but yeah it is pretty cool it's a blender add on so you just added
+Blender Addon
+4:01
+via the add-ons panel and blender let's download it and we want to do open and
+4:09
+here's those two parts you have the the Python add-on actually right you have the blender add on right here and this
+4:16
+is the mwl camel camel file form X that was created by Andreas 80 who is a node
+4:24
+group wizard and I'll show you how to use that as well so let's just take these export them to put everything in
+4:31
+scripts usually and they're already here I'm not gonna replace them so you see here's the blender add-on and here's my
+4:39
+camel blend file ok so now what let's get this going in blender and let's open
+4:46
+a blender and this is how you install add-ons I'm gonna change back to the default view I normally see a cube here
+4:53
+but I don't have it but I deleted it might default a blend of you as we go to user
+5:00
+preferences and then we go to click on the add-ons tab install add-on from file
+5:06
+and scripts here is the Python you click
+5:13
+add from file and then you have to find it in here I just this helps filter to
+5:20
+import-export which is what this is filed under and you just make sure you enable out right here and it does have a
+5:26
+little warning here that says you have to use the CGF converter to convert the cg and c GF files which I am assuming
+5:34
+you've done if you haven't done that this is probably gonna fail spectacularly alright so once that is
+5:40
+installed you now have some options here on your import you'll have import MEC
+5:46
+which will import a mecca that you've converted import CryEngine assets which will make a blend file out of all the DS
+5:54
+in a directory it works on a directory level and I'll explain a little bit more about that later and import transient
+6:00
+prefab which will let you use the prefab assets to create entire scenes and I
+6:05
+will also go over that right now we just care about import cranes and asset now you do have some options here you have
+6:13
+the texture type DDS is the default and for most grinding games it's what you're gonna want to use you also can select if
+6:19
+here and what that will do is it will look for the TIFF version of the textures blender can't read the star
+6:24
+citizen version of the DDS files but there are some utilities where you can convert those to a tiff and if you do
+6:30
+that then you want to select if here it has to be able to find those files if you don't do it starts Epson still has
+6:35
+the DDS file but you won't see the materials properly in your layout and you'll have to fix them all save file by
+6:42
+default it's going to save the file as the directory named lend it will automatically overwrite any file that it
+6:49
+finds with that name so be careful if you have a file that you've already imported and you made a lot of changes
+6:56
+to it you probably don't want to automatically save over it so you want to uncheck that in generate preview is
+7:01
+nice when you're trying to create a scene it takes all the assets in that in this blend file it's going to create
+7:08
+makes little thumbnails so that when you're trying to import them in the scene and you want to see exactly what a railing is of the 300 different types of
+7:15
+railings and you can actually see a little thumbnail that so super nice I like doing that and we'll do that and let's go to catwalks and railings you
+7:22
+just have to have the name up here you don't need to put anything down here and you want to select anything down here either these are all the files that it
+7:28
+found in this directory if we go up a level you can see you know their doors is just one file their crates there's
+7:36
+two different types of crates but its directory oriented all right so you click on import and this will take a
+7:43
+couple seconds if you don't have the generate preview option selected it'll go a lot quicker but it's doing a lot of
+7:49
+rendering in the background all right that wasn't too bad it's probably about
+7:54
+30 seconds and here are all the assets now you can see it did set cycles it
+8:01
+will do that for you because it is using cycles node groups we can actually actually we're not going look at that
+8:07
+right now but you can tell that a couple pieces went flying off in the middle of nowhere here not really sure why it
+8:13
+doesn't it's probably part of my converter program doesn't quite set the route but you can and you really do want
+8:19
+to do this you want to reset the transform to be at the root so if you hit alt G it'll move them back into the
+8:25
+center the other thing that happened it's probably not as visible to you is one of these materials here is not quite
+8:34
+right so let's grab it and move that up a little bit for now will reset the transform in a second here but this is
+8:41
+not the right material for it it looks for all the material files in the directory and if there's multiple
+8:46
+material files that use the same material name it can grab the wrong one the way you fix this is you go here and
+8:53
+you just change you can see gril zero one in trim zero one and it had a grill
+8:58
+and a trim and it just got confused between the two so you set that the right one set this to the right trim and
+9:05
+that should be it then alt G to clear that transform and there you go you have a nice library let's let's save this
+9:14
+because that is what we want to do
+9:19
+and if we want to do a quick render on this see what it looks like let's grab the camera make sure I can see
+9:25
+everything let's move that out of the way a little bit yeah set some features up go to GPU set the full resolution to
+9:34
+a transparent background and we also want to set some lighting up you almost always want to use HDRI for lighting it
+9:41
+just makes things look really good and I do have a bunch of HDRI files that I use
+9:47
+this kind of stuff let's do a nice indoor corporate interior scene or lighting open it up and let's make sure
+9:56
+our performance is set so this doesn't take forever because nice big blocks and
+10:03
+then if you get f12 and the camera set yeah this should be good let's see what it looks like
+10:11
+alright look at that that's beautiful if the lighting is a little dim you might want to tweak that in my thing but it
+10:16
+doesn't really matter because this is just for asset purposes you are going to use this file to import into other
+10:25
+scenes so let us move on actually let's let's take a look what that looks like
+10:31
+let's go to blender we're opening up a new instance this is our library file and if we had make a new scene and set
+10:39
+it the cycles go to that I was do default layout again and the way you use
+10:45
+the library is you use the link feature you can do a pen but what a pen will do is it'll copy assets into this
+10:51
+particular plan file which sometimes you want to do that usually not because if you make a scene with a bunch of assets
+10:57
+in it if you need to change one of the assets for whatever reason if you append it the changes won't be reflected in
+11:03
+every location so I just like using Lincoln and then we can go to catwalks
+11:08
+and railings and I did as part of the CryEngine importer it does create a group for every item out there
+11:14
+so you can easily access them this way
+11:23
+there we go now they came into the right location I do have this set to set the material
+11:30
+mode there you go now you have them now you can grab individual pieces and move them around and duplicate x-axis things
+11:38
+are creating walkways that way yeah and
+11:44
+then you can start building your scene out this way again these are linked to it so you have these empties we actually control them control the objects and you
+11:53
+can't change the material on them as you see there's no material button on this which is fine again it's it's all
+11:58
+controlled through this file so if you make a change to one of these assets and save this when you reopen this it looks
+12:07
+in this file for that asset and then the changes will be reflected in this scene here alright so that's it for the asset
+12:15
+importer portion of this video let's talk about mix because we all really
+12:20
+like mix and we want to see what Mexico let's close this asset let's go this guy down
+12:25
+yeah I don't wanna say this was just a temp file now we wanted to take a look at mix so Mex are found not under
+Mix Addon
+12:36
+environment on your mix and then they're all here and go to adder it is the best
+12:43
+mech and then again you do this cgf converter right here right here for each
+12:48
+file and get child under curse blah blah blah skin there are CHR files in here which is important because that is the
+12:54
+armature so you wanna make sure you include the converting of the armature into something useful and then object
+13:01
+directory yeah I should do it and I'm not actually hit enter here I've already converted all the files so
+13:06
+I don't really need to do that break stop I guess we're gonna do it alright
+13:14
+that wasn't too bad just another minute to do all the assets in this directory alright now we want to import the mech
+13:22
+so let's go back to blender and set spec
+Import Mech
+13:27
+to default layout and we want to do file import mech which is one of the three
+13:34
+new tools as part of CryEngine importer and we go to the adder directory in my in direct my particular case objects mix
+13:42
+adder is looking for the chr file you still have some of the same options before you can select DDS or TIF max
+13:48
+almost there it's mwo specific and those DDS files are are good so just use that
+13:54
+and then to save it automatically now you might want to be a little more careful with this because if you create an adder blend file with animations on
+14:01
+it and you run this to save it automatically you can cause some problems you know you'll lose all your animations so but you probably shouldn't save it as
+14:08
+that name you should save it as a custom name but yeah anyway import and what
+14:14
+this is going to do is it's going to go through all the files be converted it's going to create an armature it's going
+14:20
+to create the materials for it and you can do you can move them around
+14:27
+it's got eyeful like aids on them so if you need to move and arm you can see the elbow here's
+14:33
+like the elbow like a for the left arm you can change that around position them this is a fully rigged Mecca you have a
+14:41
+torso box here which controls the lower you've got a couple here let's turn this
+14:47
+off material moment back to solid so it's a little easier to see you have a circle here that could rotate the top
+14:54
+and I was certainly here that rotates the bottom or actually the sort of eights the whole thing and then this the
+15:00
+box controls the hips and you can grab them it's set up so that the the feet will fall around make Ikeys like the Hat
+15:08
+for this is a chicken Walker so the knees are in the back for a more human-like version of it the knees I
+15:14
+guess will be in the front they can move those around yeah there's all kinds of great stuff you can do with this let's
+15:20
+go three us to a semi run you rotate the foot rotate X and yeah there you know
+15:40
+full neck in full stride right here let's move this out a little bit that
+15:46
+probably should be positioned a little bit better alright and of course the
+15:54
+materials are well if you know us there's no weapons on this mech which is kind of a problem but if you go to
+16:00
+amateur materials back on all the materials are on the second layer here
+16:06
+if you want to make them available on the first one you select the materials you want em to suck clear and if you
+16:13
+shift click this one will be visible on both of them and there you can see the
+16:19
+weapons came across they don't look quite positioned right see let's let's reset all the positions and then you can
+16:26
+you can move them around again but this is just the default camo pattern for the
+16:31
+mechs which is nice but if we're going to be thorough we actually want to make
+16:37
+it look a little bit better so let us select one of the mech parts here if we
+16:42
+go to materials too you will see all the materials are signed there are four materials on any
+16:48
+given Mecca four or five there's the body the variant the window a decal one
+16:54
+and a on some of the newer mixers at generic it's a little bit of a pain in the butt to sort between them yeah this
+17:02
+is the default texture that it creates for the mech it's just a simple diffuse
+17:07
+specular in normal map with the principle psdf node but this is simple
+17:14
+and we want to do much better than that so let us append the mwo camo three
+17:22
+pattern from andreas and I have that and if we remember where I export it to I
+17:28
+was in scripts and here's MW look at pattern and it's a material so you got
+17:33
+inner material and click it right there and it's linked in its appended into
+17:40
+this blend file now which is what we want but we need to add a new material to actually get it in here type of camo
+17:47
+right here and here you can see the node layout for that particular you can see the node layout this node group is very
+17:54
+huge and complicated and he was nice enough to put there's no droop to simplify it you can select the three
+18:01
+channels for the colors for the camel patterns but what we need to do now is find the right texture files for it so
+18:08
+this is the camel pattern since it already it already imported all the texture files from the material files
+18:15
+you should be able to find it this way we're going to do the body right now and the camo is RGB just like that diffuse
+18:24
+is going to be di f DD n is normal and
+18:32
+then specular is SP Sethe SP c SP c
+18:39
+alright now there's two materials a sign
+18:44
+here which is not quite what we want so let's select all the notes in here
+18:50
+controls with a ctrl C to copy it go to the this material use a dislike
+18:56
+all the nodes delete them and then paste in that node group let's move it over a
+19:01
+little bit and there you go now at the body we can get rid of this mo mwl camel
+19:07
+material now this is the new layout you can change the colors of your mech this
+19:15
+way we have a nice kind of purplish blue the default camel pattern for the adder
+19:21
+only has one channel you can't really see the these other two colors or not they're not there but you can actually
+19:27
+select if you go where are all the they
+19:35
+have all them all the files all the camel patterns under let's take a look
+19:42
+at this is a list under skins skins so
+19:50
+we do a Buccaneer because that's a really good one and here you can see the body and variant for the Buccaneer
+19:56
+pattern for the adder so let's collect that and then yeah that's much better I know you can see the three different
+20:03
+channels and we can change colors there's the white Channel let's keep that white and red let's make it more of
+20:10
+a teal like that
+20:16
+yeah I'm not very good at colors apparently so this is the this is for
+20:22
+the body but we also want to do the variant one so we go here let's select
+20:29
+all these delete them paste in this but this is not obviously these aren't the right materials this
+20:35
+you gotta find the variant so let's open this go back to a ListView and our
+20:42
+variant open you have to change all these from the body to variants
+20:48
+this is diffuse add a very diffuse
+20:56
+variant normal and finally variants Beck
+21:06
+right there okay now the patterns the colors will be all proper you only
+21:12
+really need to worry about the variant in the body once you change one of materials it affects all the different components so you don't have to keep on
+21:17
+mucking around with trying to find each of the different parts they're all linked together so now you have a adder
+21:24
+with the buccaneer pattern and the particular colors that you want so let's
+21:30
+grab the camera we want to render this I actually just do it this way yeah go
+21:38
+from the front let's rotate him around a little bit
+21:43
+grab the arms moving forward just pointing at you one leg back one leg
+21:56
+forward maybe the other way around
+22:01
+grab why-why ctrl alt zero changes the
+22:09
+camera location to what you're looking at try to try to grab the border zoom
+22:15
+out a little bit
+22:23
+and again let's we gotta set up lighting set it's a GPU so they don't
+22:31
+transparency change the performance so it doesn't take forever set the world
+22:40
+use nodes environmental texture to find HDR I find a nice bright one this time
+22:49
+HDR I that bump it up to three turn on
+22:58
+ambient occlusion and yeah let's render this see what happens
+23:03
+there you go there's your a header with the Buccaneer camel pattern with very horrible color schemes I'm not going to
+23:10
+go into the animation part of this there's a lot of things you do with animation keyframes and it's way beyond
+23:17
+the scope of this tutorial but there's a ton of tutorials out there that you can look at on how to actually animate this
+23:23
+guy and make them do stuff so alright enough with the mech I'm not gonna save this one either because you can just
+23:29
+recreate them very quickly now and the final thing I want to talk about is the
+Prefab Importer
+23:36
+prefab importer so let's actually open up a this and if
+23:42
+you notice again we're in the mwo root level you have this prefabs directory with a bunch of XML files that contain
+23:50
+information about what in this case the MEK lab looks like these are just prefabs they are not complete levels I
+23:56
+don't have the ability to import levels but I do update this program quite a bit and maybe someday I'll add a feature
+24:02
+where you can do complete levels with a click of a button but we're not there yet anyway the MEK lab has is pretty
+24:09
+feature complete so we're going to use a prefab importer to import this now prior
+24:14
+to doing this again you have to convert all the files with CryEngine import grindage converter and you also have to
+24:21
+convert all the objects to two using the asset importer portion of it to make
+24:27
+those blend files it does require those libraries to exist or it will not be able to find the
+24:34
+assets that needs to to import into the prefab so you have to go to each of
+24:39
+these directories here make the make the default file like that fix the rotation
+24:45
+fix the knots a rotation fix the translation materials because it is all linked and then it will work another
+24:51
+caveat for the MEK lab is there seems to be two locations for these mecklen vials and they're not differentiated in the
+24:57
+prefab information so you actually have to go to this is on the front end mech lab there's also industrial a lot of the
+25:06
+MEK bate assets are found in here so you actually have to go and convert the
+25:12
+crates and gantries in the hangar door all in here as well so I've already done
+25:17
+that I won't waste your time doing it again but let's take a look at blenders acid
+25:23
+importer let's change us again to default and
+Blender Importer
+25:30
+cycles although I think it sets cycles automatically for you don't need to do that file import prefab it says not yet
+25:38
+implemented it really is I probably I need to fix that now you need to find
+25:43
+the prefab directory and environments
+25:49
+prefabs objects too far not far enough
+25:56
+then make lab and again same same options here you can save it and it will
+26:03
+overwrite it but you click import and this will take a second because it is importing a lot of assets it's linking
+26:10
+them yeah ok that's not the full neck lab but if
+26:15
+you zoom out a little bit for some reason it offsets some quite a bit you have it here it is here's all the wall
+26:22
+pieces let's turn off back face culling so you can kind of see in there and for
+26:30
+some reason the lighting gets set way up here I'm not really sure why it does that let's grab that all move it down
+26:36
+somewhat into place it probably requires
+26:42
+a lot more positioning in this because those are clearly not the right spots
+26:48
+and I have no idea why these pieces got sent way off there as well but yeah I'm
+26:56
+still working on it these are elevators they didn't get put in the right position you can see one
+27:01
+that kind of did but those those are just parts of it so if you shift F you can enter flying mode I need to fly
+27:08
+around the mech lab so that you're in it and you can see all different pieces
+27:14
+here is a console that didn't get positioned properly
+27:20
+yeah if you didn't fix the materials for these pieces when you created those when
+27:27
+you use the importer the acid importer it would have shown with the wrong ones in here you can see these are all that
+27:33
+did fix it so it was alright I don't know why these are like that probably a bug is somewhere but yeah you can throw
+27:42
+mekin here you can import the door separately if you go file link where are
+27:49
+they objects vironment front end mech lab
+27:55
+mech bait doors hangar doors and then we
+28:02
+want to do the groups I didn't do them again so Doric consists of two parts one
+28:09
+of them has the mwo detail decal on it the other one doesn't link it it would
+28:14
+have set it to this root position here so let's grab these yeah let's get those
+28:21
+others grab the non decal ones turn our
+28:26
+perspective now and grab it sit here make sure it's the right altitude look
+28:37
+about right that's close enough for our purposes duplicate in the y-direction oh
+28:42
+hang on let's grab all the pieces X and
+28:47
+there you go that's a little bit better so let's fly around in here a little bit more there's some doors if he didn't
+28:55
+reset the transform those doors would have appeared to way out in the middle know where these look like the materials
+29:01
+are kind of messed up on the floors so after you save this file you can go
+29:06
+through and find out all the parts that don't look the way you want them to and set that up let's do a quick test render
+29:12
+from over here
+29:19
+let's change some settings change the camera to be a little bit more wide
+29:24
+angle so you can see better and I don't
+29:36
+care about you don't want transparent but we're gonna use a HDR again but it's going to be outside of here fortunately there's a lot of lighting in here to
+29:42
+help make it work a little better performance 256 go to the environmental
+29:52
+lighting again use nodes that environmental texture find an HDR that
+29:58
+will work or interior let's do corporate interior and I'll put the strength a
+30:04
+little bit and let's render this and see what happens all right that took two and
+30:19
+a half minutes about I'm running a 970 card so it's not the latest and greatest
+30:24
+this is a low it doesn't have a lot of
+30:29
+samples on it there's only 128 there's a lot of fireflies the Lighting's all
+30:35
+messed up as you can see you know some blue lighting there so it does in the
+30:40
+prefab it does specify the color lighting and I try to follow that so there's missing parts you can see the
+30:45
+the pipes just kind of seem to end in some places but you know for a quick test render this is a great starting
+30:51
+position for you to go modify and make this exactly the way you want it to be yeah and then you throw mechs in here
+30:56
+you throw people you can animate you can do all kinds of really fun stuff but yeah that's the prefab importer I
+31:04
+haven't checked out any of the other prefabs just a mech lab here but feel
+31:10
+free to try them out on other prefabs and see what they look like and again as
+31:15
+I said there's no level and border yet so there's no real way of getting an entire level but maybe in the future
+31:21
+I'll keep working on this alright thanks for watching enjoy and go make some beautiful art
+31:29
+[Music]
