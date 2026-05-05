@@ -8,6 +8,7 @@
 - **Animation demo:** KCD2 Boar (path TBD — fill in your actual KCD2 extraction location)
 
 **Shell:** PowerShell inside Windows Terminal — encourage viewers to install Windows Terminal.
+**Setup:** lead with the Inno Setup installer (`cgf-converter-setup-X.Y.Z.exe`); reference the loose `cgf-converter.exe` only briefly for power users / CI.
 **No drag-and-drop:** intentionally omitted because dropping a `.cgf` on the .exe means no `-objectdir` and broken materials.
 
 ---
@@ -45,18 +46,23 @@
 ## 1:30 – 3:00 — Setup
 
 **ON SCREEN:**
-1. Browser → `github.com/Markemp/Cryengine-Converter/releases`. Click latest release. Download `cgf-converter.exe`.
-2. Move it into a `D:\scripts` directory.
-3. Brief shot of System → Environment Variables → PATH containing `D:\scripts`. (Don't dwell — link in description.)
-4. Open Windows Terminal. If you don't have it, install from Microsoft Store on screen.
-5. PowerShell prompt. Type `cgf-converter`. Show the usage banner.
+1. Browser → `github.com/Markemp/Cryengine-Converter/releases`. Click latest release. Show the assets list — point at `cgf-converter-setup-2.0.0.exe`.
+2. Download. Double-click. Show the Inno Setup wizard.
+3. Click through quickly: License → Tasks (leave "Add to PATH" checked) → Install. ~5 seconds of progress bar.
+4. **Cut to a freshly opened Windows Terminal.** PowerShell tab. Type `cgf-converter -usage`. Usage banner appears. Highlight the `+` SHA suffix on the version line.
 
 **SPOKEN:**
-> "First thing, grab the latest release from the GitHub page — link's in the description. There's a single self-contained Windows executable, around 120 megs. It's got everything baked in, no .NET install needed, no dependencies.
+> "Setup is way easier in v2 than it used to be. Grab the latest release from the GitHub page — link's in the description. There's a Windows installer right at the top of the assets list — `cgf-converter-setup-2.0.0.exe`.
 >
-> What I like to do is drop it into a `scripts` directory and put that on my PATH. I'm not going to walk through editing the PATH — there's a million tutorials for that already, link in the description if you need one — but you really do want to do it. Otherwise you're typing the full path to the .exe every single time, which is just a pain.
+> Run it. Click through the wizard. The default install is per-user, so no admin password — and there's a checkbox for 'Add to PATH', which is checked by default. Just leave it checked. The whole thing takes maybe ten seconds.
 >
-> Now, **about your terminal.** If you're still using the old Windows PowerShell window or the classic command prompt — install Windows Terminal. It's free in the Microsoft Store, it handles colors and Unicode and resizing properly, and it'll save you a lot of frustration. The Cryengine Converter is a command-line tool, and a good terminal makes a real difference. So that's my recommendation — Windows Terminal with a PowerShell tab.
+> One thing the installer can't do is refresh your *currently open* terminals. If you have a PowerShell window open from before the install, close it and open a new one. The new one picks up the PATH change automatically.
+>
+> Speaking of terminals — **about your terminal.** If you're still using the old Windows PowerShell console or the classic command prompt, do yourself a favor and install Windows Terminal. It's free in the Microsoft Store, it handles colors and Unicode and resizing properly, and it'll save you a lot of frustration. The Cryengine Converter is a command-line tool, and a good terminal makes a real difference. So that's my recommendation — Windows Terminal with a PowerShell tab.
+>
+> Quick verification: `cgf-converter -usage`. You should see the usage banner. Note the version line — that little plus-sign and hash on the end is the git commit the binary was built from. Useful if you're reporting a bug.
+>
+> One more note for the power users out there: there's also a raw `cgf-converter.exe` in the releases assets, if you'd rather PATH-it-yourself or use it in a CI pipeline. The installer also supports silent install — `/VERYSILENT /CURRENTUSER` — so you can drop it into a Dockerfile or provisioning script. Details in the README. For everyone else, the installer is the easy path.
 >
 > The last thing you need is a Cryengine game with the `.pak` files extracted. Mechwarrior Online, Star Citizen, Hunt: Showdown, Crysis, Kingdom Come Deliverance — anything Cryengine. Use 7-Zip — right-click on a `.pak` file, '7-Zip → Extract Here'. You'll end up with a directory tree that has folders like `Objects`, `Textures`, and `Materials` at the top. We'll call that the **data directory**. Remember it — we're going to point the converter at it constantly."
 
@@ -266,10 +272,9 @@
 - **Cuts to Blender** can be quick — viewers don't need to see Blender boot. Cut directly to the import dialog.
 - **Description should include:**
   - GitHub repo: https://github.com/Markemp/Cryengine-Converter
-  - Latest release page
+  - Latest release page (direct link, so installer is one click away)
   - 7-Zip
   - Windows Terminal (Microsoft Store)
-  - Adding to PATH guide (any decent one)
   - The recursive PowerShell one-liner as plain text
   - Part 2 (placeholder until recorded)
 - **YouTube chapters** — mirror the section headings: Setup, First Conversion, Output Formats, ObjectDir, Bulk Conversion, Animations, Star Citizen, Outro.
