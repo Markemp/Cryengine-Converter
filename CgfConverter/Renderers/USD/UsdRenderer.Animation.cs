@@ -134,8 +134,13 @@ public partial class UsdRenderer
             return animations;
         }
 
-        // Set header timeline info if we have animations
+        // Set header timeline info if we have animations.
+        // Both timeCodesPerSecond AND framesPerSecond must be set: USD treats them as
+        // distinct (timeCodes are logical units; framesPerSecond is the playback hint).
+        // Blender's USD importer reads framesPerSecond for the scene FPS — when missing,
+        // it falls back to 24fps and the imported frame range can collapse to 0.
         header.TimeCodesPerSecond = 30;
+        header.FramesPerSecond = 30;
         header.StartTimeCode = 0;
         header.EndTimeCode = maxEndFrame;
 
@@ -1227,6 +1232,7 @@ public partial class UsdRenderer
             {
                 DefaultPrim = _rootPrimName,
                 TimeCodesPerSecond = 30,
+                FramesPerSecond = 30,
                 StartTimeCode = 0,
                 EndTimeCode = endFrame
             }

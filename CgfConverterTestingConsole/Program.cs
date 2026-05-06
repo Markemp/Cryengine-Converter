@@ -466,8 +466,7 @@ static void RunCustom(CryEngine cryData)
                             var boneName = bone?.BoneName ?? $"unknown_{hash:X8}";
                             bool isFocus = focusBones.Contains(boneName);
 
-                            if (!isFocus) continue;
-
+                            // Print every bone so we can spot SNORM ones for cross-checking.
                             var posFormat = IvoAnimationHelpers.GetPositionFormat(ctrl.PosFormatFlags);
                             Console.Write($"      {boneName,-40} hash=0x{hash:X08} fmt={posFormat,-15} posKeys={ctrl.NumPosKeys}");
 
