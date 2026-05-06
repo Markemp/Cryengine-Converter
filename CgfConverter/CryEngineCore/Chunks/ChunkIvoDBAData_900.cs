@@ -84,6 +84,15 @@ internal sealed class ChunkIvoDBAData_900 : ChunkIvoDBAData
                 };
             }
 
+            // The next #dba block starts immediately after this block's controller
+            // headers. Verified against AEGS Avenger landing-gear DBA: blocks are
+            // packed header-back-to-header (12 + 4*bones + 24*bones), and the
+            // shared keyframe pool follows all the headers. DataSize is NOT the
+            // stride to the next block — it's the per-animation keyframe-pool
+            // size, used only as a hint. Capture the position now, before
+            // ParseAnimationData seeks around inside the keyframe pool.
+            long positionAfterHeaders = b.BaseStream.Position;
+
             // Create animation block with parsed data
             var animBlock = new IvoAnimationBlock
             {
@@ -98,24 +107,8 @@ internal sealed class ChunkIvoDBAData_900 : ChunkIvoDBAData
 
             AnimationBlocks.Add(animBlock);
 
-            // Advance to next block. DataSize covers the entire block from its start
-            // (including sig + BoneCount + Magic + DataSize fields), consistent with CAF.
-            long nextBlockStart = blockStart + header.DataSize;
-            b.BaseStream.Seek(nextBlockStart, SeekOrigin.Begin);
-
-            // Diagnostic: warn if the next position looks wrong (not at a #dba sig or dataEnd)
-            if (nextBlockStart < dataEnd)
-            {
-                long savedPos = b.BaseStream.Position;
-                string nextSig = Encoding.ASCII.GetString(b.ReadBytes(4));
-                if (nextSig != "#dba")
-                {
-                    HelperMethods.Log(LogLevelEnum.Warning,
-                        $"ChunkIvoDBAData_900: Expected #dba at block {blockIndex + 1} start (0x{nextBlockStart:X}), got '{nextSig}'. DataSize={header.DataSize}");
-                }
-                b.BaseStream.Seek(savedPos, SeekOrigin.Begin);
-            }
-
+            // Restore position to the start of the next block's header
+            b.BaseStream.Seek(positionAfterHeaders, SeekOrigin.Begin);
             blockIndex++;
         }
 

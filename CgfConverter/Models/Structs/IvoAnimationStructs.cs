@@ -58,19 +58,21 @@ public static class IvoAnimationHelpers
     public static byte GetTimeFormat(ushort formatFlags) => (byte)(formatFlags & 0x0F);
 
     /// <summary>
-    /// Decompresses a SNORM int16 value to float using per-bone local bounds.
-    /// The 24-byte header stores rangeMin and rangeMax for each axis.
-    /// Formula: rangeMin + ((snormValue + 32767) / 65534.0f) * (rangeMax - rangeMin)
+    /// Decompresses a quantized u16 position value using per-bone scale and offset.
+    /// The 24-byte header stores [scale Vec3, offset Vec3]. Despite the historical
+    /// "SNORM" naming, the value is read as an unsigned 16-bit integer.
+    /// Formula: u16 * scale + offset (per axis).
+    /// Cross-validated against StarBreaker's reference reader on AEGS Avenger DBA.
     /// </summary>
-    public static float DecompressSNorm(short snormValue, float rangeMin, float rangeMax)
-        => rangeMin + ((snormValue + 32767) / 65534.0f) * (rangeMax - rangeMin);
+    public static float DecompressSNorm(ushort u16Value, float scale, float offset)
+        => u16Value * scale + offset;
 
     /// <summary>
     /// Checks if a channel is active. Inactive channels use FLT_MAX as a sentinel
-    /// in the rangeMin field of the 24-byte SNORM header.
+    /// in the scale component of the 24-byte position header.
     /// </summary>
-    public static bool IsChannelActive(float rangeMinValue)
-        => rangeMinValue < FltMaxSentinel;
+    public static bool IsChannelActive(float scaleValue)
+        => MathF.Abs(scaleValue) < FltMaxSentinel;
 
     /// <summary>
     /// Reads time keys from a binary reader based on format flags.
@@ -173,22 +175,22 @@ public static class IvoAnimationHelpers
                 break;
 
             case IvoPositionFormat.SNormFull:
-                // 0xC1xx: SNORM with 24-byte header, all channels (6 bytes per key)
+                // 0xC1xx: 24-byte header followed by 6 bytes per key.
+                // Header layout: [scale Vec3, offset Vec3]. All three axes present.
+                // Per-axis decode: u16 * scale + offset.
                 {
-                    // Read 24-byte header: rangeMin (12 bytes) + rangeMax (12 bytes)
-                    // Each i16 maps the full [-32767, +32767] range to [rangeMin, rangeMax]
-                    Vector3 rangeMin = ReadVector3(b);
-                    Vector3 rangeMax = ReadVector3(b);
+                    Vector3 scale = ReadVector3(b);
+                    Vector3 offset = ReadVector3(b);
 
                     for (int i = 0; i < count; i++)
                     {
-                        short sx = b.ReadInt16();
-                        short sy = b.ReadInt16();
-                        short sz = b.ReadInt16();
+                        ushort sx = b.ReadUInt16();
+                        ushort sy = b.ReadUInt16();
+                        ushort sz = b.ReadUInt16();
 
-                        float x = DecompressSNorm(sx, rangeMin.X, rangeMax.X);
-                        float y = DecompressSNorm(sy, rangeMin.Y, rangeMax.Y);
-                        float z = DecompressSNorm(sz, rangeMin.Z, rangeMax.Z);
+                        float x = DecompressSNorm(sx, scale.X, offset.X);
+                        float y = DecompressSNorm(sy, scale.Y, offset.Y);
+                        float z = DecompressSNorm(sz, scale.Z, offset.Z);
 
                         positions.Add(new Vector3(x, y, z));
                     }
@@ -196,36 +198,23 @@ public static class IvoAnimationHelpers
                 break;
 
             case IvoPositionFormat.SNormPacked:
-                // 0xC2xx: SNORM with 24-byte header, packed active channels only
+                // 0xC2xx: 24-byte header followed by 2 bytes per active axis per key,
+                // interleaved (verified empirically vs StarBreaker hex dump).
+                // Header layout: [scale Vec3, offset Vec3]. Inactive axes use FLT_MAX
+                // sentinel in the scale field; their value is just `offset` for every key.
                 {
-                    // Read 24-byte header: rangeMin (12 bytes) + rangeMax (12 bytes)
-                    // Inactive channels use FLT_MAX as sentinel in rangeMin
-                    Vector3 rangeMin = ReadVector3(b);
-                    Vector3 rangeMax = ReadVector3(b);
+                    Vector3 scale = ReadVector3(b);
+                    Vector3 offset = ReadVector3(b);
 
-                    bool xActive = IsChannelActive(rangeMin.X);
-                    bool yActive = IsChannelActive(rangeMin.Y);
-                    bool zActive = IsChannelActive(rangeMin.Z);
+                    bool xActive = IsChannelActive(scale.X);
+                    bool yActive = IsChannelActive(scale.Y);
+                    bool zActive = IsChannelActive(scale.Z);
 
                     for (int i = 0; i < count; i++)
                     {
-                        float x = 0, y = 0, z = 0;
-
-                        if (xActive)
-                        {
-                            short sx = b.ReadInt16();
-                            x = DecompressSNorm(sx, rangeMin.X, rangeMax.X);
-                        }
-                        if (yActive)
-                        {
-                            short sy = b.ReadInt16();
-                            y = DecompressSNorm(sy, rangeMin.Y, rangeMax.Y);
-                        }
-                        if (zActive)
-                        {
-                            short sz = b.ReadInt16();
-                            z = DecompressSNorm(sz, rangeMin.Z, rangeMax.Z);
-                        }
+                        float x = xActive ? DecompressSNorm(b.ReadUInt16(), scale.X, offset.X) : offset.X;
+                        float y = yActive ? DecompressSNorm(b.ReadUInt16(), scale.Y, offset.Y) : offset.Y;
+                        float z = zActive ? DecompressSNorm(b.ReadUInt16(), scale.Z, offset.Z) : offset.Z;
 
                         positions.Add(new Vector3(x, y, z));
                     }

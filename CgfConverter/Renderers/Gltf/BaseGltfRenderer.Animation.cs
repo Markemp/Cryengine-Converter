@@ -460,11 +460,6 @@ public partial class BaseGltfRenderer
     {
         newAnimation = new GltfAnimation { Name = animName };
 
-        // Build hash → controller index map for posFormat lookup
-        var hashToControllerIndex = block.BoneHashes
-            .Select((hash, idx) => (hash, idx))
-            .ToDictionary(x => x.hash, x => x.idx);
-
         foreach (var boneHash in block.BoneHashes)
         {
             // Try to find node by bone hash (CRC32 of bone name)
@@ -505,16 +500,12 @@ public partial class BaseGltfRenderer
                         $"ivo_dba/{animName}/pos_time/{boneHash:X08}", -1, null,
                         keyTimes.Select(t => (t - startTime) / 30f).ToArray());
 
-                    // C0 (float) = absolute local positions, use directly.
-                    // C1/C2 (SNORM) = delta from rest pose, add rest translation first.
-                    ushort posFormat = hashToControllerIndex.TryGetValue(boneHash, out var ctrlIdx)
-                        && ctrlIdx < block.Controllers.Length
-                        ? block.Controllers[ctrlIdx].PosFormatFlags
-                        : (ushort)0;
-                    bool isAbsolute = IvoAnimationHelpers.GetPositionFormat(posFormat) == IvoPositionFormat.FloatVector3;
-
+                    // All Ivo position formats decode to absolute local positions.
+                    // C0 (float) is stored as a raw Vector3; C1/C2 (SNORM) decode through
+                    // a per-bone [rangeMin, rangeMax] header that maps int16 linearly into
+                    // absolute world bounds. No rest translation should be added.
                     var absolutePositions = positions
-                        .Select(p => SwapAxesForPosition(isAbsolute ? p : restTranslation + p))
+                        .Select(SwapAxesForPosition)
                         .ToArray();
 
                     var posAccessor = AddAccessor(
