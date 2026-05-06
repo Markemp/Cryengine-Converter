@@ -373,7 +373,7 @@ public class ManualRenderTests
     [TestMethod]
     public void Aloprat_USD()
     {
-        RenderToUsd($@"{sc46ObjectDir}\Objects\Characters\Creatures\aloprat\aloprat_skel.chr", sc46ObjectDir);
+        RenderToUsd($@"{sc46ObjectDir}\Objects\Characters\Creatures\aloprat\aloprat_skel.chr", sc46ObjectDir, includeAnimations: true);
     }
 
     [TestMethod]
@@ -427,7 +427,7 @@ public class ManualRenderTests
     [TestMethod]
     public void AEGS_Avenger_LandingGear_Back_USD()
     {
-        RenderToUsd($@"{sc46ObjectDir}\Objects\Spaceships\Ships\AEGS\LandingGear\Avenger\AEGS_Avenger_LandingGear_Back_CHR.chr", sc41ObjectDir);
+        RenderToUsd($@"{sc46ObjectDir}\Objects\Spaceships\Ships\AEGS\LandingGear\Avenger\AEGS_Avenger_LandingGear_Back_CHR.chr", sc41ObjectDir, includeAnimations: true);
     }
 
     [TestMethod]

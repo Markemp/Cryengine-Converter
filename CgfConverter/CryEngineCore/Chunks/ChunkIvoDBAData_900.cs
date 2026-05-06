@@ -84,10 +84,13 @@ internal sealed class ChunkIvoDBAData_900 : ChunkIvoDBAData
                 };
             }
 
-            // Save position after controller headers - this is where the next block starts!
-            // DBA format: headers are sequential, keyframe data is at the end accessed via offsets.
-            // The next #dba block starts right after the current block's controller headers,
-            // NOT at blockEnd (which is where this block's keyframe data extends to).
+            // The next #dba block starts immediately after this block's controller
+            // headers. Verified against AEGS Avenger landing-gear DBA: blocks are
+            // packed header-back-to-header (12 + 4*bones + 24*bones), and the
+            // shared keyframe pool follows all the headers. DataSize is NOT the
+            // stride to the next block — it's the per-animation keyframe-pool
+            // size, used only as a hint. Capture the position now, before
+            // ParseAnimationData seeks around inside the keyframe pool.
             long positionAfterHeaders = b.BaseStream.Position;
 
             // Create animation block with parsed data
@@ -104,7 +107,7 @@ internal sealed class ChunkIvoDBAData_900 : ChunkIvoDBAData
 
             AnimationBlocks.Add(animBlock);
 
-            // Restore position to after headers - next block starts here, not at blockEnd
+            // Restore position to the start of the next block's header
             b.BaseStream.Seek(positionAfterHeaders, SeekOrigin.Begin);
             blockIndex++;
         }
@@ -145,7 +148,7 @@ internal sealed class ChunkIvoDBAData_900 : ChunkIvoDBAData
 
                 // Parse rotation data
                 b.BaseStream.Seek(controllerStart + ctrl.RotDataOffset, SeekOrigin.Begin);
-                var rotations = IvoAnimationHelpers.ReadRotationKeys(b, ctrl.NumRotKeys);
+                var rotations = IvoAnimationHelpers.ReadRotationKeys(b, ctrl.NumRotKeys, ctrl.RotFormatFlags);
                 block.Rotations[boneHash] = rotations;
                 rotationCount++;
             }

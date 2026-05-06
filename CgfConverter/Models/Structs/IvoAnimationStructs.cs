@@ -1,3 +1,4 @@
+using Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -57,17 +58,21 @@ public static class IvoAnimationHelpers
     public static byte GetTimeFormat(ushort formatFlags) => (byte)(formatFlags & 0x0F);
 
     /// <summary>
-    /// Decompresses a SNORM int16 value to float using scale factor.
-    /// Formula: (snormValue / 32767.0f) * scale
+    /// Decompresses a quantized u16 position value using per-bone scale and offset.
+    /// The 24-byte header stores [scale Vec3, offset Vec3]. Despite the historical
+    /// "SNORM" naming, the value is read as an unsigned 16-bit integer.
+    /// Formula: u16 * scale + offset (per axis).
+    /// Cross-validated against StarBreaker's reference reader on AEGS Avenger DBA.
     /// </summary>
-    public static float DecompressSNorm(short snormValue, float scale)
-        => (snormValue / 32767.0f) * scale;
+    public static float DecompressSNorm(ushort u16Value, float scale, float offset)
+        => u16Value * scale + offset;
 
     /// <summary>
-    /// Checks if a channel is active (not masked with FLT_MAX sentinel).
+    /// Checks if a channel is active. Inactive channels use FLT_MAX as a sentinel
+    /// in the scale component of the 24-byte position header.
     /// </summary>
-    public static bool IsChannelActive(float channelMaskValue)
-        => channelMaskValue < FltMaxSentinel;
+    public static bool IsChannelActive(float scaleValue)
+        => MathF.Abs(scaleValue) < FltMaxSentinel;
 
     /// <summary>
     /// Reads time keys from a binary reader based on format flags.
@@ -114,23 +119,31 @@ public static class IvoAnimationHelpers
     }
 
     /// <summary>
-    /// Reads rotation keyframes (uncompressed quaternions).
+    /// Gets the rotation compression type from the high byte of format flags.
+    /// 0x80 = uncompressed (16 bytes), 0x82 = SmallTree48BitQuat (6 bytes).
+    /// </summary>
+    public static byte GetRotationCompression(ushort formatFlags) => (byte)((formatFlags >> 8) & 0xFF);
+
+    /// <summary>
+    /// Reads rotation keyframes, dispatching on the compression type in the high byte of formatFlags.
     /// </summary>
     /// <param name="b">Binary reader positioned at rotation data.</param>
     /// <param name="count">Number of rotation keys.</param>
+    /// <param name="formatFlags">Rotation format flags. High byte: 0x80 = uncompressed, 0x82 = SmallTree48BitQuat.</param>
     /// <returns>List of quaternion rotations.</returns>
-    public static List<Quaternion> ReadRotationKeys(BinaryReader b, int count)
+    public static List<Quaternion> ReadRotationKeys(BinaryReader b, int count, ushort formatFlags)
     {
         var rotations = new List<Quaternion>(count);
+        byte compression = GetRotationCompression(formatFlags);
 
-        // Ivo CAF/DBA uses uncompressed quaternions (16 bytes each: x, y, z, w)
         for (int i = 0; i < count; i++)
         {
-            float x = b.ReadSingle();
-            float y = b.ReadSingle();
-            float z = b.ReadSingle();
-            float w = b.ReadSingle();
-            rotations.Add(new Quaternion(x, y, z, w));
+            Quaternion rot = compression switch
+            {
+                0x82 => b.ReadSmallTree48BitQuat(),   // SmallTree48BitQuat: 6 bytes, "smallest three" encoding
+                _    => b.ReadQuaternion(),            // 0x80 uncompressed: 16 bytes (x, y, z, w floats)
+            };
+            rotations.Add(rot);
         }
 
         return rotations;
@@ -162,21 +175,22 @@ public static class IvoAnimationHelpers
                 break;
 
             case IvoPositionFormat.SNormFull:
-                // 0xC1xx: SNORM with 24-byte header, all channels (6 bytes per key)
+                // 0xC1xx: 24-byte header followed by 6 bytes per key.
+                // Header layout: [scale Vec3, offset Vec3]. All three axes present.
+                // Per-axis decode: u16 * scale + offset.
                 {
-                    // Read 24-byte header: channelMask (12 bytes) + scale (12 bytes)
-                    Vector3 channelMask = ReadVector3(b);
                     Vector3 scale = ReadVector3(b);
+                    Vector3 offset = ReadVector3(b);
 
                     for (int i = 0; i < count; i++)
                     {
-                        short sx = b.ReadInt16();
-                        short sy = b.ReadInt16();
-                        short sz = b.ReadInt16();
+                        ushort sx = b.ReadUInt16();
+                        ushort sy = b.ReadUInt16();
+                        ushort sz = b.ReadUInt16();
 
-                        float x = DecompressSNorm(sx, scale.X);
-                        float y = DecompressSNorm(sy, scale.Y);
-                        float z = DecompressSNorm(sz, scale.Z);
+                        float x = DecompressSNorm(sx, scale.X, offset.X);
+                        float y = DecompressSNorm(sy, scale.Y, offset.Y);
+                        float z = DecompressSNorm(sz, scale.Z, offset.Z);
 
                         positions.Add(new Vector3(x, y, z));
                     }
@@ -184,35 +198,23 @@ public static class IvoAnimationHelpers
                 break;
 
             case IvoPositionFormat.SNormPacked:
-                // 0xC2xx: SNORM with 24-byte header, packed active channels only
+                // 0xC2xx: 24-byte header followed by 2 bytes per active axis per key,
+                // interleaved (verified empirically vs StarBreaker hex dump).
+                // Header layout: [scale Vec3, offset Vec3]. Inactive axes use FLT_MAX
+                // sentinel in the scale field; their value is just `offset` for every key.
                 {
-                    // Read 24-byte header: channelMask (12 bytes) + scale (12 bytes)
-                    Vector3 channelMask = ReadVector3(b);
                     Vector3 scale = ReadVector3(b);
+                    Vector3 offset = ReadVector3(b);
 
-                    bool xActive = IsChannelActive(channelMask.X);
-                    bool yActive = IsChannelActive(channelMask.Y);
-                    bool zActive = IsChannelActive(channelMask.Z);
+                    bool xActive = IsChannelActive(scale.X);
+                    bool yActive = IsChannelActive(scale.Y);
+                    bool zActive = IsChannelActive(scale.Z);
 
                     for (int i = 0; i < count; i++)
                     {
-                        float x = 0, y = 0, z = 0;
-
-                        if (xActive)
-                        {
-                            short sx = b.ReadInt16();
-                            x = DecompressSNorm(sx, scale.X);
-                        }
-                        if (yActive)
-                        {
-                            short sy = b.ReadInt16();
-                            y = DecompressSNorm(sy, scale.Y);
-                        }
-                        if (zActive)
-                        {
-                            short sz = b.ReadInt16();
-                            z = DecompressSNorm(sz, scale.Z);
-                        }
+                        float x = xActive ? DecompressSNorm(b.ReadUInt16(), scale.X, offset.X) : offset.X;
+                        float y = yActive ? DecompressSNorm(b.ReadUInt16(), scale.Y, offset.Y) : offset.Y;
+                        float z = zActive ? DecompressSNorm(b.ReadUInt16(), scale.Z, offset.Z) : offset.Z;
 
                         positions.Add(new Vector3(x, y, z));
                     }

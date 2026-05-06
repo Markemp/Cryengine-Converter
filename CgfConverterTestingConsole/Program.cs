@@ -24,7 +24,7 @@ for (int i = 1; i < args.Length; i++)
     {
         objectDir = args[++i];
     }
-    else if (arg.StartsWith("--dump-") || arg == "--custom")
+    else if (arg.StartsWith("--dump-") || arg == "--custom" || arg == "--ivo-raw")
     {
         command = arg;
         commandIndex = i;
@@ -42,6 +42,14 @@ if (!File.Exists(filePath))
 {
     Console.Error.WriteLine($"File not found: {filePath}");
     return 1;
+}
+
+// --ivo-raw runs without going through CryEngine processing — walks the IVO
+// container and DB_DATA blocks directly against StarBreaker whitepaper layout.
+if (command == "--ivo-raw")
+{
+    DumpIvoRaw(filePath);
+    return 0;
 }
 
 // Parse and process the file
@@ -458,10 +466,9 @@ static void RunCustom(CryEngine cryData)
                             var boneName = bone?.BoneName ?? $"unknown_{hash:X8}";
                             bool isFocus = focusBones.Contains(boneName);
 
-                            if (!isFocus) continue;
-
+                            // Print every bone so we can spot SNORM ones for cross-checking.
                             var posFormat = IvoAnimationHelpers.GetPositionFormat(ctrl.PosFormatFlags);
-                            Console.Write($"      {boneName,-40} fmt={posFormat,-15} posKeys={ctrl.NumPosKeys}");
+                            Console.Write($"      {boneName,-40} hash=0x{hash:X08} fmt={posFormat,-15} posKeys={ctrl.NumPosKeys}");
 
                             if (block.Positions.TryGetValue(hash, out var positions) && positions.Count > 0)
                                 Console.Write($"  parsed[0]=({positions[0].X:F6}, {positions[0].Y:F6}, {positions[0].Z:F6})");
@@ -531,6 +538,167 @@ static void RunCustom(CryEngine cryData)
                     }
                 }
             }
+        }
+    }
+}
+
+static void DumpIvoRaw(string path)
+{
+    using var fs = File.OpenRead(path);
+    using var br = new BinaryReader(fs);
+
+    // IVO header per StarBreaker whitepaper
+    string magic = System.Text.Encoding.ASCII.GetString(br.ReadBytes(4));
+    uint version = br.ReadUInt32();
+    uint chunkCount = br.ReadUInt32();
+    uint chunkTableOffset = br.ReadUInt32();
+    Console.WriteLine($"IVO header: magic='{magic}' version=0x{version:X} chunks={chunkCount} tableOffset=0x{chunkTableOffset:X}");
+    Console.WriteLine($"File size: 0x{fs.Length:X} ({fs.Length})\n");
+
+    if (magic != "#ivo") { Console.WriteLine("Not an #ivo file."); return; }
+
+    // Chunk table: 16 bytes per entry — type(u32), version(u32), fileOffset(u64)
+    fs.Seek(chunkTableOffset, SeekOrigin.Begin);
+    var chunks = new List<(uint type, uint ver, ulong off)>();
+    for (int i = 0; i < chunkCount; i++)
+    {
+        uint t = br.ReadUInt32();
+        uint v = br.ReadUInt32();
+        ulong o = br.ReadUInt64();
+        chunks.Add((t, v, o));
+        Console.WriteLine($"  chunk[{i}]: type=0x{t:X8} version=0x{v:X} fileOffset=0x{o:X}");
+    }
+    Console.WriteLine();
+
+    // Locate DB_DATA chunk (0x194FBC50)
+    var dbData = chunks.Find(c => c.type == 0x194FBC50);
+    if (dbData.off == 0) { Console.WriteLine("No DB_DATA chunk in this file."); return; }
+
+    Console.WriteLine($"=== Walking DB_DATA at file offset 0x{dbData.off:X} ===\n");
+    fs.Seek((long)dbData.off, SeekOrigin.Begin);
+
+    // First u32 of DB_DATA payload is total_size (per whitepaper)
+    long payloadStart = fs.Position;
+    uint totalSize = br.ReadUInt32();
+    Console.WriteLine($"total_size (first u32): 0x{totalSize:X} ({totalSize})");
+    Console.WriteLine($"payload starts at 0x{payloadStart:X}, blocks start at 0x{fs.Position:X}\n");
+
+    // Walk blocks per whitepaper layout:
+    //   +0x00 '#dba' (4)  +0x04 bone_count (u16)  +0x06 0xAA55 (u16)  +0x08 data_size (u32)
+    int blockIndex = 0;
+    while (true)
+    {
+        long blockStart = fs.Position;
+        if (blockStart >= fs.Length - 4) { Console.WriteLine($"Reached EOF at 0x{blockStart:X}."); break; }
+
+        byte[] sigBytes = br.ReadBytes(4);
+        string sig = System.Text.Encoding.ASCII.GetString(sigBytes);
+        ushort boneCount = br.ReadUInt16();
+        ushort magic2 = br.ReadUInt16();
+        uint dataSize = br.ReadUInt32();
+
+        Console.WriteLine($"Block[{blockIndex}] @ 0x{blockStart:X}: sig='{sig}' bones={boneCount} magic=0x{magic2:X4} data_size=0x{dataSize:X} ({dataSize})");
+        Console.WriteLine($"  raw sig bytes: {sigBytes[0]:X2} {sigBytes[1]:X2} {sigBytes[2]:X2} {sigBytes[3]:X2}");
+
+        if (sig != "#dba")
+        {
+            Console.WriteLine("  Not '#dba' — terminating loop per whitepaper rule.");
+            break;
+        }
+
+        long nextStart = blockStart + dataSize;
+        Console.WriteLine($"  blockStart + data_size = 0x{nextStart:X}");
+
+        // Peek what's at nextStart
+        if (nextStart < fs.Length - 4)
+        {
+            long savedPos = fs.Position;
+            fs.Seek(nextStart, SeekOrigin.Begin);
+            byte[] peek = br.ReadBytes(4);
+            string peekStr = System.Text.Encoding.ASCII.GetString(peek);
+            Console.WriteLine($"  peek at 0x{nextStart:X}: '{peekStr}' (raw: {peek[0]:X2} {peek[1]:X2} {peek[2]:X2} {peek[3]:X2})");
+
+            // Also check a few candidate offsets: alignment + small padding
+            foreach (long delta in new long[] { 4, 8, 16, 32, 48 })
+            {
+                long alt = nextStart + delta;
+                if (alt + 4 > fs.Length) continue;
+                fs.Seek(alt, SeekOrigin.Begin);
+                byte[] altBytes = br.ReadBytes(4);
+                string altStr = System.Text.Encoding.ASCII.GetString(altBytes);
+                if (altStr == "#dba" || altStr == "#caf")
+                    Console.WriteLine($"  >>> '#dba'/'#caf' actually found at 0x{alt:X} (= nextStart + {delta}) <<<");
+            }
+
+            fs.Seek(savedPos, SeekOrigin.Begin);
+        }
+
+        // Scan whole file for all #dba/#caf magics — print ALL of them
+        if (blockIndex == 0)
+        {
+            Console.WriteLine("  All '#dba'/'#caf' magic occurrences in file:");
+            for (long p = 0; p < fs.Length - 4; p++)
+            {
+                fs.Seek(p, SeekOrigin.Begin);
+                byte[] b4 = br.ReadBytes(4);
+                bool isDba = b4[0] == (byte)'#' && b4[1] == (byte)'d' && b4[2] == (byte)'b' && b4[3] == (byte)'a';
+                bool isCaf = b4[0] == (byte)'#' && b4[1] == (byte)'c' && b4[2] == (byte)'a' && b4[3] == (byte)'f';
+                if (isDba || isCaf)
+                    Console.WriteLine($"    0x{p:X}  '{(isDba ? "#dba" : "#caf")}'");
+            }
+        }
+        Console.WriteLine();
+
+        // Advance: try ALTERNATE stride — header(12) + boneHashes(4*n) + controllers(24*n)
+        long altStride = 12 + 4 * boneCount + 24 * boneCount;
+        long altNext = blockStart + altStride;
+        Console.WriteLine($"  alt stride (12 + 28*bones): 0x{altStride:X}  → next at 0x{altNext:X}");
+
+        // Use alt stride for actual iteration to walk full chain
+        fs.Seek(altNext, SeekOrigin.Begin);
+        blockIndex++;
+        if (blockIndex > 8) { Console.WriteLine("Stopping after 8 blocks."); break; }
+    }
+
+    // Now also try walking via DBA_META to cross-check expected animation count
+    Console.WriteLine();
+    var dbaMeta = chunks.Find(c => c.type == 0xF7351608);
+    if (dbaMeta.off != 0)
+    {
+        Console.WriteLine($"=== DBA_META at 0x{dbaMeta.off:X} (version 0x{dbaMeta.ver:X}) ===");
+        fs.Seek((long)dbaMeta.off, SeekOrigin.Begin);
+        uint count = br.ReadUInt32();
+        Console.WriteLine($"  count (animations): {count}");
+        for (int i = 0; i < count; i++)
+        {
+            long entryStart = fs.Position;
+            uint flags0 = br.ReadUInt32();
+            uint flags1 = br.ReadUInt32();
+            ushort fps = br.ReadUInt16();
+            ushort numCtrls = br.ReadUInt16();
+            uint ver2 = br.ReadUInt32();
+            uint pad = br.ReadUInt32();
+            uint endFrame = br.ReadUInt32();
+            // start_rotation (16) + start_position (8) = 24
+            fs.Seek(entryStart + 48, SeekOrigin.Begin);
+            Console.WriteLine($"  entry[{i}]: flags=({flags0:X8},{flags1:X8}) fps={fps} numControllers={numCtrls} ver=0x{ver2:X} endFrame={endFrame}");
+        }
+
+        // Skip 4-byte NUL pad, then string table
+        fs.ReadByte(); fs.ReadByte(); fs.ReadByte(); fs.ReadByte();
+        long stringStart = fs.Position;
+        Console.WriteLine($"  string table at 0x{stringStart:X}:");
+        var sb = new System.Text.StringBuilder();
+        while (fs.Position < fs.Length)
+        {
+            byte ch = br.ReadByte();
+            if (ch == 0)
+            {
+                if (sb.Length > 0) { Console.WriteLine($"    \"{sb}\""); sb.Clear(); }
+                else break; // double-null = end
+            }
+            else sb.Append((char)ch);
+            if (fs.Position >= fs.Length) break;
         }
     }
 }

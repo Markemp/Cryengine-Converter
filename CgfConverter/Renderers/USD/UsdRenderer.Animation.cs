@@ -134,8 +134,13 @@ public partial class UsdRenderer
             return animations;
         }
 
-        // Set header timeline info if we have animations
+        // Set header timeline info if we have animations.
+        // Both timeCodesPerSecond AND framesPerSecond must be set: USD treats them as
+        // distinct (timeCodes are logical units; framesPerSecond is the playback hint).
+        // Blender's USD importer reads framesPerSecond for the scene FPS — when missing,
+        // it falls back to 24fps and the imported frame range can collapse to 0.
         header.TimeCodesPerSecond = 30;
+        header.FramesPerSecond = 30;
         header.StartTimeCode = 0;
         header.EndTimeCode = maxEndFrame;
 
@@ -457,27 +462,18 @@ public partial class UsdRenderer
                     ? restR
                     : Quaternion.Identity;
 
-                // Position interpretation depends on the storage format:
-                // - C0 (0xC0xx, raw float): ABSOLUTE local positions (replace rest translation)
-                // - C1/C2 (0xC1xx/0xC2xx, SNORM): DELTAS from rest (SNORM encodes offsets around zero)
-                // Evidence: C0 bones (UpPiston) have values near rest. C2 bones (MainWheel) in Block 1
-                // have (0,0,0) meaning "no change from rest" (zero delta), not "position at origin."
+                // All Ivo position formats decode to ABSOLUTE local positions.
+                //   C0 (0xC0xx) — raw float Vector3, used as-is.
+                //   C1/C2 (0xC1xx/0xC2xx) — SNORM int16 with a per-bone [rangeMin, rangeMax]
+                //     header that maps [-32767, +32767] linearly into absolute world bounds
+                //     (verified against AEGS Avenger DBA: rangeMax ≈ rest, rangeMin ≈ 0,
+                //     snorm=0 → midpoint of bounds, snorm=±32767 → endpoints).
+                // The previous "delta from rest" interpretation doubled the bone distance,
+                // because SNORM frames near rest were being added on top of rest.
                 Vector3 position;
                 if (trackPos is not null && trackPos.Count > 0)
                 {
-                    var rawValue = SampleIvoPositionDelta(trackPos, posTimes, frame);
-                    var posType = IvoAnimationHelpers.GetPositionFormat(posFormat);
-
-                    if (posType == IvoPositionFormat.FloatVector3)
-                    {
-                        // C0: raw float = absolute local position
-                        position = rawValue;
-                    }
-                    else
-                    {
-                        // C1/C2: SNORM compressed = delta from rest
-                        position = restTranslation + rawValue;
-                    }
+                    position = SampleIvoPositionDelta(trackPos, posTimes, frame);
                 }
                 else
                 {
@@ -1236,6 +1232,7 @@ public partial class UsdRenderer
             {
                 DefaultPrim = _rootPrimName,
                 TimeCodesPerSecond = 30,
+                FramesPerSecond = 30,
                 StartTimeCode = 0,
                 EndTimeCode = endFrame
             }
