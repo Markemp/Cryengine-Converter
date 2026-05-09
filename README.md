@@ -26,6 +26,18 @@ cgf-converter [-usage] | <.cgf file> [-outputfile <output file>] [-objectdir <Ob
 -throw:           Throw Exceptions to installed debugger
 ```
 
+### Building from source
+
+Building from source requires the .NET 9 SDK. The CLI project is `cgf-converter`.
+
+```
+dotnet build "Cryengine Converter.sln"
+```
+
+Local build output may include warnings such as an ImageSharp vulnerability advisory and a Microsoft.XmlSerializer.Generator / SGEN warning. These warnings were observed during local build verification and do not prevent the solution from building.
+
+Developer documentation: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+
 Ok, so how do you actually **USE** it?
 
 I'm going to assume you've already taken a Cryengine based game (Mechwarrior Online, Star Citizen, etc) and extracted the `.pak` files into a directory structure that essentially mimics a Cryengine layout.
