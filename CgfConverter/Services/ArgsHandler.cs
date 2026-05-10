@@ -431,6 +431,12 @@ public sealed class ArgsHandler
         Console.WriteLine("-throw:            Throw Exceptions to installed debugger.");
         Console.WriteLine("-dump:             Dump missing/bad chunk info for support.");
         Console.WriteLine();
+        Console.WriteLine(" Diagnostic commands:");
+        Console.WriteLine("cgf-converter scan-unknown-chunks <input> [options]");
+        Console.WriteLine("                   Scan .cgf .cga .chr .skin .anim .soc .caf .dba files for unknown or unsupported chunks.");
+        Console.WriteLine("                   Options: -recursive -format <console|csv|json> -out <file> -mt <n> -loglevel <lvl>");
+        Console.WriteLine("                   .json and .csv output paths infer report format when -format is omitted.");
+        Console.WriteLine();
     }
 
     public override string ToString() => $@"Input file: {InputFiles}, Object Dir: {string.Join(',', DataDir)}, Output file: {OutputFile}";

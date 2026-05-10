@@ -1,4 +1,5 @@
 ﻿using CgfConverter.Renderers;
+using CgfConverter.Diagnostics.ChunkScanning;
 using CgfConverter.Renderers.Collada;
 using CgfConverter.Renderers.Gltf;
 using CgfConverter.Renderers.Wavefront;
@@ -36,6 +37,9 @@ public class Program
         var customCulture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
         customCulture.NumberFormat.NumberDecimalSeparator = ".";
         Thread.CurrentThread.CurrentCulture = customCulture;
+
+        if (args.Length > 0 && args[0].Equals("scan-unknown-chunks", StringComparison.OrdinalIgnoreCase))
+            return ChunkScanCommand.Run(args.Skip(1).ToArray());
 
         var argsHandler = new ArgsHandler();
         var numErrorsOccurred = argsHandler.ProcessArgs(args);

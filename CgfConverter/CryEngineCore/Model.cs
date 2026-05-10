@@ -8,7 +8,7 @@ using CgfConverter.Services;
 
 namespace CgfConverter.CryEngineCore;
 
-public class Model
+public partial class Model
 {
     /// <summary> The Root of the loaded object </summary>
     public ChunkNode? RootNode { get; internal set; }
