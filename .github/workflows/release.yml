@@ -135,16 +135,28 @@ jobs:
           output-artifact-directory: cgf-converter\bin\Release\net9.0\win-x64\publish\signed
 
       - name: Replace unsigned exe with signed
-        # SignPath returns the signed artifact in the same envelope it received
-        # (zip, since our artifact config wraps in <zip-file>). Extract, then
-        # overwrite the original.
+        # SignPath's action may return the signed PE bare, or wrapped in a zip,
+        # or nested under a subdirectory named after the upload artifact. Be
+        # tolerant: dump the tree for diagnostics, then locate cgf-converter.exe
+        # wherever it actually landed and copy it over the unsigned original.
         shell: pwsh
         run: |
           $signedDir = "cgf-converter\bin\Release\net9.0\win-x64\publish\signed"
-          $zip = Get-ChildItem "$signedDir\*.zip" | Select-Object -First 1
-          if (-not $zip) { Write-Error "No signed zip found in $signedDir"; exit 1 }
-          Expand-Archive -Path $zip.FullName -DestinationPath "$signedDir\extracted" -Force
-          Copy-Item "$signedDir\extracted\cgf-converter.exe" `
+          Write-Host "Contents of $signedDir :"
+          Get-ChildItem $signedDir -Recurse | Select-Object FullName, Length | Format-Table -AutoSize
+
+          # If a zip is present, expand it
+          $zip = Get-ChildItem "$signedDir\*.zip" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($zip) {
+            Write-Host "Found zip $($zip.FullName); extracting..."
+            Expand-Archive -Path $zip.FullName -DestinationPath "$signedDir\extracted" -Force
+          }
+
+          # Find the signed exe wherever it ended up
+          $signed = Get-ChildItem $signedDir -Recurse -Filter cgf-converter.exe | Select-Object -First 1
+          if (-not $signed) { Write-Error "Signed cgf-converter.exe not found under $signedDir"; exit 1 }
+          Write-Host "Using signed exe at $($signed.FullName)"
+          Copy-Item $signed.FullName `
                     "cgf-converter\bin\Release\net9.0\win-x64\publish\cgf-converter.exe" -Force
 
       - name: Compile installer with Inno Setup
@@ -182,18 +194,24 @@ jobs:
           output-artifact-directory: installer\output\signed
 
       - name: Replace unsigned installer with signed
-        # SignPath returns the signed artifact in the same envelope it received
-        # (zip, since our artifact config wraps in <zip-file>). Extract, then
-        # overwrite the original.
+        # See "Replace unsigned exe with signed" comment above — same logic.
         shell: pwsh
         run: |
           $signedDir = "installer\output\signed"
-          $zip = Get-ChildItem "$signedDir\*.zip" | Select-Object -First 1
-          if (-not $zip) { Write-Error "No signed zip found in $signedDir"; exit 1 }
-          Expand-Archive -Path $zip.FullName -DestinationPath "$signedDir\extracted" -Force
           $installer = "cgf-converter-setup-${{ steps.version.outputs.version }}.exe"
-          Copy-Item "$signedDir\extracted\$installer" `
-                    "installer\output\$installer" -Force
+          Write-Host "Contents of $signedDir :"
+          Get-ChildItem $signedDir -Recurse | Select-Object FullName, Length | Format-Table -AutoSize
+
+          $zip = Get-ChildItem "$signedDir\*.zip" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($zip) {
+            Write-Host "Found zip $($zip.FullName); extracting..."
+            Expand-Archive -Path $zip.FullName -DestinationPath "$signedDir\extracted" -Force
+          }
+
+          $signed = Get-ChildItem $signedDir -Recurse -Filter $installer | Select-Object -First 1
+          if (-not $signed) { Write-Error "Signed $installer not found under $signedDir"; exit 1 }
+          Write-Host "Using signed installer at $($signed.FullName)"
+          Copy-Item $signed.FullName "installer\output\$installer" -Force
 
       - name: Stage release assets
         shell: pwsh
