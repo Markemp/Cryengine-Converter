@@ -102,14 +102,16 @@ jobs:
       # ─── Code signing via SignPath ───────────────────────────────────────
       # Signs cgf-converter.exe BEFORE the installer is compiled so the
       # signed binary gets bundled inside the installer. Then signs the
-      # installer itself so users see "Heffay Presents" in SmartScreen.
+      # installer itself so users see the verified publisher
+      # ("Cryengine Converter [OSS]") in SmartScreen.
       #
       # The SignPath action requires an artifact uploaded via upload-artifact
       # to get an artifact ID. After signing, the signed file is downloaded
       # back and copied over the unsigned original.
       #
-      # Swap signing-policy-slug to the production policy once the OSS
-      # cert is approved by SignPath Foundation.
+      # Org / project / policy are scoped to the SignPath Foundation OSS
+      # org. The release-signing policy is gated on the Certum-issued cert
+      # being uploaded to SignPath — until then signing requests will fail.
 
       - name: Upload cgf-converter.exe for signing
         id: upload-exe
@@ -122,8 +124,10 @@ jobs:
         uses: signpath/github-action-submit-signing-request@v1
         with:
           api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
-          organization-id: b57aa812-9618-42c4-842f-96ef43865425
-          project-slug: Cryengine_Converter
+          organization-id: 8379344c-28fc-42b2-94b3-f1303d6ee926
+          project-slug: Cryengine-Converter
+          # TEMPORARY: test-signing for end-to-end pipeline verification.
+          # Flip back to release-signing once the Certum cert lands.
           signing-policy-slug: test-signing
           github-artifact-id: ${{ steps.upload-exe.outputs.artifact-id }}
           wait-for-completion: true
@@ -159,8 +163,10 @@ jobs:
         uses: signpath/github-action-submit-signing-request@v1
         with:
           api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
-          organization-id: b57aa812-9618-42c4-842f-96ef43865425
-          project-slug: Cryengine_Converter
+          organization-id: 8379344c-28fc-42b2-94b3-f1303d6ee926
+          project-slug: Cryengine-Converter
+          # TEMPORARY: test-signing for end-to-end pipeline verification.
+          # Flip back to release-signing once the Certum cert lands.
           signing-policy-slug: test-signing
           github-artifact-id: ${{ steps.upload-installer.outputs.artifact-id }}
           wait-for-completion: true
