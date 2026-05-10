@@ -127,9 +127,7 @@ jobs:
           organization-id: 8379344c-28fc-42b2-94b3-f1303d6ee926
           project-slug: Cryengine-Converter
           artifact-configuration-slug: cgf-converter-exe
-          # TEMPORARY: test-signing for end-to-end pipeline verification.
-          # Flip back to release-signing once the Certum cert lands.
-          signing-policy-slug: test-signing
+          signing-policy-slug: release-signing
           github-artifact-id: ${{ steps.upload-exe.outputs.artifact-id }}
           wait-for-completion: true
           output-artifact-directory: cgf-converter\bin\Release\net9.0\win-x64\publish\signed
@@ -186,9 +184,7 @@ jobs:
           organization-id: 8379344c-28fc-42b2-94b3-f1303d6ee926
           project-slug: Cryengine-Converter
           artifact-configuration-slug: installer
-          # TEMPORARY: test-signing for end-to-end pipeline verification.
-          # Flip back to release-signing once the Certum cert lands.
-          signing-policy-slug: test-signing
+          signing-policy-slug: release-signing
           github-artifact-id: ${{ steps.upload-installer.outputs.artifact-id }}
           wait-for-completion: true
           output-artifact-directory: installer\output\signed
