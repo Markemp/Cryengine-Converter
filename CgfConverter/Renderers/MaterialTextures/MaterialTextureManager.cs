@@ -161,6 +161,14 @@ public class MaterialTextureManager
             if (!cryTextures.TryGetValue(mapType, out Texture? t))
                 continue;
 
+            // A <Texture> element with no File attribute deserializes to File == null (issue #263).
+            // Skip it rather than crash in ResolveTextureFile.
+            if (string.IsNullOrWhiteSpace(t.File))
+            {
+                _log.D("Texture (Map={0}) has no file path; skipping", mapType);
+                continue;
+            }
+
             // Build data dirs list: objectDir + material file's directory (for ./ relative paths)
             var dataDirs = new List<string>();
             if (_args.DataDir is not null)

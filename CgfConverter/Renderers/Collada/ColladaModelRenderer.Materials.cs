@@ -248,7 +248,7 @@ public partial class ColladaModelRenderer
         return colladaEffect;
     }
 
-    private ColladaMaterial AddMaterialToMaterialLibrary(string matKey, Material submat)
+    internal ColladaMaterial AddMaterialToMaterialLibrary(string matKey, Material submat)
     {
         var matName = GetMaterialName(matKey, submat?.Name ?? "unknown");
         ColladaMaterial material = new()
@@ -271,6 +271,14 @@ public partial class ColladaModelRenderer
 
         for (int i = 0; i < numberOfTextures; i++)
         {
+            // A <Texture> element with no File attribute deserializes to File == null (issue #263).
+            // It cannot produce an <image>, so skip it rather than crash in ResolveTextureFile.
+            if (string.IsNullOrWhiteSpace(submat.Textures[i].File))
+            {
+                Log.D($"Texture (Map={submat.Textures[i].Map}) on material \"{submat.Name}\" has no file path; skipping");
+                continue;
+            }
+
             // For each texture in the material, we make a new <image> object and add it to the list.
             var name = GetMaterialName(matKey, submat.Name);
             ColladaImage image = new()

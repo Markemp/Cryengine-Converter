@@ -3,6 +3,7 @@ using CgfConverter.Models.Materials;
 using CgfConverter.PackFileSystem;
 using CgfConverter.Renderers.Collada;
 using CgfConverter.Renderers.Collada.Collada.Collada_FX.Effects;
+using CgfConverter.Renderers.Collada.Collada.Collada_FX.Texturing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 
@@ -105,6 +106,26 @@ public class ColladaMaterialTests
         var specularRef = GetPhongSpecularTextureRef(effect);
         Assert.IsNotNull(specularRef, "Expected phong specular to be bound when only TexSlot10 is present");
         StringAssert.EndsWith(specularRef, "_TexSlot10-sampler");
+    }
+
+    [TestMethod]
+    public void AddMaterial_TextureWithNullFile_DoesNotThrowAndSkipsTexture()
+    {
+        // Issue #263: a <Texture> element with no File attribute deserializes to File == null.
+        // The Collada renderer passed that null straight into ResolveTextureFile, throwing
+        // ArgumentNullException and crashing the whole conversion. A fileless texture cannot
+        // produce an <image>, so it must be skipped (matching the USD renderer's behavior).
+        var subMat = BuildSubMaterial("broken",
+            ("Diffuse", null!),                 // offending fileless texture
+            ("Bumpmap", "valid_ddna.dds"));     // valid texture alongside it
+
+        renderer.DaeObject.Library_Images = new ColladaLibraryImages();
+
+        renderer.AddMaterialToMaterialLibrary("broken.mtl", subMat);
+
+        var images = renderer.DaeObject.Library_Images.Image;
+        Assert.IsNotNull(images, "Expected the valid texture to still produce an <image>");
+        Assert.AreEqual(1, images.Length, "Fileless texture should be skipped; only the valid one emitted");
     }
 
     [TestMethod]
