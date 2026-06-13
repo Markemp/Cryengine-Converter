@@ -77,7 +77,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "addtopath"; Description: "Add {#MyAppName} to PATH (recommended — required to run cgf-converter from any directory)"; GroupDescription: "Additional tasks:"; Flags: checkedonce
+Name: "addtopath"; Description: "Add {#MyAppName} to PATH (recommended — required to run cgf-converter from any directory)"; GroupDescription: "Additional tasks:"
 
 [Files]
 Source: "{#PublishDir}\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion

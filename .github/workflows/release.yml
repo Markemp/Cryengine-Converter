@@ -32,9 +32,36 @@ permissions:
   contents: write   # needed to create releases and upload assets
   actions: read     # needed for SignPath action to read artifact metadata
 
+# Serialize release runs. An accidental tag-push storm (or a runaway dispatch)
+# queues instead of fanning out into N parallel signing requests. We do NOT
+# cancel-in-progress: a run that's already mid-signing has likely submitted
+# a SignPath request, and cancelling here would leave that request orphaned
+# in SignPath's UI for someone to clean up manually.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: windows-latest
+    # Gate the entire job on a GitHub Environment with required reviewers.
+    # Even before SignPath sees a request, a human (you) has to click approve
+    # in the GitHub Actions UI. This means an attacker with only a stolen
+    # GitHub session can't trigger signing — they'd also need to bypass the
+    # environment approval, which is enforced server-side by GitHub.
+    #
+    # IMPORTANT: this YAML key is inert until the environment is configured
+    # in the repo settings:
+    #   Settings → Environments → New environment → "production-signing"
+    #     → Required reviewers: <your GitHub user>
+    #     → (optionally) Deployment branches: release/* and tags v*.*.*
+    environment: production-signing
+    # Production SignPath signing requires manual approval in the SignPath UI
+    # (Foundation OSS policy). The job idles between submitting a signing
+    # request and the reviewer clicking approve, so the default 6h job timeout
+    # is too tight for two sequential approvals (exe, then installer). 12h
+    # gives a full business day of slack.
+    timeout-minutes: 720
 
     steps:
       - name: Checkout
@@ -102,14 +129,16 @@ jobs:
       # ─── Code signing via SignPath ───────────────────────────────────────
       # Signs cgf-converter.exe BEFORE the installer is compiled so the
       # signed binary gets bundled inside the installer. Then signs the
-      # installer itself so users see "Heffay Presents" in SmartScreen.
+      # installer itself so users see the verified publisher
+      # ("Cryengine Converter [OSS]") in SmartScreen.
       #
       # The SignPath action requires an artifact uploaded via upload-artifact
       # to get an artifact ID. After signing, the signed file is downloaded
       # back and copied over the unsigned original.
       #
-      # Swap signing-policy-slug to the production policy once the OSS
-      # cert is approved by SignPath Foundation.
+      # Org / project / policy are scoped to the SignPath Foundation OSS
+      # org. The release-signing policy is gated on the Certum-issued cert
+      # being uploaded to SignPath — until then signing requests will fail.
 
       - name: Upload cgf-converter.exe for signing
         id: upload-exe
@@ -122,17 +151,40 @@ jobs:
         uses: signpath/github-action-submit-signing-request@v1
         with:
           api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
-          organization-id: b57aa812-9618-42c4-842f-96ef43865425
-          project-slug: Cryengine_Converter
-          signing-policy-slug: test-signing
+          organization-id: 8379344c-28fc-42b2-94b3-f1303d6ee926
+          project-slug: Cryengine-Converter
+          artifact-configuration-slug: cgf-converter-exe
+          signing-policy-slug: release-signing
           github-artifact-id: ${{ steps.upload-exe.outputs.artifact-id }}
           wait-for-completion: true
+          # Production cert requires manual approval; action's default poll
+          # timeout (10 min) is far too short. Wait up to 6h for a reviewer.
+          wait-for-completion-timeout-in-seconds: 21600
           output-artifact-directory: cgf-converter\bin\Release\net9.0\win-x64\publish\signed
 
       - name: Replace unsigned exe with signed
+        # SignPath's action may return the signed PE bare, or wrapped in a zip,
+        # or nested under a subdirectory named after the upload artifact. Be
+        # tolerant: dump the tree for diagnostics, then locate cgf-converter.exe
+        # wherever it actually landed and copy it over the unsigned original.
         shell: pwsh
         run: |
-          Copy-Item "cgf-converter\bin\Release\net9.0\win-x64\publish\signed\cgf-converter.exe" `
+          $signedDir = "cgf-converter\bin\Release\net9.0\win-x64\publish\signed"
+          Write-Host "Contents of $signedDir :"
+          Get-ChildItem $signedDir -Recurse | Select-Object FullName, Length | Format-Table -AutoSize
+
+          # If a zip is present, expand it
+          $zip = Get-ChildItem "$signedDir\*.zip" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($zip) {
+            Write-Host "Found zip $($zip.FullName); extracting..."
+            Expand-Archive -Path $zip.FullName -DestinationPath "$signedDir\extracted" -Force
+          }
+
+          # Find the signed exe wherever it ended up
+          $signed = Get-ChildItem $signedDir -Recurse -Filter cgf-converter.exe | Select-Object -First 1
+          if (-not $signed) { Write-Error "Signed cgf-converter.exe not found under $signedDir"; exit 1 }
+          Write-Host "Using signed exe at $($signed.FullName)"
+          Copy-Item $signed.FullName `
                     "cgf-converter\bin\Release\net9.0\win-x64\publish\cgf-converter.exe" -Force
 
       - name: Compile installer with Inno Setup
@@ -159,18 +211,35 @@ jobs:
         uses: signpath/github-action-submit-signing-request@v1
         with:
           api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
-          organization-id: b57aa812-9618-42c4-842f-96ef43865425
-          project-slug: Cryengine_Converter
-          signing-policy-slug: test-signing
+          organization-id: 8379344c-28fc-42b2-94b3-f1303d6ee926
+          project-slug: Cryengine-Converter
+          artifact-configuration-slug: installer
+          signing-policy-slug: release-signing
           github-artifact-id: ${{ steps.upload-installer.outputs.artifact-id }}
           wait-for-completion: true
+          # See note on Sign cgf-converter.exe — 6h for manual approval.
+          wait-for-completion-timeout-in-seconds: 21600
           output-artifact-directory: installer\output\signed
 
       - name: Replace unsigned installer with signed
+        # See "Replace unsigned exe with signed" comment above — same logic.
         shell: pwsh
         run: |
-          Copy-Item "installer\output\signed\cgf-converter-setup-${{ steps.version.outputs.version }}.exe" `
-                    "installer\output\cgf-converter-setup-${{ steps.version.outputs.version }}.exe" -Force
+          $signedDir = "installer\output\signed"
+          $installer = "cgf-converter-setup-${{ steps.version.outputs.version }}.exe"
+          Write-Host "Contents of $signedDir :"
+          Get-ChildItem $signedDir -Recurse | Select-Object FullName, Length | Format-Table -AutoSize
+
+          $zip = Get-ChildItem "$signedDir\*.zip" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($zip) {
+            Write-Host "Found zip $($zip.FullName); extracting..."
+            Expand-Archive -Path $zip.FullName -DestinationPath "$signedDir\extracted" -Force
+          }
+
+          $signed = Get-ChildItem $signedDir -Recurse -Filter $installer | Select-Object -First 1
+          if (-not $signed) { Write-Error "Signed $installer not found under $signedDir"; exit 1 }
+          Write-Host "Using signed installer at $($signed.FullName)"
+          Copy-Item $signed.FullName "installer\output\$installer" -Force
 
       - name: Stage release assets
         shell: pwsh
