@@ -1036,7 +1036,7 @@ public partial class CryEngine
     /// Expands a wildcard pattern to find matching CAF files.
     /// Handles wildcards in both directory path (e.g., "path/*/*.caf") and filename (e.g., "path/*.caf").
     /// </summary>
-    private List<string> ExpandCafWildcard(string pattern)
+    internal List<string> ExpandCafWildcard(string pattern)
     {
         var results = new List<string>();
 
@@ -1083,9 +1083,23 @@ public partial class CryEngine
             if (Directory.Exists(baseDirectory))
             {
                 var searchOption = searchRecursively ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
-                var matchingFiles = Directory.GetFiles(baseDirectory, filePattern, searchOption);
-                results.AddRange(matchingFiles.Where(f =>
-                    f.EndsWith(".caf", StringComparison.OrdinalIgnoreCase)));
+
+                results.AddRange(Directory.GetFiles(baseDirectory, filePattern, searchOption)
+                    .Where(f => f.EndsWith(".caf", StringComparison.OrdinalIgnoreCase)));
+
+                // Some animations ship only as intermediate .i_caf files (uncompiled source) with no
+                // compiled .caf counterpart (e.g. Pandemic Express no-weapon anims — issue #242). They
+                // share the same CrCh chunk format, so include them too. Prefer the compiled .caf when
+                // both exist for the same animation, matched by filename stem.
+                var iCafPattern = filePattern.EndsWith(".caf", StringComparison.OrdinalIgnoreCase)
+                    ? string.Concat(filePattern.AsSpan(0, filePattern.Length - 4), ".i_caf")
+                    : filePattern;
+                var compiledStems = results
+                    .Select(Path.GetFileNameWithoutExtension)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                results.AddRange(Directory.GetFiles(baseDirectory, iCafPattern, searchOption)
+                    .Where(f => f.EndsWith(".i_caf", StringComparison.OrdinalIgnoreCase)
+                                && !compiledStems.Contains(Path.GetFileNameWithoutExtension(f))));
 
                 Log.D("Searched '{0}' with pattern '{1}', recursive={2}, found {3} files",
                     baseDirectory, filePattern, searchRecursively, results.Count);
