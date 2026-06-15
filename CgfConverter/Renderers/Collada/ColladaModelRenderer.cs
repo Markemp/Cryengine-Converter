@@ -106,9 +106,9 @@ public partial class ColladaModelRenderer : IRenderer
         else
             WriteLibrary_VisualScenes();
 
-        // Note: Animations are exported to separate files for Blender compatibility.
-        // Blender's Collada importer merges all animations into one action, so we
-        // don't include animations in the main geometry file. See ExportAnimationFiles().
+        // Animations are written into the main file and also exported as separate files
+        // (one per clip) for Blender's NLA workflow.
+        WriteLibrary_Animations();
     }
 
     protected void WriteColladaRoot(string version)
