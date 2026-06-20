@@ -335,7 +335,7 @@ public sealed class ArgsHandler
         Console.WriteLine("                   Exclude matching nodes from rendering. Can be listed multiple times.");
         Console.WriteLine("-em/-excludemat    <regular expression for material names>");
         Console.WriteLine("                   Exclude meshes with matching materials from rendering. Can be listed multiple times.");
-        Console.WriteLine("-sm/-excludeshader  <material_name>:");
+        Console.WriteLine("-es/-excludeshader  <material_name>:");
         Console.WriteLine("                   Exclude meshes with the material using matching shader from rendering. Can be listed multiple times.");
         Console.WriteLine("-noconflict:       Append _out to output filename to avoid naming conflicts.");
         Console.WriteLine();

@@ -2,7 +2,7 @@
 
 # Cryengine Converter
 
-[Cryengine Converter](https://www.heffaypresents.com/GitHub) is a C# command-line tool that converts Cryengine game assets — `.cgf`, `.cga`, `.chr`, `.skin`, animation files — into portable 3D formats. It supports the major Cryengine variants, including traditional Cryengine games (MechWarrior Online, Crysis, Hunt: Showdown, Kingdom Come Deliverance, ArcheAge) and Star Citizen's proprietary `#ivo` binary format.
+[Cryengine Converter](https://www.github.com/Markemp/Cryengine-Converter) is a C# command-line tool that converts Cryengine game assets — `.cgf`, `.cga`, `.chr`, `.skin`, animation files — into portable 3D formats. It supports the major Cryengine variants, including traditional Cryengine games (MechWarrior Online, Crysis, Hunt: Showdown, Kingdom Come Deliverance, ArcheAge) and Star Citizen's proprietary `#ivo` binary format.
 
 ## What's new in v2
 
@@ -24,6 +24,20 @@ Download `cgf-converter-setup-<version>.exe` and run it. The wizard installs to 
 ### Option B — Loose executable
 
 Download `cgf-converter.exe` directly and drop it into a folder that's already on your `PATH` (e.g. `D:\scripts\`). It's a single self-contained Windows executable (~120 MB) — no .NET install required.
+
+### "Windows protected your PC" — SmartScreen warning
+
+The installer is code-signed (certificate by the [SignPath Foundation](https://signpath.org)), but Microsoft Defender SmartScreen still shows an "unrecognized app" warning until enough people have installed a given release for it to build reputation. This is expected for a new open-source release and **does not** mean the download is unsafe — you can confirm the signature yourself in the next step.
+
+To proceed, click **More info**:
+
+![SmartScreen warning — click More info](docs/images/smartscreen-1.png)
+
+Then verify the publisher reads **SignPath Foundation** and click **Run anyway**:
+
+![SmartScreen — verify publisher, then click Run anyway](docs/images/smartscreen-2.png)
+
+If you'd rather not see this at all, use [Option B](#option-b--loose-executable) — the loose `.exe` still triggers SmartScreen on first run but you can also right-click it → **Properties → Unblock** before launching.
 
 ### After install
 
@@ -96,7 +110,7 @@ This produces `adder_torso.usda` next to the source file, ready to import into B
 | glTF      | `-gltf`   | Game engines (Unity, Unreal, Godot), web viewers. Folder of files.          |
 | GLB       | `-glb`    | Same as glTF, single self-contained file with embedded textures.            |
 | Collada   | `-dae`    | Maya / 3DS Max workflows, anything that won't take USD.                     |
-| Wavefront | `-obj`    | **Deprecated.** No skinning, no animation, limited materials. Avoid.        |
+| Wavefront | `-obj`    | **Deprecated.** No skinning, no animation, limited materials.               |
 
 **Recommendation:** start with USD. Switch to something else only if you hit a specific problem.
 
@@ -125,12 +139,12 @@ PS> cgf-converter boar.chr -anim -objectdir D:\depot\KCD2
 
 The `-anim` flag pulls in `.chrparams`, `.dba`, `.caf`, and `.cal` animation files. Multi-clip assets emit one USD file per animation, which can be loaded as separate actions in Blender's NLA editor.
 
-### Star Citizen — combining split DDS textures
+### Split textures - combining split DDS textures
 
-Star Citizen ships its DDS textures split across multiple files (`*.dds.0`, `*.dds.1`, ...). Pass `-unsplittextures` to combine them before materials are written:
+Many modern CryEngine games ship their DDS textures split across multiple files (`*.dds.0`, `*.dds.1`, ...). Pass `-unsplittextures` (or `-ut`) to combine them before materials are written:
 
 ```powershell
-PS> cgf-converter AEGS_Avenger.cga -unsplittextures -objectdir D:\depot\SC4.6\Data
+PS> cgf-converter AEGS_Avenger.cga -ut -objectdir D:\depot\SC4.6\Data
 ```
 
 ## Full CLI reference
@@ -159,12 +173,13 @@ Texture options:
 Filtering:
   -en / -excludenode <regex>     Exclude matching nodes
   -em / -excludemat <regex>      Exclude meshes with matching materials
-  -sm / -excludeshader <regex>   Exclude meshes by shader name
+  -es / -excludeshader <regex>   Exclude meshes by shader name
 
 Animation:
   -anim / -animations   Include .caf/.dba/.cal animation data
 
 Other:
+  -out / -outdir <path> Write output to this directory (default: next to the source file)
   -noconflict           Append _out to output filenames
   -pp / -preservepath   Preserve directory hierarchy in output
   -mt / -maxthreads <n> Limit thread count (0 = all cores)
@@ -175,7 +190,7 @@ Run `cgf-converter -usage` for the always-current list.
 
 ## Tutorial videos
 
-A new v2 tutorial series is in production. The earlier 2017 series uses an older version of the tool (Collada-only, no animation, no `#ivo` support) and shouldn't be used as a guide for v2 workflows — but the asset extraction and Blender setup parts are still relevant:
+A new v2 tutorial series is in production. The earlier 2017 series uses an older version of the tool (Collada-only, no animation) and shouldn't be used as a guide for v2 workflows — but the asset extraction and Blender setup parts are still relevant:
 
 - [Original Part 1: Converting CryEngine Files](https://www.youtube.com/watch?v=6WoA2ubTZ0k) (2017)
 - [Original Part 2: Bulk Convert and Import Mechs / Prefabs](https://www.youtube.com/watch?v=oBJzNdzFIxM) (2017)
@@ -195,8 +210,8 @@ Free code signing provided by [SignPath.io](https://signpath.io), certificate by
 | Approvers | [Owners](https://github.com/orgs/Markemp/people?query=role%3Aowner) |
 | Committers | [Contributors](https://github.com/Markemp/Cryengine-Converter/graphs/contributors) |
 
-**Privacy policy:** [Heffay Presents Privacy Policy](https://www.heffaypresents.com/Privacy)
+**Privacy policy:** This program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it. See also the [Heffay Presents Privacy Policy](https://www.heffaypresents.com/Privacy).
 
 ## License
 
-See repository for license details.
+See the `LICENSE` file for license details.
