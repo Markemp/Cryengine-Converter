@@ -45,6 +45,7 @@ public abstract class Chunk : IBinaryChunk
             ChunkType.SceneProps => Chunk.New<ChunkSceneProp>(version),
             ChunkType.MeshPhysicsData => Chunk.New<ChunkMeshPhysicsData>(version),
             ChunkType.BoneAnim => Chunk.New<ChunkBoneAnim>(version),
+            ChunkType.MotionParams => Chunk.New<ChunkMotionParameters>(version),
             // Compiled chunks
             ChunkType.CompiledBones => Chunk.New<ChunkCompiledBones>(version),
             ChunkType.CompiledPhysicalProxies => Chunk.New<ChunkCompiledPhysicalProxies>(version),
@@ -75,6 +76,18 @@ public abstract class Chunk : IBinaryChunk
             ChunkType.BoneNameList => Chunk.New<ChunkBoneNameList>(version),
             ChunkType.MeshMorphTarget => Chunk.New<ChunkMeshMorphTargets>(version),
             ChunkType.BinaryXmlDataSC => Chunk.New<ChunkBinaryXmlData>(version),
+            // Star Citizen #ivo animation chunks
+            ChunkType.IvoCAFData => Chunk.New<ChunkIvoCAF>(version),
+            ChunkType.IvoAnimInfo => Chunk.New<ChunkIvoAnimInfo>(version),
+            ChunkType.IvoDBAData => Chunk.New<ChunkIvoDBAData>(version),
+            ChunkType.IvoDBAMetadata => Chunk.New<ChunkIvoDBAMetadata>(version),
+            // Star Citizen 4.5+ new chunk types - safely skipped (metadata/LOD data not needed for rendering)
+            ChunkType.IvoAssetMetadata => new ChunkUnknown(),    // Asset GUIDs - skip
+            ChunkType.IvoLodDistances => new ChunkUnknown(),     // LOD thresholds - skip (we export LOD0)
+            ChunkType.IvoLodMeshData => new ChunkUnknown(),      // LOD1-4 meshes - skip (we export LOD0)
+            ChunkType.IvoBoundingData => new ChunkUnknown(),     // Bounding data - skip
+            ChunkType.IvoChunkTerminator => new ChunkUnknown(),  // EOF marker - skip
+            ChunkType.IvoMtlNameVariant => new ChunkUnknown(),   // Material variant - skip (rare)
             _ => new ChunkUnknown(),
         };
     }

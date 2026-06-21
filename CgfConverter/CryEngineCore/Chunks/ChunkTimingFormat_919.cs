@@ -1,4 +1,4 @@
-﻿using System;
+﻿using CgfConverter.Models.Structs;
 using System.IO;
 
 namespace CgfConverter.CryEngineCore.Chunks;
@@ -9,11 +9,14 @@ internal sealed class ChunkTimingFormat_919 : ChunkTimingFormat
     {
         base.Read(reader);
 
-        // TODO:  This is copied from 918 but may not be entirely accurate.  Not tested.
-        SecsPerTick = reader.ReadSingle();
-        TicksPerFrame = reader.ReadInt32();
-        GlobalRange.Name = reader.ReadFString(32);  // Name is technically a String32
-        GlobalRange.Start = reader.ReadInt32();
-        GlobalRange.End = reader.ReadInt32();
+        // 919 is a condensed 12-byte format: flags (int32), ticks/sec (float), num sub-ranges (int32).
+        // GlobalRange and per-frame tick count are not stored; defaults are applied.
+        _ = reader.ReadInt32();  // flags/unknown, purpose TBD
+        var ticksPerSecond = reader.ReadSingle();
+        NumSubRanges = reader.ReadInt32();
+
+        SecsPerTick = 1.0f / ticksPerSecond;
+        TicksPerFrame = 1;
+        GlobalRange = new RangeEntity { Name = string.Empty, Start = 0, End = 0 };
     }
 }

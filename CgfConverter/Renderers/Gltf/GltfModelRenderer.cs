@@ -7,8 +7,8 @@ public class GltfModelRenderer : BaseGltfRenderer, IRenderer
 {
     private readonly CryEngine _cryData;
 
-    public GltfModelRenderer(ArgsHandler argsHandler, CryEngine cryEngine, bool writeText, bool writeBinary)
-        : base(argsHandler, Path.GetFileName(cryEngine.InputFile), writeText, writeBinary)
+    public GltfModelRenderer(Args argsHandler, CryEngine cryEngine)
+        : base(argsHandler, Path.GetFileName(cryEngine.InputFile))
     {
         _cryData = cryEngine;
     }
@@ -25,8 +25,8 @@ public class GltfModelRenderer : BaseGltfRenderer, IRenderer
         // Create the root object.
         Reset("Scene");
 
-        var extension = Path.GetExtension(_cryData.InputFile);
-        bool omitSkins = !(extension == ".chr" || extension == ".skin");
+        // Only omit skins if there's no skinning data available
+        bool omitSkins = _cryData.SkinningInfo is not { HasSkinningInfo: true };
 
         // For each root node in the crydata, add to the scene nodes.
         CreateGltfNodeInto(CurrentScene.Nodes, _cryData, omitSkins);

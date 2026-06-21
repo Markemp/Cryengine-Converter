@@ -27,6 +27,9 @@ public class UsdHeader
     [UsdProperty("timeCodesPerSecond")]
     public int? TimeCodesPerSecond { get; set; }
 
+    [UsdProperty("framesPerSecond")]
+    public int? FramesPerSecond { get; set; }
+
     [UsdProperty("version")]
     public string Version { get; set; } = "1.0";
 
@@ -37,7 +40,15 @@ public class UsdHeader
         sb.AppendLine("(");
         sb.AppendLine($"    defaultPrim = \"{DefaultPrim}\"");
         sb.AppendLine($"    doc = \"{Doc}\"");
+        if (EndTimeCode.HasValue)
+            sb.AppendLine($"    endTimeCode = {EndTimeCode.Value}");
         sb.AppendLine($"    metersPerUnit = {MetersPerUnit}");
+        if (StartTimeCode.HasValue)
+            sb.AppendLine($"    startTimeCode = {StartTimeCode.Value}");
+        if (FramesPerSecond.HasValue)
+            sb.AppendLine($"    framesPerSecond = {FramesPerSecond.Value}");
+        if (TimeCodesPerSecond.HasValue)
+            sb.AppendLine($"    timeCodesPerSecond = {TimeCodesPerSecond.Value}");
         sb.AppendLine($"    upAxis = \"{UpAxis}\"");
         sb.AppendLine(")");
         return sb.ToString();

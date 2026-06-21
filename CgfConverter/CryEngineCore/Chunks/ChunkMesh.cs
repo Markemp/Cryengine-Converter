@@ -20,6 +20,7 @@ public abstract class ChunkMesh : Chunk
     public int NumBuffs { get; set; }
     public int NormalsData { get; set; }
     public int UVsData { get; set; }
+    public int UVs2Data { get; set; }
     public int ColorsData { get; set; }
     public int Colors2Data { get; set; }
     public int IndicesData { get; set; }

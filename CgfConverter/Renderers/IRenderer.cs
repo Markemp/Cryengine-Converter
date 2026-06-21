@@ -3,7 +3,7 @@
 public interface IRenderer
 {
     /// <summary>
-    /// Renders a terrain into a file.
+    /// Renders scene data to output files.
     /// </summary>
     /// <returns>Number of files created.</returns>
     public int Render();

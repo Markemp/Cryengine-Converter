@@ -58,4 +58,13 @@ public class HashingExtensionTests
 
         Assert.AreEqual(expectedCrc, actualCrc);
     }
+
+    [TestMethod]
+    public void Crc32_Bip01_VerifyArcheAgeBoneHashing()
+    {
+        // ArcheAge CAF files use CRC32 with original case bone names
+        // This verifies the algorithm matches what ArcheAge expects
+        Assert.AreEqual((uint)0x78561A24, Crc32CryEngine.Compute("Bip01"), "Bip01 CRC32");
+        Assert.AreEqual((uint)0xC8E05E07, Crc32CryEngine.Compute("l_wing_00"), "l_wing_00 CRC32");
+    }
 }

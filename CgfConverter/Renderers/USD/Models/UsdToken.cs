@@ -52,4 +52,6 @@ public class UsdToken<T> : UsdAttribute
                 return value.ToString();
         }
     }
+
+    public override string ToString() => Serialize(0);
 }

@@ -199,7 +199,7 @@ public class CryTerrain
             {
                 try
                 {
-                    var engine = new CryEngine(path, packFileSystem, Log);
+                    var engine = new CryEngine(path, packFileSystem, parentLogger: Log);
                     engine.ProcessCryengineFiles();
                     return Tuple.Create(path, engine);
                 }

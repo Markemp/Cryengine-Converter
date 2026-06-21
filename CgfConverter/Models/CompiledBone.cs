@@ -19,7 +19,7 @@ public sealed class CompiledBone
     public int OffsetParent { get; set; }                   // offset to the parent in number of CompiledBone structs (584 bytes)
     public int OffsetChild { get; set; }                    // Offset to the first child to this bone in number of CompiledBone structs. Don't use this. Not in Ivo files.
     public int NumberOfChildren { get; set; }                    // Number of children to this bone
-    public int ObjectNodeIndex { get; set; }                // Points to index of NodeMeshCombo chunk (Ivo file)
+    public int ObjectNodeIndex { get; set; } = -1;          // Points to index of NodeMeshCombo chunk (Ivo file only, -1 = not set)
     public int ParentIndex { get; set; }       // For 0x900, we don't have parent offset.
     // Calculated values
     public Matrix4x4 BindPoseMatrix { get; set; }     // This is the WorldToBone matrix for library_controllers
@@ -58,18 +58,36 @@ public sealed class CompiledBone
     public void ReadCompiledBone_801(BinaryReader b)
     {
         // Reads just a single 324 byte entry of a bone.
+        // Unlike 0x800 which stores both W2B and B2W matrices, 0x801 only stores B2W (boneToWorld).
+        // We must compute W2B by inverting B2W.
         ControllerID = b.ReadUInt32();        // Bone controller.  Can be 0xFFFFFFFF
         LimbId = b.ReadUInt32();
         PhysicsGeometry = new PhysicsGeometry[2];
-        PhysicsGeometry[0].ReadPhysicsGeometry(b);     // LOD 0 is the physics of alive body, 
+        PhysicsGeometry[0].ReadPhysicsGeometry(b);     // LOD 0 is the physics of alive body,
         PhysicsGeometry[1].ReadPhysicsGeometry(b);     // LOD 1 is the physics of a dead body
         BoneName = b.ReadFString(48);
         OffsetParent = b.ReadInt32();
         NumberOfChildren = b.ReadInt32();
         OffsetChild = b.ReadInt32();
-        LocalTransformMatrix = b.ReadMatrix3x4();
-        BindPoseMatrix = LocalTransformMatrix.ConvertToTransformMatrix();
-        WorldTransformMatrix = new(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0);
+
+        // The matrix stored in 0x801 is B2W (boneToWorld), not W2B like in 0x800
+        WorldTransformMatrix = b.ReadMatrix3x4();
+
+        // Compute W2B (worldToBone) by inverting B2W - this is the bind pose matrix
+        var boneToWorld = WorldTransformMatrix.ConvertToTransformMatrix();
+        if (Matrix4x4.Invert(boneToWorld, out var worldToBone))
+        {
+            BindPoseMatrix = worldToBone;
+        }
+        else
+        {
+            // Fallback to identity if inversion fails
+            BindPoseMatrix = Matrix4x4.Identity;
+        }
+
+        // LocalTransformMatrix will be computed after parent relationships are established
+        // For now, use the B2W matrix (actual local will be computed in ChunkCompiledBones_801)
+        LocalTransformMatrix = WorldTransformMatrix;
     }
 
     public void ReadCompiledBone_900(BinaryReader b)
@@ -85,11 +103,18 @@ public sealed class CompiledBone
         LocalTransformMatrix = Matrix3x4.CreateFromParts(relativeQuat, relativeTranslation);
         WorldTransformMatrix = Matrix3x4.CreateFromParts(worldQuat, worldTranslation);
 
-        var m = Matrix4x4.CreateFromQuaternion(worldQuat);
-        m.M14 = worldTranslation.X;
-        m.M24 = worldTranslation.Y;
-        m.M34 = worldTranslation.Z;
-        Matrix4x4.Invert(m, out Matrix4x4 bpm);
+        // Build boneToWorld matrix in CryEngine convention (column-vector rotation + translation in col 4).
+        // IMPORTANT: Must use ConvertToRotationMatrix() which produces CryEngine convention rotation,
+        // NOT Matrix4x4.CreateFromQuaternion() which produces .NET row-vector convention (transposed).
+        // Using the wrong convention causes parent.BPM * inv(child.BPM) to produce incorrect local
+        // transforms, making skeleton bone positions diverge from their bind transforms.
+        var rot = worldQuat.ConvertToRotationMatrix();
+        var boneToWorld = new Matrix4x4(
+            rot.M11, rot.M12, rot.M13, worldTranslation.X,
+            rot.M21, rot.M22, rot.M23, worldTranslation.Y,
+            rot.M31, rot.M32, rot.M33, worldTranslation.Z,
+            0, 0, 0, 1);
+        Matrix4x4.Invert(boneToWorld, out Matrix4x4 bpm);
         BindPoseMatrix = bpm;
     }
 

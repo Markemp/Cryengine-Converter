@@ -4,6 +4,12 @@ using static CgfConverter.Utilities.HelperMethods;
 
 namespace CgfConverter.CryEngineCore;
 
+/// <summary>
+/// WARNING: This chunk version has NOT been validated for animation export.
+/// Only ChunkCompiledBones_800 has been vetted for animations (with MWO DBA files).
+/// The BindPoseMatrix calculation here may not be correct - do not trust animation
+/// data from this chunk until it has been properly validated.
+/// </summary>
 internal sealed class ChunkCompiledBones_900 : ChunkCompiledBones
 {
     public override void Read(BinaryReader b)

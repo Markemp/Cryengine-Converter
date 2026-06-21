@@ -6,6 +6,7 @@ public abstract class ChunkDataStream : Chunk // Contains data such as vertices,
 {
     public uint Flags2 { get; set; } // not used, looks almost like a filler. Set to 257 for SC files
     public DatastreamType DataStreamType { get; set; } // type of data (vertices, normals, uv, etc)
+    public int StreamIndex { get; set; } // stream index for multi-stream types (e.g. 0 = UV0, 1 = UV1)
     public uint NumElements { get; set; } // Number of data entries
     public uint BytesPerElement { get; set; } // Bytes per data entry
 

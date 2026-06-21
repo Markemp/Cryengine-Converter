@@ -1,4 +1,5 @@
-﻿using CgfConverter.Models.Materials;
+﻿using System;
+using CgfConverter.Models.Materials;
 using CgfConverter.Renderers.Gltf.Models;
 using CgfConverter.Renderers.MaterialTextures;
 
@@ -16,7 +17,8 @@ public partial class BaseGltfRenderer
             Material source,
             BaseGltfRenderer renderer,
             MaterialTextureManager mtm,
-            ArgsHandler argsHandler)
+            Args argsHandler,
+            string? materialFilePath = null)
         {
             CryMaterial = source;
             if (argsHandler.IsMaterialExcluded(CryMaterial))
@@ -42,10 +44,11 @@ public partial class BaseGltfRenderer
                 GltfMaterial.AlphaMode = GltfMaterialAlphaMode.Mask;
                 GltfMaterial.AlphaCutoff = 1f; // Fully transparent
                 GltfMaterial.PbrMetallicRoughness.BaseColorFactor = Float4Transparent;
+                Index = renderer.AddMaterial(GltfMaterial);
                 return;
             }
 
-            MaterialTextureSet textureSet = mtm.CreateSet(CryMaterial);
+            MaterialTextureSet textureSet = mtm.CreateSet(CryMaterial, materialFilePath);
             GltfMaterial = new GltfMaterial
             {
                 Name = CryMaterial.Name,
@@ -66,7 +69,7 @@ public partial class BaseGltfRenderer
                         float.Clamp(CryMaterial.OpacityValue ?? 1f, 0f, 1f),
                     ],
                     MetallicFactor = float.Clamp(CryMaterial.PublicParams?.Metalness ?? 0, 0, 1),
-                    RoughnessFactor = float.Clamp((255 - (float) CryMaterial.Shininess) / 255f, 0, 1),
+                    RoughnessFactor = CalculateRoughness(CryMaterial),
                     MetallicRoughnessTexture = renderer.AddTextureInfo(
                         $"{CryMaterial.Name}-metallicroughness",
                         textureSet.MetallicRoughness),
@@ -89,7 +92,7 @@ public partial class BaseGltfRenderer
                             CryMaterial.SpecularValue?.Green ?? 0f,
                             CryMaterial.SpecularValue?.Blue ?? 0f,
                         },
-                        GlossinessFactor = float.Clamp((float) CryMaterial.Shininess / 255f, 0f, 1f),
+                        GlossinessFactor = 1f - CalculateRoughness(CryMaterial),
                         SpecularGlossinessTexture = renderer.AddTextureInfo(
                             $"{CryMaterial.Name}-specularglossiness",
                             textureSet.SpecularGlossiness),
@@ -113,11 +116,27 @@ public partial class BaseGltfRenderer
         public Material CryMaterial { get; }
 
         public GltfMaterial? GltfMaterial { get; }
+
+        /// <summary>
+        /// Convert CryEngine Shininess + Specular to PBR roughness.
+        /// Weights glossiness by specular intensity so low-specular surfaces appear matte.
+        /// </summary>
+        private static float CalculateRoughness(Material mat)
+        {
+            float glossiness = (float)mat.Shininess / 255.0f;
+            float specIntensity = mat.SpecularValue is not null
+                ? Math.Max(mat.SpecularValue.Red, Math.Max(mat.SpecularValue.Green, mat.SpecularValue.Blue))
+                : 0.0f;
+            return float.Clamp(1.0f - glossiness * MathF.Sqrt(specIntensity), 0.0f, 1.0f);
+        }
     }
 
     protected void WriteMaterial(string materialFile, Material material)
     {
-        foreach (Material submat in material.SubMaterials!)
+        if (material.SubMaterials is null)
+            return;
+
+        foreach (Material submat in material.SubMaterials)
         {
             (string MaterialFile, string SubMaterialName) key = (materialFile, submat.Name!);
             if (_materialMap.ContainsKey(key))
@@ -126,7 +145,8 @@ public partial class BaseGltfRenderer
                 submat,
                 this,
                 _materialTextureManager,
-                Args);
+                _args,
+                materialFile);
         }
     }
 }

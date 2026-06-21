@@ -1,6 +1,7 @@
 ﻿using CgfConverter.Renderers;
 using CgfConverter.Renderers.Collada;
 using CgfConverter.Renderers.Gltf;
+using CgfConverter.Renderers.USD;
 using CgfConverter.Renderers.Wavefront;
 using CgfConverter.Terrain;
 using CgfConverter.Utilities;
@@ -17,9 +18,9 @@ namespace CgfConverter;
 public class Program
 {
     private readonly TaggedLogger Log = new("Program");
-    private readonly ArgsHandler _args;
+    private readonly Args _args;
 
-    private Program(ArgsHandler args)
+    private Program(Args args)
     {
         _args = args;
     }
@@ -43,9 +44,9 @@ public class Program
             return numErrorsOccurred;
 
 #if DEBUG
-        return new Program(argsHandler).Run();
+        return new Program(argsHandler.Args).Run();
 #else
-        return await new Program(argsHandler).Run();
+        return await new Program(argsHandler.Args).Run();
 #endif
     }
 
@@ -117,8 +118,7 @@ public class Program
         var data = new CryEngine(
             inputFile,
             _args.PackFileSystem,
-            materialFiles: _args.MaterialFile,
-            objectDir: _args.DataDir);
+            new CryEngineOptions(_args.MaterialFile, _args.DataDir, _args.IncludeAnimations));
 
         data.ProcessCryengineFiles();
 
@@ -128,7 +128,9 @@ public class Program
         if (_args.OutputCollada)
             renderers.Add(new ColladaModelRenderer(_args, data));
         if (_args.OutputGLB || _args.OutputGLTF)
-            renderers.Add(new GltfModelRenderer(_args, data, _args.OutputGLTF, _args.OutputGLB));
+            renderers.Add(new GltfModelRenderer(_args, data));
+        if (_args.OutputUSD)
+            renderers.Add(new UsdRenderer(_args, data));
 
         RunRenderersAndThrowAggregateExceptionIfAny(renderers);
     }
@@ -139,7 +141,7 @@ public class Program
 
         var renderers = new List<IRenderer>();
         if (_args.OutputGLB || _args.OutputGLTF)
-            renderers.Add(new GltfTerrainRenderer(_args, data, _args.OutputGLTF, _args.OutputGLB));
+            renderers.Add(new GltfTerrainRenderer(_args, data));
 
         RunRenderersAndThrowAggregateExceptionIfAny(renderers);
     }

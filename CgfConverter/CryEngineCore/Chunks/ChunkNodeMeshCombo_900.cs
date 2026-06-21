@@ -19,6 +19,9 @@ internal sealed class ChunkNodeMeshCombo_900 : ChunkNodeMeshCombo
         Unknown1 = b.ReadInt32(); // related to number of nodes 
         Unknown3 = b.ReadInt32(); // 0 if no mesh chunk for this node
 
+        // SC 4.5+ has 32 bytes of padding after the header
+        SkipBytes(b, 32);
+
         NodeMeshCombos = [];
         for (int i = 0; i < NumberOfNodes; i++)
         {
@@ -51,7 +54,7 @@ internal sealed class ChunkNodeMeshCombo_900 : ChunkNodeMeshCombo
             MaterialIndices.Add(b.ReadUInt16());
         }
 
-        NodeNames = GetNullSeparatedStrings(NumberOfNodes, b);
+        NodeNames = GetNullSeparatedStrings(NumberOfNodes, StringTableSize, b);
         // There is more data after here but it's unknown.
     }
 }

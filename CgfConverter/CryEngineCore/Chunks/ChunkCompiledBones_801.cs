@@ -4,7 +4,8 @@ namespace CgfConverter.CryEngineCore;
 
 internal sealed class ChunkCompiledBones_801 : ChunkCompiledBones
 {
-    // Archeage drug_boy01
+    // Archeage format - stores B2W (boneToWorld) matrix only, not both W2B and B2W like 0x800.
+    // ReadCompiledBone_801 handles computing W2B by inverting B2W.
     public override void Read(BinaryReader b)
     {
         base.Read(b);

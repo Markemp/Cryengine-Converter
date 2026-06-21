@@ -82,7 +82,8 @@ public enum ChunkType : uint    // complete
     BonesBoxes = 0xAAFC0004,        // unknown chunk
     FoliageInfo = 0xAAFC0005,       // unknown chunk
     GlobalAnimationHeaderCAF = 0xAAFC0007,
-    
+    MotionParams = 0x3002,
+
     // Star Citizen versions
     NodeSC = 0xCCCC100B,
     CompiledBonesSC = 0xCCCC1000,
@@ -107,6 +108,21 @@ public enum ChunkType : uint    // complete
     CompiledBones_Ivo2 = 0xC2011111,    // 3.24 and newer SC
     BShapesGPU = 0x57A3BEFD,
     BShapes = 0x875CCB28,
+
+    // Star Citizen #ivo animation chunks
+    IvoAnimInfo = 0x4733C6ED,       // Animation info chunk (CAF), v901
+    IvoCAFData = 0xA9496CB5,        // #caf animation data
+    IvoDBAData = 0x194FBC50,        // #dba animation data blocks (was SpeedInfoSC)
+    IvoDBAMetadata = 0xF7351608,    // DBA metadata/string table
+
+    // Star Citizen 4.5+ new chunk types (introduced Jan 2026)
+    // Analysis: These chunks can be safely skipped - they're metadata or LOD data
+    IvoAssetMetadata = 0xBE5E493E,  // SC 4.5 - Asset metadata: counts + 2x 128-bit GUIDs (128 bytes)
+    IvoLodDistances = 0x9351756F,   // SC 4.5 - LOD distance thresholds: count + float array
+    IvoLodMeshData = 0x58DE1772,    // SC 4.5 - LOD mesh data for LOD1-4 (can be very large ~50MB+)
+    IvoBoundingData = 0x2B7ECF9F,   // SC 4.5 - Bounding/animation data (floats + sparse data)
+    IvoChunkTerminator = 0xE0181074, // SC 4.5 - End-of-file marker in .cgam files (0 bytes)
+    IvoMtlNameVariant = 0x83353533, // SC 4.5 - Material name variant (rare, similar to MtlNameIvo320)
 
     BinaryXmlDataSC = 0xcccbf004,
 }
@@ -204,7 +220,7 @@ public enum DatastreamType : uint
     IVOVERTSUVS = 0x91329AE9,
     IVOVERTSUVS2 = 0xB3A70D5E,
     IVOBONEMAP32 = 0x6ECA3708,           // Objects\Characters\Human\heads\male\npc\male01\male01_t2_head.skinm
-    IVOUNKNOWN = 0x9D51C5EE,        // box.cgfm.  2 bytes, all zeros, numvertices
+    IVOSIMPLEBONEMAP = 0x9D51C5EE,       // Simple bone mapping: ushort bone index per vertex, weight implied 1.0 (rigid attachment meshes)
 }
 
 public enum PhysicsPrimitiveType : uint

@@ -81,9 +81,4 @@ public class UsdSerializer
             sb.AppendLine("}");
         }
     }
-
-    private static void AppendIndent(StringBuilder sb, int indentLevel)
-    {
-        sb.Append(new string(' ', indentLevel * 4));
-    }
 }

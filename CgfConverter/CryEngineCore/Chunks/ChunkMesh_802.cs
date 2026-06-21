@@ -20,8 +20,9 @@ internal sealed class ChunkMesh_802 : ChunkMesh
         SkipBytes(b, 28);           // These are stream index values.  Should be 8 ints (including the data stream)
         NormalsData = b.ReadInt32();           // Chunk ID of the datastream for the normals for this mesh
         SkipBytes(b, 28);
-        UVsData = b.ReadInt32();               // Chunk ID of the Normals datastream
-        SkipBytes(b, 28);
+        UVsData = b.ReadInt32();               // Chunk ID of the UV datastream (index 0)
+        UVs2Data = b.ReadInt32();              // Chunk ID of the UV2 datastream (index 1), 0 if not present
+        SkipBytes(b, 24);                      // Remaining 6 slots in nStreamChunkID[CGF_STREAM_TEXCOORDS][8]
         ColorsData = b.ReadInt32();
         SkipBytes(b, 28);
         Colors2Data = b.ReadInt32();

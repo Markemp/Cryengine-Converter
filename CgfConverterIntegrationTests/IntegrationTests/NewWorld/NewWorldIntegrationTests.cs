@@ -1,9 +1,13 @@
 ﻿using CgfConverter;
+using CgfConverter.CryEngineCore;
 using CgfConverter.Renderers.Collada;
 using CgfConverterTests.TestUtilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Numerics;
 using System.Threading;
 
 namespace CgfConverterTests.IntegrationTests;
@@ -32,10 +36,10 @@ public class NewWorldIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, null, objectDir: objectDir);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions(ObjectDir: objectDir));
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
     }
@@ -47,10 +51,10 @@ public class NewWorldIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, null, objectDir: objectDir, materialFiles: "editorprimitive_b_mat.mtl");
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions("editorprimitive_b_mat.mtl", objectDir));
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
         // Verify materials
@@ -68,10 +72,10 @@ public class NewWorldIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, null);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
         var nodes = daeObject.Library_Visual_Scene.Visual_Scene[0].Node;
@@ -89,10 +93,10 @@ public class NewWorldIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, null);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
         var nodes = daeObject.Library_Visual_Scene.Visual_Scene[0].Node;
@@ -111,10 +115,10 @@ public class NewWorldIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, null, objectDir: objectDir, materialFiles: "hood_mat_matgroup.mtl");
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem, new CryEngineOptions("hood_mat_matgroup.mtl", objectDir));
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
         var nodes = daeObject.Library_Visual_Scene.Visual_Scene[0].Node;
@@ -132,13 +136,74 @@ public class NewWorldIntegrationTests
         int result = testUtils.argsHandler.ProcessArgs(args);
         Assert.AreEqual(0, result);
 
-        var cryData = new CryEngine(args[0], testUtils.argsHandler.PackFileSystem, null);
+        var cryData = new CryEngine(args[0], testUtils.argsHandler.Args.PackFileSystem);
         cryData.ProcessCryengineFiles();
 
-        var colladaData = new ColladaModelRenderer(testUtils.argsHandler, cryData);
+        var colladaData = new ColladaModelRenderer(testUtils.argsHandler.Args, cryData);
         colladaData.GenerateDaeObject();
         var daeObject = colladaData.DaeObject;
         var nodes = daeObject.Library_Visual_Scene.Visual_Scene[0].Node;
+    }
+
+    [TestMethod]
+    public void ChairSittingIdle_CAF_Controller831_ParsesCorrectly()
+    {
+        var cafPath = $@"{objectDir}\animations\gameplay\character\player\male\roleplay\chair\roleply_chair_sitting_idle.caf";
+        var model = Model.FromStream(cafPath, File.OpenRead(cafPath), closeStream: true);
+
+        var controllers = model.ChunkMap.Values.OfType<ChunkController_831>().ToList();
+        Assert.IsTrue(controllers.Count > 0, "Should have ChunkController_831 chunks");
+
+        foreach (var ctrl in controllers)
+        {
+            // Verify quaternions are approximately normalized (length ~1.0)
+            // Compressed formats (SmallTree48Bit, SmallTree64BitExt) may have minor precision loss
+            foreach (var rot in ctrl.KeyRotations)
+            {
+                var length = rot.Length();
+                Assert.IsTrue(length > 0.9f && length < 1.1f,
+                    $"Controller {ctrl.ControllerId:X}: rotation not normalized, length={length}");
+            }
+
+            // Verify positions are finite and reasonable
+            foreach (var pos in ctrl.KeyPositions)
+            {
+                Assert.IsFalse(float.IsNaN(pos.X) || float.IsNaN(pos.Y) || float.IsNaN(pos.Z),
+                    $"Controller {ctrl.ControllerId:X}: NaN in position data");
+                Assert.IsTrue(pos.Length() < 1000f,
+                    $"Controller {ctrl.ControllerId:X}: position magnitude unreasonable ({pos.Length()})");
+            }
+
+            // Key times should be monotonically non-decreasing
+            for (int i = 1; i < ctrl.RotationKeyTimes.Count; i++)
+            {
+                Assert.IsTrue(ctrl.RotationKeyTimes[i] >= ctrl.RotationKeyTimes[i - 1],
+                    $"Controller {ctrl.ControllerId:X}: rotation key times not monotonic at index {i}");
+            }
+
+            for (int i = 1; i < ctrl.PositionKeyTimes.Count; i++)
+            {
+                Assert.IsTrue(ctrl.PositionKeyTimes[i] >= ctrl.PositionKeyTimes[i - 1],
+                    $"Controller {ctrl.ControllerId:X}: position key times not monotonic at index {i}");
+            }
+        }
+    }
+
+    [TestMethod]
+    public void PlayerMale_Chr_LoadsSkeleton()
+    {
+        var chrPath = $@"{objectDir}\objects\characters\player\male\player_male.chr";
+        var args = new string[] { chrPath, "-usd", "-objectdir", objectDir };
+        int result = testUtils.argsHandler.ProcessArgs(args);
+        Assert.AreEqual(0, result);
+
+        var cryData = new CryEngine(chrPath, testUtils.argsHandler.Args.PackFileSystem,
+            new CryEngineOptions(ObjectDir: objectDir));
+        cryData.ProcessCryengineFiles();
+
+        // Verify skeleton loaded
+        Assert.IsNotNull(cryData.SkinningInfo?.CompiledBones, "Skeleton should be loaded");
+        Assert.IsTrue(cryData.SkinningInfo.CompiledBones.Count > 0, "Should have bones");
     }
 
 }

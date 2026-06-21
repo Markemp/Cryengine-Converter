@@ -71,4 +71,25 @@ public class CryXmlSerializerTests
         var material = MaterialUtilities.FromFile(filename, "clothing_main_m", objectDir);
         Assert.AreEqual(1, material.SubMaterials.Count());
     }
+
+    [TestMethod]
+    public void FromFile_EmptyMatLayersElement_DoesNotFallBackToDefault()
+    {
+        // Regression: a submaterial with a self-closing <MatLayers/> element used to
+        // throw NullReferenceException (Layers is null) which was silently swallowed,
+        // causing the whole file to fall back to a single default material and
+        // producing empty _materials scopes in rendered output.
+        var filename = @"..\..\..\TestData\MatLayersEmpty.xml";
+
+        var material = MaterialUtilities.FromFile(filename, "MatLayersEmpty");
+
+        Assert.IsNotNull(material);
+        Assert.IsNotNull(material.SubMaterials, "Parse should not fall back to default (which has no submaterials)");
+        Assert.AreEqual(3, material.SubMaterials.Length);
+
+        var emptyLayered = material.SubMaterials.Single(m => m.Name == "plastic_2_matte_black");
+        Assert.IsNotNull(emptyLayered.MatLayers, "Empty <MatLayers/> still deserializes to an object");
+        Assert.IsNull(emptyLayered.MatLayers.Layers, "Empty element should have null Layers array");
+        Assert.IsNull(emptyLayered.SubMaterials, "No layers to flatten, so no sub-layer submaterials");
+    }
 }
