@@ -27,7 +27,10 @@ public class MaterialTextureManager
 
     public MaterialTextureSet CreateSet(Material cryMaterial, string? materialFilePath = null)
     {
-        Dictionary<Texture.MapTypeEnum, Texture> texturesDict = cryMaterial.Textures!
+        // A submaterial without a <Textures> element (AEGS Vanguard's
+        // vanguard_ext_a.mtl) has Textures == null; it is an untextured
+        // material, not a reason to fail the whole file.
+        Dictionary<Texture.MapTypeEnum, Texture> texturesDict = (cryMaterial.Textures ?? [])
             .Where(
                 x => x.TexType == Texture.TypeEnum.Default
                     && x.File != "nearest_cubemap"
