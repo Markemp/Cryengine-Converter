@@ -10,7 +10,7 @@
 ; Inno Setup 6.2.0 or newer required (https://jrsoftware.org/isinfo.php).
 
 #define MyAppName "Cryengine Converter"
-#define MyAppVersion "2.0.0"
+#define MyAppVersion "2.0.1"
 #define MyAppPublisher "Heffay Presents"
 #define MyAppURL "https://github.com/Markemp/Cryengine-Converter"
 #define MyAppExeName "cgf-converter.exe"
