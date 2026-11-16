@@ -7,6 +7,11 @@ on:
   pull_request:
     branches: [ master ]
 
+# Least privilege: this workflow only reads the repo. (Fork PRs are read-only
+# regardless; this also covers branches pushed to this repo.)
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: windows-latest
