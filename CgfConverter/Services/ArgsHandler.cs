@@ -309,6 +309,7 @@ public sealed class ArgsHandler
     {
         Console.WriteLine();
         Console.WriteLine("cgf-converter [-usage] | <.cgf file> [-dae] [-obj] [-glb] [-gltf] [-usd] [-notex/-png/-tif/-tga] [-excludenode <nodename>] [-excludemat <matname>] [-loglevel <LogLevel>] [-objectdir <ObjectDir>] [-anim]");
+        Console.WriteLine($"cgf-converter {Diagnostics.ChunkScanCommand.Name} <file-or-directory> [<file-or-directory> ...] -out <report.json> [-recursive]");
         Console.WriteLine();
         Console.WriteLine($"CryEngine Converter v{GetInformationalVersion()}");
         Console.WriteLine();
