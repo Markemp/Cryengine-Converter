@@ -555,19 +555,19 @@ public partial class BaseGltfRenderer
                     buf[i].A = newAlphaByte;
             }
 
-            using var image = Image.LoadPixelData(buf, width, height);
+            using var image = Image.LoadPixelData<SixLabors.ImageSharp.PixelFormats.Rgba32>(buf, width, height);
             image.SaveAsPng(ms);
         }
         else
         {
             if (sourceAlphaMode == SourceAlphaModes.Enable)
             {
-                using var image = Image.LoadPixelData(raw.ToRgba32(), width, height);
+                using var image = Image.LoadPixelData<SixLabors.ImageSharp.PixelFormats.Rgba32>(raw.ToRgba32(), width, height);
                 image.SaveAsPng(ms);
             }
             else
             {
-                using var image = Image.LoadPixelData(raw.ToRgb24(), width, height);
+                using var image = Image.LoadPixelData<SixLabors.ImageSharp.PixelFormats.Rgb24>(raw.ToRgb24(), width, height);
                 image.SaveAsPng(ms);
             }
         }
@@ -602,19 +602,19 @@ public partial class BaseGltfRenderer
                     buf[i].A = newAlphaByte;
             }
 
-            using var image = Image.LoadPixelData(buf, width, height);
+            using var image = Image.LoadPixelData<SixLabors.ImageSharp.PixelFormats.Rgba32>(buf, width, height);
             image.SaveAsPng(ms);
         }
         else
         {
             if (sourceAlphaMode == SourceAlphaModes.Enable)
             {
-                using var image = Image.LoadPixelData(raw.ToRgba32(), width, height);
+                using var image = Image.LoadPixelData<SixLabors.ImageSharp.PixelFormats.Rgba32>(raw.ToRgba32(), width, height);
                 image.SaveAsPng(ms);
             }
             else
             {
-                using var image = Image.LoadPixelData(raw.ToRgb24(), width, height);
+                using var image = Image.LoadPixelData<SixLabors.ImageSharp.PixelFormats.Rgb24>(raw.ToRgb24(), width, height);
                 image.SaveAsPng(ms);
             }
         }
