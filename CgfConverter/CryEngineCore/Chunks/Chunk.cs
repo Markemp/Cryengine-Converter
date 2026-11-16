@@ -28,69 +28,85 @@ public abstract class Chunk : IBinaryChunk
     public ChunkType ChunkType { get; internal set; }
     public uint DataSize { get; set; }
 
-    public static Chunk New(ChunkType chunkType, uint version)
+    public static Chunk New(ChunkType chunkType, uint version) =>
+        CreateForRead(chunkType, version).Chunk;
+
+    internal static ChunkCreationResult CreateForRead(ChunkType chunkType, uint version)
     {
         return chunkType switch
         {
-            ChunkType.SourceInfo => Chunk.New<ChunkSourceInfo>(version),
-            ChunkType.Timing => Chunk.New<ChunkTimingFormat>(version),
-            ChunkType.ExportFlags => Chunk.New<ChunkExportFlags>(version),
-            ChunkType.MtlName => Chunk.New<ChunkMtlName>(version),
-            ChunkType.DataStream => Chunk.New<ChunkDataStream>(version),
-            ChunkType.Mesh => Chunk.New<ChunkMesh>(version),
-            ChunkType.MeshSubsets => Chunk.New<ChunkMeshSubsets>(version),
-            ChunkType.Node => Chunk.New<ChunkNode>(version),
-            ChunkType.Helper => Chunk.New<ChunkHelper>(version),
-            ChunkType.Controller => Chunk.New<ChunkController>(version),
-            ChunkType.SceneProps => Chunk.New<ChunkSceneProp>(version),
-            ChunkType.MeshPhysicsData => Chunk.New<ChunkMeshPhysicsData>(version),
-            ChunkType.BoneAnim => Chunk.New<ChunkBoneAnim>(version),
-            ChunkType.MotionParams => Chunk.New<ChunkMotionParameters>(version),
+            ChunkType.SourceInfo => CreateImplemented<ChunkSourceInfo>(version),
+            ChunkType.Timing => CreateImplemented<ChunkTimingFormat>(version),
+            ChunkType.ExportFlags => CreateImplemented<ChunkExportFlags>(version),
+            ChunkType.MtlName => CreateImplemented<ChunkMtlName>(version),
+            ChunkType.DataStream => CreateImplemented<ChunkDataStream>(version),
+            ChunkType.Mesh => CreateImplemented<ChunkMesh>(version),
+            ChunkType.MeshSubsets => CreateImplemented<ChunkMeshSubsets>(version),
+            ChunkType.Node => CreateImplemented<ChunkNode>(version),
+            ChunkType.Helper => CreateImplemented<ChunkHelper>(version),
+            ChunkType.Controller => CreateImplemented<ChunkController>(version),
+            ChunkType.SceneProps => CreateImplemented<ChunkSceneProp>(version),
+            ChunkType.MeshPhysicsData => CreateImplemented<ChunkMeshPhysicsData>(version),
+            ChunkType.BoneAnim => CreateImplemented<ChunkBoneAnim>(version),
+            ChunkType.MotionParams => CreateImplemented<ChunkMotionParameters>(version),
             // Compiled chunks
-            ChunkType.CompiledBones => Chunk.New<ChunkCompiledBones>(version),
-            ChunkType.CompiledPhysicalProxies => Chunk.New<ChunkCompiledPhysicalProxies>(version),
-            ChunkType.CompiledPhysicalBones => Chunk.New<ChunkCompiledPhysicalBones>(version),
-            ChunkType.CompiledIntSkinVertices => Chunk.New<ChunkCompiledIntSkinVertices>(version),
-            ChunkType.CompiledMorphTargets => Chunk.New<ChunkCompiledMorphTargets>(version),
-            ChunkType.CompiledExt2IntMap => Chunk.New<ChunkCompiledExtToIntMap>(version),
-            ChunkType.CompiledIntFaces => Chunk.New<ChunkCompiledIntFaces>(version),
+            ChunkType.CompiledBones => CreateImplemented<ChunkCompiledBones>(version),
+            ChunkType.CompiledPhysicalProxies => CreateImplemented<ChunkCompiledPhysicalProxies>(version),
+            ChunkType.CompiledPhysicalBones => CreateImplemented<ChunkCompiledPhysicalBones>(version),
+            ChunkType.CompiledIntSkinVertices => CreateImplemented<ChunkCompiledIntSkinVertices>(version),
+            ChunkType.CompiledMorphTargets => CreateImplemented<ChunkCompiledMorphTargets>(version),
+            ChunkType.CompiledExt2IntMap => CreateImplemented<ChunkCompiledExtToIntMap>(version),
+            ChunkType.CompiledIntFaces => CreateImplemented<ChunkCompiledIntFaces>(version),
             // Star Citizen equivalents
-            ChunkType.CompiledBonesSC => Chunk.New<ChunkCompiledBones>(version),
-            ChunkType.CompiledPhysicalBonesSC => Chunk.New<ChunkCompiledPhysicalBones>(version),
-            ChunkType.CompiledExt2IntMapSC => Chunk.New<ChunkCompiledExtToIntMap>(version),
-            ChunkType.CompiledIntFacesSC => Chunk.New<ChunkCompiledIntFaces>(version),
-            ChunkType.CompiledIntSkinVerticesSC => Chunk.New<ChunkCompiledIntSkinVertices>(version),
-            ChunkType.CompiledMorphTargetsSC => Chunk.New<ChunkCompiledMorphTargets>(version),
-            ChunkType.CompiledPhysicalProxiesSC => Chunk.New<ChunkCompiledPhysicalProxies>(version),
+            ChunkType.CompiledBonesSC => CreateImplemented<ChunkCompiledBones>(version),
+            ChunkType.CompiledPhysicalBonesSC => CreateImplemented<ChunkCompiledPhysicalBones>(version),
+            ChunkType.CompiledExt2IntMapSC => CreateImplemented<ChunkCompiledExtToIntMap>(version),
+            ChunkType.CompiledIntFacesSC => CreateImplemented<ChunkCompiledIntFaces>(version),
+            ChunkType.CompiledIntSkinVerticesSC => CreateImplemented<ChunkCompiledIntSkinVertices>(version),
+            ChunkType.CompiledMorphTargetsSC => CreateImplemented<ChunkCompiledMorphTargets>(version),
+            ChunkType.CompiledPhysicalProxiesSC => CreateImplemented<ChunkCompiledPhysicalProxies>(version),
             // SC IVO chunks
-            ChunkType.MtlNameIvo => Chunk.New<ChunkMtlName>(version),
-            ChunkType.MtlNameIvo320 => Chunk.New<ChunkMtlName>(version),
-            ChunkType.CompiledBones_Ivo => Chunk.New<ChunkCompiledBones>(version),
-            ChunkType.CompiledBones_Ivo2 => Chunk.New<ChunkCompiledBones>(version),
-            ChunkType.MeshIvo => Chunk.New<ChunkMesh>(version),
-            ChunkType.MeshInfo => Chunk.New<ChunkMesh>(version),
-            ChunkType.IvoSkin2 => Chunk.New<ChunkIvoSkinMesh>(version),
-            ChunkType.IvoSkin => Chunk.New<ChunkIvoSkinMesh>(version),
-            ChunkType.NodeMeshCombo => Chunk.New<ChunkNodeMeshCombo>(version),
+            ChunkType.MtlNameIvo => CreateImplemented<ChunkMtlName>(version),
+            ChunkType.MtlNameIvo320 => CreateImplemented<ChunkMtlName>(version),
+            ChunkType.CompiledBones_Ivo => CreateImplemented<ChunkCompiledBones>(version),
+            ChunkType.CompiledBones_Ivo2 => CreateImplemented<ChunkCompiledBones>(version),
+            ChunkType.MeshIvo => CreateImplemented<ChunkMesh>(version),
+            ChunkType.MeshInfo => CreateImplemented<ChunkMesh>(version),
+            ChunkType.IvoSkin2 => CreateImplemented<ChunkIvoSkinMesh>(version),
+            ChunkType.IvoSkin => CreateImplemented<ChunkIvoSkinMesh>(version),
+            ChunkType.NodeMeshCombo => CreateImplemented<ChunkNodeMeshCombo>(version),
             // Old chunks
-            ChunkType.BoneNameList => Chunk.New<ChunkBoneNameList>(version),
-            ChunkType.MeshMorphTarget => Chunk.New<ChunkMeshMorphTargets>(version),
-            ChunkType.BinaryXmlDataSC => Chunk.New<ChunkBinaryXmlData>(version),
+            ChunkType.BoneNameList => CreateImplemented<ChunkBoneNameList>(version),
+            ChunkType.MeshMorphTarget => CreateImplemented<ChunkMeshMorphTargets>(version),
+            ChunkType.BinaryXmlDataSC => CreateImplemented<ChunkBinaryXmlData>(version),
             // Star Citizen #ivo animation chunks
-            ChunkType.IvoCAFData => Chunk.New<ChunkIvoCAF>(version),
-            ChunkType.IvoAnimInfo => Chunk.New<ChunkIvoAnimInfo>(version),
-            ChunkType.IvoDBAData => Chunk.New<ChunkIvoDBAData>(version),
-            ChunkType.IvoDBAMetadata => Chunk.New<ChunkIvoDBAMetadata>(version),
+            ChunkType.IvoCAFData => CreateImplemented<ChunkIvoCAF>(version),
+            ChunkType.IvoAnimInfo => CreateImplemented<ChunkIvoAnimInfo>(version),
+            ChunkType.IvoDBAData => CreateImplemented<ChunkIvoDBAData>(version),
+            ChunkType.IvoDBAMetadata => CreateImplemented<ChunkIvoDBAMetadata>(version),
             // Star Citizen 4.5+ new chunk types - safely skipped (metadata/LOD data not needed for rendering)
-            ChunkType.IvoAssetMetadata => new ChunkUnknown(),    // Asset GUIDs - skip
-            ChunkType.IvoLodDistances => new ChunkUnknown(),     // LOD thresholds - skip (we export LOD0)
-            ChunkType.IvoLodMeshData => new ChunkUnknown(),      // LOD1-4 meshes - skip (we export LOD0)
-            ChunkType.IvoBoundingData => new ChunkUnknown(),     // Bounding data - skip
-            ChunkType.IvoChunkTerminator => new ChunkUnknown(),  // EOF marker - skip
-            ChunkType.IvoMtlNameVariant => new ChunkUnknown(),   // Material variant - skip (rare)
-            _ => new ChunkUnknown(),
+            ChunkType.IvoAssetMetadata => CreateIntentionallyIgnored(),
+            ChunkType.IvoLodDistances => CreateIntentionallyIgnored(),
+            ChunkType.IvoLodMeshData => CreateIntentionallyIgnored(),
+            ChunkType.IvoBoundingData => CreateIntentionallyIgnored(),
+            ChunkType.IvoChunkTerminator => CreateIntentionallyIgnored(),
+            ChunkType.IvoMtlNameVariant => CreateIntentionallyIgnored(),
+            _ => CreateUnknown(chunkType),
         };
     }
+
+    private static ChunkCreationResult CreateImplemented<T>(uint version) where T : Chunk =>
+        new(New<T>(version), ChunkFactoryClassification.ParserAvailable);
+
+    private static ChunkCreationResult CreateIntentionallyIgnored() =>
+        new(new ChunkUnknown(), ChunkFactoryClassification.IntentionallyIgnored);
+
+    private static ChunkCreationResult CreateUnknown(ChunkType chunkType) =>
+        new(
+            new ChunkUnknown(),
+            Enum.IsDefined(typeof(ChunkType), chunkType)
+                ? ChunkFactoryClassification.EnumDefinedUnimplemented
+                : ChunkFactoryClassification.RawUnknown);
 
     public static T New<T>(uint version) where T : Chunk
     {

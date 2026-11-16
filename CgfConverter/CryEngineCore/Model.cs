@@ -10,6 +10,13 @@ namespace CgfConverter.CryEngineCore;
 
 public class Model
 {
+    private bool fileTypeRead;
+    private bool fileVersionRead;
+    private bool declaredChunkCountRead;
+    private bool chunkTableOffsetRead;
+    private IModelReadObserver? activeObserver;
+    private ChunkOccurrence? activeOccurrence;
+
     /// <summary> The Root of the loaded object </summary>
     public ChunkNode? RootNode { get; internal set; }
 
@@ -90,12 +97,26 @@ public class Model
     }
 
     /// <summary> Load the specified stream as a Model</summary>
-    public static Model FromStream(string fileName, Stream stream, bool closeStream =false)
+    public static Model FromStream(string fileName, Stream stream, bool closeStream = false) =>
+        FromStreamCore(fileName, stream, observer: null, closeStream);
+
+    internal static Model FromStream(
+        string fileName,
+        Stream stream,
+        IModelReadObserver observer,
+        bool closeStream = false) =>
+        FromStreamCore(fileName, stream, observer, closeStream);
+
+    private static Model FromStreamCore(
+        string fileName,
+        Stream stream,
+        IModelReadObserver? observer,
+        bool closeStream)
     {
         try
         {
             var buffer = new Model();
-            buffer.Load(fileName, stream);
+            buffer.Load(fileName, stream, observer);
             return buffer;
         }
         finally
@@ -107,15 +128,53 @@ public class Model
 
     public bool IsIvoFile => FileSignature?.Equals("#ivo") ?? false;
 
-    private void Load(string fileName, Stream fs)
+    internal void ObserveUnknownDataStream(uint typeCode, long offset)
+    {
+        if (activeObserver is null || activeOccurrence is not ChunkOccurrence occurrence)
+            return;
+        if (offset < 0 || offset > uint.MaxValue)
+            throw new InvalidDataException($"Datastream offset is outside the supported file range: {offset}.");
+        activeObserver.OnUnknownDataStream(occurrence, typeCode, (uint)offset);
+    }
+
+    private void Load(string fileName, Stream fs, IModelReadObserver? observer)
     {
         FileName = fileName;
 
         using EndiannessChangeableBinaryReader reader = new(fs);
         // Get the header.  This isn't essential for .cgam files, but we need this info to find the version and offset to the chunk table
-        ReadFileHeader(reader);
-        ReadChunkTable(reader);
-        ReadChunks(reader);
+        try
+        {
+            ReadFileHeader(reader);
+        }
+        catch (Exception exception) when (observer is not null && IsObservableDiagnosticException(exception))
+        {
+            observer.OnFileHeader(CreateFileHeaderObservation(complete: false));
+            observer.OnFileFailure(
+                ModelReadStage.FileHeader,
+                exception is NotSupportedException && FileSignature is not null
+                    ? ReadFailureClassification.UnsupportedFileSignature
+                    : ClassifyReadFailure(exception),
+                exception);
+            throw;
+        }
+
+        observer?.OnFileHeader(CreateFileHeaderObservation(complete: true));
+
+        try
+        {
+            ReadChunkTable(reader, observer);
+        }
+        catch (Exception exception) when (observer is not null && IsObservableDiagnosticException(exception))
+        {
+            observer.OnFileFailure(
+                ModelReadStage.ChunkTable,
+                ClassifyReadFailure(exception),
+                exception);
+            throw;
+        }
+
+        ReadChunks(reader, observer);
 
         // Move this to the parent.  Model should just read a single file.
         //BuildIvoNodeStructure();
@@ -130,16 +189,22 @@ public class Model
         if (FileSignature == "CrCh")           // file signature v3.6+
         {
             FileVersion = (FileVersion)b.ReadUInt32();    // 0x746
+            fileVersionRead = true;
             NumChunks = b.ReadUInt32();       // number of Chunks in the chunk table
+            declaredChunkCountRead = true;
             ChunkTableOffset = b.ReadInt32(); // location of the chunk table
+            chunkTableOffsetRead = true;
 
             return;
         }
         else if (FileSignature == "#ivo")
         {
             FileVersion = (FileVersion)b.ReadUInt32();  // 0x0900
+            fileVersionRead = true;
             NumChunks = b.ReadUInt32();
+            declaredChunkCountRead = true;
             ChunkTableOffset = b.ReadInt32();
+            chunkTableOffsetRead = true;
             return;
         }
 
@@ -149,9 +214,13 @@ public class Model
         if (FileSignature == "CryTek")         // file signature v3.5-
         {
             FileType = (FileType)b.ReadUInt32();
+            fileTypeRead = true;
             FileVersion = (FileVersion)b.ReadUInt32();    // 0x744 0x745
+            fileVersionRead = true;
             ChunkTableOffset = b.ReadInt32() + 4;
+            chunkTableOffsetRead = true;
             NumChunks = b.ReadUInt32();       // number of Chunks in the chunk table
+            declaredChunkCountRead = true;
 
             return;
         }
@@ -177,7 +246,16 @@ public class Model
         ChunkMap.Add(1, rootNode);
     }
 
-    private void ReadChunkTable(BinaryReader b)
+    private FileHeaderObservation CreateFileHeaderObservation(bool complete) =>
+        new(
+            FileSignature,
+            fileTypeRead ? (uint)FileType : null,
+            fileVersionRead ? (uint)FileVersion : null,
+            declaredChunkCountRead ? NumChunks : null,
+            chunkTableOffsetRead ? ChunkTableOffset : null,
+            complete);
+
+    private void ReadChunkTable(BinaryReader b, IModelReadObserver? observer)
     {
         b.BaseStream.Seek(ChunkTableOffset, SeekOrigin.Begin);
 
@@ -198,6 +276,14 @@ public class Model
             ChunkHeader header = Chunk.New<ChunkHeader>((uint)FileVersion);
             header.Read(b);
 
+            // Version 0x900 stores no chunk ID. Preserve the existing random surrogate during normal
+            // conversion, but use a stable negative surrogate for diagnostics so large scans cannot
+            // exhaust the process-global random-ID pool or accidentally match ordinary material IDs.
+            if (FileVersion == FileVersion.x0900)
+                header.ID = observer is null
+                    ? Chunk.GetNextRandom()
+                    : checked(int.MinValue + i);
+
             chunkHeaders.Add(header);
         }
 
@@ -212,20 +298,103 @@ public class Model
         }
     }
 
-    private void ReadChunks(BinaryReader reader)
+    private void ReadChunks(BinaryReader reader, IModelReadObserver? observer)
     {
-        foreach (ChunkHeader chunkHeaderItem in chunkHeaders)
+        var recoverStreamPosition = false;
+
+        for (var tableIndex = 0; tableIndex < chunkHeaders.Count; tableIndex++)
         {
+            var chunkHeaderItem = chunkHeaders[tableIndex];
+            var sizeKnown = (FileVersion != FileVersion.x0744
+                && FileVersion != FileVersion.x0900)
+                || tableIndex < chunkHeaders.Count - 1;
+            var occurrence = new ChunkOccurrence(
+                tableIndex,
+                (uint)chunkHeaderItem.ChunkType,
+                chunkHeaderItem.VersionRaw,
+                chunkHeaderItem.Offset,
+                sizeKnown ? chunkHeaderItem.Size : null,
+                FileVersion == FileVersion.x0900 ? null : chunkHeaderItem.ID);
+
             Utilities.HelperMethods.Log(Utilities.LogLevelEnum.Debug,
                 $"[{Path.GetFileName(FileName)}] Reading chunk: Type={chunkHeaderItem.ChunkType}, Version=0x{chunkHeaderItem.Version:X}, ID={chunkHeaderItem.ID}, Offset=0x{chunkHeaderItem.Offset:X}, Size={chunkHeaderItem.Size}");
 
-            var chunk = Chunk.New(chunkHeaderItem.ChunkType, chunkHeaderItem.Version);
-            ChunkMap[chunkHeaderItem.ID] = chunk;
+            ChunkCreationResult creation;
+            try
+            {
+                creation = Chunk.CreateForRead(chunkHeaderItem.ChunkType, chunkHeaderItem.Version);
+            }
+            catch (Exception exception) when (observer is not null && IsObservableDiagnosticException(exception))
+            {
+                var classification = exception is NotSupportedException
+                    ? ReadFailureClassification.UnsupportedVersion
+                    : ClassifyReadFailure(exception);
+                observer.OnChunkFailure(
+                    occurrence,
+                    ModelReadStage.ChunkFactory,
+                    classification,
+                    exception);
 
-            chunk.Load(this, chunkHeaderItem);
-            chunk.Read(reader);
-            // Ensure we read to end of structure
-            chunk.SkipBytes(reader);
+                if (MustAbortDiagnosticRead(classification))
+                    throw;
+
+                recoverStreamPosition = true;
+                continue;
+            }
+
+            observer?.OnChunkClassified(occurrence, creation.Classification);
+
+            var chunk = creation.Chunk;
+            var stage = ModelReadStage.ChunkRead;
+            var hadPreviousChunk = ChunkMap.TryGetValue(chunkHeaderItem.ID, out var previousChunk);
+            try
+            {
+                ChunkMap[chunkHeaderItem.ID] = chunk;
+                chunk.Load(this, chunkHeaderItem);
+
+                if (observer is not null && recoverStreamPosition)
+                {
+                    reader.BaseStream.Seek(chunkHeaderItem.Offset, SeekOrigin.Begin);
+                    ((EndiannessChangeableBinaryReader)reader).IsBigEndian =
+                        (chunkHeaderItem.VersionRaw & 0x80000000u) != 0;
+                    recoverStreamPosition = false;
+                }
+                activeObserver = observer;
+                activeOccurrence = observer is null ? null : occurrence;
+                try
+                {
+                    chunk.Read(reader);
+
+                    // Ensure we read to end of structure
+                    stage = ModelReadStage.ChunkSkip;
+                    chunk.SkipBytes(reader);
+                }
+                finally
+                {
+                    activeObserver = null;
+                    activeOccurrence = null;
+                }
+            }
+            catch (Exception exception) when (observer is not null && IsObservableDiagnosticException(exception))
+            {
+                if (hadPreviousChunk)
+                    ChunkMap[chunkHeaderItem.ID] = previousChunk!;
+                else
+                    ChunkMap.Remove(chunkHeaderItem.ID);
+
+                var classification = ClassifyReadFailure(exception);
+                observer.OnChunkFailure(
+                    occurrence,
+                    stage,
+                    classification,
+                    exception);
+
+                if (MustAbortDiagnosticRead(classification))
+                    throw;
+
+                recoverStreamPosition = true;
+                continue;
+            }
 
             // Assume first node read in Model[0] is root node.  This may be bad if they aren't in order!
             if (chunkHeaderItem.ChunkType == ChunkType.Node && RootNode == null)
@@ -241,4 +410,21 @@ public class Model
             }
         }
     }
+
+    private static ReadFailureClassification ClassifyReadFailure(Exception exception) =>
+        exception switch
+        {
+            OutOfMemoryException => ReadFailureClassification.ResourceExhaustion,
+            IOException when exception is not EndOfStreamException => ReadFailureClassification.IoFailure,
+            _ => ReadFailureClassification.ParseFailure,
+        };
+
+    private static bool MustAbortDiagnosticRead(ReadFailureClassification classification) =>
+        classification is ReadFailureClassification.IoFailure
+            or ReadFailureClassification.ResourceExhaustion;
+
+    private static bool IsObservableDiagnosticException(Exception exception) =>
+        exception is not OperationCanceledException
+            and not AccessViolationException
+            and not StackOverflowException;
 }
