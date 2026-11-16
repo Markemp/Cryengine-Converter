@@ -4,6 +4,13 @@ on:
   workflow_dispatch:
   push:
     branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+# Least privilege: this workflow only reads the repo. (Fork PRs are read-only
+# regardless; this also covers branches pushed to this repo.)
+permissions:
+  contents: read
 
 jobs:
   build:

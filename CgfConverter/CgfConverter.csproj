@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
@@ -11,7 +11,6 @@
     <PackageReference Include="BCnEncoder.Net" Version="2.2.1" />
     <PackageReference Include="DDSUnsplitter" Version="1.0.1" />
     <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="9.0.5" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="4.1.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="System.IO.Hashing" Version="9.0.4" />
     <PackageReference Include="Microsoft.XmlSerializer.Generator" Version="9.0.4" />
