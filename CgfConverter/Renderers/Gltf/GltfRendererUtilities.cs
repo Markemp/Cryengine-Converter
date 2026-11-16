@@ -2,34 +2,35 @@
 using System.Collections.Immutable;
 using System.Linq;
 using BCnEncoder.Shared;
-using SixLabors.ImageSharp.PixelFormats;
 
 namespace CgfConverter.Renderers.Gltf;
 
 internal static class GltfRendererUtilities
 {
-    internal static Rgba32[] ToRgba32(this ColorRgba32[] raw)
+    /// <summary>Interleaved 8-bit RGBA bytes, for <see cref="Utilities.PngEncoder"/>.</summary>
+    internal static byte[] ToRgbaBytes(this ColorRgba32[] raw)
     {
-        var res = new Rgba32[raw.Length];
-        for (var i = 0; i < raw.Length; i++)
+        var res = new byte[raw.Length * 4];
+        for (int i = 0, j = 0; i < raw.Length; i++, j += 4)
         {
-            res[i].R = raw[i].r;
-            res[i].G = raw[i].g;
-            res[i].B = raw[i].b;
-            res[i].A = raw[i].a;
+            res[j] = raw[i].r;
+            res[j + 1] = raw[i].g;
+            res[j + 2] = raw[i].b;
+            res[j + 3] = raw[i].a;
         }
 
         return res;
     }
 
-    internal static Rgb24[] ToRgb24(this ColorRgba32[] raw)
+    /// <summary>Interleaved 8-bit RGB bytes (alpha dropped), for <see cref="Utilities.PngEncoder"/>.</summary>
+    internal static byte[] ToRgbBytes(this ColorRgba32[] raw)
     {
-        var res = new Rgb24[raw.Length];
-        for (var i = 0; i < raw.Length; i++)
+        var res = new byte[raw.Length * 3];
+        for (int i = 0, j = 0; i < raw.Length; i++, j += 3)
         {
-            res[i].R = raw[i].r;
-            res[i].G = raw[i].g;
-            res[i].B = raw[i].b;
+            res[j] = raw[i].r;
+            res[j + 1] = raw[i].g;
+            res[j + 2] = raw[i].b;
         }
 
         return res;

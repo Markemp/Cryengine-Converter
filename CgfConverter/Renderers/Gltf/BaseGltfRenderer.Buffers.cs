@@ -9,8 +9,8 @@ using BCnEncoder.Shared;
 using CgfConverter.Models.Structs;
 using CgfConverter.Renderers.Gltf.Models;
 using CgfConverter.Renderers.MaterialTextures;
+using CgfConverter.Utilities;
 using Newtonsoft.Json;
-using SixLabors.ImageSharp;
 using static DDSUnsplitter.Library.DDSUnsplitter;
 
 namespace CgfConverter.Renderers.Gltf;
@@ -539,87 +539,24 @@ public partial class BaseGltfRenderer
                 : SourceAlphaModes.Disable;
         }
 
-        using var ms = new MemoryStream();
+        bool hasAlpha = newOpacity is not null || sourceAlphaMode == SourceAlphaModes.Enable;
+        byte[] pixels = hasAlpha ? raw.ToRgbaBytes() : raw.ToRgbBytes();
         if (newOpacity is not null)
         {
-            var buf = raw.ToRgba32();
             if (sourceAlphaMode == SourceAlphaModes.Enable)
             {
-                for (var i = 0; i < buf.Length; i++)
-                    buf[i].A = (byte) (buf[i].A * newOpacity);
+                for (var i = 3; i < pixels.Length; i += 4)
+                    pixels[i] = (byte) (pixels[i] * newOpacity);
             }
             else
             {
                 var newAlphaByte = (byte) (255 * newOpacity.Value);
-                for (var i = 0; i < buf.Length; i++)
-                    buf[i].A = newAlphaByte;
-            }
-
-            using var image = Image.LoadPixelData<SixLabors.ImageSharp.PixelFormats.Rgba32>(buf, width, height);
-            image.SaveAsPng(ms);
-        }
-        else
-        {
-            if (sourceAlphaMode == SourceAlphaModes.Enable)
-            {
-                using var image = Image.LoadPixelData<SixLabors.ImageSharp.PixelFormats.Rgba32>(raw.ToRgba32(), width, height);
-                image.SaveAsPng(ms);
-            }
-            else
-            {
-                using var image = Image.LoadPixelData<SixLabors.ImageSharp.PixelFormats.Rgb24>(raw.ToRgb24(), width, height);
-                image.SaveAsPng(ms);
+                for (var i = 3; i < pixels.Length; i += 4)
+                    pixels[i] = newAlphaByte;
             }
         }
 
-        return AddTexture(baseName, "image/png", ms.ToArray());
-    }
-
-    // Overload for backward compatibility
-    private int AddTexture(string? baseName, int width, int height, ColorRgba32[] raw, SourceAlphaModes sourceAlphaMode,
-        float? newOpacity = null)
-    {
-        if (sourceAlphaMode == SourceAlphaModes.Automatic)
-        {
-            sourceAlphaMode = GltfRendererUtilities.HasMeaningfulAlphaChannel(raw)
-                ? SourceAlphaModes.Enable
-                : SourceAlphaModes.Disable;
-        }
-
-        using var ms = new MemoryStream();
-        if (newOpacity is not null)
-        {
-            var buf = raw.ToRgba32();
-            if (sourceAlphaMode == SourceAlphaModes.Enable)
-            {
-                for (var i = 0; i < buf.Length; i++)
-                    buf[i].A = (byte) (buf[i].A * newOpacity);
-            }
-            else
-            {
-                var newAlphaByte = (byte) (255 * newOpacity.Value);
-                for (var i = 0; i < buf.Length; i++)
-                    buf[i].A = newAlphaByte;
-            }
-
-            using var image = Image.LoadPixelData<SixLabors.ImageSharp.PixelFormats.Rgba32>(buf, width, height);
-            image.SaveAsPng(ms);
-        }
-        else
-        {
-            if (sourceAlphaMode == SourceAlphaModes.Enable)
-            {
-                using var image = Image.LoadPixelData<SixLabors.ImageSharp.PixelFormats.Rgba32>(raw.ToRgba32(), width, height);
-                image.SaveAsPng(ms);
-            }
-            else
-            {
-                using var image = Image.LoadPixelData<SixLabors.ImageSharp.PixelFormats.Rgb24>(raw.ToRgb24(), width, height);
-                image.SaveAsPng(ms);
-            }
-        }
-
-        return AddTexture(baseName, "image/png", ms.ToArray());
+        return AddTexture(baseName, "image/png", PngEncoder.Encode(pixels, width, height, hasAlpha));
     }
 
     private int AddTexture(string? baseName, string mimeType, byte[]? textureBytes, string? uri = null)
