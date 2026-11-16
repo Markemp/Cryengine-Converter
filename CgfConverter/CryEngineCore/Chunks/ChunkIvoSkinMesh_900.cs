@@ -410,7 +410,9 @@ internal sealed class ChunkIvoSkinMesh_900 : ChunkIvoSkinMesh
                 default:
                     // Unknown datastream type - skip the 4 bytes we just read (the type) and continue
                     // The chunk size-based loop will handle reaching the end of the chunk
-                    HelperMethods.Log(LogLevelEnum.Warning, $"***** Unknown DataStream Type 0x{datastreamType:X8} at position 0x{b.BaseStream.Position - 4:X} - skipping and continuing *****");
+                    var typeOffset = b.BaseStream.Position - 4;
+                    _model.ObserveUnknownDataStream(datastreamType, typeOffset);
+                    HelperMethods.Log(LogLevelEnum.Warning, $"***** Unknown DataStream Type 0x{datastreamType:X8} at position 0x{typeOffset:X} - skipping and continuing *****");
                     // Position is already advanced by ReadUInt32(), so we just continue
                     // Align to 8 bytes in case the next datastream expects alignment
                     b.AlignTo(8);

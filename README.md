@@ -139,6 +139,18 @@ PS> cgf-converter boar.chr -anim -objectdir D:\depot\KCD2
 
 The `-anim` flag pulls in `.chrparams`, `.dba`, `.caf`, and `.cal` animation files. Multi-clip assets emit one USD file per animation, which can be loaded as separate actions in Blender's NLA editor.
 
+### Diagnose chunk-format compatibility
+
+Use `scan-unknown-chunks` to inventory parser compatibility without loading materials, animations, or renderers:
+
+```powershell
+PS> cgf-converter scan-unknown-chunks D:\extracted-assets\Objects -recursive -out chunk-scan.json
+```
+
+The schema-v4 JSON report identifies raw unknown chunk types, unknown nested `#ivo` datastream types, enum-defined types without parsers, unsupported versions, and parser failure stages. It uses stable input aliases and root-relative file paths so reports can be shared without exposing local directory roots.
+
+The scan is sequential and does not read P4K archives directly. An isolated memory-exhausted file is skipped so later files can still be diagnosed; three consecutive memory-exhausted files stop the remaining corpus as a safety bound. Exit code `0` means the diagnostic completed, even when format findings were recorded; `1` means an operational, I/O, resource, or report-write failure made the scan partial; `2` means the command invocation was invalid.
+
 ### Split textures - combining split DDS textures
 
 Many modern CryEngine games ship their DDS textures split across multiple files (`*.dds.0`, `*.dds.1`, ...). Pass `-unsplittextures` (or `-ut`) to combine them before materials are written:

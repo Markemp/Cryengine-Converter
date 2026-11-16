@@ -6,6 +6,7 @@ using CgfConverter.Renderers.Wavefront;
 using CgfConverter.Terrain;
 using CgfConverter.Utilities;
 using CgfConverter.Utils;
+using CgfConverter.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -37,6 +38,9 @@ public class Program
         var customCulture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
         customCulture.NumberFormat.NumberDecimalSeparator = ".";
         Thread.CurrentThread.CurrentCulture = customCulture;
+
+        if (ChunkScanCommand.TryRun(args, out var scanExitCode))
+            return scanExitCode;
 
         var argsHandler = new ArgsHandler();
         var numErrorsOccurred = argsHandler.ProcessArgs(args);
